@@ -9,6 +9,13 @@ static class Program
     [SuppressUnmanagedCodeSecurity, DllImport("QtSharp", EntryPoint = "qs_QWidget_windowTitle", CallingConvention = CallingConvention.Cdecl)]
     static extern IntPtr qs_windowTitle(IntPtr w);
 
+    sealed class MyWidget : QWidget
+    {
+        public MyWidget() : base(null, 0) { }
+
+        public override bool HasHeightForWidth => true;
+    }
+
     static unsafe int Main()
     {
         try
@@ -30,6 +37,9 @@ static class Program
                 var titlePtr = qs_windowTitle(widget.__Instance);
                 Console.WriteLine($"[OK] windowTitle roundtrip = '{QStringMarshaller.ToManaged(titlePtr)}'");
                 QStringMarshaller.Free(titlePtr);
+
+                using var my = new MyWidget();
+                Console.WriteLine($"[OK] subclass HasHeightForWidth override = {my.HasHeightForWidth}");
 
                 widget.Resize(640, 480);
                 widget.Show();
