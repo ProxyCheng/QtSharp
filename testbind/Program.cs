@@ -38,6 +38,10 @@ static class Program
                 Console.WriteLine($"[OK] windowTitle roundtrip = '{QStringMarshaller.ToManaged(titlePtr)}'");
                 QStringMarshaller.Free(titlePtr);
 
+                using var size = new QSize(800, 600);
+                Console.WriteLine($"[OK] QSize value type = {size.Width}x{size.Height}");
+                widget.Resize(size.Width, size.Height);
+
                 using var my = new MyWidget();
                 Console.WriteLine($"[OK] subclass HasHeightForWidth override = {my.HasHeightForWidth}");
 

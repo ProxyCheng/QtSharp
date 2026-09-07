@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Include="Passes\verbs.txt" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\Parser\CppSharp.Parser.csproj" />
+    <ProjectReference Include="$(NativeProjectsDir)Std-symbols.vcxproj" ReferenceOutputAssembly="false" Condition="$(IsWindows)" />
+  </ItemGroup>
+</Project>

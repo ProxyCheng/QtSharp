@@ -8,12 +8,23 @@
 .vs/
 
 # Vendored third-party (re-vendor as needed, see notes below)
-#   CppSharp/  - patched CppSharp source (patch: src/AST/ASTVisitor.cs VisitParameterDecl null guard)
 #   lib/       - vendored CppSharp DLLs (incl. rebuilt CppSharp.AST.dll) + clang builtin headers
 #   Qt/        - Qt 6.11 headers/libs/runtime DLLs
-CppSharp/
 lib/
 Qt/
+
+# CppSharp source (tracked because we patch it); ignore generated bindings + artifacts
+CppSharp/bin/
+CppSharp/build/
+CppSharp/tests/
+CppSharp/Backup/
+CppSharp/.github/
+CppSharp/docs/
+CppSharp/examples/
+CppSharp/include/
+CppSharp/Sample.Cpp/
+CppSharp/Sample.Gen/
+CppSharp/src/CppParser/
 
 # Generated output
 out/
