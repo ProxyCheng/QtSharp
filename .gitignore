@@ -1,0 +1,23 @@
+# Build outputs
+**/bin/
+**/obj/
+*.obj
+*.log
+
+# IDE
+.vs/
+
+# Vendored third-party (re-vendor as needed, see notes below)
+#   CppSharp/  - patched CppSharp source (patch: src/AST/ASTVisitor.cs VisitParameterDecl null guard)
+#   lib/       - vendored CppSharp DLLs (incl. rebuilt CppSharp.AST.dll) + clang builtin headers
+#   Qt/        - Qt 6.11 headers/libs/runtime DLLs
+CppSharp/
+lib/
+Qt/
+
+# Generated output
+out/
+
+# Generated binding sources (regenerate via gen/)
+testbind/QtSharp.cs
+testbind/Std.cs

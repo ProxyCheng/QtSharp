@@ -1,0 +1,25 @@
+LIBRARY QtSharp
+EXPORTS
+  ??0QFlag@@QEAA@H@Z = qs_QFlag_int
+  ??0QFlag@@QEAA@AEBV0@@Z = qs_QFlag_copy
+  ??0QAtomicInt@@QEAA@H@Z = qs_QAtomicInt_int
+  ??0QAtomicInt@@QEAA@AEBV0@@Z = qs_QAtomicInt_copy
+  ??0QArrayData@@QEAA@XZ = qs_QArrayData
+  ??0QBindingStorage@@QEAA@AEBV0@@Z = qs_QBindingStorage_copy
+  ??0QApplication@@QEAA@AEAHPEAPEADH@Z
+  ?exec@QApplication@@SAHXZ
+  ??0QBindingStorage@@QEAA@XZ
+  ??1QBindingStorage@@QEAA@XZ
+  ??0QObjectData@@QEAA@XZ
+  ??0QObject@@QEAA@PEAV0@@Z
+  ??0QCoreApplication@@QEAA@AEAHPEAPEADH@Z
+  ?exec@QCoreApplication@@SAHXZ
+  ?quit@QCoreApplication@@SAXXZ
+  ??0QPaintDevice@@IEAA@XZ
+  ??0QGuiApplication@@QEAA@AEAHPEAPEADH@Z
+  ?exec@QGuiApplication@@SAHXZ
+  ?show@QWidget@@QEAAXXZ
+  ?hide@QWidget@@QEAAXXZ
+  ?close@QWidget@@QEAA_NXZ
+  ?resize@QWidget@@QEAAXHH@Z
+  ??0QWidget@@QEAA@PEAV0@V?$QFlags@W4WindowType@Qt@@@@@Z

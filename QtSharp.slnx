@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="gen/gen.csproj" />
+  <Project Path="testbind/testbind.csproj" />
+</Solution>
