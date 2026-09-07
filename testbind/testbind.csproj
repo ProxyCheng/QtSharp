@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>testapp</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="CppSharp.Runtime">
+      <HintPath>D:\QtSharp\lib\CppSharp.Runtime.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="CopyNativeDeps" AfterTargets="Build">
+    <ItemGroup>
+      <QtSharpNative Include="D:\QtSharp\out\native\QtSharp.dll" />
+      <QtRuntimeDll Include="D:\QtSharp\Qt\6.11.0\runtime\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(QtSharpNative)" DestinationFolder="$(OutDir)" />
+    <Copy SourceFiles="@(QtRuntimeDll)" DestinationFolder="$(OutDir)" />
+    <Copy SourceFiles="D:\QtSharp\Qt\6.11.0\runtime\platforms\qwindows.dll" DestinationFolder="$(OutDir)platforms\" />
+  </Target>
+
+</Project>
