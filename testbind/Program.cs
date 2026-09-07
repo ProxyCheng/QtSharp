@@ -1,10 +1,14 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Text;
 using QtSharp;
 
 static class Program
 {
+    [SuppressUnmanagedCodeSecurity, DllImport("QtSharp", EntryPoint = "qs_QWidget_windowTitle", CallingConvention = CallingConvention.Cdecl)]
+    static extern IntPtr qs_windowTitle(IntPtr w);
+
     static unsafe int Main()
     {
         try
@@ -21,6 +25,11 @@ static class Program
 
                 using var widget = new QWidget(null, 0);
                 Console.WriteLine("[OK] QWidget created");
+
+                widget.SetWindowTitle("Hello from C#");
+                var titlePtr = qs_windowTitle(widget.__Instance);
+                Console.WriteLine($"[OK] windowTitle roundtrip = '{QStringMarshaller.ToManaged(titlePtr)}'");
+                QStringMarshaller.Free(titlePtr);
 
                 widget.Resize(640, 480);
                 widget.Show();

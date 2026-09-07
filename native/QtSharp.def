@@ -22,4 +22,5 @@ EXPORTS
   ?hide@QWidget@@QEAAXXZ
   ?close@QWidget@@QEAA_NXZ
   ?resize@QWidget@@QEAAXHH@Z
+  ?setWindowTitle@QWidget@@QEAAXAEBVQString@@@Z
   ??0QWidget@@QEAA@PEAV0@V?$QFlags@W4WindowType@Qt@@@@@Z
