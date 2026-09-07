@@ -1,0 +1,69 @@
+<Project>
+  <Import Project="build/config.props" />
+
+  <PropertyGroup>
+    <RootDir>$(MSBuildThisFileDirectory)</RootDir>
+    <Platforms>x86;x64</Platforms>
+    <Configurations>Debug;DebugOpt;Release</Configurations>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>    
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/mono/CppSharp</RepositoryUrl>
+    <RepositoryCommit>$(GITHUB_SHA)</RepositoryCommit>
+    <Authors>João Matos, Dimitar Dobrev, Jose Torres</Authors>
+    <Copyright>João Matos, Dimitar Dobrev</Copyright>
+    <Version>$(NBGV_Version)</Version>
+    <AssemblyVersion>$(NBGV_AssemblyVersion)</AssemblyVersion>
+    <AssemblyFileVersion>$(NBGV_AssemblyFileVersion)</AssemblyFileVersion>
+    <AssemblyInformationalVersion>$(NBGV_AssemblyInformationalVersion)</AssemblyInformationalVersion>
+    <IsPackable>false</IsPackable>
+    <BuildDir>$(RootDir)build\</BuildDir>
+    <ObjDir>$(BuildDir)obj\</ObjDir>
+    <GenDir>$(BuildDir)gen\</GenDir>
+    <SrcDir>$(RootDir)src\</SrcDir>
+    <GlobalTargetFramework>$(TargetFramework)</GlobalTargetFramework>
+    <BaseIntermediateOutputPath>$(ObjDir)$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(RootDir)bin\</BaseOutputPath>
+    <OutputPath>$(BaseOutputPath)$(Configuration)\</OutputPath>
+    <ActionDir>$(BuildDir)$(PremakeAction)\</ActionDir>
+    <NativeProjectsDir>$(ActionDir)projects\</NativeProjectsDir>
+    <PackageDir>$(RootDir)artifacts\package\</PackageDir>
+    <TargetDir>$(OutputPath)</TargetDir>
+    <LangVersion>10.0</LangVersion>
+    <WarningLevel>4</WarningLevel>
+    <DotNetCmd>dotnet</DotNetCmd>
+    <GeneratorFileExtension>dll</GeneratorFileExtension>
+    <DotNetCmd Condition="'$(PlatformTarget)' == 'x86' AND Exists('$(MSBuildProgramFiles32)\dotnet\dotnet.exe')">"$(MSBuildProgramFiles32)\dotnet\dotnet.exe"</DotNetCmd>
+    <DotNetCmd Condition="'$(PlatformTarget)' == 'x64' AND Exists('$(ProgramW6432)\dotnet\dotnet.exe')">"$(ProgramW6432)\dotnet\dotnet.exe"</DotNetCmd>
+    <RID Condition="$(IsWindows)">win</RID>
+    <RID Condition="$(IsLinux)">linux</RID>
+    <RID Condition="$(IsMacOSX)">osx</RID>
+    <RID>$(RID)-$(PlatformTarget)</RID>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+      <DebugSymbols>true</DebugSymbols>
+      <DebugType>full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'DebugOpt'">
+      <DebugSymbols>true</DebugSymbols>
+      <DebugType>full</DebugType>
+      <Optimize>false</Optimize>
+      <DefineConstants>DEBUG</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(DotNetCmd)' == 'dotnet' AND $(IsWindows)">
+    <GeneratorFileExtension>exe</GeneratorFileExtension>
+    <DotNetCmd></DotNetCmd>
+  </PropertyGroup>
+
+  <Target Name="prepack" DependsOnTargets="Build" Condition="'$(IsPackable)' == 'true' AND '$(Platform)' == 'x64'">
+    <Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFolder="$(PackageDir)ref\$(GlobalTargetFramework)" Condition="'$(ProduceReferenceAssembly)' == 'true' AND '$(RID)' == 'win-x64'" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PackageDir)runtimes\$(RID)\lib\$(GlobalTargetFramework)" />
+  </Target>
+
+  <Target Name="ValidateCPPSHARPRelease" BeforeTargets="Build">
+      <Error Condition="'$(CPPSHARP_RELEASE)' == 'true' AND '$(Configuration)' != 'Release'"
+             Text="Configuration must be 'Release' when CPPSHARP_RELEASE is 'true'." />
+  </Target>
+</Project>

@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <None Include="..\..\tests\dotnet\Native\AST.h" LinkBase="tests\Native" />
+    <None Include="..\..\tests\dotnet\Native\ASTExtensions.h" LinkBase="tests\Native" />
+    <None Include="..\..\tests\dotnet\Native\Passes.h" LinkBase="tests\Native" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Generator\CppSharp.Generator.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+  </ItemGroup>
+</Project>

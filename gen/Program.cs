@@ -49,6 +49,7 @@ class QtLibrary : ILibrary
     {
         ClearInvalidInitializers(ctx);
         ReportCoverage(ctx);
+        GenerateDef(ctx);
     }
 
     static readonly string[] RootNames = { "QApplication", "QWidget", "QEvent", "QPaintEvent", "QMouseEvent", "QKeyEvent", "QResizeEvent", "QMoveEvent", "QCloseEvent", "QFocusEvent", "QWheelEvent", "QShowEvent", "QHideEvent", "QTimerEvent", "QChildEvent", "QEnterEvent" };
@@ -120,6 +121,82 @@ class QtLibrary : ILibrary
                 AddReachable(c, reachable, queue);
         foreach (var sub in ns.Namespaces)
             CollectRoots(sub, queue, reachable);
+    }
+
+    static HashSet<string> LoadQtExports()
+    {
+        var set = new HashSet<string>();
+        foreach (var f in new[] { "exports_core.txt", "exports_gui.txt", "exports_widgets.txt" })
+        {
+            var path = Path.Combine(@"D:\QtSharp\Qt\6.11.0\runtime", f);
+            if (!File.Exists(path))
+                continue;
+            foreach (var line in File.ReadLines(path))
+            {
+                var parts = line.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 4 && parts[3].StartsWith("?"))
+                    set.Add(parts[3]);
+            }
+        }
+        return set;
+    }
+
+    static void GenerateDef(ASTContext ctx)
+    {
+        var exports = LoadQtExports();
+        var wrapped = CppSharp.Passes.SymbolsCodeGenerator.WrappedSymbols;
+        var sb = new StringBuilder();
+        sb.AppendLine("LIBRARY QtSharp");
+        sb.AppendLine("EXPORTS");
+        var seen = new HashSet<string>();
+        int skipped = 0;
+        foreach (var tu in ctx.TranslationUnits)
+            if (IsMyModule(tu))
+                GenerateDefIn(tu, sb, seen, exports, wrapped, ref skipped);
+        Directory.CreateDirectory(@"D:\QtSharp\native");
+        File.WriteAllText(@"D:\QtSharp\native\QtSharp.def", sb.ToString());
+        Console.WriteLine($"[def] wrote {seen.Count - skipped} exports (wrapped={wrapped.Count} skipped={skipped})");
+    }
+
+    static void GenerateDefIn(DeclarationContext dc, StringBuilder sb, HashSet<string> seen,
+        HashSet<string> exports, Dictionary<string, string> wrapped, ref int skipped)
+    {
+        foreach (var c in dc.Classes)
+        {
+            foreach (var m in c.Methods)
+                AddMethodDef(m, sb, seen, exports, wrapped, ref skipped);
+            foreach (var p in c.Properties)
+            {
+                AddMethodDef(p.GetMethod, sb, seen, exports, wrapped, ref skipped);
+                AddMethodDef(p.SetMethod, sb, seen, exports, wrapped, ref skipped);
+            }
+            GenerateDefIn(c, sb, seen, exports, wrapped, ref skipped);
+        }
+        foreach (var f in dc.Functions)
+            if (f.IsGenerated && !string.IsNullOrEmpty(f.Mangled) && seen.Add(f.Mangled))
+            {
+                if (exports.Contains(f.Mangled))
+                    sb.AppendLine($"  {f.Mangled}");
+                else
+                    skipped++;
+            }
+        foreach (var ns in dc.Namespaces)
+            GenerateDefIn(ns, sb, seen, exports, wrapped, ref skipped);
+    }
+
+    static void AddMethodDef(Method m, StringBuilder sb, HashSet<string> seen,
+        HashSet<string> exports, Dictionary<string, string> wrapped, ref int skipped)
+    {
+        if (m == null || string.IsNullOrEmpty(m.Mangled) || !seen.Add(m.Mangled))
+            return;
+        if (!m.IsGenerated && !(m.AssociatedDeclaration is Property { IsGenerated: true }))
+            return;
+        if (wrapped.TryGetValue(m.Mangled, out var wrapper))
+            sb.AppendLine($"  {m.Mangled} = {wrapper}");
+        else if (exports.Contains(m.Mangled))
+            sb.AppendLine($"  {m.Mangled}");
+        else
+            skipped++;
     }
 
     static void ReportCoverage(ASTContext ctx)
