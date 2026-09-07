@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>10.0</LangVersion>
+    <AssemblyName>CppSharp.Generator</AssemblyName>
+    <Version>1.1.0.0</Version>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\CppSharp\src\Generator\**\*.cs" />
+    <EmbeddedResource Include="..\..\CppSharp\src\Generator\Passes\verbs.txt" LogicalName="CppSharp.Passes.verbs.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="CppSharp">
+      <HintPath>..\..\lib\CppSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="CppSharp.AST">
+      <HintPath>..\..\lib\CppSharp.AST.dll</HintPath>
+    </Reference>
+    <Reference Include="CppSharp.Parser">
+      <HintPath>..\..\lib\CppSharp.Parser.dll</HintPath>
+    </Reference>
+    <Reference Include="CppSharp.Parser.CSharp">
+      <HintPath>..\..\lib\CppSharp.Parser.CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="CppSharp.Runtime">
+      <HintPath>..\..\lib\CppSharp.Runtime.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>
