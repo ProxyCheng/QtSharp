@@ -59,7 +59,12 @@ class QtLibrary : ILibrary
     static readonly string[] ForceIgnoreNames = {
         "QPartialOrdering", "QStrongOrdering", "QWeakOrdering",
         "QTotallyOrderedWrapper",
-        "PartialOrdering", "WeakOrdering", "StrongOrdering"
+        "PartialOrdering", "WeakOrdering", "StrongOrdering",
+        "QMetaObject", "QHashPrivate", "QHash", "QMultiHash", "QVariant"
+    };
+
+    static readonly string[] ForceIgnoreMethodNames = {
+        "QChar::fromUcs4"
     };
 
     static void LimitScope(ASTContext ctx)
@@ -78,8 +83,11 @@ class QtLibrary : ILibrary
                 if (b.IsClass && b.Class != null && !reachable.Contains(b.Class))
                     AddReachable(b.Class, reachable, queue);
 
+            if (ForceIgnoreNames.Contains(c.OriginalName))
+                continue;
+
             foreach (var m in c.Methods)
-                if (m.IsConstructor || MethodWhitelist.Contains(m.OriginalName))
+                if (m.Access != AccessSpecifier.Private)
                 {
                     VisitType(m.ReturnType.Type, reachable, queue);
                     foreach (var p in m.Parameters)
@@ -183,8 +191,16 @@ class QtLibrary : ILibrary
             if (reachable.Contains(c) && !c.IsDependent)
             {
                 foreach (var m in c.Methods)
-                    if (!m.IsConstructor && !m.IsDestructor && !MethodWhitelist.Contains(m.OriginalName))
+                {
+                    if (ForceIgnoreMethodNames.Contains(m.QualifiedOriginalName))
+                    {
                         m.ExplicitlyIgnore();
+                        continue;
+                    }
+                    var rt = m.ReturnType.Type?.Desugar();
+                    if (rt is TemplateSpecializationType ts && ts.Template?.TemplatedDecl?.OriginalName == "QFlags")
+                        m.ExplicitlyIgnore();
+                }
                 foreach (var p in c.Properties)
                     p.ExplicitlyIgnore();
             }
@@ -204,6 +220,13 @@ class QtLibrary : ILibrary
                 c.ExplicitlyIgnore();
                 ignored++;
             }
+            if (c.IsDependent)
+                foreach (var spec in c.Specializations)
+                    if (ForceIgnoreNames.Contains(c.OriginalName))
+                    {
+                        spec.ExplicitlyIgnore();
+                        ignored++;
+                    }
             IgnoreClasses(c, reachable, ref ignored);
         }
         foreach (var f in ctx.Functions)
