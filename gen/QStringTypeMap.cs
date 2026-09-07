@@ -1,5 +1,6 @@
 using CppSharp;
 using CppSharp.AST;
+using CppSharp.AST.Extensions;
 using CppSharp.Generators;
 using CppSharp.Types;
 using Type = CppSharp.AST.Type;
@@ -25,6 +26,10 @@ public class QStringTypeMap : TypeMap
 
     public override void MarshalToManaged(MarshalContext ctx)
     {
-        ctx.Return.Write($"global::QtSharp.QStringMarshaller.ToManaged({ctx.ReturnVarName})");
+        var v = ctx.ReturnVarName;
+        if (Type != null && !Type.Desugar().IsAddress())
+            ctx.Return.Write($"global::QtSharp.QStringMarshaller.ToManaged(new global::System.IntPtr(&{v}))");
+        else
+            ctx.Return.Write($"global::QtSharp.QStringMarshaller.ToManaged({v})");
     }
 }

@@ -26,7 +26,7 @@ static class Program
                 using var widget = new QWidget(null, 0);
                 Console.WriteLine("[OK] QWidget created");
 
-                widget.SetWindowTitle("Hello from C#");
+                widget.WindowTitle = "Hello from C#";
                 var titlePtr = qs_windowTitle(widget.__Instance);
                 Console.WriteLine($"[OK] windowTitle roundtrip = '{QStringMarshaller.ToManaged(titlePtr)}'");
                 QStringMarshaller.Free(titlePtr);
