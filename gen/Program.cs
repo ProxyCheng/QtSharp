@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using CppSharp;
 using CppSharp.AST;
 using CppSharp.AST.Extensions;
@@ -17,7 +18,7 @@ class QtLibrary : ILibrary
         var options = driver.Options;
         options.GeneratorKind = GeneratorKind.CSharp;
         options.OutputDir = @"D:\QtSharp\out\qt_min";
-        options.GetClassGenerationOptions = _ => new ClassGenerationOptions { GenerateNativeToManaged = false };
+        options.GetClassGenerationOptions = _ => new ClassGenerationOptions { GenerateNativeToManaged = true };
 
         var module = options.AddModule("QtSharp");
         module.OutputNamespace = "QtSharp";
