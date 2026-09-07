@@ -51,7 +51,7 @@ class QtLibrary : ILibrary
         ReportCoverage(ctx);
     }
 
-    static readonly string[] RootNames = { "QApplication", "QWidget" };
+    static readonly string[] RootNames = { "QApplication", "QWidget", "QEvent", "QPaintEvent", "QMouseEvent", "QKeyEvent", "QResizeEvent", "QMoveEvent", "QCloseEvent", "QFocusEvent", "QWheelEvent", "QShowEvent", "QHideEvent", "QTimerEvent", "QChildEvent", "QEnterEvent" };
 
     static readonly string[] MethodWhitelist = {
         "exec", "show", "setWindowTitle", "resize", "quit", "hide", "close"
@@ -284,11 +284,26 @@ class QtLibrary : ILibrary
 
 class Program
 {
+    static void FixDtorHooks(string path)
+    {
+        var text = File.ReadAllText(path);
+        var regex = new System.Text.RegularExpressions.Regex(
+            @"var __target = (?<cls>[\w:.]+?)\.__GetInstance\(__instance\);\r?\n(?<indent>\s*)__target\.Dispose\(disposing: true, callNativeDtor: true\);");
+        int count = regex.Matches(text).Count;
+        text = regex.Replace(text, m =>
+            $"if (!{m.Groups["cls"].Value}.__TryGetNativeToManagedMapping(__instance, out var __mapped))\n{m.Groups["indent"].Value}    return;\n{m.Groups["indent"].Value}var __target = ({m.Groups["cls"].Value}) __mapped;\n{m.Groups["indent"].Value}__target.Dispose(disposing: true, callNativeDtor: true);");
+
+        File.WriteAllText(path, text);
+        Console.WriteLine($"[fix] dtor={count}");
+    }
+
     static int Main(string[] args)
     {
         try
         {
             bool ok = ConsoleDriver.Run(new QtLibrary());
+            if (ok)
+                FixDtorHooks(@"D:\QtSharp\out\qt_min\QtSharp.cs");
             Console.WriteLine(ok ? "[OK] Qt scope-limited probe completed." : "[FAIL] Qt probe returned false.");
             return ok ? 0 : 1;
         }
