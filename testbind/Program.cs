@@ -19,11 +19,15 @@ static class Program
             window.Resize(400, 200);
 
             var layout = new QVBoxLayout();
-            var edit = new QLineEdit(null);
             var button = new QPushButton(null);
             button.Text = "Click me";
 
-            layout.AddWidget(edit);
+            Signals.ConnectClicked(button, isChecked =>
+            {
+                Console.WriteLine($"[SIGNAL] clicked, checked={isChecked}");
+                QMessageBox.Information(window, "QtSharp", "Button clicked!");
+            });
+
             layout.AddWidget(button);
             window.Layout = layout;
 
