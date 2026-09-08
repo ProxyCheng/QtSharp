@@ -27,7 +27,9 @@ public class QStringTypeMap : TypeMap
     public override void MarshalToManaged(MarshalContext ctx)
     {
         var v = ctx.ReturnVarName;
-        if (Type != null && !Type.Desugar().IsAddress())
+        if (v.Contains("__IntPtr"))
+            ctx.Return.Write($"global::QtSharp.QStringMarshaller.ToManaged({v})");
+        else if (Type != null && !Type.Desugar().IsAddress())
             ctx.Return.Write($"global::QtSharp.QStringMarshaller.ToManaged(new global::System.IntPtr(&{v}))");
         else
             ctx.Return.Write($"global::QtSharp.QStringMarshaller.ToManaged({v})");

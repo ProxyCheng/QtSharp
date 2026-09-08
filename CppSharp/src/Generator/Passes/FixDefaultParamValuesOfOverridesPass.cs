@@ -15,7 +15,7 @@ namespace CppSharp.Passes
                 p => p.Kind != ParameterKind.IndirectReturnType).ToList();
             var parameters = method.Parameters.Where(
                 p => p.Kind != ParameterKind.IndirectReturnType).ToList();
-            for (int i = 0; i < parameters.Count; i++)
+            for (int i = 0; i < parameters.Count && i < rootBaseParameters.Count; i++)
             {
                 var rootBaseParameter = rootBaseParameters[i];
                 var parameter = parameters[i];
