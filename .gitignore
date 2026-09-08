@@ -31,4 +31,7 @@ out/
 
 # Generated binding sources (regenerate via gen/)
 testbind/QtSharp.cs
+testbind/QtSharp.Core.cs
+testbind/QtSharp.Gui.cs
+testbind/QtSharp.Widgets.cs
 testbind/Std.cs

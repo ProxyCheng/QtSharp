@@ -1,59 +1,38 @@
 using System;
-using System.Runtime.InteropServices;
-using System.Security;
-using System.Text;
-using QtSharp;
+using QtSharp.QtCore;
+using QtSharp.QtWidgets;
 
 static class Program
 {
-    [SuppressUnmanagedCodeSecurity, DllImport("QtSharp", EntryPoint = "qs_QWidget_windowTitle", CallingConvention = CallingConvention.Cdecl)]
-    static extern IntPtr qs_windowTitle(IntPtr w);
-
-    sealed class MyWidget : QWidget
-    {
-        public MyWidget() : base(null, 0) { }
-
-        public override bool HasHeightForWidth => true;
-    }
-
-    static unsafe int Main()
+    static int Main()
     {
         try
         {
-            int argc = 1;
-            byte[] arg0 = Encoding.UTF8.GetBytes("qtsharp\0");
-            fixed (byte* pArg0 = arg0)
-            {
-                sbyte* sArg0 = (sbyte*)pArg0;
-                sbyte** argv = &sArg0;
+            var q = new QString("a,b,c");
+            string[] parts = q.Split(new QString(","), 0, 0);
+            Console.WriteLine($"[OK] QStringList split => [{string.Join("|", parts)}]");
 
-                using var app = new QApplication(ref argc, argv, 0);
-                Console.WriteLine($"[OK] QApplication created, argc={argc}");
+            using var app = new QApplication(new[] { "qtsharp" });
 
-                using var widget = new QWidget(null, 0);
-                Console.WriteLine("[OK] QWidget created");
+            using var window = new QWidget(null, 0);
+            window.WindowTitle = "Layout demo";
+            window.Resize(400, 200);
 
-                widget.WindowTitle = "Hello from C#";
-                var titlePtr = qs_windowTitle(widget.__Instance);
-                Console.WriteLine($"[OK] windowTitle roundtrip = '{QStringMarshaller.ToManaged(titlePtr)}'");
-                QStringMarshaller.Free(titlePtr);
+            var layout = new QVBoxLayout();
+            var edit = new QLineEdit(null);
+            var button = new QPushButton(null);
+            button.Text = "Click me";
 
-                using var size = new QSize(800, 600);
-                Console.WriteLine($"[OK] QSize value type = {size.Width}x{size.Height}");
-                widget.Resize(size.Width, size.Height);
+            layout.AddWidget(edit);
+            layout.AddWidget(button);
+            window.Layout = layout;
 
-                using var my = new MyWidget();
-                Console.WriteLine($"[OK] subclass HasHeightForWidth override = {my.HasHeightForWidth}");
+            window.Show();
+            Console.WriteLine("[OK] Window shown; close it to exit...");
 
-                widget.Resize(640, 480);
-                widget.Show();
-                Console.WriteLine("[OK] Widget shown; entering event loop (auto-quit 1.5s)...");
-
-                using var timer = new System.Threading.Timer(_ => QCoreApplication.Quit(), null, 1500, System.Threading.Timeout.Infinite);
-                int rc = QApplication.Exec();
-                Console.WriteLine($"[OK] Event loop exited with code {rc}");
-                return rc;
-            }
+            int rc = QApplication.Exec();
+            Console.WriteLine($"[OK] exec exited with code {rc}");
+            return rc;
         }
         catch (Exception ex)
         {
