@@ -653,6 +653,322 @@ class Program
         Console.WriteLine($"[fix] dedupeStructs={total}");
     }
 
+    class SignalParamInfo
+    {
+        public string CppType;
+        public string Name;
+    }
+
+    class SignalInfo
+    {
+        public string ClassName;
+        public string SignalName;
+        public string HeaderFile;
+        public string ModuleDir;
+        public List<SignalParamInfo> Params = new();
+    }
+
+    static readonly (string dir, string[] headers)[] SignalModules =
+    {
+        ("QtCore", new[] { "qobject.h", "qcoreapplication.h", "qeventloop.h", "qfile.h", "qfileinfo.h", "qsettings.h", "qabstractitemmodel.h", "qitemselectionmodel.h", "qsortfilterproxymodel.h", "qstringlistmodel.h", "qprocess.h" }),
+        ("QtGui", new[] { "qevent.h", "qwindow.h", "qscreen.h", "qguiapplication.h", "qvalidator.h", "qstandarditemmodel.h" }),
+        ("QtWidgets", new[] { "qwidget.h", "qmainwindow.h", "qdialog.h", "qframe.h", "qgroupbox.h", "qlabel.h", "qlcdnumber.h", "qlineedit.h", "qtextedit.h", "qplaintextedit.h", "qtextbrowser.h", "qabstractbutton.h", "qpushbutton.h", "qtoolbutton.h", "qradiobutton.h", "qcheckbox.h", "qcommandlinkbutton.h", "qbuttongroup.h", "qabstractspinbox.h", "qspinbox.h", "qabstractslider.h", "qslider.h", "qscrollbar.h", "qdial.h", "qcombobox.h", "qfontcombobox.h", "qdatetimeedit.h", "qkeysequenceedit.h", "qcalendarwidget.h", "qabstractscrollarea.h", "qscrollarea.h", "qtabbar.h", "qtabwidget.h", "qstackedwidget.h", "qsplitter.h", "qdockwidget.h", "qtoolbox.h", "qaction.h", "qmenu.h", "qmenubar.h", "qtoolbar.h", "qstatusbar.h", "qprogressbar.h", "qsizegrip.h", "qrubberband.h", "qmessagebox.h", "qfiledialog.h", "qinputdialog.h", "qcolordialog.h", "qfontdialog.h", "qprogressdialog.h", "qdialogbuttonbox.h", "qabstractitemview.h", "qlistview.h", "qtableview.h", "qtreeview.h", "qheaderview.h", "qlistwidget.h", "qtreewidget.h", "qtablewidget.h" }),
+    };
+
+    static List<SignalInfo> ScanSignals()
+    {
+        var result = new List<SignalInfo>();
+        var inc = @"D:\QtSharp\Qt\6.11.0\msvc2022_64\include";
+        foreach (var (dir, headers) in SignalModules)
+        {
+            foreach (var header in headers)
+            {
+                var path = Path.Combine(inc, dir, header);
+                if (!File.Exists(path))
+                    continue;
+                ScanSignalsInFile(path, dir, header, result);
+            }
+        }
+        return result;
+    }
+
+    static void ScanSignalsInFile(string path, string dir, string header, List<SignalInfo> result)
+    {
+        var lines = File.ReadAllLines(path);
+        string currentClass = null;
+        bool inSignals = false;
+        foreach (var rawLine in lines)
+        {
+            var line = rawLine.Trim();
+            var cm = System.Text.RegularExpressions.Regex.Match(line, @"^class\s+(?:[A-Za-z_][A-Za-z0-9_]*_EXPORT\s+)?([A-Za-z_]\w*)");
+            if (cm.Success)
+                currentClass = cm.Groups[1].Value;
+
+            if (line == "Q_SIGNALS:" || line == "signals:" || line.StartsWith("Q_SIGNALS:"))
+            {
+                inSignals = true;
+                continue;
+            }
+
+            if (inSignals)
+            {
+                if (line.EndsWith("Q_SLOTS:") || line == "public:" || line == "private:" ||
+                    line == "protected:" || line == "};")
+                {
+                    inSignals = false;
+                    continue;
+                }
+
+                var sig = TryParseSignal(line, currentClass);
+                if (sig != null)
+                {
+                    sig.HeaderFile = header;
+                    sig.ModuleDir = dir;
+                    result.Add(sig);
+                }
+            }
+        }
+    }
+
+    static SignalInfo TryParseSignal(string line, string className)
+    {
+        if (className == null || !line.StartsWith("void "))
+            return null;
+        var m = System.Text.RegularExpressions.Regex.Match(line, @"^void\s+(\w+)\s*\(([^)]*)\)");
+        if (!m.Success)
+            return null;
+        var info = new SignalInfo { ClassName = className, SignalName = m.Groups[1].Value };
+        var paramStr = m.Groups[2].Value.Trim();
+        if (paramStr.Length > 0)
+        {
+            foreach (var p in paramStr.Split(','))
+            {
+                var pt = p.Trim();
+                if (pt.Length == 0)
+                    continue;
+                var eq = pt.IndexOf('=');
+                if (eq >= 0)
+                    pt = pt.Substring(0, eq).Trim();
+                int sp = pt.LastIndexOf(' ');
+                if (sp < 0)
+                    continue;
+                var name = pt.Substring(sp + 1).Trim();
+                var type = pt.Substring(0, sp).Trim();
+                if (name.StartsWith("&") || name.StartsWith("*"))
+                    name = name.Substring(1).Trim();
+                if (name.Length == 0)
+                    name = "arg" + info.Params.Count;
+                info.Params.Add(new SignalParamInfo { CppType = type, Name = name });
+            }
+        }
+        return info;
+    }
+
+    static bool MapSignalType(string cppType, out string csharpType, out string lambdaType, out string cbType, out string toCb, out string fromCb)
+    {
+        var t = cppType.Replace("const", "").Replace("&", "").Replace(" ", "").Trim();
+        switch (t)
+        {
+            case "bool":
+                csharpType = "bool"; lambdaType = "bool"; cbType = "int"; toCb = " ? 1 : 0"; fromCb = "{p} != 0"; return true;
+            case "int":
+                csharpType = "int"; lambdaType = "int"; cbType = "int"; toCb = ""; fromCb = "{p}"; return true;
+            case "double":
+            case "qreal":
+                csharpType = "double"; lambdaType = "double"; cbType = "double"; toCb = ""; fromCb = "{p}"; return true;
+            case "qint64":
+            case "qlonglong":
+            case "longlong":
+                csharpType = "long"; lambdaType = "qint64"; cbType = "long long"; toCb = ""; fromCb = "{p}"; return true;
+            case "QString":
+                csharpType = "string"; lambdaType = "QString"; cbType = "const ushort*"; toCb = ".utf16()"; fromCb = "Marshal.PtrToStringUni({p})"; return true;
+            default:
+                csharpType = lambdaType = cbType = toCb = fromCb = null;
+                return false;
+        }
+    }
+
+    static void GenerateSignals()
+    {
+        var signals = ScanSignals();
+
+        // collect actually-generated classes (skip force-ignored / pruned ones like QHeaderView)
+        var generatedClasses = new HashSet<string>();
+        foreach (var f in new[] { "QtSharp.Core.cs", "QtSharp.Gui.cs", "QtSharp.Widgets.cs" })
+        {
+            var path = @"D:\QtSharp\out\qt_min\" + f;
+            if (!File.Exists(path))
+                continue;
+            foreach (var line in File.ReadLines(path))
+            {
+                var m = System.Text.RegularExpressions.Regex.Match(line, @"class\s+(\w+)\s*:");
+                if (m.Success)
+                    generatedClasses.Add(m.Groups[1].Value);
+            }
+        }
+
+        var supported = new List<SignalInfo>();
+        foreach (var s in signals)
+        {
+            if (!generatedClasses.Contains(s.ClassName))
+                continue;
+            bool ok = true;
+            foreach (var p in s.Params)
+                if (!MapSignalType(p.CppType, out _, out _, out _, out _, out _))
+                    ok = false;
+            if (ok)
+                supported.Add(s);
+        }
+        Console.WriteLine($"[signals] scanned {signals.Count}, supported {supported.Count}");
+
+        GenerateSignalsGlue(supported);
+        GenerateSignalsCSharp(supported);
+    }
+
+    static void GenerateSignalsGlue(List<SignalInfo> signals)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("// Auto-generated signal glue.");
+        sb.AppendLine("#include <qobject.h>");
+        sb.AppendLine("#include <qstring.h>");
+        var includes = new HashSet<string>();
+        foreach (var s in signals)
+            includes.Add("#include <" + s.HeaderFile + ">");
+        foreach (var inc in includes.OrderBy(x => x))
+            sb.AppendLine(inc);
+
+        foreach (var s in signals.OrderBy(x => x.ClassName).ThenBy(x => x.SignalName))
+        {
+            var lambdaParams = new List<string>();
+            var cbArgs = new List<string>();
+            var cbTypes = new List<string>();
+            for (int i = 0; i < s.Params.Count; i++)
+            {
+                var p = s.Params[i];
+                MapSignalType(p.CppType, out _, out var lambdaType, out var cbType, out var toCb, out _);
+                lambdaParams.Add(lambdaType + " " + p.Name);
+                cbArgs.Add(p.Name + toCb);
+                cbTypes.Add(cbType);
+            }
+            var fn = $"qs_{s.ClassName}_connect_{s.SignalName}";
+            sb.Append($"extern \"C\" __declspec(dllexport) void {fn}(void* obj, void (*cb)(void* ud");
+            for (int i = 0; i < cbTypes.Count; i++)
+                sb.Append(", " + cbTypes[i] + " a" + i);
+            sb.Append("), void* ud) {\n");
+            sb.Append($"    QObject::connect(({s.ClassName}*)obj, &{s.ClassName}::{s.SignalName}, [cb, ud](");
+            sb.Append(string.Join(", ", lambdaParams));
+            sb.Append(") {\n");
+            sb.Append("        cb(ud");
+            for (int i = 0; i < cbArgs.Count; i++)
+                sb.Append(", " + cbArgs[i]);
+            sb.Append(");\n");
+            sb.Append("    });\n");
+            sb.Append("}\n\n");
+        }
+
+        Directory.CreateDirectory(@"D:\QtSharp\native");
+        File.WriteAllText(@"D:\QtSharp\native\QtSharp_signals.cpp", sb.ToString());
+        Console.WriteLine($"[signals] wrote native/QtSharp_signals.cpp");
+    }
+
+    static void GenerateSignalsCSharp(List<SignalInfo> signals)
+    {
+        var byClass = signals.GroupBy(s => s.ClassName).OrderBy(g => g.Key).ToList();
+        var sb = new StringBuilder();
+        sb.AppendLine("// Auto-generated signal bindings (PyQt-style .XxxSignal.Connect(...)).");
+        sb.AppendLine("using System;");
+        sb.AppendLine("using System.Collections.Generic;");
+        sb.AppendLine("using System.Runtime.InteropServices;");
+        sb.AppendLine("using QtSharp.QtCore;");
+        sb.AppendLine("using QtSharp.QtGui;");
+        sb.AppendLine("using QtSharp.QtWidgets;");
+        sb.AppendLine();
+
+        // SignalHost static class: delegates + P/Invoke + Connect methods
+        sb.AppendLine("public static class SignalHost");
+        sb.AppendLine("{");
+        sb.AppendLine("    static readonly List<GCHandle> __handles = new();");
+        sb.AppendLine("    static readonly List<Delegate> __delegates = new();");
+        sb.AppendLine();
+
+        foreach (var g in byClass)
+        {
+            foreach (var s in g.OrderBy(x => x.SignalName))
+            {
+                var csTypes = new List<string>();
+                var cbTypes = new List<string>();
+                var fromCbs = new List<string>();
+                for (int i = 0; i < s.Params.Count; i++)
+                {
+                    var p = s.Params[i];
+                    MapSignalType(p.CppType, out var cs, out _, out var cb, out _, out var fromCb);
+                    csTypes.Add(cs);
+                    cbTypes.Add(cb == "const ushort*" ? "IntPtr" : cb);
+                    fromCbs.Add(fromCb.Replace("{p}", "p" + i));
+                }
+                var csSig = csTypes.Count == 0 ? "" : string.Join(", ", csTypes);
+                var delegateParams = string.Join(", ", cbTypes.Select((t, i) => t + " p" + i));
+                var actionType = csSig.Length > 0 ? "Action<" + csSig + ">" : "Action";
+
+                sb.AppendLine($"    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]");
+                sb.AppendLine($"    delegate void {s.ClassName}_{s.SignalName}__cb(IntPtr ud{(delegateParams.Length > 0 ? ", " + delegateParams : "")});");
+                sb.AppendLine();
+                sb.AppendLine($"    [DllImport(\"QtSharp\", EntryPoint = \"qs_{s.ClassName}_connect_{s.SignalName}\", CallingConvention = CallingConvention.Cdecl)]");
+                sb.AppendLine($"    static extern void {s.ClassName}_{s.SignalName}__native(IntPtr obj, {s.ClassName}_{s.SignalName}__cb cb, IntPtr ud);");
+                sb.AppendLine();
+                sb.AppendLine($"    public static void Connect_{s.SignalName}({s.ClassName} obj, {actionType} handler)");
+                sb.AppendLine("    {");
+                sb.AppendLine("        var handle = GCHandle.Alloc(handler);");
+                sb.AppendLine($"        var cb = new {s.ClassName}_{s.SignalName}__cb((ud{string.Concat(cbTypes.Select((t, i) => ", p" + i))}) =>");
+                sb.AppendLine("        {");
+                sb.AppendLine($"            var target = ({actionType})GCHandle.FromIntPtr(ud).Target;");
+                sb.Append("            target(");
+                sb.Append(string.Join(", ", fromCbs));
+                sb.AppendLine(");");
+                sb.AppendLine("        });");
+                sb.AppendLine("        __handles.Add(handle);");
+                sb.AppendLine("        __delegates.Add(cb);");
+                sb.AppendLine($"        {s.ClassName}_{s.SignalName}__native(obj.__Instance, cb, GCHandle.ToIntPtr(handle));");
+                sb.AppendLine("    }");
+                sb.AppendLine();
+            }
+        }
+        sb.AppendLine("}");
+        sb.AppendLine();
+
+        // partial class signal properties
+        foreach (var g in byClass)
+        {
+            foreach (var s in g.OrderBy(x => x.SignalName))
+            {
+                var csTypes = new List<string>();
+                foreach (var p in s.Params)
+                {
+                    MapSignalType(p.CppType, out var cs, out _, out _, out _, out _);
+                    csTypes.Add(cs);
+                }
+                var csSig = csTypes.Count == 0 ? "" : string.Join(", ", csTypes);
+                var actionType = csSig.Length > 0 ? "Action<" + csSig + ">" : "Action";
+                var ns = ModuleNamespace(s.ModuleDir);
+                sb.AppendLine($"namespace {ns} {{ public partial class {s.ClassName} {{");
+                sb.AppendLine($"    public global::QSignal<{actionType}> {Capitalize(s.SignalName)}Signal => new global::QSignal<{actionType}>(h => global::SignalHost.Connect_{s.SignalName}(this, h));");
+                sb.AppendLine("} }");
+            }
+        }
+
+        File.WriteAllText(@"D:\QtSharp\testbind\GeneratedSignals.cs", sb.ToString());
+        Console.WriteLine($"[signals] wrote testbind/GeneratedSignals.cs");
+    }
+
+    static string Capitalize(string s) => string.IsNullOrEmpty(s) ? s : char.ToUpperInvariant(s[0]) + s.Substring(1);
+
+    static string ModuleNamespace(string dir) => dir switch
+    {
+        "QtCore" => "QtSharp.QtCore",
+        "QtGui" => "QtSharp.QtGui",
+        _ => "QtSharp.QtWidgets",
+    };
+
     static int Main(string[] args)
     {
         try
@@ -660,6 +976,7 @@ class Program
             bool ok = ConsoleDriver.Run(new QtLibrary());
             if (ok)
             {
+                GenerateSignals();
                 var files = new[] { "QtSharp.Core.cs", "QtSharp.Gui.cs", "QtSharp.Widgets.cs" };
                 foreach (var f in files)
                 {

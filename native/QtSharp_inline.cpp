@@ -22,9 +22,3 @@ extern "C" __declspec(dllexport) void* qs_QStringList_from_strings(const char16_
 extern "C" __declspec(dllexport) long long qs_QStringList_size(const void* list) { return static_cast<long long>(static_cast<const QStringList*>(list)->size()); }
 extern "C" __declspec(dllexport) const unsigned short* qs_QStringList_at(const void* list, long long index) { return static_cast<const QStringList*>(list)->at(static_cast<int>(index)).utf16(); }
 extern "C" __declspec(dllexport) void qs_QStringList_free(void* list) { delete static_cast<QStringList*>(list); }
-
-extern "C" __declspec(dllexport) void qs_QAbstractButton_connect_clicked(void* button, void (*callback)(void* userData, int checked), void* userData) {
-    QObject::connect(static_cast<QAbstractButton*>(button), &QAbstractButton::clicked, [callback, userData](bool checked) {
-        callback(userData, checked ? 1 : 0);
-    });
-}
