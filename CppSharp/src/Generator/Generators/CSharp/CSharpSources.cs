@@ -3138,7 +3138,7 @@ internal static{(@new ? " new" : string.Empty)} {printedClass} __GetInstance({Ty
 
                 TypeMap typeMap;
                 string construct = null;
-                if (Context.TypeMaps.FindTypeMap(type, out typeMap))
+                if (Context.TypeMaps.FindTypeMap(indirectRetType.Type, out typeMap))
                     construct = typeMap.CSharpConstruct();
 
                 if (construct == null)
@@ -3161,7 +3161,7 @@ internal static{(@new ? " new" : string.Empty)} {printedClass} __GetInstance({Ty
                             Helpers.ReturnIdentifier);
                     }
                     else
-                        WriteLine("var {0} = {1};", construct);
+                        WriteLine("var {0} = {1};", Helpers.ReturnIdentifier, construct);
                 }
             }
 

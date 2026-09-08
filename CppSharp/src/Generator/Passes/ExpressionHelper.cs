@@ -22,6 +22,29 @@ namespace CppSharp.Internal
         {
             var desugared = type.Desugar();
 
+            if (desugared is TemplateSpecializationType qfTs &&
+                qfTs.Template?.TemplatedDecl?.OriginalName == "QFlags" &&
+                (expression.Class == StatementClass.BinaryOperator ||
+                 expression.Class == StatementClass.CXXOperatorCall))
+            {
+                result = "0";
+                expression.Declaration = null;
+                expression.Class = StatementClass.Any;
+                return true;
+            }
+
+            var stringPointee = desugared.GetFinalPointee()?.Desugar();
+            if (expression.Class == StatementClass.ConstructorReference &&
+                (stringPointee?.ToString() == "string" ||
+                 (stringPointee is CILType cilStr && cilStr.Type == typeof(string))) &&
+                expression is CXXConstructExprObsolete strCtor && strCtor.Arguments.Count == 0)
+            {
+                result = "\"\"";
+                expression.Declaration = null;
+                expression.Class = StatementClass.Any;
+                return true;
+            }
+
             if (desugared.IsAddress() && !desugared.IsPrimitiveTypeConvertibleToRef() &&
                 (expression.String == "0" || expression.String == "nullptr"))
             {
@@ -31,9 +54,20 @@ namespace CppSharp.Internal
             }
 
             // constants are obtained through dynamic calls at present so they are not compile-time values in target languages
-            if (expression.Declaration is Variable ||
-                (!context.Options.MarshalCharAsManagedChar &&
-                 desugared.IsPrimitiveType(PrimitiveType.UChar)))
+            if (expression.Declaration is Variable variable)
+            {
+                if (variable.Initializer != null &&
+                    !string.IsNullOrEmpty(variable.Initializer.String) &&
+                    long.TryParse(variable.Initializer.String, out _))
+                {
+                    result = variable.Initializer.String;
+                    expression.Declaration = null;
+                    return true;
+                }
+                return null;
+            }
+            if (!context.Options.MarshalCharAsManagedChar &&
+                 desugared.IsPrimitiveType(PrimitiveType.UChar))
                 return null;
 
             if (desugared.IsPrimitiveTypeConvertibleToRef())
@@ -63,7 +97,10 @@ namespace CppSharp.Internal
             if (defaultConstruct != false)
                 return defaultConstruct;
 
-            return CheckForSimpleExpressions(context, expression, ref result, desugared);
+            if (CheckForSimpleExpressions(context, expression, ref result, desugared))
+                return true;
+
+            return null;
         }
 
         public static System.Type GetSystemType(BindingContext context, Type type)
@@ -227,6 +264,27 @@ namespace CppSharp.Internal
         {
             var type = (desugared.GetFinalPointee() ?? desugared).Desugar();
 
+            if (expression is CXXConstructExprObsolete ctorExpr1 &&
+                ctorExpr1.Arguments.Count == 1 &&
+                (ctorExpr1.Arguments[0].Declaration is Enumeration.Item ||
+                 ctorExpr1.Arguments[0].Declaration is Variable))
+            {
+                result = "default";
+                expression.Declaration = null;
+                expression.Class = StatementClass.Any;
+                return true;
+            }
+
+            if (expression is CXXConstructExprObsolete ctorExpr2 &&
+                type is TemplateSpecializationType qflagsTs &&
+                qflagsTs.Template?.TemplatedDecl?.OriginalName == "QFlags")
+            {
+                result = "0";
+                expression.Declaration = null;
+                expression.Class = StatementClass.Any;
+                return true;
+            }
+
             Class decl;
             if (!type.TryGetClass(out decl))
                 return false;
@@ -269,6 +327,20 @@ namespace CppSharp.Internal
                     result = "\"\"";
                     return true;
                 }
+
+                if (ctor != null && ctor.Arguments.Count == 0 &&
+                    typeInSignature is CILType cilArr && cilArr.Type == typeof(string[]))
+                {
+                    result = "new string[0]";
+                    return true;
+                }
+            }
+
+            if (ctor != null && ctor.Arguments.Count == 0 &&
+                type.ToString().Contains("QList<"))
+            {
+                result = "default";
+                return true;
             }
 
             if (ctor == null)
@@ -316,6 +388,11 @@ namespace CppSharp.Internal
                             result = statement.String.Replace(".F", ".0F");
                             return true;
                         }
+                        if (statement.String.EndsWith(".", System.StringComparison.OrdinalIgnoreCase))
+                        {
+                            result = statement.String + "0F";
+                            return true;
+                        }
                         break;
                     case PrimitiveType.Double:
                         if (statement.String.EndsWith(".", System.StringComparison.OrdinalIgnoreCase))
@@ -334,13 +411,29 @@ namespace CppSharp.Internal
         {
             var enumItem = statement.Declaration as Enumeration.Item;
             if (enumItem != null)
+            {
+                var enumValue = ((Enumeration)enumItem.Namespace).GetItemValueAsString(enumItem);
+                bool mapsToPrimitive = desugared.IsPrimitiveType() ||
+                    (desugared is CILType cil && cil.Type != null && cil.Type.IsPrimitive) ||
+                    context.TypeMaps.FindTypeMap(desugared, GeneratorKind.CSharp, out _);
+                if (mapsToPrimitive)
+                    result = enumValue;
+                else
+                {
+                    var typePrinter = new CSharpTypePrinter(context);
+                    result = $"({desugared.Visit(typePrinter)}) ({enumValue})";
+                }
+                statement.Declaration = null;
                 return true;
+            }
 
             var call = statement.Declaration as Function;
             if (call != null && statement.String != "0")
             {
                 var @params = regexFunctionParams.Match(statement.String).Groups[1].Value;
                 result = TranslateEnumExpression(desugared, @params);
+                statement.Declaration = null;
+                statement.Class = StatementClass.Any;
                 return true;
             }
 
@@ -393,13 +486,40 @@ namespace CppSharp.Internal
 
         private static bool CheckForChar(BindingContext context, Type desugared, ref string result)
         {
-            if (int.TryParse(result, out int value) &&
-                ((context.Options.MarshalCharAsManagedChar &&
-                 desugared.IsPrimitiveType(PrimitiveType.Char)) ||
-                 desugared.IsPrimitiveType(PrimitiveType.WideChar)))
+            if (!string.IsNullOrEmpty(result) && result.Length >= 3 &&
+                result[0] == '\'' && result[result.Length - 1] == '\'')
             {
-                result = value == 0 ? "'\\0'" : ("(char) " + result);
-                return true;
+                if (desugared.IsPrimitiveType(PrimitiveType.Char))
+                {
+                    if (!context.Options.MarshalCharAsManagedChar)
+                        result = "(sbyte) " + result;
+                    return true;
+                }
+                if (desugared.IsPrimitiveType(PrimitiveType.UChar) &&
+                    !context.Options.MarshalCharAsManagedChar)
+                {
+                    result = "(byte) " + result;
+                    return true;
+                }
+                if (desugared.IsPrimitiveType(PrimitiveType.WideChar) ||
+                    desugared.IsPrimitiveType(PrimitiveType.Char16))
+                    return true;
+            }
+
+            if (int.TryParse(result, out int value))
+            {
+                if (desugared.TryGetClass(out Class charClass) && charClass.OriginalName == "QChar")
+                {
+                    result = "default";
+                    return true;
+                }
+                if ((context.Options.MarshalCharAsManagedChar &&
+                     desugared.IsPrimitiveType(PrimitiveType.Char)) ||
+                    desugared.IsPrimitiveType(PrimitiveType.WideChar))
+                {
+                    result = value == 0 ? "'\\0'" : ("(char) " + result);
+                    return true;
+                }
             }
             if (context.Options.MarshalCharAsManagedChar &&
                 desugared.IsPrimitiveType(PrimitiveType.UChar))

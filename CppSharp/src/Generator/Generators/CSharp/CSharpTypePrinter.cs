@@ -560,6 +560,9 @@ $"[{Context.TargetInfo.LongDoubleWidth}]");
         {
             var names = new Stack<string>();
 
+            if (decl is Class { CompleteDeclaration: { } complete })
+                decl = complete;
+
             Declaration ctx = decl;
             if (decl is ClassTemplateSpecialization specialization &&
                 ContextKind == TypePrinterContextKind.Native &&

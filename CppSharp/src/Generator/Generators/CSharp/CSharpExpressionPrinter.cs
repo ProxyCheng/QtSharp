@@ -22,6 +22,8 @@ namespace CppSharp.Generators.CSharp
 
         public string VisitParameter(Parameter parameter)
         {
+            if (parameter.DefaultArgument == null)
+                return "default";
             var expression = VisitExpression(parameter.DefaultArgument);
             var desugared = parameter.Type.Desugar();
             if (desugared.IsPrimitiveType() &&
@@ -37,10 +39,14 @@ namespace CppSharp.Generators.CSharp
 
         public string VisitExpression(ExpressionObsolete expr)
         {
+            if (expr == null)
+                return "default";
             switch (expr.Class)
             {
                 case StatementClass.Call:
                     var callExpr = (CallExprObsolete)expr;
+                    if (callExpr.Declaration == null || callExpr.Declaration.Namespace == null)
+                        return expr.String ?? "default";
                     switch (callExpr.Declaration.GenerationKind)
                     {
                         case GenerationKind.Generate:
@@ -52,10 +58,11 @@ namespace CppSharp.Generators.CSharp
                                 p => p.GetMethod == callExpr.Declaration);
                             return $"{typePrinter.VisitDeclaration(callExpr.Declaration.Namespace)}.{property.Name}";
                         default:
-                            return expr.String;
+                            return expr.String ?? "default";
                     }
                 case StatementClass.DeclarationReference:
-                    if (expr.Declaration is Variable || expr.Declaration is Enumeration.Item)
+                    if (expr.Declaration != null &&
+                        (expr.Declaration is Variable || expr.Declaration is Enumeration.Item))
                         return expr.Declaration.Visit(typePrinter).Type;
                     goto default;
                 case StatementClass.BinaryOperator:
@@ -70,6 +77,11 @@ namespace CppSharp.Generators.CSharp
                     if (constructorExpr.Arguments.Count == 1 &&
                         constructorExpr.Arguments[0].Class != StatementClass.Any)
                         return VisitExpression(constructorExpr.Arguments[0]);
+                    if (constructorExpr.Arguments.Count == 0 &&
+                        constructorExpr.Declaration is Method ctorMethod &&
+                        ctorMethod.Namespace is Class ctorClass &&
+                        ctorClass.OriginalName == "QString")
+                        return "\"\"";
                     goto default;
                 default:
                     return expr.String;
