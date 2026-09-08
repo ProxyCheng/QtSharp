@@ -35,3 +35,7 @@ testbind/QtSharp.Core.cs
 testbind/QtSharp.Gui.cs
 testbind/QtSharp.Widgets.cs
 testbind/Std.cs
+testbind/GeneratedSignals.cs
+
+# Generated signal glue (regenerate via gen/)
+native/QtSharp_signals.cpp

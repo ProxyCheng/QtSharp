@@ -3103,9 +3103,7 @@ EXPORTS
   ?applicationFontFamilies@QFontDatabase@@SA?AV?$QList@VQString@@@@H@Z
   ?removeApplicationFont@QFontDatabase@@SA_NH@Z
   ?removeAllApplicationFonts@QFontDatabase@@SA_NXZ
-  ?addApplicationFallbackFontFamily@QFontDatabase@@SAXW4Script@QChar@@AEBVQString@@@Z
   ?removeApplicationFallbackFontFamily@QFontDatabase@@SA_NW4Script@QChar@@AEBVQString@@@Z
-  ?setApplicationFallbackFontFamilies@QFontDatabase@@SAXW4Script@QChar@@AEBV?$QList@VQString@@@@@Z
   ?applicationFallbackFontFamilies@QFontDatabase@@SA?AV?$QList@VQString@@@@W4Script@QChar@@@Z
   ?addApplicationEmojiFontFamily@QFontDatabase@@SAXAEBVQString@@@Z
   ?removeApplicationEmojiFontFamily@QFontDatabase@@SA_NAEBVQString@@@Z
@@ -4324,6 +4322,7 @@ EXPORTS
   ?hitButton@QRadioButton@@MEBA_NAEBVQPoint@@@Z
   ?paintEvent@QRadioButton@@MEAAXPEAVQPaintEvent@@@Z
   ?mouseMoveEvent@QRadioButton@@MEAAXPEAVQMouseEvent@@@Z
+  ?initStyleOption@QRadioButton@@MEBAXPEAVQStyleOptionButton@@@Z
   ?qt_metacast@QCheckBox@@UEAAPEAXPEBD@Z
   ?tr@QCheckBox@@SA?AVQString@@PEBD0H@Z
   ??0QCheckBox@@QEAA@PEAVQWidget@@@Z
@@ -5049,7 +5048,6 @@ EXPORTS
   ??0QDockWidget@@QEAA@PEAVQWidget@@V?$QFlags@W4WindowType@Qt@@@@@Z
   ??1QDockWidget@@UEAA@XZ
   ?widget@QDockWidget@@QEBAPEAVQWidget@@XZ
-  ?setWidget@QDockWidget@@QEAAXPEAVQWidget@@@Z
   ?setFeatures@QDockWidget@@QEAAXV?$QFlags@W4DockWidgetFeature@QDockWidget@@@@@Z
   ?setFloating@QDockWidget@@QEAAX_N@Z
   ?isFloating@QDockWidget@@QEBA_NXZ
@@ -5168,6 +5166,7 @@ EXPORTS
   ??0QMenuBar@@QEAA@PEAVQWidget@@@Z
   ??1QMenuBar@@UEAA@XZ
   ?addMenu@QMenuBar@@QEAAPEAVQAction@@PEAVQMenu@@@Z
+  ?addMenu@QMenuBar@@QEAAPEAVQMenu@@AEBVQString@@@Z
   ?addMenu@QMenuBar@@QEAAPEAVQMenu@@AEBVQIcon@@AEBVQString@@@Z
   ?addSeparator@QMenuBar@@QEAAPEAVQAction@@XZ
   ?insertSeparator@QMenuBar@@QEAAPEAVQAction@@PEAV2@@Z
@@ -5179,6 +5178,7 @@ EXPORTS
   ?isDefaultUp@QMenuBar@@QEBA_NXZ
   ?sizeHint@QMenuBar@@UEBA?AVQSize@@XZ
   ?minimumSizeHint@QMenuBar@@UEBA?AVQSize@@XZ
+  ?heightForWidth@QMenuBar@@UEBAHH@Z
   ?actionGeometry@QMenuBar@@QEBA?AVQRect@@PEAVQAction@@@Z
   ?actionAt@QMenuBar@@QEBAPEAVQAction@@AEBVQPoint@@@Z
   ?setCornerWidget@QMenuBar@@QEAAXPEAVQWidget@@W4Corner@Qt@@@Z
@@ -5260,7 +5260,6 @@ EXPORTS
   ?resizeEvent@QStatusBar@@MEAAXPEAVQResizeEvent@@@Z
   ?reformat@QStatusBar@@IEAAXXZ
   ?hideOrShow@QStatusBar@@IEAAXXZ
-  ?event@QStatusBar@@MEAA_NPEAVQEvent@@@Z
   ?qt_metacast@QProgressBar@@UEAAPEAXPEBD@Z
   ?tr@QProgressBar@@SA?AVQString@@PEBD0H@Z
   ??0QProgressBar@@QEAA@PEAVQWidget@@@Z
