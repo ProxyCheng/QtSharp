@@ -144,6 +144,13 @@ public class WindowFlagsWindow : QWidget
         if (customizeWindowHintCheckBox.Checked) flags |= (int)Qt.WindowType.CustomizeWindowHint;
 
         previewWindow.SetWindowFlags(flags);
+
+        using (var pos = previewWindow.Pos)
+        {
+            if (pos.X < 0) pos.X = 0;
+            if (pos.Y < 0) pos.Y = 0;
+            previewWindow.Move(pos);
+        }
         previewWindow.ShowNormal();
     }
 

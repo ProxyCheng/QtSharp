@@ -90,6 +90,11 @@ namespace CppSharp.Passes
                 WrapDestructor(method, wrapper);
                 return true;
             }
+            if (method.NeedsSymbol() && !method.IsOperator)
+            {
+                WriteMethodWrapper(method, wrapper);
+                return true;
+            }
             TakeFunctionAddress(method, wrapper);
             return true;
         }
@@ -220,6 +225,71 @@ namespace CppSharp.Passes
             else
                 Write($@"({$"{@namespace}*{instance}"}) {{ {instance}->~{method.Namespace.Name}");
             WriteLine("(); }");
+        }
+
+        private void WriteMethodWrapper(Method method, string wrapper)
+        {
+            bool isStatic = method.IsStatic;
+            bool isConst = method.IsConst;
+            string className = method.Namespace.Visit(cppTypePrinter).ToString();
+
+            bool hasSret = method.HasIndirectReturnTypeParameter;
+
+            var paramDecls = new List<string>();
+            var callArgs = new List<string>();
+            string sretName = null;
+
+            if (!isStatic)
+                paramDecls.Add($"{(isConst ? "const " : string.Empty)}{className}* {Helpers.InstanceField}");
+
+            foreach (var p in method.Parameters)
+            {
+                if (p.Kind == ParameterKind.IndirectReturnType)
+                {
+                    sretName = p.Name;
+                    var sretPointee = p.QualifiedType.Type.Visit(cppTypePrinter).ToString();
+                    paramDecls.Add($"{sretPointee}* {sretName}");
+                    continue;
+                }
+                if (p.Kind != ParameterKind.Regular)
+                    continue;
+                var defaultArg = p.DefaultArgument;
+                p.DefaultArgument = null;
+                paramDecls.Add(cppTypePrinter.VisitParameter(p).ToString());
+                p.DefaultArgument = defaultArg;
+                callArgs.Add(p.Name);
+            }
+
+            string call = isStatic
+                ? $"{className}::{method.OriginalName}"
+                : $"{Helpers.InstanceField}->{method.OriginalName}";
+            string callStr = $"{call}({string.Join(", ", callArgs)})";
+
+            string returnTypeStr;
+            string body;
+            if (hasSret)
+            {
+                returnTypeStr = "void";
+                body = $"*{sretName} = {callStr}";
+            }
+            else if (method.ReturnType.Type.Desugar().IsPrimitiveType(PrimitiveType.Void))
+            {
+                returnTypeStr = "void";
+                body = callStr;
+            }
+            else
+            {
+                cppTypePrinter.PrintTags = true;
+                returnTypeStr = method.ReturnType.Visit(cppTypePrinter).ToString();
+                cppTypePrinter.PrintTags = false;
+                body = $"return {callStr}";
+            }
+
+            Write($"extern \"C\" {GetExporting()}{returnTypeStr} {wrapper}({string.Join(", ", paramDecls)}) {{ {body}; }}");
+            NewLine();
+
+            if (!string.IsNullOrEmpty(method.Mangled))
+                WrappedSymbols[method.Mangled] = wrapper;
         }
 
         private void TakeFunctionAddress(Function function, string wrapper)
@@ -399,7 +469,7 @@ namespace CppSharp.Passes
 
         private CppTypePrinter cppTypePrinter;
 
-        private int functionCount;
+        private static int functionCount;
         private HashSet<Method> implementedDtors = new HashSet<Method>();
     }
 }
