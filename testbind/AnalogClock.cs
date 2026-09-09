@@ -3,7 +3,7 @@ using QtSharp.QtCore;
 using QtSharp.QtGui;
 using QtSharp.QtWidgets;
 
-public unsafe partial class AnalogClock : QWidget
+public class AnalogClock : QWidget
 {
     public AnalogClock(QWidget parent = null) : base(parent, 0)
     {

@@ -4,16 +4,28 @@ using QtSharp.QtWidgets;
 static class Program
 {
     [STAThread]
-    static int Main()
+    static int Main(string[] args)
     {
         try
         {
-            using var app = new QApplication(new[] { "analogclock" });
+            using var app = new QApplication(new[] { "qtsharp-examples" });
 
-            using var clock = new AnalogClock();
-            clock.Show();
-            Console.WriteLine("[OK] AnalogClock shown; close it to exit...");
-
+            string which = args.Length > 0 ? args[0].ToLowerInvariant() : "sliders";
+            QWidget window = which switch
+            {
+                "sliders" => new SlidersWindow(),
+                "spinboxes" => new SpinBoxesWindow(),
+                "windowflags" => new WindowFlagsWindow(),
+                "lineedits" => new LineEditsWindow(),
+                "shapedclock" => new ShapedClock(),
+                "calendar" => new CalendarWindow(),
+                "systray" => new SystemTrayWindow(),
+                "analogclock" => new AnalogClock(),
+                "calculator" => new Calculator(),
+                _ => new SlidersWindow(),
+            };
+            window.Show();
+            Console.WriteLine($"[OK] {which} shown; close it to exit...");
             return QApplication.Exec();
         }
         catch (Exception ex)

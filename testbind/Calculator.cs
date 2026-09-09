@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using QtSharp.QtWidgets;
 
-public unsafe partial class Calculator : QWidget
+public class Calculator : QWidget
 {
     QLineEdit display;
     string current = "";
