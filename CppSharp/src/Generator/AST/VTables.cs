@@ -74,6 +74,19 @@ namespace CppSharp.AST
             }
         }
 
+        public static long GetVTableThisOffset(Function function)
+        {
+            var @class = (Class)function.Namespace;
+            if (@class.Layout.ABI != CppAbi.Microsoft)
+                return 0;
+
+            foreach (var vfptr in @class.Layout.VFTables)
+                if (vfptr.Layout.Components.Any(c => c.Method == function))
+                    return vfptr.VFPtrFullOffset;
+
+            return 0;
+        }
+
         public static bool IsIgnored(this VTableComponent entry)
         {
             return entry.Method != null &&

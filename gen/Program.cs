@@ -18,7 +18,7 @@ class QtLibrary : ILibrary
         var options = driver.Options;
         options.GeneratorKind = GeneratorKind.CSharp;
         options.OutputDir = @"D:\QtSharp\out\qt_min";
-        options.GetClassGenerationOptions = _ => new ClassGenerationOptions { GenerateNativeToManaged = false };
+        options.GetClassGenerationOptions = _ => new ClassGenerationOptions { GenerateNativeToManaged = true };
         options.GenerateDefaultValuesForArguments = true;
 
         string inc = @"D:\QtSharp\Qt\6.11.0\msvc2022_64\include";
@@ -62,6 +62,7 @@ class QtLibrary : ILibrary
         core.Headers.Add("qurl.h");
         core.Headers.Add("qcoreapplication.h");
         core.Headers.Add("qeventloop.h");
+        core.Headers.Add("qtimer.h");
         core.Headers.Add("qregularexpression.h");
         core.Headers.Add("qstringlist.h");
         core.Headers.Add("qstringview.h");
@@ -220,6 +221,7 @@ class QtLibrary : ILibrary
     static readonly string[] RootNames = {
         "QApplication", "QWidget", "QEvent", "QPaintEvent", "QMouseEvent", "QKeyEvent", "QResizeEvent", "QMoveEvent", "QCloseEvent", "QFocusEvent", "QWheelEvent", "QShowEvent", "QHideEvent", "QTimerEvent", "QChildEvent", "QEnterEvent",
         "QString", "QStringList",
+        "QPainter", "QTimer", "QTime",
         "QMainWindow", "QDialog", "QFrame", "QGroupBox", "QLabel", "QLCDNumber",
         "QLineEdit", "QTextEdit", "QPlainTextEdit", "QTextBrowser",
         "QAbstractButton", "QPushButton", "QToolButton", "QRadioButton", "QCheckBox", "QCommandLinkButton", "QButtonGroup",
@@ -246,7 +248,7 @@ class QtLibrary : ILibrary
         "QTotallyOrderedWrapper",
         "PartialOrdering", "WeakOrdering", "StrongOrdering",
         "QMetaObject", "QHashPrivate", "QHash", "QMultiHash", "QVariant",
-        "QHeaderView", "QWidgetItemData", "QStackedLayout"
+        "QHeaderView", "QWidgetItemData", "QStackedLayout", "QFileDevice"
     };
 
     static readonly string[] ForceIgnoreMethodNames = {
@@ -670,7 +672,7 @@ class Program
 
     static readonly (string dir, string[] headers)[] SignalModules =
     {
-        ("QtCore", new[] { "qobject.h", "qcoreapplication.h", "qeventloop.h", "qfile.h", "qfileinfo.h", "qsettings.h", "qabstractitemmodel.h", "qitemselectionmodel.h", "qsortfilterproxymodel.h", "qstringlistmodel.h", "qprocess.h" }),
+        ("QtCore", new[] { "qobject.h", "qcoreapplication.h", "qeventloop.h", "qfile.h", "qfileinfo.h", "qsettings.h", "qabstractitemmodel.h", "qitemselectionmodel.h", "qsortfilterproxymodel.h", "qstringlistmodel.h", "qprocess.h", "qtimer.h" }),
         ("QtGui", new[] { "qevent.h", "qwindow.h", "qscreen.h", "qguiapplication.h", "qvalidator.h", "qstandarditemmodel.h" }),
         ("QtWidgets", new[] { "qwidget.h", "qmainwindow.h", "qdialog.h", "qframe.h", "qgroupbox.h", "qlabel.h", "qlcdnumber.h", "qlineedit.h", "qtextedit.h", "qplaintextedit.h", "qtextbrowser.h", "qabstractbutton.h", "qpushbutton.h", "qtoolbutton.h", "qradiobutton.h", "qcheckbox.h", "qcommandlinkbutton.h", "qbuttongroup.h", "qabstractspinbox.h", "qspinbox.h", "qabstractslider.h", "qslider.h", "qscrollbar.h", "qdial.h", "qcombobox.h", "qfontcombobox.h", "qdatetimeedit.h", "qkeysequenceedit.h", "qcalendarwidget.h", "qabstractscrollarea.h", "qscrollarea.h", "qtabbar.h", "qtabwidget.h", "qstackedwidget.h", "qsplitter.h", "qdockwidget.h", "qtoolbox.h", "qaction.h", "qmenu.h", "qmenubar.h", "qtoolbar.h", "qstatusbar.h", "qprogressbar.h", "qsizegrip.h", "qrubberband.h", "qmessagebox.h", "qfiledialog.h", "qinputdialog.h", "qcolordialog.h", "qfontdialog.h", "qprogressdialog.h", "qdialogbuttonbox.h", "qabstractitemview.h", "qlistview.h", "qtableview.h", "qtreeview.h", "qheaderview.h", "qlistwidget.h", "qtreewidget.h", "qtablewidget.h" }),
     };

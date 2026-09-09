@@ -1121,7 +1121,6 @@ EXPORTS
   ??0QCalendar@@QEAA@VQAnyStringView@@@Z
   ??0QCalendar@@QEAA@VSystemId@0@@Z
   ?isValid@QCalendar@@QEBA_NXZ
-  ?daysInMonth@QCalendar@@QEBAHHH@Z
   ?daysInYear@QCalendar@@QEBAHH@Z
   ?monthsInYear@QCalendar@@QEBAHH@Z
   ?isDateValid@QCalendar@@QEBA_NHHH@Z
@@ -1179,7 +1178,6 @@ EXPORTS
   ?entryList@QDir@@QEBA?AV?$QList@VQString@@@@AEBV2@V?$QFlags@W4Filter@QDir@@@@V?$QFlags@W4SortFlag@QDir@@@@@Z
   ?rmdir@QDir@@QEBA_NAEBVQString@@@Z
   ?removeRecursively@QDir@@QEAA_NXZ
-  ?isReadable@QDir@@QEBA_NXZ
   ?exists@QDir@@QEBA_NXZ
   ?isRoot@QDir@@QEBA_NXZ
   ?isRelativePath@QDir@@SA_NAEBVQString@@@Z
@@ -1205,20 +1203,6 @@ EXPORTS
   ?match@QDir@@SA_NAEBVQString@@0@Z
   ?cleanPath@QDir@@SA?AVQString@@AEBV2@@Z
   ?refresh@QDir@@QEBAXXZ
-  ?tr@QFileDevice@@SA?AVQString@@PEBD0H@Z
-  ??1QFileDevice@@UEAA@XZ
-  ?unsetError@QFileDevice@@QEAAXXZ
-  ?handle@QFileDevice@@QEBAHXZ
-  ?fileName@QFileDevice@@UEBA?AVQString@@XZ
-  ?flush@QFileDevice@@QEAA_NXZ
-  ?resize@QFileDevice@@UEAA_N_J@Z
-  ?setPermissions@QFileDevice@@UEAA_NV?$QFlags@W4Permission@QFileDevice@@@@@Z
-  ?map@QFileDevice@@QEAAPEAE_J0V?$QFlags@W4MemoryMapFlag@QFileDevice@@@@@Z
-  ?unmap@QFileDevice@@QEAA_NPEAE@Z
-  ?fileTime@QFileDevice@@QEBA?AVQDateTime@@W4FileTime@1@@Z
-  ?setFileTime@QFileDevice@@QEAA_NAEBVQDateTime@@W4FileTime@1@@Z
-  ??0QFileDevice@@IEAA@XZ
-  ??0QFileDevice@@IEAA@PEAVQObject@@@Z
   ??0QTimeZone@@QEAA@XZ
   ??0QTimeZone@@QEAA@W4Initialization@0@@Z
   ??0QTimeZone@@QEAA@H@Z
@@ -1264,13 +1248,11 @@ EXPORTS
   ??0QFileInfo@@QEAA@PEAVQFileInfoPrivate@@@Z
   ??0QFileInfo@@QEAA@XZ
   ??0QFileInfo@@QEAA@AEBVQString@@@Z
-  ??0QFileInfo@@QEAA@AEBVQFileDevice@@@Z
   ??0QFileInfo@@QEAA@AEBVQDir@@AEBVQString@@@Z
   ??0QFileInfo@@QEAA@AEBV0@@Z
   ??1QFileInfo@@QEAA@XZ
   ?swap@QFileInfo@@QEAAXAEAV1@@Z
   ?setFile@QFileInfo@@QEAAXAEBVQString@@@Z
-  ?setFile@QFileInfo@@QEAAXAEBVQFileDevice@@@Z
   ?setFile@QFileInfo@@QEAAXAEBVQDir@@AEBVQString@@@Z
   ?exists@QFileInfo@@QEBA_NXZ
   ?exists@QFileInfo@@SA_NAEBVQString@@@Z
@@ -1320,12 +1302,10 @@ EXPORTS
   ?metadataChangeTime@QFileInfo@@QEBA?AVQDateTime@@XZ
   ?lastModified@QFileInfo@@QEBA?AVQDateTime@@XZ
   ?lastRead@QFileInfo@@QEBA?AVQDateTime@@XZ
-  ?fileTime@QFileInfo@@QEBA?AVQDateTime@@W4FileTime@QFileDevice@@@Z
   ?birthTime@QFileInfo@@QEBA?AVQDateTime@@AEBVQTimeZone@@@Z
   ?metadataChangeTime@QFileInfo@@QEBA?AVQDateTime@@AEBVQTimeZone@@@Z
   ?lastModified@QFileInfo@@QEBA?AVQDateTime@@AEBVQTimeZone@@@Z
   ?lastRead@QFileInfo@@QEBA?AVQDateTime@@AEBVQTimeZone@@@Z
-  ?fileTime@QFileInfo@@QEBA?AVQDateTime@@W4FileTime@QFileDevice@@AEBVQTimeZone@@@Z
   ?caching@QFileInfo@@QEBA_NXZ
   ?setCaching@QFileInfo@@QEAAX_N@Z
   ?stat@QFileInfo@@QEAAXXZ
@@ -1346,7 +1326,6 @@ EXPORTS
   ?setAuthority@QUrl@@QEAAXAEBVQString@@W4ParsingMode@1@@Z
   ?authority@QUrl@@QEBA?AVQString@@V?$QFlags@W4ComponentFormattingOption@QUrl@@@@@Z
   ?setUserInfo@QUrl@@QEAAXAEBVQString@@W4ParsingMode@1@@Z
-  ?userInfo@QUrl@@QEBA?AVQString@@V?$QFlags@W4ComponentFormattingOption@QUrl@@@@@Z
   ?setUserName@QUrl@@QEAAXAEBVQString@@W4ParsingMode@1@@Z
   ?userName@QUrl@@QEBA?AVQString@@V?$QFlags@W4ComponentFormattingOption@QUrl@@@@@Z
   ?setPassword@QUrl@@QEAAXAEBVQString@@W4ParsingMode@1@@Z
@@ -1490,6 +1469,26 @@ EXPORTS
   ?added@QChildEvent@@QEBA_NXZ
   ?polished@QChildEvent@@QEBA_NXZ
   ?removed@QChildEvent@@QEBA_NXZ
+  ?qt_metacast@QTimer@@UEAAPEAXPEBD@Z
+  ?tr@QTimer@@SA?AVQString@@PEBD0H@Z
+  ??0QTimer@@QEAA@PEAVQObject@@@Z
+  ??1QTimer@@UEAA@XZ
+  ?isActive@QTimer@@QEBA_NXZ
+  ?timerId@QTimer@@QEBAHXZ
+  ?id@QTimer@@QEBA?AW4TimerId@Qt@@XZ
+  ?setInterval@QTimer@@QEAAXH@Z
+  ?interval@QTimer@@QEBAHXZ
+  ?remainingTime@QTimer@@QEBAHXZ
+  ?setTimerType@QTimer@@QEAAXW4TimerType@Qt@@@Z
+  ?timerType@QTimer@@QEBA?AW4TimerType@Qt@@XZ
+  ?setSingleShot@QTimer@@QEAAX_N@Z
+  ?isSingleShot@QTimer@@QEBA_NXZ
+  ?singleShot@QTimer@@SAXHPEBVQObject@@PEBD@Z
+  ?singleShot@QTimer@@SAXHW4TimerType@Qt@@PEBVQObject@@PEBD@Z
+  ?start@QTimer@@QEAAXH@Z
+  ?start@QTimer@@QEAAXXZ
+  ?stop@QTimer@@QEAAXXZ
+  ?timerEvent@QTimer@@MEAAXPEAVQTimerEvent@@@Z
   ??0QModelRoleDataSpan@@QEAA@XZ = QModelRoleDataSpan_QModelRoleDataSpan
   ??0QModelIndex@@QEAA@XZ = QModelIndex_QModelIndex
   ?qt_metacast@QAbstractItemModel@@UEAAPEAXPEBD@Z
@@ -1580,7 +1579,9 @@ EXPORTS
   ?colorCount@QPaintDevice@@QEBAHXZ
   ?depth@QPaintDevice@@QEBAHXZ
   ?metric@QPaintDevice@@MEBAHW4PaintDeviceMetric@1@@Z
+  ?initPainter@QPaintDevice@@MEBAXPEAVQPainter@@@Z
   ?redirected@QPaintDevice@@MEBAPEAV1@PEAVQPoint@@@Z
+  ?sharedPainter@QPaintDevice@@MEBAPEAVQPainter@@XZ
   ?getDecodedMetricF@QPaintDevice@@IEBANW4PaintDeviceMetric@1@0@Z
   ??1QPaintDevice@@UEAA@XZ
   ?devicePixelRatioFScale@QPaintDevice@@SANXZ
@@ -2301,6 +2302,8 @@ EXPORTS
   ?pixmap@QIcon@@QEBA?AVQPixmap@@AEBVQSize@@NW4Mode@1@W4State@1@@Z
   ?actualSize@QIcon@@QEBA?AVQSize@@AEBV2@W4Mode@1@W4State@1@@Z
   ?name@QIcon@@QEBA?AVQString@@XZ
+  ?paint@QIcon@@QEBAXPEAVQPainter@@AEBVQRect@@V?$QFlags@W4AlignmentFlag@Qt@@@@W4Mode@1@W4State@1@@Z
+  ?paint@QIcon@@QEBAXPEAVQPainter@@HHHHV?$QFlags@W4AlignmentFlag@Qt@@@@W4Mode@1@W4State@1@@Z
   ?isNull@QIcon@@QEBA_NXZ
   ?isDetached@QIcon@@QEBA_NXZ
   ?detach@QIcon@@QEAAXXZ
@@ -2363,6 +2366,7 @@ EXPORTS
   ??0QBrush@@QEAA@AEBVQPixmap@@@Z
   ??0QBrush@@QEAA@AEBVQImage@@@Z
   ??0QBrush@@QEAA@AEBV0@@Z
+  ??0QBrush@@QEAA@AEBVQGradient@@@Z
   ??1QBrush@@QEAA@XZ
   ?swap@QBrush@@QEAAXAEAV1@@Z
   ?style@QBrush@@QEBA?AW4BrushStyle@Qt@@XZ
@@ -2376,10 +2380,199 @@ EXPORTS
   ?color@QBrush@@QEBAAEBVQColor@@XZ
   ?setColor@QBrush@@QEAAXAEBVQColor@@@Z
   ?setColor@QBrush@@QEAAXW4GlobalColor@Qt@@@Z
+  ?gradient@QBrush@@QEBAPEBVQGradient@@XZ
   ?isOpaque@QBrush@@QEBA_NXZ
   ??8QBrush@@QEBA_NAEBV0@@Z
   ??9QBrush@@QEBA_NAEBV0@@Z
   ?isDetached@QBrush@@QEBA_NXZ
+  ??0QGradient@@QEAA@XZ
+  ??0QGradient@@QEAA@W4Preset@0@@Z
+  ??1QGradient@@QEAA@XZ
+  ?setColorAt@QGradient@@QEAAXNAEBVQColor@@@Z
+  ??8QGradient@@QEBA_NAEBV0@@Z
+  ??9QGradient@@QEBA_NAEBV0@@Z
+  ??0QGradient@@QEAA@AEBV0@@Z = QGradient_QGradient___1__S_QGradient
+  ??0QPainter@@QEAA@XZ
+  ??0QPainter@@QEAA@PEAVQPaintDevice@@@Z
+  ??1QPainter@@QEAA@XZ
+  ?device@QPainter@@QEBAPEAVQPaintDevice@@XZ
+  ?begin@QPainter@@QEAA_NPEAVQPaintDevice@@@Z
+  ?end@QPainter@@QEAA_NXZ
+  ?isActive@QPainter@@QEBA_NXZ
+  ?setCompositionMode@QPainter@@QEAAXW4CompositionMode@1@@Z
+  ?compositionMode@QPainter@@QEBA?AW4CompositionMode@1@XZ
+  ?font@QPainter@@QEBAAEBVQFont@@XZ
+  ?setFont@QPainter@@QEAAXAEBVQFont@@@Z
+  ?fontMetrics@QPainter@@QEBA?AVQFontMetrics@@XZ
+  ?fontInfo@QPainter@@QEBA?AVQFontInfo@@XZ
+  ?setPen@QPainter@@QEAAXAEBVQColor@@@Z
+  ?setPen@QPainter@@QEAAXAEBVQPen@@@Z
+  ?setPen@QPainter@@QEAAXW4PenStyle@Qt@@@Z
+  ?pen@QPainter@@QEBAAEBVQPen@@XZ
+  ?setBrush@QPainter@@QEAAXAEBVQBrush@@@Z
+  ?setBrush@QPainter@@QEAAXW4BrushStyle@Qt@@@Z
+  ?setBrush@QPainter@@QEAAXVQColor@@@Z
+  ?setBrush@QPainter@@QEAAXW4GlobalColor@Qt@@@Z
+  ?brush@QPainter@@QEBAAEBVQBrush@@XZ
+  ?setBackgroundMode@QPainter@@QEAAXW4BGMode@Qt@@@Z
+  ?backgroundMode@QPainter@@QEBA?AW4BGMode@Qt@@XZ
+  ?brushOrigin@QPainter@@QEBA?AVQPoint@@XZ
+  ?brushOriginF@QPainter@@QEBA?AVQPointF@@XZ
+  ?setBrushOrigin@QPainter@@QEAAXHH@Z
+  ?setBrushOrigin@QPainter@@QEAAXAEBVQPoint@@@Z
+  ?setBrushOrigin@QPainter@@QEAAXAEBVQPointF@@@Z
+  ?setBackground@QPainter@@QEAAXAEBVQBrush@@@Z
+  ?background@QPainter@@QEBAAEBVQBrush@@XZ
+  ?opacity@QPainter@@QEBANXZ
+  ?setOpacity@QPainter@@QEAAXN@Z
+  ?clipRegion@QPainter@@QEBA?AVQRegion@@XZ
+  ?setClipRect@QPainter@@QEAAXAEBVQRectF@@W4ClipOperation@Qt@@@Z
+  ?setClipRect@QPainter@@QEAAXAEBVQRect@@W4ClipOperation@Qt@@@Z
+  ?setClipRect@QPainter@@QEAAXHHHHW4ClipOperation@Qt@@@Z
+  ?setClipRegion@QPainter@@QEAAXAEBVQRegion@@W4ClipOperation@Qt@@@Z
+  ?setClipping@QPainter@@QEAAX_N@Z
+  ?hasClipping@QPainter@@QEBA_NXZ
+  ?clipBoundingRect@QPainter@@QEBA?AVQRectF@@XZ
+  ?save@QPainter@@QEAAXXZ
+  ?restore@QPainter@@QEAAXXZ
+  ?setTransform@QPainter@@QEAAXAEBVQTransform@@_N@Z
+  ?transform@QPainter@@QEBAAEBVQTransform@@XZ
+  ?deviceTransform@QPainter@@QEBAAEBVQTransform@@XZ
+  ?resetTransform@QPainter@@QEAAXXZ
+  ?setWorldTransform@QPainter@@QEAAXAEBVQTransform@@_N@Z
+  ?worldTransform@QPainter@@QEBAAEBVQTransform@@XZ
+  ?combinedTransform@QPainter@@QEBA?AVQTransform@@XZ
+  ?setWorldMatrixEnabled@QPainter@@QEAAX_N@Z
+  ?worldMatrixEnabled@QPainter@@QEBA_NXZ
+  ?scale@QPainter@@QEAAXNN@Z
+  ?shear@QPainter@@QEAAXNN@Z
+  ?rotate@QPainter@@QEAAXN@Z
+  ?translate@QPainter@@QEAAXAEBVQPointF@@@Z
+  ?translate@QPainter@@QEAAXAEBVQPoint@@@Z
+  ?translate@QPainter@@QEAAXNN@Z
+  ?window@QPainter@@QEBA?AVQRect@@XZ
+  ?setWindow@QPainter@@QEAAXAEBVQRect@@@Z
+  ?setWindow@QPainter@@QEAAXHHHH@Z
+  ?viewport@QPainter@@QEBA?AVQRect@@XZ
+  ?setViewport@QPainter@@QEAAXAEBVQRect@@@Z
+  ?setViewport@QPainter@@QEAAXHHHH@Z
+  ?setViewTransformEnabled@QPainter@@QEAAX_N@Z
+  ?viewTransformEnabled@QPainter@@QEBA_NXZ
+  ?drawPoint@QPainter@@QEAAXAEBVQPointF@@@Z
+  ?drawPoint@QPainter@@QEAAXAEBVQPoint@@@Z
+  ?drawPoint@QPainter@@QEAAXHH@Z
+  ?drawPoints@QPainter@@QEAAXPEBVQPointF@@H@Z
+  ?drawPoints@QPainter@@QEAAXAEBVQPolygonF@@@Z
+  ?drawPoints@QPainter@@QEAAXPEBVQPoint@@H@Z
+  ?drawPoints@QPainter@@QEAAXAEBVQPolygon@@@Z
+  ?drawLine@QPainter@@QEAAXAEBVQLineF@@@Z
+  ?drawLine@QPainter@@QEAAXAEBVQLine@@@Z
+  ?drawLine@QPainter@@QEAAXHHHH@Z
+  ?drawLine@QPainter@@QEAAXAEBVQPoint@@0@Z
+  ?drawLine@QPainter@@QEAAXAEBVQPointF@@0@Z
+  ?drawLines@QPainter@@QEAAXPEBVQLineF@@H@Z
+  ?drawLines@QPainter@@QEAAXPEBVQPointF@@H@Z
+  ?drawLines@QPainter@@QEAAXPEBVQLine@@H@Z
+  ?drawLines@QPainter@@QEAAXPEBVQPoint@@H@Z
+  ?drawRect@QPainter@@QEAAXAEBVQRectF@@@Z
+  ?drawRect@QPainter@@QEAAXHHHH@Z
+  ?drawRect@QPainter@@QEAAXAEBVQRect@@@Z
+  ?drawRects@QPainter@@QEAAXPEBVQRectF@@H@Z
+  ?drawRects@QPainter@@QEAAXPEBVQRect@@H@Z
+  ?drawEllipse@QPainter@@QEAAXAEBVQRectF@@@Z
+  ?drawEllipse@QPainter@@QEAAXAEBVQRect@@@Z
+  ?drawEllipse@QPainter@@QEAAXHHHH@Z
+  ?drawEllipse@QPainter@@QEAAXAEBVQPointF@@NN@Z
+  ?drawEllipse@QPainter@@QEAAXAEBVQPoint@@HH@Z
+  ?drawPolyline@QPainter@@QEAAXPEBVQPointF@@H@Z
+  ?drawPolyline@QPainter@@QEAAXAEBVQPolygonF@@@Z
+  ?drawPolyline@QPainter@@QEAAXPEBVQPoint@@H@Z
+  ?drawPolyline@QPainter@@QEAAXAEBVQPolygon@@@Z
+  ?drawPolygon@QPainter@@QEAAXPEBVQPointF@@HW4FillRule@Qt@@@Z
+  ?drawPolygon@QPainter@@QEAAXAEBVQPolygonF@@W4FillRule@Qt@@@Z
+  ?drawPolygon@QPainter@@QEAAXPEBVQPoint@@HW4FillRule@Qt@@@Z
+  ?drawPolygon@QPainter@@QEAAXAEBVQPolygon@@W4FillRule@Qt@@@Z
+  ?drawConvexPolygon@QPainter@@QEAAXPEBVQPointF@@H@Z
+  ?drawConvexPolygon@QPainter@@QEAAXAEBVQPolygonF@@@Z
+  ?drawConvexPolygon@QPainter@@QEAAXPEBVQPoint@@H@Z
+  ?drawConvexPolygon@QPainter@@QEAAXAEBVQPolygon@@@Z
+  ?drawArc@QPainter@@QEAAXAEBVQRectF@@HH@Z
+  ?drawArc@QPainter@@QEAAXAEBVQRect@@HH@Z
+  ?drawArc@QPainter@@QEAAXHHHHHH@Z
+  ?drawPie@QPainter@@QEAAXAEBVQRectF@@HH@Z
+  ?drawPie@QPainter@@QEAAXHHHHHH@Z
+  ?drawPie@QPainter@@QEAAXAEBVQRect@@HH@Z
+  ?drawChord@QPainter@@QEAAXAEBVQRectF@@HH@Z
+  ?drawChord@QPainter@@QEAAXHHHHHH@Z
+  ?drawChord@QPainter@@QEAAXAEBVQRect@@HH@Z
+  ?drawRoundedRect@QPainter@@QEAAXAEBVQRectF@@NNW4SizeMode@Qt@@@Z
+  ?drawRoundedRect@QPainter@@QEAAXHHHHNNW4SizeMode@Qt@@@Z
+  ?drawRoundedRect@QPainter@@QEAAXAEBVQRect@@NNW4SizeMode@Qt@@@Z
+  ?drawTiledPixmap@QPainter@@QEAAXAEBVQRectF@@AEBVQPixmap@@AEBVQPointF@@@Z
+  ?drawTiledPixmap@QPainter@@QEAAXHHHHAEBVQPixmap@@HH@Z
+  ?drawTiledPixmap@QPainter@@QEAAXAEBVQRect@@AEBVQPixmap@@AEBVQPoint@@@Z
+  ?drawPicture@QPainter@@QEAAXAEBVQPointF@@AEBVQPicture@@@Z
+  ?drawPicture@QPainter@@QEAAXHHAEBVQPicture@@@Z
+  ?drawPicture@QPainter@@QEAAXAEBVQPoint@@AEBVQPicture@@@Z
+  ?drawPixmap@QPainter@@QEAAXAEBVQRectF@@AEBVQPixmap@@0@Z
+  ?drawPixmap@QPainter@@QEAAXAEBVQRect@@AEBVQPixmap@@0@Z
+  ?drawPixmap@QPainter@@QEAAXHHHHAEBVQPixmap@@HHHH@Z
+  ?drawPixmap@QPainter@@QEAAXHHAEBVQPixmap@@HHHH@Z
+  ?drawPixmap@QPainter@@QEAAXAEBVQPointF@@AEBVQPixmap@@AEBVQRectF@@@Z
+  ?drawPixmap@QPainter@@QEAAXAEBVQPoint@@AEBVQPixmap@@AEBVQRect@@@Z
+  ?drawPixmap@QPainter@@QEAAXAEBVQPointF@@AEBVQPixmap@@@Z
+  ?drawPixmap@QPainter@@QEAAXAEBVQPoint@@AEBVQPixmap@@@Z
+  ?drawPixmap@QPainter@@QEAAXHHAEBVQPixmap@@@Z
+  ?drawPixmap@QPainter@@QEAAXAEBVQRect@@AEBVQPixmap@@@Z
+  ?drawPixmap@QPainter@@QEAAXHHHHAEBVQPixmap@@@Z
+  ?drawPixmapFragments@QPainter@@QEAAXPEBVPixmapFragment@1@HAEBVQPixmap@@V?$QFlags@W4PixmapFragmentHint@QPainter@@@@@Z
+  ?drawImage@QPainter@@QEAAXAEBVQRectF@@AEBVQImage@@0V?$QFlags@W4ImageConversionFlag@Qt@@@@@Z
+  ?drawImage@QPainter@@QEAAXAEBVQRect@@AEBVQImage@@0V?$QFlags@W4ImageConversionFlag@Qt@@@@@Z
+  ?drawImage@QPainter@@QEAAXAEBVQPointF@@AEBVQImage@@AEBVQRectF@@V?$QFlags@W4ImageConversionFlag@Qt@@@@@Z
+  ?drawImage@QPainter@@QEAAXAEBVQPoint@@AEBVQImage@@AEBVQRect@@V?$QFlags@W4ImageConversionFlag@Qt@@@@@Z
+  ?drawImage@QPainter@@QEAAXAEBVQRectF@@AEBVQImage@@@Z
+  ?drawImage@QPainter@@QEAAXAEBVQRect@@AEBVQImage@@@Z
+  ?drawImage@QPainter@@QEAAXAEBVQPointF@@AEBVQImage@@@Z
+  ?drawImage@QPainter@@QEAAXAEBVQPoint@@AEBVQImage@@@Z
+  ?drawImage@QPainter@@QEAAXHHAEBVQImage@@HHHHV?$QFlags@W4ImageConversionFlag@Qt@@@@@Z
+  ?setLayoutDirection@QPainter@@QEAAXW4LayoutDirection@Qt@@@Z
+  ?layoutDirection@QPainter@@QEBA?AW4LayoutDirection@Qt@@XZ
+  ?drawText@QPainter@@QEAAXAEBVQPointF@@AEBVQString@@@Z
+  ?drawText@QPainter@@QEAAXAEBVQPoint@@AEBVQString@@@Z
+  ?drawText@QPainter@@QEAAXHHAEBVQString@@@Z
+  ?drawText@QPainter@@QEAAXAEBVQPointF@@AEBVQString@@HH@Z
+  ?drawText@QPainter@@QEAAXAEBVQRectF@@HAEBVQString@@PEAV2@@Z
+  ?drawText@QPainter@@QEAAXAEBVQRect@@HAEBVQString@@PEAV2@@Z
+  ?drawText@QPainter@@QEAAXHHHHHAEBVQString@@PEAVQRect@@@Z
+  ?drawText@QPainter@@QEAAXAEBVQRectF@@AEBVQString@@AEBVQTextOption@@@Z
+  ?boundingRect@QPainter@@QEAA?AVQRectF@@AEBV2@HAEBVQString@@@Z
+  ?boundingRect@QPainter@@QEAA?AVQRect@@AEBV2@HAEBVQString@@@Z
+  ?boundingRect@QPainter@@QEAA?AVQRect@@HHHHHAEBVQString@@@Z
+  ?boundingRect@QPainter@@QEAA?AVQRectF@@AEBV2@AEBVQString@@AEBVQTextOption@@@Z
+  ?fillRect@QPainter@@QEAAXAEBVQRectF@@AEBVQBrush@@@Z
+  ?fillRect@QPainter@@QEAAXHHHHAEBVQBrush@@@Z
+  ?fillRect@QPainter@@QEAAXAEBVQRect@@AEBVQBrush@@@Z
+  ?fillRect@QPainter@@QEAAXAEBVQRectF@@AEBVQColor@@@Z
+  ?fillRect@QPainter@@QEAAXHHHHAEBVQColor@@@Z
+  ?fillRect@QPainter@@QEAAXAEBVQRect@@AEBVQColor@@@Z
+  ?fillRect@QPainter@@QEAAXHHHHW4GlobalColor@Qt@@@Z
+  ?fillRect@QPainter@@QEAAXAEBVQRect@@W4GlobalColor@Qt@@@Z
+  ?fillRect@QPainter@@QEAAXAEBVQRectF@@W4GlobalColor@Qt@@@Z
+  ?fillRect@QPainter@@QEAAXHHHHW4BrushStyle@Qt@@@Z
+  ?fillRect@QPainter@@QEAAXAEBVQRect@@W4BrushStyle@Qt@@@Z
+  ?fillRect@QPainter@@QEAAXAEBVQRectF@@W4BrushStyle@Qt@@@Z
+  ?fillRect@QPainter@@QEAAXHHHHW4Preset@QGradient@@@Z
+  ?fillRect@QPainter@@QEAAXAEBVQRect@@W4Preset@QGradient@@@Z
+  ?fillRect@QPainter@@QEAAXAEBVQRectF@@W4Preset@QGradient@@@Z
+  ?eraseRect@QPainter@@QEAAXAEBVQRectF@@@Z
+  ?eraseRect@QPainter@@QEAAXHHHH@Z
+  ?eraseRect@QPainter@@QEAAXAEBVQRect@@@Z
+  ?setRenderHint@QPainter@@QEAAXW4RenderHint@1@_N@Z
+  ?setRenderHints@QPainter@@QEAAXV?$QFlags@W4RenderHint@QPainter@@@@_N@Z
+  ?testRenderHint@QPainter@@QEBA_NW4RenderHint@1@@Z
+  ?beginNativePainting@QPainter@@QEAAXXZ
+  ?endNativePainting@QPainter@@QEAAXXZ
+  ?create@PixmapFragment@QPainter@@SA?AV12@AEBVQPointF@@AEBVQRectF@@NNNN@Z
   ??0QTextOption@@QEAA@XZ
   ??0QTextOption@@QEAA@V?$QFlags@W4AlignmentFlag@Qt@@@@@Z
   ??1QTextOption@@QEAA@XZ
@@ -2736,6 +2929,7 @@ EXPORTS
   ?useDesignMetrics@QTextDocument@@QEBA_NXZ
   ?setLayoutEnabled@QTextDocument@@QEAAX_N@Z
   ?isLayoutEnabled@QTextDocument@@QEBA_NXZ
+  ?drawContents@QTextDocument@@QEAAXPEAVQPainter@@AEBVQRectF@@@Z
   ?setTextWidth@QTextDocument@@QEAAXN@Z
   ?textWidth@QTextDocument@@QEBANXZ
   ?idealWidth@QTextDocument@@QEBANXZ
@@ -3103,7 +3297,9 @@ EXPORTS
   ?applicationFontFamilies@QFontDatabase@@SA?AV?$QList@VQString@@@@H@Z
   ?removeApplicationFont@QFontDatabase@@SA_NH@Z
   ?removeAllApplicationFonts@QFontDatabase@@SA_NXZ
+  ?addApplicationFallbackFontFamily@QFontDatabase@@SAXW4Script@QChar@@AEBVQString@@@Z
   ?removeApplicationFallbackFontFamily@QFontDatabase@@SA_NW4Script@QChar@@AEBVQString@@@Z
+  ?setApplicationFallbackFontFamilies@QFontDatabase@@SAXW4Script@QChar@@AEBV?$QList@VQString@@@@@Z
   ?applicationFallbackFontFamilies@QFontDatabase@@SA?AV?$QList@VQString@@@@W4Script@QChar@@@Z
   ?addApplicationEmojiFontFamily@QFontDatabase@@SAXAEBVQString@@@Z
   ?removeApplicationEmojiFontFamily@QFontDatabase@@SA_NAEBVQString@@@Z
@@ -3273,6 +3469,7 @@ EXPORTS
   ?mask@QWidget@@QEBA?AVQRegion@@XZ
   ?clearMask@QWidget@@QEAAXXZ
   ?render@QWidget@@QEAAXPEAVQPaintDevice@@AEBVQPoint@@AEBVQRegion@@V?$QFlags@W4RenderFlag@QWidget@@@@@Z
+  ?render@QWidget@@QEAAXPEAVQPainter@@AEBVQPoint@@AEBVQRegion@@V?$QFlags@W4RenderFlag@QWidget@@@@@Z
   ?grab@QWidget@@QEAA?AVQPixmap@@AEBVQRect@@@Z
   ?grabGesture@QWidget@@QEAAXW4GestureType@Qt@@V?$QFlags@W4GestureFlag@Qt@@@@@Z
   ?ungrabGesture@QWidget@@QEAAXW4GestureType@Qt@@@Z
@@ -3451,7 +3648,9 @@ EXPORTS
   ?nativeEvent@QWidget@@MEAA_NAEBVQByteArray@@PEAXPEA_J@Z
   ?changeEvent@QWidget@@MEAAXPEAVQEvent@@@Z
   ?metric@QWidget@@MEBAHW4PaintDeviceMetric@QPaintDevice@@@Z
+  ?initPainter@QWidget@@MEBAXPEAVQPainter@@@Z
   ?redirected@QWidget@@MEBAPEAVQPaintDevice@@PEAVQPoint@@@Z
+  ?sharedPainter@QWidget@@MEBAPEAVQPainter@@XZ
   ?setInputMethodHints@QWidget@@QEAAXV?$QFlags@W4InputMethodHint@Qt@@@@@Z
   ?updateMicroFocus@QWidget@@IEAAXW4InputMethodQuery@Qt@@@Z
   ?create@QWidget@@IEAAX_K_N1@Z
@@ -3714,6 +3913,7 @@ EXPORTS
   ?event@QFrame@@MEAA_NPEAVQEvent@@@Z
   ?paintEvent@QFrame@@MEAAXPEAVQPaintEvent@@@Z
   ?changeEvent@QFrame@@MEAAXPEAVQEvent@@@Z
+  ?drawFrame@QFrame@@IEAAXPEAVQPainter@@@Z
   ?qt_metacast@QGroupBox@@UEAAPEAXPEBD@Z
   ?tr@QGroupBox@@SA?AVQString@@PEBD0H@Z
   ??0QGroupBox@@QEAA@PEAVQWidget@@@Z
@@ -3798,6 +3998,7 @@ EXPORTS
   ?size@QPicture@@QEBAIXZ
   ?data@QPicture@@QEBAPEBDXZ
   ?setData@QPicture@@UEAAXPEBDI@Z
+  ?play@QPicture@@QEAA_NPEAVQPainter@@@Z
   ?load@QPicture@@QEAA_NAEBVQString@@@Z
   ?save@QPicture@@QEAA_NAEBVQString@@@Z
   ?boundingRect@QPicture@@QEBA?AVQRect@@XZ
@@ -3930,7 +4131,6 @@ EXPORTS
   ?setDocument@QTextEdit@@QEAAXPEAVQTextDocument@@@Z
   ?document@QTextEdit@@QEBAPEAVQTextDocument@@XZ
   ?setPlaceholderText@QTextEdit@@QEAAXAEBVQString@@@Z
-  ?placeholderText@QTextEdit@@QEBA?AVQString@@XZ
   ?setTextCursor@QTextEdit@@QEAAXAEBVQTextCursor@@@Z
   ?textCursor@QTextEdit@@QEBA?AVQTextCursor@@XZ
   ?isReadOnly@QTextEdit@@QEBA_NXZ
@@ -3956,8 +4156,6 @@ EXPORTS
   ?setUndoRedoEnabled@QTextEdit@@QEAAX_N@Z
   ?lineWrapMode@QTextEdit@@QEBA?AW4LineWrapMode@1@XZ
   ?setLineWrapMode@QTextEdit@@QEAAXW4LineWrapMode@1@@Z
-  ?lineWrapColumnOrWidth@QTextEdit@@QEBAHXZ
-  ?setLineWrapColumnOrWidth@QTextEdit@@QEAAXH@Z
   ?wordWrapMode@QTextEdit@@QEBA?AW4WrapMode@QTextOption@@XZ
   ?setWordWrapMode@QTextEdit@@QEAAXW4WrapMode@QTextOption@@@Z
   ?find@QTextEdit@@QEAA_NAEBVQString@@V?$QFlags@W4FindFlag@QTextDocument@@@@@Z
@@ -4311,6 +4509,7 @@ EXPORTS
   ?hitButton@QToolButton@@MEBA_NAEBVQPoint@@@Z
   ?checkStateSet@QToolButton@@MEAAXXZ
   ?nextCheckState@QToolButton@@MEAAXXZ
+  ?initStyleOption@QToolButton@@MEBAXPEAVQStyleOptionToolButton@@@Z
   ?qt_metacast@QRadioButton@@UEAAPEAXPEBD@Z
   ?tr@QRadioButton@@SA?AVQString@@PEBD0H@Z
   ??0QRadioButton@@QEAA@PEAVQWidget@@@Z
@@ -4322,7 +4521,6 @@ EXPORTS
   ?hitButton@QRadioButton@@MEBA_NAEBVQPoint@@@Z
   ?paintEvent@QRadioButton@@MEAAXPEAVQPaintEvent@@@Z
   ?mouseMoveEvent@QRadioButton@@MEAAXPEAVQMouseEvent@@@Z
-  ?initStyleOption@QRadioButton@@MEBAXPEAVQStyleOptionButton@@@Z
   ?qt_metacast@QCheckBox@@UEAAPEAXPEBD@Z
   ?tr@QCheckBox@@SA?AVQString@@PEBD0H@Z
   ??0QCheckBox@@QEAA@PEAVQWidget@@@Z
@@ -4662,6 +4860,10 @@ EXPORTS
   ?keyPressEvent@QComboBox@@MEAAXPEAVQKeyEvent@@@Z
   ?keyReleaseEvent@QComboBox@@MEAAXPEAVQKeyEvent@@@Z
   ?wheelEvent@QComboBox@@MEAAXPEAVQWheelEvent@@@Z
+  ??0QStyleOptionToolButton@@QEAA@XZ
+  ??0QStyleOptionToolButton@@QEAA@AEBV0@@Z
+  ??0QStyleOptionToolButton@@IEAA@H@Z
+  ??1QStyleOptionToolButton@@QEAA@XZ = QStyleOptionToolButton__QStyleOptionToolButton
   ?qt_metacast@QTabBar@@UEAAPEAXPEBD@Z
   ?tr@QTabBar@@SA?AVQString@@PEBD0H@Z
   ??0QTabBar@@QEAA@PEAVQWidget@@@Z
@@ -4933,6 +5135,7 @@ EXPORTS
   ?mousePressEvent@QCalendarWidget@@MEAAXPEAVQMouseEvent@@@Z
   ?resizeEvent@QCalendarWidget@@MEAAXPEAVQResizeEvent@@@Z
   ?keyPressEvent@QCalendarWidget@@MEAAXPEAVQKeyEvent@@@Z
+  ?paintCell@QCalendarWidget@@MEBAXPEAVQPainter@@AEBVQRect@@VQDate@@@Z
   ?updateCell@QCalendarWidget@@IEAAXVQDate@@@Z
   ?updateCells@QCalendarWidget@@IEAAXXZ
   ?setSelectedDate@QCalendarWidget@@QEAAXVQDate@@@Z
@@ -5048,6 +5251,7 @@ EXPORTS
   ??0QDockWidget@@QEAA@PEAVQWidget@@V?$QFlags@W4WindowType@Qt@@@@@Z
   ??1QDockWidget@@UEAA@XZ
   ?widget@QDockWidget@@QEBAPEAVQWidget@@XZ
+  ?setWidget@QDockWidget@@QEAAXPEAVQWidget@@@Z
   ?setFeatures@QDockWidget@@QEAAXV?$QFlags@W4DockWidgetFeature@QDockWidget@@@@@Z
   ?setFloating@QDockWidget@@QEAAX_N@Z
   ?isFloating@QDockWidget@@QEBA_NXZ
@@ -5260,6 +5464,7 @@ EXPORTS
   ?resizeEvent@QStatusBar@@MEAAXPEAVQResizeEvent@@@Z
   ?reformat@QStatusBar@@IEAAXXZ
   ?hideOrShow@QStatusBar@@IEAAXXZ
+  ?event@QStatusBar@@MEAA_NPEAVQEvent@@@Z
   ?qt_metacast@QProgressBar@@UEAAPEAXPEBD@Z
   ?tr@QProgressBar@@SA?AVQString@@PEBD0H@Z
   ??0QProgressBar@@QEAA@PEAVQWidget@@@Z
@@ -5290,7 +5495,6 @@ EXPORTS
   ?valueChanged@QProgressBar@@QEAAXH@Z
   ?event@QProgressBar@@MEAA_NPEAVQEvent@@@Z
   ?paintEvent@QProgressBar@@MEAAXPEAVQPaintEvent@@@Z
-  ?qt_metacast@QSizeGrip@@UEAAPEAXPEBD@Z
   ?tr@QSizeGrip@@SA?AVQString@@PEBD0H@Z
   ??0QSizeGrip@@QEAA@PEAVQWidget@@@Z
   ??1QSizeGrip@@UEAA@XZ
@@ -5936,6 +6140,8 @@ EXPORTS
   ?changeEvent@QTreeView@@MEAAXPEAVQEvent@@@Z
   ?timerEvent@QTreeView@@MEAAXPEAVQTimerEvent@@@Z
   ?paintEvent@QTreeView@@MEAAXPEAVQPaintEvent@@@Z
+  ?drawTree@QTreeView@@IEBAXPEAVQPainter@@AEBVQRegion@@@Z
+  ?drawBranches@QTreeView@@MEBAXPEAVQPainter@@AEBVQRect@@AEBVQModelIndex@@@Z
   ?mousePressEvent@QTreeView@@MEAAXPEAVQMouseEvent@@@Z
   ?mouseReleaseEvent@QTreeView@@MEAAXPEAVQMouseEvent@@@Z
   ?mouseDoubleClickEvent@QTreeView@@MEAAXPEAVQMouseEvent@@@Z
@@ -6474,7 +6680,6 @@ EXPORTS
   ?setRowVisible@QFormLayout@@QEAAXPEAVQWidget@@_N@Z
   ?setRowVisible@QFormLayout@@QEAAXPEAVQLayout@@_N@Z
   ?isRowVisible@QFormLayout@@QEBA_NH@Z
-  ?isRowVisible@QFormLayout@@QEBA_NPEAVQWidget@@@Z
   ?isRowVisible@QFormLayout@@QEBA_NPEAVQLayout@@@Z
   ?itemAt@QFormLayout@@QEBAPEAVQLayoutItem@@HW4ItemRole@1@@Z
   ?getItemPosition@QFormLayout@@QEBAXHPEAHPEAW4ItemRole@1@@Z
