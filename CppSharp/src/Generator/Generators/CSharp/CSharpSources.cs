@@ -2076,7 +2076,11 @@ internal static bool {Helpers.TryGetNativeToManagedMappingIdentifier}(IntPtr nat
 
             using (WriteBlock($"private static {retType} {vTableMethodDelegateName}Hook({string.Join(", ", @params)})"))
             {
-                WriteLine($@"var {Helpers.TargetIdentifier} = {@class.Visit(TypePrinter)}.__GetInstance({Helpers.InstanceField});");
+                var thisOffset = VTables.GetVTableThisOffset(method);
+                if (thisOffset == 0)
+                    WriteLine($@"var {Helpers.TargetIdentifier} = {@class.Visit(TypePrinter)}.__GetInstance({Helpers.InstanceField});");
+                else
+                    WriteLine($@"var {Helpers.TargetIdentifier} = {@class.Visit(TypePrinter)}.__GetInstance({Helpers.InstanceField} - {thisOffset});");
                 GenerateVTableManagedCall(method);
             }
 
@@ -3278,7 +3282,13 @@ internal static{(@new ? " new" : string.Empty)} {printedClass} __GetInstance({Ty
         private string GetInstanceParam(Function function)
         {
             var from = (Class)function.Namespace;
-            var to = (function.OriginalFunction == null ||
+            var origNs = function.OriginalFunction?.Namespace as Class;
+            bool origIsInterface = origNs != null && origNs.IsInterface;
+            // An interface implementation (non-virtual, e.g. a pure virtual method implemented
+            // by the class) has its DllImport symbol on the current class, so the instance must
+            // point to the current class rather than the (secondary) interface/base.
+            bool isInterfaceImpl = origIsInterface && !((function as Method)?.IsVirtual ?? false);
+            var to = (function.OriginalFunction == null || isInterfaceImpl ||
                 // we don't need to offset the instance with Itanium if there's an existing interface impl
                 (Context.ParserOptions.IsItaniumLikeAbi &&
                  !((Class)function.OriginalNamespace).IsInterface)) &&
