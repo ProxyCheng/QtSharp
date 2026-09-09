@@ -770,18 +770,30 @@ class Program
         switch (t)
         {
             case "bool":
-                csharpType = "bool"; lambdaType = "bool"; cbType = "int"; toCb = " ? 1 : 0"; fromCb = "{p} != 0"; return true;
+                csharpType = "bool"; lambdaType = "bool"; cbType = "int"; toCb = "{name} ? 1 : 0"; fromCb = "{p} != 0"; return true;
             case "int":
-                csharpType = "int"; lambdaType = "int"; cbType = "int"; toCb = ""; fromCb = "{p}"; return true;
+                csharpType = "int"; lambdaType = "int"; cbType = "int"; toCb = "{name}"; fromCb = "{p}"; return true;
+            case "short":
+                csharpType = "short"; lambdaType = "short"; cbType = "short"; toCb = "{name}"; fromCb = "{p}"; return true;
+            case "ushort":
+                csharpType = "ushort"; lambdaType = "ushort"; cbType = "unsigned short"; toCb = "{name}"; fromCb = "{p}"; return true;
+            case "uint":
+                csharpType = "uint"; lambdaType = "uint"; cbType = "unsigned int"; toCb = "{name}"; fromCb = "{p}"; return true;
+            case "ulong":
+                csharpType = "ulong"; lambdaType = "ulong"; cbType = "unsigned long long"; toCb = "{name}"; fromCb = "{p}"; return true;
+            case "float":
+                csharpType = "float"; lambdaType = "float"; cbType = "float"; toCb = "{name}"; fromCb = "{p}"; return true;
             case "double":
             case "qreal":
-                csharpType = "double"; lambdaType = "double"; cbType = "double"; toCb = ""; fromCb = "{p}"; return true;
+                csharpType = "double"; lambdaType = "double"; cbType = "double"; toCb = "{name}"; fromCb = "{p}"; return true;
             case "qint64":
             case "qlonglong":
             case "longlong":
-                csharpType = "long"; lambdaType = "qint64"; cbType = "long long"; toCb = ""; fromCb = "{p}"; return true;
+                csharpType = "long"; lambdaType = "qint64"; cbType = "long long"; toCb = "{name}"; fromCb = "{p}"; return true;
             case "QString":
-                csharpType = "string"; lambdaType = "QString"; cbType = "const ushort*"; toCb = ".utf16()"; fromCb = "Marshal.PtrToStringUni({p})"; return true;
+                csharpType = "string"; lambdaType = "QString"; cbType = "const ushort*"; toCb = "{name}.utf16()"; fromCb = "Marshal.PtrToStringUni({p})"; return true;
+            case "QStringList":
+                csharpType = "string[]"; lambdaType = "QStringList"; cbType = "void*"; toCb = "&{name}"; fromCb = "QtSharp.QStringListMarshaller.ToManaged({p})"; return true;
             default:
                 csharpType = lambdaType = cbType = toCb = fromCb = null;
                 return false;
@@ -831,6 +843,7 @@ class Program
         sb.AppendLine("// Auto-generated signal glue.");
         sb.AppendLine("#include <qobject.h>");
         sb.AppendLine("#include <qstring.h>");
+        sb.AppendLine("#include <qstringlist.h>");
         var includes = new HashSet<string>();
         foreach (var s in signals)
             includes.Add("#include <" + s.HeaderFile + ">");
@@ -847,7 +860,7 @@ class Program
                 var p = s.Params[i];
                 MapSignalType(p.CppType, out _, out var lambdaType, out var cbType, out var toCb, out _);
                 lambdaParams.Add(lambdaType + " " + p.Name);
-                cbArgs.Add(p.Name + toCb);
+                cbArgs.Add(toCb.Replace("{name}", p.Name));
                 cbTypes.Add(cbType);
             }
             var fn = $"qs_{s.ClassName}_connect_{s.SignalName}";
@@ -903,7 +916,7 @@ class Program
                     var p = s.Params[i];
                     MapSignalType(p.CppType, out var cs, out _, out var cb, out _, out var fromCb);
                     csTypes.Add(cs);
-                    cbTypes.Add(cb == "const ushort*" ? "IntPtr" : cb);
+                    cbTypes.Add((cb == "const ushort*" || cb == "void*") ? "IntPtr" : cb);
                     fromCbs.Add(fromCb.Replace("{p}", "p" + i));
                 }
                 var csSig = csTypes.Count == 0 ? "" : string.Join(", ", csTypes);
