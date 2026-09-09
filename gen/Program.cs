@@ -389,10 +389,10 @@ class QtLibrary : ILibrary
             return;
         if (!m.IsGenerated && !(m.AssociatedDeclaration is Property { IsGenerated: true }))
             return;
-        if (wrapped.TryGetValue(m.Mangled, out var wrapper))
-            sb.AppendLine($"  {m.Mangled} = {wrapper}");
-        else if (exports.Contains(m.Mangled))
+        if (exports.Contains(m.Mangled))
             sb.AppendLine($"  {m.Mangled}");
+        else if (wrapped.TryGetValue(m.Mangled, out var wrapper))
+            sb.AppendLine($"  {m.Mangled} = {wrapper}");
         else
             skipped++;
     }
