@@ -20,6 +20,7 @@ static class Program
                 "shapedclock" => new ShapedClock(),
                 "calendar" => new CalendarWindow(),
                 "systray" => new SystemTrayWindow(),
+                "scribble" => new ScribbleWindow(),
                 "analogclock" => new AnalogClock(),
                 "calculator" => new Calculator(),
                 _ => new SlidersWindow(),
