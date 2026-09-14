@@ -10,7 +10,7 @@ static class Program
         {
             using var app = new QApplication(new[] { "qtsharp-examples" });
 
-            string which = args.Length > 0 ? args[0].ToLowerInvariant() : "sliders";
+            string which = args.Length > 0 ? args[0].ToLowerInvariant() : "all";
             QWidget window = which switch
             {
                 "sliders" => new SlidersWindow(),
@@ -21,10 +21,22 @@ static class Program
                 "calendar" => new CalendarWindow(),
                 "systray" => new SystemTrayWindow(),
                 "scribble" => new ScribbleWindow(),
+                "shortcut" => new ShortcutWindow(),
                 "analogclock" => new AnalogClock(),
                 "calculator" => new Calculator(),
-                _ => new SlidersWindow(),
+                "gallery" => new WidgetGalleryWindow(),
+                "docviewer" => new DocumentViewerWindow(),
+                _ => null,
             };
+
+            if (window == null)
+            {
+                var demos = AllDemos.CreateAll();
+                AllDemos.ShowTiled(demos);
+                Console.WriteLine($"[OK] {demos.Count} demos shown side by side; close them to exit...");
+                return QApplication.Exec();
+            }
+
             window.Show();
             Console.WriteLine($"[OK] {which} shown; close it to exit...");
             return QApplication.Exec();
