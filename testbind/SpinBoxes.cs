@@ -116,6 +116,8 @@ public class SpinBoxesWindow : QWidget
 
         formatComboBox.TextActivatedSignal.Connect(SetFormatString);
 
+        SetFormatString(formatComboBox.CurrentText);
+
         var editsLayout = new QVBoxLayout();
         editsLayout.AddWidget(dateLabel);
         editsLayout.AddWidget(dateEdit);
@@ -179,6 +181,16 @@ public class SpinBoxesWindow : QWidget
 
         precisionSpinBox.ValueChangedSignal.Connect(() => ChangePrecision(precisionSpinBox.Value));
 
+        var groupSeparatorSpinBoxD = new QDoubleSpinBox();
+        groupSeparatorSpinBoxD.SetRange(-99999999, 99999999);
+        groupSeparatorSpinBoxD.Decimals = 2;
+        groupSeparatorSpinBoxD.Value = 1000.00;
+        groupSeparatorSpinBoxD.GroupSeparatorShown = true;
+        var groupSeparatorChkBox = new QCheckBox();
+        groupSeparatorChkBox.Text = "Show group separator";
+        groupSeparatorChkBox.Checked = true;
+        groupSeparatorChkBox.ToggledSignal.Connect(b => groupSeparatorSpinBoxD.GroupSeparatorShown = b);
+
         var spinBoxLayout = new QVBoxLayout();
         spinBoxLayout.AddWidget(precisionLabel);
         spinBoxLayout.AddWidget(precisionSpinBox);
@@ -188,6 +200,8 @@ public class SpinBoxesWindow : QWidget
         spinBoxLayout.AddWidget(scaleSpinBox);
         spinBoxLayout.AddWidget(priceLabel);
         spinBoxLayout.AddWidget(priceSpinBox);
+        spinBoxLayout.AddWidget(groupSeparatorChkBox);
+        spinBoxLayout.AddWidget(groupSeparatorSpinBoxD);
         doubleSpinBoxesGroup.Layout = spinBoxLayout;
     }
 

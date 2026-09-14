@@ -6,6 +6,9 @@ using Qt = QtSharp.QtCore.Qt;
 
 public class ShapedClock : QWidget
 {
+    QPoint dragPosition;
+    bool dragging;
+
     public ShapedClock() : base(null, (int)Qt.WindowType.FramelessWindowHint | (int)Qt.WindowType.WindowSystemMenuHint)
     {
         SetAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, true);
@@ -16,6 +19,7 @@ public class ShapedClock : QWidget
 
         var quitAction = new QAction("E&xit", this);
         quitAction.TriggeredSignal.Connect(_ => QApplication.Quit());
+        quitAction.Shortcut = new QKeySequence(QKeySequence.StandardKey.Quit);
         AddAction(quitAction);
 
         ContextMenuPolicy = Qt.ContextMenuPolicy.ActionsContextMenu;
@@ -24,6 +28,35 @@ public class ShapedClock : QWidget
     }
 
     public override QSize SizeHint => new QSize(200, 200);
+
+    protected override void MousePressEvent(QMouseEvent @event)
+    {
+        if (@event.Button == Qt.MouseButton.LeftButton)
+        {
+            dragPosition = Sub(@event.GlobalPos, FrameGeometry.TopLeft);
+            dragging = true;
+            @event.Accept();
+        }
+    }
+
+    protected override void MouseMoveEvent(QMouseEvent @event)
+    {
+        // The original tests (event->buttons() & Qt::LeftButton); that accessor is not
+        // part of the current bindings, so the pressed state is tracked instead.
+        if (dragging)
+        {
+            Move(Sub(@event.GlobalPos, dragPosition));
+            @event.Accept();
+        }
+    }
+
+    protected override void MouseReleaseEvent(QMouseEvent @event)
+    {
+        if (@event.Button == Qt.MouseButton.LeftButton)
+            dragging = false;
+    }
+
+    static QPoint Sub(QPoint a, QPoint b) => new QPoint(a.X - b.X, a.Y - b.Y);
 
     protected override void PaintEvent(QPaintEvent e)
     {
