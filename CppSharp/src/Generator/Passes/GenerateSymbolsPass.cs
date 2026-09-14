@@ -213,6 +213,13 @@ namespace CppSharp.Passes
         private bool NeedsSymbol(Function function)
         {
             var method = function as Method;
+            // Abstract classes cannot be instantiated directly, so their
+            // constructors must always be wrapped in a concrete subclass.
+            if (method != null && method.IsConstructor && !method.IsDeleted &&
+                function.IsGenerated && function.Namespace.IsGenerated &&
+                function.Namespace is Class @class && @class.IsAbstract)
+                return true;
+
             bool isInImplicitSpecialization;
             var declarationContext = function.Namespace;
             do

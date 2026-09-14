@@ -147,10 +147,29 @@ namespace CppSharp.AST
             if (obj is not TagType type) 
                 return false;
 
-            return Declaration.Equals(type.Declaration);
+            if (ReferenceEquals(Declaration, type.Declaration))
+                return true;
+
+            // The parser can create distinct declaration objects for the same C++ type
+            // when a header is reached through more than one translation unit. Compare by
+            // the clang USR so such duplicates are still recognised as the same type.
+            var a = GetTypeIdentity(Declaration);
+            var b = GetTypeIdentity(type.Declaration);
+            return a != null && b != null && a == b;
         }
 
-        public override int GetHashCode() => Declaration.GetHashCode();
+        internal static string GetTypeIdentity(Declaration declaration)
+        {
+            if (declaration == null)
+                return null;
+            return string.IsNullOrEmpty(declaration.USR) ? null : declaration.USR;
+        }
+
+        public override int GetHashCode()
+        {
+            var identity = GetTypeIdentity(Declaration);
+            return identity != null ? identity.GetHashCode() : (Declaration?.GetHashCode() ?? 0);
+        }
     }
 
     /// <summary>

@@ -1,6 +1,6 @@
 LIBRARY QtSharp
 EXPORTS
-  ??0QObjectData@@QEAA@XZ
+  ??0QObjectData@@QEAA@XZ = QObjectData_QObjectData
   ??1QObjectData@@UEAA@XZ
   ?qt_metacast@QObject@@UEAAPEAXPEBD@Z
   ?tr@QObject@@SA?AVQString@@PEBD0H@Z
@@ -27,6 +27,8 @@ EXPORTS
   ?disconnect@QObject@@QEBA_NPEBV1@PEBD@Z
   ?dumpObjectTree@QObject@@QEBAXXZ
   ?dumpObjectInfo@QObject@@QEBAXXZ
+  ?setProperty@QObject@@QEAA_NPEBDAEBVQVariant@@@Z
+  ?property@QObject@@QEBA?AVQVariant@@PEBD@Z
   ?bindingStorage@QObject@@QEAAPEAVQBindingStorage@@XZ
   ?destroyed@QObject@@QEAAXPEAV1@@Z
   ?parent@QObject@@QEBAPEAV1@XZ
@@ -49,9 +51,9 @@ EXPORTS
   ??0QLatin1Char@@QEAA@D@Z = QLatin1Char_QLatin1Char_C
   ?toLatin1@QLatin1Char@@QEBADXZ = _9
   ?unicode@QLatin1Char@@QEBA_SXZ = _10
-  ??0QChar@@QEAA@XZ
-  ??0QChar@@QEAA@EE@Z
-  ?fromUcs2@QChar@@SA?AV1@_S@Z
+  ??0QChar@@QEAA@XZ = QChar_QChar
+  ??0QChar@@QEAA@EE@Z = QChar_QChar_c_c
+  ?fromUcs2@QChar@@SA?AV1@_S@Z = _12
   ?category@QChar@@QEBA?AW4Category@1@XZ
   ?direction@QChar@@QEBA?AW4Direction@1@XZ
   ?joiningType@QChar@@QEBA?AW4JoiningType@1@XZ
@@ -67,39 +69,39 @@ EXPORTS
   ?toCaseFolded@QChar@@QEBA?AV1@XZ
   ?script@QChar@@QEBA?AW4Script@1@XZ
   ?unicodeVersion@QChar@@QEBA?AW4UnicodeVersion@1@XZ
-  ?toLatin1@QChar@@QEBADXZ
-  ?unicode@QChar@@QEBA_SXZ
-  ?fromLatin1@QChar@@SA?AV1@D@Z
-  ?isNull@QChar@@QEBA_NXZ
+  ?toLatin1@QChar@@QEBADXZ = _13
+  ?unicode@QChar@@QEBA_SXZ = _14
+  ?fromLatin1@QChar@@SA?AV1@D@Z = _15
+  ?isNull@QChar@@QEBA_NXZ = _16
   ?isPrint@QChar@@QEBA_NXZ
-  ?isSpace@QChar@@QEBA_NXZ
+  ?isSpace@QChar@@QEBA_NXZ = _17
   ?isMark@QChar@@QEBA_NXZ
   ?isPunct@QChar@@QEBA_NXZ
   ?isSymbol@QChar@@QEBA_NXZ
-  ?isLetter@QChar@@QEBA_NXZ
-  ?isNumber@QChar@@QEBA_NXZ
-  ?isLetterOrNumber@QChar@@QEBA_NXZ
-  ?isDigit@QChar@@QEBA_NXZ
-  ?isLower@QChar@@QEBA_NXZ
-  ?isUpper@QChar@@QEBA_NXZ
-  ?isTitleCase@QChar@@QEBA_NXZ
-  ?isNonCharacter@QChar@@QEBA_NXZ
-  ?isHighSurrogate@QChar@@QEBA_NXZ
-  ?isLowSurrogate@QChar@@QEBA_NXZ
-  ?isSurrogate@QChar@@QEBA_NXZ
-  ?cell@QChar@@QEBAEXZ
-  ?row@QChar@@QEBAEXZ
-  ?setCell@QChar@@QEAAXE@Z
-  ?setRow@QChar@@QEAAXE@Z
-  ?isNonCharacter@QChar@@SA_N_U@Z
-  ?isHighSurrogate@QChar@@SA_N_U@Z
-  ?isLowSurrogate@QChar@@SA_N_U@Z
-  ?isSurrogate@QChar@@SA_N_U@Z
-  ?requiresSurrogates@QChar@@SA_N_U@Z
-  ?surrogateToUcs4@QChar@@SA_U_S0@Z
-  ?surrogateToUcs4@QChar@@SA_UV1@0@Z
-  ?highSurrogate@QChar@@SA_S_U@Z
-  ?lowSurrogate@QChar@@SA_S_U@Z
+  ?isLetter@QChar@@QEBA_NXZ = _18
+  ?isNumber@QChar@@QEBA_NXZ = _19
+  ?isLetterOrNumber@QChar@@QEBA_NXZ = _20
+  ?isDigit@QChar@@QEBA_NXZ = _21
+  ?isLower@QChar@@QEBA_NXZ = _22
+  ?isUpper@QChar@@QEBA_NXZ = _23
+  ?isTitleCase@QChar@@QEBA_NXZ = _24
+  ?isNonCharacter@QChar@@QEBA_NXZ = _25
+  ?isHighSurrogate@QChar@@QEBA_NXZ = _26
+  ?isLowSurrogate@QChar@@QEBA_NXZ = _27
+  ?isSurrogate@QChar@@QEBA_NXZ = _28
+  ?cell@QChar@@QEBAEXZ = _29
+  ?row@QChar@@QEBAEXZ = _30
+  ?setCell@QChar@@QEAAXE@Z = _31
+  ?setRow@QChar@@QEAAXE@Z = _32
+  ?isNonCharacter@QChar@@SA_N_U@Z = _33
+  ?isHighSurrogate@QChar@@SA_N_U@Z = _34
+  ?isLowSurrogate@QChar@@SA_N_U@Z = _35
+  ?isSurrogate@QChar@@SA_N_U@Z = _36
+  ?requiresSurrogates@QChar@@SA_N_U@Z = _37
+  ?surrogateToUcs4@QChar@@SA_U_S0@Z = _38
+  ?surrogateToUcs4@QChar@@SA_UV1@0@Z = _39
+  ?highSurrogate@QChar@@SA_S_U@Z = _40
+  ?lowSurrogate@QChar@@SA_S_U@Z = _41
   ?category@QChar@@SA?AW4Category@1@_U@Z
   ?direction@QChar@@SA?AW4Direction@1@_U@Z
   ?joiningType@QChar@@SA?AW4JoiningType@1@_U@Z
@@ -117,17 +119,17 @@ EXPORTS
   ?unicodeVersion@QChar@@SA?AW4UnicodeVersion@1@_U@Z
   ?currentUnicodeVersion@QChar@@SA?AW4UnicodeVersion@1@XZ
   ?isPrint@QChar@@SA_N_U@Z
-  ?isSpace@QChar@@SA_N_U@Z
+  ?isSpace@QChar@@SA_N_U@Z = _42
   ?isMark@QChar@@SA_N_U@Z
   ?isPunct@QChar@@SA_N_U@Z
   ?isSymbol@QChar@@SA_N_U@Z
-  ?isLetter@QChar@@SA_N_U@Z
-  ?isNumber@QChar@@SA_N_U@Z
-  ?isLetterOrNumber@QChar@@SA_N_U@Z
-  ?isDigit@QChar@@SA_N_U@Z
-  ?isLower@QChar@@SA_N_U@Z
-  ?isUpper@QChar@@SA_N_U@Z
-  ?isTitleCase@QChar@@SA_N_U@Z
+  ?isLetter@QChar@@SA_N_U@Z = _43
+  ?isNumber@QChar@@SA_N_U@Z = _44
+  ?isLetterOrNumber@QChar@@SA_N_U@Z = _45
+  ?isDigit@QChar@@SA_N_U@Z = _46
+  ?isLower@QChar@@SA_N_U@Z = _47
+  ?isUpper@QChar@@SA_N_U@Z = _48
+  ?isTitleCase@QChar@@SA_N_U@Z = _49
   ??0QStringView@@QEAA@XZ = QStringView_QStringView
   ?size@QStringView@@QEBA_JXZ = _51
   ?utf16@QStringView@@QEBAPEB_SXZ = _52
@@ -162,24 +164,24 @@ EXPORTS
   ?allocate2@QArrayData@@SAPEAXPEAPEAU1@_JW4AllocationOption@1@@Z
   ?deallocate@QArrayData@@SAXPEAU1@_J1@Z
   ??0QArrayData@@QEAA@XZ = QArrayData_QArrayData
-  ??0QByteArrayView@@QEAA@XZ
+  ??0QByteArrayView@@QEAA@XZ = QByteArrayView_QByteArrayView
   ?toByteArray@QByteArrayView@@QEBA?AVQByteArray@@XZ
-  ?size@QByteArrayView@@QEBA_JXZ
-  ?data@QByteArrayView@@QEBAPEBDXZ
-  ?constData@QByteArrayView@@QEBAPEBDXZ
-  ?at@QByteArrayView@@QEBAD_J@Z
-  ?first@QByteArrayView@@QEBA?AV1@_J@Z
-  ?last@QByteArrayView@@QEBA?AV1@_J@Z
-  ?sliced@QByteArrayView@@QEBA?AV1@_J@Z
-  ?sliced@QByteArrayView@@QEBA?AV1@_J0@Z
-  ?slice@QByteArrayView@@QEAAAEAV1@_J@Z
-  ?slice@QByteArrayView@@QEAAAEAV1@_J0@Z
-  ?chopped@QByteArrayView@@QEBA?AV1@_J@Z
-  ?left@QByteArrayView@@QEBA?AV1@_J@Z
-  ?right@QByteArrayView@@QEBA?AV1@_J@Z
-  ?mid@QByteArrayView@@QEBA?AV1@_J0@Z
-  ?truncate@QByteArrayView@@QEAAX_J@Z
-  ?chop@QByteArrayView@@QEAAX_J@Z
+  ?size@QByteArrayView@@QEBA_JXZ = _79
+  ?data@QByteArrayView@@QEBAPEBDXZ = _80
+  ?constData@QByteArrayView@@QEBAPEBDXZ = _81
+  ?at@QByteArrayView@@QEBAD_J@Z = _83
+  ?first@QByteArrayView@@QEBA?AV1@_J@Z = _84
+  ?last@QByteArrayView@@QEBA?AV1@_J@Z = _85
+  ?sliced@QByteArrayView@@QEBA?AV1@_J@Z = _86
+  ?sliced@QByteArrayView@@QEBA?AV1@_J0@Z = _87
+  ?slice@QByteArrayView@@QEAAAEAV1@_J@Z = _88
+  ?slice@QByteArrayView@@QEAAAEAV1@_J0@Z = _89
+  ?chopped@QByteArrayView@@QEBA?AV1@_J@Z = _90
+  ?left@QByteArrayView@@QEBA?AV1@_J@Z = _91
+  ?right@QByteArrayView@@QEBA?AV1@_J@Z = _92
+  ?mid@QByteArrayView@@QEBA?AV1@_J0@Z = _93
+  ?truncate@QByteArrayView@@QEAAX_J@Z = _94
+  ?chop@QByteArrayView@@QEAAX_J@Z = _95
   ?trimmed@QByteArrayView@@QEBA?AV1@XZ
   ?toShort@QByteArrayView@@QEBAFPEA_NH@Z
   ?toUShort@QByteArrayView@@QEBAGPEA_NH@Z
@@ -192,9 +194,9 @@ EXPORTS
   ?toFloat@QByteArrayView@@QEBAMPEA_N@Z
   ?toDouble@QByteArrayView@@QEBANPEA_N@Z
   ?startsWith@QByteArrayView@@QEBA_NV1@@Z
-  ?startsWith@QByteArrayView@@QEBA_ND@Z
+  ?startsWith@QByteArrayView@@QEBA_ND@Z = _96
   ?endsWith@QByteArrayView@@QEBA_NV1@@Z
-  ?endsWith@QByteArrayView@@QEBA_ND@Z
+  ?endsWith@QByteArrayView@@QEBA_ND@Z = _97
   ?indexOf@QByteArrayView@@QEBA_JV1@_J@Z
   ?indexOf@QByteArrayView@@QEBA_JD_J@Z
   ?contains@QByteArrayView@@QEBA_NV1@@Z
@@ -206,21 +208,21 @@ EXPORTS
   ?count@QByteArrayView@@QEBA_JD@Z
   ?compare@QByteArrayView@@QEBAHV1@W4CaseSensitivity@Qt@@@Z
   ?isValidUtf8@QByteArrayView@@QEBA_NXZ
-  ?begin@QByteArrayView@@QEBAPEBDXZ
-  ?end@QByteArrayView@@QEBAPEBDXZ
-  ?cbegin@QByteArrayView@@QEBAPEBDXZ
-  ?cend@QByteArrayView@@QEBAPEBDXZ
-  ?empty@QByteArrayView@@QEBA_NXZ
-  ?front@QByteArrayView@@QEBADXZ
-  ?back@QByteArrayView@@QEBADXZ
-  ?max_size@QByteArrayView@@QEBA_JXZ
-  ?isNull@QByteArrayView@@QEBA_NXZ
-  ?isEmpty@QByteArrayView@@QEBA_NXZ
-  ?length@QByteArrayView@@QEBA_JXZ
-  ?first@QByteArrayView@@QEBADXZ
-  ?last@QByteArrayView@@QEBADXZ
-  ?maxSize@QByteArrayView@@SA_JXZ
-  ??0QByteArray@@QEAA@XZ
+  ?begin@QByteArrayView@@QEBAPEBDXZ = _98
+  ?end@QByteArrayView@@QEBAPEBDXZ = _99
+  ?cbegin@QByteArrayView@@QEBAPEBDXZ = _100
+  ?cend@QByteArrayView@@QEBAPEBDXZ = _101
+  ?empty@QByteArrayView@@QEBA_NXZ = _102
+  ?front@QByteArrayView@@QEBADXZ = _103
+  ?back@QByteArrayView@@QEBADXZ = _104
+  ?max_size@QByteArrayView@@QEBA_JXZ = _105
+  ?isNull@QByteArrayView@@QEBA_NXZ = _106
+  ?isEmpty@QByteArrayView@@QEBA_NXZ = _107
+  ?length@QByteArrayView@@QEBA_JXZ = _108
+  ?first@QByteArrayView@@QEBADXZ = _109
+  ?last@QByteArrayView@@QEBADXZ = _110
+  ?maxSize@QByteArrayView@@SA_JXZ = _111
+  ??0QByteArray@@QEAA@XZ = QByteArray_QByteArray
   ??0QByteArray@@QEAA@PEBD_J@Z
   ??0QByteArray@@QEAA@_JD@Z
   ??0QByteArray@@QEAA@_JW4Initialization@Qt@@@Z
@@ -228,7 +230,7 @@ EXPORTS
   ??0QByteArray@@QEAA@AEBV0@@Z
   ??1QByteArray@@QEAA@XZ
   ?swap@QByteArray@@QEAAXAEAV1@@Z
-  ?isEmpty@QByteArray@@QEBA_NXZ
+  ?isEmpty@QByteArray@@QEBA_NXZ = _114
   ?resize@QByteArray@@QEAAX_J@Z
   ?resize@QByteArray@@QEAAX_JD@Z
   ?resizeForOverwrite@QByteArray@@QEAAX_J@Z
@@ -363,14 +365,14 @@ EXPORTS
   ?shrink_to_fit@QByteArray@@QEAAXXZ
   ?erase@QByteArray@@QEAAPEADPEBD0@Z
   ?erase@QByteArray@@QEAAPEADPEBD@Z
-  ?max_size@QByteArray@@QEBA_JXZ
+  ?max_size@QByteArray@@QEBA_JXZ = _115
   ?fromStdString@QByteArray@@SA?AV1@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
   ?toStdString@QByteArray@@QEBA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ
-  ?maxSize@QByteArray@@SA_JXZ
-  ?size@QByteArray@@QEBA_JXZ
-  ?count@QByteArray@@QEBA_JXZ
-  ?length@QByteArray@@QEBA_JXZ
-  ?isNull@QByteArray@@QEBA_NXZ
+  ?maxSize@QByteArray@@SA_JXZ = _116
+  ?size@QByteArray@@QEBA_JXZ = _117
+  ?count@QByteArray@@QEBA_JXZ = _118
+  ?length@QByteArray@@QEBA_JXZ = _119
+  ?isNull@QByteArray@@QEBA_NXZ = _120
   ?nullTerminated@QByteArray@@QEGBA?AV1@XZ
   ?nullTerminate@QByteArray@@QEAAAEAV1@XZ
   ??0FromBase64Result@QByteArray@@QEAA@AEBV01@@Z = QByteArray_S_FromBase64Result_FromBase64Result___1__S_QByteArray_S_FromBase64Result
@@ -440,18 +442,18 @@ EXPORTS
   ?isNull@QAnyStringView@@QEBA_NXZ = _174
   ?isEmpty@QAnyStringView@@QEBA_NXZ = _175
   ?length@QAnyStringView@@QEBA_JXZ = _176
-  ??0QString@@QEAA@XZ
+  ??0QString@@QEAA@XZ = QString_QString
   ??0QString@@QEAA@PEBVQChar@@_J@Z
   ??0QString@@QEAA@_JVQChar@@@Z
   ??0QString@@QEAA@VQLatin1String@@@Z
   ??0QString@@QEAA@VQStringView@@@Z
   ??1QString@@QEAA@XZ
   ?swap@QString@@QEAAXAEAV1@@Z
-  ?maxSize@QString@@SA_JXZ
-  ?size@QString@@QEBA_JXZ
-  ?count@QString@@QEBA_JXZ
-  ?length@QString@@QEBA_JXZ
-  ?isEmpty@QString@@QEBA_NXZ
+  ?maxSize@QString@@SA_JXZ = _178
+  ?size@QString@@QEBA_JXZ = _179
+  ?count@QString@@QEBA_JXZ = _180
+  ?length@QString@@QEBA_JXZ = _181
+  ?isEmpty@QString@@QEBA_NXZ = _182
   ?resize@QString@@QEAAX_J@Z
   ?resize@QString@@QEAAX_JVQChar@@@Z
   ?resizeForOverwrite@QString@@QEAAX_J@Z
@@ -645,10 +647,10 @@ EXPORTS
   ?shrink_to_fit@QString@@QEAAXXZ
   ?erase@QString@@QEAAPEAVQChar@@PEBV2@0@Z
   ?erase@QString@@QEAAPEAVQChar@@PEBV2@@Z
-  ?max_size@QString@@QEBA_JXZ
+  ?max_size@QString@@QEBA_JXZ = _183
   ?fromStdString@QString@@SA?AV1@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
   ?toStdString@QString@@QEBA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ
-  ?isNull@QString@@QEBA_NXZ
+  ?isNull@QString@@QEBA_NXZ = _184
   ?isRightToLeft@QString@@QEBA_NXZ
   ?isValidUtf16@QString@@QEBA_NXZ
   ??0QString@@QEAA@_JW4Initialization@Qt@@@Z
@@ -663,14 +665,14 @@ EXPORTS
   ?destruct@QMetaType@@SAXHPEAX@Z
   ?isRegistered@QMetaType@@SA_NH@Z
   ??0QMetaType@@QEAA@H@Z
-  ??0QMetaType@@QEAA@XZ
-  ?isValid@QMetaType@@QEBA_NUDisambiguated_t@Qt@@@Z
+  ??0QMetaType@@QEAA@XZ = QMetaType_QMetaType
+  ?isValid@QMetaType@@QEBA_NUDisambiguated_t@Qt@@@Z = _185
   ?isRegistered@QMetaType@@QEBA_NUDisambiguated_t@Qt@@@Z
   ?registerType@QMetaType@@QEBAXXZ
   ?id@QMetaType@@QEBAHH@Z
-  ?sizeOf@QMetaType@@QEBA_JXZ
-  ?alignOf@QMetaType@@QEBA_JXZ
-  ?name@QMetaType@@QEBAPEBDXZ
+  ?sizeOf@QMetaType@@QEBA_JXZ = _186
+  ?alignOf@QMetaType@@QEBA_JXZ = _187
+  ?name@QMetaType@@QEBAPEBDXZ = _188
   ?create@QMetaType@@QEBAPEAXPEBX@Z
   ?destroy@QMetaType@@QEBAXPEAX@Z
   ?construct@QMetaType@@QEBAPEAXPEAXPEBX@Z
@@ -703,63 +705,63 @@ EXPORTS
   ??1QBindingStorage@@QEAA@XZ
   ?isEmpty@QBindingStorage@@QEAA_NXZ
   ?isValid@QBindingStorage@@QEBA_NXZ
-  ??0QRect@@QEAA@XZ
-  ??0QRect@@QEAA@AEBVQPoint@@0@Z
-  ??0QRect@@QEAA@AEBVQPoint@@AEBVQSize@@@Z
-  ??0QRect@@QEAA@HHHH@Z
-  ?isNull@QRect@@QEBA_NXZ
-  ?isEmpty@QRect@@QEBA_NXZ
-  ?isValid@QRect@@QEBA_NXZ
-  ?left@QRect@@QEBAHXZ
-  ?top@QRect@@QEBAHXZ
-  ?right@QRect@@QEBAHXZ
-  ?bottom@QRect@@QEBAHXZ
+  ??0QRect@@QEAA@XZ = QRect_QRect
+  ??0QRect@@QEAA@AEBVQPoint@@0@Z = QRect_QRect___1__S_QPoint_S0
+  ??0QRect@@QEAA@AEBVQPoint@@AEBVQSize@@@Z = QRect_QRect___1__S_QPoint___1__S_QSize
+  ??0QRect@@QEAA@HHHH@Z = QRect_QRect_I_I_I_I
+  ?isNull@QRect@@QEBA_NXZ = _192
+  ?isEmpty@QRect@@QEBA_NXZ = _193
+  ?isValid@QRect@@QEBA_NXZ = _194
+  ?left@QRect@@QEBAHXZ = _195
+  ?top@QRect@@QEBAHXZ = _196
+  ?right@QRect@@QEBAHXZ = _197
+  ?bottom@QRect@@QEBAHXZ = _198
   ?normalized@QRect@@QEBA?AV1@XZ
-  ?x@QRect@@QEBAHXZ
-  ?y@QRect@@QEBAHXZ
-  ?setLeft@QRect@@QEAAXH@Z
-  ?setTop@QRect@@QEAAXH@Z
-  ?setRight@QRect@@QEAAXH@Z
-  ?setBottom@QRect@@QEAAXH@Z
-  ?setX@QRect@@QEAAXH@Z
-  ?setY@QRect@@QEAAXH@Z
-  ?setTopLeft@QRect@@QEAAXAEBVQPoint@@@Z
-  ?setBottomRight@QRect@@QEAAXAEBVQPoint@@@Z
-  ?setTopRight@QRect@@QEAAXAEBVQPoint@@@Z
-  ?setBottomLeft@QRect@@QEAAXAEBVQPoint@@@Z
-  ?topLeft@QRect@@QEBA?AVQPoint@@XZ
-  ?bottomRight@QRect@@QEBA?AVQPoint@@XZ
-  ?topRight@QRect@@QEBA?AVQPoint@@XZ
-  ?bottomLeft@QRect@@QEBA?AVQPoint@@XZ
-  ?center@QRect@@QEBA?AVQPoint@@XZ
-  ?moveLeft@QRect@@QEAAXH@Z
-  ?moveTop@QRect@@QEAAXH@Z
-  ?moveRight@QRect@@QEAAXH@Z
-  ?moveBottom@QRect@@QEAAXH@Z
-  ?moveTopLeft@QRect@@QEAAXAEBVQPoint@@@Z
-  ?moveBottomRight@QRect@@QEAAXAEBVQPoint@@@Z
-  ?moveTopRight@QRect@@QEAAXAEBVQPoint@@@Z
-  ?moveBottomLeft@QRect@@QEAAXAEBVQPoint@@@Z
-  ?moveCenter@QRect@@QEAAXAEBVQPoint@@@Z
-  ?translate@QRect@@QEAAXHH@Z
-  ?translate@QRect@@QEAAXAEBVQPoint@@@Z
-  ?translated@QRect@@QEBA?AV1@HH@Z
-  ?translated@QRect@@QEBA?AV1@AEBVQPoint@@@Z
-  ?transposed@QRect@@QEBA?AV1@XZ
-  ?moveTo@QRect@@QEAAXHH@Z
-  ?moveTo@QRect@@QEAAXAEBVQPoint@@@Z
-  ?setRect@QRect@@QEAAXHHHH@Z
-  ?getRect@QRect@@QEBAXPEAH000@Z
-  ?setCoords@QRect@@QEAAXHHHH@Z
-  ?getCoords@QRect@@QEBAXPEAH000@Z
-  ?adjust@QRect@@QEAAXHHHH@Z
-  ?adjusted@QRect@@QEBA?AV1@HHHH@Z
-  ?size@QRect@@QEBA?AVQSize@@XZ
-  ?width@QRect@@QEBAHXZ
-  ?height@QRect@@QEBAHXZ
-  ?setWidth@QRect@@QEAAXH@Z
-  ?setHeight@QRect@@QEAAXH@Z
-  ?setSize@QRect@@QEAAXAEBVQSize@@@Z
+  ?x@QRect@@QEBAHXZ = _199
+  ?y@QRect@@QEBAHXZ = _200
+  ?setLeft@QRect@@QEAAXH@Z = _201
+  ?setTop@QRect@@QEAAXH@Z = _202
+  ?setRight@QRect@@QEAAXH@Z = _203
+  ?setBottom@QRect@@QEAAXH@Z = _204
+  ?setX@QRect@@QEAAXH@Z = _205
+  ?setY@QRect@@QEAAXH@Z = _206
+  ?setTopLeft@QRect@@QEAAXAEBVQPoint@@@Z = _207
+  ?setBottomRight@QRect@@QEAAXAEBVQPoint@@@Z = _208
+  ?setTopRight@QRect@@QEAAXAEBVQPoint@@@Z = _209
+  ?setBottomLeft@QRect@@QEAAXAEBVQPoint@@@Z = _210
+  ?topLeft@QRect@@QEBA?AVQPoint@@XZ = _211
+  ?bottomRight@QRect@@QEBA?AVQPoint@@XZ = _212
+  ?topRight@QRect@@QEBA?AVQPoint@@XZ = _213
+  ?bottomLeft@QRect@@QEBA?AVQPoint@@XZ = _214
+  ?center@QRect@@QEBA?AVQPoint@@XZ = _215
+  ?moveLeft@QRect@@QEAAXH@Z = _216
+  ?moveTop@QRect@@QEAAXH@Z = _217
+  ?moveRight@QRect@@QEAAXH@Z = _218
+  ?moveBottom@QRect@@QEAAXH@Z = _219
+  ?moveTopLeft@QRect@@QEAAXAEBVQPoint@@@Z = _220
+  ?moveBottomRight@QRect@@QEAAXAEBVQPoint@@@Z = _221
+  ?moveTopRight@QRect@@QEAAXAEBVQPoint@@@Z = _222
+  ?moveBottomLeft@QRect@@QEAAXAEBVQPoint@@@Z = _223
+  ?moveCenter@QRect@@QEAAXAEBVQPoint@@@Z = _224
+  ?translate@QRect@@QEAAXHH@Z = _225
+  ?translate@QRect@@QEAAXAEBVQPoint@@@Z = _226
+  ?translated@QRect@@QEBA?AV1@HH@Z = _227
+  ?translated@QRect@@QEBA?AV1@AEBVQPoint@@@Z = _228
+  ?transposed@QRect@@QEBA?AV1@XZ = _229
+  ?moveTo@QRect@@QEAAXHH@Z = _230
+  ?moveTo@QRect@@QEAAXAEBVQPoint@@@Z = _231
+  ?setRect@QRect@@QEAAXHHHH@Z = _232
+  ?getRect@QRect@@QEBAXPEAH000@Z = _233
+  ?setCoords@QRect@@QEAAXHHHH@Z = _234
+  ?getCoords@QRect@@QEBAXPEAH000@Z = _235
+  ?adjust@QRect@@QEAAXHHHH@Z = _236
+  ?adjusted@QRect@@QEBA?AV1@HHHH@Z = _237
+  ?size@QRect@@QEBA?AVQSize@@XZ = _238
+  ?width@QRect@@QEBAHXZ = _239
+  ?height@QRect@@QEBAHXZ = _240
+  ?setWidth@QRect@@QEAAXH@Z = _241
+  ?setHeight@QRect@@QEAAXH@Z = _242
+  ?setSize@QRect@@QEAAXAEBVQSize@@@Z = _243
   ??UQRect@@QEBA?AV0@AEBV0@@Z
   ??IQRect@@QEBA?AV0@AEBV0@@Z
   ?contains@QRect@@QEBA_NAEBV1@_N@Z
@@ -769,68 +771,68 @@ EXPORTS
   ?united@QRect@@QEBA?AV1@AEBV1@@Z
   ?intersected@QRect@@QEBA?AV1@AEBV1@@Z
   ?intersects@QRect@@QEBA_NAEBV1@@Z
-  ?marginsAdded@QRect@@QEBA?AV1@AEBVQMargins@@@Z
-  ?marginsRemoved@QRect@@QEBA?AV1@AEBVQMargins@@@Z
-  ?span@QRect@@SA?AV1@AEBVQPoint@@0@Z
-  ?toRectF@QRect@@QEBA?AVQRectF@@XZ
-  ??0QRectF@@QEAA@XZ
-  ??0QRectF@@QEAA@AEBVQPointF@@AEBVQSizeF@@@Z
-  ??0QRectF@@QEAA@AEBVQPointF@@0@Z
-  ??0QRectF@@QEAA@NNNN@Z
-  ??0QRectF@@QEAA@AEBVQRect@@@Z
-  ?isNull@QRectF@@QEBA_NXZ
-  ?isEmpty@QRectF@@QEBA_NXZ
-  ?isValid@QRectF@@QEBA_NXZ
+  ?marginsAdded@QRect@@QEBA?AV1@AEBVQMargins@@@Z = _244
+  ?marginsRemoved@QRect@@QEBA?AV1@AEBVQMargins@@@Z = _245
+  ?span@QRect@@SA?AV1@AEBVQPoint@@0@Z = _248
+  ?toRectF@QRect@@QEBA?AVQRectF@@XZ = _249
+  ??0QRectF@@QEAA@XZ = QRectF_QRectF
+  ??0QRectF@@QEAA@AEBVQPointF@@AEBVQSizeF@@@Z = QRectF_QRectF___1__S_QPointF___1__S_QSizeF
+  ??0QRectF@@QEAA@AEBVQPointF@@0@Z = QRectF_QRectF___1__S_QPointF_S0
+  ??0QRectF@@QEAA@NNNN@Z = QRectF_QRectF_d_d_d_d
+  ??0QRectF@@QEAA@AEBVQRect@@@Z = QRectF_QRectF___1__S_QRect
+  ?isNull@QRectF@@QEBA_NXZ = _251
+  ?isEmpty@QRectF@@QEBA_NXZ = _252
+  ?isValid@QRectF@@QEBA_NXZ = _253
   ?normalized@QRectF@@QEBA?AV1@XZ
-  ?left@QRectF@@QEBANXZ
-  ?top@QRectF@@QEBANXZ
-  ?right@QRectF@@QEBANXZ
-  ?bottom@QRectF@@QEBANXZ
-  ?x@QRectF@@QEBANXZ
-  ?y@QRectF@@QEBANXZ
-  ?setLeft@QRectF@@QEAAXN@Z
-  ?setTop@QRectF@@QEAAXN@Z
-  ?setRight@QRectF@@QEAAXN@Z
-  ?setBottom@QRectF@@QEAAXN@Z
-  ?setX@QRectF@@QEAAXN@Z
-  ?setY@QRectF@@QEAAXN@Z
-  ?topLeft@QRectF@@QEBA?AVQPointF@@XZ
-  ?bottomRight@QRectF@@QEBA?AVQPointF@@XZ
-  ?topRight@QRectF@@QEBA?AVQPointF@@XZ
-  ?bottomLeft@QRectF@@QEBA?AVQPointF@@XZ
-  ?center@QRectF@@QEBA?AVQPointF@@XZ
-  ?setTopLeft@QRectF@@QEAAXAEBVQPointF@@@Z
-  ?setBottomRight@QRectF@@QEAAXAEBVQPointF@@@Z
-  ?setTopRight@QRectF@@QEAAXAEBVQPointF@@@Z
-  ?setBottomLeft@QRectF@@QEAAXAEBVQPointF@@@Z
-  ?moveLeft@QRectF@@QEAAXN@Z
-  ?moveTop@QRectF@@QEAAXN@Z
-  ?moveRight@QRectF@@QEAAXN@Z
-  ?moveBottom@QRectF@@QEAAXN@Z
-  ?moveTopLeft@QRectF@@QEAAXAEBVQPointF@@@Z
-  ?moveBottomRight@QRectF@@QEAAXAEBVQPointF@@@Z
-  ?moveTopRight@QRectF@@QEAAXAEBVQPointF@@@Z
-  ?moveBottomLeft@QRectF@@QEAAXAEBVQPointF@@@Z
-  ?moveCenter@QRectF@@QEAAXAEBVQPointF@@@Z
-  ?translate@QRectF@@QEAAXNN@Z
-  ?translate@QRectF@@QEAAXAEBVQPointF@@@Z
-  ?translated@QRectF@@QEBA?AV1@NN@Z
-  ?translated@QRectF@@QEBA?AV1@AEBVQPointF@@@Z
-  ?transposed@QRectF@@QEBA?AV1@XZ
-  ?moveTo@QRectF@@QEAAXNN@Z
-  ?moveTo@QRectF@@QEAAXAEBVQPointF@@@Z
-  ?setRect@QRectF@@QEAAXNNNN@Z
-  ?getRect@QRectF@@QEBAXPEAN000@Z
-  ?setCoords@QRectF@@QEAAXNNNN@Z
-  ?getCoords@QRectF@@QEBAXPEAN000@Z
-  ?adjust@QRectF@@QEAAXNNNN@Z
-  ?adjusted@QRectF@@QEBA?AV1@NNNN@Z
-  ?size@QRectF@@QEBA?AVQSizeF@@XZ
-  ?width@QRectF@@QEBANXZ
-  ?height@QRectF@@QEBANXZ
-  ?setWidth@QRectF@@QEAAXN@Z
-  ?setHeight@QRectF@@QEAAXN@Z
-  ?setSize@QRectF@@QEAAXAEBVQSizeF@@@Z
+  ?left@QRectF@@QEBANXZ = _254
+  ?top@QRectF@@QEBANXZ = _255
+  ?right@QRectF@@QEBANXZ = _256
+  ?bottom@QRectF@@QEBANXZ = _257
+  ?x@QRectF@@QEBANXZ = _258
+  ?y@QRectF@@QEBANXZ = _259
+  ?setLeft@QRectF@@QEAAXN@Z = _260
+  ?setTop@QRectF@@QEAAXN@Z = _261
+  ?setRight@QRectF@@QEAAXN@Z = _262
+  ?setBottom@QRectF@@QEAAXN@Z = _263
+  ?setX@QRectF@@QEAAXN@Z = _264
+  ?setY@QRectF@@QEAAXN@Z = _265
+  ?topLeft@QRectF@@QEBA?AVQPointF@@XZ = _266
+  ?bottomRight@QRectF@@QEBA?AVQPointF@@XZ = _267
+  ?topRight@QRectF@@QEBA?AVQPointF@@XZ = _268
+  ?bottomLeft@QRectF@@QEBA?AVQPointF@@XZ = _269
+  ?center@QRectF@@QEBA?AVQPointF@@XZ = _270
+  ?setTopLeft@QRectF@@QEAAXAEBVQPointF@@@Z = _271
+  ?setBottomRight@QRectF@@QEAAXAEBVQPointF@@@Z = _272
+  ?setTopRight@QRectF@@QEAAXAEBVQPointF@@@Z = _273
+  ?setBottomLeft@QRectF@@QEAAXAEBVQPointF@@@Z = _274
+  ?moveLeft@QRectF@@QEAAXN@Z = _275
+  ?moveTop@QRectF@@QEAAXN@Z = _276
+  ?moveRight@QRectF@@QEAAXN@Z = _277
+  ?moveBottom@QRectF@@QEAAXN@Z = _278
+  ?moveTopLeft@QRectF@@QEAAXAEBVQPointF@@@Z = _279
+  ?moveBottomRight@QRectF@@QEAAXAEBVQPointF@@@Z = _280
+  ?moveTopRight@QRectF@@QEAAXAEBVQPointF@@@Z = _281
+  ?moveBottomLeft@QRectF@@QEAAXAEBVQPointF@@@Z = _282
+  ?moveCenter@QRectF@@QEAAXAEBVQPointF@@@Z = _283
+  ?translate@QRectF@@QEAAXNN@Z = _284
+  ?translate@QRectF@@QEAAXAEBVQPointF@@@Z = _285
+  ?translated@QRectF@@QEBA?AV1@NN@Z = _286
+  ?translated@QRectF@@QEBA?AV1@AEBVQPointF@@@Z = _287
+  ?transposed@QRectF@@QEBA?AV1@XZ = _288
+  ?moveTo@QRectF@@QEAAXNN@Z = _289
+  ?moveTo@QRectF@@QEAAXAEBVQPointF@@@Z = _290
+  ?setRect@QRectF@@QEAAXNNNN@Z = _291
+  ?getRect@QRectF@@QEBAXPEAN000@Z = _292
+  ?setCoords@QRectF@@QEAAXNNNN@Z = _293
+  ?getCoords@QRectF@@QEBAXPEAN000@Z = _294
+  ?adjust@QRectF@@QEAAXNNNN@Z = _295
+  ?adjusted@QRectF@@QEBA?AV1@NNNN@Z = _296
+  ?size@QRectF@@QEBA?AVQSizeF@@XZ = _297
+  ?width@QRectF@@QEBANXZ = _298
+  ?height@QRectF@@QEBANXZ = _299
+  ?setWidth@QRectF@@QEAAXN@Z = _300
+  ?setHeight@QRectF@@QEAAXN@Z = _301
+  ?setSize@QRectF@@QEAAXAEBVQSizeF@@@Z = _302
   ??UQRectF@@QEBA?AV0@AEBV0@@Z
   ??IQRectF@@QEBA?AV0@AEBV0@@Z
   ?contains@QRectF@@QEBA_NAEBV1@@Z
@@ -839,9 +841,9 @@ EXPORTS
   ?united@QRectF@@QEBA?AV1@AEBV1@@Z
   ?intersected@QRectF@@QEBA?AV1@AEBV1@@Z
   ?intersects@QRectF@@QEBA_NAEBV1@@Z
-  ?marginsAdded@QRectF@@QEBA?AV1@AEBVQMarginsF@@@Z
-  ?marginsRemoved@QRectF@@QEBA?AV1@AEBVQMarginsF@@@Z
-  ?toRect@QRectF@@QEBA?AVQRect@@XZ
+  ?marginsAdded@QRectF@@QEBA?AV1@AEBVQMarginsF@@@Z = _303
+  ?marginsRemoved@QRectF@@QEBA?AV1@AEBVQMarginsF@@@Z = _304
+  ?toRect@QRectF@@QEBA?AVQRect@@XZ = _307
   ?toAlignedRect@QRectF@@QEBA?AVQRect@@XZ
   ??0QMargins@@QEAA@XZ = QMargins_QMargins
   ??0QMargins@@QEAA@HHHH@Z = QMargins_QMargins_I_I_I_I
@@ -868,51 +870,51 @@ EXPORTS
   ?setRight@QMarginsF@@QEAAXN@Z = _335
   ?setBottom@QMarginsF@@QEAAXN@Z = _336
   ?toMargins@QMarginsF@@QEBA?AVQMargins@@XZ = _343
-  ??0QSize@@QEAA@XZ
-  ??0QSize@@QEAA@HH@Z
-  ?isNull@QSize@@QEBA_NXZ
-  ?isEmpty@QSize@@QEBA_NXZ
-  ?isValid@QSize@@QEBA_NXZ
-  ?width@QSize@@QEBAHXZ
-  ?height@QSize@@QEBAHXZ
-  ?setWidth@QSize@@QEAAXH@Z
-  ?setHeight@QSize@@QEAAXH@Z
+  ??0QSize@@QEAA@XZ = QSize_QSize
+  ??0QSize@@QEAA@HH@Z = QSize_QSize_I_I
+  ?isNull@QSize@@QEBA_NXZ = _345
+  ?isEmpty@QSize@@QEBA_NXZ = _346
+  ?isValid@QSize@@QEBA_NXZ = _347
+  ?width@QSize@@QEBAHXZ = _348
+  ?height@QSize@@QEBAHXZ = _349
+  ?setWidth@QSize@@QEAAXH@Z = _350
+  ?setHeight@QSize@@QEAAXH@Z = _351
   ?transpose@QSize@@QEAAXXZ
-  ?transposed@QSize@@QEBA?AV1@XZ
+  ?transposed@QSize@@QEBA?AV1@XZ = _352
   ?scale@QSize@@QEAAXHHW4AspectRatioMode@Qt@@@Z
   ?scale@QSize@@QEAAXAEBV1@W4AspectRatioMode@Qt@@@Z
   ?scaled@QSize@@QEBA?AV1@HHW4AspectRatioMode@Qt@@@Z
   ?scaled@QSize@@QEBA?AV1@AEBV1@W4AspectRatioMode@Qt@@@Z
-  ?expandedTo@QSize@@QEBA?AV1@AEBV1@@Z
-  ?boundedTo@QSize@@QEBA?AV1@AEBV1@@Z
-  ?grownBy@QSize@@QEBA?AV1@VQMargins@@@Z
-  ?shrunkBy@QSize@@QEBA?AV1@VQMargins@@@Z
-  ?rwidth@QSize@@QEAAAEAHXZ
-  ?rheight@QSize@@QEAAAEAHXZ
-  ?toSizeF@QSize@@QEBA?AVQSizeF@@XZ
-  ??0QSizeF@@QEAA@XZ
-  ??0QSizeF@@QEAA@AEBVQSize@@@Z
-  ??0QSizeF@@QEAA@NN@Z
+  ?expandedTo@QSize@@QEBA?AV1@AEBV1@@Z = _353
+  ?boundedTo@QSize@@QEBA?AV1@AEBV1@@Z = _354
+  ?grownBy@QSize@@QEBA?AV1@VQMargins@@@Z = _355
+  ?shrunkBy@QSize@@QEBA?AV1@VQMargins@@@Z = _356
+  ?rwidth@QSize@@QEAAAEAHXZ = _357
+  ?rheight@QSize@@QEAAAEAHXZ = _358
+  ?toSizeF@QSize@@QEBA?AVQSizeF@@XZ = _362
+  ??0QSizeF@@QEAA@XZ = QSizeF_QSizeF
+  ??0QSizeF@@QEAA@AEBVQSize@@@Z = QSizeF_QSizeF___1__S_QSize
+  ??0QSizeF@@QEAA@NN@Z = QSizeF_QSizeF_d_d
   ?isNull@QSizeF@@QEBA_NXZ
-  ?isEmpty@QSizeF@@QEBA_NXZ
-  ?isValid@QSizeF@@QEBA_NXZ
-  ?width@QSizeF@@QEBANXZ
-  ?height@QSizeF@@QEBANXZ
-  ?setWidth@QSizeF@@QEAAXN@Z
-  ?setHeight@QSizeF@@QEAAXN@Z
+  ?isEmpty@QSizeF@@QEBA_NXZ = _364
+  ?isValid@QSizeF@@QEBA_NXZ = _365
+  ?width@QSizeF@@QEBANXZ = _366
+  ?height@QSizeF@@QEBANXZ = _367
+  ?setWidth@QSizeF@@QEAAXN@Z = _368
+  ?setHeight@QSizeF@@QEAAXN@Z = _369
   ?transpose@QSizeF@@QEAAXXZ
-  ?transposed@QSizeF@@QEBA?AV1@XZ
+  ?transposed@QSizeF@@QEBA?AV1@XZ = _370
   ?scale@QSizeF@@QEAAXNNW4AspectRatioMode@Qt@@@Z
   ?scale@QSizeF@@QEAAXAEBV1@W4AspectRatioMode@Qt@@@Z
   ?scaled@QSizeF@@QEBA?AV1@NNW4AspectRatioMode@Qt@@@Z
   ?scaled@QSizeF@@QEBA?AV1@AEBV1@W4AspectRatioMode@Qt@@@Z
-  ?expandedTo@QSizeF@@QEBA?AV1@AEBV1@@Z
-  ?boundedTo@QSizeF@@QEBA?AV1@AEBV1@@Z
-  ?grownBy@QSizeF@@QEBA?AV1@VQMarginsF@@@Z
-  ?shrunkBy@QSizeF@@QEBA?AV1@VQMarginsF@@@Z
-  ?rwidth@QSizeF@@QEAAAEANXZ
-  ?rheight@QSizeF@@QEAAAEANXZ
-  ?toSize@QSizeF@@QEBA?AVQSize@@XZ
+  ?expandedTo@QSizeF@@QEBA?AV1@AEBV1@@Z = _371
+  ?boundedTo@QSizeF@@QEBA?AV1@AEBV1@@Z = _372
+  ?grownBy@QSizeF@@QEBA?AV1@VQMarginsF@@@Z = _373
+  ?shrunkBy@QSizeF@@QEBA?AV1@VQMarginsF@@@Z = _374
+  ?rwidth@QSizeF@@QEAAAEANXZ = _375
+  ?rheight@QSizeF@@QEAAAEANXZ = _376
+  ?toSize@QSizeF@@QEBA?AVQSize@@XZ = _380
   ??0QPoint@@QEAA@XZ = QPoint_QPoint
   ??0QPoint@@QEAA@HH@Z = QPoint_QPoint_I_I
   ?isNull@QPoint@@QEBA_NXZ = _382
@@ -939,66 +941,154 @@ EXPORTS
   ?ry@QPointF@@QEAAAEANXZ = _407
   ?dotProduct@QPointF@@SANAEBV1@0@Z = _412
   ?toPoint@QPointF@@QEBA?AVQPoint@@XZ = _413
-  ??0QLine@@QEAA@XZ
-  ??0QLine@@QEAA@AEBVQPoint@@0@Z
-  ??0QLine@@QEAA@HHHH@Z
-  ?isNull@QLine@@QEBA_NXZ
-  ?p1@QLine@@QEBA?AVQPoint@@XZ
-  ?p2@QLine@@QEBA?AVQPoint@@XZ
-  ?x1@QLine@@QEBAHXZ
-  ?y1@QLine@@QEBAHXZ
-  ?x2@QLine@@QEBAHXZ
-  ?y2@QLine@@QEBAHXZ
-  ?dx@QLine@@QEBAHXZ
-  ?dy@QLine@@QEBAHXZ
-  ?translate@QLine@@QEAAXAEBVQPoint@@@Z
-  ?translate@QLine@@QEAAXHH@Z
-  ?translated@QLine@@QEBA?AV1@AEBVQPoint@@@Z
-  ?translated@QLine@@QEBA?AV1@HH@Z
-  ?center@QLine@@QEBA?AVQPoint@@XZ
+  ??0QLine@@QEAA@XZ = QLine_QLine
+  ??0QLine@@QEAA@AEBVQPoint@@0@Z = QLine_QLine___1__S_QPoint_S0
+  ??0QLine@@QEAA@HHHH@Z = QLine_QLine_I_I_I_I
+  ?isNull@QLine@@QEBA_NXZ = _415
+  ?p1@QLine@@QEBA?AVQPoint@@XZ = _416
+  ?p2@QLine@@QEBA?AVQPoint@@XZ = _417
+  ?x1@QLine@@QEBAHXZ = _418
+  ?y1@QLine@@QEBAHXZ = _419
+  ?x2@QLine@@QEBAHXZ = _420
+  ?y2@QLine@@QEBAHXZ = _421
+  ?dx@QLine@@QEBAHXZ = _422
+  ?dy@QLine@@QEBAHXZ = _423
+  ?translate@QLine@@QEAAXAEBVQPoint@@@Z = _424
+  ?translate@QLine@@QEAAXHH@Z = _425
+  ?translated@QLine@@QEBA?AV1@AEBVQPoint@@@Z = _426
+  ?translated@QLine@@QEBA?AV1@HH@Z = _427
+  ?center@QLine@@QEBA?AVQPoint@@XZ = _428
   ?setP1@QLine@@QEAAXAEBVQPoint@@@Z
   ?setP2@QLine@@QEAAXAEBVQPoint@@@Z
   ?setPoints@QLine@@QEAAXAEBVQPoint@@0@Z
   ?setLine@QLine@@QEAAXHHHH@Z
-  ?toLineF@QLine@@QEBA?AVQLineF@@XZ
-  ??0QLineF@@QEAA@XZ
-  ??0QLineF@@QEAA@AEBVQPointF@@0@Z
-  ??0QLineF@@QEAA@NNNN@Z
-  ??0QLineF@@QEAA@AEBVQLine@@@Z
+  ?toLineF@QLine@@QEBA?AVQLineF@@XZ = _429
+  ??0QLineF@@QEAA@XZ = QLineF_QLineF
+  ??0QLineF@@QEAA@AEBVQPointF@@0@Z = QLineF_QLineF___1__S_QPointF_S0
+  ??0QLineF@@QEAA@NNNN@Z = QLineF_QLineF_d_d_d_d
+  ??0QLineF@@QEAA@AEBVQLine@@@Z = QLineF_QLineF___1__S_QLine
   ?fromPolar@QLineF@@SA?AV1@NN@Z
-  ?isNull@QLineF@@QEBA_NXZ
-  ?p1@QLineF@@QEBA?AVQPointF@@XZ
-  ?p2@QLineF@@QEBA?AVQPointF@@XZ
-  ?x1@QLineF@@QEBANXZ
-  ?y1@QLineF@@QEBANXZ
-  ?x2@QLineF@@QEBANXZ
-  ?y2@QLineF@@QEBANXZ
-  ?dx@QLineF@@QEBANXZ
-  ?dy@QLineF@@QEBANXZ
+  ?isNull@QLineF@@QEBA_NXZ = _431
+  ?p1@QLineF@@QEBA?AVQPointF@@XZ = _432
+  ?p2@QLineF@@QEBA?AVQPointF@@XZ = _433
+  ?x1@QLineF@@QEBANXZ = _434
+  ?y1@QLineF@@QEBANXZ = _435
+  ?x2@QLineF@@QEBANXZ = _436
+  ?y2@QLineF@@QEBANXZ = _437
+  ?dx@QLineF@@QEBANXZ = _438
+  ?dy@QLineF@@QEBANXZ = _439
   ?length@QLineF@@QEBANXZ
   ?setLength@QLineF@@QEAAXN@Z
   ?angle@QLineF@@QEBANXZ
   ?setAngle@QLineF@@QEAAXN@Z
   ?angleTo@QLineF@@QEBANAEBV1@@Z
   ?unitVector@QLineF@@QEBA?AV1@XZ
-  ?normalVector@QLineF@@QEBA?AV1@XZ
+  ?normalVector@QLineF@@QEBA?AV1@XZ = _440
   ?intersects@QLineF@@QEBA?AW4IntersectionType@1@AEBV1@PEAVQPointF@@@Z
-  ?pointAt@QLineF@@QEBA?AVQPointF@@N@Z
-  ?translate@QLineF@@QEAAXAEBVQPointF@@@Z
-  ?translate@QLineF@@QEAAXNN@Z
-  ?translated@QLineF@@QEBA?AV1@AEBVQPointF@@@Z
-  ?translated@QLineF@@QEBA?AV1@NN@Z
-  ?center@QLineF@@QEBA?AVQPointF@@XZ
+  ?pointAt@QLineF@@QEBA?AVQPointF@@N@Z = _441
+  ?translate@QLineF@@QEAAXAEBVQPointF@@@Z = _442
+  ?translate@QLineF@@QEAAXNN@Z = _443
+  ?translated@QLineF@@QEBA?AV1@AEBVQPointF@@@Z = _444
+  ?translated@QLineF@@QEBA?AV1@NN@Z = _445
+  ?center@QLineF@@QEBA?AVQPointF@@XZ = _446
   ?setP1@QLineF@@QEAAXAEBVQPointF@@@Z
   ?setP2@QLineF@@QEAAXAEBVQPointF@@@Z
   ?setPoints@QLineF@@QEAAXAEBVQPointF@@0@Z
   ?setLine@QLineF@@QEAAXNNNN@Z
-  ?toLine@QLineF@@QEBA?AVQLine@@XZ
-  ??0QDate@@QEAA@XZ
+  ?toLine@QLineF@@QEBA?AVQLine@@XZ = _447
+  ??0QVariant@@QEAA@XZ
+  ??1QVariant@@QEAA@XZ
+  ??0QVariant@@QEAA@VQMetaType@@PEBX@Z
+  ??0QVariant@@QEAA@AEBV0@@Z
+  ??0QVariant@@QEAA@H@Z
+  ??0QVariant@@QEAA@I@Z
+  ??0QVariant@@QEAA@_J@Z
+  ??0QVariant@@QEAA@_K@Z
+  ??0QVariant@@QEAA@_N@Z
+  ??0QVariant@@QEAA@N@Z
+  ??0QVariant@@QEAA@M@Z
+  ??0QVariant@@QEAA@VQChar@@@Z
+  ??0QVariant@@QEAA@VQDate@@@Z
+  ??0QVariant@@QEAA@VQTime@@@Z
+  ??0QVariant@@QEAA@AEBVQByteArray@@@Z
+  ??0QVariant@@QEAA@AEBVQDateTime@@@Z
+  ??0QVariant@@QEAA@AEBVQLocale@@@Z
+  ??0QVariant@@QEAA@AEBVQRegularExpression@@@Z
+  ??0QVariant@@QEAA@AEBV?$QList@VQString@@@@@Z
+  ??0QVariant@@QEAA@AEBVQUrl@@@Z
+  ??0QVariant@@QEAA@AEBVQModelIndex@@@Z
+  ??0QVariant@@QEAA@VQSize@@@Z
+  ??0QVariant@@QEAA@VQSizeF@@@Z
+  ??0QVariant@@QEAA@VQPoint@@@Z
+  ??0QVariant@@QEAA@VQPointF@@@Z
+  ??0QVariant@@QEAA@VQLine@@@Z
+  ??0QVariant@@QEAA@VQLineF@@@Z
+  ??0QVariant@@QEAA@VQRect@@@Z
+  ??0QVariant@@QEAA@VQRectF@@@Z
+  ??0QVariant@@QEAA@PEBD@Z
+  ??0QVariant@@QEAA@VQLatin1String@@@Z
+  ?swap@QVariant@@QEAAXAEAV1@@Z
+  ?userType@QVariant@@QEBAHXZ
+  ?typeId@QVariant@@QEBAHXZ
+  ?typeName@QVariant@@QEBAPEBDXZ
+  ?metaType@QVariant@@QEBA?AVQMetaType@@XZ
+  ?canConvert@QVariant@@QEBA_NVQMetaType@@@Z
+  ?convert@QVariant@@QEAA_NVQMetaType@@@Z
+  ?canView@QVariant@@QEBA_NVQMetaType@@@Z
+  ?canConvert@QVariant@@QEBA_NH@Z
+  ?convert@QVariant@@QEAA_NH@Z
+  ?isValid@QVariant@@QEBA_NXZ
+  ?isNull@QVariant@@QEBA_NXZ
+  ?clear@QVariant@@QEAAXXZ
+  ?detach@QVariant@@QEAAXXZ
+  ?isDetached@QVariant@@QEBA_NXZ
+  ?toInt@QVariant@@QEBAHPEA_N@Z
+  ?toUInt@QVariant@@QEBAIPEA_N@Z
+  ?toLongLong@QVariant@@QEBA_JPEA_N@Z
+  ?toULongLong@QVariant@@QEBA_KPEA_N@Z
+  ?toBool@QVariant@@QEBA_NXZ
+  ?toDouble@QVariant@@QEBANPEA_N@Z
+  ?toFloat@QVariant@@QEBAMPEA_N@Z
+  ?toReal@QVariant@@QEBANPEA_N@Z
+  ?toByteArray@QVariant@@QEBA?AVQByteArray@@XZ
+  ?toString@QVariant@@QEBA?AVQString@@XZ
+  ?toStringList@QVariant@@QEBA?AV?$QList@VQString@@@@XZ
+  ?toChar@QVariant@@QEBA?AVQChar@@XZ
+  ?toDate@QVariant@@QEBA?AVQDate@@XZ
+  ?toTime@QVariant@@QEBA?AVQTime@@XZ
+  ?toDateTime@QVariant@@QEBA?AVQDateTime@@XZ
+  ?toPoint@QVariant@@QEBA?AVQPoint@@XZ
+  ?toPointF@QVariant@@QEBA?AVQPointF@@XZ
+  ?toRect@QVariant@@QEBA?AVQRect@@XZ
+  ?toSize@QVariant@@QEBA?AVQSize@@XZ
+  ?toSizeF@QVariant@@QEBA?AVQSizeF@@XZ
+  ?toLine@QVariant@@QEBA?AVQLine@@XZ
+  ?toLineF@QVariant@@QEBA?AVQLineF@@XZ
+  ?toRectF@QVariant@@QEBA?AVQRectF@@XZ
+  ?toLocale@QVariant@@QEBA?AVQLocale@@XZ
+  ?toRegularExpression@QVariant@@QEBA?AVQRegularExpression@@XZ
+  ?toUrl@QVariant@@QEBA?AVQUrl@@XZ
+  ?toModelIndex@QVariant@@QEBA?AVQModelIndex@@XZ
+  ??0QVariant@@QEAA@W4Type@0@@Z
+  ?type@QVariant@@QEBA?AW4Type@1@XZ
+  ?typeToName@QVariant@@SAPEBDH@Z
+  ?nameToType@QVariant@@SA?AW4Type@1@PEBD@Z
+  ?data@QVariant@@QEAAPEAXXZ
+  ?constData@QVariant@@QEBAPEBXXZ
+  ?setValue@QVariant@@QEAAXAEBV1@@Z
+  ?fromMetaType@QVariant@@SA?AV1@VQMetaType@@PEBX@Z
+  ?create@QVariant@@IEAAXHPEBX@Z
+  ?create@QVariant@@IEAAXVQMetaType@@PEBX@Z
+  ?equals@QVariant@@IEBA_NAEBV1@@Z
+  ?convert@QVariant@@IEBA_NHPEAX@Z
+  ?view@QVariant@@IEAA_NHPEAX@Z
+  ?data_ptr@QVariant@@QEAAAEAUPrivate@1@XZ
+  ??0Private@QVariant@@QEAA@XZ = QVariant_S_Private_Private
+  ??0QDate@@QEAA@XZ = QDate_QDate
   ??0QDate@@QEAA@HHH@Z
   ??0QDate@@QEAA@HHHVQCalendar@@@Z
-  ?isNull@QDate@@QEBA_NXZ
-  ?isValid@QDate@@QEBA_NXZ
+  ?isNull@QDate@@QEBA_NXZ = _450
+  ?isValid@QDate@@QEBA_NXZ = _451
   ?year@QDate@@QEBAHXZ
   ?month@QDate@@QEBAHXZ
   ?day@QDate@@QEBAHXZ
@@ -1048,11 +1138,11 @@ EXPORTS
   ?fromString@QDate@@SA?AV1@AEBVQString@@0HVQCalendar@@@Z
   ?isValid@QDate@@SA_NHHH@Z
   ?isLeapYear@QDate@@SA_NH@Z
-  ?fromJulianDay@QDate@@SA?AV1@_J@Z
-  ?toJulianDay@QDate@@QEBA_JXZ
-  ??0QTime@@QEAA@XZ
+  ?fromJulianDay@QDate@@SA?AV1@_J@Z = _452
+  ?toJulianDay@QDate@@QEBA_JXZ = _453
+  ??0QTime@@QEAA@XZ = QTime_QTime
   ??0QTime@@QEAA@HHHH@Z
-  ?isNull@QTime@@QEBA_NXZ
+  ?isNull@QTime@@QEBA_NXZ = _455
   ?isValid@QTime@@QEBA_NXZ
   ?hour@QTime@@QEBAHXZ
   ?minute@QTime@@QEBAHXZ
@@ -1066,8 +1156,8 @@ EXPORTS
   ?secsTo@QTime@@QEBAHV1@@Z
   ?addMSecs@QTime@@QEBA?AV1@H@Z
   ?msecsTo@QTime@@QEBAHV1@@Z
-  ?fromMSecsSinceStartOfDay@QTime@@SA?AV1@H@Z
-  ?msecsSinceStartOfDay@QTime@@QEBAHXZ
+  ?fromMSecsSinceStartOfDay@QTime@@SA?AV1@H@Z = _456
+  ?msecsSinceStartOfDay@QTime@@QEBAHXZ = _457
   ?currentTime@QTime@@SA?AV1@XZ
   ?fromString@QTime@@SA?AV1@VQStringView@@W4DateFormat@Qt@@@Z
   ?fromString@QTime@@SA?AV1@VQStringView@@0@Z
@@ -1299,8 +1389,8 @@ EXPORTS
   ?dateTimeToString@QCalendar@@QEBA?AVQString@@VQStringView@@AEBVQDateTime@@VQDate@@VQTime@@AEBVQLocale@@@Z
   ?availableCalendars@QCalendar@@SA?AV?$QList@VQString@@@@XZ
   ??0SystemId@QCalendar@@QEAA@XZ = QCalendar_S_SystemId_SystemId
-  ?index@SystemId@QCalendar@@QEBA_KXZ = _459
-  ?isValid@SystemId@QCalendar@@QEBA_NXZ = _460
+  ?index@SystemId@QCalendar@@QEBA_KXZ = _460
+  ?isValid@SystemId@QCalendar@@QEBA_NXZ = _461
   ??0QDir@@QEAA@AEBV0@@Z
   ??0QDir@@QEAA@AEBVQString@@@Z
   ??0QDir@@QEAA@AEBVQString@@0V?$QFlags@W4SortFlag@QDir@@@@V?$QFlags@W4Filter@QDir@@@@@Z
@@ -1343,7 +1433,7 @@ EXPORTS
   ?remove@QDir@@QEAA_NAEBVQString@@@Z
   ?rename@QDir@@QEAA_NAEBVQString@@0@Z
   ?exists@QDir@@QEBA_NAEBVQString@@@Z
-  ?listSeparator@QDir@@SA?AVQChar@@XZ
+  ?listSeparator@QDir@@SA?AVQChar@@XZ = _464
   ?separator@QDir@@SA?AVQChar@@XZ
   ?setCurrent@QDir@@SA_NAEBVQString@@@Z
   ?current@QDir@@SA?AV1@XZ
@@ -1368,10 +1458,10 @@ EXPORTS
   ?swap@QTimeZone@@QEAAXAEAV1@@Z
   ?isValid@QTimeZone@@QEBA_NXZ
   ?fromSecondsAheadOfUtc@QTimeZone@@SA?AV1@H@Z
-  ?timeSpec@QTimeZone@@QEBA?AW4TimeSpec@Qt@@XZ
-  ?fixedSecondsAheadOfUtc@QTimeZone@@QEBAHXZ
-  ?isUtcOrFixedOffset@QTimeZone@@SA_NW4TimeSpec@Qt@@@Z
-  ?isUtcOrFixedOffset@QTimeZone@@QEBA_NXZ
+  ?timeSpec@QTimeZone@@QEBA?AW4TimeSpec@Qt@@XZ = _466
+  ?fixedSecondsAheadOfUtc@QTimeZone@@QEBAHXZ = _467
+  ?isUtcOrFixedOffset@QTimeZone@@SA_NW4TimeSpec@Qt@@@Z = _468
+  ?isUtcOrFixedOffset@QTimeZone@@QEBA_NXZ = _469
   ?asBackendZone@QTimeZone@@QEBA?AV1@XZ
   ?hasAlternativeName@QTimeZone@@QEBA_NVQByteArrayView@@@Z
   ?id@QTimeZone@@QEBA?AVQByteArray@@XZ
@@ -1562,11 +1652,11 @@ EXPORTS
   ?applicationVersionChanged@QCoreApplication@@QEAAXXZ
   ?event@QCoreApplication@@MEAA_NPEAVQEvent@@@Z
   ??0QDeadlineTimer@@QEAA@XZ
-  ??0QDeadlineTimer@@QEAA@W4TimerType@Qt@@@Z
-  ??0QDeadlineTimer@@QEAA@W4ForeverConstant@0@W4TimerType@Qt@@@Z
+  ??0QDeadlineTimer@@QEAA@W4TimerType@Qt@@@Z = QDeadlineTimer_QDeadlineTimer___N_Qt_E_TimerType
+  ??0QDeadlineTimer@@QEAA@W4ForeverConstant@0@W4TimerType@Qt@@@Z = QDeadlineTimer_QDeadlineTimer___S_QDeadlineTimer_E_ForeverConstant___N_Qt_E_TimerType
   ??0QDeadlineTimer@@QEAA@_JW4TimerType@Qt@@@Z
   ?swap@QDeadlineTimer@@QEAAXAEAV1@@Z
-  ?isForever@QDeadlineTimer@@QEBA_NXZ
+  ?isForever@QDeadlineTimer@@QEBA_NXZ = _470
   ?hasExpired@QDeadlineTimer@@QEBA_NXZ
   ?timerType@QDeadlineTimer@@QEBA?AW4TimerType@Qt@@XZ
   ?setTimerType@QDeadlineTimer@@QEAAXW4TimerType@Qt@@@Z
@@ -1705,22 +1795,67 @@ EXPORTS
   ?peekNext@QRegularExpressionMatchIterator@@QEBA?AVQRegularExpressionMatch@@XZ
   ?regularExpression@QRegularExpressionMatchIterator@@QEBA?AVQRegularExpression@@XZ
   ?matchType@QRegularExpressionMatchIterator@@QEBA?AW4MatchType@QRegularExpression@@XZ
+  ?qt_metacast@QSettings@@UEAAPEAXPEBD@Z
+  ?tr@QSettings@@SA?AVQString@@PEBD0H@Z
+  ??0QSettings@@QEAA@AEBVQString@@0PEAVQObject@@@Z
+  ??0QSettings@@QEAA@W4Scope@0@AEBVQString@@1PEAVQObject@@@Z
+  ??0QSettings@@QEAA@W4Format@0@W4Scope@0@AEBVQString@@2PEAVQObject@@@Z
+  ??0QSettings@@QEAA@AEBVQString@@W4Format@0@PEAVQObject@@@Z
+  ??0QSettings@@QEAA@PEAVQObject@@@Z
+  ??0QSettings@@QEAA@W4Scope@0@PEAVQObject@@@Z
+  ??1QSettings@@UEAA@XZ
+  ?clear@QSettings@@QEAAXXZ
+  ?sync@QSettings@@QEAAXXZ
+  ?status@QSettings@@QEBA?AW4Status@1@XZ
+  ?isAtomicSyncRequired@QSettings@@QEBA_NXZ
+  ?setAtomicSyncRequired@QSettings@@QEAAX_N@Z
+  ?beginGroup@QSettings@@QEAAXVQAnyStringView@@@Z
+  ?endGroup@QSettings@@QEAAXXZ
+  ?group@QSettings@@QEBA?AVQString@@XZ
+  ?beginReadArray@QSettings@@QEAAHVQAnyStringView@@@Z
+  ?beginWriteArray@QSettings@@QEAAXVQAnyStringView@@H@Z
+  ?endArray@QSettings@@QEAAXXZ
+  ?setArrayIndex@QSettings@@QEAAXH@Z
+  ?allKeys@QSettings@@QEBA?AV?$QList@VQString@@@@XZ
+  ?childKeys@QSettings@@QEBA?AV?$QList@VQString@@@@XZ
+  ?childGroups@QSettings@@QEBA?AV?$QList@VQString@@@@XZ
+  ?isWritable@QSettings@@QEBA_NXZ
+  ?setValue@QSettings@@QEAAXVQAnyStringView@@AEBVQVariant@@@Z
+  ?value@QSettings@@QEBA?AVQVariant@@VQAnyStringView@@AEBV2@@Z
+  ?value@QSettings@@QEBA?AVQVariant@@VQAnyStringView@@@Z
+  ?remove@QSettings@@QEAAXVQAnyStringView@@@Z
+  ?contains@QSettings@@QEBA_NVQAnyStringView@@@Z
+  ?setFallbacksEnabled@QSettings@@QEAAX_N@Z
+  ?fallbacksEnabled@QSettings@@QEBA_NXZ
+  ?fileName@QSettings@@QEBA?AVQString@@XZ
+  ?format@QSettings@@QEBA?AW4Format@1@XZ
+  ?scope@QSettings@@QEBA?AW4Scope@1@XZ
+  ?organizationName@QSettings@@QEBA?AVQString@@XZ
+  ?applicationName@QSettings@@QEBA?AVQString@@XZ
+  ?setDefaultFormat@QSettings@@SAXW4Format@1@@Z
+  ?defaultFormat@QSettings@@SA?AW4Format@1@XZ
+  ?setPath@QSettings@@SAXW4Format@1@W4Scope@1@AEBVQString@@@Z
+  ?event@QSettings@@MEAA_NPEAVQEvent@@@Z
   ??0QModelRoleDataSpan@@QEAA@XZ = QModelRoleDataSpan_QModelRoleDataSpan
-  ?size@QModelRoleDataSpan@@QEBA_JXZ = _474
-  ?length@QModelRoleDataSpan@@QEBA_JXZ = _475
+  ?size@QModelRoleDataSpan@@QEBA_JXZ = _475
+  ?length@QModelRoleDataSpan@@QEBA_JXZ = _476
+  ?dataForRole@QModelRoleDataSpan@@QEBAPEAVQVariant@@H@Z = _477
   ??0QModelIndex@@QEAA@XZ = QModelIndex_QModelIndex
-  ?row@QModelIndex@@QEBAHXZ = _477
-  ?column@QModelIndex@@QEBAHXZ = _478
-  ?internalId@QModelIndex@@QEBA_KXZ = _479
-  ?model@QModelIndex@@QEBAPEBVQAbstractItemModel@@XZ = _480
-  ?isValid@QModelIndex@@QEBA_NXZ = _481
+  ?row@QModelIndex@@QEBAHXZ = _479
+  ?column@QModelIndex@@QEBAHXZ = _480
+  ?internalId@QModelIndex@@QEBA_KXZ = _481
+  ?model@QModelIndex@@QEBAPEBVQAbstractItemModel@@XZ = _482
+  ?isValid@QModelIndex@@QEBA_NXZ = _483
   ?qt_metacast@QAbstractItemModel@@UEAAPEAXPEBD@Z
   ?tr@QAbstractItemModel@@SA?AVQString@@PEBD0H@Z
-  ??0QAbstractItemModel@@QEAA@PEAVQObject@@@Z
+  ??0QAbstractItemModel@@QEAA@PEAVQObject@@@Z = QAbstractItemModel_QAbstractItemModel____S_QObject
   ??1QAbstractItemModel@@UEAA@XZ
   ?hasIndex@QAbstractItemModel@@QEBA_NHHAEBVQModelIndex@@@Z
   ?sibling@QAbstractItemModel@@UEBA?AVQModelIndex@@HHAEBV2@@Z
   ?hasChildren@QAbstractItemModel@@UEBA_NAEBVQModelIndex@@@Z
+  ?setData@QAbstractItemModel@@UEAA_NAEBVQModelIndex@@AEBVQVariant@@H@Z
+  ?headerData@QAbstractItemModel@@UEBA?AVQVariant@@HW4Orientation@Qt@@H@Z
+  ?setHeaderData@QAbstractItemModel@@UEAA_NHW4Orientation@Qt@@AEBVQVariant@@H@Z
   ?clearItemData@QAbstractItemModel@@UEAA_NAEBVQModelIndex@@@Z
   ?mimeTypes@QAbstractItemModel@@UEBA?AV?$QList@VQString@@@@XZ
   ?insertRows@QAbstractItemModel@@UEAA_NHHAEBVQModelIndex@@@Z
@@ -1737,6 +1872,7 @@ EXPORTS
   ?moveColumn@QAbstractItemModel@@QEAA_NAEBVQModelIndex@@H0H@Z
   ?fetchMore@QAbstractItemModel@@UEAAXAEBVQModelIndex@@@Z
   ?canFetchMore@QAbstractItemModel@@UEBA_NAEBVQModelIndex@@@Z
+  ?flags@QAbstractItemModel@@UEBA?AV?$QFlags@W4ItemFlag@Qt@@@@AEBVQModelIndex@@@Z
   ?sort@QAbstractItemModel@@UEAAXHW4SortOrder@Qt@@@Z
   ?buddy@QAbstractItemModel@@UEBA?AVQModelIndex@@AEBV2@@Z
   ?span@QAbstractItemModel@@UEBA?AVQSize@@AEBVQModelIndex@@@Z
@@ -1763,6 +1899,14 @@ EXPORTS
   ?beginResetModel@QAbstractItemModel@@IEAAXXZ
   ?endResetModel@QAbstractItemModel@@IEAAXXZ
   ?changePersistentIndex@QAbstractItemModel@@IEAAXAEBVQModelIndex@@0@Z
+  ?qt_metacast@QAbstractTableModel@@UEAAPEAXPEBD@Z
+  ?tr@QAbstractTableModel@@SA?AVQString@@PEBD0H@Z
+  ??0QAbstractTableModel@@QEAA@PEAVQObject@@@Z = QAbstractTableModel_QAbstractTableModel____S_QObject
+  ??1QAbstractTableModel@@UEAA@XZ
+  ?index@QAbstractTableModel@@UEBA?AVQModelIndex@@HHAEBV2@@Z
+  ?sibling@QAbstractTableModel@@UEBA?AVQModelIndex@@HHAEBV2@@Z
+  ?parent@QAbstractTableModel@@EEBA?AVQModelIndex@@AEBV2@@Z
+  ?hasChildren@QAbstractTableModel@@EEBA_NAEBVQModelIndex@@@Z
   ?qt_metacast@QItemSelectionModel@@UEAAPEAXPEBD@Z
   ?tr@QItemSelectionModel@@SA?AVQString@@PEBD0H@Z
   ??0QItemSelectionModel@@QEAA@PEAVQAbstractItemModel@@@Z
@@ -1809,7 +1953,7 @@ EXPORTS
   ??1QPaintDevice@@UEAA@XZ
   ?devicePixelRatioFScale@QPaintDevice@@SANXZ
   ?encodeMetricF@QPaintDevice@@SAHW4PaintDeviceMetric@1@N@Z
-  ??0QPaintDevice@@IEAA@XZ
+  ??0QPaintDevice@@IEAA@XZ = QPaintDevice_QPaintDevice
   ??0QInputEvent@@IEAA@AEBV0@@Z
   ?clone@QInputEvent@@UEBAPEAV1@XZ
   ??1QInputEvent@@UEAA@XZ
@@ -1958,17 +2102,18 @@ EXPORTS
   ??0QVector2D@@QEAA@VQPointF@@@Z = QVector2D_QVector2D___S_QPointF
   ??0QVector2D@@QEAA@VQVector3D@@@Z = QVector2D_QVector2D___S_QVector3D
   ??0QVector2D@@QEAA@VQVector4D@@@Z = QVector2D_QVector2D___S_QVector4D
-  ?isNull@QVector2D@@QEBA_NXZ = _483
-  ?x@QVector2D@@QEBAMXZ = _484
-  ?y@QVector2D@@QEBAMXZ = _485
-  ?setX@QVector2D@@QEAAXM@Z = _486
-  ?setY@QVector2D@@QEAAXM@Z = _487
-  ?lengthSquared@QVector2D@@QEBAMXZ = _489
-  ?dotProduct@QVector2D@@SAMV1@0@Z = _496
-  ?toVector3D@QVector2D@@QEBA?AVQVector3D@@XZ = _497
-  ?toVector4D@QVector2D@@QEBA?AVQVector4D@@XZ = _498
-  ?toPoint@QVector2D@@QEBA?AVQPoint@@XZ = _499
-  ?toPointF@QVector2D@@QEBA?AVQPointF@@XZ = _500
+  ?isNull@QVector2D@@QEBA_NXZ = _485
+  ?x@QVector2D@@QEBAMXZ = _486
+  ?y@QVector2D@@QEBAMXZ = _487
+  ?setX@QVector2D@@QEAAXM@Z = _488
+  ?setY@QVector2D@@QEAAXM@Z = _489
+  ?lengthSquared@QVector2D@@QEBAMXZ = _491
+  ?dotProduct@QVector2D@@SAMV1@0@Z = _498
+  ?toVector3D@QVector2D@@QEBA?AVQVector3D@@XZ = _499
+  ?toVector4D@QVector2D@@QEBA?AVQVector4D@@XZ = _500
+  ?toPoint@QVector2D@@QEBA?AVQPoint@@XZ = _501
+  ?toPointF@QVector2D@@QEBA?AVQPointF@@XZ = _502
+  ??BQVector2D@@QEBA?AVQVariant@@XZ
   ??0QVector3D@@QEAA@XZ = QVector3D_QVector3D
   ??0QVector3D@@QEAA@MMM@Z = QVector3D_QVector3D_f_f_f
   ??0QVector3D@@QEAA@VQPoint@@@Z = QVector3D_QVector3D___S_QPoint
@@ -1976,21 +2121,22 @@ EXPORTS
   ??0QVector3D@@QEAA@VQVector2D@@@Z = QVector3D_QVector3D___S_QVector2D
   ??0QVector3D@@QEAA@VQVector2D@@M@Z = QVector3D_QVector3D___S_QVector2D_f
   ??0QVector3D@@QEAA@VQVector4D@@@Z = QVector3D_QVector3D___S_QVector4D
-  ?isNull@QVector3D@@QEBA_NXZ = _502
-  ?x@QVector3D@@QEBAMXZ = _503
-  ?y@QVector3D@@QEBAMXZ = _504
-  ?z@QVector3D@@QEBAMXZ = _505
-  ?setX@QVector3D@@QEAAXM@Z = _506
-  ?setY@QVector3D@@QEAAXM@Z = _507
-  ?setZ@QVector3D@@QEAAXM@Z = _508
-  ?lengthSquared@QVector3D@@QEBAMXZ = _510
-  ?dotProduct@QVector3D@@SAMV1@0@Z = _517
-  ?crossProduct@QVector3D@@SA?AV1@V1@0@Z = _518
-  ?distanceToPlane@QVector3D@@QEBAMV1@0@Z = _519
-  ?toVector2D@QVector3D@@QEBA?AVQVector2D@@XZ = _520
-  ?toVector4D@QVector3D@@QEBA?AVQVector4D@@XZ = _521
-  ?toPoint@QVector3D@@QEBA?AVQPoint@@XZ = _522
-  ?toPointF@QVector3D@@QEBA?AVQPointF@@XZ = _523
+  ?isNull@QVector3D@@QEBA_NXZ = _504
+  ?x@QVector3D@@QEBAMXZ = _505
+  ?y@QVector3D@@QEBAMXZ = _506
+  ?z@QVector3D@@QEBAMXZ = _507
+  ?setX@QVector3D@@QEAAXM@Z = _508
+  ?setY@QVector3D@@QEAAXM@Z = _509
+  ?setZ@QVector3D@@QEAAXM@Z = _510
+  ?lengthSquared@QVector3D@@QEBAMXZ = _512
+  ?dotProduct@QVector3D@@SAMV1@0@Z = _519
+  ?crossProduct@QVector3D@@SA?AV1@V1@0@Z = _520
+  ?distanceToPlane@QVector3D@@QEBAMV1@0@Z = _521
+  ?toVector2D@QVector3D@@QEBA?AVQVector2D@@XZ = _522
+  ?toVector4D@QVector3D@@QEBA?AVQVector4D@@XZ = _523
+  ?toPoint@QVector3D@@QEBA?AVQPoint@@XZ = _524
+  ?toPointF@QVector3D@@QEBA?AVQPointF@@XZ = _525
+  ??BQVector3D@@QEBA?AVQVariant@@XZ
   ??0QVector4D@@QEAA@XZ = QVector4D_QVector4D
   ??0QVector4D@@QEAA@MMMM@Z = QVector4D_QVector4D_f_f_f_f
   ??0QVector4D@@QEAA@VQPoint@@@Z = QVector4D_QVector4D___S_QPoint
@@ -1999,25 +2145,27 @@ EXPORTS
   ??0QVector4D@@QEAA@VQVector2D@@MM@Z = QVector4D_QVector4D___S_QVector2D_f_f
   ??0QVector4D@@QEAA@VQVector3D@@@Z = QVector4D_QVector4D___S_QVector3D
   ??0QVector4D@@QEAA@VQVector3D@@M@Z = QVector4D_QVector4D___S_QVector3D_f
-  ?isNull@QVector4D@@QEBA_NXZ = _525
-  ?x@QVector4D@@QEBAMXZ = _526
-  ?y@QVector4D@@QEBAMXZ = _527
-  ?z@QVector4D@@QEBAMXZ = _528
-  ?w@QVector4D@@QEBAMXZ = _529
-  ?setX@QVector4D@@QEAAXM@Z = _530
-  ?setY@QVector4D@@QEAAXM@Z = _531
-  ?setZ@QVector4D@@QEAAXM@Z = _532
-  ?setW@QVector4D@@QEAAXM@Z = _533
-  ?lengthSquared@QVector4D@@QEBAMXZ = _535
-  ?dotProduct@QVector4D@@SAMV1@0@Z = _542
-  ?toVector2D@QVector4D@@QEBA?AVQVector2D@@XZ = _543
-  ?toVector2DAffine@QVector4D@@QEBA?AVQVector2D@@XZ = _544
-  ?toVector3D@QVector4D@@QEBA?AVQVector3D@@XZ = _545
-  ?toVector3DAffine@QVector4D@@QEBA?AVQVector3D@@XZ = _546
-  ?toPoint@QVector4D@@QEBA?AVQPoint@@XZ = _547
-  ?toPointF@QVector4D@@QEBA?AVQPointF@@XZ = _548
+  ?isNull@QVector4D@@QEBA_NXZ = _527
+  ?x@QVector4D@@QEBAMXZ = _528
+  ?y@QVector4D@@QEBAMXZ = _529
+  ?z@QVector4D@@QEBAMXZ = _530
+  ?w@QVector4D@@QEBAMXZ = _531
+  ?setX@QVector4D@@QEAAXM@Z = _532
+  ?setY@QVector4D@@QEAAXM@Z = _533
+  ?setZ@QVector4D@@QEAAXM@Z = _534
+  ?setW@QVector4D@@QEAAXM@Z = _535
+  ?lengthSquared@QVector4D@@QEBAMXZ = _537
+  ?dotProduct@QVector4D@@SAMV1@0@Z = _544
+  ?toVector2D@QVector4D@@QEBA?AVQVector2D@@XZ = _545
+  ?toVector2DAffine@QVector4D@@QEBA?AVQVector2D@@XZ = _546
+  ?toVector3D@QVector4D@@QEBA?AVQVector3D@@XZ = _547
+  ?toVector3DAffine@QVector4D@@QEBA?AVQVector3D@@XZ = _548
+  ?toPoint@QVector4D@@QEBA?AVQPoint@@XZ = _549
+  ?toPointF@QVector4D@@QEBA?AVQPointF@@XZ = _550
+  ??BQVector4D@@QEBA?AVQVariant@@XZ
   ??0QPolygon@@QEAA@AEBVQRect@@_N@Z
   ??0QPolygon@@QEAA@HPEBH@Z
+  ??BQPolygon@@QEBA?AVQVariant@@XZ
   ?translate@QPolygon@@QEAAXHH@Z
   ?translated@QPolygon@@QEBA?AV1@HH@Z
   ?boundingRect@QPolygon@@QEBA?AVQRect@@XZ
@@ -2037,6 +2185,7 @@ EXPORTS
   ??1QPolygon@@QEAA@XZ = QPolygon__QPolygon
   ??0QPolygonF@@QEAA@AEBVQRectF@@@Z
   ??0QPolygonF@@QEAA@AEBVQPolygon@@@Z
+  ??BQPolygonF@@QEBA?AVQVariant@@XZ
   ?translate@QPolygonF@@QEAAXAEBVQPointF@@@Z
   ?translated@QPolygonF@@QEBA?AV1@AEBVQPointF@@@Z
   ?toPolygon@QPolygonF@@QEBA?AVQPolygon@@XZ
@@ -2088,6 +2237,7 @@ EXPORTS
   ??TQRegion@@QEBA?AV0@AEBV0@@Z
   ??8QRegion@@QEBA_NAEBV0@@Z
   ??9QRegion@@QEBA_NAEBV0@@Z
+  ??BQRegion@@QEBA?AVQVariant@@XZ
   ??0QTransform@@QEAA@W4Initialization@Qt@@@Z
   ??0QTransform@@QEAA@XZ
   ??0QTransform@@QEAA@NNNNNNNNN@Z
@@ -2117,7 +2267,6 @@ EXPORTS
   ?adjoint@QTransform@@QEBA?AV1@XZ
   ?transposed@QTransform@@QEBA?AV1@XZ
   ?translate@QTransform@@QEAAAEAV1@NN@Z
-  ?scale@QTransform@@QEAAAEAV1@NN@Z
   ?shear@QTransform@@QEAAAEAV1@NN@Z
   ?rotate@QTransform@@QEAAAEAV1@NW4Axis@Qt@@N@Z
   ?rotate@QTransform@@QEAAAEAV1@NW4Axis@Qt@@@Z
@@ -2129,6 +2278,7 @@ EXPORTS
   ??8QTransform@@QEBA_NAEBV0@@Z
   ??9QTransform@@QEBA_NAEBV0@@Z
   ??DQTransform@@QEBA?AV0@AEBV0@@Z
+  ??BQTransform@@QEBA?AVQVariant@@XZ
   ?reset@QTransform@@QEAAXXZ
   ?map@QTransform@@QEBA?AVQPoint@@AEBV2@@Z
   ?map@QTransform@@QEBA?AVQPointF@@AEBV2@@Z
@@ -2210,9 +2360,9 @@ EXPORTS
   ??8QInputDevice@@QEBA_NAEBV0@@Z
   ?availableVirtualGeometryChanged@QInputDevice@@QEAAXVQRect@@@Z
   ?capabilitiesChanged@QInputDevice@@QEAAXV?$QFlags@W4Capability@QInputDevice@@@@@Z
-  ??0QPointingDeviceUniqueId@@QEAA@XZ
+  ??0QPointingDeviceUniqueId@@QEAA@XZ = QPointingDeviceUniqueId_QPointingDeviceUniqueId
   ?fromNumericId@QPointingDeviceUniqueId@@SA?AV1@_J@Z
-  ?isValid@QPointingDeviceUniqueId@@QEBA_NXZ
+  ?isValid@QPointingDeviceUniqueId@@QEBA_NXZ = _554
   ?numericId@QPointingDeviceUniqueId@@QEBA_JXZ
   ?qt_metacast@QPointingDevice@@UEAAPEAXPEBD@Z
   ?tr@QPointingDevice@@SA?AVQString@@PEBD0H@Z
@@ -2283,6 +2433,7 @@ EXPORTS
   ?count@QKeySequence@@QEBAHXZ
   ?isEmpty@QKeySequence@@QEBA_NXZ
   ?mnemonic@QKeySequence@@SA?AV1@AEBVQString@@@Z
+  ??BQKeySequence@@QEBA?AVQVariant@@XZ
   ?swap@QKeySequence@@QEAAXAEAV1@@Z
   ??8QKeySequence@@QEBA_NAEBV0@@Z
   ??9QKeySequence@@QEBA_NAEBV0@@Z
@@ -2291,27 +2442,27 @@ EXPORTS
   ??NQKeySequence@@QEBA_NAEBV0@@Z
   ??PQKeySequence@@QEBA_NAEBV0@@Z
   ?isDetached@QKeySequence@@QEBA_NXZ
-  ?fromRgba64@QRgba64@@SA?AV1@_K@Z = _554
-  ?fromRgba64@QRgba64@@SA?AV1@GGGG@Z = _555
-  ?fromRgba@QRgba64@@SA?AV1@EEEE@Z = _556
-  ?fromArgb32@QRgba64@@SA?AV1@I@Z = _557
-  ?isOpaque@QRgba64@@QEBA_NXZ = _558
-  ?isTransparent@QRgba64@@QEBA_NXZ = _559
-  ?red@QRgba64@@QEBAGXZ = _560
-  ?green@QRgba64@@QEBAGXZ = _561
-  ?blue@QRgba64@@QEBAGXZ = _562
-  ?alpha@QRgba64@@QEBAGXZ = _563
-  ?red8@QRgba64@@QEBAEXZ = _564
-  ?green8@QRgba64@@QEBAEXZ = _565
-  ?blue8@QRgba64@@QEBAEXZ = _566
-  ?alpha8@QRgba64@@QEBAEXZ = _567
-  ?toArgb32@QRgba64@@QEBAIXZ = _568
-  ?toRgb16@QRgba64@@QEBAGXZ = _569
-  ?premultiplied@QRgba64@@QEBA?AV1@XZ = _570
-  ?unpremultiplied@QRgba64@@QEBA?AV1@XZ = _571
-  ??0QColor@@QEAA@XZ
+  ?fromRgba64@QRgba64@@SA?AV1@_K@Z = _556
+  ?fromRgba64@QRgba64@@SA?AV1@GGGG@Z = _557
+  ?fromRgba@QRgba64@@SA?AV1@EEEE@Z = _558
+  ?fromArgb32@QRgba64@@SA?AV1@I@Z = _559
+  ?isOpaque@QRgba64@@QEBA_NXZ = _560
+  ?isTransparent@QRgba64@@QEBA_NXZ = _561
+  ?red@QRgba64@@QEBAGXZ = _562
+  ?green@QRgba64@@QEBAGXZ = _563
+  ?blue@QRgba64@@QEBAGXZ = _564
+  ?alpha@QRgba64@@QEBAGXZ = _565
+  ?red8@QRgba64@@QEBAEXZ = _566
+  ?green8@QRgba64@@QEBAEXZ = _567
+  ?blue8@QRgba64@@QEBAEXZ = _568
+  ?alpha8@QRgba64@@QEBAEXZ = _569
+  ?toArgb32@QRgba64@@QEBAIXZ = _570
+  ?toRgb16@QRgba64@@QEBAGXZ = _571
+  ?premultiplied@QRgba64@@QEBA?AV1@XZ = _572
+  ?unpremultiplied@QRgba64@@QEBA?AV1@XZ = _573
+  ??0QColor@@QEAA@XZ = QColor_QColor
   ??0QColor@@QEAA@W4GlobalColor@Qt@@@Z
-  ??0QColor@@QEAA@HHHH@Z
+  ??0QColor@@QEAA@HHHH@Z = QColor_QColor_I_I_I_I
   ??0QColor@@QEAA@I@Z
   ??0QColor@@QEAA@VQRgba64@@@Z
   ??0QColor@@QEAA@VQStringView@@@Z
@@ -2410,35 +2561,36 @@ EXPORTS
   ?darker@QColor@@QEBA?AV1@H@Z
   ??8QColor@@QEBA_NAEBV0@@Z
   ??9QColor@@QEBA_NAEBV0@@Z
+  ??BQColor@@QEBA?AVQVariant@@XZ
   ?isValidColor@QColor@@SA_NAEBVQString@@@Z
   ?isValidColor@QColor@@SA_NVQStringView@@@Z
   ?isValidColor@QColor@@SA_NVQLatin1String@@@Z
   ?isValidColorName@QColor@@SA_NVQAnyStringView@@@Z
-  ??0QColor@@QEAA@W4Spec@0@GGGGG@Z
+  ??0QColor@@QEAA@W4Spec@0@GGGGG@Z = QColor_QColor___S_QColor_E_Spec_s_s_s_s_s
   ??0QPixelFormat@@QEAA@XZ = QPixelFormat_QPixelFormat
   ??0QPixelFormat@@QEAA@W4ColorModel@0@EEEEEEW4AlphaUsage@0@W4AlphaPosition@0@W4AlphaPremultiplied@0@W4TypeInterpretation@0@W4ByteOrder@0@E@Z = QPixelFormat_QPixelFormat___S_QPixelFormat_E_ColorModel_c_c_c_c_c_c___S_QPixelFormat_E_AlphaUsage___S_QPixelFormat_E_AlphaPosition___S_QPixelFormat_E_AlphaPremultiplied___S_QPixelFormat_E_TypeInterpretation___S_QPixelFormat_E_ByteOrder_c
-  ?colorModel@QPixelFormat@@QEBA?AW4ColorModel@1@XZ = _575
-  ?channelCount@QPixelFormat@@QEBAEXZ = _576
-  ?redSize@QPixelFormat@@QEBAEXZ = _577
-  ?greenSize@QPixelFormat@@QEBAEXZ = _578
-  ?blueSize@QPixelFormat@@QEBAEXZ = _579
-  ?cyanSize@QPixelFormat@@QEBAEXZ = _580
-  ?magentaSize@QPixelFormat@@QEBAEXZ = _581
-  ?yellowSize@QPixelFormat@@QEBAEXZ = _582
-  ?blackSize@QPixelFormat@@QEBAEXZ = _583
-  ?hueSize@QPixelFormat@@QEBAEXZ = _584
-  ?saturationSize@QPixelFormat@@QEBAEXZ = _585
-  ?lightnessSize@QPixelFormat@@QEBAEXZ = _586
-  ?brightnessSize@QPixelFormat@@QEBAEXZ = _587
-  ?alphaSize@QPixelFormat@@QEBAEXZ = _588
-  ?bitsPerPixel@QPixelFormat@@QEBAEXZ = _589
-  ?alphaUsage@QPixelFormat@@QEBA?AW4AlphaUsage@1@XZ = _590
-  ?alphaPosition@QPixelFormat@@QEBA?AW4AlphaPosition@1@XZ = _591
-  ?premultiplied@QPixelFormat@@QEBA?AW4AlphaPremultiplied@1@XZ = _592
-  ?typeInterpretation@QPixelFormat@@QEBA?AW4TypeInterpretation@1@XZ = _593
-  ?byteOrder@QPixelFormat@@QEBA?AW4ByteOrder@1@XZ = _594
-  ?yuvLayout@QPixelFormat@@QEBA?AW4YUVLayout@1@XZ = _595
-  ?subEnum@QPixelFormat@@QEBAEXZ = _596
+  ?colorModel@QPixelFormat@@QEBA?AW4ColorModel@1@XZ = _577
+  ?channelCount@QPixelFormat@@QEBAEXZ = _578
+  ?redSize@QPixelFormat@@QEBAEXZ = _579
+  ?greenSize@QPixelFormat@@QEBAEXZ = _580
+  ?blueSize@QPixelFormat@@QEBAEXZ = _581
+  ?cyanSize@QPixelFormat@@QEBAEXZ = _582
+  ?magentaSize@QPixelFormat@@QEBAEXZ = _583
+  ?yellowSize@QPixelFormat@@QEBAEXZ = _584
+  ?blackSize@QPixelFormat@@QEBAEXZ = _585
+  ?hueSize@QPixelFormat@@QEBAEXZ = _586
+  ?saturationSize@QPixelFormat@@QEBAEXZ = _587
+  ?lightnessSize@QPixelFormat@@QEBAEXZ = _588
+  ?brightnessSize@QPixelFormat@@QEBAEXZ = _589
+  ?alphaSize@QPixelFormat@@QEBAEXZ = _590
+  ?bitsPerPixel@QPixelFormat@@QEBAEXZ = _591
+  ?alphaUsage@QPixelFormat@@QEBA?AW4AlphaUsage@1@XZ = _592
+  ?alphaPosition@QPixelFormat@@QEBA?AW4AlphaPosition@1@XZ = _593
+  ?premultiplied@QPixelFormat@@QEBA?AW4AlphaPremultiplied@1@XZ = _594
+  ?typeInterpretation@QPixelFormat@@QEBA?AW4TypeInterpretation@1@XZ = _595
+  ?byteOrder@QPixelFormat@@QEBA?AW4ByteOrder@1@XZ = _596
+  ?yuvLayout@QPixelFormat@@QEBA?AW4YUVLayout@1@XZ = _597
+  ?subEnum@QPixelFormat@@QEBAEXZ = _598
   ??0QImage@@QEAA@XZ
   ??0QImage@@QEAA@AEBVQSize@@W4Format@0@@Z
   ??0QImage@@QEAA@HHW4Format@0@@Z
@@ -2452,6 +2604,7 @@ EXPORTS
   ?devType@QImage@@UEBAHXZ
   ??8QImage@@QEBA_NAEBV0@@Z
   ??9QImage@@QEBA_NAEBV0@@Z
+  ??BQImage@@QEBA?AVQVariant@@XZ
   ?detach@QImage@@QEAAXXZ
   ?isDetached@QImage@@QEBA_NXZ
   ?copy@QImage@@QEBA?AV1@AEBVQRect@@@Z
@@ -2553,6 +2706,7 @@ EXPORTS
   ??0QPixmap@@QEAA@QEBQEBD@Z
   ??1QPixmap@@UEAA@XZ
   ?swap@QPixmap@@QEAAXAEAV1@@Z
+  ??BQPixmap@@QEBA?AVQVariant@@XZ
   ?isNull@QPixmap@@QEBA_NXZ
   ?devType@QPixmap@@UEBAHXZ
   ?width@QPixmap@@QEBAHXZ
@@ -2602,6 +2756,7 @@ EXPORTS
   ??0QIcon@@QEAA@AEBVQString@@@Z
   ??1QIcon@@QEAA@XZ
   ?swap@QIcon@@QEAAXAEAV1@@Z
+  ??BQIcon@@QEBA?AVQVariant@@XZ
   ?pixmap@QIcon@@QEBA?AVQPixmap@@AEBVQSize@@W4Mode@1@W4State@1@@Z
   ?pixmap@QIcon@@QEBA?AVQPixmap@@HHW4Mode@1@W4State@1@@Z
   ?pixmap@QIcon@@QEBA?AVQPixmap@@HW4Mode@1@W4State@1@@Z
@@ -2639,12 +2794,13 @@ EXPORTS
   ??0QBitmap@@QEAA@AEBVQString@@PEBD@Z
   ??1QBitmap@@UEAA@XZ
   ?swap@QBitmap@@QEAAXAEAV1@@Z
+  ??BQBitmap@@QEBA?AVQVariant@@XZ
   ?clear@QBitmap@@QEAAXXZ
   ?fromImage@QBitmap@@SA?AV1@AEBVQImage@@V?$QFlags@W4ImageConversionFlag@Qt@@@@@Z
   ?fromData@QBitmap@@SA?AV1@AEBVQSize@@PEBEW4Format@QImage@@@Z
   ?fromPixmap@QBitmap@@SA?AV1@AEBVQPixmap@@@Z
   ?transformed@QBitmap@@QEBA?AV1@AEBVQTransform@@@Z
-  ??0QBitmap@@QEAA@AEBV0@@Z
+  ??0QBitmap@@QEAA@AEBV0@@Z = QBitmap_QBitmap___1__S_QBitmap
   ??0QCursor@@QEAA@XZ
   ??0QCursor@@QEAA@W4CursorShape@Qt@@@Z
   ??0QCursor@@QEAA@AEBVQBitmap@@0HH@Z
@@ -2652,6 +2808,7 @@ EXPORTS
   ??0QCursor@@QEAA@AEBV0@@Z
   ??1QCursor@@QEAA@XZ
   ?swap@QCursor@@QEAAXAEAV1@@Z
+  ??BQCursor@@QEBA?AVQVariant@@XZ
   ?shape@QCursor@@QEBA?AW4CursorShape@Qt@@XZ
   ?setShape@QCursor@@QEAAXW4CursorShape@Qt@@@Z
   ?bitmap@QCursor@@QEBA?AVQBitmap@@W4ReturnByValueConstant@Qt@@@Z
@@ -2675,6 +2832,7 @@ EXPORTS
   ??0QBrush@@QEAA@AEBVQGradient@@@Z
   ??1QBrush@@QEAA@XZ
   ?swap@QBrush@@QEAAXAEAV1@@Z
+  ??BQBrush@@QEBA?AVQVariant@@XZ
   ?style@QBrush@@QEBA?AW4BrushStyle@Qt@@XZ
   ?setStyle@QBrush@@QEAAXW4BrushStyle@Qt@@@Z
   ?transform@QBrush@@QEBA?AVQTransform@@XZ
@@ -2697,7 +2855,7 @@ EXPORTS
   ?setColorAt@QGradient@@QEAAXNAEBVQColor@@@Z
   ??8QGradient@@QEBA_NAEBV0@@Z
   ??9QGradient@@QEBA_NAEBV0@@Z
-  ??0QGradient@@QEAA@AEBV0@@Z
+  ??0QGradient@@QEAA@AEBV0@@Z = QGradient_QGradient___1__S_QGradient
   ??0QPainter@@QEAA@XZ
   ??0QPainter@@QEAA@PEAVQPaintDevice@@@Z
   ??1QPainter@@QEAA@XZ
@@ -2927,6 +3085,7 @@ EXPORTS
   ?setCosmetic@QPen@@QEAAX_N@Z
   ??8QPen@@QEBA_NAEBV0@@Z
   ??9QPen@@QEBA_NAEBV0@@Z
+  ??BQPen@@QEBA?AVQVariant@@XZ
   ?isDetached@QPen@@QEAA_NXZ
   ??0QFont@@QEAA@XZ
   ??0QFont@@QEAA@AEBVQString@@HH_N@Z
@@ -2994,6 +3153,7 @@ EXPORTS
   ??8QFont@@QEBA_NAEBV0@@Z
   ??9QFont@@QEBA_NAEBV0@@Z
   ??MQFont@@QEBA_NAEBV0@@Z
+  ??BQFont@@QEBA?AVQVariant@@XZ
   ?isCopyOf@QFont@@QEBA_NAEBV1@@Z
   ?key@QFont@@QEBA?AVQString@@XZ
   ?toString@QFont@@QEBA?AVQString@@XZ
@@ -3014,8 +3174,8 @@ EXPORTS
   ?setLegacyWeight@QFont@@QEAAXH@Z
   ?legacyWeight@QFont@@QEBAHXZ
   ??0Tag@QFont@@QEAA@XZ = QFont_S_Tag_Tag
-  ?isValid@Tag@QFont@@QEBA_NXZ = _604
-  ?value@Tag@QFont@@QEBAIXZ = _605
+  ?isValid@Tag@QFont@@QEBA_NXZ = _606
+  ?value@Tag@QFont@@QEBAIXZ = _607
   ??0QFontVariableAxis@@QEAA@XZ
   ??0QFontVariableAxis@@QEAA@AEBV0@@Z
   ??1QFontVariableAxis@@QEAA@XZ
@@ -3097,6 +3257,7 @@ EXPORTS
   ??0QPalette@@QEAA@AEBV0@@Z
   ??1QPalette@@QEAA@XZ
   ?swap@QPalette@@QEAAXAEAV1@@Z
+  ??BQPalette@@QEBA?AVQVariant@@XZ
   ?setColor@QPalette@@QEAAXW4ColorRole@1@AEBVQColor@@@Z
   ?setBrush@QPalette@@QEAAXW4ColorRole@1@AEBVQBrush@@@Z
   ?color@QPalette@@QEBAAEBVQColor@@W4ColorRole@1@@Z
@@ -3234,6 +3395,8 @@ EXPORTS
   ?baselineOffset@QTextDocument@@QEBANXZ
   ?pageCount@QTextDocument@@QEBAHXZ
   ?isModified@QTextDocument@@QEBA_NXZ
+  ?resource@QTextDocument@@QEBA?AVQVariant@@HAEBVQUrl@@@Z
+  ?addResource@QTextDocument@@QEAAXHAEBVQUrl@@AEBVQVariant@@@Z
   ?markContentsDirty@QTextDocument@@QEAAXHH@Z
   ?setUseDesignMetrics@QTextDocument@@QEAAX_N@Z
   ?useDesignMetrics@QTextDocument@@QEBA_NXZ
@@ -3277,6 +3440,7 @@ EXPORTS
   ?undo@QTextDocument@@QEAAXXZ
   ?redo@QTextDocument@@QEAAXXZ
   ?setModified@QTextDocument@@QEAAX_N@Z
+  ?loadResource@QTextDocument@@MEAA?AVQVariant@@HAEBVQUrl@@@Z
   ??0QTextLength@@QEAA@XZ
   ??0QTextLength@@QEAA@W4Type@0@N@Z
   ?type@QTextLength@@QEBA?AW4Type@1@XZ
@@ -3284,6 +3448,7 @@ EXPORTS
   ?rawValue@QTextLength@@QEBANXZ
   ??8QTextLength@@QEBA_NAEBV0@@Z
   ??9QTextLength@@QEBA_NAEBV0@@Z
+  ??BQTextLength@@QEBA?AVQVariant@@XZ
   ??0QTextFormat@@QEAA@XZ
   ??0QTextFormat@@QEAA@H@Z
   ??0QTextFormat@@QEAA@AEBV0@@Z
@@ -3295,6 +3460,8 @@ EXPORTS
   ?type@QTextFormat@@QEBAHXZ
   ?objectIndex@QTextFormat@@QEBAHXZ
   ?setObjectIndex@QTextFormat@@QEAAXH@Z
+  ?property@QTextFormat@@QEBA?AVQVariant@@H@Z
+  ?setProperty@QTextFormat@@QEAAXHAEBVQVariant@@@Z
   ?clearProperty@QTextFormat@@QEAAXH@Z
   ?hasProperty@QTextFormat@@QEBA_NH@Z
   ?boolProperty@QTextFormat@@QEBA_NH@Z
@@ -3324,6 +3491,7 @@ EXPORTS
   ?toTableCellFormat@QTextFormat@@QEBA?AVQTextTableCellFormat@@XZ
   ??8QTextFormat@@QEBA_NAEBV0@@Z
   ??9QTextFormat@@QEBA_NAEBV0@@Z
+  ??BQTextFormat@@QEBA?AVQVariant@@XZ
   ?setLayoutDirection@QTextFormat@@QEAAXW4LayoutDirection@Qt@@@Z
   ?layoutDirection@QTextFormat@@QEBA?AW4LayoutDirection@Qt@@XZ
   ?setBackground@QTextFormat@@QEAAXAEBVQBrush@@@Z
@@ -3339,7 +3507,9 @@ EXPORTS
   ?setFontFamily@QTextCharFormat@@QEAAXAEBVQString@@@Z
   ?fontFamily@QTextCharFormat@@QEBA?AVQString@@XZ
   ?setFontFamilies@QTextCharFormat@@QEAAXAEBV?$QList@VQString@@@@@Z
+  ?fontFamilies@QTextCharFormat@@QEBA?AVQVariant@@XZ
   ?setFontStyleName@QTextCharFormat@@QEAAXAEBVQString@@@Z
+  ?fontStyleName@QTextCharFormat@@QEBA?AVQVariant@@XZ
   ?setFontPointSize@QTextCharFormat@@QEAAXN@Z
   ?fontPointSize@QTextCharFormat@@QEBANXZ
   ?setFontWeight@QTextCharFormat@@QEAAXH@Z
@@ -3399,8 +3569,8 @@ EXPORTS
   ?setTableCellColumnSpan@QTextCharFormat@@QEAAXH@Z
   ?tableCellColumnSpan@QTextCharFormat@@QEBAHXZ
   ??0QTextCharFormat@@IEAA@AEBVQTextFormat@@@Z
-  ??0QTextCharFormat@@QEAA@AEBV0@@Z
-  ??1QTextCharFormat@@QEAA@XZ
+  ??0QTextCharFormat@@QEAA@AEBV0@@Z = QTextCharFormat_QTextCharFormat___1__S_QTextCharFormat
+  ??1QTextCharFormat@@QEAA@XZ = QTextCharFormat__QTextCharFormat
   ??0QTextBlockFormat@@QEAA@XZ
   ?isValid@QTextBlockFormat@@QEBA_NXZ
   ?setAlignment@QTextBlockFormat@@QEAAXV?$QFlags@W4AlignmentFlag@Qt@@@@@Z
@@ -3428,8 +3598,8 @@ EXPORTS
   ?setMarker@QTextBlockFormat@@QEAAXW4MarkerType@1@@Z
   ?marker@QTextBlockFormat@@QEBA?AW4MarkerType@1@XZ
   ??0QTextBlockFormat@@IEAA@AEBVQTextFormat@@@Z
-  ??0QTextBlockFormat@@QEAA@AEBV0@@Z
-  ??1QTextBlockFormat@@QEAA@XZ
+  ??0QTextBlockFormat@@QEAA@AEBV0@@Z = QTextBlockFormat_QTextBlockFormat___1__S_QTextBlockFormat
+  ??1QTextBlockFormat@@QEAA@XZ = QTextBlockFormat__QTextBlockFormat
   ??0QTextListFormat@@QEAA@XZ
   ?isValid@QTextListFormat@@QEBA_NXZ
   ?setStyle@QTextListFormat@@QEAAXW4Style@1@@Z
@@ -3443,8 +3613,8 @@ EXPORTS
   ?setStart@QTextListFormat@@QEAAXH@Z
   ?start@QTextListFormat@@QEBAHXZ
   ??0QTextListFormat@@IEAA@AEBVQTextFormat@@@Z
-  ??0QTextListFormat@@QEAA@AEBV0@@Z
-  ??1QTextListFormat@@QEAA@XZ
+  ??0QTextListFormat@@QEAA@AEBV0@@Z = QTextListFormat_QTextListFormat___1__S_QTextListFormat
+  ??1QTextListFormat@@QEAA@XZ = QTextListFormat__QTextListFormat
   ??0QTextImageFormat@@QEAA@XZ
   ?isValid@QTextImageFormat@@QEBA_NXZ
   ?setName@QTextImageFormat@@QEAAXAEBVQString@@@Z
@@ -3459,8 +3629,8 @@ EXPORTS
   ?setQuality@QTextImageFormat@@QEAAXXZ
   ?quality@QTextImageFormat@@QEBAHXZ
   ??0QTextImageFormat@@IEAA@AEBVQTextFormat@@@Z
-  ??0QTextImageFormat@@QEAA@AEBV0@@Z
-  ??1QTextImageFormat@@QEAA@XZ
+  ??0QTextImageFormat@@QEAA@AEBV0@@Z = QTextImageFormat_QTextImageFormat___1__S_QTextImageFormat
+  ??1QTextImageFormat@@QEAA@XZ = QTextImageFormat__QTextImageFormat
   ??0QTextFrameFormat@@QEAA@XZ
   ?isValid@QTextFrameFormat@@QEBA_NXZ
   ?setPosition@QTextFrameFormat@@QEAAXW4Position@1@@Z
@@ -3491,8 +3661,8 @@ EXPORTS
   ?height@QTextFrameFormat@@QEBA?AVQTextLength@@XZ
   ?setPageBreakPolicy@QTextFrameFormat@@QEAAXV?$QFlags@W4PageBreakFlag@QTextFormat@@@@@Z
   ??0QTextFrameFormat@@IEAA@AEBVQTextFormat@@@Z
-  ??0QTextFrameFormat@@QEAA@AEBV0@@Z
-  ??1QTextFrameFormat@@QEAA@XZ
+  ??0QTextFrameFormat@@QEAA@AEBV0@@Z = QTextFrameFormat_QTextFrameFormat___1__S_QTextFrameFormat
+  ??1QTextFrameFormat@@QEAA@XZ = QTextFrameFormat__QTextFrameFormat
   ??0QTextTableFormat@@QEAA@XZ
   ?isValid@QTextTableFormat@@QEBA_NXZ
   ?columns@QTextTableFormat@@QEBAHXZ
@@ -3508,8 +3678,8 @@ EXPORTS
   ?setBorderCollapse@QTextTableFormat@@QEAAX_N@Z
   ?borderCollapse@QTextTableFormat@@QEBA_NXZ
   ??0QTextTableFormat@@IEAA@AEBVQTextFormat@@@Z
-  ??0QTextTableFormat@@QEAA@AEBV0@@Z
-  ??1QTextTableFormat@@QEAA@XZ
+  ??0QTextTableFormat@@QEAA@AEBV0@@Z = QTextTableFormat_QTextTableFormat___1__S_QTextTableFormat
+  ??1QTextTableFormat@@QEAA@XZ = QTextTableFormat__QTextTableFormat
   ??0QTextTableCellFormat@@QEAA@XZ
   ?isValid@QTextTableCellFormat@@QEBA_NXZ
   ?setTopPadding@QTextTableCellFormat@@QEAAXN@Z
@@ -3549,11 +3719,11 @@ EXPORTS
   ?rightBorderBrush@QTextTableCellFormat@@QEBA?AVQBrush@@XZ
   ?setBorderBrush@QTextTableCellFormat@@QEAAXAEBVQBrush@@@Z
   ??0QTextTableCellFormat@@IEAA@AEBVQTextFormat@@@Z
-  ??0QTextTableCellFormat@@QEAA@AEBV0@@Z
-  ??1QTextTableCellFormat@@QEAA@XZ
+  ??0QTextTableCellFormat@@QEAA@AEBV0@@Z = QTextTableCellFormat_QTextTableCellFormat___1__S_QTextTableCellFormat
+  ??1QTextTableCellFormat@@QEAA@XZ = QTextTableCellFormat__QTextTableCellFormat
   ?qt_metacast@QValidator@@UEAAPEAXPEBD@Z
   ?tr@QValidator@@SA?AVQString@@PEBD0H@Z
-  ??0QValidator@@QEAA@PEAVQObject@@@Z
+  ??0QValidator@@QEAA@PEAVQObject@@@Z = QValidator_QValidator____S_QObject
   ??1QValidator@@UEAA@XZ
   ?setLocale@QValidator@@QEAAXAEBVQLocale@@@Z
   ?locale@QValidator@@QEBA?AVQLocale@@XZ
@@ -3613,8 +3783,12 @@ EXPORTS
   ?rowCount@QStandardItemModel@@UEBAHAEBVQModelIndex@@@Z
   ?columnCount@QStandardItemModel@@UEBAHAEBVQModelIndex@@@Z
   ?hasChildren@QStandardItemModel@@UEBA_NAEBVQModelIndex@@@Z
+  ?data@QStandardItemModel@@UEBA?AVQVariant@@AEBVQModelIndex@@H@Z
   ?multiData@QStandardItemModel@@UEBAXAEBVQModelIndex@@VQModelRoleDataSpan@@@Z
+  ?setData@QStandardItemModel@@UEAA_NAEBVQModelIndex@@AEBVQVariant@@H@Z
   ?clearItemData@QStandardItemModel@@UEAA_NAEBVQModelIndex@@@Z
+  ?headerData@QStandardItemModel@@UEBA?AVQVariant@@HW4Orientation@Qt@@H@Z
+  ?setHeaderData@QStandardItemModel@@UEAA_NHW4Orientation@Qt@@AEBVQVariant@@H@Z
   ?insertRows@QStandardItemModel@@UEAA_NHHAEBVQModelIndex@@@Z
   ?insertColumns@QStandardItemModel@@UEAA_NHHAEBVQModelIndex@@@Z
   ?removeRows@QStandardItemModel@@UEAA_NHHAEBVQModelIndex@@@Z
@@ -3661,7 +3835,7 @@ EXPORTS
   ?applicationEmojiFontFamilies@QFontDatabase@@SA?AV?$QList@VQString@@@@XZ
   ?qt_metacast@QAbstractTextDocumentLayout@@UEAAPEAXPEBD@Z
   ?tr@QAbstractTextDocumentLayout@@SA?AVQString@@PEBD0H@Z
-  ??0QAbstractTextDocumentLayout@@QEAA@PEAVQTextDocument@@@Z
+  ??0QAbstractTextDocumentLayout@@QEAA@PEAVQTextDocument@@@Z = QAbstractTextDocumentLayout_QAbstractTextDocumentLayout____S_QTextDocument
   ??1QAbstractTextDocumentLayout@@UEAA@XZ
   ?anchorAt@QAbstractTextDocumentLayout@@QEBA?AVQString@@AEBVQPointF@@@Z
   ?imageAt@QAbstractTextDocumentLayout@@QEBA?AVQString@@AEBVQPointF@@@Z
@@ -4010,6 +4184,7 @@ EXPORTS
   ?initPainter@QWidget@@MEBAXPEAVQPainter@@@Z
   ?redirected@QWidget@@MEBAPEAVQPaintDevice@@PEAVQPoint@@@Z
   ?sharedPainter@QWidget@@MEBAPEAVQPainter@@XZ
+  ?inputMethodQuery@QWidget@@UEBA?AVQVariant@@W4InputMethodQuery@Qt@@@Z
   ?setInputMethodHints@QWidget@@QEAAXV?$QFlags@W4InputMethodHint@Qt@@@@@Z
   ?updateMicroFocus@QWidget@@IEAAXW4InputMethodQuery@Qt@@@Z
   ?create@QWidget@@IEAAX_K_N1@Z
@@ -4052,6 +4227,8 @@ EXPORTS
   ?font@QAction@@QEBA?AVQFont@@XZ
   ?setCheckable@QAction@@QEAAX_N@Z
   ?isCheckable@QAction@@QEBA_NXZ
+  ?data@QAction@@QEBA?AVQVariant@@XZ
+  ?setData@QAction@@QEAAXAEBVQVariant@@@Z
   ?isChecked@QAction@@QEBA_NXZ
   ?isEnabled@QAction@@QEBA_NXZ
   ?isVisible@QAction@@QEBA_NXZ
@@ -4079,28 +4256,29 @@ EXPORTS
   ?triggered@QAction@@QEAAX_N@Z
   ?hovered@QAction@@QEAAXXZ
   ?toggled@QAction@@QEAAX_N@Z
-  ??0QSizePolicy@@QEAA@XZ
-  ??0QSizePolicy@@QEAA@W4Policy@0@0W4ControlType@0@@Z
-  ?horizontalPolicy@QSizePolicy@@QEBA?AW4Policy@1@XZ
-  ?verticalPolicy@QSizePolicy@@QEBA?AW4Policy@1@XZ
+  ??0QSizePolicy@@QEAA@XZ = QSizePolicy_QSizePolicy
+  ??0QSizePolicy@@QEAA@W4Policy@0@0W4ControlType@0@@Z = QSizePolicy_QSizePolicy___S_QSizePolicy_E_Policy_S0____S_QSizePolicy_E_ControlType
+  ?horizontalPolicy@QSizePolicy@@QEBA?AW4Policy@1@XZ = _620
+  ?verticalPolicy@QSizePolicy@@QEBA?AW4Policy@1@XZ = _621
   ?controlType@QSizePolicy@@QEBA?AW4ControlType@1@XZ
-  ?setHorizontalPolicy@QSizePolicy@@QEAAXW4Policy@1@@Z
-  ?setVerticalPolicy@QSizePolicy@@QEAAXW4Policy@1@@Z
+  ?setHorizontalPolicy@QSizePolicy@@QEAAXW4Policy@1@@Z = _622
+  ?setVerticalPolicy@QSizePolicy@@QEAAXW4Policy@1@@Z = _623
   ?setControlType@QSizePolicy@@QEAAXW4ControlType@1@@Z
-  ?setHeightForWidth@QSizePolicy@@QEAAX_N@Z
-  ?hasHeightForWidth@QSizePolicy@@QEBA_NXZ
-  ?setWidthForHeight@QSizePolicy@@QEAAX_N@Z
-  ?hasWidthForHeight@QSizePolicy@@QEBA_NXZ
+  ?setHeightForWidth@QSizePolicy@@QEAAX_N@Z = _624
+  ?hasHeightForWidth@QSizePolicy@@QEBA_NXZ = _625
+  ?setWidthForHeight@QSizePolicy@@QEAAX_N@Z = _626
+  ?hasWidthForHeight@QSizePolicy@@QEBA_NXZ = _627
   ??8QSizePolicy@@QEBA_NAEBV0@@Z
   ??9QSizePolicy@@QEBA_NAEBV0@@Z
-  ?horizontalStretch@QSizePolicy@@QEBAHXZ
-  ?verticalStretch@QSizePolicy@@QEBAHXZ
-  ?setHorizontalStretch@QSizePolicy@@QEAAXH@Z
-  ?setVerticalStretch@QSizePolicy@@QEAAXH@Z
-  ?retainSizeWhenHidden@QSizePolicy@@QEBA_NXZ
-  ?setRetainSizeWhenHidden@QSizePolicy@@QEAAX_N@Z
-  ?transpose@QSizePolicy@@QEAAXXZ
-  ?transposed@QSizePolicy@@QEBA?AV1@XZ
+  ??BQSizePolicy@@QEBA?AVQVariant@@XZ
+  ?horizontalStretch@QSizePolicy@@QEBAHXZ = _630
+  ?verticalStretch@QSizePolicy@@QEBAHXZ = _631
+  ?setHorizontalStretch@QSizePolicy@@QEAAXH@Z = _632
+  ?setVerticalStretch@QSizePolicy@@QEAAXH@Z = _633
+  ?retainSizeWhenHidden@QSizePolicy@@QEBA_NXZ = _634
+  ?setRetainSizeWhenHidden@QSizePolicy@@QEAAX_N@Z = _635
+  ?transpose@QSizePolicy@@QEAAXXZ = _636
+  ?transposed@QSizePolicy@@QEBA?AV1@XZ = _637
   ?qt_metacast@QMainWindow@@UEAAPEAXPEBD@Z
   ?tr@QMainWindow@@SA?AVQString@@PEBD0H@Z
   ??0QMainWindow@@QEAA@PEAVQWidget@@V?$QFlags@W4WindowType@Qt@@@@@Z
@@ -4479,6 +4657,8 @@ EXPORTS
   ?focusOutEvent@QLineEdit@@MEAAXPEAVQFocusEvent@@@Z
   ?paintEvent@QLineEdit@@MEAAXPEAVQPaintEvent@@@Z
   ?changeEvent@QLineEdit@@MEAAXPEAVQEvent@@@Z
+  ?inputMethodQuery@QLineEdit@@UEBA?AVQVariant@@W4InputMethodQuery@Qt@@@Z
+  ?inputMethodQuery@QLineEdit@@QEBA?AVQVariant@@W4InputMethodQuery@Qt@@V2@@Z
   ?timerEvent@QLineEdit@@UEAAXPEAVQTimerEvent@@@Z
   ?event@QLineEdit@@UEAA_NPEAVQEvent@@@Z
   ?cursorRect@QLineEdit@@IEBA?AVQRect@@XZ
@@ -4526,6 +4706,7 @@ EXPORTS
   ?toHtml@QTextEdit@@QEBA?AVQString@@XZ
   ?toMarkdown@QTextEdit@@QEBA?AVQString@@V?$QFlags@W4MarkdownFeature@QTextDocument@@@@@Z
   ?ensureCursorVisible@QTextEdit@@QEAAXXZ
+  ?loadResource@QTextEdit@@UEAA?AVQVariant@@HAEBVQUrl@@@Z
   ?createStandardContextMenu@QTextEdit@@QEAAPEAVQMenu@@XZ
   ?createStandardContextMenu@QTextEdit@@QEAAPEAVQMenu@@AEBVQPoint@@@Z
   ?cursorForPosition@QTextEdit@@QEBA?AVQTextCursor@@AEBVQPoint@@@Z
@@ -4542,6 +4723,8 @@ EXPORTS
   ?setAcceptRichText@QTextEdit@@QEAAX_N@Z
   ?moveCursor@QTextEdit@@QEAAXW4MoveOperation@QTextCursor@@W4MoveMode@3@@Z
   ?canPaste@QTextEdit@@QEBA_NXZ
+  ?inputMethodQuery@QTextEdit@@UEBA?AVQVariant@@W4InputMethodQuery@Qt@@@Z
+  ?inputMethodQuery@QTextEdit@@QEBA?AVQVariant@@W4InputMethodQuery@Qt@@V2@@Z
   ?setFontPointSize@QTextEdit@@QEAAXN@Z
   ?setFontFamily@QTextEdit@@QEAAXAEBVQString@@@Z
   ?setFontWeight@QTextEdit@@QEAAXH@Z
@@ -4673,6 +4856,7 @@ EXPORTS
   ?find@QPlainTextEdit@@QEAA_NAEBVQRegularExpression@@V?$QFlags@W4FindFlag@QTextDocument@@@@@Z
   ?toPlainText@QPlainTextEdit@@QEBA?AVQString@@XZ
   ?ensureCursorVisible@QPlainTextEdit@@QEAAXXZ
+  ?loadResource@QPlainTextEdit@@UEAA?AVQVariant@@HAEBVQUrl@@@Z
   ?createStandardContextMenu@QPlainTextEdit@@QEAAPEAVQMenu@@XZ
   ?createStandardContextMenu@QPlainTextEdit@@QEAAPEAVQMenu@@AEBVQPoint@@@Z
   ?cursorForPosition@QPlainTextEdit@@QEBA?AVQTextCursor@@AEBVQPoint@@@Z
@@ -4688,6 +4872,8 @@ EXPORTS
   ?moveCursor@QPlainTextEdit@@QEAAXW4MoveOperation@QTextCursor@@W4MoveMode@3@@Z
   ?canPaste@QPlainTextEdit@@QEBA_NXZ
   ?blockCount@QPlainTextEdit@@QEBAHXZ
+  ?inputMethodQuery@QPlainTextEdit@@UEBA?AVQVariant@@W4InputMethodQuery@Qt@@@Z
+  ?inputMethodQuery@QPlainTextEdit@@QEBA?AVQVariant@@W4InputMethodQuery@Qt@@V2@@Z
   ?setPlainText@QPlainTextEdit@@QEAAXAEBVQString@@@Z
   ?cut@QPlainTextEdit@@QEAAXXZ
   ?copy@QPlainTextEdit@@QEAAXXZ
@@ -4740,6 +4926,7 @@ EXPORTS
   ?sourceType@QTextBrowser@@QEBA?AW4ResourceType@QTextDocument@@XZ
   ?searchPaths@QTextBrowser@@QEBA?AV?$QList@VQString@@@@XZ
   ?setSearchPaths@QTextBrowser@@QEAAXAEBV?$QList@VQString@@@@@Z
+  ?loadResource@QTextBrowser@@UEAA?AVQVariant@@HAEBVQUrl@@@Z
   ?isBackwardAvailable@QTextBrowser@@QEBA_NXZ
   ?isForwardAvailable@QTextBrowser@@QEBA_NXZ
   ?clearHistory@QTextBrowser@@QEAAXXZ
@@ -4773,7 +4960,7 @@ EXPORTS
   ?doSetSource@QTextBrowser@@MEAAXAEBVQUrl@@W4ResourceType@QTextDocument@@@Z
   ?qt_metacast@QAbstractButton@@UEAAPEAXPEBD@Z
   ?tr@QAbstractButton@@SA?AVQString@@PEBD0H@Z
-  ??0QAbstractButton@@QEAA@PEAVQWidget@@@Z
+  ??0QAbstractButton@@QEAA@PEAVQWidget@@@Z = QAbstractButton_QAbstractButton____S_QWidget
   ??1QAbstractButton@@UEAA@XZ
   ?setText@QAbstractButton@@QEAAXAEBVQString@@@Z
   ?text@QAbstractButton@@QEBA?AVQString@@XZ
@@ -4966,6 +5153,7 @@ EXPORTS
   ?minimumSizeHint@QAbstractSpinBox@@UEBA?AVQSize@@XZ
   ?interpretText@QAbstractSpinBox@@QEAAXXZ
   ?event@QAbstractSpinBox@@UEAA_NPEAVQEvent@@@Z
+  ?inputMethodQuery@QAbstractSpinBox@@UEBA?AVQVariant@@W4InputMethodQuery@Qt@@@Z
   ?validate@QAbstractSpinBox@@UEBA?AW4State@QValidator@@AEAVQString@@AEAH@Z
   ?fixup@QAbstractSpinBox@@UEBAXAEAVQString@@@Z
   ?stepBy@QAbstractSpinBox@@UEAAXH@Z
@@ -5156,6 +5344,7 @@ EXPORTS
   ?setFrame@QComboBox@@QEAAX_N@Z
   ?hasFrame@QComboBox@@QEBA_NXZ
   ?findText@QComboBox@@QEBAHAEBVQString@@V?$QFlags@W4MatchFlag@Qt@@@@@Z
+  ?findData@QComboBox@@QEBAHAEBVQVariant@@HV?$QFlags@W4MatchFlag@Qt@@@@@Z
   ?insertPolicy@QComboBox@@QEBA?AW4InsertPolicy@1@XZ
   ?setInsertPolicy@QComboBox@@QEAAXW4InsertPolicy@1@@Z
   ?sizeAdjustPolicy@QComboBox@@QEBA?AW4SizeAdjustPolicy@1@XZ
@@ -5184,14 +5373,21 @@ EXPORTS
   ?setLabelDrawingMode@QComboBox@@QEAAXW4LabelDrawingMode@1@@Z
   ?currentIndex@QComboBox@@QEBAHXZ
   ?currentText@QComboBox@@QEBA?AVQString@@XZ
+  ?currentData@QComboBox@@QEBA?AVQVariant@@H@Z
   ?itemText@QComboBox@@QEBA?AVQString@@H@Z
   ?itemIcon@QComboBox@@QEBA?AVQIcon@@H@Z
+  ?itemData@QComboBox@@QEBA?AVQVariant@@HH@Z
+  ?addItem@QComboBox@@QEAAXAEBVQString@@AEBVQVariant@@@Z
+  ?addItem@QComboBox@@QEAAXAEBVQIcon@@AEBVQString@@AEBVQVariant@@@Z
   ?addItems@QComboBox@@QEAAXAEBV?$QList@VQString@@@@@Z
+  ?insertItem@QComboBox@@QEAAXHAEBVQString@@AEBVQVariant@@@Z
+  ?insertItem@QComboBox@@QEAAXHAEBVQIcon@@AEBVQString@@AEBVQVariant@@@Z
   ?insertItems@QComboBox@@QEAAXHAEBV?$QList@VQString@@@@@Z
   ?insertSeparator@QComboBox@@QEAAXH@Z
   ?removeItem@QComboBox@@QEAAXH@Z
   ?setItemText@QComboBox@@QEAAXHAEBVQString@@@Z
   ?setItemIcon@QComboBox@@QEAAXHAEBVQIcon@@@Z
+  ?setItemData@QComboBox@@QEAAXHAEBVQVariant@@H@Z
   ?view@QComboBox@@QEBAPEAVQAbstractItemView@@XZ
   ?setView@QComboBox@@QEAAXPEAVQAbstractItemView@@@Z
   ?sizeHint@QComboBox@@UEBA?AVQSize@@XZ
@@ -5199,6 +5395,8 @@ EXPORTS
   ?showPopup@QComboBox@@UEAAXXZ
   ?hidePopup@QComboBox@@UEAAXXZ
   ?event@QComboBox@@UEAA_NPEAVQEvent@@@Z
+  ?inputMethodQuery@QComboBox@@UEBA?AVQVariant@@W4InputMethodQuery@Qt@@@Z
+  ?inputMethodQuery@QComboBox@@QEBA?AVQVariant@@W4InputMethodQuery@Qt@@AEBV2@@Z
   ?clear@QComboBox@@QEAAXXZ
   ?clearEditText@QComboBox@@QEAAXXZ
   ?setEditText@QComboBox@@QEAAXAEBVQString@@@Z
@@ -5223,9 +5421,17 @@ EXPORTS
   ?keyPressEvent@QComboBox@@MEAAXPEAVQKeyEvent@@@Z
   ?keyReleaseEvent@QComboBox@@MEAAXPEAVQKeyEvent@@@Z
   ?wheelEvent@QComboBox@@MEAAXPEAVQWheelEvent@@@Z
+  ??0QStyleOption@@QEAA@HH@Z
+  ??0QStyleOption@@QEAA@AEBV0@@Z
+  ??1QStyleOption@@QEAA@XZ
+  ?initFrom@QStyleOption@@QEAAXPEBVQWidget@@@Z
+  ??0QStyleOptionViewItem@@QEAA@XZ
+  ??0QStyleOptionViewItem@@QEAA@AEBV0@@Z
+  ??0QStyleOptionViewItem@@IEAA@H@Z
+  ??1QStyleOptionViewItem@@QEAA@XZ = QStyleOptionViewItem__QStyleOptionViewItem
   ?qt_metacast@QStyle@@UEAAPEAXPEBD@Z
   ?tr@QStyle@@SA?AVQString@@PEBD0H@Z
-  ??0QStyle@@QEAA@XZ
+  ??0QStyle@@QEAA@XZ = QStyle_QStyle
   ??1QStyle@@UEAA@XZ
   ?name@QStyle@@QEBA?AVQString@@XZ
   ?polish@QStyle@@UEAAXPEAVQWidget@@@Z
@@ -5243,6 +5449,7 @@ EXPORTS
   ?sliderPositionFromValue@QStyle@@SAHHHHH_N@Z
   ?sliderValueFromPosition@QStyle@@SAHHHHH_N@Z
   ?alignedRect@QStyle@@SA?AVQRect@@W4LayoutDirection@Qt@@V?$QFlags@W4AlignmentFlag@Qt@@@@AEBVQSize@@AEBV2@@Z
+  ?combinedLayoutSpacing@QStyle@@QEBAHV?$QFlags@W4ControlType@QSizePolicy@@@@0W4Orientation@Qt@@PEAVQStyleOption@@PEAVQWidget@@@Z
   ?proxy@QStyle@@QEBAPEBV1@XZ
   ?qt_metacast@QTabBar@@UEAAPEAXPEBD@Z
   ?tr@QTabBar@@SA?AVQString@@PEBD0H@Z
@@ -5272,6 +5479,8 @@ EXPORTS
   ?tabToolTip@QTabBar@@QEBA?AVQString@@H@Z
   ?setTabWhatsThis@QTabBar@@QEAAXHAEBVQString@@@Z
   ?tabWhatsThis@QTabBar@@QEBA?AVQString@@H@Z
+  ?setTabData@QTabBar@@QEAAXHAEBVQVariant@@@Z
+  ?tabData@QTabBar@@QEBA?AVQVariant@@H@Z
   ?tabRect@QTabBar@@QEBA?AVQRect@@H@Z
   ?tabAt@QTabBar@@QEBAHAEBVQPoint@@@Z
   ?currentIndex@QTabBar@@QEBAHXZ
@@ -5345,11 +5554,14 @@ EXPORTS
   ?moveEvent@QRubberBand@@MEAAXPEAVQMoveEvent@@@Z
   ?qt_metacast@QAbstractItemDelegate@@UEAAPEAXPEBD@Z
   ?tr@QAbstractItemDelegate@@SA?AVQString@@PEBD0H@Z
-  ??0QAbstractItemDelegate@@QEAA@PEAVQObject@@@Z
+  ??0QAbstractItemDelegate@@QEAA@PEAVQObject@@@Z = QAbstractItemDelegate_QAbstractItemDelegate____S_QObject
   ??1QAbstractItemDelegate@@UEAA@XZ
+  ?createEditor@QAbstractItemDelegate@@UEBAPEAVQWidget@@PEAV2@AEBVQStyleOptionViewItem@@AEBVQModelIndex@@@Z
   ?destroyEditor@QAbstractItemDelegate@@UEBAXPEAVQWidget@@AEBVQModelIndex@@@Z
   ?setEditorData@QAbstractItemDelegate@@UEBAXPEAVQWidget@@AEBVQModelIndex@@@Z
   ?setModelData@QAbstractItemDelegate@@UEBAXPEAVQWidget@@PEAVQAbstractItemModel@@AEBVQModelIndex@@@Z
+  ?updateEditorGeometry@QAbstractItemDelegate@@UEBAXPEAVQWidget@@AEBVQStyleOptionViewItem@@AEBVQModelIndex@@@Z
+  ?editorEvent@QAbstractItemDelegate@@UEAA_NPEAVQEvent@@PEAVQAbstractItemModel@@AEBVQStyleOptionViewItem@@AEBVQModelIndex@@@Z
   ?handleEditorEvent@QAbstractItemDelegate@@QEAA_NPEAVQObject@@PEAVQEvent@@@Z
   ?commitData@QAbstractItemDelegate@@QEAAXPEAVQWidget@@@Z
   ?closeEditor@QAbstractItemDelegate@@QEAAXPEAVQWidget@@W4EndEditHint@1@@Z
@@ -5442,6 +5654,7 @@ EXPORTS
   ?textFromDateTime@QDateTimeEdit@@MEBA?AVQString@@AEBVQDateTime@@@Z
   ?mousePressEvent@QDateTimeEdit@@MEAAXPEAVQMouseEvent@@@Z
   ?paintEvent@QDateTimeEdit@@MEAAXPEAVQPaintEvent@@@Z
+  ??0QDateTimeEdit@@IEAA@AEBVQVariant@@W4Type@QMetaType@@PEAVQWidget@@@Z
   ?qt_metacast@QTimeEdit@@UEAAPEAXPEBD@Z
   ?tr@QTimeEdit@@SA?AVQString@@PEBD0H@Z
   ??0QTimeEdit@@QEAA@PEAVQWidget@@@Z
@@ -6190,7 +6403,7 @@ EXPORTS
   ?forceShow@QProgressDialog@@IEAAXXZ
   ?qt_metacast@QAbstractItemView@@UEAAPEAXPEBD@Z
   ?tr@QAbstractItemView@@SA?AVQString@@PEBD0H@Z
-  ??0QAbstractItemView@@QEAA@PEAVQWidget@@@Z
+  ??0QAbstractItemView@@QEAA@PEAVQWidget@@@Z = QAbstractItemView_QAbstractItemView____S_QWidget
   ??1QAbstractItemView@@UEAA@XZ
   ?setModel@QAbstractItemView@@UEAAXPEAVQAbstractItemModel@@@Z
   ?model@QAbstractItemView@@QEBAPEAVQAbstractItemModel@@XZ
@@ -6251,6 +6464,7 @@ EXPORTS
   ?itemDelegateForColumn@QAbstractItemView@@QEBAPEAVQAbstractItemDelegate@@H@Z
   ?itemDelegate@QAbstractItemView@@QEBAPEAVQAbstractItemDelegate@@AEBVQModelIndex@@@Z
   ?itemDelegateForIndex@QAbstractItemView@@UEBAPEAVQAbstractItemDelegate@@AEBVQModelIndex@@@Z
+  ?inputMethodQuery@QAbstractItemView@@UEBA?AVQVariant@@W4InputMethodQuery@Qt@@@Z
   ?reset@QAbstractItemView@@UEAAXXZ
   ?setRootIndex@QAbstractItemView@@UEAAXAEBVQModelIndex@@@Z
   ?doItemsLayout@QAbstractItemView@@UEAAXXZ
@@ -6283,6 +6497,7 @@ EXPORTS
   ?iconSizeChanged@QAbstractItemView@@QEAAXAEBVQSize@@@Z
   ?edit@QAbstractItemView@@MEAA_NAEBVQModelIndex@@W4EditTrigger@1@PEAVQEvent@@@Z
   ?startDrag@QAbstractItemView@@MEAAXV?$QFlags@W4DropAction@Qt@@@@@Z
+  ?initViewItemOption@QAbstractItemView@@MEBAXPEAVQStyleOptionViewItem@@@Z
   ?state@QAbstractItemView@@IEBA?AW4State@1@XZ
   ?setState@QAbstractItemView@@IEAAXW4State@1@@Z
   ?scheduleDelayedItemsLayout@QAbstractItemView@@IEAAXXZ
@@ -6308,6 +6523,20 @@ EXPORTS
   ?eventFilter@QAbstractItemView@@MEAA_NPEAVQObject@@PEAVQEvent@@@Z
   ?dropIndicatorPosition@QAbstractItemView@@IEBA?AW4DropIndicatorPosition@1@XZ
   ?viewportSizeHint@QAbstractItemView@@MEBA?AVQSize@@XZ
+  ?qt_metacast@QStyledItemDelegate@@UEAAPEAXPEBD@Z
+  ?tr@QStyledItemDelegate@@SA?AVQString@@PEBD0H@Z
+  ??0QStyledItemDelegate@@QEAA@PEAVQObject@@@Z
+  ??1QStyledItemDelegate@@UEAA@XZ
+  ?paint@QStyledItemDelegate@@UEBAXPEAVQPainter@@AEBVQStyleOptionViewItem@@AEBVQModelIndex@@@Z
+  ?sizeHint@QStyledItemDelegate@@UEBA?AVQSize@@AEBVQStyleOptionViewItem@@AEBVQModelIndex@@@Z
+  ?createEditor@QStyledItemDelegate@@UEBAPEAVQWidget@@PEAV2@AEBVQStyleOptionViewItem@@AEBVQModelIndex@@@Z
+  ?setEditorData@QStyledItemDelegate@@UEBAXPEAVQWidget@@AEBVQModelIndex@@@Z
+  ?setModelData@QStyledItemDelegate@@UEBAXPEAVQWidget@@PEAVQAbstractItemModel@@AEBVQModelIndex@@@Z
+  ?updateEditorGeometry@QStyledItemDelegate@@UEBAXPEAVQWidget@@AEBVQStyleOptionViewItem@@AEBVQModelIndex@@@Z
+  ?displayText@QStyledItemDelegate@@UEBA?AVQString@@AEBVQVariant@@AEBVQLocale@@@Z
+  ?initStyleOption@QStyledItemDelegate@@MEBAXPEAVQStyleOptionViewItem@@AEBVQModelIndex@@@Z
+  ?eventFilter@QStyledItemDelegate@@MEAA_NPEAVQObject@@PEAVQEvent@@@Z
+  ?editorEvent@QStyledItemDelegate@@MEAA_NPEAVQEvent@@PEAVQAbstractItemModel@@AEBVQStyleOptionViewItem@@AEBVQModelIndex@@@Z
   ?qt_metacast@QListView@@UEAAPEAXPEBD@Z
   ?tr@QListView@@SA?AVQString@@PEBD0H@Z
   ??0QListView@@QEAA@PEAVQWidget@@@Z
@@ -6360,6 +6589,7 @@ EXPORTS
   ?timerEvent@QListView@@MEAAXPEAVQTimerEvent@@@Z
   ?resizeEvent@QListView@@MEAAXPEAVQResizeEvent@@@Z
   ?startDrag@QListView@@MEAAXV?$QFlags@W4DropAction@Qt@@@@@Z
+  ?initViewItemOption@QListView@@MEBAXPEAVQStyleOptionViewItem@@@Z
   ?paintEvent@QListView@@MEAAXPEAVQPaintEvent@@@Z
   ?horizontalOffset@QListView@@MEBAHXZ
   ?verticalOffset@QListView@@MEBAHXZ
@@ -6430,6 +6660,7 @@ EXPORTS
   ?rowCountChanged@QTableView@@IEAAXHH@Z
   ?columnCountChanged@QTableView@@IEAAXHH@Z
   ?scrollContentsBy@QTableView@@MEAAXHH@Z
+  ?initViewItemOption@QTableView@@MEBAXPEAVQStyleOptionViewItem@@@Z
   ?paintEvent@QTableView@@MEAAXPEAVQPaintEvent@@@Z
   ?timerEvent@QTableView@@MEAAXPEAVQTimerEvent@@@Z
   ?horizontalOffset@QTableView@@MEBAHXZ
@@ -6528,6 +6759,7 @@ EXPORTS
   ?timerEvent@QTreeView@@MEAAXPEAVQTimerEvent@@@Z
   ?paintEvent@QTreeView@@MEAAXPEAVQPaintEvent@@@Z
   ?drawTree@QTreeView@@IEBAXPEAVQPainter@@AEBVQRegion@@@Z
+  ?drawRow@QTreeView@@MEBAXPEAVQPainter@@AEBVQStyleOptionViewItem@@AEBVQModelIndex@@@Z
   ?drawBranches@QTreeView@@MEBAXPEAVQPainter@@AEBVQRect@@AEBVQModelIndex@@@Z
   ?mousePressEvent@QTreeView@@MEAAXPEAVQMouseEvent@@@Z
   ?mouseReleaseEvent@QTreeView@@MEAAXPEAVQMouseEvent@@@Z
@@ -6690,6 +6922,8 @@ EXPORTS
   ?setCheckState@QListWidgetItem@@QEAAXW4CheckState@Qt@@@Z
   ?sizeHint@QListWidgetItem@@QEBA?AVQSize@@XZ
   ?setSizeHint@QListWidgetItem@@QEAAXAEBVQSize@@@Z
+  ?data@QListWidgetItem@@UEBA?AVQVariant@@H@Z
+  ?setData@QListWidgetItem@@UEAAXHAEBVQVariant@@@Z
   ??MQListWidgetItem@@UEBA_NAEBV0@@Z
   ?type@QListWidgetItem@@QEBAHXZ
   ?qt_metacast@QListWidget@@UEAAPEAXPEBD@Z
@@ -6791,6 +7025,8 @@ EXPORTS
   ?setCheckState@QTreeWidgetItem@@QEAAXHW4CheckState@Qt@@@Z
   ?sizeHint@QTreeWidgetItem@@QEBA?AVQSize@@H@Z
   ?setSizeHint@QTreeWidgetItem@@QEAAXHAEBVQSize@@@Z
+  ?data@QTreeWidgetItem@@UEBA?AVQVariant@@HH@Z
+  ?setData@QTreeWidgetItem@@UEAAXHHAEBVQVariant@@@Z
   ??MQTreeWidgetItem@@UEBA_NAEBV0@@Z
   ?parent@QTreeWidgetItem@@QEBAPEAV1@XZ
   ?child@QTreeWidgetItem@@QEBAPEAV1@H@Z
@@ -6896,6 +7132,8 @@ EXPORTS
   ?setCheckState@QTableWidgetItem@@QEAAXW4CheckState@Qt@@@Z
   ?sizeHint@QTableWidgetItem@@QEBA?AVQSize@@XZ
   ?setSizeHint@QTableWidgetItem@@QEAAXAEBVQSize@@@Z
+  ?data@QTableWidgetItem@@UEBA?AVQVariant@@H@Z
+  ?setData@QTableWidgetItem@@UEAAXHAEBVQVariant@@@Z
   ??MQTableWidgetItem@@UEBA_NAEBV0@@Z
   ?type@QTableWidgetItem@@QEBAHXZ
   ?qt_metacast@QTableWidget@@UEAAPEAXPEBD@Z
@@ -6980,9 +7218,9 @@ EXPORTS
   ?layout@QLayoutItem@@UEAAPEAVQLayout@@XZ
   ?spacerItem@QLayoutItem@@UEAAPEAVQSpacerItem@@XZ
   ?setAlignment@QLayoutItem@@QEAAXV?$QFlags@W4AlignmentFlag@Qt@@@@@Z
-  ??0QLayoutItem@@QEAA@V?$QFlags@W4AlignmentFlag@Qt@@@@@Z
+  ??0QLayoutItem@@QEAA@V?$QFlags@W4AlignmentFlag@Qt@@@@@Z = QLayoutItem_QLayoutItem___S_QFlags____N_Qt_E_AlignmentFlag
   ??1QLayoutItem@@UEAA@XZ
-  ??0QLayoutItem@@QEAA@AEBV0@@Z
+  ??0QLayoutItem@@QEAA@AEBV0@@Z = QLayoutItem_QLayoutItem___1__S_QLayoutItem
   ??0QSpacerItem@@QEAA@HHW4Policy@QSizePolicy@@0@Z
   ??1QSpacerItem@@UEAA@XZ
   ?changeSize@QSpacerItem@@QEAAXHHW4Policy@QSizePolicy@@0@Z
@@ -6994,10 +7232,9 @@ EXPORTS
   ?geometry@QSpacerItem@@UEBA?AVQRect@@XZ
   ?spacerItem@QSpacerItem@@UEAAPEAV1@XZ
   ?sizePolicy@QSpacerItem@@QEBA?AVQSizePolicy@@XZ
-  ??0QSpacerItem@@QEAA@AEBV0@@Z
   ?qt_metacast@QLayout@@UEAAPEAXPEBD@Z
   ?tr@QLayout@@SA?AVQString@@PEBD0H@Z
-  ??0QLayout@@QEAA@PEAVQWidget@@@Z
+  ??0QLayout@@QEAA@PEAVQWidget@@@Z = QLayout_QLayout____S_QWidget
   ??1QLayout@@UEAA@XZ
   ?spacing@QLayout@@UEBAHXZ
   ?setSpacing@QLayout@@UEAAXH@Z
@@ -7228,7 +7465,6 @@ EXPORTS
   ??0QShortcut@@QEAA@W4StandardKey@QKeySequence@@PEAVQObject@@PEBD2W4ShortcutContext@Qt@@@Z
   ??1QShortcut@@UEAA@XZ
   ?setKey@QShortcut@@QEAAXAEBVQKeySequence@@@Z
-  ?key@QShortcut@@QEBA?AVQKeySequence@@XZ
   ?setKeys@QShortcut@@QEAAXW4StandardKey@QKeySequence@@@Z
   ?setEnabled@QShortcut@@QEAAX_N@Z
   ?isEnabled@QShortcut@@QEBA_NXZ
@@ -7249,10 +7485,19 @@ EXPORTS
   ??1QProxyStyle@@UEAA@XZ
   ?baseStyle@QProxyStyle@@QEBAPEAVQStyle@@XZ
   ?setBaseStyle@QProxyStyle@@QEAAXPEAVQStyle@@@Z
+  ?drawPrimitive@QProxyStyle@@UEBAXW4PrimitiveElement@QStyle@@PEBVQStyleOption@@PEAVQPainter@@PEBVQWidget@@@Z
+  ?drawControl@QProxyStyle@@UEBAXW4ControlElement@QStyle@@PEBVQStyleOption@@PEAVQPainter@@PEBVQWidget@@@Z
   ?drawItemText@QProxyStyle@@UEBAXPEAVQPainter@@AEBVQRect@@HAEBVQPalette@@_NAEBVQString@@W4ColorRole@4@@Z
   ?drawItemPixmap@QProxyStyle@@UEBAXPEAVQPainter@@AEBVQRect@@HAEBVQPixmap@@@Z
+  ?sizeFromContents@QProxyStyle@@UEBA?AVQSize@@W4ContentsType@QStyle@@PEBVQStyleOption@@AEBV2@PEBVQWidget@@@Z
+  ?subElementRect@QProxyStyle@@UEBA?AVQRect@@W4SubElement@QStyle@@PEBVQStyleOption@@PEBVQWidget@@@Z
   ?itemTextRect@QProxyStyle@@UEBA?AVQRect@@AEBVQFontMetrics@@AEBV2@H_NAEBVQString@@@Z
   ?itemPixmapRect@QProxyStyle@@UEBA?AVQRect@@AEBV2@HAEBVQPixmap@@@Z
+  ?pixelMetric@QProxyStyle@@UEBAHW4PixelMetric@QStyle@@PEBVQStyleOption@@PEBVQWidget@@@Z
+  ?layoutSpacing@QProxyStyle@@UEBAHW4ControlType@QSizePolicy@@0W4Orientation@Qt@@PEBVQStyleOption@@PEBVQWidget@@@Z
+  ?standardIcon@QProxyStyle@@UEBA?AVQIcon@@W4StandardPixmap@QStyle@@PEBVQStyleOption@@PEBVQWidget@@@Z
+  ?standardPixmap@QProxyStyle@@UEBA?AVQPixmap@@W4StandardPixmap@QStyle@@PEBVQStyleOption@@PEBVQWidget@@@Z
+  ?generatedIconPixmap@QProxyStyle@@UEBA?AVQPixmap@@W4Mode@QIcon@@AEBV2@PEBVQStyleOption@@@Z
   ?standardPalette@QProxyStyle@@UEBA?AVQPalette@@XZ
   ?polish@QProxyStyle@@UEAAXPEAVQWidget@@@Z
   ?polish@QProxyStyle@@UEAAXAEAVQPalette@@@Z
@@ -7264,6 +7509,15 @@ EXPORTS
   ?tr@QCommonStyle@@SA?AVQString@@PEBD0H@Z
   ??0QCommonStyle@@QEAA@XZ
   ??1QCommonStyle@@UEAA@XZ
+  ?drawPrimitive@QCommonStyle@@UEBAXW4PrimitiveElement@QStyle@@PEBVQStyleOption@@PEAVQPainter@@PEBVQWidget@@@Z
+  ?drawControl@QCommonStyle@@UEBAXW4ControlElement@QStyle@@PEBVQStyleOption@@PEAVQPainter@@PEBVQWidget@@@Z
+  ?subElementRect@QCommonStyle@@UEBA?AVQRect@@W4SubElement@QStyle@@PEBVQStyleOption@@PEBVQWidget@@@Z
+  ?sizeFromContents@QCommonStyle@@UEBA?AVQSize@@W4ContentsType@QStyle@@PEBVQStyleOption@@AEBV2@PEBVQWidget@@@Z
+  ?pixelMetric@QCommonStyle@@UEBAHW4PixelMetric@QStyle@@PEBVQStyleOption@@PEBVQWidget@@@Z
+  ?standardIcon@QCommonStyle@@UEBA?AVQIcon@@W4StandardPixmap@QStyle@@PEBVQStyleOption@@PEBVQWidget@@@Z
+  ?standardPixmap@QCommonStyle@@UEBA?AVQPixmap@@W4StandardPixmap@QStyle@@PEBVQStyleOption@@PEBVQWidget@@@Z
+  ?generatedIconPixmap@QCommonStyle@@UEBA?AVQPixmap@@W4Mode@QIcon@@AEBV2@PEBVQStyleOption@@@Z
+  ?layoutSpacing@QCommonStyle@@UEBAHW4ControlType@QSizePolicy@@0W4Orientation@Qt@@PEBVQStyleOption@@PEBVQWidget@@@Z
   ?polish@QCommonStyle@@UEAAXAEAVQPalette@@@Z
   ?polish@QCommonStyle@@UEAAXPEAVQApplication@@@Z
   ?polish@QCommonStyle@@UEAAXPEAVQWidget@@@Z

@@ -47,11 +47,11 @@ namespace CppSharp.AST
         public static List<Method> GetAbstractMethods(this Class @class)
         {
             var abstractMethods = @class.Methods.Where(m => m.IsPure).ToList();
-            var abstractOverrides = abstractMethods.Where(a => a.IsOverride).ToArray();
+            var overrides = @class.Methods.Where(m => m.IsOverride).ToArray();
             foreach (var baseAbstractMethods in @class.Bases.Select(b => GetAbstractMethods(b.Class)))
             {
                 for (var i = baseAbstractMethods.Count - 1; i >= 0; i--)
-                    if (abstractOverrides.Any(a => a.CanOverride(baseAbstractMethods[i])))
+                    if (overrides.Any(a => a.CanOverride(baseAbstractMethods[i])))
                         baseAbstractMethods.RemoveAt(i);
                 abstractMethods.AddRange(baseAbstractMethods);
             }

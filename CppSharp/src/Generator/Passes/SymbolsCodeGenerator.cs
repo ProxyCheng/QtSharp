@@ -239,18 +239,27 @@ namespace CppSharp.Passes
             var callArgs = new List<string>();
             string sretName = null;
 
+            if (hasSret)
+            {
+                foreach (var p in method.Parameters)
+                {
+                    if (p.Kind == ParameterKind.IndirectReturnType)
+                    {
+                        sretName = p.Name;
+                        var sretPointee = p.QualifiedType.Type.Visit(cppTypePrinter).ToString();
+                        paramDecls.Add($"{sretPointee}* {sretName}");
+                        break;
+                    }
+                }
+            }
+
             if (!isStatic)
                 paramDecls.Add($"{(isConst ? "const " : string.Empty)}{className}* {Helpers.InstanceField}");
 
             foreach (var p in method.Parameters)
             {
                 if (p.Kind == ParameterKind.IndirectReturnType)
-                {
-                    sretName = p.Name;
-                    var sretPointee = p.QualifiedType.Type.Visit(cppTypePrinter).ToString();
-                    paramDecls.Add($"{sretPointee}* {sretName}");
                     continue;
-                }
                 if (p.Kind != ParameterKind.Regular)
                     continue;
                 var defaultArg = p.DefaultArgument;

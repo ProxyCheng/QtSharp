@@ -7,7 +7,7 @@ namespace CppSharp.AST
     public static class FunctionExtensions
     {
         public static IList<Parameter> GatherInternalParams(this Function function,
-            bool isItaniumLikeAbi, bool universalDelegate = false)
+            bool isItaniumLikeAbi, bool universalDelegate = false, bool realAbiOrder = false)
         {
             var @params = new List<Parameter>();
 
@@ -16,8 +16,12 @@ namespace CppSharp.AST
 
             var pointer = new QualifiedType(new PointerType(new QualifiedType(new BuiltinType(PrimitiveType.Void))));
 
-            if (isInstanceMethod &&
-                (!isItaniumLikeAbi || !function.HasIndirectReturnTypeParameter))
+            // Wrapper convention (realAbiOrder=false): sret always before `this`.
+            // Real ABI (realAbiOrder=true): MS puts `this` before sret, Itanium puts sret before `this`.
+            var instanceFirst = !function.HasIndirectReturnTypeParameter ||
+                (realAbiOrder && !isItaniumLikeAbi);
+
+            if (isInstanceMethod && instanceFirst)
             {
                 @params.Add(new Parameter
                 {
@@ -44,7 +48,7 @@ namespace CppSharp.AST
                 });
 
                 if (param.Kind == ParameterKind.IndirectReturnType &&
-                    isInstanceMethod && isItaniumLikeAbi)
+                    isInstanceMethod && !instanceFirst)
                 {
                     @params.Add(new Parameter
                     {
