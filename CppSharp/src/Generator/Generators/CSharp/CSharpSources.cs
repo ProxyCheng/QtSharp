@@ -691,13 +691,13 @@ internal static bool {Helpers.TryGetNativeToManagedMappingIdentifier}(IntPtr nat
             }
         }
 
-        private IEnumerable<string> GatherInternalParams(Function function, out TypePrinterResult retType)
+        private IEnumerable<string> GatherInternalParams(Function function, out TypePrinterResult retType, bool realAbiOrder = false)
         {
             TypePrinter.PushContext(TypePrinterContextKind.Native);
 
             retType = function.ReturnType.Visit(TypePrinter);
 
-            var @params = function.GatherInternalParams(Context.ParserOptions.IsItaniumLikeAbi).Select(p =>
+            var @params = function.GatherInternalParams(Context.ParserOptions.IsItaniumLikeAbi, realAbiOrder: realAbiOrder).Select(p =>
                 $"{p.Visit(TypePrinter)} {p.Name}").ToList();
 
             TypePrinter.PopContext();
@@ -2008,6 +2008,10 @@ internal static bool {Helpers.TryGetNativeToManagedMappingIdentifier}(IntPtr nat
 
             if (hasReturn)
             {
+                var indirectReturnParam = method.HasIndirectReturnTypeParameter
+                    ? method.Parameters.First(p => p.Kind == ParameterKind.IndirectReturnType)
+                    : null;
+
                 var param = new Parameter
                 {
                     Name = Helpers.ReturnIdentifier,
@@ -2030,10 +2034,25 @@ internal static bool {Helpers.TryGetNativeToManagedMappingIdentifier}(IntPtr nat
                 if (!string.IsNullOrWhiteSpace(marshal.Context.Before))
                     Write(marshal.Context.Before);
 
-                if (method.HasIndirectReturnTypeParameter)
+                if (indirectReturnParam != null)
                 {
-                    var retParam = method.Parameters.First(p => p.Kind == ParameterKind.IndirectReturnType);
-                    WriteLine($@"*({TypePrinter.PrintNative(method.OriginalReturnType)}*) {retParam.Name} = {marshal.Context.ArgumentPrefix}{marshal.Context.Return};");
+                    var retParam = indirectReturnParam;
+                    var indirectReturnType = method.OriginalReturnType.Type.Desugar();
+                    var copyCtor = indirectReturnType.TryGetClass(out var returnClass)
+                        ? returnClass.Methods.FirstOrDefault(m => m.IsCopyConstructor)
+                        : null;
+                    if (returnClass != null && copyCtor != null && copyCtor.IsGenerated &&
+                        (returnClass.HasNonTrivialCopyConstructor || returnClass.HasNonTrivialDestructor))
+                    {
+                        // Non-trivial value types (e.g. QVariant) must be copied via the
+                        // copy constructor to keep their reference counting intact. A raw
+                        // memcpy would produce a shallow copy with a dangling data pointer.
+                        WriteLine($@"{TypePrinter.PrintNative(method.OriginalReturnType)}.{GetFunctionNativeIdentifier(copyCtor)}({retParam.Name}, {marshal.Context.Return});");
+                    }
+                    else
+                    {
+                        WriteLine($@"*({TypePrinter.PrintNative(method.OriginalReturnType)}*) {retParam.Name} = {marshal.Context.ArgumentPrefix}{marshal.Context.Return};");
+                    }
                 }
                 else
                 {
@@ -2042,6 +2061,13 @@ internal static bool {Helpers.TryGetNativeToManagedMappingIdentifier}(IntPtr nat
 
                 if (ctx.HasCodeBlock)
                     UnindentAndWriteCloseBrace();
+
+                // A native function returning a value through a hidden return-slot pointer
+                // also returns that pointer in the return register (RAX on x64). The managed
+                // hook must hand the slot pointer back to the caller, otherwise the caller
+                // dereferences a null pointer.
+                if (indirectReturnParam != null)
+                    WriteLine($"return {indirectReturnParam.Name};");
             }
 
             if (!isVoid && isSetter)
@@ -2066,10 +2092,16 @@ internal static bool {Helpers.TryGetNativeToManagedMappingIdentifier}(IntPtr nat
 
             TypePrinterResult retType;
             TypePrinter.PushMarshalKind(MarshalKind.VTableReturnValue);
-            var @params = GatherInternalParams(method, out retType);
+            var @params = GatherInternalParams(method, out retType, realAbiOrder: true);
 
             var vTableMethodDelegateName = GetVTableMethodDelegateName(method);
             TypePrinter.PopMarshalKind();
+
+            // A native function returning a value through a hidden return-slot pointer also
+            // returns that pointer in the return register (RAX on x64). The hook must return
+            // it so native callers can use the returned object.
+            if (method.HasIndirectReturnTypeParameter)
+                retType = TypePrinter.IntPtrType;
 
             WriteLine($"private static {method.FunctionType} {vTableMethodDelegateName}Instance;");
             NewLine();
@@ -3140,9 +3172,13 @@ internal static{(@new ? " new" : string.Empty)} {printedClass} __GetInstance({Ty
 
                 Type type = indirectRetType.Type.Desugar();
 
-                TypeMap typeMap;
+                TypeMap typeMap = null;
                 string construct = null;
-                if (Context.TypeMaps.FindTypeMap(indirectRetType.Type, out typeMap))
+                bool isFlagsReturn = type is TemplateSpecializationType flagsType &&
+                    flagsType.Template?.TemplatedDecl?.OriginalName == "QFlags";
+                if (isFlagsReturn)
+                    construct = "0";
+                else if (Context.TypeMaps.FindTypeMap(indirectRetType.Type, out typeMap))
                     construct = typeMap.CSharpConstruct();
 
                 if (construct == null)

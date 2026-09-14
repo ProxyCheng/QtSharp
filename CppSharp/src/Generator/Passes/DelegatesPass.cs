@@ -73,6 +73,14 @@ namespace CppSharp.Passes
             functionType.Parameters.AddRange(
                 method.GatherInternalParams(Context.ParserOptions.IsItaniumLikeAbi, true));
 
+            // A native function that returns a value through a hidden return-slot pointer also
+            // returns that pointer in the return register (RAX on x64). The delegate must carry
+            // that pointer as its return type, otherwise the marshaller emits a void thunk and
+            // native callers receive a null pointer.
+            if (method.HasIndirectReturnTypeParameter)
+                functionType.ReturnType = new QualifiedType(new PointerType(
+                    new QualifiedType(new BuiltinType(PrimitiveType.Void))));
+
             method.FunctionType = CheckForDelegate(new QualifiedType(functionType),
                 method.Namespace, @private: true);
             TypePrinter.PopMarshalKind();

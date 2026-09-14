@@ -170,6 +170,9 @@ class QtLibrary : ILibrary
         widgets.Headers.Add("qprogressdialog.h");
         widgets.Headers.Add("qdialogbuttonbox.h");
         widgets.Headers.Add("qabstractitemview.h");
+        widgets.Headers.Add("qabstractitemdelegate.h");
+        widgets.Headers.Add("qstyleditemdelegate.h");
+        widgets.Headers.Add("qstyleoption.h");
         widgets.Headers.Add("qlistview.h");
         widgets.Headers.Add("qtableview.h");
         widgets.Headers.Add("qtreeview.h");
@@ -242,7 +245,8 @@ class QtLibrary : ILibrary
         "QMessageBox", "QFileDialog", "QInputDialog", "QColorDialog", "QFontDialog", "QProgressDialog", "QDialogButtonBox",
         "QAbstractItemView", "QListView", "QTableView", "QTreeView", "QHeaderView",
         "QListWidget", "QListWidgetItem", "QTreeWidget", "QTreeWidgetItem", "QTableWidget", "QTableWidgetItem",
-        "QAbstractItemModel", "QStandardItemModel", "QStyledItemDelegate",
+        "QAbstractItemModel", "QAbstractTableModel", "QStandardItemModel", "QStyledItemDelegate", "QAbstractItemDelegate", "QStyleOptionViewItem", "QStyleOption",
+        "QSettings",
         "QSystemTrayIcon", "QShortcut",
         "QIntValidator", "QDoubleValidator", "QRegularExpressionValidator", "QRegularExpression",
         "QCommonStyle", "QProxyStyle", "QStylePainter", "QStyleFactory"
@@ -256,8 +260,8 @@ class QtLibrary : ILibrary
         "QPartialOrdering", "QStrongOrdering", "QWeakOrdering",
         "QTotallyOrderedWrapper",
         "PartialOrdering", "WeakOrdering", "StrongOrdering",
-        "QMetaObject", "QHashPrivate", "QHash", "QMultiHash", "QVariant",
-        "QWidgetItemData", "QStackedLayout", "QFileDevice"
+        "QMetaObject", "QHashPrivate", "QHash", "QMultiHash",
+        "QWidgetItemData", "QStackedLayout", "QFileDevice", "PrivateShared"
     };
 
     static readonly string[] ForceIgnoreMethodNames = {
@@ -265,6 +269,13 @@ class QtLibrary : ILibrary
         "QTableWidget::insertColumn",
         "QDir::rmpath",
         "QLayoutItemInternal::tr"
+    };
+
+    // Methods returning QFlags are dropped from the bindings (QFlags maps to int), but a
+    // few are required by the examples (e.g. an editable item model needs flags()).
+    static readonly HashSet<string> QFlagsReturnWhitelist = new()
+    {
+        "QAbstractItemModel::flags"
     };
 
     static void LimitScope(ASTContext ctx)
@@ -317,6 +328,9 @@ class QtLibrary : ILibrary
         foreach (var c in ns.Classes)
             if (RootNames.Contains(c.OriginalName))
                 AddReachable(c, reachable, queue);
+        if (ns.OriginalName == "Qt")
+            foreach (var e in ns.Enums)
+                AddReachable(e, reachable, queue);
         foreach (var sub in ns.Namespaces)
             CollectRoots(sub, queue, reachable);
     }
@@ -389,10 +403,10 @@ class QtLibrary : ILibrary
             return;
         if (!m.IsGenerated && !(m.AssociatedDeclaration is Property { IsGenerated: true }))
             return;
-        if (exports.Contains(m.Mangled))
-            sb.AppendLine($"  {m.Mangled}");
-        else if (wrapped.TryGetValue(m.Mangled, out var wrapper))
+        if (wrapped.TryGetValue(m.Mangled, out var wrapper))
             sb.AppendLine($"  {m.Mangled} = {wrapper}");
+        else if (exports.Contains(m.Mangled))
+            sb.AppendLine($"  {m.Mangled}");
         else
             skipped++;
     }
@@ -474,7 +488,9 @@ class QtLibrary : ILibrary
                         continue;
                     }
                     var rt = m.ReturnType.Type?.Desugar();
-                    if (rt is TemplateSpecializationType ts && ts.Template?.TemplatedDecl?.OriginalName == "QFlags")
+                    if (rt is TemplateSpecializationType ts &&
+                        ts.Template?.TemplatedDecl?.OriginalName == "QFlags" &&
+                        !QFlagsReturnWhitelist.Contains(m.QualifiedOriginalName))
                         m.ExplicitlyIgnore();
                 }
                 DedupeOverloads(c);
