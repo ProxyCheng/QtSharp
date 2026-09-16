@@ -10,6 +10,11 @@ static class Program
         {
             using var app = new QApplication(new[] { "qtsharp-examples" });
 
+            if (args.Length > 0 && args[0] == "metasig")
+            {
+                return MetaSignalTest.Run();
+            }
+
             string which = args.Length > 0 ? args[0].ToLowerInvariant() : "all";
             QWidget window = which switch
             {
