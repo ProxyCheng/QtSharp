@@ -153,8 +153,46 @@ sliders / spinboxes / windowflags / lineedits / shapedclock / calendar / systray
   4. 本文件(CONTEXT.md)
 - 生成产物 `out/`、`testbind/QtSharp.*.cs`、`testbind/Std.cs`、`testbind/GeneratedSignals.cs`、`native/QtSharp_signals.cpp` 被 .gitignore;`native/QtSharp.def` 被跟踪(随生成器变化提交)。
 
+## 扩展示例覆盖(进行中)
+目标:把 Qt 官方 **所有** examples/widgets 都改写成 C# 并跑通(不止 examples-widgets.html 那 16 个)。
+
+### 已完成的新增示例(除原有 13 个 demo 外)
+- **Menus**(`examples/widgets/mainwindows/menus`):菜单栏 File/Edit/Format/Help、可勾选格式动作、status tip、右键 `QContextMenuEvent` 上下文菜单、状态标签回显。
+- **Basic Layouts**(`examples/widgets/layouts/basiclayouts`):layout 内嵌 QMenuBar、horizontal/grid/form 分组、大编辑器、QDialogButtonBox 的 accept/reject、QScrollArea + 自定义竖直滚动条样式。
+- `AllDemos` 现在平铺 **15** 个窗口;`Program.cs` 新增命令 `menus`、`basiclayouts`。
+
+### 本轮为覆盖更多示例新增的绑定
+- 头文件/根类:`QAbstractAnimation`/`QPropertyAnimation`/`QEasingCurve`、`QSortFilterProxyModel`、`QStringListModel`、`QStandardItem`、`QSyntaxHighlighter`、`QImageReader`/`QImageWriter`、`QPainterPath`、`QCompleter`、`QFileSystemModel`、`QDataWidgetMapper`、`QItemDelegate`、`QWizard`/`QWizardPage`、`QErrorMessage`、`QFocusFrame`、`QScroller`、`QUndoStack`/`QUndoCommand`/`QUndoView`。
+- 事件类型:`QInputEvent`/`QContextMenuEvent`/`QHoverEvent`/`QDragEnterEvent`/`QDragMoveEvent`/`QDragLeaveEvent`/`QDropEvent`/`QHelpEvent`/`QActionEvent` + `QMimeData`(qmimedata.h)。
+- **信号生成器改进**(`gen/Program.cs`):解析**无名参数**;忽略 `QPrivateSignal` 标记(既不出现在托管签名,也不出现在 connect lambda;成员指针强转只在**重载信号**时使用,因为 QPrivateSignal 无法在类外命名)。
+- 注意:`QSpinBox/QDoubleSpinBox::valueChanged` 现在正确带值(此前因无名参数 bug 变成 0 参);`Sliders.cs`/`SpinBoxes.cs` 已改为 `_ =>`。
+
+### 踩过的坑(生成器脆弱点,务必 retry)
+- 生成**很不稳定**:同一份源码反复跑会出现 `mask`/`other` 未定义、`nint +=`、`PopBack`、`QFlagsStorage`/`QTextEdit.operator_` 之类**错误重命名**、`QGridLayout` 不实现抽象成员、`QSettings(string,string)` ctor 消失、`QScrollArea.WidgetResizable` 变只读等。**必须**用"生成→编译 testbind→编译 glue"全部通过的 retry 循环(见下)。
+- 加入 `qmdiarea.h`/`qmdisubwindow.h` 会触发 CppSharp 的 `event`→`QFlagsStorage` 重命名 bug(QPushButton 等被污染),**已放弃 MDI**。
+- `QSyntaxHighlighter` 仍未生成(头文件已加、RootName 已加,原因未查明)。
+
+### retry 命令(临时脚本,未入库)
+```
+powershell -File %TEMP%\codemaker\regen2.ps1            # 重建 AST/Generator/gen + 重试直到 testbind+glue 干净
+powershell -File %TEMP%\codemaker\regen2.ps1 -SkipBuildTools   # 只重跑生成
+powershell -File %TEMP%\codemaker\regen_once.ps1        # 单次生成(排查用)
+```
+
+### 下一批示例需要补的绑定(已确认缺口)
+1. **painting 组**(affine/basicdrawing/composition/deform/gradients/imagecomposition/painterpaths/pathstroke/transformations)需要:
+   - `QLinearGradient`/`QRadialGradient`/`QConicalGradient` 加入 RootNames(qbrush.h 已解析)。
+   - `QPainter::setPen(QPen)`/`setBrush(QBrush)` 实际是 **`QPainter.Pen`/`QPainter.Brush` 属性**(可用);`new QPainter(QWidget)` 用 `QPainter(IQPaintDevice)`。
+   - 示例用的 `:/images/*.png` **资源不存在**(无 qrc),`Pixmap`/`Texture` 分支需用程序化贴图或跳过。
+2. **animation/easing** 需要 `QGraphicsScene`/`QGraphicsView`/`QGraphicsObject`(+ `QPropertyAnimation` 已绑定)以及自定义 `PixmapItem : QGraphicsObject`。
+3. **itemviews**(addressbook/simpletreemodel/editabletreemodel/spreadsheet 等)大体已可用(`QSortFilterProxyModel`/`QStandardItem` 已绑定);`stardelegate` 需 `QStyledItemDelegate`(已绑定)。
+4. **richtext**(orderform/syntaxhighlighter)需修好 `QSyntaxHighlighter`;textobject 需 `QTextObjectInterface`(未绑定)。
+5. **graphicsview** 整组需要绑定 `QGraphicsView/Scene/Item/...` 家族(未绑定)。
+6. **tools**(completer/regexp/settingseditor/undoframework 已具备大部分;plugandpaint 需插件机制,不可行)、**touch**(需 `QTouchEvent`/`QEventPoint`)、**gestures**(需 `QGesture`)、**draganddrop**(`QMimeData`/QUrl 列表,部分可行)。
+7. **不可行**:RHI 两个(需 QRhi + `.qsb` shader blob)、Window Embedding(需嵌入非 Qt 窗口)、quartz/other 平台示例、QtStateMachine(模块未安装)、QtSvg/PrintSupport(运行时不带 DLL)。
+
 ## 下一 agent 可继续的方向
-1. **提交整理**:把上面的改动分组提交(生成器 ABI/类型修复 / ShortcutEditor 绑定+示例 / DocumentViewer / 调试工具),用户未授权前不要 commit。
-2. **继续示例对齐**:Document Viewer 的拖放(QMimeData/QUrl 列表未绑定)与打印(QtPrintSupport DLL 缺失)需先补绑定/取回 DLL;PDF 需 QtPdf 模块。
-3. **扩展绑定**以补齐"共性缺口"行列出的缺口(改 `gen/Program.cs` 的 reachability/signal 集 + 重生成;注意 gen flaky 要用 retry 循环)。
+1. **继续按上面的批次补绑定 + 移植示例**,每批完成后 `all` 冒烟。
+2. **提交整理**:本轮已提交 `Expand bindings…`、`Bind event types…`、`Port Menus and Basic Layouts…`;后续继续分组提交。
+3. **优先修 `QPainter` 相关绑定**(gradients + 确认 QPainterPath 方法),它一次解锁 9 个 painting 示例,性价比最高。
 4. 复现/验证任何 native 崩溃:用 `native/CrashTracer.cpp`(VEH+StackWalk64)+ `tools/disasm.py`(capstone)。
