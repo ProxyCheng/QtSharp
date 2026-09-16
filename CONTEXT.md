@@ -212,6 +212,28 @@ powershell -File %TEMP%\codemaker\regen_once.ps1        # 单次生成(排查用
 
 **结论**:产品的信号层应当走"moc 元数据 + 单一转发器",而不是逐信号生成 glue;这条路线已被 PoC 证明可行,且与最终是否换掉 CppSharp 无关,值得优先落地。
 
+## 架构 PoC #2:通用虚函数派发(已验证成功)
+**动机**:现在 C++→C# 的虚函数/事件重写靠 CppSharp 的**运行期 vtable thunk**(`Marshal.GetFunctionPointerForDelegate`),我们为此踩了 MS x64 的 sret/`this` 顺序/RAX 回填一堆坑(见前面 `_HeaderDataDelegateHook` 那段)。
+
+**PoC**(`native/QtSharp_vdispatch.cpp` + `testbind/VirtualDispatch.cs`,`testapp vdispatch`):
+- 生成**真正的 C++ 子类**(`QsHostWidget : QWidget`、`QsHostModel : QAbstractItemModel`),override 里把参数装进 `void* argv[]`(约定 `argv[0]` 是返回槽),转调**唯一**的托管入口 `void(void* userData, int methodId, void** argv)`;
+- 托管入口用 `[UnmanagedCallersOnly(CallConvs = new[]{ typeof(CallConvCdecl) })]` 静态方法,函数指针由 `(delegate* unmanaged[Cdecl]<...>)&Dispatch` 取得,`userData` 是 `GCHandle`。
+
+**验证结果(全部 PASS)**:
+- `QWidget::sizeHint()`(**QSize 按值返回**)由 C# 算出 137x42 并正确传回;
+- `paintEvent` 在 Qt 真正渲染(`grab()`)时回调到 C#;
+- `QAbstractItemModel::rowCount()` 回调到 C#;
+- `GC.Collect()` + `WaitForPendingFinalizers()` 之后派发依然正常(**函数指针指向静态代码,不会被移动/回收,不需要 delegate keep-alive**);
+- **Qt 库内部**调用虚 `data()`(经 `QAbstractItemModel::match()`)**返回托管构造的 QVariant 成功**——正是当年需要 sret/RAX 回填补丁的那条路径。
+
+**结论**:
+1. **ABI 归编译器管**:只要虚函数由 C++ 子类 override,managed 侧永远只看到普通指针,**sret/this 顺序/RAX 这类问题从根上消失**;`void** argv` + `argv[0]=返回槽` 的约定对所有虚函数统一(和信号派发同一套思路)。
+2. **回调生命周期问题消失**:`[UnmanagedCallersOnly]` + `delegate*` 是静态代码地址,不像委托需要保活/防止被移动。
+3. 代价:每个被绑定的类需要一份**生成的 C++ wrapper 并编译**(与 PySide 的 shiboken wrapper 同构),也就是产品按 Qt 版本/平台出原生包的原因。
+
+### 两个 PoC 合起来说明的架构结论
+**信号层用"moc 元数据 + 单一转发器"(PoC #1),虚函数层用"生成的 C++ wrapper + 单一托管入口"(PoC #2)** —— 两条都不再依赖 CppSharp 的运行期 thunk/逐信号 glue,且都验证过。这与"最终用不用 CppSharp"无关,是产品可以独立落地的最小骨架。
+
 ## 下一 agent 可继续的方向
 1. **继续按上面的批次补绑定 + 移植示例**,每批完成后 `all` 冒烟。
 2. **落地通用信号派发**(PoC 已成功,见上节):把 `GeneratedSignals.cs` 的逐信号 glue 换成 `MetaSignal` 的 moc 元数据派发,可一次性解决重载/无名参数/QPrivateSignal/任意参数类型问题。下一个 PoC 建议做 `[UnmanagedCallersOnly]` 虚函数派发,验证能否替代现在的 vtable thunk(并验证 sret 问题是否消失)。
