@@ -215,8 +215,12 @@ class QtLibrary : ILibrary
         LimitScope(ctx);
     }
 
+    public static string ExtractModelPath;
+
     public void Postprocess(Driver driver, ASTContext ctx)
     {
+        if (ExtractModelPath != null)
+            ApiModel.Extract(ctx, ExtractModelPath);
         ClearInvalidInitializers(ctx);
         ReportCoverage(ctx);
         DedupeAll(ctx);
@@ -701,7 +705,7 @@ class Program
         Console.WriteLine($"[fix] dedupeStructs={total}");
     }
 
-    class SignalParamInfo
+    public class SignalParamInfo
     {
         public string CppType;
         public string RawType;
@@ -711,7 +715,7 @@ class Program
         public bool Private;
     }
 
-    class SignalInfo
+    public class SignalInfo
     {
         public string ClassName;
         public string SignalName;
@@ -727,7 +731,7 @@ class Program
         ("QtWidgets", new[] { "qwidget.h", "qmainwindow.h", "qdialog.h", "qframe.h", "qgroupbox.h", "qlabel.h", "qlcdnumber.h", "qlineedit.h", "qtextedit.h", "qplaintextedit.h", "qtextbrowser.h", "qabstractbutton.h", "qpushbutton.h", "qtoolbutton.h", "qradiobutton.h", "qcheckbox.h", "qcommandlinkbutton.h", "qbuttongroup.h", "qabstractspinbox.h", "qspinbox.h", "qabstractslider.h", "qslider.h", "qscrollbar.h", "qdial.h", "qcombobox.h", "qfontcombobox.h", "qdatetimeedit.h", "qkeysequenceedit.h", "qcalendarwidget.h", "qabstractscrollarea.h", "qscrollarea.h", "qtabbar.h", "qtabwidget.h", "qstackedwidget.h", "qsplitter.h", "qdockwidget.h", "qtoolbox.h", "qaction.h", "qmenu.h", "qmenubar.h", "qtoolbar.h", "qstatusbar.h", "qprogressbar.h", "qsizegrip.h", "qrubberband.h", "qmessagebox.h", "qfiledialog.h", "qinputdialog.h", "qcolordialog.h", "qfontdialog.h", "qprogressdialog.h", "qdialogbuttonbox.h", "qabstractitemview.h", "qlistview.h", "qtableview.h", "qtreeview.h", "qheaderview.h", "qlistwidget.h", "qtreewidget.h", "qtablewidget.h", "qsystemtrayicon.h", "qcompleter.h", "qfilesystemmodel.h", "qwizard.h", "qundostack.h" }),
     };
 
-    static List<SignalInfo> ScanSignals()
+    internal static List<SignalInfo> ScanSignals()
     {
         var result = new List<SignalInfo>();
         var inc = @"D:\QtSharp\Qt\6.11.0\msvc2022_64\include";
@@ -845,7 +849,7 @@ class Program
         return info;
     }
 
-    static bool MapSignalType(string cppType, out string csharpType, out string lambdaType, out string cbType, out string toCb, out string fromCb)
+    internal static bool MapSignalType(string cppType, out string csharpType, out string lambdaType, out string cbType, out string toCb, out string fromCb)
     {
         var t = cppType.Replace("const", "").Replace("&", "").Replace(" ", "").Trim();
         switch (t)
@@ -1087,6 +1091,15 @@ class Program
     {
         try
         {
+            if (args.Length > 0 && args[0] == "codegen")
+            {
+                ApiCodeGen.Run(args[1], args[2]);
+                return 0;
+            }
+
+            if (args.Length > 0 && args[0] == "extract")
+                QtLibrary.ExtractModelPath = args[1];
+
             bool ok = ConsoleDriver.Run(new QtLibrary());
             if (ok)
             {

@@ -19,9 +19,11 @@
   <Target Name="CopyNativeDeps" AfterTargets="Build">
     <ItemGroup>
       <QtSharpNative Include="D:\QtSharp\out\native\QtSharp.dll" />
+      <QtSharpApiNative Include="D:\QtSharp\out\api\QtSharp.Api.dll" />
       <QtRuntimeDll Include="D:\QtSharp\Qt\6.11.0\runtime\*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(QtSharpNative)" DestinationFolder="$(OutDir)" />
+    <Copy SourceFiles="@(QtSharpApiNative)" DestinationFolder="$(OutDir)" />
     <Copy SourceFiles="@(QtRuntimeDll)" DestinationFolder="$(OutDir)" />
     <Copy SourceFiles="D:\QtSharp\Qt\6.11.0\runtime\platforms\qwindows.dll" DestinationFolder="$(OutDir)platforms\" />
   </Target>
