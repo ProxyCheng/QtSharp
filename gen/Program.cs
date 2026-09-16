@@ -76,6 +76,9 @@ class QtLibrary : ILibrary
         core.Headers.Add("qitemselectionmodel.h");
         core.Headers.Add("qsortfilterproxymodel.h");
         core.Headers.Add("qstringlistmodel.h");
+        core.Headers.Add("qabstractanimation.h");
+        core.Headers.Add("qpropertyanimation.h");
+        core.Headers.Add("qeasingcurve.h");
 
         var gui = options.AddModule("QtSharp.Gui");
         gui.OutputNamespace = "QtSharp.QtGui";
@@ -188,6 +191,16 @@ class QtLibrary : ILibrary
         widgets.Headers.Add("qstackedlayout.h");
         widgets.Headers.Add("qsystemtrayicon.h");
         widgets.Headers.Add("qshortcut.h");
+        widgets.Headers.Add("qcompleter.h");
+        widgets.Headers.Add("qfilesystemmodel.h");
+        widgets.Headers.Add("qdatawidgetmapper.h");
+        widgets.Headers.Add("qitemdelegate.h");
+        widgets.Headers.Add("qwizard.h");
+        widgets.Headers.Add("qerrormessage.h");
+        widgets.Headers.Add("qfocusframe.h");
+        widgets.Headers.Add("qscroller.h");
+        widgets.Headers.Add("qundostack.h");
+        widgets.Headers.Add("qundoview.h");
         widgets.Headers.Add("qstyle.h");
         widgets.Headers.Add("qproxystyle.h");
         widgets.Headers.Add("qstylepainter.h");
@@ -249,7 +262,12 @@ class QtLibrary : ILibrary
         "QSettings",
         "QSystemTrayIcon", "QShortcut",
         "QIntValidator", "QDoubleValidator", "QRegularExpressionValidator", "QRegularExpression",
-        "QCommonStyle", "QProxyStyle", "QStylePainter", "QStyleFactory"
+        "QCommonStyle", "QProxyStyle", "QStylePainter", "QStyleFactory",
+        "QAbstractAnimation", "QPropertyAnimation", "QEasingCurve", "QSortFilterProxyModel", "QStringListModel",
+        "QSyntaxHighlighter", "QImageReader", "QImageWriter", "QPainterPath", "QStandardItem",
+        "QCompleter", "QFileSystemModel", "QDataWidgetMapper",
+        "QItemDelegate", "QWizard", "QWizardPage", "QErrorMessage", "QFocusFrame", "QScroller",
+        "QUndoStack", "QUndoCommand", "QUndoView"
     };
 
     static readonly string[] MethodWhitelist = {
@@ -684,7 +702,11 @@ class Program
     class SignalParamInfo
     {
         public string CppType;
+        public string RawType;
         public string Name;
+        // QPrivateSignal marker: part of the real C++ signature (needed to disambiguate the
+        // member pointer) but carries no data and is not exposed to managed code.
+        public bool Private;
     }
 
     class SignalInfo
@@ -698,9 +720,9 @@ class Program
 
     static readonly (string dir, string[] headers)[] SignalModules =
     {
-        ("QtCore", new[] { "qobject.h", "qcoreapplication.h", "qeventloop.h", "qfile.h", "qfileinfo.h", "qsettings.h", "qabstractitemmodel.h", "qitemselectionmodel.h", "qsortfilterproxymodel.h", "qstringlistmodel.h", "qprocess.h", "qtimer.h" }),
-        ("QtGui", new[] { "qevent.h", "qwindow.h", "qscreen.h", "qguiapplication.h", "qvalidator.h", "qstandarditemmodel.h", "qaction.h" }),
-        ("QtWidgets", new[] { "qwidget.h", "qmainwindow.h", "qdialog.h", "qframe.h", "qgroupbox.h", "qlabel.h", "qlcdnumber.h", "qlineedit.h", "qtextedit.h", "qplaintextedit.h", "qtextbrowser.h", "qabstractbutton.h", "qpushbutton.h", "qtoolbutton.h", "qradiobutton.h", "qcheckbox.h", "qcommandlinkbutton.h", "qbuttongroup.h", "qabstractspinbox.h", "qspinbox.h", "qabstractslider.h", "qslider.h", "qscrollbar.h", "qdial.h", "qcombobox.h", "qfontcombobox.h", "qdatetimeedit.h", "qkeysequenceedit.h", "qcalendarwidget.h", "qabstractscrollarea.h", "qscrollarea.h", "qtabbar.h", "qtabwidget.h", "qstackedwidget.h", "qsplitter.h", "qdockwidget.h", "qtoolbox.h", "qaction.h", "qmenu.h", "qmenubar.h", "qtoolbar.h", "qstatusbar.h", "qprogressbar.h", "qsizegrip.h", "qrubberband.h", "qmessagebox.h", "qfiledialog.h", "qinputdialog.h", "qcolordialog.h", "qfontdialog.h", "qprogressdialog.h", "qdialogbuttonbox.h", "qabstractitemview.h", "qlistview.h", "qtableview.h", "qtreeview.h", "qheaderview.h", "qlistwidget.h", "qtreewidget.h", "qtablewidget.h", "qsystemtrayicon.h" }),
+        ("QtCore", new[] { "qobject.h", "qcoreapplication.h", "qeventloop.h", "qfile.h", "qfileinfo.h", "qsettings.h", "qabstractitemmodel.h", "qitemselectionmodel.h", "qsortfilterproxymodel.h", "qstringlistmodel.h", "qprocess.h", "qtimer.h", "qabstractanimation.h", "qpropertyanimation.h" }),
+        ("QtGui", new[] { "qevent.h", "qwindow.h", "qscreen.h", "qguiapplication.h", "qvalidator.h", "qstandarditemmodel.h", "qaction.h", "qsyntaxhighlighter.h" }),
+        ("QtWidgets", new[] { "qwidget.h", "qmainwindow.h", "qdialog.h", "qframe.h", "qgroupbox.h", "qlabel.h", "qlcdnumber.h", "qlineedit.h", "qtextedit.h", "qplaintextedit.h", "qtextbrowser.h", "qabstractbutton.h", "qpushbutton.h", "qtoolbutton.h", "qradiobutton.h", "qcheckbox.h", "qcommandlinkbutton.h", "qbuttongroup.h", "qabstractspinbox.h", "qspinbox.h", "qabstractslider.h", "qslider.h", "qscrollbar.h", "qdial.h", "qcombobox.h", "qfontcombobox.h", "qdatetimeedit.h", "qkeysequenceedit.h", "qcalendarwidget.h", "qabstractscrollarea.h", "qscrollarea.h", "qtabbar.h", "qtabwidget.h", "qstackedwidget.h", "qsplitter.h", "qdockwidget.h", "qtoolbox.h", "qaction.h", "qmenu.h", "qmenubar.h", "qtoolbar.h", "qstatusbar.h", "qprogressbar.h", "qsizegrip.h", "qrubberband.h", "qmessagebox.h", "qfiledialog.h", "qinputdialog.h", "qcolordialog.h", "qfontdialog.h", "qprogressdialog.h", "qdialogbuttonbox.h", "qabstractitemview.h", "qlistview.h", "qtableview.h", "qtreeview.h", "qheaderview.h", "qlistwidget.h", "qtreewidget.h", "qtablewidget.h", "qsystemtrayicon.h", "qcompleter.h", "qfilesystemmodel.h", "qwizard.h", "qundostack.h" }),
     };
 
     static List<SignalInfo> ScanSignals()
@@ -778,15 +800,44 @@ class Program
                 if (eq >= 0)
                     pt = pt.Substring(0, eq).Trim();
                 int sp = pt.LastIndexOf(' ');
+                string type, decl;
                 if (sp < 0)
-                    continue;
-                var name = pt.Substring(sp + 1).Trim();
-                var type = pt.Substring(0, sp).Trim();
-                if (name.StartsWith("&") || name.StartsWith("*"))
-                    name = name.Substring(1).Trim();
+                {
+                    // Unnamed parameter: the whole token is the type.
+                    type = pt.Trim();
+                    decl = string.Empty;
+                }
+                else
+                {
+                    type = pt.Substring(0, sp).Trim();
+                    decl = pt.Substring(sp + 1).Trim();
+                }
+                string suffix = string.Empty;
+                if (decl.StartsWith("&"))
+                {
+                    suffix = "&";
+                    decl = decl.Substring(1).Trim();
+                }
+                else if (decl.StartsWith("*"))
+                {
+                    suffix = "*";
+                    decl = decl.Substring(1).Trim();
+                }
+                // Qt declares "private" signals as taking a QPrivateSignal marker parameter;
+                // it carries no data and must not appear in the generated signature. It still
+                // has to be part of the member pointer type, fully qualified because parameter
+                // types of a pointer-to-member are looked up in the enclosing scope.
+                bool isPrivate = type.Contains("QPrivateSignal");
+                var name = decl;
                 if (name.Length == 0)
                     name = "arg" + info.Params.Count;
-                info.Params.Add(new SignalParamInfo { CppType = type, Name = name });
+                info.Params.Add(new SignalParamInfo
+                {
+                    CppType = type,
+                    RawType = isPrivate ? className + "::QPrivateSignal" : type + suffix,
+                    Name = name,
+                    Private = isPrivate
+                });
             }
         }
         return info;
@@ -854,18 +905,23 @@ class Program
                 continue;
             bool ok = true;
             foreach (var p in s.Params)
-                if (!MapSignalType(p.CppType, out _, out _, out _, out _, out _))
+                if (!p.Private && !MapSignalType(p.CppType, out _, out _, out _, out _, out _))
                     ok = false;
             if (ok)
                 supported.Add(s);
         }
         Console.WriteLine($"[signals] scanned {signals.Count}, supported {supported.Count}");
 
-        GenerateSignalsGlue(supported);
+        var overloaded = new HashSet<string>(signals
+            .GroupBy(s => s.ClassName + "::" + s.SignalName)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key));
+
+        GenerateSignalsGlue(supported, overloaded);
         GenerateSignalsCSharp(supported);
     }
 
-    static void GenerateSignalsGlue(List<SignalInfo> signals)
+    static void GenerateSignalsGlue(List<SignalInfo> signals, HashSet<string> overloaded)
     {
         var sb = new StringBuilder();
         sb.AppendLine("// Auto-generated signal glue.");
@@ -880,12 +936,20 @@ class Program
 
         foreach (var s in signals.OrderBy(x => x.ClassName).ThenBy(x => x.SignalName))
         {
+            var signalKey = s.ClassName + "::" + s.SignalName;
+            bool isOverloaded = overloaded.Contains(signalKey);
+            // QPrivateSignal marker parameters cannot be named outside the class, so an
+            // overloaded private signal cannot be disambiguated; skip it.
+            if (isOverloaded && s.Params.Any(p => p.Private))
+                continue;
             var lambdaParams = new List<string>();
             var cbArgs = new List<string>();
             var cbTypes = new List<string>();
             for (int i = 0; i < s.Params.Count; i++)
             {
                 var p = s.Params[i];
+                if (p.Private)
+                    continue;
                 MapSignalType(p.CppType, out _, out var lambdaType, out var cbType, out var toCb, out _);
                 lambdaParams.Add(lambdaType + " " + p.Name);
                 cbArgs.Add(toCb.Replace("{name}", p.Name));
@@ -896,7 +960,10 @@ class Program
             for (int i = 0; i < cbTypes.Count; i++)
                 sb.Append(", " + cbTypes[i] + " a" + i);
             sb.Append("), void* ud) {\n");
-            sb.Append($"    QObject::connect(({s.ClassName}*)obj, &{s.ClassName}::{s.SignalName}, [cb, ud](");
+            var signalPointer = isOverloaded
+                ? $"static_cast<void ({s.ClassName}::*)({string.Join(", ", s.Params.Select(p => p.RawType))})>(&{s.ClassName}::{s.SignalName})"
+                : $"&{s.ClassName}::{s.SignalName}";
+            sb.Append($"    QObject::connect(({s.ClassName}*)obj, {signalPointer}, [cb, ud](");
             sb.Append(string.Join(", ", lambdaParams));
             sb.Append(") {\n");
             sb.Append("        cb(ud");
@@ -942,6 +1009,8 @@ class Program
                 for (int i = 0; i < s.Params.Count; i++)
                 {
                     var p = s.Params[i];
+                    if (p.Private)
+                        continue;
                     MapSignalType(p.CppType, out var cs, out _, out var cb, out _, out var fromCb);
                     csTypes.Add(cs);
                     cbTypes.Add((cb == "const ushort*" || cb == "void*") ? "IntPtr" : cb);
@@ -985,6 +1054,8 @@ class Program
                 var csTypes = new List<string>();
                 foreach (var p in s.Params)
                 {
+                    if (p.Private)
+                        continue;
                     MapSignalType(p.CppType, out var cs, out _, out _, out _, out _);
                     csTypes.Add(cs);
                 }
