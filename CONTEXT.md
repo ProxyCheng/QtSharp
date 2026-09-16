@@ -1,7 +1,20 @@
 # QtSharp 任务上下文 (session 续接用)
 
-## 总体目标
-让 Qt Widgets 示例页 (examples-widgets.html) 的 demo 都能用 QtSharp 跑起来,示例尽量与官方 C++ 版本一致;并已修复 CppSharp 绑定生成器的 vtable hook sret 返回值(RAX)bug。`testapp.exe` 不带参数即可同时平铺显示全部 13 个 demo 顶层窗口。
+## 总体目标(已明确)
+**做一套长期可用的 Qt for .NET 绑定**;"把 Qt 官方示例改写成 C# 并跑通"只是 **conformance suite / 验证手段**。
+当前正处于"从 CppSharp 打补丁的 PoC → 产品骨架"的过渡期:**三个架构 PoC + model/codegen 第 1 步都已实测通过**(见下文)。
+`testapp.exe` 不带参数 = 平铺 15 个 demo;另有 `metasig` / `vdispatch` / `own` / `api` 四个自测命令。
+
+## 当前状态速览(给新 session)
+| 项 | 状态 |
+|---|---|
+| 旧链路(13+2 个 demo) | ✅ 全部能跑(`testapp all`,15 窗口) |
+| examples-widgets.html 16 个 | 14 个完成;剩 RHI×2、Window Embedding(不可行)、DocumentViewer(PDF/打印缺模块) |
+| 架构 PoC #1 信号(moc metacall) | ✅ `testapp metasig` 全 PASS |
+| 架构 PoC #2 虚函数(生成的 C++ wrapper + `[UnmanagedCallersOnly]`) | ✅ `testapp vdispatch` 全 PASS |
+| 架构 PoC #3 所有权(Qt-owned 弱引用 + SafeHandle + destroyed 失效) | ✅ `testapp own` 全 PASS |
+| 产品化第 1 步:model(入库)+ 确定性 codegen | ✅ `testapp api` 全 PASS;两道门禁(模型 diff / 两次生成一致)通过 |
+| **下一步** | ①独立 parse-only 提取器 ②扩大 model 覆盖面 ③旧 demo 逐步切到新链路 |
 
 ## 关键背景
 - 仓库:`D:\QtSharp`(QtSharp + vendored CppSharp)
@@ -15,11 +28,36 @@
 - 生成产物 `out/`、`testbind/QtSharp.*.cs` 被 .gitignore,不入库。
 
 ## 构建/重新生成命令序列
+### A. 旧链路(15 个 demo 用的绑定)
 1. `dotnet build D:\QtSharp\CppSharp\src\AST\CppSharp.AST.csproj -c Release -o D:\QtSharp\lib`
 2. `dotnet build D:\QtSharp\tools\rebuild-generator\CppSharp.Generator.csproj -c Release` 然后拷贝 dll 到 `lib\CppSharp.Generator.dll` 和 `gen\bin\Release\net10.0\win-x64\`
 3. `dotnet build D:\QtSharp\gen\gen.csproj -c Release`
 4. 删除 `out\qt_min\*.cs,*.cpp`,运行 `qtgen.dll`(retry 直到干净)
 5. 拷贝 .cs 到 testbind + `build_glue.bat` 重建 native dll + `dotnet build testbind`
+
+### B. 新链路(model → codegen,产品骨架)
+一条命令跑完全部(含两道门禁与冒烟):
+```
+powershell -File D:\QtSharp\tools\regen-api.ps1
+```
+内部顺序:`dotnet build gen` → `qtgen extract out\qtsharp.api.json.new`(**会顺带跑一遍旧生成,慢**)→ 与 `model\qtsharp.api.json` 比对(**model diff 门禁**)→ `qtgen codegen <model> out\api`(跑两次,**两次一致门禁**)→ 拷贝 `out\api\QtSharp.Api.cs` 到 testbind → `build_api.bat`(→ `out\api\QtSharp.Api.dll`)→ `dotnet build testbind` → `testapp api`。
+手动分段:
+```
+D:\QtSharp\gen\bin\Release\net10.0\win-x64\qtgen.exe extract D:\QtSharp\model\qtsharp.api.json
+D:\QtSharp\gen\bin\Release\net10.0\win-x64\qtgen.exe codegen D:\QtSharp\model\qtsharp.api.json D:\QtSharp\out\api
+cmd /c D:\QtSharp\build_api.bat
+```
+注意:`extract` 现在**搭在旧生成流程的 Postprocess 上**(要跑完整 qtgen,2–4 分钟且可能 flaky),这是下一步要拆掉的;`model` 本身是确定的。
+
+### C. 三个 PoC 与四个自测命令
+```
+testapp metasig    # PoC #1 通用 moc 信号派发
+testapp vdispatch  # PoC #2 [UnmanagedCallersOnly] 虚函数派发
+testapp own        # PoC #3 所有权/生命周期
+testapp api        # 新链路:model → codegen → 生成的绑定
+testapp all        # 15 个 demo 平铺
+```
+PoC 只依赖 `QtSharp.dll`(旧 native dll),`api` 只依赖 `QtSharp.Api.dll`(新 native dll),二者互不干扰。
 
 ## 本轮完成:ABI 顺序修复(正确方案)
 1. `FunctionExtensions.cs` 的 `GatherInternalParams` 增加 `realAbiOrder` 参数:
@@ -144,14 +182,33 @@ sliders / spinboxes / windowflags / lineedits / shapedclock / calendar / systray
 - `testbind/WidgetsGallery.cs`、`testbind/DocumentViewer.cs`、`testbind/ShortcutEditor.cs`、`testbind/Calculator.cs`、`testbind/Scribble.cs`、`testbind/CalendarWidget.cs`、`testbind/ShapedClock.cs`、`testbind/SpinBoxes.cs`、`testbind/SystemTray.cs`
 - `native/QtSharp_inline.cpp`(手写 shim:QString/QKeySequence/QAction/QSettings/dataChanged/QPixmap)
 - `native/CrashTracer.cpp`、`build_crashtracer.bat`、`tools/disasm.py`(ABI 调试工具)
+- **新链路(产品骨架)**:
+  - `model/qtsharp.api.json`(**入库**,规范化 API model;第一版只含 `QObject`)
+  - `gen/ApiModel.cs`(`extract`:AST → model;按自有类型白名单判定,不依赖 `IsGenerated`;处理间接返回/引用/property/QPrivateSignal)
+  - `gen/ApiCodeGen.cs`(`codegen`:model → C# + C++ wrapper + P/Invoke;纯函数)
+  - `native/QtSharpApiRuntime.{h,cpp}`(手写运行时:moc 信号转发器 + QString 桥)
+  - `build_api.bat`(→ `out/api/QtSharp.Api.dll`)、`tools/regen-api.ps1`(含两道门禁)
+  - `testbind/ApiRuntime.cs`(C# 侧运行时:`QSignal<T>`/`Wrap`/信号解包)、`testbind/ApiSmoke.cs`(`testapp api`)
+- **三个 PoC**:
+  - `native/QtSharp_meta.cpp` + `testbind/MetaSignal.cs`/`MetaSignalTest.cs`(PoC #1 信号)
+  - `native/QtSharp_vdispatch.cpp` + `testbind/VirtualDispatch.cs`(PoC #2 虚函数)
+  - `native/QtSharp_ownership.cpp` + `testbind/Ownership.cs`(PoC #3 所有权)
 
 ## 提交状态
-- 已提交(master):
-  1. `Generator: fix sret/vtable ABI, cross-TU type identity, QFlags returns, abstract ctors`(CppSharp/gen/native shim/def)
-  2. `Port official QtWidgets examples and align them with upstream`(全部 testbind,含 ShortcutEditor/DocumentViewer/QtCompat/AllDemos/WidgetsGallery)
-  3. `Add native crash tracer and disassembly tooling for ABI debugging`(CrashTracer/build_crashtracer/disasm.py)
-  4. 本文件(CONTEXT.md)
-- 生成产物 `out/`、`testbind/QtSharp.*.cs`、`testbind/Std.cs`、`testbind/GeneratedSignals.cs`、`native/QtSharp_signals.cpp` 被 .gitignore;`native/QtSharp.def` 被跟踪(随生成器变化提交)。
+- 已提交(master,按时间顺序):
+  1. `Generator: fix sret/vtable ABI, cross-TU type identity, QFlags returns, abstract ctors`
+  2. `Port official QtWidgets examples and align them with upstream`(ShortcutEditor/DocumentViewer/QtCompat/AllDemos/WidgetsGallery)
+  3. `Add native crash tracer and disassembly tooling for ABI debugging`
+  4. `Expand bindings: item-view helpers, wizards, animation, undo, syntax highlighting, image IO`
+  5. `Bind event types for context menus, drag and drop and QMimeData`
+  6. `Port Menus and Basic Layouts examples from the official Qt sources`
+  7. `PoC: generic moc-driven signal dispatcher (one forwarder for every signal)`
+  8. `PoC: virtual dispatch into managed code via a compiled C++ wrapper (UnmanagedCallersOnly)`
+  9. `PoC: ownership/lifetime model for Qt objects under the .NET GC`
+  10. `Step 1: normalized API model + deterministic codegen pipeline`
+  11. 各步的 CONTEXT.md 记录
+- 生成产物 `out/`、`testbind/QtSharp.*.cs`、`testbind/QtSharp.Api.cs`、`testbind/Std.cs`、`testbind/GeneratedSignals.cs`、`native/QtSharp_signals.cpp` 被 .gitignore;`native/QtSharp.def` 与 `model/qtsharp.api.json` 被跟踪。
+- 工作区干净(commit `67d9fd2`)。
 
 ## 扩展示例覆盖(进行中)
 目标:把 Qt 官方 **所有** examples/widgets 都改写成 C# 并跑通(不止 examples-widgets.html 那 16 个)。
@@ -275,9 +332,18 @@ powershell -File %TEMP%\codemaker\regen_once.ps1        # 单次生成(排查用
 
 **意义**:这条链路就是产品骨架的缩影 —— "model(入库) → 纯函数 codegen → 生成的 C# + C++ wrapper → 薄运行时"。下一步是扩大 model 覆盖面(更多类/类型/模块)并让旧 demo 逐步切到新链路。
 
-## 下一 agent 可继续的方向
-1. **继续按上面的批次补绑定 + 移植示例**,每批完成后 `all` 冒烟。
-2. **架构三根支柱已验证**(见 PoC #1/#2/#3):信号= moc 元数据 + 单一转发器;虚函数= 生成的 C++ wrapper + `[UnmanagedCallersOnly]`;所有权= Qt-owned 弱引用 + managed-owned `SafeHandle` + `destroyed` 失效。产品化下一步是**把 model 抽出来**(clang 提取器 → 入库的规范化模型,codegen 变成纯函数,CI 加"重新生成→diff 为空"门禁),然后按该模型重新生成 C# + C++ wrapper。
-3. **提交整理**:本轮已提交 `Expand bindings…`、`Bind event types…`、`Port Menus and Basic Layouts…`、三个 PoC 及其 CONTEXT 记录。
-4. **优先修 `QPainter` 相关绑定**(gradients + 确认 QPainterPath 方法),它一次解锁 9 个 painting 示例,性价比最高。
-5. 复现/验证任何 native 崩溃:用 `native/CrashTracer.cpp`(VEH+StackWalk64)+ `tools/disasm.py`(capstone)。
+## 下一 agent 可继续的方向(按优先级)
+1. **把 `extract` 拆成独立 parse-only 提取器**(最优先)。现在它搭在旧生成的 `Postprocess` 上,每次要 2–4 分钟且可能 flaky;改成只 `Driver.ParseCode()` + 我们自己的 pass,提取就快且稳定 —— 这是后面所有工作的基础。
+2. **扩大 model 覆盖面**:继承(`base` 字段已留)、枚举/`QFlags`、更多类型(`QStringList`/`QVariant`/容器/`QModelIndex`)、更多类(先 `QWidget` 子类里最小的一个,验证继承链)。
+3. **让旧 demo 逐步切到新链路**:建议先搬 `ShortcutEditor`(最依赖委托/分层模型),验证新管线能扛复杂场景;`QAbstractItemModel` 的虚函数族正好检验 codegen 的表达能力。
+4. **把产品骨架照"三根支柱"补齐**:信号层全面切到 `QtSharp.Api` 的 `qs_api_connect`(替换 `GeneratedSignals.cs` 的逐信号 glue);所有权层把 PoC #3 的规则做成运行时的 `Ownership` 服务。
+5. **继续补旧链路绑定 + 移植示例**(conformance suite):`QPainter` gradients(`QLinearGradient`/`QRadialGradient`/`QConicalGradient` 加 RootNames)一次解锁 9 个 painting 示例,性价比最高;`QGraphicsView` 家族解锁 graphicsview 整组。
+6. 复现/验证任何 native 崩溃:用 `native/CrashTracer.cpp`(VEH+StackWalk64)+ `tools/disasm.py`(capstone)。
+7. 已知不可行:RHI×2(需 QRhi + `.qsb` shader blob)、Window Embedding、QtStateMachine(模块未安装)、QtSvg/PrintSupport(运行时不带 DLL)、QtPdf。
+
+## 给新 session 的提醒(踩坑清单)
+- 旧链路生成**很不稳定**,必须用 retry 直到 `dotnet build testbind` + `build_glue.bat` 都干净(见"踩过的坑")。
+- 加 `qmdiarea.h`/`qmdisubwindow.h` 会触发 CppSharp 的 `event`→`QFlagsStorage` 重命名 bug,**已放弃 MDI**。
+- `QPainter::setPen(QPen)`/`setBrush(QBrush)` 实际是 **`QPainter.Pen`/`QPainter.Brush` 属性**;`QModelIndex` 没有 `internalPointer` 导出(用 `InternalId`)。
+- `QSettings(string,string)` ctor 时有时无;用 `QSettings(Scope, org, app)` 更稳。
+- 生成器不确定性的根因是 **pass 按 `HashSet<Declaration>` 哈希序迭代 + `DeclarationsList` 按 `DefinitionOrder` 二分(并列退化)**,新链路的 model 通过"全排序"已规避。
