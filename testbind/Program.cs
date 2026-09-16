@@ -26,6 +26,8 @@ static class Program
                 "calculator" => new Calculator(),
                 "gallery" => new WidgetGalleryWindow(),
                 "docviewer" => new DocumentViewerWindow(),
+                "menus" => new MenusWindow(),
+                "basiclayouts" => new BasicLayoutsDialog(),
                 _ => null,
             };
 
