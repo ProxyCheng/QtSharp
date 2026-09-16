@@ -179,7 +179,7 @@ public class SpinBoxesWindow : QWidget
         priceSpinBox.Prefix = "$";
         priceSpinBox.Value = 99.99;
 
-        precisionSpinBox.ValueChangedSignal.Connect(() => ChangePrecision(precisionSpinBox.Value));
+        precisionSpinBox.ValueChangedSignal.Connect(_ => ChangePrecision(precisionSpinBox.Value));
 
         var groupSeparatorSpinBoxD = new QDoubleSpinBox();
         groupSeparatorSpinBoxD.SetRange(-99999999, 99999999);

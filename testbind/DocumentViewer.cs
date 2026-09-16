@@ -523,7 +523,7 @@ public class DocumentViewerWindow : QMainWindow
 
     void ReadSettings()
     {
-        var settings = new QSettings(OrganizationName, ApplicationName);
+        var settings = new QSettings(QSettings.Scope.UserScope, OrganizationName, ApplicationName);
         if (settings.SettingsContains(SettingsWorkingDir))
             currentDir = settings.SettingsValue(SettingsWorkingDir).ToString();
         recentFiles.Restore(settings, SettingsRecentFiles);
@@ -531,7 +531,7 @@ public class DocumentViewerWindow : QMainWindow
 
     protected override void CloseEvent(QCloseEvent @event)
     {
-        var settings = new QSettings(OrganizationName, ApplicationName);
+        var settings = new QSettings(QSettings.Scope.UserScope, OrganizationName, ApplicationName);
         settings.SettingsSetValue(SettingsWorkingDir, currentDir);
         recentFiles.Save(settings, SettingsRecentFiles);
         settings.Sync();

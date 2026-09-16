@@ -1025,6 +1025,7 @@ EXPORTS
   ??0QVariant@@QEAA@VQLineF@@@Z
   ??0QVariant@@QEAA@VQRect@@@Z
   ??0QVariant@@QEAA@VQRectF@@@Z
+  ??0QVariant@@QEAA@AEBVQEasingCurve@@@Z
   ??0QVariant@@QEAA@PEBD@Z
   ??0QVariant@@QEAA@VQLatin1String@@@Z
   ?swap@QVariant@@QEAAXAEAV1@@Z
@@ -1067,6 +1068,7 @@ EXPORTS
   ?toRectF@QVariant@@QEBA?AVQRectF@@XZ
   ?toLocale@QVariant@@QEBA?AVQLocale@@XZ
   ?toRegularExpression@QVariant@@QEBA?AVQRegularExpression@@XZ
+  ?toEasingCurve@QVariant@@QEBA?AVQEasingCurve@@XZ
   ?toUrl@QVariant@@QEBA?AVQUrl@@XZ
   ?toModelIndex@QVariant@@QEBA?AVQModelIndex@@XZ
   ??0QVariant@@QEAA@W4Type@0@@Z
@@ -1855,7 +1857,6 @@ EXPORTS
   ?hasChildren@QAbstractItemModel@@UEBA_NAEBVQModelIndex@@@Z
   ?setData@QAbstractItemModel@@UEAA_NAEBVQModelIndex@@AEBVQVariant@@H@Z
   ?headerData@QAbstractItemModel@@UEBA?AVQVariant@@HW4Orientation@Qt@@H@Z
-  ?setHeaderData@QAbstractItemModel@@UEAA_NHW4Orientation@Qt@@AEBVQVariant@@H@Z
   ?clearItemData@QAbstractItemModel@@UEAA_NAEBVQModelIndex@@@Z
   ?mimeTypes@QAbstractItemModel@@UEBA?AV?$QList@VQString@@@@XZ
   ?insertRows@QAbstractItemModel@@UEAA_NHHAEBVQModelIndex@@@Z
@@ -1907,6 +1908,15 @@ EXPORTS
   ?sibling@QAbstractTableModel@@UEBA?AVQModelIndex@@HHAEBV2@@Z
   ?parent@QAbstractTableModel@@EEBA?AVQModelIndex@@AEBV2@@Z
   ?hasChildren@QAbstractTableModel@@EEBA_NAEBVQModelIndex@@@Z
+  ?qt_metacast@QAbstractListModel@@UEAAPEAXPEBD@Z
+  ?tr@QAbstractListModel@@SA?AVQString@@PEBD0H@Z
+  ??0QAbstractListModel@@QEAA@PEAVQObject@@@Z = QAbstractListModel_QAbstractListModel____S_QObject
+  ??1QAbstractListModel@@UEAA@XZ
+  ?index@QAbstractListModel@@UEBA?AVQModelIndex@@HHAEBV2@@Z
+  ?sibling@QAbstractListModel@@UEBA?AVQModelIndex@@HHAEBV2@@Z
+  ?parent@QAbstractListModel@@EEBA?AVQModelIndex@@AEBV2@@Z
+  ?columnCount@QAbstractListModel@@EEBAHAEBVQModelIndex@@@Z
+  ?hasChildren@QAbstractListModel@@EEBA_NAEBVQModelIndex@@@Z
   ?qt_metacast@QItemSelectionModel@@UEAAPEAXPEBD@Z
   ?tr@QItemSelectionModel@@SA?AVQString@@PEBD0H@Z
   ??0QItemSelectionModel@@QEAA@PEAVQAbstractItemModel@@@Z
@@ -1931,6 +1941,189 @@ EXPORTS
   ?currentRowChanged@QItemSelectionModel@@QEAAXAEBVQModelIndex@@0@Z
   ?currentColumnChanged@QItemSelectionModel@@QEAAXAEBVQModelIndex@@0@Z
   ?modelChanged@QItemSelectionModel@@QEAAXPEAVQAbstractItemModel@@@Z
+  ?qt_metacast@QSortFilterProxyModel@@UEAAPEAXPEBD@Z
+  ?tr@QSortFilterProxyModel@@SA?AVQString@@PEBD0H@Z
+  ??0QSortFilterProxyModel@@QEAA@PEAVQObject@@@Z
+  ??1QSortFilterProxyModel@@UEAA@XZ
+  ?setSourceModel@QSortFilterProxyModel@@UEAAXPEAVQAbstractItemModel@@@Z
+  ?mapToSource@QSortFilterProxyModel@@UEBA?AVQModelIndex@@AEBV2@@Z
+  ?mapFromSource@QSortFilterProxyModel@@UEBA?AVQModelIndex@@AEBV2@@Z
+  ?filterRegularExpression@QSortFilterProxyModel@@QEBA?AVQRegularExpression@@XZ
+  ?filterKeyColumn@QSortFilterProxyModel@@QEBAHXZ
+  ?setFilterKeyColumn@QSortFilterProxyModel@@QEAAXH@Z
+  ?filterCaseSensitivity@QSortFilterProxyModel@@QEBA?AW4CaseSensitivity@Qt@@XZ
+  ?setFilterCaseSensitivity@QSortFilterProxyModel@@QEAAXW4CaseSensitivity@Qt@@@Z
+  ?sortCaseSensitivity@QSortFilterProxyModel@@QEBA?AW4CaseSensitivity@Qt@@XZ
+  ?setSortCaseSensitivity@QSortFilterProxyModel@@QEAAXW4CaseSensitivity@Qt@@@Z
+  ?isSortLocaleAware@QSortFilterProxyModel@@QEBA_NXZ
+  ?setSortLocaleAware@QSortFilterProxyModel@@QEAAX_N@Z
+  ?sortColumn@QSortFilterProxyModel@@QEBAHXZ
+  ?sortOrder@QSortFilterProxyModel@@QEBA?AW4SortOrder@Qt@@XZ
+  ?dynamicSortFilter@QSortFilterProxyModel@@QEBA_NXZ
+  ?setDynamicSortFilter@QSortFilterProxyModel@@QEAAX_N@Z
+  ?sortRole@QSortFilterProxyModel@@QEBAHXZ
+  ?setSortRole@QSortFilterProxyModel@@QEAAXH@Z
+  ?filterRole@QSortFilterProxyModel@@QEBAHXZ
+  ?setFilterRole@QSortFilterProxyModel@@QEAAXH@Z
+  ?isRecursiveFilteringEnabled@QSortFilterProxyModel@@QEBA_NXZ
+  ?setRecursiveFilteringEnabled@QSortFilterProxyModel@@QEAAX_N@Z
+  ?autoAcceptChildRows@QSortFilterProxyModel@@QEBA_NXZ
+  ?setAutoAcceptChildRows@QSortFilterProxyModel@@QEAAX_N@Z
+  ?setFilterRegularExpression@QSortFilterProxyModel@@QEAAXAEBVQString@@@Z
+  ?setFilterRegularExpression@QSortFilterProxyModel@@QEAAXAEBVQRegularExpression@@@Z
+  ?setFilterWildcard@QSortFilterProxyModel@@QEAAXAEBVQString@@@Z
+  ?setFilterFixedString@QSortFilterProxyModel@@QEAAXAEBVQString@@@Z
+  ?invalidate@QSortFilterProxyModel@@QEAAXXZ
+  ?filterAcceptsRow@QSortFilterProxyModel@@MEBA_NHAEBVQModelIndex@@@Z
+  ?filterAcceptsColumn@QSortFilterProxyModel@@MEBA_NHAEBVQModelIndex@@@Z
+  ?lessThan@QSortFilterProxyModel@@MEBA_NAEBVQModelIndex@@0@Z
+  ?beginFilterChange@QSortFilterProxyModel@@IEAAXXZ
+  ?endFilterChange@QSortFilterProxyModel@@IEAAXV?$QFlags@W4Direction@QSortFilterProxyModel@@@@@Z
+  ?invalidateFilter@QSortFilterProxyModel@@IEAAXXZ
+  ?invalidateRowsFilter@QSortFilterProxyModel@@IEAAXXZ
+  ?invalidateColumnsFilter@QSortFilterProxyModel@@IEAAXXZ
+  ?index@QSortFilterProxyModel@@UEBA?AVQModelIndex@@HHAEBV2@@Z
+  ?parent@QSortFilterProxyModel@@UEBA?AVQModelIndex@@AEBV2@@Z
+  ?sibling@QSortFilterProxyModel@@UEBA?AVQModelIndex@@HHAEBV2@@Z
+  ?rowCount@QSortFilterProxyModel@@UEBAHAEBVQModelIndex@@@Z
+  ?columnCount@QSortFilterProxyModel@@UEBAHAEBVQModelIndex@@@Z
+  ?hasChildren@QSortFilterProxyModel@@UEBA_NAEBVQModelIndex@@@Z
+  ?data@QSortFilterProxyModel@@UEBA?AVQVariant@@AEBVQModelIndex@@H@Z
+  ?setData@QSortFilterProxyModel@@UEAA_NAEBVQModelIndex@@AEBVQVariant@@H@Z
+  ?headerData@QSortFilterProxyModel@@UEBA?AVQVariant@@HW4Orientation@Qt@@H@Z
+  ?setHeaderData@QSortFilterProxyModel@@UEAA_NHW4Orientation@Qt@@AEBVQVariant@@H@Z
+  ?insertRows@QSortFilterProxyModel@@UEAA_NHHAEBVQModelIndex@@@Z
+  ?insertColumns@QSortFilterProxyModel@@UEAA_NHHAEBVQModelIndex@@@Z
+  ?removeRows@QSortFilterProxyModel@@UEAA_NHHAEBVQModelIndex@@@Z
+  ?removeColumns@QSortFilterProxyModel@@UEAA_NHHAEBVQModelIndex@@@Z
+  ?fetchMore@QSortFilterProxyModel@@UEAAXAEBVQModelIndex@@@Z
+  ?canFetchMore@QSortFilterProxyModel@@UEBA_NAEBVQModelIndex@@@Z
+  ?buddy@QSortFilterProxyModel@@UEBA?AVQModelIndex@@AEBV2@@Z
+  ?span@QSortFilterProxyModel@@UEBA?AVQSize@@AEBVQModelIndex@@@Z
+  ?sort@QSortFilterProxyModel@@UEAAXHW4SortOrder@Qt@@@Z
+  ?mimeTypes@QSortFilterProxyModel@@UEBA?AV?$QList@VQString@@@@XZ
+  ?dynamicSortFilterChanged@QSortFilterProxyModel@@QEAAX_N@Z
+  ?filterCaseSensitivityChanged@QSortFilterProxyModel@@QEAAXW4CaseSensitivity@Qt@@@Z
+  ?sortCaseSensitivityChanged@QSortFilterProxyModel@@QEAAXW4CaseSensitivity@Qt@@@Z
+  ?sortLocaleAwareChanged@QSortFilterProxyModel@@QEAAX_N@Z
+  ?sortRoleChanged@QSortFilterProxyModel@@QEAAXH@Z
+  ?filterRoleChanged@QSortFilterProxyModel@@QEAAXH@Z
+  ?recursiveFilteringEnabledChanged@QSortFilterProxyModel@@QEAAX_N@Z
+  ?autoAcceptChildRowsChanged@QSortFilterProxyModel@@QEAAX_N@Z
+  ?sourceModel@QAbstractProxyModel@@QEBAPEAVQAbstractItemModel@@XZ
+  ?qt_metacast@QAbstractProxyModel@@UEAAPEAXPEBD@Z
+  ?tr@QAbstractProxyModel@@SA?AVQString@@PEBD0H@Z
+  ??0QAbstractProxyModel@@QEAA@PEAVQObject@@@Z = QAbstractProxyModel_QAbstractProxyModel____S_QObject
+  ??1QAbstractProxyModel@@UEAA@XZ
+  ?setSourceModel@QAbstractProxyModel@@UEAAXPEAVQAbstractItemModel@@@Z
+  ?submit@QAbstractProxyModel@@UEAA_NXZ
+  ?revert@QAbstractProxyModel@@UEAAXXZ
+  ?data@QAbstractProxyModel@@UEBA?AVQVariant@@AEBVQModelIndex@@H@Z
+  ?headerData@QAbstractProxyModel@@UEBA?AVQVariant@@HW4Orientation@Qt@@H@Z
+  ?setData@QAbstractProxyModel@@UEAA_NAEBVQModelIndex@@AEBVQVariant@@H@Z
+  ?setHeaderData@QAbstractProxyModel@@UEAA_NHW4Orientation@Qt@@AEBVQVariant@@H@Z
+  ?clearItemData@QAbstractProxyModel@@UEAA_NAEBVQModelIndex@@@Z
+  ?buddy@QAbstractProxyModel@@UEBA?AVQModelIndex@@AEBV2@@Z
+  ?canFetchMore@QAbstractProxyModel@@UEBA_NAEBVQModelIndex@@@Z
+  ?fetchMore@QAbstractProxyModel@@UEAAXAEBVQModelIndex@@@Z
+  ?sort@QAbstractProxyModel@@UEAAXHW4SortOrder@Qt@@@Z
+  ?span@QAbstractProxyModel@@UEBA?AVQSize@@AEBVQModelIndex@@@Z
+  ?hasChildren@QAbstractProxyModel@@UEBA_NAEBVQModelIndex@@@Z
+  ?sibling@QAbstractProxyModel@@UEBA?AVQModelIndex@@HHAEBV2@@Z
+  ?mimeTypes@QAbstractProxyModel@@UEBA?AV?$QList@VQString@@@@XZ
+  ?createSourceIndex@QAbstractProxyModel@@IEBA?AVQModelIndex@@HHPEAX@Z
+  ?qt_metacast@QStringListModel@@UEAAPEAXPEBD@Z
+  ?tr@QStringListModel@@SA?AVQString@@PEBD0H@Z
+  ??0QStringListModel@@QEAA@PEAVQObject@@@Z
+  ??0QStringListModel@@QEAA@AEBV?$QList@VQString@@@@PEAVQObject@@@Z
+  ?rowCount@QStringListModel@@UEBAHAEBVQModelIndex@@@Z
+  ?sibling@QStringListModel@@UEBA?AVQModelIndex@@HHAEBV2@@Z
+  ?data@QStringListModel@@UEBA?AVQVariant@@AEBVQModelIndex@@H@Z
+  ?setData@QStringListModel@@UEAA_NAEBVQModelIndex@@AEBVQVariant@@H@Z
+  ?clearItemData@QStringListModel@@UEAA_NAEBVQModelIndex@@@Z
+  ?insertRows@QStringListModel@@UEAA_NHHAEBVQModelIndex@@@Z
+  ?removeRows@QStringListModel@@UEAA_NHHAEBVQModelIndex@@@Z
+  ?moveRows@QStringListModel@@UEAA_NAEBVQModelIndex@@HH0H@Z
+  ?sort@QStringListModel@@UEAAXHW4SortOrder@Qt@@@Z
+  ?stringList@QStringListModel@@QEBA?AV?$QList@VQString@@@@XZ
+  ?setStringList@QStringListModel@@QEAAXAEBV?$QList@VQString@@@@@Z
+  ??1QStringListModel@@UEAA@XZ
+  ?qt_metacast@QAbstractAnimation@@UEAAPEAXPEBD@Z
+  ?tr@QAbstractAnimation@@SA?AVQString@@PEBD0H@Z
+  ??0QAbstractAnimation@@QEAA@PEAVQObject@@@Z = QAbstractAnimation_QAbstractAnimation____S_QObject
+  ??1QAbstractAnimation@@UEAA@XZ
+  ?state@QAbstractAnimation@@QEBA?AW4State@1@XZ
+  ?direction@QAbstractAnimation@@QEBA?AW4Direction@1@XZ
+  ?setDirection@QAbstractAnimation@@QEAAXW4Direction@1@@Z
+  ?currentTime@QAbstractAnimation@@QEBAHXZ
+  ?currentLoopTime@QAbstractAnimation@@QEBAHXZ
+  ?loopCount@QAbstractAnimation@@QEBAHXZ
+  ?setLoopCount@QAbstractAnimation@@QEAAXH@Z
+  ?currentLoop@QAbstractAnimation@@QEBAHXZ
+  ?totalDuration@QAbstractAnimation@@QEBAHXZ
+  ?finished@QAbstractAnimation@@QEAAXXZ
+  ?stateChanged@QAbstractAnimation@@QEAAXW4State@1@0@Z
+  ?currentLoopChanged@QAbstractAnimation@@QEAAXH@Z
+  ?directionChanged@QAbstractAnimation@@QEAAXW4Direction@1@@Z
+  ?start@QAbstractAnimation@@QEAAXW4DeletionPolicy@1@@Z
+  ?pause@QAbstractAnimation@@QEAAXXZ
+  ?resume@QAbstractAnimation@@QEAAXXZ
+  ?setPaused@QAbstractAnimation@@QEAAX_N@Z
+  ?stop@QAbstractAnimation@@QEAAXXZ
+  ?setCurrentTime@QAbstractAnimation@@QEAAXH@Z
+  ?event@QAbstractAnimation@@MEAA_NPEAVQEvent@@@Z
+  ?updateState@QAbstractAnimation@@MEAAXW4State@1@0@Z
+  ?updateDirection@QAbstractAnimation@@MEAAXW4Direction@1@@Z
+  ?qt_metacast@QPropertyAnimation@@UEAAPEAXPEBD@Z
+  ?tr@QPropertyAnimation@@SA?AVQString@@PEBD0H@Z
+  ??0QPropertyAnimation@@QEAA@PEAVQObject@@@Z
+  ??0QPropertyAnimation@@QEAA@PEAVQObject@@AEBVQByteArray@@0@Z
+  ??1QPropertyAnimation@@UEAA@XZ
+  ?targetObject@QPropertyAnimation@@QEBAPEAVQObject@@XZ
+  ?setTargetObject@QPropertyAnimation@@QEAAXPEAVQObject@@@Z
+  ?propertyName@QPropertyAnimation@@QEBA?AVQByteArray@@XZ
+  ?setPropertyName@QPropertyAnimation@@QEAAXAEBVQByteArray@@@Z
+  ?event@QPropertyAnimation@@MEAA_NPEAVQEvent@@@Z
+  ?updateCurrentValue@QPropertyAnimation@@MEAAXAEBVQVariant@@@Z
+  ?updateState@QPropertyAnimation@@MEAAXW4State@QAbstractAnimation@@0@Z
+  ??0QEasingCurve@@QEAA@W4Type@0@@Z
+  ??0QEasingCurve@@QEAA@AEBV0@@Z
+  ??1QEasingCurve@@QEAA@XZ
+  ?swap@QEasingCurve@@QEAAXAEAV1@@Z
+  ?amplitude@QEasingCurve@@QEBANXZ
+  ?setAmplitude@QEasingCurve@@QEAAXN@Z
+  ?period@QEasingCurve@@QEBANXZ
+  ?setPeriod@QEasingCurve@@QEAAXN@Z
+  ?overshoot@QEasingCurve@@QEBANXZ
+  ?setOvershoot@QEasingCurve@@QEAAXN@Z
+  ?addCubicBezierSegment@QEasingCurve@@QEAAXAEBVQPointF@@00@Z
+  ?addTCBSegment@QEasingCurve@@QEAAXAEBVQPointF@@NNN@Z
+  ?type@QEasingCurve@@QEBA?AW4Type@1@XZ
+  ?setType@QEasingCurve@@QEAAXW4Type@1@@Z
+  ?setCustomType@QEasingCurve@@QEAAXP6ANN@Z@Z
+  ?customType@QEasingCurve@@QEBAP6ANN@ZXZ
+  ?valueForProgress@QEasingCurve@@QEBANN@Z
+  ?qt_metacast@QVariantAnimation@@UEAAPEAXPEBD@Z
+  ?tr@QVariantAnimation@@SA?AVQString@@PEBD0H@Z
+  ??0QVariantAnimation@@QEAA@PEAVQObject@@@Z
+  ??1QVariantAnimation@@UEAA@XZ
+  ?startValue@QVariantAnimation@@QEBA?AVQVariant@@XZ
+  ?setStartValue@QVariantAnimation@@QEAAXAEBVQVariant@@@Z
+  ?endValue@QVariantAnimation@@QEBA?AVQVariant@@XZ
+  ?setEndValue@QVariantAnimation@@QEAAXAEBVQVariant@@@Z
+  ?keyValueAt@QVariantAnimation@@QEBA?AVQVariant@@N@Z
+  ?setKeyValueAt@QVariantAnimation@@QEAAXNAEBVQVariant@@@Z
+  ?currentValue@QVariantAnimation@@QEBA?AVQVariant@@XZ
+  ?duration@QVariantAnimation@@UEBAHXZ
+  ?setDuration@QVariantAnimation@@QEAAXH@Z
+  ?easingCurve@QVariantAnimation@@QEBA?AVQEasingCurve@@XZ
+  ?setEasingCurve@QVariantAnimation@@QEAAXAEBVQEasingCurve@@@Z
+  ?valueChanged@QVariantAnimation@@QEAAXAEBVQVariant@@@Z
+  ?event@QVariantAnimation@@MEAA_NPEAVQEvent@@@Z
+  ?updateCurrentTime@QVariantAnimation@@MEAAXH@Z
+  ?updateState@QVariantAnimation@@MEAAXW4State@QAbstractAnimation@@0@Z
+  ?updateCurrentValue@QVariantAnimation@@MEAAXAEBVQVariant@@@Z
+  ?interpolated@QVariantAnimation@@MEBA?AVQVariant@@AEBV2@0N@Z
   ?devType@QPaintDevice@@UEBAHXZ
   ?paintingActive@QPaintDevice@@QEBA_NXZ
   ?width@QPaintDevice@@QEBAHXZ
@@ -2267,6 +2460,7 @@ EXPORTS
   ?adjoint@QTransform@@QEBA?AV1@XZ
   ?transposed@QTransform@@QEBA?AV1@XZ
   ?translate@QTransform@@QEAAAEAV1@NN@Z
+  ?scale@QTransform@@QEAAAEAV1@NN@Z
   ?shear@QTransform@@QEAAAEAV1@NN@Z
   ?rotate@QTransform@@QEAAAEAV1@NW4Axis@Qt@@N@Z
   ?rotate@QTransform@@QEAAAEAV1@NW4Axis@Qt@@@Z
@@ -2594,12 +2788,10 @@ EXPORTS
   ??0QImage@@QEAA@XZ
   ??0QImage@@QEAA@AEBVQSize@@W4Format@0@@Z
   ??0QImage@@QEAA@HHW4Format@0@@Z
-  ??0QImage@@QEAA@PEAEHHW4Format@0@P6AXPEAX@Z2@Z
   ??0QImage@@QEAA@PEAEHH_JW4Format@0@P6AXPEAX@Z3@Z
   ??0QImage@@QEAA@QEBQEBD@Z
   ??0QImage@@QEAA@AEBVQString@@PEBD@Z
   ??1QImage@@UEAA@XZ
-  ?swap@QImage@@QEAAXAEAV1@@Z
   ?isNull@QImage@@QEBA_NXZ
   ?devType@QImage@@UEBAHXZ
   ??8QImage@@QEBA_NAEBV0@@Z
@@ -2642,7 +2834,6 @@ EXPORTS
   ?setPixel@QImage@@QEAAXAEBVQPoint@@I@Z
   ?pixelColor@QImage@@QEBA?AVQColor@@HH@Z
   ?pixelColor@QImage@@QEBA?AVQColor@@AEBVQPoint@@@Z
-  ?setPixelColor@QImage@@QEAAXHHAEBVQColor@@@Z
   ?setPixelColor@QImage@@QEAAXAEBVQPoint@@AEBVQColor@@@Z
   ?devicePixelRatio@QImage@@QEBANXZ
   ?setDevicePixelRatio@QImage@@QEAAXN@Z
@@ -2734,6 +2925,7 @@ EXPORTS
   ?trueMatrix@QPixmap@@SA?AVQTransform@@AEBV2@HH@Z
   ?toImage@QPixmap@@QEBA?AVQImage@@XZ
   ?fromImage@QPixmap@@SA?AV1@AEBVQImage@@V?$QFlags@W4ImageConversionFlag@Qt@@@@@Z
+  ?fromImageReader@QPixmap@@SA?AV1@PEAVQImageReader@@V?$QFlags@W4ImageConversionFlag@Qt@@@@@Z
   ?load@QPixmap@@QEAA_NAEBVQString@@PEBDV?$QFlags@W4ImageConversionFlag@Qt@@@@@Z
   ?loadFromData@QPixmap@@QEAA_NPEBEIPEBDV?$QFlags@W4ImageConversionFlag@Qt@@@@@Z
   ?loadFromData@QPixmap@@QEAA_NAEBVQByteArray@@PEBDV?$QFlags@W4ImageConversionFlag@Qt@@@@@Z
@@ -2791,7 +2983,6 @@ EXPORTS
   ??0QBitmap@@QEAA@AEBVQPixmap@@@Z
   ??0QBitmap@@QEAA@HH@Z
   ??0QBitmap@@QEAA@AEBVQSize@@@Z
-  ??0QBitmap@@QEAA@AEBVQString@@PEBD@Z
   ??1QBitmap@@UEAA@XZ
   ?swap@QBitmap@@QEAAXAEAV1@@Z
   ??BQBitmap@@QEBA?AVQVariant@@XZ
@@ -2817,7 +3008,6 @@ EXPORTS
   ?mask@QCursor@@QEBA?AVQBitmap@@XZ
   ?pixmap@QCursor@@QEBA?AVQPixmap@@XZ
   ?hotSpot@QCursor@@QEBA?AVQPoint@@XZ
-  ?pos@QCursor@@SA?AVQPoint@@XZ
   ?setPos@QCursor@@SAXHH@Z
   ?setPos@QCursor@@SAXAEBVQPoint@@@Z
   ??0QBrush@@QEAA@XZ
@@ -3773,6 +3963,85 @@ EXPORTS
   ?regularExpression@QRegularExpressionValidator@@QEBA?AVQRegularExpression@@XZ
   ?setRegularExpression@QRegularExpressionValidator@@QEAAXAEBVQRegularExpression@@@Z
   ?regularExpressionChanged@QRegularExpressionValidator@@QEAAXAEBVQRegularExpression@@@Z
+  ??0QStandardItem@@QEAA@XZ
+  ??0QStandardItem@@QEAA@AEBVQString@@@Z
+  ??0QStandardItem@@QEAA@AEBVQIcon@@AEBVQString@@@Z
+  ??0QStandardItem@@QEAA@HH@Z
+  ??1QStandardItem@@UEAA@XZ
+  ?data@QStandardItem@@UEBA?AVQVariant@@H@Z
+  ?multiData@QStandardItem@@UEBAXVQModelRoleDataSpan@@@Z
+  ?setData@QStandardItem@@UEAAXAEBVQVariant@@H@Z
+  ?clearData@QStandardItem@@QEAAXXZ
+  ?text@QStandardItem@@QEBA?AVQString@@XZ
+  ?setText@QStandardItem@@QEAAXAEBVQString@@@Z
+  ?icon@QStandardItem@@QEBA?AVQIcon@@XZ
+  ?setIcon@QStandardItem@@QEAAXAEBVQIcon@@@Z
+  ?toolTip@QStandardItem@@QEBA?AVQString@@XZ
+  ?setToolTip@QStandardItem@@QEAAXAEBVQString@@@Z
+  ?statusTip@QStandardItem@@QEBA?AVQString@@XZ
+  ?setStatusTip@QStandardItem@@QEAAXAEBVQString@@@Z
+  ?whatsThis@QStandardItem@@QEBA?AVQString@@XZ
+  ?setWhatsThis@QStandardItem@@QEAAXAEBVQString@@@Z
+  ?sizeHint@QStandardItem@@QEBA?AVQSize@@XZ
+  ?setSizeHint@QStandardItem@@QEAAXAEBVQSize@@@Z
+  ?font@QStandardItem@@QEBA?AVQFont@@XZ
+  ?setFont@QStandardItem@@QEAAXAEBVQFont@@@Z
+  ?setTextAlignment@QStandardItem@@QEAAXV?$QFlags@W4AlignmentFlag@Qt@@@@@Z
+  ?background@QStandardItem@@QEBA?AVQBrush@@XZ
+  ?setBackground@QStandardItem@@QEAAXAEBVQBrush@@@Z
+  ?foreground@QStandardItem@@QEBA?AVQBrush@@XZ
+  ?setForeground@QStandardItem@@QEAAXAEBVQBrush@@@Z
+  ?checkState@QStandardItem@@QEBA?AW4CheckState@Qt@@XZ
+  ?setCheckState@QStandardItem@@QEAAXW4CheckState@Qt@@@Z
+  ?accessibleText@QStandardItem@@QEBA?AVQString@@XZ
+  ?setAccessibleText@QStandardItem@@QEAAXAEBVQString@@@Z
+  ?accessibleDescription@QStandardItem@@QEBA?AVQString@@XZ
+  ?setAccessibleDescription@QStandardItem@@QEAAXAEBVQString@@@Z
+  ?setFlags@QStandardItem@@QEAAXV?$QFlags@W4ItemFlag@Qt@@@@@Z
+  ?isEnabled@QStandardItem@@QEBA_NXZ
+  ?setEnabled@QStandardItem@@QEAAX_N@Z
+  ?isEditable@QStandardItem@@QEBA_NXZ
+  ?setEditable@QStandardItem@@QEAAX_N@Z
+  ?isSelectable@QStandardItem@@QEBA_NXZ
+  ?setSelectable@QStandardItem@@QEAAX_N@Z
+  ?isCheckable@QStandardItem@@QEBA_NXZ
+  ?setCheckable@QStandardItem@@QEAAX_N@Z
+  ?isAutoTristate@QStandardItem@@QEBA_NXZ
+  ?setAutoTristate@QStandardItem@@QEAAX_N@Z
+  ?isUserTristate@QStandardItem@@QEBA_NXZ
+  ?setUserTristate@QStandardItem@@QEAAX_N@Z
+  ?isDragEnabled@QStandardItem@@QEBA_NXZ
+  ?setDragEnabled@QStandardItem@@QEAAX_N@Z
+  ?isDropEnabled@QStandardItem@@QEBA_NXZ
+  ?setDropEnabled@QStandardItem@@QEAAX_N@Z
+  ?parent@QStandardItem@@QEBAPEAV1@XZ
+  ?row@QStandardItem@@QEBAHXZ
+  ?column@QStandardItem@@QEBAHXZ
+  ?index@QStandardItem@@QEBA?AVQModelIndex@@XZ
+  ?model@QStandardItem@@QEBAPEAVQStandardItemModel@@XZ
+  ?rowCount@QStandardItem@@QEBAHXZ
+  ?setRowCount@QStandardItem@@QEAAXH@Z
+  ?columnCount@QStandardItem@@QEBAHXZ
+  ?setColumnCount@QStandardItem@@QEAAXH@Z
+  ?hasChildren@QStandardItem@@QEBA_NXZ
+  ?child@QStandardItem@@QEBAPEAV1@HH@Z
+  ?setChild@QStandardItem@@QEAAXHHPEAV1@@Z
+  ?setChild@QStandardItem@@QEAAXHPEAV1@@Z
+  ?insertRows@QStandardItem@@QEAAXHH@Z
+  ?insertColumns@QStandardItem@@QEAAXHH@Z
+  ?removeRow@QStandardItem@@QEAAXH@Z
+  ?removeColumn@QStandardItem@@QEAAXH@Z
+  ?removeRows@QStandardItem@@QEAAXHH@Z
+  ?removeColumns@QStandardItem@@QEAAXHH@Z
+  ?insertRow@QStandardItem@@QEAAXHPEAV1@@Z
+  ?appendRow@QStandardItem@@QEAAXPEAV1@@Z
+  ?takeChild@QStandardItem@@QEAAPEAV1@HH@Z
+  ?sortChildren@QStandardItem@@QEAAXHW4SortOrder@Qt@@@Z
+  ?clone@QStandardItem@@UEBAPEAV1@XZ
+  ?type@QStandardItem@@UEBAHXZ
+  ??MQStandardItem@@UEBA_NAEBV0@@Z
+  ??0QStandardItem@@IEAA@AEBV0@@Z
+  ?emitDataChanged@QStandardItem@@IEAAXXZ
   ?qt_metacast@QStandardItemModel@@UEAAPEAXPEBD@Z
   ?tr@QStandardItemModel@@SA?AVQString@@PEBD0H@Z
   ??0QStandardItemModel@@QEAA@PEAVQObject@@@Z
@@ -3795,15 +4064,33 @@ EXPORTS
   ?removeColumns@QStandardItemModel@@UEAA_NHHAEBVQModelIndex@@@Z
   ?clear@QStandardItemModel@@QEAAXXZ
   ?sort@QStandardItemModel@@UEAAXHW4SortOrder@Qt@@@Z
+  ?itemFromIndex@QStandardItemModel@@QEBAPEAVQStandardItem@@AEBVQModelIndex@@@Z
+  ?indexFromItem@QStandardItemModel@@QEBA?AVQModelIndex@@PEBVQStandardItem@@@Z
+  ?item@QStandardItemModel@@QEBAPEAVQStandardItem@@HH@Z
+  ?setItem@QStandardItemModel@@QEAAXHHPEAVQStandardItem@@@Z
+  ?setItem@QStandardItemModel@@QEAAXHPEAVQStandardItem@@@Z
+  ?invisibleRootItem@QStandardItemModel@@QEBAPEAVQStandardItem@@XZ
+  ?horizontalHeaderItem@QStandardItemModel@@QEBAPEAVQStandardItem@@H@Z
+  ?setHorizontalHeaderItem@QStandardItemModel@@QEAAXHPEAVQStandardItem@@@Z
+  ?verticalHeaderItem@QStandardItemModel@@QEBAPEAVQStandardItem@@H@Z
+  ?setVerticalHeaderItem@QStandardItemModel@@QEAAXHPEAVQStandardItem@@@Z
   ?setHorizontalHeaderLabels@QStandardItemModel@@QEAAXAEBV?$QList@VQString@@@@@Z
   ?setVerticalHeaderLabels@QStandardItemModel@@QEAAXAEBV?$QList@VQString@@@@@Z
   ?setRowCount@QStandardItemModel@@QEAAXH@Z
   ?setColumnCount@QStandardItemModel@@QEAAXH@Z
+  ?appendRow@QStandardItemModel@@QEAAXPEAVQStandardItem@@@Z
+  ?insertRow@QStandardItemModel@@QEAAXHPEAVQStandardItem@@@Z
   ?insertRow@QStandardItemModel@@QEAA_NHAEBVQModelIndex@@@Z
   ?insertColumn@QStandardItemModel@@QEAA_NHAEBVQModelIndex@@@Z
+  ?takeItem@QStandardItemModel@@QEAAPEAVQStandardItem@@HH@Z
+  ?takeHorizontalHeaderItem@QStandardItemModel@@QEAAPEAVQStandardItem@@H@Z
+  ?takeVerticalHeaderItem@QStandardItemModel@@QEAAPEAVQStandardItem@@H@Z
+  ?itemPrototype@QStandardItemModel@@QEBAPEBVQStandardItem@@XZ
+  ?setItemPrototype@QStandardItemModel@@QEAAXPEBVQStandardItem@@@Z
   ?sortRole@QStandardItemModel@@QEBAHXZ
   ?setSortRole@QStandardItemModel@@QEAAXH@Z
   ?mimeTypes@QStandardItemModel@@UEBA?AV?$QList@VQString@@@@XZ
+  ?itemChanged@QStandardItemModel@@QEAAXPEAVQStandardItem@@@Z
   ?families@QFontDatabase@@SA?AV?$QList@VQString@@@@W4WritingSystem@1@@Z
   ?styles@QFontDatabase@@SA?AV?$QList@VQString@@@@AEBVQString@@@Z
   ?styleString@QFontDatabase@@SA?AVQString@@AEBVQFont@@@Z
@@ -4593,6 +4880,8 @@ EXPORTS
   ?setReadOnly@QLineEdit@@QEAAX_N@Z
   ?setValidator@QLineEdit@@QEAAXPEBVQValidator@@@Z
   ?validator@QLineEdit@@QEBAPEBVQValidator@@XZ
+  ?setCompleter@QLineEdit@@QEAAXPEAVQCompleter@@@Z
+  ?completer@QLineEdit@@QEBAPEAVQCompleter@@XZ
   ?sizeHint@QLineEdit@@UEBA?AVQSize@@XZ
   ?minimumSizeHint@QLineEdit@@UEBA?AVQSize@@XZ
   ?cursorPosition@QLineEdit@@QEBAHXZ
@@ -5060,6 +5349,7 @@ EXPORTS
   ?hitButton@QToolButton@@MEBA_NAEBVQPoint@@@Z
   ?checkStateSet@QToolButton@@MEAAXXZ
   ?nextCheckState@QToolButton@@MEAAXXZ
+  ?initStyleOption@QToolButton@@MEBAXPEAVQStyleOptionToolButton@@@Z
   ?qt_metacast@QRadioButton@@UEAAPEAXPEBD@Z
   ?tr@QRadioButton@@SA?AVQString@@PEBD0H@Z
   ??0QRadioButton@@QEAA@PEAVQWidget@@@Z
@@ -5361,6 +5651,8 @@ EXPORTS
   ?lineEdit@QComboBox@@QEBAPEAVQLineEdit@@XZ
   ?setValidator@QComboBox@@QEAAXPEBVQValidator@@@Z
   ?validator@QComboBox@@QEBAPEBVQValidator@@XZ
+  ?setCompleter@QComboBox@@QEAAXPEAVQCompleter@@@Z
+  ?completer@QComboBox@@QEBAPEAVQCompleter@@XZ
   ?itemDelegate@QComboBox@@QEBAPEAVQAbstractItemDelegate@@XZ
   ?setItemDelegate@QComboBox@@QEAAXPEAVQAbstractItemDelegate@@@Z
   ?model@QComboBox@@QEBAPEAVQAbstractItemModel@@XZ
@@ -5429,6 +5721,10 @@ EXPORTS
   ??0QStyleOptionViewItem@@QEAA@AEBV0@@Z
   ??0QStyleOptionViewItem@@IEAA@H@Z
   ??1QStyleOptionViewItem@@QEAA@XZ = QStyleOptionViewItem__QStyleOptionViewItem
+  ??0QStyleOptionToolButton@@QEAA@XZ
+  ??0QStyleOptionToolButton@@QEAA@AEBV0@@Z
+  ??0QStyleOptionToolButton@@IEAA@H@Z
+  ??1QStyleOptionToolButton@@QEAA@XZ = QStyleOptionToolButton__QStyleOptionToolButton
   ?qt_metacast@QStyle@@UEAAPEAXPEBD@Z
   ?tr@QStyle@@SA?AVQString@@PEBD0H@Z
   ??0QStyle@@QEAA@XZ = QStyle_QStyle
@@ -6240,6 +6536,8 @@ EXPORTS
   ?labelText@QFileDialog@@QEBA?AVQString@@W4DialogLabel@1@@Z
   ?setSupportedSchemes@QFileDialog@@QEAAXAEBV?$QList@VQString@@@@@Z
   ?supportedSchemes@QFileDialog@@QEBA?AV?$QList@VQString@@@@XZ
+  ?setProxyModel@QFileDialog@@QEAAXPEAVQAbstractProxyModel@@@Z
+  ?proxyModel@QFileDialog@@QEBAPEAVQAbstractProxyModel@@XZ
   ?setOption@QFileDialog@@QEAAXW4Option@1@_N@Z
   ?testOption@QFileDialog@@QEBA_NW4Option@1@@Z
   ?setOptions@QFileDialog@@QEAAXV?$QFlags@W4Option@QFileDialog@@@@@Z
@@ -6561,8 +6859,6 @@ EXPORTS
   ?viewMode@QListView@@QEBA?AW4ViewMode@1@XZ
   ?clearPropertyFlags@QListView@@QEAAXXZ
   ?isRowHidden@QListView@@QEBA_NH@Z
-  ?setRowHidden@QListView@@QEAAXH_N@Z
-  ?setModelColumn@QListView@@QEAAXH@Z
   ?modelColumn@QListView@@QEBAHXZ
   ?setUniformItemSizes@QListView@@QEAAX_N@Z
   ?uniformItemSizes@QListView@@QEBA_NXZ
@@ -6889,7 +7185,6 @@ EXPORTS
   ?setSelection@QHeaderView@@MEAAXAEBVQRect@@V?$QFlags@W4SelectionFlag@QItemSelectionModel@@@@@Z
   ??0QListWidgetItem@@QEAA@PEAVQListWidget@@H@Z
   ??0QListWidgetItem@@QEAA@AEBVQString@@PEAVQListWidget@@H@Z
-  ??0QListWidgetItem@@QEAA@AEBVQIcon@@AEBVQString@@PEAVQListWidget@@H@Z
   ??0QListWidgetItem@@QEAA@AEBV0@@Z
   ??1QListWidgetItem@@UEAA@XZ
   ?clone@QListWidgetItem@@UEBAPEAV1@XZ
@@ -6927,7 +7222,6 @@ EXPORTS
   ??MQListWidgetItem@@UEBA_NAEBV0@@Z
   ?type@QListWidgetItem@@QEBAHXZ
   ?qt_metacast@QListWidget@@UEAAPEAXPEBD@Z
-  ?tr@QListWidget@@SA?AVQString@@PEBD0H@Z
   ??0QListWidget@@QEAA@PEAVQWidget@@@Z
   ??1QListWidget@@UEAA@XZ
   ?setSelectionModel@QListWidget@@UEAAXPEAVQItemSelectionModel@@@Z
@@ -6940,13 +7234,11 @@ EXPORTS
   ?addItem@QListWidget@@QEAAXPEAVQListWidgetItem@@@Z
   ?addItems@QListWidget@@QEAAXAEBV?$QList@VQString@@@@@Z
   ?takeItem@QListWidget@@QEAAPEAVQListWidgetItem@@H@Z
-  ?count@QListWidget@@QEBAHXZ
   ?currentItem@QListWidget@@QEBAPEAVQListWidgetItem@@XZ
   ?setCurrentItem@QListWidget@@QEAAXPEAVQListWidgetItem@@@Z
   ?setCurrentItem@QListWidget@@QEAAXPEAVQListWidgetItem@@V?$QFlags@W4SelectionFlag@QItemSelectionModel@@@@@Z
   ?currentRow@QListWidget@@QEBAHXZ
   ?setCurrentRow@QListWidget@@QEAAXH@Z
-  ?setCurrentRow@QListWidget@@QEAAXHV?$QFlags@W4SelectionFlag@QItemSelectionModel@@@@@Z
   ?itemAt@QListWidget@@QEBAPEAVQListWidgetItem@@AEBVQPoint@@@Z
   ?itemAt@QListWidget@@QEBAPEAVQListWidgetItem@@HH@Z
   ?visualItemRect@QListWidget@@QEBA?AVQRect@@PEBVQListWidgetItem@@@Z
@@ -6964,14 +7256,12 @@ EXPORTS
   ?itemFromIndex@QListWidget@@QEBAPEAVQListWidgetItem@@AEBVQModelIndex@@@Z
   ?setSupportedDragActions@QListWidget@@QEAAXV?$QFlags@W4DropAction@Qt@@@@@Z
   ?scrollToItem@QListWidget@@QEAAXPEBVQListWidgetItem@@W4ScrollHint@QAbstractItemView@@@Z
-  ?clear@QListWidget@@QEAAXXZ
   ?itemPressed@QListWidget@@QEAAXPEAVQListWidgetItem@@@Z
   ?itemClicked@QListWidget@@QEAAXPEAVQListWidgetItem@@@Z
   ?itemDoubleClicked@QListWidget@@QEAAXPEAVQListWidgetItem@@@Z
   ?itemActivated@QListWidget@@QEAAXPEAVQListWidgetItem@@@Z
   ?itemEntered@QListWidget@@QEAAXPEAVQListWidgetItem@@@Z
   ?itemChanged@QListWidget@@QEAAXPEAVQListWidgetItem@@@Z
-  ?currentItemChanged@QListWidget@@QEAAXPEAVQListWidgetItem@@0@Z
   ?currentTextChanged@QListWidget@@QEAAXAEBVQString@@@Z
   ?currentRowChanged@QListWidget@@QEAAXH@Z
   ?itemSelectionChanged@QListWidget@@QEAAXXZ
@@ -7232,6 +7522,7 @@ EXPORTS
   ?geometry@QSpacerItem@@UEBA?AVQRect@@XZ
   ?spacerItem@QSpacerItem@@UEAAPEAV1@XZ
   ?sizePolicy@QSpacerItem@@QEBA?AVQSizePolicy@@XZ
+  ??0QSpacerItem@@QEAA@AEBV0@@Z = QSpacerItem_QSpacerItem___1__S_QSpacerItem
   ?qt_metacast@QLayout@@UEAAPEAXPEBD@Z
   ?tr@QLayout@@SA?AVQString@@PEBD0H@Z
   ??0QLayout@@QEAA@PEAVQWidget@@@Z = QLayout_QLayout____S_QWidget
@@ -7465,6 +7756,7 @@ EXPORTS
   ??0QShortcut@@QEAA@W4StandardKey@QKeySequence@@PEAVQObject@@PEBD2W4ShortcutContext@Qt@@@Z
   ??1QShortcut@@UEAA@XZ
   ?setKey@QShortcut@@QEAAXAEBVQKeySequence@@@Z
+  ?key@QShortcut@@QEBA?AVQKeySequence@@XZ
   ?setKeys@QShortcut@@QEAAXW4StandardKey@QKeySequence@@@Z
   ?setEnabled@QShortcut@@QEAAX_N@Z
   ?isEnabled@QShortcut@@QEBA_NXZ
@@ -7478,6 +7770,351 @@ EXPORTS
   ?activated@QShortcut@@QEAAXXZ
   ?activatedAmbiguously@QShortcut@@QEAAXXZ
   ?event@QShortcut@@MEAA_NPEAVQEvent@@@Z
+  ?qt_metacast@QCompleter@@UEAAPEAXPEBD@Z
+  ?tr@QCompleter@@SA?AVQString@@PEBD0H@Z
+  ??0QCompleter@@QEAA@PEAVQObject@@@Z
+  ??0QCompleter@@QEAA@PEAVQAbstractItemModel@@PEAVQObject@@@Z
+  ??0QCompleter@@QEAA@AEBV?$QList@VQString@@@@PEAVQObject@@@Z
+  ??1QCompleter@@UEAA@XZ
+  ?setWidget@QCompleter@@QEAAXPEAVQWidget@@@Z
+  ?widget@QCompleter@@QEBAPEAVQWidget@@XZ
+  ?setModel@QCompleter@@QEAAXPEAVQAbstractItemModel@@@Z
+  ?model@QCompleter@@QEBAPEAVQAbstractItemModel@@XZ
+  ?setCompletionMode@QCompleter@@QEAAXW4CompletionMode@1@@Z
+  ?completionMode@QCompleter@@QEBA?AW4CompletionMode@1@XZ
+  ?setFilterMode@QCompleter@@QEAAXV?$QFlags@W4MatchFlag@Qt@@@@@Z
+  ?popup@QCompleter@@QEBAPEAVQAbstractItemView@@XZ
+  ?setPopup@QCompleter@@QEAAXPEAVQAbstractItemView@@@Z
+  ?setCaseSensitivity@QCompleter@@QEAAXW4CaseSensitivity@Qt@@@Z
+  ?caseSensitivity@QCompleter@@QEBA?AW4CaseSensitivity@Qt@@XZ
+  ?setModelSorting@QCompleter@@QEAAXW4ModelSorting@1@@Z
+  ?modelSorting@QCompleter@@QEBA?AW4ModelSorting@1@XZ
+  ?setCompletionColumn@QCompleter@@QEAAXH@Z
+  ?completionColumn@QCompleter@@QEBAHXZ
+  ?setCompletionRole@QCompleter@@QEAAXH@Z
+  ?completionRole@QCompleter@@QEBAHXZ
+  ?wrapAround@QCompleter@@QEBA_NXZ
+  ?maxVisibleItems@QCompleter@@QEBAHXZ
+  ?setMaxVisibleItems@QCompleter@@QEAAXH@Z
+  ?completionCount@QCompleter@@QEBAHXZ
+  ?setCurrentRow@QCompleter@@QEAA_NH@Z
+  ?currentRow@QCompleter@@QEBAHXZ
+  ?currentIndex@QCompleter@@QEBA?AVQModelIndex@@XZ
+  ?currentCompletion@QCompleter@@QEBA?AVQString@@XZ
+  ?completionModel@QCompleter@@QEBAPEAVQAbstractItemModel@@XZ
+  ?completionPrefix@QCompleter@@QEBA?AVQString@@XZ
+  ?setCompletionPrefix@QCompleter@@QEAAXAEBVQString@@@Z
+  ?complete@QCompleter@@QEAAXAEBVQRect@@@Z
+  ?setWrapAround@QCompleter@@QEAAX_N@Z
+  ?pathFromIndex@QCompleter@@UEBA?AVQString@@AEBVQModelIndex@@@Z
+  ?splitPath@QCompleter@@UEBA?AV?$QList@VQString@@@@AEBVQString@@@Z
+  ?eventFilter@QCompleter@@MEAA_NPEAVQObject@@PEAVQEvent@@@Z
+  ?event@QCompleter@@MEAA_NPEAVQEvent@@@Z
+  ?activated@QCompleter@@QEAAXAEBVQString@@@Z
+  ?activated@QCompleter@@QEAAXAEBVQModelIndex@@@Z
+  ?highlighted@QCompleter@@QEAAXAEBVQString@@@Z
+  ?highlighted@QCompleter@@QEAAXAEBVQModelIndex@@@Z
+  ?qt_metacast@QFileSystemModel@@UEAAPEAXPEBD@Z
+  ?tr@QFileSystemModel@@SA?AVQString@@PEBD0H@Z
+  ?rootPathChanged@QFileSystemModel@@QEAAXAEBVQString@@@Z
+  ?fileRenamed@QFileSystemModel@@QEAAXAEBVQString@@00@Z
+  ?directoryLoaded@QFileSystemModel@@QEAAXAEBVQString@@@Z
+  ??0QFileSystemModel@@QEAA@PEAVQObject@@@Z
+  ??1QFileSystemModel@@UEAA@XZ
+  ?index@QFileSystemModel@@UEBA?AVQModelIndex@@HHAEBV2@@Z
+  ?index@QFileSystemModel@@QEBA?AVQModelIndex@@AEBVQString@@H@Z
+  ?parent@QFileSystemModel@@UEBA?AVQModelIndex@@AEBV2@@Z
+  ?sibling@QFileSystemModel@@UEBA?AVQModelIndex@@HHAEBV2@@Z
+  ?hasChildren@QFileSystemModel@@UEBA_NAEBVQModelIndex@@@Z
+  ?canFetchMore@QFileSystemModel@@UEBA_NAEBVQModelIndex@@@Z
+  ?fetchMore@QFileSystemModel@@UEAAXAEBVQModelIndex@@@Z
+  ?rowCount@QFileSystemModel@@UEBAHAEBVQModelIndex@@@Z
+  ?columnCount@QFileSystemModel@@UEBAHAEBVQModelIndex@@@Z
+  ?myComputer@QFileSystemModel@@QEBA?AVQVariant@@H@Z
+  ?data@QFileSystemModel@@UEBA?AVQVariant@@AEBVQModelIndex@@H@Z
+  ?setData@QFileSystemModel@@UEAA_NAEBVQModelIndex@@AEBVQVariant@@H@Z
+  ?headerData@QFileSystemModel@@UEBA?AVQVariant@@HW4Orientation@Qt@@H@Z
+  ?sort@QFileSystemModel@@UEAAXHW4SortOrder@Qt@@@Z
+  ?mimeTypes@QFileSystemModel@@UEBA?AV?$QList@VQString@@@@XZ
+  ?setRootPath@QFileSystemModel@@QEAA?AVQModelIndex@@AEBVQString@@@Z
+  ?rootPath@QFileSystemModel@@QEBA?AVQString@@XZ
+  ?rootDirectory@QFileSystemModel@@QEBA?AVQDir@@XZ
+  ?setFilter@QFileSystemModel@@QEAAXV?$QFlags@W4Filter@QDir@@@@@Z
+  ?setResolveSymlinks@QFileSystemModel@@QEAAX_N@Z
+  ?resolveSymlinks@QFileSystemModel@@QEBA_NXZ
+  ?setReadOnly@QFileSystemModel@@QEAAX_N@Z
+  ?isReadOnly@QFileSystemModel@@QEBA_NXZ
+  ?setNameFilterDisables@QFileSystemModel@@QEAAX_N@Z
+  ?nameFilterDisables@QFileSystemModel@@QEBA_NXZ
+  ?setNameFilters@QFileSystemModel@@QEAAXAEBV?$QList@VQString@@@@@Z
+  ?nameFilters@QFileSystemModel@@QEBA?AV?$QList@VQString@@@@XZ
+  ?setOption@QFileSystemModel@@QEAAXW4Option@1@_N@Z
+  ?testOption@QFileSystemModel@@QEBA_NW4Option@1@@Z
+  ?setOptions@QFileSystemModel@@QEAAXV?$QFlags@W4Option@QFileSystemModel@@@@@Z
+  ?filePath@QFileSystemModel@@QEBA?AVQString@@AEBVQModelIndex@@@Z
+  ?isDir@QFileSystemModel@@QEBA_NAEBVQModelIndex@@@Z
+  ?size@QFileSystemModel@@QEBA_JAEBVQModelIndex@@@Z
+  ?type@QFileSystemModel@@QEBA?AVQString@@AEBVQModelIndex@@@Z
+  ?lastModified@QFileSystemModel@@QEBA?AVQDateTime@@AEBVQModelIndex@@@Z
+  ?lastModified@QFileSystemModel@@QEBA?AVQDateTime@@AEBVQModelIndex@@AEBVQTimeZone@@@Z
+  ?mkdir@QFileSystemModel@@QEAA?AVQModelIndex@@AEBV2@AEBVQString@@@Z
+  ?rmdir@QFileSystemModel@@QEAA_NAEBVQModelIndex@@@Z
+  ?fileName@QFileSystemModel@@QEBA?AVQString@@AEBVQModelIndex@@@Z
+  ?fileIcon@QFileSystemModel@@QEBA?AVQIcon@@AEBVQModelIndex@@@Z
+  ?fileInfo@QFileSystemModel@@QEBA?AVQFileInfo@@AEBVQModelIndex@@@Z
+  ?remove@QFileSystemModel@@QEAA_NAEBVQModelIndex@@@Z
+  ?timerEvent@QFileSystemModel@@MEAAXPEAVQTimerEvent@@@Z
+  ?event@QFileSystemModel@@MEAA_NPEAVQEvent@@@Z
+  ?qt_metacast@QDataWidgetMapper@@UEAAPEAXPEBD@Z
+  ?tr@QDataWidgetMapper@@SA?AVQString@@PEBD0H@Z
+  ??0QDataWidgetMapper@@QEAA@PEAVQObject@@@Z
+  ??1QDataWidgetMapper@@UEAA@XZ
+  ?setModel@QDataWidgetMapper@@QEAAXPEAVQAbstractItemModel@@@Z
+  ?model@QDataWidgetMapper@@QEBAPEAVQAbstractItemModel@@XZ
+  ?setItemDelegate@QDataWidgetMapper@@QEAAXPEAVQAbstractItemDelegate@@@Z
+  ?itemDelegate@QDataWidgetMapper@@QEBAPEAVQAbstractItemDelegate@@XZ
+  ?setRootIndex@QDataWidgetMapper@@QEAAXAEBVQModelIndex@@@Z
+  ?rootIndex@QDataWidgetMapper@@QEBA?AVQModelIndex@@XZ
+  ?setOrientation@QDataWidgetMapper@@QEAAXW4Orientation@Qt@@@Z
+  ?orientation@QDataWidgetMapper@@QEBA?AW4Orientation@Qt@@XZ
+  ?setSubmitPolicy@QDataWidgetMapper@@QEAAXW4SubmitPolicy@1@@Z
+  ?submitPolicy@QDataWidgetMapper@@QEBA?AW4SubmitPolicy@1@XZ
+  ?addMapping@QDataWidgetMapper@@QEAAXPEAVQWidget@@H@Z
+  ?addMapping@QDataWidgetMapper@@QEAAXPEAVQWidget@@HAEBVQByteArray@@@Z
+  ?removeMapping@QDataWidgetMapper@@QEAAXPEAVQWidget@@@Z
+  ?mappedSection@QDataWidgetMapper@@QEBAHPEAVQWidget@@@Z
+  ?mappedPropertyName@QDataWidgetMapper@@QEBA?AVQByteArray@@PEAVQWidget@@@Z
+  ?mappedWidgetAt@QDataWidgetMapper@@QEBAPEAVQWidget@@H@Z
+  ?clearMapping@QDataWidgetMapper@@QEAAXXZ
+  ?currentIndex@QDataWidgetMapper@@QEBAHXZ
+  ?revert@QDataWidgetMapper@@QEAAXXZ
+  ?submit@QDataWidgetMapper@@QEAA_NXZ
+  ?toFirst@QDataWidgetMapper@@QEAAXXZ
+  ?toLast@QDataWidgetMapper@@QEAAXXZ
+  ?toNext@QDataWidgetMapper@@QEAAXXZ
+  ?toPrevious@QDataWidgetMapper@@QEAAXXZ
+  ?setCurrentIndex@QDataWidgetMapper@@UEAAXH@Z
+  ?setCurrentModelIndex@QDataWidgetMapper@@QEAAXAEBVQModelIndex@@@Z
+  ?currentIndexChanged@QDataWidgetMapper@@QEAAXH@Z
+  ?qt_metacast@QItemDelegate@@UEAAPEAXPEBD@Z
+  ?tr@QItemDelegate@@SA?AVQString@@PEBD0H@Z
+  ??0QItemDelegate@@QEAA@PEAVQObject@@@Z
+  ??1QItemDelegate@@UEAA@XZ
+  ?hasClipping@QItemDelegate@@QEBA_NXZ
+  ?setClipping@QItemDelegate@@QEAAX_N@Z
+  ?paint@QItemDelegate@@UEBAXPEAVQPainter@@AEBVQStyleOptionViewItem@@AEBVQModelIndex@@@Z
+  ?sizeHint@QItemDelegate@@UEBA?AVQSize@@AEBVQStyleOptionViewItem@@AEBVQModelIndex@@@Z
+  ?createEditor@QItemDelegate@@UEBAPEAVQWidget@@PEAV2@AEBVQStyleOptionViewItem@@AEBVQModelIndex@@@Z
+  ?setEditorData@QItemDelegate@@UEBAXPEAVQWidget@@AEBVQModelIndex@@@Z
+  ?setModelData@QItemDelegate@@UEBAXPEAVQWidget@@PEAVQAbstractItemModel@@AEBVQModelIndex@@@Z
+  ?updateEditorGeometry@QItemDelegate@@UEBAXPEAVQWidget@@AEBVQStyleOptionViewItem@@AEBVQModelIndex@@@Z
+  ?drawDisplay@QItemDelegate@@MEBAXPEAVQPainter@@AEBVQStyleOptionViewItem@@AEBVQRect@@AEBVQString@@@Z
+  ?drawDecoration@QItemDelegate@@MEBAXPEAVQPainter@@AEBVQStyleOptionViewItem@@AEBVQRect@@AEBVQPixmap@@@Z
+  ?drawFocus@QItemDelegate@@MEBAXPEAVQPainter@@AEBVQStyleOptionViewItem@@AEBVQRect@@@Z
+  ?drawCheck@QItemDelegate@@MEBAXPEAVQPainter@@AEBVQStyleOptionViewItem@@AEBVQRect@@W4CheckState@Qt@@@Z
+  ?drawBackground@QItemDelegate@@IEBAXPEAVQPainter@@AEBVQStyleOptionViewItem@@AEBVQModelIndex@@@Z
+  ?doLayout@QItemDelegate@@IEBAXAEBVQStyleOptionViewItem@@PEAVQRect@@11_N@Z
+  ?rect@QItemDelegate@@IEBA?AVQRect@@AEBVQStyleOptionViewItem@@AEBVQModelIndex@@H@Z
+  ?eventFilter@QItemDelegate@@MEAA_NPEAVQObject@@PEAVQEvent@@@Z
+  ?editorEvent@QItemDelegate@@MEAA_NPEAVQEvent@@PEAVQAbstractItemModel@@AEBVQStyleOptionViewItem@@AEBVQModelIndex@@@Z
+  ?setOptions@QItemDelegate@@IEBA?AVQStyleOptionViewItem@@AEBVQModelIndex@@AEBV2@@Z
+  ?decoration@QItemDelegate@@IEBA?AVQPixmap@@AEBVQStyleOptionViewItem@@AEBVQVariant@@@Z
+  ?selectedPixmap@QItemDelegate@@KA?AVQPixmap@@AEBV2@AEBVQPalette@@_N@Z
+  ?doCheck@QItemDelegate@@IEBA?AVQRect@@AEBVQStyleOptionViewItem@@AEBV2@AEBVQVariant@@@Z
+  ?textRectangle@QItemDelegate@@IEBA?AVQRect@@PEAVQPainter@@AEBV2@AEBVQFont@@AEBVQString@@@Z
+  ?qt_metacast@QWizard@@UEAAPEAXPEBD@Z
+  ?tr@QWizard@@SA?AVQString@@PEBD0H@Z
+  ??0QWizard@@QEAA@PEAVQWidget@@V?$QFlags@W4WindowType@Qt@@@@@Z
+  ??1QWizard@@UEAA@XZ
+  ?addPage@QWizard@@QEAAHPEAVQWizardPage@@@Z
+  ?setPage@QWizard@@QEAAXHPEAVQWizardPage@@@Z
+  ?removePage@QWizard@@QEAAXH@Z
+  ?page@QWizard@@QEBAPEAVQWizardPage@@H@Z
+  ?hasVisitedPage@QWizard@@QEBA_NH@Z
+  ?setStartId@QWizard@@QEAAXH@Z
+  ?startId@QWizard@@QEBAHXZ
+  ?currentPage@QWizard@@QEBAPEAVQWizardPage@@XZ
+  ?currentId@QWizard@@QEBAHXZ
+  ?validateCurrentPage@QWizard@@UEAA_NXZ
+  ?nextId@QWizard@@UEBAHXZ
+  ?setField@QWizard@@QEAAXAEBVQString@@AEBVQVariant@@@Z
+  ?field@QWizard@@QEBA?AVQVariant@@AEBVQString@@@Z
+  ?setWizardStyle@QWizard@@QEAAXW4WizardStyle@1@@Z
+  ?wizardStyle@QWizard@@QEBA?AW4WizardStyle@1@XZ
+  ?setOption@QWizard@@QEAAXW4WizardOption@1@_N@Z
+  ?testOption@QWizard@@QEBA_NW4WizardOption@1@@Z
+  ?setOptions@QWizard@@QEAAXV?$QFlags@W4WizardOption@QWizard@@@@@Z
+  ?setButtonText@QWizard@@QEAAXW4WizardButton@1@AEBVQString@@@Z
+  ?buttonText@QWizard@@QEBA?AVQString@@W4WizardButton@1@@Z
+  ?setButton@QWizard@@QEAAXW4WizardButton@1@PEAVQAbstractButton@@@Z
+  ?button@QWizard@@QEBAPEAVQAbstractButton@@W4WizardButton@1@@Z
+  ?setTitleFormat@QWizard@@QEAAXW4TextFormat@Qt@@@Z
+  ?titleFormat@QWizard@@QEBA?AW4TextFormat@Qt@@XZ
+  ?setSubTitleFormat@QWizard@@QEAAXW4TextFormat@Qt@@@Z
+  ?subTitleFormat@QWizard@@QEBA?AW4TextFormat@Qt@@XZ
+  ?setPixmap@QWizard@@QEAAXW4WizardPixmap@1@AEBVQPixmap@@@Z
+  ?pixmap@QWizard@@QEBA?AVQPixmap@@W4WizardPixmap@1@@Z
+  ?setSideWidget@QWizard@@QEAAXPEAVQWidget@@@Z
+  ?sideWidget@QWizard@@QEBAPEAVQWidget@@XZ
+  ?setDefaultProperty@QWizard@@QEAAXPEBD00@Z
+  ?setVisible@QWizard@@UEAAX_N@Z
+  ?sizeHint@QWizard@@UEBA?AVQSize@@XZ
+  ?currentIdChanged@QWizard@@QEAAXH@Z
+  ?helpRequested@QWizard@@QEAAXXZ
+  ?customButtonClicked@QWizard@@QEAAXH@Z
+  ?pageAdded@QWizard@@QEAAXH@Z
+  ?pageRemoved@QWizard@@QEAAXH@Z
+  ?back@QWizard@@QEAAXXZ
+  ?next@QWizard@@QEAAXXZ
+  ?setCurrentId@QWizard@@QEAAXH@Z
+  ?restart@QWizard@@QEAAXXZ
+  ?event@QWizard@@MEAA_NPEAVQEvent@@@Z
+  ?resizeEvent@QWizard@@MEAAXPEAVQResizeEvent@@@Z
+  ?paintEvent@QWizard@@MEAAXPEAVQPaintEvent@@@Z
+  ?nativeEvent@QWizard@@MEAA_NAEBVQByteArray@@PEAXPEA_J@Z
+  ?done@QWizard@@MEAAXH@Z
+  ?initializePage@QWizard@@MEAAXH@Z
+  ?cleanupPage@QWizard@@MEAAXH@Z
+  ?qt_metacast@QWizardPage@@UEAAPEAXPEBD@Z
+  ?tr@QWizardPage@@SA?AVQString@@PEBD0H@Z
+  ??0QWizardPage@@QEAA@PEAVQWidget@@@Z
+  ??1QWizardPage@@UEAA@XZ
+  ?setTitle@QWizardPage@@QEAAXAEBVQString@@@Z
+  ?title@QWizardPage@@QEBA?AVQString@@XZ
+  ?setSubTitle@QWizardPage@@QEAAXAEBVQString@@@Z
+  ?subTitle@QWizardPage@@QEBA?AVQString@@XZ
+  ?setPixmap@QWizardPage@@QEAAXW4WizardPixmap@QWizard@@AEBVQPixmap@@@Z
+  ?pixmap@QWizardPage@@QEBA?AVQPixmap@@W4WizardPixmap@QWizard@@@Z
+  ?setFinalPage@QWizardPage@@QEAAX_N@Z
+  ?isFinalPage@QWizardPage@@QEBA_NXZ
+  ?setCommitPage@QWizardPage@@QEAAX_N@Z
+  ?isCommitPage@QWizardPage@@QEBA_NXZ
+  ?setButtonText@QWizardPage@@QEAAXW4WizardButton@QWizard@@AEBVQString@@@Z
+  ?buttonText@QWizardPage@@QEBA?AVQString@@W4WizardButton@QWizard@@@Z
+  ?initializePage@QWizardPage@@UEAAXXZ
+  ?cleanupPage@QWizardPage@@UEAAXXZ
+  ?validatePage@QWizardPage@@UEAA_NXZ
+  ?isComplete@QWizardPage@@UEBA_NXZ
+  ?nextId@QWizardPage@@UEBAHXZ
+  ?completeChanged@QWizardPage@@QEAAXXZ
+  ?setField@QWizardPage@@IEAAXAEBVQString@@AEBVQVariant@@@Z
+  ?field@QWizardPage@@IEBA?AVQVariant@@AEBVQString@@@Z
+  ?registerField@QWizardPage@@IEAAXAEBVQString@@PEAVQWidget@@PEBD2@Z
+  ?wizard@QWizardPage@@IEBAPEAVQWizard@@XZ
+  ?qt_metacast@QErrorMessage@@UEAAPEAXPEBD@Z
+  ?tr@QErrorMessage@@SA?AVQString@@PEBD0H@Z
+  ??0QErrorMessage@@QEAA@PEAVQWidget@@@Z
+  ??1QErrorMessage@@UEAA@XZ
+  ?qtHandler@QErrorMessage@@SAPEAV1@XZ
+  ?showMessage@QErrorMessage@@QEAAXAEBVQString@@@Z
+  ?showMessage@QErrorMessage@@QEAAXAEBVQString@@0@Z
+  ?done@QErrorMessage@@MEAAXH@Z
+  ?changeEvent@QErrorMessage@@MEAAXPEAVQEvent@@@Z
+  ?qt_metacast@QFocusFrame@@UEAAPEAXPEBD@Z
+  ?tr@QFocusFrame@@SA?AVQString@@PEBD0H@Z
+  ??0QFocusFrame@@QEAA@PEAVQWidget@@@Z
+  ??1QFocusFrame@@UEAA@XZ
+  ?setWidget@QFocusFrame@@QEAAXPEAVQWidget@@@Z
+  ?widget@QFocusFrame@@QEBAPEAVQWidget@@XZ
+  ?event@QFocusFrame@@MEAA_NPEAVQEvent@@@Z
+  ?eventFilter@QFocusFrame@@MEAA_NPEAVQObject@@PEAVQEvent@@@Z
+  ?paintEvent@QFocusFrame@@MEAAXPEAVQPaintEvent@@@Z
+  ?initStyleOption@QFocusFrame@@MEBAXPEAVQStyleOption@@@Z
+  ?qt_metacast@QScroller@@UEAAPEAXPEBD@Z
+  ?tr@QScroller@@SA?AVQString@@PEBD0H@Z
+  ?hasScroller@QScroller@@SA_NPEAVQObject@@@Z
+  ?scroller@QScroller@@SAPEAV1@PEAVQObject@@@Z
+  ?grabGesture@QScroller@@SA?AW4GestureType@Qt@@PEAVQObject@@W4ScrollerGestureType@1@@Z
+  ?grabbedGesture@QScroller@@SA?AW4GestureType@Qt@@PEAVQObject@@@Z
+  ?ungrabGesture@QScroller@@SAXPEAVQObject@@@Z
+  ?target@QScroller@@QEBAPEAVQObject@@XZ
+  ?state@QScroller@@QEBA?AW4State@1@XZ
+  ?handleInput@QScroller@@QEAA_NW4Input@1@AEBVQPointF@@_J@Z
+  ?stop@QScroller@@QEAAXXZ
+  ?velocity@QScroller@@QEBA?AVQPointF@@XZ
+  ?finalPosition@QScroller@@QEBA?AVQPointF@@XZ
+  ?pixelPerMeter@QScroller@@QEBA?AVQPointF@@XZ
+  ?scrollerProperties@QScroller@@QEBA?AVQScrollerProperties@@XZ
+  ?setSnapPositionsX@QScroller@@QEAAXNN@Z
+  ?setSnapPositionsY@QScroller@@QEAAXNN@Z
+  ?setScrollerProperties@QScroller@@QEAAXAEBVQScrollerProperties@@@Z
+  ?scrollTo@QScroller@@QEAAXAEBVQPointF@@@Z
+  ?scrollTo@QScroller@@QEAAXAEBVQPointF@@H@Z
+  ?ensureVisible@QScroller@@QEAAXAEBVQRectF@@NN@Z
+  ?ensureVisible@QScroller@@QEAAXAEBVQRectF@@NNH@Z
+  ?resendPrepareEvent@QScroller@@QEAAXXZ
+  ?stateChanged@QScroller@@QEAAXW4State@1@@Z
+  ?scrollerPropertiesChanged@QScroller@@QEAAXAEBVQScrollerProperties@@@Z
+  ??1QScroller@@EEAA@XZ
+  ??0QScrollerProperties@@QEAA@XZ
+  ??0QScrollerProperties@@QEAA@AEBV0@@Z
+  ??1QScrollerProperties@@UEAA@XZ
+  ??8QScrollerProperties@@QEBA_NAEBV0@@Z
+  ??9QScrollerProperties@@QEBA_NAEBV0@@Z
+  ?setDefaultScrollerProperties@QScrollerProperties@@SAXAEBV1@@Z
+  ?unsetDefaultScrollerProperties@QScrollerProperties@@SAXXZ
+  ?scrollMetric@QScrollerProperties@@QEBA?AVQVariant@@W4ScrollMetric@1@@Z
+  ?setScrollMetric@QScrollerProperties@@QEAAXW4ScrollMetric@1@AEBVQVariant@@@Z
+  ??0QUndoCommand@@QEAA@PEAV0@@Z
+  ??0QUndoCommand@@QEAA@AEBVQString@@PEAV0@@Z
+  ??1QUndoCommand@@UEAA@XZ
+  ?undo@QUndoCommand@@UEAAXXZ
+  ?redo@QUndoCommand@@UEAAXXZ
+  ?text@QUndoCommand@@QEBA?AVQString@@XZ
+  ?actionText@QUndoCommand@@QEBA?AVQString@@XZ
+  ?setText@QUndoCommand@@QEAAXAEBVQString@@@Z
+  ?isObsolete@QUndoCommand@@QEBA_NXZ
+  ?setObsolete@QUndoCommand@@QEAAX_N@Z
+  ?id@QUndoCommand@@UEBAHXZ
+  ?mergeWith@QUndoCommand@@UEAA_NPEBV1@@Z
+  ?childCount@QUndoCommand@@QEBAHXZ
+  ?child@QUndoCommand@@QEBAPEBV1@H@Z
+  ?qt_metacast@QUndoStack@@UEAAPEAXPEBD@Z
+  ?tr@QUndoStack@@SA?AVQString@@PEBD0H@Z
+  ??0QUndoStack@@QEAA@PEAVQObject@@@Z
+  ??1QUndoStack@@UEAA@XZ
+  ?clear@QUndoStack@@QEAAXXZ
+  ?push@QUndoStack@@QEAAXPEAVQUndoCommand@@@Z
+  ?canUndo@QUndoStack@@QEBA_NXZ
+  ?canRedo@QUndoStack@@QEBA_NXZ
+  ?undoText@QUndoStack@@QEBA?AVQString@@XZ
+  ?redoText@QUndoStack@@QEBA?AVQString@@XZ
+  ?count@QUndoStack@@QEBAHXZ
+  ?index@QUndoStack@@QEBAHXZ
+  ?text@QUndoStack@@QEBA?AVQString@@H@Z
+  ?createUndoAction@QUndoStack@@QEBAPEAVQAction@@PEAVQObject@@AEBVQString@@@Z
+  ?createRedoAction@QUndoStack@@QEBAPEAVQAction@@PEAVQObject@@AEBVQString@@@Z
+  ?isActive@QUndoStack@@QEBA_NXZ
+  ?isClean@QUndoStack@@QEBA_NXZ
+  ?cleanIndex@QUndoStack@@QEBAHXZ
+  ?beginMacro@QUndoStack@@QEAAXAEBVQString@@@Z
+  ?endMacro@QUndoStack@@QEAAXXZ
+  ?setUndoLimit@QUndoStack@@QEAAXH@Z
+  ?undoLimit@QUndoStack@@QEBAHXZ
+  ?command@QUndoStack@@QEBAPEBVQUndoCommand@@H@Z
+  ?setClean@QUndoStack@@QEAAXXZ
+  ?resetClean@QUndoStack@@QEAAXXZ
+  ?setIndex@QUndoStack@@QEAAXH@Z
+  ?undo@QUndoStack@@QEAAXXZ
+  ?redo@QUndoStack@@QEAAXXZ
+  ?setActive@QUndoStack@@QEAAX_N@Z
+  ?indexChanged@QUndoStack@@QEAAXH@Z
+  ?cleanChanged@QUndoStack@@QEAAX_N@Z
+  ?canUndoChanged@QUndoStack@@QEAAX_N@Z
+  ?canRedoChanged@QUndoStack@@QEAAX_N@Z
+  ?undoTextChanged@QUndoStack@@QEAAXAEBVQString@@@Z
+  ?redoTextChanged@QUndoStack@@QEAAXAEBVQString@@@Z
+  ?qt_metacast@QUndoView@@UEAAPEAXPEBD@Z
+  ?tr@QUndoView@@SA?AVQString@@PEBD0H@Z
+  ??0QUndoView@@QEAA@PEAVQWidget@@@Z
+  ??0QUndoView@@QEAA@PEAVQUndoStack@@PEAVQWidget@@@Z
+  ??1QUndoView@@UEAA@XZ
+  ?stack@QUndoView@@QEBAPEAVQUndoStack@@XZ
+  ?setEmptyLabel@QUndoView@@QEAAXAEBVQString@@@Z
+  ?emptyLabel@QUndoView@@QEBA?AVQString@@XZ
+  ?setCleanIcon@QUndoView@@QEAAXAEBVQIcon@@@Z
+  ?cleanIcon@QUndoView@@QEBA?AVQIcon@@XZ
+  ?setStack@QUndoView@@QEAAXPEAVQUndoStack@@@Z
   ?qt_metacast@QProxyStyle@@UEAAPEAXPEBD@Z
   ?tr@QProxyStyle@@SA?AVQString@@PEBD0H@Z
   ??0QProxyStyle@@QEAA@PEAVQStyle@@@Z
