@@ -234,9 +234,31 @@ powershell -File %TEMP%\codemaker\regen_once.ps1        # 单次生成(排查用
 ### 两个 PoC 合起来说明的架构结论
 **信号层用"moc 元数据 + 单一转发器"(PoC #1),虚函数层用"生成的 C++ wrapper + 单一托管入口"(PoC #2)** —— 两条都不再依赖 CppSharp 的运行期 thunk/逐信号 glue,且都验证过。这与"最终用不用 CppSharp"无关,是产品可以独立落地的最小骨架。
 
+## 架构 PoC #3:所有权/生命周期(已验证成功)
+**动机**:这是唯一可能推翻架构的未知——.NET 的 GC 是**非确定**的,而 Qt 的所有权是 parent-child + 引用计数;最危险的失效模式是"Qt 还在用这个对象,托管 wrapper 已被终结并释放"。
+
+**PoC**(`native/QtSharp_ownership.cpp` + `testbind/Ownership.cs`,`testapp own`)验证三条规则:
+1. **Qt 拥有的对象**:托管侧只存 `IntPtr`(**不用 SafeHandle、不加终结器**),native 对象由 Qt 的 parent-child 持有;
+2. **托管拥有**的对象:用 `SafeHandle`(**恰好释放一次**);
+3. 两者都用 `QObject::destroyed` 回调把托管 wrapper 标记失效,之后访问**抛 `ObjectDisposedException` 而不是崩溃**(等价 PySide 对已删除 C++ 对象抛 `RuntimeError`)。
+
+**验证结果(11 项全 PASS)**:删除父对象会连带销毁子对象且其 wrapper 失效、访问抛异常;`GC.Collect()+WaitForPendingFinalizers()` 后 Qt 拥有的对象**仍然存活**且能从 native 侧正常使用;托管拥有的对象 `Dispose` **恰好一次**、二次 `Dispose` 是 no-op(不 double free)、被遗弃对象的**终结器恰好释放一次**。
+
+**产品注意点(已写进代码注释)**:`SafeHandle` 的 `ReleaseHandle` 在**终结器线程**执行,真实 QObject 应改为 `deleteLater()`/在所属线程删除,否则违反 Qt 的线程亲和。
+
+### 三个 PoC 合起来的结论(产品骨架已全部验证)
+| 层 | 机制 | 状态 |
+|---|---|---|
+| 信号 | moc 元数据 + 单一 `QSlotObjectBase` 转发器 | ✅ |
+| 虚函数 | 生成的 C++ wrapper + 单一托管入口(`[UnmanagedCallersOnly]`) | ✅ |
+| 所有权 | Qt-owned 弱引用 + managed-owned `SafeHandle` + `destroyed` 失效 | ✅ |
+| ABI | 由 C++ 编译器负责(不手写 sret/thunk) | ✅(PoC #2 间接证明) |
+
+也就是说:**"生成 C++ wrapper + 一个薄 .NET 运行时"这套架构的三根支柱都已实测可行**,剩下的都是工程量(模型提取器、codegen、模块覆盖、打包),而不是未知风险。
+
 ## 下一 agent 可继续的方向
 1. **继续按上面的批次补绑定 + 移植示例**,每批完成后 `all` 冒烟。
-2. **落地通用信号派发**(PoC 已成功,见上节):把 `GeneratedSignals.cs` 的逐信号 glue 换成 `MetaSignal` 的 moc 元数据派发,可一次性解决重载/无名参数/QPrivateSignal/任意参数类型问题。下一个 PoC 建议做 `[UnmanagedCallersOnly]` 虚函数派发,验证能否替代现在的 vtable thunk(并验证 sret 问题是否消失)。
-3. **提交整理**:本轮已提交 `Expand bindings…`、`Bind event types…`、`Port Menus and Basic Layouts…`、`PoC: generic moc-driven signal dispatcher`。
+2. **架构三根支柱已验证**(见 PoC #1/#2/#3):信号= moc 元数据 + 单一转发器;虚函数= 生成的 C++ wrapper + `[UnmanagedCallersOnly]`;所有权= Qt-owned 弱引用 + managed-owned `SafeHandle` + `destroyed` 失效。产品化下一步是**把 model 抽出来**(clang 提取器 → 入库的规范化模型,codegen 变成纯函数,CI 加"重新生成→diff 为空"门禁),然后按该模型重新生成 C# + C++ wrapper。
+3. **提交整理**:本轮已提交 `Expand bindings…`、`Bind event types…`、`Port Menus and Basic Layouts…`、三个 PoC 及其 CONTEXT 记录。
 4. **优先修 `QPainter` 相关绑定**(gradients + 确认 QPainterPath 方法),它一次解锁 9 个 painting 示例,性价比最高。
 5. 复现/验证任何 native 崩溃:用 `native/CrashTracer.cpp`(VEH+StackWalk64)+ `tools/disasm.py`(capstone)。
