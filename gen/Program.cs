@@ -62,6 +62,7 @@ class QtLibrary : ILibrary
         core.Headers.Add("qurl.h");
         core.Headers.Add("qcoreapplication.h");
         core.Headers.Add("qeventloop.h");
+        core.Headers.Add("qmimedata.h");
         core.Headers.Add("qtimer.h");
         core.Headers.Add("qregularexpression.h");
         core.Headers.Add("qstringlist.h");
@@ -242,6 +243,7 @@ class QtLibrary : ILibrary
 
     static readonly string[] RootNames = {
         "QApplication", "QWidget", "QEvent", "QPaintEvent", "QMouseEvent", "QKeyEvent", "QResizeEvent", "QMoveEvent", "QCloseEvent", "QFocusEvent", "QWheelEvent", "QShowEvent", "QHideEvent", "QTimerEvent", "QChildEvent", "QEnterEvent",
+        "QContextMenuEvent", "QInputEvent", "QHoverEvent", "QDragEnterEvent", "QDragMoveEvent", "QDragLeaveEvent", "QDropEvent", "QHelpEvent", "QActionEvent", "QMimeData",
         "QString", "QStringList",
         "QPainter", "QTimer", "QTime",
         "QMainWindow", "QDialog", "QFrame", "QGroupBox", "QLabel", "QLCDNumber",
