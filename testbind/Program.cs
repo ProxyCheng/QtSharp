@@ -15,6 +15,11 @@ static class Program
                 return MetaSignalTest.Run();
             }
 
+            if (args.Length > 0 && args[0] == "vdispatch")
+            {
+                return VirtualDispatchTest.Run();
+            }
+
             string which = args.Length > 0 ? args[0].ToLowerInvariant() : "all";
             QWidget window = which switch
             {
