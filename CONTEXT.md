@@ -191,8 +191,30 @@ powershell -File %TEMP%\codemaker\regen_once.ps1        # 单次生成(排查用
 6. **tools**(completer/regexp/settingseditor/undoframework 已具备大部分;plugandpaint 需插件机制,不可行)、**touch**(需 `QTouchEvent`/`QEventPoint`)、**gestures**(需 `QGesture`)、**draganddrop**(`QMimeData`/QUrl 列表,部分可行)。
 7. **不可行**:RHI 两个(需 QRhi + `.qsb` shader blob)、Window Embedding(需嵌入非 Qt 窗口)、quartz/other 平台示例、QtStateMachine(模块未安装)、QtSvg/PrintSupport(运行时不带 DLL)。
 
+## 架构 PoC:通用 moc 信号派发(已验证成功)
+**动机**:现有 `QtSharp_signals.cpp` 是"扫头文件 → 每个信号生成一段编译期 C++ glue → `static_cast<void (Class::*)(...)>` 定位成员指针",因此**重载信号有歧义、`QPrivateSignal` 是 private 无法命名、无名参数解析不出**。PySide 之所以没这些问题,是因为它走 moc 元数据 + 通用 metacall。
+
+**PoC**(`native/QtSharp_meta.cpp` + `testbind/MetaSignal.cs` + `testbind/MetaSignalTest.cs`,`testapp metasig`):
+- 用一个 `QtPrivate::QSlotObjectBase` 子类作**唯一转发器**,通过**私有 API** `QObjectPrivate::connect(sender, signal_index, slotObj, type)` 挂接;
+- 信号在**运行期**由 `sender->metaObject()->indexOfSignal(normalizedSignature)` 定位,类型 id 取自 `QMetaMethod::parameterMetaType(i).id()`,实参 `void**`(args[0] 是返回槽)直接交给托管侧按 QMetaType id 解包;
+- 需要私有头:`-I"%QT_INC%\QtCore\6.11.0" -I"%QT_INC%\QtCore\6.11.0\QtCore"`(已加进 `build_glue.bat`)。
+
+**验证结果(全部 PASS)**:int / QString / bool 参数投递;**头文件里无名参数**(`QSpinBox::valueChanged(int)`)正常;**`QCompleter::activated` 两个重载解析成不同 index(4/5)并各自可连**;伪造签名被拒;`QTimer::timeout` 可连。
+
+**关键发现(直接影响架构决策)**:
+```
+[info] QTimer signal(0) = destroyed(QObject*)
+[info] QTimer signal(1) = destroyed()
+[info] QTimer signal(2) = objectNameChanged(QString)
+[info] QTimer signal(4) = timeout()
+```
+**moc 在运行期签名里把 `QPrivateSignal` 标记剥掉了**(`timeout(QPrivateSignal)` → `timeout()`),而且重载在元数据里就是两条不同签名。也就是说:我们之前拼命绕的那个"命名不了 QPrivateSignal"的问题,**在 moc 元数据层面根本不存在**——这套通用派发天然解决它。
+
+**结论**:产品的信号层应当走"moc 元数据 + 单一转发器",而不是逐信号生成 glue;这条路线已被 PoC 证明可行,且与最终是否换掉 CppSharp 无关,值得优先落地。
+
 ## 下一 agent 可继续的方向
 1. **继续按上面的批次补绑定 + 移植示例**,每批完成后 `all` 冒烟。
-2. **提交整理**:本轮已提交 `Expand bindings…`、`Bind event types…`、`Port Menus and Basic Layouts…`;后续继续分组提交。
-3. **优先修 `QPainter` 相关绑定**(gradients + 确认 QPainterPath 方法),它一次解锁 9 个 painting 示例,性价比最高。
-4. 复现/验证任何 native 崩溃:用 `native/CrashTracer.cpp`(VEH+StackWalk64)+ `tools/disasm.py`(capstone)。
+2. **落地通用信号派发**(PoC 已成功,见上节):把 `GeneratedSignals.cs` 的逐信号 glue 换成 `MetaSignal` 的 moc 元数据派发,可一次性解决重载/无名参数/QPrivateSignal/任意参数类型问题。下一个 PoC 建议做 `[UnmanagedCallersOnly]` 虚函数派发,验证能否替代现在的 vtable thunk(并验证 sret 问题是否消失)。
+3. **提交整理**:本轮已提交 `Expand bindings…`、`Bind event types…`、`Port Menus and Basic Layouts…`、`PoC: generic moc-driven signal dispatcher`。
+4. **优先修 `QPainter` 相关绑定**(gradients + 确认 QPainterPath 方法),它一次解锁 9 个 painting 示例,性价比最高。
+5. 复现/验证任何 native 崩溃:用 `native/CrashTracer.cpp`(VEH+StackWalk64)+ `tools/disasm.py`(capstone)。
