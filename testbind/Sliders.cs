@@ -134,9 +134,9 @@ public class SlidersWindow : QWidget
         valueSpinBox.SingleStep = 1;
 
         slidersGroup.ValueChanged += v => valueSpinBox.Value = v;
-        valueSpinBox.ValueChangedSignal.Connect(() => slidersGroup.SetValue(valueSpinBox.Value));
-        minimumSpinBox.ValueChangedSignal.Connect(() => slidersGroup.SetMinimum(minimumSpinBox.Value));
-        maximumSpinBox.ValueChangedSignal.Connect(() => slidersGroup.SetMaximum(maximumSpinBox.Value));
+        valueSpinBox.ValueChangedSignal.Connect(_ => slidersGroup.SetValue(valueSpinBox.Value));
+        minimumSpinBox.ValueChangedSignal.Connect(_ => slidersGroup.SetMinimum(minimumSpinBox.Value));
+        maximumSpinBox.ValueChangedSignal.Connect(_ => slidersGroup.SetMaximum(maximumSpinBox.Value));
         invertedAppearance.ToggledSignal.Connect(b => slidersGroup.InvertAppearance(b));
         invertedKeyBindings.ToggledSignal.Connect(b => slidersGroup.InvertKeyBindings(b));
 
