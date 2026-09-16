@@ -1,0 +1,38 @@
+{
+  "formatVersion": 1,
+  "qtVersion": "6.11.0",
+  "namespace": "QtSharp.Api",
+  "classes": [
+    {
+      "name": "QObject",
+      "base": null,
+      "isAbstract": false,
+      "methods": [
+        { "name": "blockSignals", "returnType": "bool", "parameters": [{ "name": "b", "type": "bool" }] },
+        { "name": "deleteLater", "returnType": "void", "parameters": [] },
+        { "name": "dumpObjectInfo", "returnType": "void", "parameters": [] },
+        { "name": "dumpObjectTree", "returnType": "void", "parameters": [] },
+        { "name": "installEventFilter", "returnType": "void", "parameters": [{ "name": "filterObj", "type": "QObject*" }] },
+        { "name": "isQmlExposed", "returnType": "bool", "parameters": [] },
+        { "name": "isQuickItemType", "returnType": "bool", "parameters": [] },
+        { "name": "isWidgetType", "returnType": "bool", "parameters": [] },
+        { "name": "isWindowType", "returnType": "bool", "parameters": [] },
+        { "name": "killTimer", "returnType": "void", "parameters": [{ "name": "id", "type": "int" }] },
+        { "name": "objectName", "returnType": "QString", "parameters": [] },
+        { "name": "parent", "returnType": "QObject*", "parameters": [] },
+        { "name": "removeEventFilter", "returnType": "void", "parameters": [{ "name": "obj", "type": "QObject*" }] },
+        { "name": "setObjectName", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "setParent", "returnType": "void", "parameters": [{ "name": "parent", "type": "QObject*" }] },
+        { "name": "signalsBlocked", "returnType": "bool", "parameters": [] }
+      ],
+      "virtuals": [
+        { "name": "customEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QEvent*" }] },
+        { "name": "event", "returnType": "bool", "parameters": [{ "name": "event", "type": "QEvent*" }] },
+        { "name": "eventFilter", "returnType": "bool", "parameters": [{ "name": "watched", "type": "QObject*" }, { "name": "event", "type": "QEvent*" }] }
+      ],
+      "signals": [
+        { "name": "objectNameChanged", "parameters": [{ "name": "objectName", "type": "QString" }] }
+      ]
+    }
+  ]
+}

@@ -34,6 +34,7 @@ testbind/QtSharp.cs
 testbind/QtSharp.Core.cs
 testbind/QtSharp.Gui.cs
 testbind/QtSharp.Widgets.cs
+testbind/QtSharp.Api.cs
 testbind/Std.cs
 testbind/GeneratedSignals.cs
 
