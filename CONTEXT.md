@@ -256,6 +256,25 @@ powershell -File %TEMP%\codemaker\regen_once.ps1        # 单次生成(排查用
 
 也就是说:**"生成 C++ wrapper + 一个薄 .NET 运行时"这套架构的三根支柱都已实测可行**,剩下的都是工程量(模型提取器、codegen、模块覆盖、打包),而不是未知风险。
 
+## 产品化第 1 步:规范化 model + 确定性 codegen(已跑通)
+**目标**:让 codegen 不再是"读原始头文件 + 一堆后处理补丁",而是**某个入库产物的纯函数**,这样"生成器不稳定"从根上消失,并且能加 CI 门禁。
+
+**产出**:
+- `model/qtsharp.api.json`(**入库**,第一版只有 `QObject`):字段 `formatVersion/qtVersion/namespace/classes[]`,每个类有 `methods[]`/`virtuals[]`/`signals[]`;方法含 `name(原始 C++ 名)/returnType/parameters[]`。排序固定 → **字节可复现**。
+- `gen/ApiModel.cs`(`extract` 模式):从 clang/CppSharp AST 提取并**规范化**:
+  - 用 `OriginalName`(C++ 名)而不是 CppSharp 改名后的 `Name`;
+  - **不依赖 `IsGenerated`**(旧管线会按自己的理由裁掉方法),改用我们自己的类型白名单判定;
+  - 处理**按值返回**(AST 里表现为隐藏的 `IndirectReturnType` 参数,真实类型在 `OriginalReturnType`);
+  - 处理**引用**(`PointerType` + `LVReference` 修饰);
+  - property 的 getter/setter 要从 `c.Properties` 取回(旧管线把 properties 全部 ignore);
+  - 忽略 `QPrivateSignal` 参数;剔除 signal 名以免混进 method 列表;按 `(name,paramTypes)` 去重。
+- `gen/ApiCodeGen.cs`(`codegen` 模式):model → **C# 绑定 + C++ wrapper + P/Invoke**,并转义 C# 关键字参数名(如 `event` → `@event`)。
+- `native/QtSharpApiRuntime.{h,cpp}`(**手写运行时**,随绑定发布):通用 moc 信号转发器(PoC #1)+ QString 桥。
+- `build_api.bat` → `out/api/QtSharp.Api.dll`;`tools/regen-api.ps1` = 提取 → **model diff 门禁** → codegen → **两次生成一致性门禁** → 编译原生 → 编译 C# → 跑 `testapp api`。
+- 验证:`testapp api` 全 PASS(生成的访问器、生成的信号属性经 moc 派发投递、**native 调用生成的虚函数命中宿主重写**);15 个旧 demo 与三个 PoC 均无回归。
+
+**意义**:这条链路就是产品骨架的缩影 —— "model(入库) → 纯函数 codegen → 生成的 C# + C++ wrapper → 薄运行时"。下一步是扩大 model 覆盖面(更多类/类型/模块)并让旧 demo 逐步切到新链路。
+
 ## 下一 agent 可继续的方向
 1. **继续按上面的批次补绑定 + 移植示例**,每批完成后 `all` 冒烟。
 2. **架构三根支柱已验证**(见 PoC #1/#2/#3):信号= moc 元数据 + 单一转发器;虚函数= 生成的 C++ wrapper + `[UnmanagedCallersOnly]`;所有权= Qt-owned 弱引用 + managed-owned `SafeHandle` + `destroyed` 失效。产品化下一步是**把 model 抽出来**(clang 提取器 → 入库的规范化模型,codegen 变成纯函数,CI 加"重新生成→diff 为空"门禁),然后按该模型重新生成 C# + C++ wrapper。
