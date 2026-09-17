@@ -722,6 +722,104 @@ class Program
         public List<SignalParamInfo> Params = new();
     }
 
+    // One Q_PROPERTY declaration: the Qt name plus the accessors it is sugar over.
+    public class PropertyInfo
+    {
+        public string ClassName;
+        public string Name;
+        public string Getter;
+        public string Setter;
+        public string Notify;
+        public string HeaderFile;
+        public string ModuleDir;
+    }
+
+    // Q_PROPERTY(Type name READ getter WRITE setter NOTIFY signal ...) is scanned out of the
+    // header text, like the signals: the declaration can span several lines and Qt's own metadata
+    // is not visible to the model at this point. The scan is a pure function of the header.
+    internal static List<PropertyInfo> ScanProperties(string dir, string header)
+    {
+        var result = new List<PropertyInfo>();
+        var path = Path.Combine(QtLibrary.QtIncludeRoot, dir, header);
+        if (!File.Exists(path))
+            return result;
+        var text = File.ReadAllText(path);
+        const string macro = "Q_PROPERTY(";
+        int search = 0;
+        while (true)
+        {
+            int at = text.IndexOf(macro, search, StringComparison.Ordinal);
+            if (at < 0)
+                break;
+            search = at + 1;
+
+            // Balance the parentheses: a declaration may carry nested parentheses (default values)
+            // and run over several lines.
+            int depth = 0, end = -1;
+            for (int i = at + macro.Length - 1; i < text.Length; i++)
+            {
+                if (text[i] == '(')
+                    depth++;
+                else if (text[i] == ')')
+                {
+                    depth--;
+                    if (depth == 0)
+                    {
+                        end = i;
+                        break;
+                    }
+                }
+            }
+            if (end < 0)
+                continue;
+
+            var className = EnclosingClass(text, at);
+            if (className == null)
+                continue;
+            var body = text.Substring(at + macro.Length, end - at - macro.Length);
+            var tokens = body.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            if (tokens.Length < 2)
+                continue;
+            // The type may be spelled with a detached star (QAbstractItemModel *sourceModel), and
+            // then the pointer sign is glued to the name.
+            var info = new PropertyInfo
+            {
+                ClassName = className,
+                Name = tokens[1].TrimStart('*', '&'),
+            };
+            for (int i = 2; i + 1 < tokens.Length; i++)
+            {
+                switch (tokens[i])
+                {
+                    case "READ": info.Getter = tokens[i + 1]; break;
+                    case "WRITE": info.Setter = tokens[i + 1]; break;
+                    case "NOTIFY": info.Notify = tokens[i + 1]; break;
+                }
+            }
+            info.HeaderFile = header;
+            info.ModuleDir = dir;
+            result.Add(info);
+        }
+        return result;
+    }
+
+    // The class a Q_PROPERTY belongs to: the nearest class declaration before it. Qt always
+    // declares a class's properties inside its body.
+    static string EnclosingClass(string text, int position)
+    {
+        string found = null;
+        var regex = new System.Text.RegularExpressions.Regex(
+            @"^\s*(?:class|struct)\s+(?:[A-Za-z_][A-Za-z0-9_]*_EXPORT\s+)?([A-Za-z_]\w*)",
+            System.Text.RegularExpressions.RegexOptions.Multiline);
+        foreach (System.Text.RegularExpressions.Match m in regex.Matches(text))
+        {
+            if (m.Index >= position)
+                break;
+            found = m.Groups[1].Value;
+        }
+        return found;
+    }
+
     static readonly (string dir, string[] headers)[] SignalModules =
     {
         ("QtCore", new[] { "qobject.h", "qcoreapplication.h", "qeventloop.h", "qfile.h", "qfileinfo.h", "qsettings.h", "qabstractitemmodel.h", "qitemselectionmodel.h", "qsortfilterproxymodel.h", "qstringlistmodel.h", "qprocess.h", "qtimer.h", "qabstractanimation.h", "qpropertyanimation.h" }),
