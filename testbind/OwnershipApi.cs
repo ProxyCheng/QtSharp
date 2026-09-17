@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QtSharp.Api;
 
 // Ownership on the new pipeline: who is allowed to delete a native object.
@@ -162,6 +163,48 @@ public static class ApiOwnershipDemo
         sceneOwner.Dispose();           // -> the scene -> its items
         Check(ThrowsOnUse(() => sceneItem.Rect()), "an item whose scene died throws on use");
         Check(ThrowsOnUse(() => scene.Items()), "and so does the scene it belonged to");
+
+        // ---------------------------------------------------------------- the release path
+        // "Does Qt own this object?" is a question about the object, not about the class: the
+        // generated destructor asks Qt (parent()) and the wrapper only releases what it created.
+        // That is what lets a class whose base is QObject directly - QTimer, QThread, QSharedMemory,
+        // QUndoStack - have a Dispose at all. It used to be decided per class, by a rule that
+        // answered "no release path" for exactly the classes a program creates and should release.
+        var timer = new QTimer();
+        bool timerDestroyed = false;
+        ApiRuntime.Connect(timer.Handle, "destroyed()", _ => timerDestroyed = true);
+        Check(timer.Parent() == null, "a QTimer we create has no parent");
+        timer.Dispose();
+        Check(timerDestroyed && ThrowsOnUse(() => timer.Interval.ToString()),
+            "disposing a QObject we created really deletes it (Qt said destroyed)");
+
+        // The same class with a parent belongs to that parent, and Dispose leaves it there.
+        var owner = new QObject();
+        var ownedTimer = new QTimer(owner);
+        bool ownedDestroyed = false;
+        ApiRuntime.Connect(ownedTimer.Handle, "destroyed()", _ => ownedDestroyed = true);
+        int childrenBeforeDispose = owner.Children().Length;
+        ownedTimer.Dispose();
+        Check(!ownedDestroyed && owner.Children().Length == childrenBeforeDispose,
+            $"a QTimer with a parent survives Dispose (parent still has {owner.Children().Length} child(ren))");
+
+        // The same rule for a document: Qt only owns it when the editor is its QObject parent,
+        // which is why the C++ API takes one (`new QTextDocument(edit)`).
+        var editor = new QTextEdit();
+        var document = new QTextDocument(editor);
+        document.SetPlainText("owned by the editor");
+        editor.SetDocument(document);
+        document.Dispose();
+        Check(editor.ToPlainText() == "owned by the editor",
+            $"a document whose parent is the editor survives Dispose (got '{editor.ToPlainText()}')");
+
+        // And the case that has no parent to hide behind is marked in the model instead: the
+        // clipboard (and QDrag) adopt a QMimeData without reparenting it, so the binding never
+        // releases one - a leak rather than a use-after-free.
+        var mime = new QMimeData();
+        mime.SetText("payload");
+        Check(!mime.GetType().GetInterfaces().Any(i => i.Name == "IDisposable"),
+            "QMimeData is deliberately not disposable (the clipboard owns it once it is set)");
 
         Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
         return failures == 0 ? 0 : 1;
