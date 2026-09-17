@@ -7,7 +7,7 @@ public sealed class ApiDerivedObject : QObject
 {
     public int FilterCalls;
 
-    public override bool EventFilter(QObject watched, IntPtr eventPtr)
+    public override bool EventFilter(QObject watched, QEvent e)
     {
         FilterCalls++;
         return true;
