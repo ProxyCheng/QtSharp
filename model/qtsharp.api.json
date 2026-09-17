@@ -552,7 +552,7 @@
       "isAbstract": true,
       "subclassable": true,
       "subclassCtor": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -583,7 +583,7 @@
       "isAbstract": true,
       "subclassable": true,
       "subclassCtor": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -780,7 +780,7 @@
       "isAbstract": true,
       "subclassable": true,
       "subclassCtor": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -1075,7 +1075,7 @@
       "isAbstract": true,
       "subclassable": true,
       "subclassCtor": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -1100,7 +1100,7 @@
       "bases": ["QObject"],
       "isAbstract": true,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -1135,7 +1135,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "text", "type": "QString" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
@@ -1238,7 +1238,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*" }] }
       ],
@@ -1627,7 +1627,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -2397,7 +2397,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": false,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -3051,7 +3051,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "model", "type": "QAbstractItemModel*" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
@@ -3171,7 +3171,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -3348,7 +3348,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -4058,7 +4058,7 @@
       "bases": ["QValidator"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "bottom", "type": "double" }, { "name": "top", "type": "double" }, { "name": "decimals", "type": "int" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
@@ -4331,7 +4331,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -4871,7 +4871,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "paths", "type": "QStringList" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
@@ -5427,7 +5427,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -6084,7 +6084,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -6613,7 +6613,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "sceneRect", "type": "QRectF" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
@@ -7747,7 +7747,7 @@
       "bases": ["QObject", "QIODeviceBase"],
       "isAbstract": true,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -8361,7 +8361,7 @@
       "bases": ["QValidator"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "bottom", "type": "int" }, { "name": "top", "type": "int" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
@@ -8499,7 +8499,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "model", "type": "QAbstractItemModel*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "model", "type": "QAbstractItemModel*" }, { "name": "parent", "type": "QObject*" }] }
@@ -8999,7 +8999,7 @@
       "bases": ["QObject", "QLayoutItem"],
       "isAbstract": true,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -9109,7 +9109,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "fileName", "type": "QString" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
@@ -10872,7 +10872,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "device", "type": "QIODevice*" }] },
@@ -11583,7 +11583,7 @@
       "bases": ["QGesture"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -11726,7 +11726,7 @@
       "bases": ["QGesture"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -12090,7 +12090,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "fileName", "type": "QString" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
@@ -13283,7 +13283,7 @@
       "bases": ["QValidator"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "re", "type": "QRegularExpression" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
@@ -13452,7 +13452,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -13669,7 +13669,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": false,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -13763,7 +13763,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "key", "type": "QNativeIpcKey" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
@@ -13805,7 +13805,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*" }] },
         { "parameters": [{ "name": "key", "type": "QKeySequence" }, { "name": "parent", "type": "QObject*" }, { "name": "member", "type": "char*", "optional": true, "default": "null" }, { "name": "ambiguousMember", "type": "char*", "optional": true, "default": "null" }, { "name": "context", "type": "Qt::ShortcutContext", "optional": true, "default": "Qt.ShortcutContext.WindowShortcut" }] },
@@ -13889,7 +13889,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -14135,7 +14135,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "arg0", "type": "QSocketNotifier::Type" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "socket", "type": "long long" }, { "name": "arg1", "type": "QSocketNotifier::Type" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
@@ -14926,7 +14926,7 @@
       "bases": ["QObject"],
       "isAbstract": true,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -15041,7 +15041,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -15887,7 +15887,7 @@
       "bases": ["QGesture"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -15916,7 +15916,7 @@
       "bases": ["QObject"],
       "isAbstract": true,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -15999,7 +15999,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "icon", "type": "QIcon" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
@@ -16534,7 +16534,7 @@
       "bases": ["QGesture"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -16561,7 +16561,7 @@
       "bases": ["QGesture"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -16738,7 +16738,7 @@
       "bases": ["QTextObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -17038,7 +17038,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "text", "type": "QString" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
@@ -17470,7 +17470,7 @@
       "bases": ["QTextObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "doc", "type": "QTextDocument*" }] }
       ],
@@ -17791,7 +17791,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -18079,7 +18079,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -18130,7 +18130,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -18295,7 +18295,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -18644,7 +18644,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -18980,7 +18980,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -19021,7 +19021,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
@@ -19285,7 +19285,7 @@
       "bases": ["QObject"],
       "isAbstract": true,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
       ],
       "methods": [
@@ -19702,7 +19702,7 @@
       "bases": ["QObject", "QPaintDevice"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QWidget*", "optional": true, "default": "null" }, { "name": "f", "type": "Qt::WindowFlags", "optional": true, "default": "0" }] }
       ],
@@ -20128,7 +20128,7 @@
       "bases": ["QObject"],
       "isAbstract": false,
       "subclassable": true,
-      "owned": false,
+      "owned": true,
       "constructors": [
         { "parameters": [{ "name": "screen", "type": "QScreen*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "parent", "type": "QWindow*" }] }

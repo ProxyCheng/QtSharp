@@ -96,12 +96,10 @@ public static partial class ApiModel
             .ToList();
         Console.WriteLine($"[model2] scanned {rootProperties.Count} Q_PROPERTY declaration(s)");
 
-        // A chunk is one header's roots. It matters for the "owned" rule, which is a relation
-        // between classes of the same chunk in the CppSharp extractor.
+        // One group per header. The grouping only makes the log readable now (the "owned" rule
+        // that used to depend on it is gone); the class *order* in the model is sorted anyway.
         foreach (var chunk in ActiveRoots.GroupBy(r => (r.Module, r.Header)))
         {
-            var chunkClasses = chunk.Select(r => r.Class).ToHashSet(StringComparer.Ordinal);
-
             // The whole chunk's base lists have to be known before any class is rendered: a chain
             // may be walked in either direction.
             foreach (var root in chunk)
@@ -116,7 +114,7 @@ public static partial class ApiModel
                     Console.WriteLine($"[model2] WARNING: root class {root.Class} was not found in the parsed headers");
                     continue;
                 }
-                part.Classes[root.Class] = ClassJson(classRecord, root, index2, chunkClasses, signals, allSignalNames, rootProperties, part.Enums);
+                part.Classes[root.Class] = ClassJson(classRecord, root, index2, signals, allSignalNames, rootProperties, part.Enums);
             }
             Console.WriteLine($"[model2]   {chunk.Key.Module}/{chunk.Key.Header}: {chunk.Count()} class(es)");
         }
@@ -899,7 +897,7 @@ public static partial class ApiModel
         public List<ParamFact> Visible = new();
     }
 
-    static string ClassJson(CXCursor record, Root root, ClangIndex index, HashSet<string> chunkClasses,
+    static string ClassJson(CXCursor record, Root root, ClangIndex index,
                             List<Program.SignalInfo> signals, HashSet<string> allSignalNames,
                             List<Program.PropertyInfo> properties,
                             Dictionary<string, EnumEntry> enums)
@@ -1022,7 +1020,7 @@ public static partial class ApiModel
                             && CanSubclassFromManaged(className, index, new HashSet<string>(StringComparer.Ordinal));
         if (subclassCtor)
             body.Append("      \"subclassCtor\": true,\n");
-        body.Append($"      \"owned\": {(OwnedOf(root, chunkClasses) ? "true" : "false")},\n");
+        body.Append($"      \"owned\": {(OwnedOf(root) ? "true" : "false")},\n");
         var fields = FieldsOf(record);
         if (fields.Count > 0)
         {
@@ -1081,28 +1079,22 @@ public static partial class ApiModel
     // either way along the chain.
     static readonly Dictionary<string, List<string>> ClassBases = new(StringComparer.Ordinal);
 
-    // Qt owns everything under QObject; a class the model marked "owned" and that is not in
-    // QObject's chunk may be deleted by the managed side.
-    static bool OwnedOf(Root root, HashSet<string> chunkClasses)
-        => root.Owned && !DerivesFromQObject(root.Class, chunkClasses);
-
-    static bool DerivesFromQObject(string className, HashSet<string> chunkClasses)
-    {
-        if (className == "QObject")
-            return true;
-        var seen = new HashSet<string>(StringComparer.Ordinal);
-        for (var current = className; current != null && seen.Add(current);)
-        {
-            if (!ClassBases.TryGetValue(current, out var bases) || bases.Count == 0)
-                return false;
-            if (bases[0] == "QObject")
-                return true;
-            if (!chunkClasses.Contains(bases[0]))
-                return false;       // the chain crosses a chunk boundary
-            current = bases[0];
-        }
-        return false;
-    }
+    // Whether the binding publishes a release path for the class: Dispose, a finalizer and the
+    // native Destroy_<X> entry point.
+    //
+    // It used to be "the Roots flag, unless the class derives from QObject" - and that rule was
+    // decided per *chunk* (a class whose primary base sat in another header looked like a plain
+    // value type). The result was backwards: QSharedMemory/QTimer/QThread/QEventLoop, which a
+    // program creates and should be able to release, had no Dispose at all, while QPushButton did.
+    //
+    // "Does Qt own this?" is a question about the *object*, not about the class, so the model no
+    // longer answers it: the Roots flag says whether the managed side may ever release an instance
+    // (true for everything a program can construct; false for the events Qt builds on the stack,
+    // the item classes a view or a scene holds, and the few values Qt adopts by a route that
+    // leaves no parent). The generated destructor answers the runtime half by asking Qt first -
+    // `if (object->parent()) return;` - and the wrapper only ever releases what it created
+    // (__ownsNative).
+    static bool OwnedOf(Root root) => root.Owned;
 
     // One class-body child that is a function: methods, constructors, operators and templates.
     static unsafe FnFact Member(CXCursor cursor)
