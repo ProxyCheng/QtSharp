@@ -25,6 +25,11 @@ static class Program
                 return ApiWidgetsDemo.Run();
             }
 
+            if (args.Length > 0 && args[0] == "api-graphics")
+            {
+                return ApiGraphicsDemo.Run();
+            }
+
             using var app = new QApplication(new[] { "qtsharp-examples" });
 
             if (args.Length > 0 && args[0] == "metasig")
