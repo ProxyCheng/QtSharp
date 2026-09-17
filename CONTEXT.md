@@ -17,7 +17,7 @@
 | 产品化第 1 步:model(入库)+ codegen | ✅ 44 类 / 1309 方法;**model 可复现**(按头文件分块自校验)、codegen 纯函数 |
 | **两个 demo 跑在新链路上** | ✅ `testapp api-analogclock`(事件循环 + 渲染 + 鼠标/自定义事件)✅ `testapp api-lineedits`(布局 + 控件 + 校验器 + 信号) |
 | **前端迁移(已决策)** | ✅ **已完成**:`qtgen extract2`(ClangSharp)取代 CppSharp 成为默认前端,~2.5 秒产出**逐字节一致**的 model;原 44 类 model 复刻 **1472/1472** 条事实(见"路线 A 可行性验证"一节) |
-| **QtWidgets 覆盖面** | 🚧 **44 → 221 类**(QtWidgets 121 + QtGui 69 + QtCore 31)/ 5439 方法 / 210 信号 / 269 枚举;新增 demo `testapp api-widgets`(44 项断言全 PASS)。仍缺:**容器**(QList/QStringList)、`const char*`、`QStringView`、`qsizetype`/`qint64`/`uint`、`QCalendar` 等类型类别(见"下一步") |
+| **QtWidgets 覆盖面** | 🚧 **44 → 225 类**(QtWidgets 121 + QtGui 69 + QtCore 35)/ **6063 方法** / 210 信号 / 272 枚举;`testapp api-widgets` 51 项断言全 PASS。**类型类别已补**:`const char*`、`QStringList`(参数+返回)、`QStringView`/`QAnyStringView`、`qsizetype`/`qint64`/`uint`/`QRgb`、`char32_t`;类补了 `QMetaObject`/`QCalendar`/`QMimeData`/`QBitArray`。仍缺:泛型 `QList<T>`、`QByteArrayView`、裸 `char`、`QTimeZone`、`QBindable<T>`、`QGraphics*` 整组 |
 
 ## 关键背景
 - 仓库:`D:\QtSharp`(QtSharp + vendored CppSharp)
@@ -145,12 +145,21 @@ clangprobe --dump CXCursor CXType clang
 
 **⑦ 类覆盖到什么程度**:QtWidgets 头文件里能绑的 198 个顶层类中,**121 个已入库**;未入的 77 个主要是:①**QGraphics\* 整组(~35)**:item 不是 QObject、需要 QGraphicsItem/QGraphicsSceneMouseEvent/QStyleOptionGraphicsItem 一整套(下一批可做);②手势/触摸输入(QGesture 家族 8 个、QScroller、QTouchEventWidgetSequence);③不需要绑的小工具(QColormap/QTileRules/QWidgetData/QAccessibleWidget/QStylePlugin/QItemEditorCreatorBase/QStyleHintReturn\*);④还差几行 Roots 的散类(QSplashScreen/QToolTip/QWidgetAction/QWizardPage/QUndoGroup/QSplitterHandle/QStylePainter/QPlainTextDocumentLayout/QTreeWidgetItemIterator/QTableWidgetSelectionRange)。
 
-**⑧ 已知瑕疵 / 下一步(按收益排序)**
-1. **类型类别(最大收益)**:`const char*` x159、`QList<...>` x153、`qsizetype` x60、`QStringView` x39、`QStringList` x34、`char32_t` x34、`qint64` x28、`QCalendar` x27、`uint` x18。这些是"加类型"而不是"加类",需要 model 词汇表 + 运行时 marshal(参考 QString/QStringList 已有的桥)。
-2. `QMetaObject*` x117 是 `Q_OBJECT` 宏展开的 `metaObject()` 被打回:**把 `QMetaObject` 也建了**就顺手拿到动态派发能力。
+**⑧ 类型类别:已补的那一批(本轮下半场)**
+- **`const char*`** → C# `string`:参数直接透传 `const char*`(P/Invoke 用 `LPUTF8Str`),返回用 `QString::fromUtf8` 拷成 QString 交给既有的 QString 桥(native 侧 `NativeRetExpr`)。
+- **整数 typedef** → `qsizetype`/`qint64` 是 `long long`、`uint`/`QRgb` 是 `unsigned int`、`quint64` 是 `unsigned long long`:在 `BuiltinName` 里把 canonical 类型映射成 model 类型,再 `ApiTypes.Managed`/`NativeParamType`/`NativeRetCpp` 各加一行(注意 `NativeRetCpp` 漏了会报 `cannot convert qsizetype to void*`)。
+- **`QStringList`** → C# `string[]`(唯一支持的容器):参数由运行时 `ApiRuntime.NewStringList` 建一个 native QStringList、**`try/finally` 里释放**(codegen 新增 `MarshalParams`/`EmitGuarded`);返回走 `ToManagedStringList`(拷出来后 `qs_api_qstringlist_free`)。model 侧靠"canonical 拼写 == `QList<QString>`"识别。
+- **`QStringView`/`QAnyStringView`** → 和 `QString` 一样当字符串(native 侧 `QString::fromUtf16`,C++ 的隐式转换负责变成视图);**`QLatin1StringView` 故意不收**(QString 不能隐式转成它)。`char32_t` → `unsigned int`。
+- **`ApiTypes.Managed` 的坑**:`char*` 也以 `*` 结尾,必须先判字符串再判指针,否则 `char*`→`IntPtr` 而 codegen 渲染成 `string` → **同一 C# 签名出现两个重载(CS0111)**。
+- 顺带:生成的 ctor 局部变量 `context` 撞了 `QShortcut(... Qt.ShortcutContext context)`,已改名 `__context`。
+
+**⑨ 已知瑕疵 / 下一步(按收益排序)**
+1. **泛型 `QList<T>`**(`QList<...>` x103 + `const QList<...>` x53,是现在最大的块):需要 model 表达容器 + 按元素类型 marshal(int/QString/绑定类指针各一套)。`QStringList` 的桥可以照抄。
+2. `char` x25(裸 `char` 参数,要定映射成 `byte` 还是 `char`)、`QByteArrayView` x20、`QTimeZone` x13、`QBindable<T>` x18(需要 `bindable*()` 那族)。
 3. **item 类暂时 `owned: false`**(视图/布局接管所有权,GC 释放会 double free)→ 会泄漏;正解是 PoC #3 的所有权服务。
 4. 派生类重声明的虚函数生成的是 **C# `virtual` 隐藏**(CS0114)而非 `override`:native 派发路径是对的(槽位按声明类解析),但从基类类型调用会走基类实现。要彻底修需要 codegen 记录"基类是否已声明同名虚函数"。
 5. `QErrorMessage.FromHandle` 等静态成员隐藏了继承的同名静态(CS0108 警告),同理可加 `new`。
+6. `QMetaObject` 已入库(动态派发能力到手:`metaObject().className()`/`indexOfSignal()` 都可用),但它的 `QMetaMethod`/`QMetaProperty` 还没绑,`method()`/`property()` 那族仍被挡。
 
 ### 解析配置清单(CppSharp 实际传给 clang 的东西 —— 已 dump,`qtgen dumpopts`)
 来源:`gen/ApiModel.cs` 的 `ModelLibrary.Setup` + `QtLibrary.QtIncludeRoot` + `CppSharp.Parser.ParserOptions.SetupMSVC`。
@@ -193,9 +202,9 @@ BuiltinsDir = <assemblies>\lib\clang\19\include
 CppSharp 替我们解决了一个不小的坑:**Qt 头的 MSVC 兼容解析**(`-fms-compatibility`、`__cplusplus`、`_MSC_VER` 等)和 libclang 分发。换前端必须精确复刻这套配置(约 20 行,但要**验证**)。另外**模板/默认参数的提取会比 CppSharp 的"结构化 AST"更手工** —— 这正是路线 B 作为备选的原因(自己吐 JSON 可以只吐我们要的那几个事实)。
 
 ## 下一 agent 的第一件事
-**把"类型类别"补上,这是 QtWidgets 覆盖面唯一的瓶颈**(类已经够多了:`Roots` 加一行就能加类,加不进去的全是类型)。
-按收益顺序:①`const char*`(159 处,直接映射成 C# `string`,native 侧转 `QByteArray`/直接 `toUtf8`);②容器 `QList<T>`/`QStringList`/`QVector<T>`(153+34 处,需要 model 里表达容器 + 运行时 marshal,参考 `QStringList` 信号的桥);③整数 typedef `qsizetype`/`qint64`/`uint`(106 处,`qint64→long`、`qsizetype→long`、`uint→uint`);④`QStringView`/`QChar`/`char32_t`(85 处,都是字符串视图);⑤`QCalendar`/`QMetaObject` 等漏掉的**类**(各加一行 Roots 即可)。
-做法:改 `ApiModel2.ModelName` 的词汇表 + `ApiTypes.Managed` + `ApiCodeGen` 的 `ManagedType`/`CppParamType`/`CppArg`/`NativeRetCpp`,每加一类就跑 `tools/regen-api.ps1` 看 `blocked by` 榜往下走。
+**继续啃类型类别**(`const char*`/`QStringList`/整数 typedef/字符串视图/`char32_t` 已在本轮补完,见"⑧")。
+剩下的按收益:①**泛型 `QList<T>`**(103+53 处,最大的一块:model 里表达容器 + 按元素类型 marshal,`QStringList` 的桥可以照抄);②`char`(25)、`QByteArrayView`(20)、`QTimeZone`(13,加一行 Roots 即可)、`QBindable<T>`(18,需要 `bindable*()` 那族);③**QGraphics\* 整组**(~35 个类,需要 QGraphicsItem/QStyleOptionGraphicsItem 那套)。
+做法:改 `ApiModel2.ModelName` 的词汇表 + `ApiTypes.Managed` + `ApiCodeGen` 的 `ManagedType`/`NativeParamType`/`CppParamType`/`CppArg`/`NativeRetCpp`(+ 需要临时对象的参数走 `MarshalParams`/`EmitGuarded`),每加一类就跑 `tools/regen-api.ps1` 看 `blocked by` 榜往下走。
 
 ## 其它可继续的方向
 1. `extract2` 已通过验收,可以**删掉 CppSharp 的 extract 路径**(`ApiModel.RunExtract`/`ExtractChunk`/`ParseChunk`/`ModelLibrary`)以及 `tools/regen-api.ps1` 的 `-Extractor1`——但**旧链路 15 个 demo 仍在用 CppSharp 的 pass/codegen**(`QtSharp.def`+`build_glue.bat`),那部分要等旧 demo 搬完。

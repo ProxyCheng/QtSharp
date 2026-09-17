@@ -49,6 +49,22 @@ extern "C" __declspec(dllexport) void* qs_api_qstringlist_at(const void* list, i
     return new QString(static_cast<const QStringList*>(list)->at(index));
 }
 
+// A QStringList built for a single call (a managed string[] passed as a container argument).
+extern "C" __declspec(dllexport) void* qs_api_qstringlist_new()
+{
+    return new QStringList();
+}
+
+extern "C" __declspec(dllexport) void qs_api_qstringlist_append(void* list, const char16_t* text)
+{
+    static_cast<QStringList*>(list)->append(text ? QString::fromUtf16(text) : QString());
+}
+
+extern "C" __declspec(dllexport) void qs_api_qstringlist_free(void* list)
+{
+    delete static_cast<QStringList*>(list);
+}
+
 // ------------------------------------------------------------------ signal forwarder
 typedef void (*QsApiSignalCallback)(void* userData, int argc, const void* const* argv, const int* typeIds);
 
