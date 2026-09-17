@@ -76,6 +76,10 @@ public static class ApiCodeGen
     static bool IsPure(JsonElement v)
         => v.TryGetProperty("pure", out var p) && p.ValueKind == JsonValueKind.True;
 
+    // A const virtual must be declared const to override anything (QWidget::sizeHint() const).
+    static string ConstSuffix(JsonElement v)
+        => v.TryGetProperty("const", out var c) && c.ValueKind == JsonValueKind.True ? " const" : "";
+
     // Whether a value type can be default-constructed in C++ (needed when a managed null is
     // passed for a boxed parameter).
     static bool HasDefaultCtor(string className)
@@ -113,7 +117,7 @@ public static class ApiCodeGen
         if (ManagedType(type) == "IntPtr")
             return "default";       // a value type: IntPtr.Zero is not a constant
         if (IsArray(type) || IsPtr(type) || IsBoxed(type) || IsStringT(type) || type == "char*"
-            || IsStringListT(type) || IsListT(type))
+            || IsStringListT(type) || IsListT(type) || type == "QByteArrayView")
             return "null";
         return "default";
     }
@@ -174,6 +178,13 @@ public static class ApiCodeGen
             WriteNativeDeclarations(sb, cls);
         foreach (var elem in ListElements())
             WriteListNativeDeclarations(sb, elem);
+        foreach (var boxed in VirtualBoxedReturns())
+        {
+            string stem = ListStem(boxed);
+            sb.AppendLine();
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_assign_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        internal static extern void Assign_{stem}(IntPtr destination, IntPtr source);");
+        }
         sb.AppendLine("    }");
 
         foreach (var elem in ListElements())
@@ -449,7 +460,7 @@ public static class ApiCodeGen
     }
 
     static string VirtualKey(JsonElement v)
-        => Name(v) + "(" + string.Join(",", Params(v).Select(PType)) + ")";
+        => Name(v) + "(" + string.Join(",", Params(v).Select(PType)) + ")" + ConstSuffix(v);
 
     static void WriteClass(StringBuilder sb, JsonElement cls)
     {
@@ -602,6 +613,8 @@ public static class ApiCodeGen
                 // Nothing to chain to: a managed subclass that does not override this simply
                 // does nothing (Qt never calls a pure virtual it has no implementation for).
                 sb.AppendLine("            // pure virtual: no base implementation to call");
+                if (ret != "void")
+                    sb.AppendLine("            return default;");
             }
             else
             {
@@ -658,7 +671,7 @@ public static class ApiCodeGen
                 else
                 {
                     sb.AppendLine($"                    var result = target.{member}({args});");
-                    sb.AppendLine($"                    ApiRuntime.WriteResult(Marshal.ReadIntPtr(argv, 0), result);");
+                    sb.AppendLine("                    " + DispatchStore(ReturnType(v), "result"));
                 }
                 sb.AppendLine("                    break;");
                 sb.AppendLine("                }");
@@ -675,6 +688,39 @@ public static class ApiCodeGen
     }
 
     static string CtorSuffix(int index) => index == 0 ? "" : (index + 1).ToString();
+
+    // Stores the value a managed override produced into the slot the native caller provided.
+    // Scalars go through the runtime's typed writers; a boxed value needs a per-type assignment
+    // (the caller's slot holds the value itself, not a pointer to it).
+    static string DispatchStore(string t, string value)
+    {
+        string dest = "Marshal.ReadIntPtr(argv, 0)";
+        if (t == "void")
+            return "";
+        if (IsEnum(t))
+            return $"ApiRuntime.WriteResult({dest}, (int){value});";
+        if (IsBoxed(t))
+            return $"ApiNative.Assign_{ListStem(t)}({dest}, {value}?.Handle ?? IntPtr.Zero);";
+        if (IsPtr(t))
+            return $"Marshal.WriteIntPtr({dest}, {value}?.Handle ?? IntPtr.Zero);";
+        if (IsStringT(t) || t == "char*")
+            return $"ApiRuntime.WriteResult({dest}, {value});";
+        return $"ApiRuntime.WriteResult({dest}, {value});";
+    }
+
+    // The boxed types a virtual may return: each needs the assignment helper above.
+    static List<string> VirtualBoxedReturns()
+    {
+        var types = new SortedSet<string>(StringComparer.Ordinal);
+        foreach (var cls in Classes)
+            foreach (var v in cls.GetProperty("virtuals").EnumerateArray())
+            {
+                var ret = ReturnType(v);
+                if (IsBoxed(ret))
+                    types.Add(ret);
+            }
+        return types.ToList();
+    }
 
     // A parameter that is not a plain scalar/pointer/handle needs a temporary native object for
     // the duration of the call: the managed array becomes a QStringList here, and the cleanup
@@ -701,6 +747,12 @@ public static class ApiCodeGen
                 string helper = ListHelper(ListElem(t));
                 prelude.Add($"var {n}Handle = {helper}.New({n});");
                 cleanup.Add($"{helper}.Free({n}Handle);");
+                args.Add($"{n}Handle");
+            }
+            else if (t == "QByteArrayView")
+            {
+                prelude.Add($"var {n}Handle = ApiRuntime.NewByteArray({n});");
+                cleanup.Add($"ApiRuntime.FreeByteArray({n}Handle);");
                 args.Add($"{n}Handle");
             }
             else
@@ -805,7 +857,10 @@ public static class ApiCodeGen
 
     // argv[i] carries the argument itself: an object pointer is already an address the
     // managed side can use, while a scalar/enum/QString has to be published by address.
-    static string DispatchArgStore(string t, string name) => IsPtr(t) ? name : "&" + name;
+    static string DispatchArgStore(string t, string name)
+        // The override receives Qt's value types by const reference, so the address has to be
+        // taken off the const.
+        => IsBoxed(t) ? $"const_cast<{t}*>(&{name})" : IsPtr(t) ? name : "&" + name;
 
     static string DispatchRead(string t, int index)
     {
@@ -844,7 +899,7 @@ public static class ApiCodeGen
     {
         if (IsArray(t)) return ManagedType(t);
         if (t == "char*") return "[MarshalAs(UnmanagedType.LPUTF8Str)] string";
-        if (IsStringListT(t) || IsListT(t)) return "IntPtr";
+        if (IsStringListT(t) || IsListT(t) || t == "QByteArrayView") return "IntPtr";
         if (IsPtr(t) || IsBoxed(t)) return "IntPtr";
         if (IsEnum(t)) return "int";
         if (IsStringT(t)) return "[MarshalAs(UnmanagedType.LPWStr)] string";
@@ -880,7 +935,7 @@ public static class ApiCodeGen
     static string ArgToNative(string t, string name)
     {
         if (IsArray(t) || IsStringT(t) || t == "char*") return name;
-        if (IsStringListT(t) || IsListT(t)) return $"{name}Handle";
+        if (IsStringListT(t) || IsListT(t) || t == "QByteArrayView") return $"{name}Handle";
         if (IsEnum(t)) return $"(int){name}";
         // Opaque pointers (QEvent*) are already raw handles and must not be dereferenced.
         if (IsClassPtr(t) || IsBoxed(t)) return $"{name}?.Handle ?? IntPtr.Zero";
@@ -893,6 +948,7 @@ public static class ApiCodeGen
         if (IsStringT(t) || t == "char*") return $"ApiRuntime.ToManaged({call})";
         if (IsStringListT(t)) return $"ApiRuntime.ToManagedStringList({call})";
         if (IsListT(t)) return $"{ListHelper(ListElem(t))}.Read({call})";
+        if (t == "QByteArrayView") return $"ApiRuntime.ToManagedBytes({call})";
         if (IsEnum(t)) return $"({CsEnum(t)}){call}";
         if (IsClassPtr(t)) return $"{t.Substring(0, t.Length - 1)}.FromHandle({call})";
         if (IsBoxed(t)) return IsOwned(t) ? $"{t}.FromOwnedHandle({call})" : $"{t}.FromTransientHandle({call})";
@@ -919,6 +975,19 @@ public static class ApiCodeGen
 
         foreach (var elem in ListElements())
             WriteListNativeCpp(sb, elem);
+
+        // A managed override that returns a value type hands the value over by copying it into
+        // the caller's slot.
+        foreach (var boxed in VirtualBoxedReturns())
+        {
+            string stem = ListStem(boxed);
+            sb.AppendLine();
+            sb.AppendLine($"// {boxed}: the value a managed override returned, copied into the caller's slot.");
+            sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_assign_{stem}(void* destination, void* source)");
+            sb.AppendLine("{");
+            sb.AppendLine($"    *static_cast<{boxed}*>(destination) = *static_cast<const {boxed}*>(source);");
+            sb.AppendLine("}");
+        }
         return sb.ToString();
     }
 
@@ -993,7 +1062,7 @@ public static class ApiCodeGen
             var ps = Params(v);
             string sig = string.Join(", ", ps.Select(p => $"{CppVirtualParamType(PType(p))} {NativeName(PName(p))}"));
             string ret = ReturnType(v);
-            sb.AppendLine($"    {ret} {Name(v)}({sig}) override");
+            sb.AppendLine($"    {ret} {Name(v)}({sig}){ConstSuffix(v)} override");
             sb.AppendLine("    {");
             if (ret != "void")
                 sb.AppendLine($"        {ret} result = {{}};");
@@ -1106,7 +1175,7 @@ public static class ApiCodeGen
         if (t == "char*") return "const char*";
         if (t == "int*") return "const int*";
         if (t == "uchar*") return "const unsigned char*";
-        if (IsStringListT(t) || IsListT(t)) return "void*";
+        if (IsStringListT(t) || IsListT(t) || t == "QByteArrayView") return "void*";
         if (IsPtr(t) || IsBoxed(t)) return "void*";
         if (IsEnum(t)) return "int";
         return t;
@@ -1121,6 +1190,8 @@ public static class ApiCodeGen
         if (t == "uchar*") return "const unsigned char*";
         if (IsStringListT(t)) return "const QStringList&";
         if (IsListT(t)) return $"const {t}&";
+        // A byte[] argument is carried as a QByteArray, which converts to the view implicitly.
+        if (t == "QByteArrayView") return "const QByteArray&";
         if (IsEnum(t) || IsPtr(t)) return t;
         if (IsBoxed(t)) return $"const {t}&";
         return t;
@@ -1132,6 +1203,7 @@ public static class ApiCodeGen
         if (IsStringT(t)) return $"{name} ? QString::fromUtf16({name}) : QString()";
         if (IsStringListT(t)) return $"*static_cast<QStringList*>({name})";
         if (IsListT(t)) return $"*static_cast<{t}*>({name})";
+        if (t == "QByteArrayView") return $"*static_cast<QByteArray*>({name})";
         if (t == "char*" || t == "uchar*") return name;      // already a matching pointer
         if (IsPtr(t)) return $"static_cast<{t.Substring(0, t.Length - 1)}*>({name})";
         // QFlags has no cast from int; the named constructor is the documented way back.
@@ -1163,6 +1235,7 @@ public static class ApiCodeGen
         if (IsStringT(t)) return $"return new QString({call});";
         if (IsStringListT(t)) return $"return new QStringList({call});";
         if (IsListT(t)) return $"return new {t}({call});";
+        if (t == "QByteArrayView") return $"return new QByteArray({call});";
         if (t == "char*") return $"{{ const char* text = ({call}); return new QString(text ? QString::fromUtf8(text) : QString()); }}";
         if (IsFlags(t)) return $"return static_cast<int>({call}.toInt());";
         if (IsEnum(t)) return $"return static_cast<int>({call});";
@@ -1180,6 +1253,9 @@ public static class ApiCodeGen
         if (t == "char*") return "const char*";
         if (IsPtr(t)) return t.Substring(0, t.Length - 1) + "*";
         if (IsEnum(t)) return t;
+        // An override has to repeat the base declaration exactly, and Qt passes its value types
+        // by const reference (QAbstractItemDelegate::sizeHint(const QStyleOptionViewItem&, ...)).
+        if (IsBoxed(t)) return $"const {t}&";
         return t;
     }
 

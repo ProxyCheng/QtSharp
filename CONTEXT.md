@@ -17,7 +17,7 @@
 | 产品化第 1 步:model(入库)+ codegen | ✅ 44 类 / 1309 方法;**model 可复现**(按头文件分块自校验)、codegen 纯函数 |
 | **两个 demo 跑在新链路上** | ✅ `testapp api-analogclock`(事件循环 + 渲染 + 鼠标/自定义事件)✅ `testapp api-lineedits`(布局 + 控件 + 校验器 + 信号) |
 | **前端迁移(已决策)** | ✅ **已完成**:`qtgen extract2`(ClangSharp)取代 CppSharp 成为默认前端,~2.5 秒产出**逐字节一致**的 model;原 44 类 model 复刻 **1472/1472** 条事实(见"路线 A 可行性验证"一节) |
-| **QtWidgets 覆盖面** | 🚧 **44 → 306 类**(QtWidgets 184 + QtGui 80 + QtCore 42)/ **7504 方法** / 236 信号 / 314 枚举;5 个新链路 demo 共 87 项断言全 PASS(`api` 6 / `api-analogclock` 10 / `api-lineedits` 9 / `api-widgets` 53 / `api-graphics` 9)。**QGraphics\* 整组已入**(scene/view/15 个 item 类/9 个 scene event/effect/transform/layout)。**类型类别已补**:`const char*`、**泛型 `QList<T>`**(参数+返回)、`QStringList`、`QStringView`/`QAnyStringView`、`qsizetype`/`qint64`/`uint`/`QRgb`、`short`/`ushort`/`long`/`ulong`/`char`/`uchar`/`char16_t`/`char32_t`;类补了 `QMetaObject`/`QCalendar`/`QMimeData`/`QBitArray`/`QIODevice`/`QDataStream`/`QMetaType`/`QRegularExpression`/`QTextStream`/`QColorSpace`/`QTimeZone`。仍缺:`QByteArrayView`、`QBindable<T>`、`QMap<...>`、`const uchar*`、`QGraphics*` 整组 |
+| **QtWidgets 覆盖面** | 🚧 **44 → 306 类**(QtWidgets 184 + QtGui 80 + QtCore 42)/ 7435 方法 / **638 虚函数** / 236 信号 / 314 枚举;5 个新链路 demo 共 93 项断言全 PASS(`api` 6 / `api-analogclock` 10 / `api-lineedits` 9 / `api-widgets` 59 / `api-graphics` 9)。**托管子类可以重写 `sizeHint`/`minimumSizeHint`/`heightForWidth`/`hasHeightForWidth`**(自定义控件尺寸),`QByteArrayView`→`byte[]` 也已通。**QGraphics\* 整组已入**(scene/view/15 个 item 类/9 个 scene event/effect/transform/layout)。**类型类别已补**:`const char*`、**泛型 `QList<T>`**(参数+返回)、`QStringList`、`QStringView`/`QAnyStringView`、`qsizetype`/`qint64`/`uint`/`QRgb`、`short`/`ushort`/`long`/`ulong`/`char`/`uchar`/`char16_t`/`char32_t`;类补了 `QMetaObject`/`QCalendar`/`QMimeData`/`QBitArray`/`QIODevice`/`QDataStream`/`QMetaType`/`QRegularExpression`/`QTextStream`/`QColorSpace`/`QTimeZone`。仍缺:`QByteArrayView`、`QBindable<T>`、`QMap<...>`、`const uchar*`、`QGraphics*` 整组 |
 
 ## 关键背景
 - 仓库:`D:\QtSharp`(QtSharp + vendored CppSharp)
@@ -158,6 +158,11 @@ clangprobe --dump CXCursor CXType clang
 - **默认值的两处 C# 陷阱**:①`IntPtr` 是值类型,`IntPtr.Zero` **不是编译期常量**,所以可选的不透明指针参数默认值只能是 `default`(写 `null` 报 CS1750、写 `IntPtr.Zero` 报 CS1736);②`char*`/`uchar*` 映射成引用类型,默认值才是 `null`。
 - **入口符号撞名**:构造函数导出原来叫 `qs_api_{name}_create{N}`,而 `QMetaType::create` 这个**方法**也叫 `create` → `qs_api_QMetaType_create` 定义两次(`C2733`)。已改名 `qs_api_{name}_ctor{N}` / `qs_api_{name}_dtor`。(重载后缀 `foo2` 与真实方法名 `foo2` 仍可能相撞,概率极低,先记在这。)
 - 又补 10 个类(QtGui 值类型):`QPicture`/`QScreen`/`QVector2D`/`QVector3D`/`QVector4D`/`QQuaternion`/`QEventPoint`/`QColorTransform`/`QMatrix4x4`/`QPointingDevice`。
+- **`QByteArrayView`** → C# `byte[]`(它自己带长度,所以**参数和返回都行**):参数由运行时 `ApiRuntime.NewByteArray` 建一个 native QByteArray(C++ 的隐式转换负责变成视图,同样 `try/finally` 释放),返回走 `ToManagedBytes`。
+- **`sizeHint`/`minimumSizeHint`/`heightForWidth`/`hasHeightForWidth` 进 `VirtualAllow`**(自定义控件必须能说自己多大,官方 Calculator 的 `CalcButton` 就是重写 `sizeHint`)——这一步逼出三个 must-fix:
+  1. **虚函数要带 `const`**:`QWidget::sizeHint() const` 不带 const 就**不构成重写**(MSVC `C3668`),model 里因此新增虚函数的 `"const": true`,生成 native wrapper 时写 `... const override`(注意顺序,`override const` 编译不过);
+  2. **override 的参数表必须是**完整**的**:之前"可 marshal 前缀"的裁剪规则会把 `sizeHint(Qt::SizeHint, const QSizeF& = QSizeF())` 的第二个参数砍掉 → 签名对不上 → `C3668`。现在虚函数保留全部参数(裁剪规则只用于可调用成员),`CppVirtualParamType` 对 boxed 值类型统一发 `const T&`(Qt 的写法),`DispatchArgStore` 相应 `const_cast`;
+  3. **虚函数返回值是 boxed 值类型时**(`QSize`)托管侧要写回调用方的槽:新增按类型生成的 `qs_api_assign_<T>`(native `*dst = *src`)+ `ApiNative.Assign_<T>`,Dispatch 按返回类型选择写回方式;顺带给 `ApiRuntime.WriteResult` 补齐了 double/float/long/ulong/uint/short/ushort/char/sbyte/byte/IntPtr 重载。纯虚函数(无实现可链)的托管默认实现改为 `return default;`。
 - 顺带:生成的 ctor 局部变量 `context` 撞了 `QShortcut(... Qt.ShortcutContext context)`,已改名 `__context`。
 - **QGraphics\* 整组入库**(scene/view/15 个 item 类/9 个 scene event/effect/transform/layout/anchor):item **不是 QObject**且由 scene 拥有,所以一律 `owned: false`(GC 不删,暂时会泄漏,等所有权服务);scene event 由 Qt 在栈上构造 → `bindCtors: false`。**新增 demo `testapp api-graphics`**(9 项断言,含 `scene.items()` 的 `QList<QGraphicsItem*>` 返回、`itemAt()` 的身份一致、离屏 `view.Grab()` 真的渲染出 240x120)。
 - 又补 29 个类(其余 QtWidgets):`QSplashScreen`/`QToolTip`/`QWidgetAction`/`QWizardPage`/`QUndoGroup`/`QSplitterHandle`/`QStylePainter`/`QTableWidgetSelectionRange`/`QTreeWidgetItemIterator`/`QPlainTextDocumentLayout`/`QItemEditorFactory`/`QStyleOption*` 4 个/`QStyleHintReturn*` 3 个/`QScroller`/`QScrollerProperties`/手势家族 5 个/`QGestureEvent`/`QGestureRecognizer`。
@@ -212,7 +217,8 @@ CppSharp 替我们解决了一个不小的坑:**Qt 头的 MSVC 兼容解析**(`-
 
 ## 下一 agent 的第一件事
 **继续啃类型类别**(`const char*`/`QStringList`/**`QList<T>`**/整数 typedef/字符串视图/小标量已补完,见"⑧";QGraphics\* 整组与其余 QtWidgets 类已入库)。
-剩下的按收益(数字来自 extract2 的 `blocked by` 报告):①`QByteArrayView`(27,字节视图 → `byte[]`)、`QBindable<T>`(18,需要 `bindable*()` 那族);②`QMap<K,V>`(15,照抄 `QList<T>` 的写法 + key/value 访问器);③两类**故意不收**的:`int*`/`float*`/`char*` 这类非 const 裸指针(≈45,全是 out 参数,托管侧看不见写回)与 `QString`(非 const `QString&`,11);④容器迭代器(`iterator`/`const_reverse_iterator`,16,来自 `QHash`/`QMap` 风格的 begin/end)与 `QList<std::pair<...>>`(6)这类元素类型。
+剩下的按收益(数字来自 extract2 的 `blocked by` 报告):①`QBindable<T>`(18,需要 `bindable*()` 那族);②`QMap<K,V>`(15,照抄 `QList<T>` 的写法 + key/value 访问器);③两类**故意不收**的:`int*`/`float*`/`char*` 这类非 const 裸指针(≈45,全是 out 参数,托管侧看不见写回)与 `QString`(非 const `QString&`,11);④容器迭代器(`iterator`/`const_reverse_iterator`,16,来自 `QHash`/`QMap` 风格的 begin/end)与 `QList<std::pair<...>>`(6)这类元素类型。
+**虚函数白名单**(`VirtualAllow`)目前是 31 个名字(事件处理 + `sizeHint` 家族 + `event/eventFilter/timerEvent/childEvent/customEvent`)。想让**自定义 model/delegate** 也能从 C# 重写(`QAbstractItemModel::data/rowCount/setData/...`、`QStyledItemDelegate::paint/sizeHint/createEditor/...`),还需要:boxed 值**参数**在 Dispatch 里用瞬态包装(现在用 `FromHandle`,会进身份缓存,对短命参数不安全)+ `QVariant` 返回值的写回(同 `QSize` 的 assign 思路)。
 覆盖率报告在 `extract2` 结尾会打印,`QTSHARP_MODEL_DEBUG=1` 会把被挡的**完整拼写**打出来(报告里按容器名归并)。
 做法:改 `ApiModel2.ModelName` 的词汇表 + `ApiTypes.Managed` + `ApiCodeGen` 的 `ManagedType`/`NativeParamType`/`CppParamType`/`CppArg`/`NativeRetCpp`(+ 需要临时对象的参数走 `MarshalParams`/`EmitGuarded`),每加一类就跑 `tools/regen-api.ps1` 看 `blocked by` 榜往下走。
 
