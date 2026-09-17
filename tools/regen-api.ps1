@@ -1,6 +1,10 @@
 param(
-    [switch]$SkipExtract
+    [switch]$SkipExtract,
+    [switch]$Adopt,
+    # The CppSharp extractor is kept only as a cross-check while its replacement settles in.
+    [switch]$Extractor1
 )
+$extractor = if ($Extractor1) { "extract" } else { "extract2" }
 $ErrorActionPreference = "Continue"
 $root = "D:\QtSharp"
 $genBin = "$root\gen\bin\Release\net10.0\win-x64"
@@ -10,9 +14,9 @@ dotnet build "$root\gen\gen.csproj" -c Release --nologo | Out-Host
 if ($LASTEXITCODE -ne 0) { Write-Host "gen build failed"; exit 1 }
 
 if (-not $SkipExtract) {
-    Write-Host "=== [2] Extract model (also runs the legacy generation) ==="
+    Write-Host "=== [2] Extract model (${extractor}: parse-only, one translation unit) ==="
     Push-Location $genBin
-    & "$genBin\qtgen.exe" extract "$root\out\qtsharp.api.json.new" *> "$root\out\extract.log"
+    & "$genBin\qtgen.exe" $extractor "$root\out\qtsharp.api.json.new" *> "$root\out\extract.log"
     $rc = $LASTEXITCODE
     Pop-Location
     if ($rc -ne 0) { Write-Host "extract failed (exit=$rc)"; Get-Content "$root\out\extract.log" | Select-String "EXCEPTION|FAIL" | Select-Object -First 3; exit 1 }
@@ -24,11 +28,19 @@ if (-not $SkipExtract) {
     } else {
         $a = (Get-FileHash "$root\model\qtsharp.api.json").Hash
         $b = (Get-FileHash "$root\out\qtsharp.api.json.new").Hash
-        if ($a -eq $b) { Write-Host "model is byte-identical (deterministic extraction)" }
-        else {
-            Write-Host "MODEL CHANGED - review the diff and adopt it deliberately:"
+        if ($a -eq $b) {
+            Write-Host "model is byte-identical (reproducible extraction)"
+        } elseif ($Adopt) {
+            Write-Host "MODEL CHANGED - adopting deliberately (diff above):"
             git -C $root diff --no-index -- "$root\model\qtsharp.api.json" "$root\out\qtsharp.api.json.new" | Select-Object -First 40
             Copy-Item "$root\out\qtsharp.api.json.new" "$root\model\qtsharp.api.json" -Force
+        } else {
+            # One parse of one translation unit is reproducible by construction (verified: three
+            # runs give the same hash), so a mismatch is a real API change or a changed Roots
+            # table: review it and re-run with -Adopt.
+            Write-Host "MODEL CHANGED - review the diff, then re-run with -Adopt:"
+            git -C $root diff --no-index -- "$root\model\qtsharp.api.json" "$root\out\qtsharp.api.json.new" | Select-Object -First 60
+            exit 1
         }
     }
 }
@@ -51,9 +63,23 @@ Write-Host "=== [5] Build native bindings ==="
 & cmd /c "`"$root\build_api.bat`"" *> "$root\out\api_native.log"
 if ($LASTEXITCODE -ne 0) { Write-Host "native build failed"; Get-Content "$root\out\api_native.log" | Select-String "error" | Select-Object -First 6; exit 1 }
 
-Write-Host "=== [6] Build + run the smoke test ==="
+Write-Host "=== [6] Build + run the smoke tests ==="
 dotnet build "$root\testbind\testbind.csproj" -c Release --nologo *> "$root\out\api_testbuild.log"
 if ($LASTEXITCODE -ne 0) { Write-Host "testbind build failed"; Select-String -Path "$root\out\api_testbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }; exit 1 }
 
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The AnalogClock demo on the new pipeline: a real Qt event loop, a real widget and a real
+# paintEvent override, all reached through generated code.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-analogclock
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The LineEdits demo: layouts, group boxes, combo boxes, validators and signals.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-lineedits
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The QtWidgets tour: menus, tool bars, tabs, splitters, item views, model/view/proxy, a data
+# widget mapper, a calendar and an undo stack - the whole widget surface the model now covers.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-widgets
 exit $LASTEXITCODE
