@@ -106,7 +106,8 @@ public static class ApiCodeGen
 
     static string CSharpDefault(string type)
     {
-        if (IsArray(type) || IsPtr(type) || IsBoxed(type) || IsStringT(type) || type == "char*" || IsStringListT(type))
+        if (IsArray(type) || IsPtr(type) || IsBoxed(type) || IsStringT(type) || type == "char*"
+            || IsStringListT(type) || IsListT(type))
             return "null";
         return "default";
     }
@@ -120,6 +121,21 @@ public static class ApiCodeGen
     // The container the model carries; the runtime builds a QStringList around the managed
     // array for the duration of the call.
     static bool IsStringListT(string t) => t == "QStringList";
+
+    // A generic container: QList<E> is marshalled element by element through a generated helper.
+    static bool IsListT(string t) => t.StartsWith("QList<", StringComparison.Ordinal) && t.EndsWith(">");
+    static string ListElem(string t) => t.Substring("QList<".Length, t.Length - "QList<".Length - 1);
+
+    // The element kinds the generated converters distinguish: a scalar crosses the C ABI as
+    // itself, a bound class as its handle, and a boxed value as a pointer to a copy.
+    static bool IsScalarElem(string e) => CSharpScalar(e) != null || e == "int" || e == "float" || e == "double" || e == "bool";
+    static bool IsPointerElem(string e) => e.EndsWith("*");
+
+    // A C identifier for one element type: used for the native exports, the generated helper
+    // class and the DllImport method names.
+    static string ListStem(string elem)
+        => elem.Replace("*", "Ptr").Replace(" ", "").Replace("::", "_").Replace("unsigned", "u");
+    static string ListHelper(string elem) => "QsApiList_" + ListStem(elem);
     static bool IsPtr(string t) => !IsArray(t) && t.EndsWith("*");
     static bool IsClassPtr(string t) => IsPtr(t) && ClassNames.Contains(t.Substring(0, t.Length - 1));
     static bool IsEnum(string t) => EnumNames.Contains(t);
@@ -150,9 +166,151 @@ public static class ApiCodeGen
         sb.AppendLine("    {");
         foreach (var cls in Classes)
             WriteNativeDeclarations(sb, cls);
+        foreach (var elem in ListElements())
+            WriteListNativeDeclarations(sb, elem);
         sb.AppendLine("    }");
+
+        foreach (var elem in ListElements())
+            WriteListHelper(sb, elem);
+
         sb.AppendLine("}");
         return sb.ToString();
+    }
+
+    // Every element type that appears in a QList<...> anywhere in the model, in a stable order.
+    static List<string> ListElements()
+    {
+        var elements = new SortedSet<string>(StringComparer.Ordinal);
+        foreach (var cls in Classes)
+        {
+            foreach (var fn in cls.GetProperty("methods").EnumerateArray()
+                         .Concat(cls.GetProperty("virtuals").EnumerateArray())
+                         .Concat(cls.GetProperty("constructors").EnumerateArray()))
+            {
+                var types = new List<string> { fn.TryGetProperty("returnType", out var r) ? r.GetString() : null };
+                types.AddRange(fn.GetProperty("parameters").EnumerateArray().Select(PType));
+                foreach (var t in types)
+                    if (t != null && IsListT(t))
+                        elements.Add(ListElem(t));
+            }
+        }
+        return elements.ToList();
+    }
+
+    // The C# side of the container conversion: New/Free around a call, Read for a return.
+    static void WriteListHelper(StringBuilder sb, string elem)
+    {
+        string helper = ListHelper(elem);
+        string stem = ListStem(elem);
+        string managed = ApiTypes.Managed(elem, ClassNames);
+        // The element is the loop variable of the generated New(): a scalar crosses as itself,
+        // a handle (class pointer or boxed value) as the raw pointer it wraps.
+        string argConv = IsScalarElem(elem) ? "item" : "item?.Handle ?? IntPtr.Zero";
+
+        sb.AppendLine();
+        sb.AppendLine($"    internal static class {helper}");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        public static IntPtr New({managed}[] items)");
+        sb.AppendLine("        {");
+        sb.AppendLine($"            var list = ApiNative.List_{stem}_new();");
+        sb.AppendLine("            if (items != null)");
+        sb.AppendLine($"                foreach (var item in items)");
+        sb.AppendLine($"                    ApiNative.List_{stem}_append(list, {argConv});");
+        sb.AppendLine("            return list;");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine($"        public static void Free(IntPtr list) => ApiNative.List_{stem}_free(list);");
+        sb.AppendLine();
+        sb.AppendLine($"        public static {managed}[] Read(IntPtr list)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            if (list == IntPtr.Zero)");
+        sb.AppendLine("                return null;");
+        sb.AppendLine($"            int count = ApiNative.List_{stem}_count(list);");
+        sb.AppendLine($"            var result = new {managed}[count];");
+        sb.AppendLine("            for (int i = 0; i < count; i++)");
+        sb.AppendLine($"                result[i] = {ReadElement(elem)};");
+        sb.AppendLine($"            ApiNative.List_{stem}_free(list);");
+        sb.AppendLine("            return result;");
+        sb.AppendLine("        }");
+        sb.AppendLine("    }");
+    }
+
+    // The DllImports the generated helper class calls.
+    static void WriteListNativeDeclarations(StringBuilder sb, string elem)
+    {
+        string stem = ListStem(elem);
+        string abi = IsScalarElem(elem) ? ManagedType(elem) : "IntPtr";
+        sb.AppendLine();
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_list_{stem}_new\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        internal static extern IntPtr List_{stem}_new();");
+        sb.AppendLine();
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_list_{stem}_append\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        internal static extern void List_{stem}_append(IntPtr list, {abi} item);");
+        sb.AppendLine();
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_list_{stem}_count\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        internal static extern int List_{stem}_count(IntPtr list);");
+        sb.AppendLine();
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_list_{stem}_at\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        internal static extern {abi} List_{stem}_at(IntPtr list, int index);");
+        sb.AppendLine();
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_list_{stem}_free\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        internal static extern void List_{stem}_free(IntPtr list);");
+    }
+
+    // The C++ side of the container conversion: one append/count/at per element type, with the
+    // element crossing the C ABI as itself, as a handle, or as a pointer to a copy.
+    static void WriteListNativeCpp(StringBuilder sb, string elem)
+    {
+        string stem = ListStem(elem);
+        string list = $"QList<{elem}>";
+        string abi = IsScalarElem(elem) ? elem : "void*";
+
+        string appendConv = IsScalarElem(elem) ? "item"
+            : IsPointerElem(elem) ? $"static_cast<{elem.Substring(0, elem.Length - 1)}*>(item)"
+            : $"*static_cast<{elem}*>(item)";
+        string atConv = IsScalarElem(elem)
+            ? $"return static_cast<const {list}*>(list)->at(index);"
+            : IsPointerElem(elem)
+                ? $"return static_cast<void*>(static_cast<const {list}*>(list)->at(index));"
+                : $"return new {elem}(static_cast<const {list}*>(list)->at(index));";
+
+        sb.AppendLine();
+        sb.AppendLine($"// QList<{elem}>: element-by-element conversion for the managed side.");
+        sb.AppendLine($"extern \"C\" __declspec(dllexport) void* qs_api_list_{stem}_new()");
+        sb.AppendLine("{");
+        sb.AppendLine($"    return new {list}();");
+        sb.AppendLine("}");
+        sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_list_{stem}_append(void* list, {abi} item)");
+        sb.AppendLine("{");
+        sb.AppendLine($"    static_cast<{list}*>(list)->append({appendConv});");
+        sb.AppendLine("}");
+        sb.AppendLine($"extern \"C\" __declspec(dllexport) int qs_api_list_{stem}_count(const void* list)");
+        sb.AppendLine("{");
+        sb.AppendLine($"    return static_cast<int>(static_cast<const {list}*>(list)->size());");
+        sb.AppendLine("}");
+        sb.AppendLine($"extern \"C\" __declspec(dllexport) {abi} qs_api_list_{stem}_at(const void* list, int index)");
+        sb.AppendLine("{");
+        sb.AppendLine($"    {atConv}");
+        sb.AppendLine("}");
+        sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_list_{stem}_free(void* list)");
+        sb.AppendLine("{");
+        sb.AppendLine($"    delete static_cast<{list}*>(list);");
+        sb.AppendLine("}");
+    }
+
+    static string ToCSharpElement(string elem)
+        => IsScalarElem(elem) ? ManagedType(elem) : ApiTypes.Managed(elem, ClassNames);
+
+    static string ReadElement(string elem)
+    {
+        string stem = ListStem(elem);
+        string call = $"ApiNative.List_{stem}_at(list, i)";
+        if (IsScalarElem(elem))
+            return call;
+        if (IsPointerElem(elem))
+            return $"{elem.Substring(0, elem.Length - 1)}.FromTransientHandle({call})";
+        // A boxed value comes back as a fresh copy that the wrapper owns.
+        return IsOwned(elem) ? $"{elem}.FromOwnedHandle({call})" : $"{elem}.FromTransientHandle({call})";
     }
 
     static void WriteEnums(StringBuilder sb, string scope, int indent)
@@ -532,6 +690,13 @@ public static class ApiCodeGen
                 cleanup.Add($"ApiRuntime.FreeStringList({n}Handle);");
                 args.Add($"{n}Handle");
             }
+            else if (IsListT(t))
+            {
+                string helper = ListHelper(ListElem(t));
+                prelude.Add($"var {n}Handle = {helper}.New({n});");
+                cleanup.Add($"{helper}.Free({n}Handle);");
+                args.Add($"{n}Handle");
+            }
             else
             {
                 args.Add(ArgToNative(t, n));
@@ -647,7 +812,12 @@ public static class ApiCodeGen
         if (t == "char*") return $"ApiRuntime.FromUtf8({slot})";
         if (t == "long long") return $"Marshal.ReadInt64({slot})";
         if (t == "unsigned long long") return $"(ulong)Marshal.ReadInt64({slot})";
-        if (t == "unsigned int") return $"(uint)Marshal.ReadInt32({slot})";
+        if (t == "unsigned int" || t == "unsigned long") return $"(uint)Marshal.ReadInt32({slot})";
+        if (t == "short") return $"Marshal.ReadInt16({slot})";
+        if (t == "unsigned short" || t == "char16_t") return $"({CSharpScalar(t)})Marshal.ReadInt16({slot})";
+        if (t == "long") return $"Marshal.ReadInt32({slot})";
+        if (t == "unsigned char") return $"Marshal.ReadByte({slot})";
+        if (t == "char") return $"(sbyte)Marshal.ReadByte({slot})";
         if (IsEnum(t)) return $"({CsEnum(t)})Marshal.ReadInt32({slot})";
         if (IsBoxed(t)) return $"{t}.FromHandle({slot})";
         return slot;
@@ -658,6 +828,7 @@ public static class ApiCodeGen
     {
         if (IsArray(t)) return "int[]";
         if (t == "char*") return "string";
+        if (IsListT(t)) return ApiTypes.Managed(t, ClassNames);
         if (IsPtr(t)) return IsClassPtr(t) ? t.Substring(0, t.Length - 1) : "IntPtr";
         if (IsEnum(t)) return CsEnum(t);
         return ApiTypes.Managed(t, ClassNames);
@@ -667,7 +838,7 @@ public static class ApiCodeGen
     {
         if (IsArray(t)) return "int[]";
         if (t == "char*") return "[MarshalAs(UnmanagedType.LPUTF8Str)] string";
-        if (IsStringListT(t)) return "IntPtr";
+        if (IsStringListT(t) || IsListT(t)) return "IntPtr";
         if (IsPtr(t) || IsBoxed(t)) return "IntPtr";
         if (IsEnum(t)) return "int";
         if (IsStringT(t)) return "[MarshalAs(UnmanagedType.LPWStr)] string";
@@ -690,13 +861,20 @@ public static class ApiCodeGen
         "long long" => "long",
         "unsigned long long" => "ulong",
         "unsigned int" => "uint",
+        "short" => "short",
+        "unsigned short" => "ushort",
+        "long" => "int",            // 32-bit on the MSVC target we bind
+        "unsigned long" => "uint",
+        "char" => "sbyte",
+        "unsigned char" => "byte",
+        "char16_t" => "char",
         _ => null,
     };
 
     static string ArgToNative(string t, string name)
     {
         if (IsArray(t) || IsStringT(t) || t == "char*") return name;
-        if (IsStringListT(t)) return $"{name}Handle";
+        if (IsStringListT(t) || IsListT(t)) return $"{name}Handle";
         if (IsEnum(t)) return $"(int){name}";
         // Opaque pointers (QEvent*) are already raw handles and must not be dereferenced.
         if (IsClassPtr(t) || IsBoxed(t)) return $"{name}?.Handle ?? IntPtr.Zero";
@@ -708,6 +886,7 @@ public static class ApiCodeGen
         // The native side hands back a newly allocated QString for both string conventions.
         if (IsStringT(t) || t == "char*") return $"ApiRuntime.ToManaged({call})";
         if (IsStringListT(t)) return $"ApiRuntime.ToManagedStringList({call})";
+        if (IsListT(t)) return $"{ListHelper(ListElem(t))}.Read({call})";
         if (IsEnum(t)) return $"({CsEnum(t)}){call}";
         if (IsClassPtr(t)) return $"{t.Substring(0, t.Length - 1)}.FromHandle({call})";
         if (IsBoxed(t)) return IsOwned(t) ? $"{t}.FromOwnedHandle({call})" : $"{t}.FromTransientHandle({call})";
@@ -731,6 +910,9 @@ public static class ApiCodeGen
 
         foreach (var cls in Classes)
             WriteNativeClass(sb, cls);
+
+        foreach (var elem in ListElements())
+            WriteListNativeCpp(sb, elem);
         return sb.ToString();
     }
 
@@ -917,7 +1099,7 @@ public static class ApiCodeGen
         if (IsStringT(t)) return "const char16_t*";
         if (t == "char*") return "const char*";
         if (t == "int*") return "const int*";
-        if (IsStringListT(t)) return "void*";
+        if (IsStringListT(t) || IsListT(t)) return "void*";
         if (IsPtr(t) || IsBoxed(t)) return "void*";
         if (IsEnum(t)) return "int";
         return t;
@@ -930,6 +1112,7 @@ public static class ApiCodeGen
         if (t == "char*") return "const char*";
         if (t == "int*") return "const int*";
         if (IsStringListT(t)) return "const QStringList&";
+        if (IsListT(t)) return $"const {t}&";
         if (IsEnum(t) || IsPtr(t)) return t;
         if (IsBoxed(t)) return $"const {t}&";
         return t;
@@ -940,6 +1123,7 @@ public static class ApiCodeGen
         // A null managed string must not reach QString::fromUtf16 as a null pointer.
         if (IsStringT(t)) return $"{name} ? QString::fromUtf16({name}) : QString()";
         if (IsStringListT(t)) return $"*static_cast<QStringList*>({name})";
+        if (IsListT(t)) return $"*static_cast<{t}*>({name})";
         if (t == "char*") return name;      // already a const char*
         if (IsPtr(t)) return $"static_cast<{t.Substring(0, t.Length - 1)}*>({name})";
         // QFlags has no cast from int; the named constructor is the documented way back.
@@ -970,6 +1154,7 @@ public static class ApiCodeGen
         if (t == "void") return call + ";";
         if (IsStringT(t)) return $"return new QString({call});";
         if (IsStringListT(t)) return $"return new QStringList({call});";
+        if (IsListT(t)) return $"return new {t}({call});";
         if (t == "char*") return $"{{ const char* text = ({call}); return new QString(text ? QString::fromUtf8(text) : QString()); }}";
         if (IsFlags(t)) return $"return static_cast<int>({call}.toInt());";
         if (IsEnum(t)) return $"return static_cast<int>({call});";

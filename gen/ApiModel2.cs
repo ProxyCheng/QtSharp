@@ -279,11 +279,14 @@ public static partial class ApiModel
         if (flags != null)
             return flags;
 
-        // QStringList is the one container the model carries: it is QList<QString>, and the
-        // runtime already has a bridge for it (the signals use it). Any other QList<...> is
-        // still skipped rather than guessed.
+        // QStringList is QList<QString> and keeps its own name (the signals already use it, and
+        // the runtime has had a bridge for it all along). Any other QList<E> whose element type
+        // the vocabulary can express becomes "QList<E>"; the rest stay unbound rather than
+        // guessed.
         if (IsQStringList(type))
             return "QStringList";
+        if (IsQList(type, out var element))
+            return "QList<" + element + ">";
 
         if (type.kind == CXTypeKind.CXType_Pointer)
         {
@@ -351,6 +354,30 @@ public static partial class ApiModel
         return spelling.Replace(" ", "") == "QList<QString>";
     }
 
+    // The element type of a "QList<E>" model type name, or null when it is not a list.
+    static string ListElement(string modelType)
+        => modelType != null && modelType.StartsWith("QList<", StringComparison.Ordinal) && modelType.EndsWith(">")
+            ? modelType.Substring("QList<".Length, modelType.Length - "QList<".Length - 1)
+            : null;
+
+    // A QList<E> whose element type the vocabulary can express. The element comes from the
+    // template argument of the specialization rather than from parsing the spelling.
+    static bool IsQList(CXType type, out string element)
+    {
+        element = null;
+        var canonical = type.CanonicalType;
+        var declaration = canonical.Declaration;
+        if (clang.getCursorKind(declaration) != CXCursorKind.CXCursor_ClassDecl)
+            return false;
+        if (clang.getCursorSpelling(declaration).ToString() != "QList")
+            return false;
+        int count = clang.Cursor_getNumTemplateArguments(declaration);
+        if (count != 1)
+            return false;
+        element = ModelName(clang.Cursor_getTemplateArgumentType(declaration, 0));
+        return element != null;
+    }
+
     static string BuiltinName(CXType type) => type.kind switch
     {
         CXTypeKind.CXType_Void => "void",
@@ -363,7 +390,15 @@ public static partial class ApiModel
         CXTypeKind.CXType_LongLong => "long long",
         CXTypeKind.CXType_ULongLong => "unsigned long long",
         CXTypeKind.CXType_UInt => "unsigned int",
-        // A UTF-32 code unit is a 32-bit unsigned value, which is how managed code sees it.
+        // The remaining small scalars Qt uses for byte/character work. A UTF-32 code unit is a
+        // 32-bit unsigned value, which is how managed code sees it.
+        CXTypeKind.CXType_Short => "short",
+        CXTypeKind.CXType_UShort => "unsigned short",
+        CXTypeKind.CXType_Long => "long",
+        CXTypeKind.CXType_ULong => "unsigned long",
+        CXTypeKind.CXType_Char_S => "char",
+        CXTypeKind.CXType_UChar => "unsigned char",
+        CXTypeKind.CXType_Char16 => "char16_t",
         CXTypeKind.CXType_Char32 => "unsigned int",
         _ => null,
     };
@@ -440,6 +475,9 @@ public static partial class ApiModel
             return false;
         if (name.EndsWith("*"))
             return SupportedTypes.Contains(name);
+        // A QList<E> is bindable exactly when its element type is.
+        if (ListElement(name) is string element)
+            return SupportedTypes.Contains(element);
 
         var flags = FlagsName(type);
         if (flags != null)
@@ -462,6 +500,10 @@ public static partial class ApiModel
         var spelling = clang.getTypeSpelling(type).ToString();
         if (spelling.Length == 0)
             return clang.getTypeKindSpelling(type.kind).ToString();
+        // The coverage report groups by the container name; the debug log keeps the full
+        // spelling, which is what says which element types are still missing.
+        if (Environment.GetEnvironmentVariable("QTSHARP_MODEL_DEBUG") == "1")
+            Console.WriteLine($"[model2-debug] blocked: {spelling}");
         var open = spelling.IndexOf('<');
         return open < 0 ? spelling : spelling.Substring(0, open) + "<...>";
     }
@@ -667,6 +709,9 @@ public static partial class ApiModel
         }
 
         var isCtor = clang.getCursorKind(handle) == CXCursorKind.CXCursor_Constructor;
+        if (!isCtor && !IsCopyableResult(clang.getCursorResultType(handle)))
+            return null;
+
         var fn = new FnFact
         {
             Cursor = handle,
@@ -732,6 +777,29 @@ public static partial class ApiModel
     }
 
     static CX_CXXAccessSpecifier Access(CXCursor cursor) => clang.getCXXAccessSpecifier(cursor);
+
+    // The generated glue hands a returned value to managed code by copying it, so a class whose
+    // copy constructor is deleted (QDataStream, returned by its own fluent writeBytes) cannot be
+    // a return type at all.
+    static bool IsCopyableResult(CXType type)
+    {
+        type = Unwrap(type);
+        if (type.kind == CXTypeKind.CXType_LValueReference ||
+            type.kind == CXTypeKind.CXType_RValueReference)
+            type = type.PointeeType;
+        var declaration = type.CanonicalType.Declaration;
+        if (clang.getCursorKind(declaration) != CXCursorKind.CXCursor_ClassDecl &&
+            clang.getCursorKind(declaration) != CXCursorKind.CXCursor_StructDecl)
+            return true;
+        foreach (var child in Children(declaration))
+        {
+            if (clang.getCursorKind(child) != CXCursorKind.CXCursor_Constructor)
+                continue;
+            if (clang.CXXConstructor_isCopyConstructor(child) != 0)
+                return clang.CXXMethod_isDeleted(child) == 0;
+        }
+        return true;    // an implicitly declared copy constructor
+    }
 
     static readonly HashSet<string> TypeWords = new(StringComparer.Ordinal)
     {

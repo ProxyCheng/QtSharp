@@ -40,7 +40,27 @@ public static class ApiTypes
                 return "ulong";
             case "unsigned int":
                 return "uint";
+            // The small scalars, including the byte/character conventions Qt uses.
+            case "short":
+                return "short";
+            case "unsigned short":
+                return "ushort";
+            case "long":
+                return "int";           // 32-bit on the MSVC target we bind
+            case "unsigned long":
+                return "uint";
+            case "char":
+                return "sbyte";
+            case "unsigned char":
+                return "byte";
+            case "char16_t":
+                return "char";
         }
+
+        // A generic container: the managed surface is an array of the managed element type
+        // (QList<int> -> int[], QList<QStandardItem*> -> QStandardItem[]).
+        if (modelType.StartsWith("QList<", StringComparison.Ordinal) && modelType.EndsWith(">"))
+            return Managed(modelType.Substring("QList<".Length, modelType.Length - "QList<".Length - 1), classes) + "[]";
 
         if (modelType == "int*")
             return "int[]";
@@ -299,6 +319,14 @@ public static partial class ApiModel
         R("QCalendar",        "qcalendar.h",        "QtCore"),
         R("QMimeData",        "qmimedata.h",        "QtCore"),
         R("QBitArray",        "qbitarray.h",        "QtCore"),
+        R("QTimeZone",        "qtimezone.h",        "QtCore"),
+        R("QIODevice",        "qiodevice.h",        "QtCore"),
+        R("QDataStream",      "qdatastream.h",      "QtCore"),
+        R("QMetaType",        "qmetatype.h",        "QtCore"),
+        R("QRegularExpression", "qregularexpression.h", "QtCore"),
+        R("QTextStream",      "qtextstream.h",      "QtCore"),
+        R("QColorSpace",      "qcolorspace.h",      "QtGui"),
+        R("QMetaMethod",      "qmetaobject.h",      "QtCore"),
         // ------------------------------------------------------------------ item views, styles, values
         // The item-model data types and the item-view item classes, the style option structs that
         // every custom paintEvent receives, and the value types (QModelIndex, QVariant, bytes,
@@ -396,6 +424,8 @@ public static partial class ApiModel
         {
             "void", "bool", "int", "float", "double",
             "long long", "unsigned long long", "unsigned int",
+            "short", "unsigned short", "long", "unsigned long",
+            "char", "unsigned char", "char16_t",
             "QString", "char*", "int*",
             // The string views Qt declares next to QString; they all surface as a managed
             // string, and folding the overloads is what ApiTypes.Managed is for.
