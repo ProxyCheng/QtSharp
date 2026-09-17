@@ -115,6 +115,20 @@ namespace QtSharp.Api
         public static void WriteResult(IntPtr destination, int value)
             => Marshal.WriteInt32(destination, value);
 
+        // The caller's slot holds the value itself, so every scalar the model can return needs
+        // its own writer (a virtual override's result is copied into it).
+        public static void WriteResult(IntPtr destination, long value) => Marshal.WriteInt64(destination, value);
+        public static void WriteResult(IntPtr destination, ulong value) => Marshal.WriteInt64(destination, unchecked((long)value));
+        public static void WriteResult(IntPtr destination, uint value) => Marshal.WriteInt32(destination, unchecked((int)value));
+        public static void WriteResult(IntPtr destination, short value) => Marshal.WriteInt16(destination, value);
+        public static void WriteResult(IntPtr destination, ushort value) => Marshal.WriteInt16(destination, unchecked((short)value));
+        public static void WriteResult(IntPtr destination, char value) => Marshal.WriteInt16(destination, (short)value);
+        public static void WriteResult(IntPtr destination, sbyte value) => Marshal.WriteByte(destination, unchecked((byte)value));
+        public static void WriteResult(IntPtr destination, byte value) => Marshal.WriteByte(destination, value);
+        public static void WriteResult(IntPtr destination, double value) => Marshal.WriteInt64(destination, BitConverter.DoubleToInt64Bits(value));
+        public static void WriteResult(IntPtr destination, float value) => Marshal.WriteInt32(destination, BitConverter.SingleToInt32Bits(value));
+        public static void WriteResult(IntPtr destination, IntPtr value) => Marshal.WriteIntPtr(destination, value);
+
         public static int ProbeEventFilter(IntPtr self, IntPtr watched, IntPtr eventPtr)
             => ProbeEventFilterNative(self, watched, eventPtr);
 
@@ -189,6 +203,41 @@ namespace QtSharp.Api
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_qstringlist_free", CallingConvention = CallingConvention.Cdecl)]
         private static extern void StringListFree(IntPtr list);
+
+        // A byte buffer argument becomes a QByteArray for the duration of the call; the
+        // generated wrapper frees it in a finally. A QByteArrayView return is copied out.
+        public static IntPtr NewByteArray(byte[] data)
+            => ByteArrayFromBytes(data ?? Array.Empty<byte>(), data?.Length ?? 0);
+
+        public static void FreeByteArray(IntPtr array)
+        {
+            if (array != IntPtr.Zero)
+                ByteArrayFree(array);
+        }
+
+        public static byte[] ToManagedBytes(IntPtr array)
+        {
+            if (array == IntPtr.Zero)
+                return null;
+            int size = ByteArraySize(array);
+            var result = new byte[size];
+            if (size > 0)
+                Marshal.Copy(ByteArrayData(array), result, 0, size);
+            ByteArrayFree(array);
+            return result;
+        }
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_qbytearray_from_bytes", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr ByteArrayFromBytes([MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 1)] byte[] data, int length);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_qbytearray_size", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ByteArraySize(IntPtr array);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_qbytearray_data", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr ByteArrayData(IntPtr array);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_qbytearray_free", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void ByteArrayFree(IntPtr array);
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_qstringlist_count", CallingConvention = CallingConvention.Cdecl)]
         private static extern int StringListCount(IntPtr list);

@@ -65,6 +65,28 @@ extern "C" __declspec(dllexport) void qs_api_qstringlist_free(void* list)
     delete static_cast<QStringList*>(list);
 }
 
+// QByteArray: built from a managed byte[] for the duration of a call, and copied out when a
+// QByteArrayView (or a QByteArray) comes back.
+extern "C" __declspec(dllexport) void* qs_api_qbytearray_from_bytes(const unsigned char* data, int length)
+{
+    return new QByteArray(reinterpret_cast<const char*>(data), length);
+}
+
+extern "C" __declspec(dllexport) int qs_api_qbytearray_size(const void* array)
+{
+    return static_cast<int>(static_cast<const QByteArray*>(array)->size());
+}
+
+extern "C" __declspec(dllexport) const unsigned char* qs_api_qbytearray_data(const void* array)
+{
+    return reinterpret_cast<const unsigned char*>(static_cast<const QByteArray*>(array)->constData());
+}
+
+extern "C" __declspec(dllexport) void qs_api_qbytearray_free(void* array)
+{
+    delete static_cast<QByteArray*>(array);
+}
+
 // ------------------------------------------------------------------ signal forwarder
 typedef void (*QsApiSignalCallback)(void* userData, int argc, const void* const* argv, const int* typeIds);
 

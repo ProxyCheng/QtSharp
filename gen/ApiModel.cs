@@ -64,6 +64,10 @@ public static class ApiTypes
 
         if (modelType == "int*")
             return "int[]";
+        // Byte buffers: a const uchar* whose length is passed separately, and the Qt6 byte view
+        // that carries its own length.
+        if (modelType == "uchar*" || modelType == "QByteArrayView")
+            return "byte[]";
         if (modelType.EndsWith("*"))
         {
             var pointee = modelType.Substring(0, modelType.Length - 1);
@@ -511,6 +515,8 @@ public static partial class ApiModel
             "void*",
             // A const byte buffer with its length passed separately.
             "uchar*",
+            // The Qt6 byte view: a length-carrying byte buffer, so returns are fine here.
+            "QByteArrayView",
             "QString", "char*", "int*",
             // The string views Qt declares next to QString; they all surface as a managed
             // string, and folding the overloads is what ApiTypes.Managed is for.
@@ -560,6 +566,9 @@ public static partial class ApiModel
         "wheelEvent", "keyPressEvent", "keyReleaseEvent", "focusInEvent", "focusOutEvent",
         "enterEvent", "leaveEvent", "changeEvent", "contextMenuEvent",
         "dragEnterEvent", "dragMoveEvent", "dragLeaveEvent", "dropEvent",
+        // The layout side of a custom widget: without these a managed widget cannot say how big
+        // it wants to be (the Calculator example's CalcButton overrides sizeHint).
+        "sizeHint", "minimumSizeHint", "heightForWidth", "hasHeightForWidth",
     };
 
     // The parse-only side of the pipeline only needs the headers of the roots it is given:

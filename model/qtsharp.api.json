@@ -422,11 +422,11 @@
         { "name": "paintingRoles", "returnType": "QList<int>", "parameters": [] },
         { "name": "setEditorData", "returnType": "void", "parameters": [{ "name": "editor", "type": "QWidget*" }, { "name": "index", "type": "QModelIndex" }] },
         { "name": "setModelData", "returnType": "void", "parameters": [{ "name": "editor", "type": "QWidget*" }, { "name": "model", "type": "QAbstractItemModel*" }, { "name": "index", "type": "QModelIndex" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [{ "name": "option", "type": "QStyleOptionViewItem" }, { "name": "index", "type": "QModelIndex" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "updateEditorGeometry", "returnType": "void", "parameters": [{ "name": "editor", "type": "QWidget*" }, { "name": "option", "type": "QStyleOptionViewItem" }, { "name": "index", "type": "QModelIndex" }] }
       ],
       "virtuals": [
+        { "name": "sizeHint", "pure": true, "const": true, "returnType": "QSize", "parameters": [{ "name": "option", "type": "QStyleOptionViewItem" }, { "name": "index", "type": "QModelIndex" }] }
       ],
       "signals": [
       ]
@@ -691,7 +691,6 @@
         { "name": "horizontalScrollBarPolicy", "returnType": "Qt::ScrollBarPolicy", "parameters": [] },
         { "name": "maximumViewportSize", "returnType": "QSize", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "scrollBarWidgets", "returnType": "QList<QWidget*>", "parameters": [{ "name": "alignment", "type": "Qt::Alignment" }] },
         { "name": "setCornerWidget", "returnType": "void", "parameters": [{ "name": "widget", "type": "QWidget*" }] },
         { "name": "setHorizontalScrollBar", "returnType": "void", "parameters": [{ "name": "scrollbar", "type": "QScrollBar*" }] },
@@ -702,7 +701,6 @@
         { "name": "setViewport", "returnType": "void", "parameters": [{ "name": "widget", "type": "QWidget*" }] },
         { "name": "setupViewport", "returnType": "void", "parameters": [{ "name": "viewport", "type": "QWidget*" }] },
         { "name": "sizeAdjustPolicy", "returnType": "QAbstractScrollArea::SizeAdjustPolicy", "parameters": [] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "verticalScrollBar", "returnType": "QScrollBar*", "parameters": [] },
         { "name": "verticalScrollBarPolicy", "returnType": "Qt::ScrollBarPolicy", "parameters": [] },
@@ -717,12 +715,14 @@
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "arg0", "type": "QEvent*" }] },
         { "name": "eventFilter", "returnType": "bool", "parameters": [{ "name": "arg0", "type": "QObject*" }, { "name": "arg1", "type": "QEvent*" }] },
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QKeyEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mouseDoubleClickEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
         { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QResizeEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "wheelEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QWheelEvent*" }] }
       ],
       "signals": [
@@ -808,7 +808,6 @@
         { "name": "isReadOnly", "returnType": "bool", "parameters": [] },
         { "name": "keyboardTracking", "returnType": "bool", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "selectAll", "returnType": "void", "parameters": [] },
         { "name": "setAccelerated", "returnType": "void", "parameters": [{ "name": "on", "type": "bool" }] },
         { "name": "setAlignment", "returnType": "void", "parameters": [{ "name": "flag", "type": "Qt::Alignment" }] },
@@ -820,7 +819,6 @@
         { "name": "setReadOnly", "returnType": "void", "parameters": [{ "name": "r", "type": "bool" }] },
         { "name": "setSpecialValueText", "returnType": "void", "parameters": [{ "name": "txt", "type": "QString" }] },
         { "name": "setWrapping", "returnType": "void", "parameters": [{ "name": "w", "type": "bool" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "specialValueText", "returnType": "QString", "parameters": [] },
         { "name": "stepBy", "returnType": "void", "parameters": [{ "name": "steps", "type": "int" }] },
         { "name": "stepDown", "returnType": "void", "parameters": [] },
@@ -839,12 +837,14 @@
         { "name": "hideEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QHideEvent*" }] },
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QKeyEvent*" }] },
         { "name": "keyReleaseEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QKeyEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QMouseEvent*" }] },
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QMouseEvent*" }] },
         { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QMouseEvent*" }] },
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QPaintEvent*" }] },
         { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QResizeEvent*" }] },
         { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QShowEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "timerEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QTimerEvent*" }] },
         { "name": "wheelEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QWheelEvent*" }] }
       ],
@@ -1149,8 +1149,6 @@
         { "name": "count", "returnType": "int", "parameters": [] },
         { "name": "direction", "returnType": "QBoxLayout::Direction", "parameters": [] },
         { "name": "expandingDirections", "returnType": "Qt::Orientations", "parameters": [] },
-        { "name": "hasHeightForWidth", "returnType": "bool", "parameters": [] },
-        { "name": "heightForWidth", "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "insertItem", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "arg1", "type": "QLayoutItem*" }] },
         { "name": "insertLayout", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "layout", "type": "QLayout*" }, { "name": "stretch", "type": "int", "optional": true, "default": "0" }] },
         { "name": "insertSpacerItem", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "spacerItem", "type": "QSpacerItem*" }] },
@@ -1169,13 +1167,15 @@
         { "name": "setStretch", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "stretch", "type": "int" }] },
         { "name": "setStretchFactor", "returnType": "bool", "parameters": [{ "name": "l", "type": "QLayout*" }, { "name": "stretch", "type": "int" }] },
         { "name": "setStretchFactor", "returnType": "bool", "parameters": [{ "name": "w", "type": "QWidget*" }, { "name": "stretch", "type": "int" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "spacing", "returnType": "int", "parameters": [] },
         { "name": "stretch", "returnType": "int", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "takeAt", "returnType": "QLayoutItem*", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "hasHeightForWidth", "const": true, "returnType": "bool", "parameters": [] },
+        { "name": "heightForWidth", "const": true, "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -1265,16 +1265,19 @@
       "owned": true,
       "constructors": [
         { "parameters": [] },
+        { "parameters": [{ "name": "v", "type": "QByteArrayView" }] },
         { "parameters": [{ "name": "arg0", "type": "char*" }, { "name": "size", "type": "long long", "optional": true, "default": "-1" }] },
         { "parameters": [{ "name": "size", "type": "long long" }, { "name": "arg1", "type": "Qt::Initialization" }] },
         { "parameters": [{ "name": "size", "type": "long long" }, { "name": "c", "type": "char" }] }
       ],
       "methods": [
         { "name": "append", "returnType": "QByteArray", "parameters": [{ "name": "a", "type": "QByteArray" }] },
+        { "name": "append", "returnType": "QByteArray", "parameters": [{ "name": "a", "type": "QByteArrayView" }] },
         { "name": "append", "returnType": "QByteArray", "parameters": [{ "name": "c", "type": "char" }] },
         { "name": "append", "returnType": "QByteArray", "parameters": [{ "name": "s", "type": "char*" }] },
         { "name": "append", "returnType": "QByteArray", "parameters": [{ "name": "s", "type": "char*" }, { "name": "len", "type": "long long" }] },
         { "name": "append", "returnType": "QByteArray", "parameters": [{ "name": "count", "type": "long long" }, { "name": "c", "type": "char" }] },
+        { "name": "assign", "returnType": "QByteArray", "parameters": [{ "name": "v", "type": "QByteArrayView" }] },
         { "name": "assign", "returnType": "QByteArray", "parameters": [{ "name": "n", "type": "long long" }, { "name": "c", "type": "char" }] },
         { "name": "at", "returnType": "char", "parameters": [{ "name": "i", "type": "long long" }] },
         { "name": "back", "returnType": "char", "parameters": [] },
@@ -1285,15 +1288,19 @@
         { "name": "chop", "returnType": "void", "parameters": [{ "name": "n", "type": "long long" }] },
         { "name": "chopped", "returnType": "QByteArray", "parameters": [{ "name": "len", "type": "long long" }] },
         { "name": "clear", "returnType": "void", "parameters": [] },
+        { "name": "compare", "returnType": "int", "parameters": [{ "name": "a", "type": "QByteArrayView" }, { "name": "cs", "type": "Qt::CaseSensitivity", "optional": true, "default": "Qt.CaseSensitivity.CaseSensitive" }] },
         { "name": "constBegin", "returnType": "char*", "parameters": [] },
         { "name": "constData", "returnType": "char*", "parameters": [] },
         { "name": "constEnd", "returnType": "char*", "parameters": [] },
+        { "name": "contains", "returnType": "bool", "parameters": [{ "name": "bv", "type": "QByteArrayView" }] },
         { "name": "contains", "returnType": "bool", "parameters": [{ "name": "c", "type": "char" }] },
         { "name": "count", "returnType": "long long", "parameters": [] },
+        { "name": "count", "returnType": "long long", "parameters": [{ "name": "bv", "type": "QByteArrayView" }] },
         { "name": "count", "returnType": "long long", "parameters": [{ "name": "c", "type": "char" }] },
         { "name": "data", "returnType": "char*", "parameters": [] },
         { "name": "detach", "returnType": "void", "parameters": [] },
         { "name": "end", "returnType": "char*", "parameters": [] },
+        { "name": "endsWith", "returnType": "bool", "parameters": [{ "name": "bv", "type": "QByteArrayView" }] },
         { "name": "endsWith", "returnType": "bool", "parameters": [{ "name": "c", "type": "char" }] },
         { "name": "fill", "returnType": "QByteArray", "parameters": [{ "name": "c", "type": "char" }, { "name": "size", "type": "long long", "optional": true, "default": "-1" }] },
         { "name": "first", "returnType": "QByteArray", "parameters": [{ "name": "n", "type": "long long" }] },
@@ -1302,8 +1309,10 @@
         { "name": "fromPercentEncoding", "static": true, "returnType": "QByteArray", "parameters": [{ "name": "pctEncoded", "type": "QByteArray" }, { "name": "percent", "type": "char", "optional": true }] },
         { "name": "fromRawData", "static": true, "returnType": "QByteArray", "parameters": [{ "name": "data", "type": "char*" }, { "name": "size", "type": "long long" }] },
         { "name": "front", "returnType": "char", "parameters": [] },
+        { "name": "indexOf", "returnType": "long long", "parameters": [{ "name": "bv", "type": "QByteArrayView" }, { "name": "from", "type": "long long", "optional": true, "default": "0" }] },
         { "name": "indexOf", "returnType": "long long", "parameters": [{ "name": "c", "type": "char" }, { "name": "from", "type": "long long", "optional": true, "default": "0" }] },
         { "name": "insert", "returnType": "QByteArray", "parameters": [{ "name": "i", "type": "long long" }, { "name": "data", "type": "QByteArray" }] },
+        { "name": "insert", "returnType": "QByteArray", "parameters": [{ "name": "i", "type": "long long" }, { "name": "data", "type": "QByteArrayView" }] },
         { "name": "insert", "returnType": "QByteArray", "parameters": [{ "name": "i", "type": "long long" }, { "name": "c", "type": "char" }] },
         { "name": "insert", "returnType": "QByteArray", "parameters": [{ "name": "i", "type": "long long" }, { "name": "s", "type": "char*" }] },
         { "name": "insert", "returnType": "QByteArray", "parameters": [{ "name": "i", "type": "long long" }, { "name": "s", "type": "char*" }, { "name": "len", "type": "long long" }] },
@@ -1316,6 +1325,8 @@
         { "name": "isUpper", "returnType": "bool", "parameters": [] },
         { "name": "isValidUtf8", "returnType": "bool", "parameters": [] },
         { "name": "last", "returnType": "QByteArray", "parameters": [{ "name": "n", "type": "long long" }] },
+        { "name": "lastIndexOf", "returnType": "long long", "parameters": [{ "name": "bv", "type": "QByteArrayView" }] },
+        { "name": "lastIndexOf", "returnType": "long long", "parameters": [{ "name": "bv", "type": "QByteArrayView" }, { "name": "from", "type": "long long" }] },
         { "name": "lastIndexOf", "returnType": "long long", "parameters": [{ "name": "c", "type": "char" }, { "name": "from", "type": "long long", "optional": true, "default": "-1" }] },
         { "name": "left", "returnType": "QByteArray", "parameters": [{ "name": "n", "type": "long long" }] },
         { "name": "leftJustified", "returnType": "QByteArray", "parameters": [{ "name": "width", "type": "long long" }, { "name": "fill", "type": "char", "optional": true }, { "name": "truncate", "type": "bool", "optional": true, "default": "false" }] },
@@ -1332,14 +1343,17 @@
         { "name": "number", "static": true, "returnType": "QByteArray", "parameters": [{ "name": "arg0", "type": "double" }, { "name": "format", "type": "char", "optional": true }, { "name": "precision", "type": "int", "optional": true, "default": "6" }] },
         { "name": "percentDecoded", "returnType": "QByteArray", "parameters": [{ "name": "percent", "type": "char", "optional": true }] },
         { "name": "prepend", "returnType": "QByteArray", "parameters": [{ "name": "a", "type": "QByteArray" }] },
+        { "name": "prepend", "returnType": "QByteArray", "parameters": [{ "name": "a", "type": "QByteArrayView" }] },
         { "name": "prepend", "returnType": "QByteArray", "parameters": [{ "name": "c", "type": "char" }] },
         { "name": "prepend", "returnType": "QByteArray", "parameters": [{ "name": "s", "type": "char*" }] },
         { "name": "prepend", "returnType": "QByteArray", "parameters": [{ "name": "s", "type": "char*" }, { "name": "len", "type": "long long" }] },
         { "name": "prepend", "returnType": "QByteArray", "parameters": [{ "name": "count", "type": "long long" }, { "name": "c", "type": "char" }] },
         { "name": "push_back", "returnType": "void", "parameters": [{ "name": "a", "type": "QByteArray" }] },
+        { "name": "push_back", "returnType": "void", "parameters": [{ "name": "a", "type": "QByteArrayView" }] },
         { "name": "push_back", "returnType": "void", "parameters": [{ "name": "c", "type": "char" }] },
         { "name": "push_back", "returnType": "void", "parameters": [{ "name": "s", "type": "char*" }] },
         { "name": "push_front", "returnType": "void", "parameters": [{ "name": "a", "type": "QByteArray" }] },
+        { "name": "push_front", "returnType": "void", "parameters": [{ "name": "a", "type": "QByteArrayView" }] },
         { "name": "push_front", "returnType": "void", "parameters": [{ "name": "c", "type": "char" }] },
         { "name": "push_front", "returnType": "void", "parameters": [{ "name": "c", "type": "char*" }] },
         { "name": "remove", "returnType": "QByteArray", "parameters": [{ "name": "index", "type": "long long" }, { "name": "len", "type": "long long" }] },
@@ -1347,7 +1361,10 @@
         { "name": "removeFirst", "returnType": "QByteArray", "parameters": [] },
         { "name": "removeLast", "returnType": "QByteArray", "parameters": [] },
         { "name": "repeated", "returnType": "QByteArray", "parameters": [{ "name": "times", "type": "long long" }] },
+        { "name": "replace", "returnType": "QByteArray", "parameters": [{ "name": "before", "type": "QByteArrayView" }, { "name": "after", "type": "QByteArrayView" }] },
+        { "name": "replace", "returnType": "QByteArray", "parameters": [{ "name": "before", "type": "char" }, { "name": "after", "type": "QByteArrayView" }] },
         { "name": "replace", "returnType": "QByteArray", "parameters": [{ "name": "before", "type": "char" }, { "name": "after", "type": "char" }] },
+        { "name": "replace", "returnType": "QByteArray", "parameters": [{ "name": "index", "type": "long long" }, { "name": "len", "type": "long long" }, { "name": "s", "type": "QByteArrayView" }] },
         { "name": "replace", "returnType": "QByteArray", "parameters": [{ "name": "before", "type": "char*" }, { "name": "bsize", "type": "long long" }, { "name": "after", "type": "char*" }, { "name": "asize", "type": "long long" }] },
         { "name": "replace", "returnType": "QByteArray", "parameters": [{ "name": "index", "type": "long long" }, { "name": "len", "type": "long long" }, { "name": "s", "type": "char*" }, { "name": "alen", "type": "long long" }] },
         { "name": "reserve", "returnType": "void", "parameters": [{ "name": "size", "type": "long long" }] },
@@ -1374,6 +1391,7 @@
         { "name": "sliced", "returnType": "QByteArray", "parameters": [{ "name": "pos", "type": "long long" }, { "name": "n", "type": "long long" }] },
         { "name": "split", "returnType": "QList<QByteArray>", "parameters": [{ "name": "sep", "type": "char" }] },
         { "name": "squeeze", "returnType": "void", "parameters": [] },
+        { "name": "startsWith", "returnType": "bool", "parameters": [{ "name": "bv", "type": "QByteArrayView" }] },
         { "name": "startsWith", "returnType": "bool", "parameters": [{ "name": "c", "type": "char" }] },
         { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QByteArray" }] },
         { "name": "toBase64", "returnType": "QByteArray", "parameters": [{ "name": "options", "type": "QByteArray::Base64Options", "optional": true }] },
@@ -1469,7 +1487,6 @@
         { "name": "maximumDate", "returnType": "QDate", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "minimumDate", "returnType": "QDate", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "monthShown", "returnType": "int", "parameters": [] },
         { "name": "selectedDate", "returnType": "QDate", "parameters": [] },
         { "name": "selectionMode", "returnType": "QCalendarWidget::SelectionMode", "parameters": [] },
@@ -1496,7 +1513,6 @@
         { "name": "showPreviousYear", "returnType": "void", "parameters": [] },
         { "name": "showSelectedDate", "returnType": "void", "parameters": [] },
         { "name": "showToday", "returnType": "void", "parameters": [] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "verticalHeaderFormat", "returnType": "QCalendarWidget::VerticalHeaderFormat", "parameters": [] },
         { "name": "weekdayTextFormat", "returnType": "QTextCharFormat", "parameters": [{ "name": "dayOfWeek", "type": "Qt::DayOfWeek" }] },
@@ -1506,8 +1522,10 @@
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "event", "type": "QEvent*" }] },
         { "name": "eventFilter", "returnType": "bool", "parameters": [{ "name": "watched", "type": "QObject*" }, { "name": "event", "type": "QEvent*" }] },
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QKeyEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QMouseEvent*" }] },
-        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QResizeEvent*" }] }
+        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QResizeEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
         { "name": "currentPageChanged", "parameters": [{ "name": "year", "type": "int" }, { "name": "month", "type": "int" }] },
@@ -1626,16 +1644,16 @@
         { "name": "checkState", "returnType": "Qt::CheckState", "parameters": [] },
         { "name": "isTristate", "returnType": "bool", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "setCheckState", "returnType": "void", "parameters": [{ "name": "state", "type": "Qt::CheckState" }] },
         { "name": "setTristate", "returnType": "void", "parameters": [{ "name": "y", "type": "bool", "optional": true, "default": "true" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "e", "type": "QEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
-        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] }
+        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
         { "name": "stateChanged", "parameters": [{ "name": "arg0", "type": "int" }] }
@@ -1935,12 +1953,12 @@
         { "name": "setResizeGripsVisible", "returnType": "void", "parameters": [{ "name": "visible", "type": "bool" }] },
         { "name": "setRootIndex", "returnType": "void", "parameters": [{ "name": "index", "type": "QModelIndex" }] },
         { "name": "setSelectionModel", "returnType": "void", "parameters": [{ "name": "selectionModel", "type": "QItemSelectionModel*" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "visualRect", "returnType": "QRect", "parameters": [{ "name": "index", "type": "QModelIndex" }] }
       ],
       "virtuals": [
-        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QResizeEvent*" }] }
+        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QResizeEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -1991,7 +2009,6 @@
         { "name": "maxVisibleItems", "returnType": "int", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "minimumContentsLength", "returnType": "int", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "model", "returnType": "QAbstractItemModel*", "parameters": [] },
         { "name": "modelColumn", "returnType": "int", "parameters": [] },
         { "name": "placeholderText", "returnType": "QString", "parameters": [] },
@@ -2024,7 +2041,6 @@
         { "name": "setView", "returnType": "void", "parameters": [{ "name": "itemView", "type": "QAbstractItemView*" }] },
         { "name": "showPopup", "returnType": "void", "parameters": [] },
         { "name": "sizeAdjustPolicy", "returnType": "QComboBox::SizeAdjustPolicy", "parameters": [] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "validator", "returnType": "QValidator*", "parameters": [] },
         { "name": "view", "returnType": "QAbstractItemView*", "parameters": [] }
@@ -2038,11 +2054,13 @@
         { "name": "hideEvent", "returnType": "void", "parameters": [{ "name": "e", "type": "QHideEvent*" }] },
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "e", "type": "QKeyEvent*" }] },
         { "name": "keyReleaseEvent", "returnType": "void", "parameters": [{ "name": "e", "type": "QKeyEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "e", "type": "QMouseEvent*" }] },
         { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "e", "type": "QMouseEvent*" }] },
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "e", "type": "QPaintEvent*" }] },
         { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "e", "type": "QResizeEvent*" }] },
         { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "e", "type": "QShowEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "wheelEvent", "returnType": "void", "parameters": [{ "name": "e", "type": "QWheelEvent*" }] }
       ],
       "signals": [
@@ -2070,17 +2088,17 @@
       ],
       "methods": [
         { "name": "description", "returnType": "QString", "parameters": [] },
-        { "name": "heightForWidth", "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "initStyleOption", "returnType": "void", "parameters": [{ "name": "option", "type": "QStyleOptionButton*" }] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "setDescription", "returnType": "void", "parameters": [{ "name": "description", "type": "QString" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "e", "type": "QEvent*" }] },
-        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] }
+        { "name": "heightForWidth", "const": true, "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
+        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -2572,7 +2590,6 @@
         { "name": "setTimeRange", "returnType": "void", "parameters": [{ "name": "min", "type": "QTime" }, { "name": "max", "type": "QTime" }] },
         { "name": "setTimeSpec", "returnType": "void", "parameters": [{ "name": "spec", "type": "Qt::TimeSpec" }] },
         { "name": "setTimeZone", "returnType": "void", "parameters": [{ "name": "zone", "type": "QTimeZone" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "stepBy", "returnType": "void", "parameters": [{ "name": "steps", "type": "int" }] },
         { "name": "time", "returnType": "QTime", "parameters": [] },
         { "name": "timeSpec", "returnType": "Qt::TimeSpec", "parameters": [] },
@@ -2585,6 +2602,7 @@
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QKeyEvent*" }] },
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QMouseEvent*" }] },
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QPaintEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "wheelEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QWheelEvent*" }] }
       ],
       "signals": [
@@ -2623,24 +2641,24 @@
       ],
       "methods": [
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "notchSize", "returnType": "int", "parameters": [] },
         { "name": "notchTarget", "returnType": "double", "parameters": [] },
         { "name": "notchesVisible", "returnType": "bool", "parameters": [] },
         { "name": "setNotchTarget", "returnType": "void", "parameters": [{ "name": "target", "type": "double" }] },
         { "name": "setNotchesVisible", "returnType": "void", "parameters": [{ "name": "visible", "type": "bool" }] },
         { "name": "setWrapping", "returnType": "void", "parameters": [{ "name": "on", "type": "bool" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "wrapping", "returnType": "bool", "parameters": [] }
       ],
       "virtuals": [
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "e", "type": "QEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "me", "type": "QMouseEvent*" }] },
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "me", "type": "QMouseEvent*" }] },
         { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "me", "type": "QMouseEvent*" }] },
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "pe", "type": "QPaintEvent*" }] },
-        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "re", "type": "QResizeEvent*" }] }
+        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "re", "type": "QResizeEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -2662,7 +2680,6 @@
         { "name": "exec", "returnType": "int", "parameters": [] },
         { "name": "isSizeGripEnabled", "returnType": "bool", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "open", "returnType": "void", "parameters": [] },
         { "name": "reject", "returnType": "void", "parameters": [] },
         { "name": "result", "returnType": "int", "parameters": [] },
@@ -2670,7 +2687,6 @@
         { "name": "setResult", "returnType": "void", "parameters": [{ "name": "r", "type": "int" }] },
         { "name": "setSizeGripEnabled", "returnType": "void", "parameters": [{ "name": "arg0", "type": "bool" }] },
         { "name": "setVisible", "returnType": "void", "parameters": [{ "name": "visible", "type": "bool" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
@@ -2678,8 +2694,10 @@
         { "name": "contextMenuEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QContextMenuEvent*" }] },
         { "name": "eventFilter", "returnType": "bool", "parameters": [{ "name": "arg0", "type": "QObject*" }, { "name": "arg1", "type": "QEvent*" }] },
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QKeyEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QResizeEvent*" }] },
-        { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QShowEvent*" }] }
+        { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QShowEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
         { "name": "accepted", "parameters": [] },
@@ -3282,12 +3300,12 @@
         { "name": "setSampleTextForFont", "returnType": "void", "parameters": [{ "name": "fontFamily", "type": "QString" }, { "name": "sampleText", "type": "QString" }] },
         { "name": "setSampleTextForSystem", "returnType": "void", "parameters": [{ "name": "writingSystem", "type": "QFontDatabase::WritingSystem" }, { "name": "sampleText", "type": "QString" }] },
         { "name": "setWritingSystem", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QFontDatabase::WritingSystem" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "writingSystem", "returnType": "QFontDatabase::WritingSystem", "parameters": [] }
       ],
       "virtuals": [
-        { "name": "event", "returnType": "bool", "parameters": [{ "name": "e", "type": "QEvent*" }] }
+        { "name": "event", "returnType": "bool", "parameters": [{ "name": "e", "type": "QEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -3537,8 +3555,6 @@
         { "name": "expandingDirections", "returnType": "Qt::Orientations", "parameters": [] },
         { "name": "fieldGrowthPolicy", "returnType": "QFormLayout::FieldGrowthPolicy", "parameters": [] },
         { "name": "formAlignment", "returnType": "Qt::Alignment", "parameters": [] },
-        { "name": "hasHeightForWidth", "returnType": "bool", "parameters": [] },
-        { "name": "heightForWidth", "returnType": "int", "parameters": [{ "name": "width", "type": "int" }] },
         { "name": "horizontalSpacing", "returnType": "int", "parameters": [] },
         { "name": "insertRow", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }, { "name": "layout", "type": "QLayout*" }] },
         { "name": "insertRow", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }, { "name": "widget", "type": "QWidget*" }] },
@@ -3576,13 +3592,15 @@
         { "name": "setSpacing", "returnType": "void", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "setVerticalSpacing", "returnType": "void", "parameters": [{ "name": "spacing", "type": "int" }] },
         { "name": "setWidget", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }, { "name": "role", "type": "QFormLayout::ItemRole" }, { "name": "widget", "type": "QWidget*" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "spacing", "returnType": "int", "parameters": [] },
         { "name": "takeAt", "returnType": "QLayoutItem*", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "verticalSpacing", "returnType": "int", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "hasHeightForWidth", "const": true, "returnType": "bool", "parameters": [] },
+        { "name": "heightForWidth", "const": true, "returnType": "int", "parameters": [{ "name": "width", "type": "int" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -3613,13 +3631,13 @@
         { "name": "setFrameStyle", "returnType": "void", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "setLineWidth", "returnType": "void", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "setMidLineWidth", "returnType": "void", "parameters": [{ "name": "arg0", "type": "int" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
         { "name": "changeEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QEvent*" }] },
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "e", "type": "QEvent*" }] },
-        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] }
+        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -3786,6 +3804,7 @@
         { "name": "verticalSpacing", "returnType": "double", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "sizeHint", "const": true, "returnType": "QSizeF", "parameters": [{ "name": "which", "type": "Qt::SizeHint" }, { "name": "constraint", "type": "QSizeF", "optional": true }] }
       ],
       "signals": [
       ]
@@ -3989,10 +4008,10 @@
         { "name": "setRowStretchFactor", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }, { "name": "stretch", "type": "int" }] },
         { "name": "setSpacing", "returnType": "void", "parameters": [{ "name": "spacing", "type": "double" }] },
         { "name": "setVerticalSpacing", "returnType": "void", "parameters": [{ "name": "spacing", "type": "double" }] },
-        { "name": "sizeHint", "returnType": "QSizeF", "parameters": [{ "name": "which", "type": "Qt::SizeHint" }] },
         { "name": "verticalSpacing", "returnType": "double", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "sizeHint", "const": true, "returnType": "QSizeF", "parameters": [{ "name": "which", "type": "Qt::SizeHint" }, { "name": "constraint", "type": "QSizeF", "optional": true }] }
       ],
       "signals": [
       ]
@@ -4345,6 +4364,7 @@
         { "name": "updateGeometry", "returnType": "void", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "sizeHint", "pure": true, "const": true, "returnType": "QSizeF", "parameters": [{ "name": "which", "type": "Qt::SizeHint" }, { "name": "constraint", "type": "QSizeF", "optional": true }] }
       ],
       "signals": [
       ]
@@ -4413,11 +4433,11 @@
         { "name": "setOrientation", "returnType": "void", "parameters": [{ "name": "orientation", "type": "Qt::Orientation" }] },
         { "name": "setSpacing", "returnType": "void", "parameters": [{ "name": "spacing", "type": "double" }] },
         { "name": "setStretchFactor", "returnType": "void", "parameters": [{ "name": "item", "type": "QGraphicsLayoutItem*" }, { "name": "stretch", "type": "int" }] },
-        { "name": "sizeHint", "returnType": "QSizeF", "parameters": [{ "name": "which", "type": "Qt::SizeHint" }] },
         { "name": "spacing", "returnType": "double", "parameters": [] },
         { "name": "stretchFactor", "returnType": "int", "parameters": [{ "name": "item", "type": "QGraphicsLayoutItem*" }] }
       ],
       "virtuals": [
+        { "name": "sizeHint", "const": true, "returnType": "QSizeF", "parameters": [{ "name": "which", "type": "Qt::SizeHint" }, { "name": "constraint", "type": "QSizeF", "optional": true }] }
       ],
       "signals": [
       ]
@@ -4615,6 +4635,7 @@
         { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] },
         { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneResizeEvent*" }] },
         { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QShowEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSizeF", "parameters": [{ "name": "which", "type": "Qt::SizeHint" }, { "name": "constraint", "type": "QSizeF", "optional": true }] },
         { "name": "wheelEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneWheelEvent*" }] }
       ],
       "signals": [
@@ -5291,7 +5312,6 @@
         { "name": "setTransformationAnchor", "returnType": "void", "parameters": [{ "name": "anchor", "type": "QGraphicsView::ViewportAnchor" }] },
         { "name": "setViewportUpdateMode", "returnType": "void", "parameters": [{ "name": "mode", "type": "QGraphicsView::ViewportUpdateMode" }] },
         { "name": "shear", "returnType": "void", "parameters": [{ "name": "sh", "type": "double" }, { "name": "sv", "type": "double" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "transform", "returnType": "QTransform", "parameters": [] },
         { "name": "transformationAnchor", "returnType": "QGraphicsView::ViewportAnchor", "parameters": [] },
@@ -5319,6 +5339,7 @@
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QPaintEvent*" }] },
         { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QResizeEvent*" }] },
         { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QShowEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "wheelEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QWheelEvent*" }] }
       ],
       "signals": [
@@ -5403,7 +5424,8 @@
         { "name": "hideEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QHideEvent*" }] },
         { "name": "moveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMoveEvent*" }] },
         { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneResizeEvent*" }] },
-        { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QShowEvent*" }] }
+        { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QShowEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSizeF", "parameters": [{ "name": "which", "type": "Qt::SizeHint" }, { "name": "constraint", "type": "QSizeF", "optional": true }] }
       ],
       "signals": [
         { "name": "geometryChanged", "parameters": [] },
@@ -5434,8 +5456,6 @@
         { "name": "columnStretch", "returnType": "int", "parameters": [{ "name": "column", "type": "int" }] },
         { "name": "count", "returnType": "int", "parameters": [] },
         { "name": "expandingDirections", "returnType": "Qt::Orientations", "parameters": [] },
-        { "name": "hasHeightForWidth", "returnType": "bool", "parameters": [] },
-        { "name": "heightForWidth", "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "horizontalSpacing", "returnType": "int", "parameters": [] },
         { "name": "invalidate", "returnType": "void", "parameters": [] },
         { "name": "itemAt", "returnType": "QLayoutItem*", "parameters": [{ "name": "index", "type": "int" }] },
@@ -5458,13 +5478,15 @@
         { "name": "setRowStretch", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }, { "name": "stretch", "type": "int" }] },
         { "name": "setSpacing", "returnType": "void", "parameters": [{ "name": "spacing", "type": "int" }] },
         { "name": "setVerticalSpacing", "returnType": "void", "parameters": [{ "name": "spacing", "type": "int" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "spacing", "returnType": "int", "parameters": [] },
         { "name": "takeAt", "returnType": "QLayoutItem*", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "verticalSpacing", "returnType": "int", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "hasHeightForWidth", "const": true, "returnType": "bool", "parameters": [] },
+        { "name": "heightForWidth", "const": true, "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -5487,7 +5509,6 @@
         { "name": "isChecked", "returnType": "bool", "parameters": [] },
         { "name": "isFlat", "returnType": "bool", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "setAlignment", "returnType": "void", "parameters": [{ "name": "alignment", "type": "int" }] },
         { "name": "setCheckable", "returnType": "void", "parameters": [{ "name": "checkable", "type": "bool" }] },
         { "name": "setChecked", "returnType": "void", "parameters": [{ "name": "checked", "type": "bool" }] },
@@ -5501,6 +5522,7 @@
         { "name": "childEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QChildEvent*" }] },
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "event", "type": "QEvent*" }] },
         { "name": "focusInEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QFocusEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QMouseEvent*" }] },
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QMouseEvent*" }] },
         { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QMouseEvent*" }] },
@@ -5608,7 +5630,6 @@
         { "name": "setStretchLastSection", "returnType": "void", "parameters": [{ "name": "stretch", "type": "bool" }] },
         { "name": "setVisible", "returnType": "void", "parameters": [{ "name": "v", "type": "bool" }] },
         { "name": "showSection", "returnType": "void", "parameters": [{ "name": "logicalIndex", "type": "int" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "sortIndicatorOrder", "returnType": "Qt::SortOrder", "parameters": [] },
         { "name": "sortIndicatorSection", "returnType": "int", "parameters": [] },
         { "name": "stretchLastSection", "returnType": "bool", "parameters": [] },
@@ -5624,7 +5645,8 @@
         { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "e", "type": "QMouseEvent*" }] },
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "e", "type": "QMouseEvent*" }] },
         { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "e", "type": "QMouseEvent*" }] },
-        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "e", "type": "QPaintEvent*" }] }
+        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "e", "type": "QPaintEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
         { "name": "geometriesChanged", "parameters": [] },
@@ -5868,6 +5890,7 @@
         { "name": "flipped", "returnType": "QImage", "parameters": [{ "name": "orient", "type": "Qt::Orientations", "optional": true, "default": "Qt.Orientations.Vertical" }] },
         { "name": "format", "returnType": "QImage::Format", "parameters": [] },
         { "name": "fromData", "static": true, "returnType": "QImage", "parameters": [{ "name": "data", "type": "QByteArray" }, { "name": "format", "type": "char*", "optional": true, "default": "null" }] },
+        { "name": "fromData", "static": true, "returnType": "QImage", "parameters": [{ "name": "data", "type": "QByteArrayView" }, { "name": "format", "type": "char*", "optional": true, "default": "null" }] },
         { "name": "hasAlphaChannel", "returnType": "bool", "parameters": [] },
         { "name": "height", "returnType": "int", "parameters": [] },
         { "name": "invertPixels", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QImage::InvertMode", "optional": true }] },
@@ -5877,6 +5900,7 @@
         { "name": "load", "returnType": "bool", "parameters": [{ "name": "device", "type": "QIODevice*" }, { "name": "format", "type": "char*" }] },
         { "name": "load", "returnType": "bool", "parameters": [{ "name": "fileName", "type": "QString" }, { "name": "format", "type": "char*", "optional": true, "default": "null" }] },
         { "name": "loadFromData", "returnType": "bool", "parameters": [{ "name": "data", "type": "QByteArray" }, { "name": "format", "type": "char*", "optional": true, "default": "null" }] },
+        { "name": "loadFromData", "returnType": "bool", "parameters": [{ "name": "data", "type": "QByteArrayView" }, { "name": "format", "type": "char*", "optional": true, "default": "null" }] },
         { "name": "mirror", "returnType": "void", "parameters": [{ "name": "horizontally", "type": "bool", "optional": true, "default": "false" }, { "name": "vertically", "type": "bool", "optional": true, "default": "true" }] },
         { "name": "mirrored", "returnType": "QImage", "parameters": [{ "name": "horizontally", "type": "bool", "optional": true, "default": "false" }, { "name": "vertically", "type": "bool", "optional": true, "default": "true" }] },
         { "name": "offset", "returnType": "QPoint", "parameters": [] },
@@ -6074,7 +6098,6 @@
         { "name": "isComboBoxEditable", "returnType": "bool", "parameters": [] },
         { "name": "labelText", "returnType": "QString", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "okButtonText", "returnType": "QString", "parameters": [] },
         { "name": "open", "returnType": "void", "parameters": [{ "name": "receiver", "type": "QObject*" }, { "name": "member", "type": "char*" }] },
         { "name": "options", "returnType": "QInputDialog::InputDialogOptions", "parameters": [] },
@@ -6100,13 +6123,14 @@
         { "name": "setTextEchoMode", "returnType": "void", "parameters": [{ "name": "mode", "type": "QLineEdit::EchoMode" }] },
         { "name": "setTextValue", "returnType": "void", "parameters": [{ "name": "text", "type": "QString" }] },
         { "name": "setVisible", "returnType": "void", "parameters": [{ "name": "visible", "type": "bool" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "testOption", "returnType": "bool", "parameters": [{ "name": "option", "type": "QInputDialog::InputDialogOption" }] },
         { "name": "textEchoMode", "returnType": "QLineEdit::EchoMode", "parameters": [] },
         { "name": "textValue", "returnType": "QString", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
         { "name": "doubleValueChanged", "parameters": [{ "name": "value", "type": "double" }] },
@@ -6166,12 +6190,12 @@
         { "name": "setEditorData", "returnType": "void", "parameters": [{ "name": "editor", "type": "QWidget*" }, { "name": "index", "type": "QModelIndex" }] },
         { "name": "setItemEditorFactory", "returnType": "void", "parameters": [{ "name": "factory", "type": "QItemEditorFactory*" }] },
         { "name": "setModelData", "returnType": "void", "parameters": [{ "name": "editor", "type": "QWidget*" }, { "name": "model", "type": "QAbstractItemModel*" }, { "name": "index", "type": "QModelIndex" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [{ "name": "option", "type": "QStyleOptionViewItem" }, { "name": "index", "type": "QModelIndex" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "updateEditorGeometry", "returnType": "void", "parameters": [{ "name": "editor", "type": "QWidget*" }, { "name": "option", "type": "QStyleOptionViewItem" }, { "name": "index", "type": "QModelIndex" }] }
       ],
       "virtuals": [
-        { "name": "eventFilter", "returnType": "bool", "parameters": [{ "name": "object", "type": "QObject*" }, { "name": "event", "type": "QEvent*" }] }
+        { "name": "eventFilter", "returnType": "bool", "parameters": [{ "name": "object", "type": "QObject*" }, { "name": "event", "type": "QEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [{ "name": "option", "type": "QStyleOptionViewItem" }, { "name": "index", "type": "QModelIndex" }] }
       ],
       "signals": [
       ]
@@ -6378,14 +6402,14 @@
         { "name": "setOctMode", "returnType": "void", "parameters": [] },
         { "name": "setSegmentStyle", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QLCDNumber::SegmentStyle" }] },
         { "name": "setSmallDecimalPoint", "returnType": "void", "parameters": [{ "name": "arg0", "type": "bool" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "smallDecimalPoint", "returnType": "bool", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "value", "returnType": "double", "parameters": [] }
       ],
       "virtuals": [
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "e", "type": "QEvent*" }] },
-        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] }
+        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
         { "name": "overflow", "parameters": [] }
@@ -6409,11 +6433,9 @@
         { "name": "clear", "returnType": "void", "parameters": [] },
         { "name": "hasScaledContents", "returnType": "bool", "parameters": [] },
         { "name": "hasSelectedText", "returnType": "bool", "parameters": [] },
-        { "name": "heightForWidth", "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "indent", "returnType": "int", "parameters": [] },
         { "name": "margin", "returnType": "int", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "openExternalLinks", "returnType": "bool", "parameters": [] },
         { "name": "picture", "returnType": "QPicture", "parameters": [] },
         { "name": "picture", "returnType": "QPicture", "parameters": [{ "name": "arg0", "type": "Qt::ReturnByValueConstant" }] },
@@ -6436,7 +6458,6 @@
         { "name": "setTextFormat", "returnType": "void", "parameters": [{ "name": "arg0", "type": "Qt::TextFormat" }] },
         { "name": "setTextInteractionFlags", "returnType": "void", "parameters": [{ "name": "flags", "type": "Qt::TextInteractionFlags" }] },
         { "name": "setWordWrap", "returnType": "void", "parameters": [{ "name": "on", "type": "bool" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "text", "returnType": "QString", "parameters": [] },
         { "name": "textFormat", "returnType": "Qt::TextFormat", "parameters": [] },
         { "name": "textInteractionFlags", "returnType": "Qt::TextInteractionFlags", "parameters": [] },
@@ -6449,11 +6470,14 @@
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "e", "type": "QEvent*" }] },
         { "name": "focusInEvent", "returnType": "void", "parameters": [{ "name": "ev", "type": "QFocusEvent*" }] },
         { "name": "focusOutEvent", "returnType": "void", "parameters": [{ "name": "ev", "type": "QFocusEvent*" }] },
+        { "name": "heightForWidth", "const": true, "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "ev", "type": "QKeyEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "ev", "type": "QMouseEvent*" }] },
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "ev", "type": "QMouseEvent*" }] },
         { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "ev", "type": "QMouseEvent*" }] },
-        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] }
+        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
         { "name": "linkActivated", "parameters": [{ "name": "link", "type": "QString" }] },
@@ -6543,8 +6567,6 @@
         { "name": "controlTypes", "returnType": "QSizePolicy::ControlTypes", "parameters": [] },
         { "name": "expandingDirections", "returnType": "Qt::Orientations", "parameters": [] },
         { "name": "geometry", "returnType": "QRect", "parameters": [] },
-        { "name": "hasHeightForWidth", "returnType": "bool", "parameters": [] },
-        { "name": "heightForWidth", "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "invalidate", "returnType": "void", "parameters": [] },
         { "name": "isEmpty", "returnType": "bool", "parameters": [] },
         { "name": "layout", "returnType": "QLayout*", "parameters": [] },
@@ -6553,11 +6575,13 @@
         { "name": "minimumSize", "returnType": "QSize", "parameters": [] },
         { "name": "setAlignment", "returnType": "void", "parameters": [{ "name": "a", "type": "Qt::Alignment" }] },
         { "name": "setGeometry", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QRect" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "spacerItem", "returnType": "QSpacerItem*", "parameters": [] },
         { "name": "widget", "returnType": "QWidget*", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "hasHeightForWidth", "const": true, "returnType": "bool", "parameters": [] },
+        { "name": "heightForWidth", "const": true, "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
+        { "name": "sizeHint", "pure": true, "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -6651,7 +6675,6 @@
         { "name": "isUndoAvailable", "returnType": "bool", "parameters": [] },
         { "name": "maxLength", "returnType": "int", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "paste", "returnType": "void", "parameters": [] },
         { "name": "placeholderText", "returnType": "QString", "parameters": [] },
         { "name": "redo", "returnType": "void", "parameters": [] },
@@ -6678,7 +6701,6 @@
         { "name": "setTextMargins", "returnType": "void", "parameters": [{ "name": "margins", "type": "QMargins" }] },
         { "name": "setTextMargins", "returnType": "void", "parameters": [{ "name": "left", "type": "int" }, { "name": "top", "type": "int" }, { "name": "right", "type": "int" }, { "name": "bottom", "type": "int" }] },
         { "name": "setValidator", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QValidator*" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "text", "returnType": "QString", "parameters": [] },
         { "name": "textMargins", "returnType": "QMargins", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
@@ -6697,11 +6719,13 @@
         { "name": "focusOutEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QFocusEvent*" }] },
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QKeyEvent*" }] },
         { "name": "keyReleaseEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QKeyEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mouseDoubleClickEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "timerEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QTimerEvent*" }] }
       ],
       "signals": [
@@ -7327,7 +7351,6 @@
         { "name": "currentSubWindow", "returnType": "QMdiSubWindow*", "parameters": [] },
         { "name": "documentMode", "returnType": "bool", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "removeSubWindow", "returnType": "void", "parameters": [{ "name": "widget", "type": "QWidget*" }] },
         { "name": "setActivationOrder", "returnType": "void", "parameters": [{ "name": "order", "type": "QMdiArea::WindowOrder" }] },
         { "name": "setActiveSubWindow", "returnType": "void", "parameters": [{ "name": "window", "type": "QMdiSubWindow*" }] },
@@ -7339,7 +7362,6 @@
         { "name": "setTabsClosable", "returnType": "void", "parameters": [{ "name": "closable", "type": "bool" }] },
         { "name": "setTabsMovable", "returnType": "void", "parameters": [{ "name": "movable", "type": "bool" }] },
         { "name": "setViewMode", "returnType": "void", "parameters": [{ "name": "mode", "type": "QMdiArea::ViewMode" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "subWindowList", "returnType": "QList<QMdiSubWindow*>", "parameters": [{ "name": "order", "type": "QMdiArea::WindowOrder", "optional": true }] },
         { "name": "tabPosition", "returnType": "QTabWidget::TabPosition", "parameters": [] },
         { "name": "tabShape", "returnType": "QTabWidget::TabShape", "parameters": [] },
@@ -7354,9 +7376,11 @@
         { "name": "childEvent", "returnType": "void", "parameters": [{ "name": "childEvent", "type": "QChildEvent*" }] },
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "event", "type": "QEvent*" }] },
         { "name": "eventFilter", "returnType": "bool", "parameters": [{ "name": "object", "type": "QObject*" }, { "name": "event", "type": "QEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "paintEvent", "type": "QPaintEvent*" }] },
         { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "resizeEvent", "type": "QResizeEvent*" }] },
         { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "showEvent", "type": "QShowEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "timerEvent", "returnType": "void", "parameters": [{ "name": "timerEvent", "type": "QTimerEvent*" }] }
       ],
       "signals": [
@@ -7381,7 +7405,6 @@
         { "name": "maximizedSystemMenuIconWidget", "returnType": "QWidget*", "parameters": [] },
         { "name": "mdiArea", "returnType": "QMdiArea*", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "setKeyboardPageStep", "returnType": "void", "parameters": [{ "name": "step", "type": "int" }] },
         { "name": "setKeyboardSingleStep", "returnType": "void", "parameters": [{ "name": "step", "type": "int" }] },
         { "name": "setOption", "returnType": "void", "parameters": [{ "name": "option", "type": "QMdiSubWindow::SubWindowOption" }, { "name": "on", "type": "bool", "optional": true, "default": "true" }] },
@@ -7389,7 +7412,6 @@
         { "name": "setWidget", "returnType": "void", "parameters": [{ "name": "widget", "type": "QWidget*" }] },
         { "name": "showShaded", "returnType": "void", "parameters": [] },
         { "name": "showSystemMenu", "returnType": "void", "parameters": [] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "systemMenu", "returnType": "QMenu*", "parameters": [] },
         { "name": "testOption", "returnType": "bool", "parameters": [{ "name": "arg0", "type": "QMdiSubWindow::SubWindowOption" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
@@ -7407,6 +7429,7 @@
         { "name": "hideEvent", "returnType": "void", "parameters": [{ "name": "hideEvent", "type": "QHideEvent*" }] },
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "keyEvent", "type": "QKeyEvent*" }] },
         { "name": "leaveEvent", "returnType": "void", "parameters": [{ "name": "leaveEvent", "type": "QEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mouseDoubleClickEvent", "returnType": "void", "parameters": [{ "name": "mouseEvent", "type": "QMouseEvent*" }] },
         { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "mouseEvent", "type": "QMouseEvent*" }] },
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "mouseEvent", "type": "QMouseEvent*" }] },
@@ -7415,6 +7438,7 @@
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "paintEvent", "type": "QPaintEvent*" }] },
         { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "resizeEvent", "type": "QResizeEvent*" }] },
         { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "showEvent", "type": "QShowEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "timerEvent", "returnType": "void", "parameters": [{ "name": "timerEvent", "type": "QTimerEvent*" }] }
       ],
       "signals": [
@@ -7474,7 +7498,6 @@
         { "name": "setToolTipsVisible", "returnType": "void", "parameters": [{ "name": "visible", "type": "bool" }] },
         { "name": "showTearOffMenu", "returnType": "void", "parameters": [] },
         { "name": "showTearOffMenu", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPoint" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "title", "returnType": "QString", "parameters": [] },
         { "name": "toolTipsVisible", "returnType": "bool", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
@@ -7490,6 +7513,7 @@
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "timerEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QTimerEvent*" }] },
         { "name": "wheelEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QWheelEvent*" }] }
       ],
@@ -7519,19 +7543,16 @@
         { "name": "addSeparator", "returnType": "QAction*", "parameters": [] },
         { "name": "clear", "returnType": "void", "parameters": [] },
         { "name": "cornerWidget", "returnType": "QWidget*", "parameters": [{ "name": "corner", "type": "Qt::Corner", "optional": true, "default": "Qt.Corner.TopRightCorner" }] },
-        { "name": "heightForWidth", "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "insertMenu", "returnType": "QAction*", "parameters": [{ "name": "before", "type": "QAction*" }, { "name": "menu", "type": "QMenu*" }] },
         { "name": "insertSeparator", "returnType": "QAction*", "parameters": [{ "name": "before", "type": "QAction*" }] },
         { "name": "isDefaultUp", "returnType": "bool", "parameters": [] },
         { "name": "isNativeMenuBar", "returnType": "bool", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "setActiveAction", "returnType": "void", "parameters": [{ "name": "action", "type": "QAction*" }] },
         { "name": "setCornerWidget", "returnType": "void", "parameters": [{ "name": "w", "type": "QWidget*" }, { "name": "corner", "type": "Qt::Corner", "optional": true, "default": "Qt.Corner.TopRightCorner" }] },
         { "name": "setDefaultUp", "returnType": "void", "parameters": [{ "name": "arg0", "type": "bool" }] },
         { "name": "setNativeMenuBar", "returnType": "void", "parameters": [{ "name": "nativeMenuBar", "type": "bool" }] },
         { "name": "setVisible", "returnType": "void", "parameters": [{ "name": "visible", "type": "bool" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
@@ -7540,13 +7561,16 @@
         { "name": "eventFilter", "returnType": "bool", "parameters": [{ "name": "arg0", "type": "QObject*" }, { "name": "arg1", "type": "QEvent*" }] },
         { "name": "focusInEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QFocusEvent*" }] },
         { "name": "focusOutEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QFocusEvent*" }] },
+        { "name": "heightForWidth", "const": true, "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QKeyEvent*" }] },
         { "name": "leaveEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
         { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QResizeEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "timerEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QTimerEvent*" }] }
       ],
       "signals": [
@@ -7662,6 +7686,7 @@
         { "name": "methodSignature", "returnType": "QByteArray", "parameters": [] },
         { "name": "methodType", "returnType": "QMetaMethod::MethodType", "parameters": [] },
         { "name": "name", "returnType": "QByteArray", "parameters": [] },
+        { "name": "nameView", "returnType": "QByteArrayView", "parameters": [] },
         { "name": "parameterCount", "returnType": "int", "parameters": [] },
         { "name": "parameterMetaType", "returnType": "QMetaType", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "parameterNames", "returnType": "QList<QByteArray>", "parameters": [] },
@@ -7756,6 +7781,7 @@
         { "name": "destruct", "static": true, "returnType": "void", "parameters": [{ "name": "type", "type": "int" }, { "name": "where", "type": "void*" }] },
         { "name": "equals", "returnType": "bool", "parameters": [{ "name": "lhs", "type": "void*" }, { "name": "rhs", "type": "void*" }] },
         { "name": "flags", "returnType": "QMetaType::TypeFlags", "parameters": [] },
+        { "name": "fromName", "static": true, "returnType": "QMetaType", "parameters": [{ "name": "name", "type": "QByteArrayView" }] },
         { "name": "hasRegisteredConverterFunction", "static": true, "returnType": "bool", "parameters": [{ "name": "fromType", "type": "QMetaType" }, { "name": "toType", "type": "QMetaType" }] },
         { "name": "hasRegisteredDataStreamOperators", "returnType": "bool", "parameters": [] },
         { "name": "hasRegisteredDebugStreamOperator", "returnType": "bool", "parameters": [] },
@@ -9012,7 +9038,6 @@
         { "name": "maximum", "returnType": "int", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "minimum", "returnType": "int", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "orientation", "returnType": "Qt::Orientation", "parameters": [] },
         { "name": "reset", "returnType": "void", "parameters": [] },
         { "name": "resetFormat", "returnType": "void", "parameters": [] },
@@ -9026,7 +9051,6 @@
         { "name": "setTextDirection", "returnType": "void", "parameters": [{ "name": "textDirection", "type": "QProgressBar::Direction" }] },
         { "name": "setTextVisible", "returnType": "void", "parameters": [{ "name": "visible", "type": "bool" }] },
         { "name": "setValue", "returnType": "void", "parameters": [{ "name": "value", "type": "int" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "text", "returnType": "QString", "parameters": [] },
         { "name": "textDirection", "returnType": "QProgressBar::Direction", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
@@ -9034,7 +9058,9 @@
       ],
       "virtuals": [
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "e", "type": "QEvent*" }] },
-        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] }
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
+        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
         { "name": "valueChanged", "parameters": [{ "name": "value", "type": "int" }] }
@@ -9075,7 +9101,6 @@
         { "name": "setMinimumDuration", "returnType": "void", "parameters": [{ "name": "ms", "type": "int" }] },
         { "name": "setRange", "returnType": "void", "parameters": [{ "name": "minimum", "type": "int" }, { "name": "maximum", "type": "int" }] },
         { "name": "setValue", "returnType": "void", "parameters": [{ "name": "progress", "type": "int" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "value", "returnType": "int", "parameters": [] },
         { "name": "wasCanceled", "returnType": "bool", "parameters": [] }
@@ -9084,7 +9109,8 @@
         { "name": "changeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QEvent*" }] },
         { "name": "closeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QCloseEvent*" }] },
         { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QResizeEvent*" }] },
-        { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QShowEvent*" }] }
+        { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QShowEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
         { "name": "canceled", "parameters": [] }
@@ -9156,13 +9182,11 @@
         { "name": "isFlat", "returnType": "bool", "parameters": [] },
         { "name": "menu", "returnType": "QMenu*", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "setAutoDefault", "returnType": "void", "parameters": [{ "name": "arg0", "type": "bool" }] },
         { "name": "setDefault", "returnType": "void", "parameters": [{ "name": "arg0", "type": "bool" }] },
         { "name": "setFlat", "returnType": "void", "parameters": [{ "name": "arg0", "type": "bool" }] },
         { "name": "setMenu", "returnType": "void", "parameters": [{ "name": "menu", "type": "QMenu*" }] },
         { "name": "showMenu", "returnType": "void", "parameters": [] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
@@ -9170,8 +9194,10 @@
         { "name": "focusInEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QFocusEvent*" }] },
         { "name": "focusOutEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QFocusEvent*" }] },
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QKeyEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
-        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] }
+        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -9281,14 +9307,14 @@
       ],
       "methods": [
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "e", "type": "QEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
-        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] }
+        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -9667,7 +9693,6 @@
         { "name": "setAlignment", "returnType": "void", "parameters": [{ "name": "arg0", "type": "Qt::Alignment" }] },
         { "name": "setWidget", "returnType": "void", "parameters": [{ "name": "widget", "type": "QWidget*" }] },
         { "name": "setWidgetResizable", "returnType": "void", "parameters": [{ "name": "resizable", "type": "bool" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "takeWidget", "returnType": "QWidget*", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "widget", "returnType": "QWidget*", "parameters": [] },
@@ -9676,7 +9701,8 @@
       "virtuals": [
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "arg0", "type": "QEvent*" }] },
         { "name": "eventFilter", "returnType": "bool", "parameters": [{ "name": "arg0", "type": "QObject*" }, { "name": "arg1", "type": "QEvent*" }] },
-        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QResizeEvent*" }] }
+        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QResizeEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -9696,7 +9722,6 @@
       "methods": [
         { "name": "createStandardContextMenu", "returnType": "QMenu*", "parameters": [{ "name": "position", "type": "QPoint" }] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
@@ -9707,6 +9732,7 @@
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "wheelEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QWheelEvent*" }] }
       ],
       "signals": [
@@ -9955,7 +9981,6 @@
       "methods": [
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setVisible", "returnType": "void", "parameters": [{ "name": "arg0", "type": "bool" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
@@ -9967,7 +9992,8 @@
         { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "mouseEvent", "type": "QMouseEvent*" }] },
         { "name": "moveEvent", "returnType": "void", "parameters": [{ "name": "moveEvent", "type": "QMoveEvent*" }] },
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
-        { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "showEvent", "type": "QShowEvent*" }] }
+        { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "showEvent", "type": "QShowEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -10024,20 +10050,20 @@
       ],
       "methods": [
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "setTickInterval", "returnType": "void", "parameters": [{ "name": "ti", "type": "int" }] },
         { "name": "setTickPosition", "returnType": "void", "parameters": [{ "name": "position", "type": "QSlider::TickPosition" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tickInterval", "returnType": "int", "parameters": [] },
         { "name": "tickPosition", "returnType": "QSlider::TickPosition", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "event", "type": "QEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "ev", "type": "QMouseEvent*" }] },
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "ev", "type": "QMouseEvent*" }] },
         { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "ev", "type": "QMouseEvent*" }] },
-        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "ev", "type": "QPaintEvent*" }] }
+        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "ev", "type": "QPaintEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -10143,11 +10169,11 @@
         { "name": "maximumSize", "returnType": "QSize", "parameters": [] },
         { "name": "minimumSize", "returnType": "QSize", "parameters": [] },
         { "name": "setGeometry", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QRect" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "sizePolicy", "returnType": "QSizePolicy", "parameters": [] },
         { "name": "spacerItem", "returnType": "QSpacerItem*", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -10246,7 +10272,6 @@
         { "name": "insertWidget", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "widget", "type": "QWidget*" }] },
         { "name": "isCollapsible", "returnType": "bool", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "opaqueResize", "returnType": "bool", "parameters": [] },
         { "name": "orientation", "returnType": "Qt::Orientation", "parameters": [] },
         { "name": "refresh", "returnType": "void", "parameters": [] },
@@ -10260,7 +10285,6 @@
         { "name": "setOrientation", "returnType": "void", "parameters": [{ "name": "arg0", "type": "Qt::Orientation" }] },
         { "name": "setSizes", "returnType": "void", "parameters": [{ "name": "list", "type": "QList<int>" }] },
         { "name": "setStretchFactor", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "stretch", "type": "int" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "sizes", "returnType": "QList<int>", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "widget", "returnType": "QWidget*", "parameters": [{ "name": "index", "type": "int" }] }
@@ -10269,7 +10293,9 @@
         { "name": "changeEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QEvent*" }] },
         { "name": "childEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QChildEvent*" }] },
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "arg0", "type": "QEvent*" }] },
-        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QResizeEvent*" }] }
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
+        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QResizeEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
         { "name": "splitterMoved", "parameters": [{ "name": "pos", "type": "int" }, { "name": "index", "type": "int" }] }
@@ -10291,7 +10317,6 @@
         { "name": "opaqueResize", "returnType": "bool", "parameters": [] },
         { "name": "orientation", "returnType": "Qt::Orientation", "parameters": [] },
         { "name": "setOrientation", "returnType": "void", "parameters": [{ "name": "o", "type": "Qt::Orientation" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "splitter", "returnType": "QSplitter*", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
@@ -10301,7 +10326,8 @@
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
-        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QResizeEvent*" }] }
+        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QResizeEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -10325,8 +10351,6 @@
         { "name": "count", "returnType": "int", "parameters": [] },
         { "name": "currentIndex", "returnType": "int", "parameters": [] },
         { "name": "currentWidget", "returnType": "QWidget*", "parameters": [] },
-        { "name": "hasHeightForWidth", "returnType": "bool", "parameters": [] },
-        { "name": "heightForWidth", "returnType": "int", "parameters": [{ "name": "width", "type": "int" }] },
         { "name": "insertWidget", "returnType": "int", "parameters": [{ "name": "index", "type": "int" }, { "name": "w", "type": "QWidget*" }] },
         { "name": "itemAt", "returnType": "QLayoutItem*", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
@@ -10335,13 +10359,15 @@
         { "name": "setCurrentWidget", "returnType": "void", "parameters": [{ "name": "w", "type": "QWidget*" }] },
         { "name": "setGeometry", "returnType": "void", "parameters": [{ "name": "rect", "type": "QRect" }] },
         { "name": "setStackingMode", "returnType": "void", "parameters": [{ "name": "stackingMode", "type": "QStackedLayout::StackingMode" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "stackingMode", "returnType": "QStackedLayout::StackingMode", "parameters": [] },
         { "name": "takeAt", "returnType": "QLayoutItem*", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "widget", "returnType": "QWidget*", "parameters": [{ "name": "arg0", "type": "int" }] }
       ],
       "virtuals": [
+        { "name": "hasHeightForWidth", "const": true, "returnType": "bool", "parameters": [] },
+        { "name": "heightForWidth", "const": true, "returnType": "int", "parameters": [{ "name": "width", "type": "int" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
         { "name": "currentChanged", "parameters": [{ "name": "index", "type": "int" }] },
@@ -11286,12 +11312,12 @@
         { "name": "setEditorData", "returnType": "void", "parameters": [{ "name": "editor", "type": "QWidget*" }, { "name": "index", "type": "QModelIndex" }] },
         { "name": "setItemEditorFactory", "returnType": "void", "parameters": [{ "name": "factory", "type": "QItemEditorFactory*" }] },
         { "name": "setModelData", "returnType": "void", "parameters": [{ "name": "editor", "type": "QWidget*" }, { "name": "model", "type": "QAbstractItemModel*" }, { "name": "index", "type": "QModelIndex" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [{ "name": "option", "type": "QStyleOptionViewItem" }, { "name": "index", "type": "QModelIndex" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "updateEditorGeometry", "returnType": "void", "parameters": [{ "name": "editor", "type": "QWidget*" }, { "name": "option", "type": "QStyleOptionViewItem" }, { "name": "index", "type": "QModelIndex" }] }
       ],
       "virtuals": [
-        { "name": "eventFilter", "returnType": "bool", "parameters": [{ "name": "object", "type": "QObject*" }, { "name": "event", "type": "QEvent*" }] }
+        { "name": "eventFilter", "returnType": "bool", "parameters": [{ "name": "object", "type": "QObject*" }, { "name": "event", "type": "QEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [{ "name": "option", "type": "QStyleOptionViewItem" }, { "name": "index", "type": "QModelIndex" }] }
       ],
       "signals": [
       ]
@@ -11411,7 +11437,6 @@
         { "name": "isTabEnabled", "returnType": "bool", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "isTabVisible", "returnType": "bool", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "moveTab", "returnType": "void", "parameters": [{ "name": "from", "type": "int" }, { "name": "to", "type": "int" }] },
         { "name": "removeTab", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "selectionBehaviorOnRemove", "returnType": "QTabBar::SelectionBehavior", "parameters": [] },
@@ -11439,7 +11464,6 @@
         { "name": "setTabsClosable", "returnType": "void", "parameters": [{ "name": "closable", "type": "bool" }] },
         { "name": "setUsesScrollButtons", "returnType": "void", "parameters": [{ "name": "useButtons", "type": "bool" }] },
         { "name": "shape", "returnType": "QTabBar::Shape", "parameters": [] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tabAt", "returnType": "int", "parameters": [{ "name": "pos", "type": "QPoint" }] },
         { "name": "tabButton", "returnType": "QWidget*", "parameters": [{ "name": "index", "type": "int" }, { "name": "position", "type": "QTabBar::ButtonPosition" }] },
         { "name": "tabData", "returnType": "QVariant", "parameters": [{ "name": "index", "type": "int" }] },
@@ -11458,6 +11482,7 @@
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "arg0", "type": "QEvent*" }] },
         { "name": "hideEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QHideEvent*" }] },
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QKeyEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mouseDoubleClickEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
@@ -11465,6 +11490,7 @@
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
         { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QResizeEvent*" }] },
         { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QShowEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "timerEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QTimerEvent*" }] },
         { "name": "wheelEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QWheelEvent*" }] }
       ],
@@ -11497,8 +11523,6 @@
         { "name": "currentWidget", "returnType": "QWidget*", "parameters": [] },
         { "name": "documentMode", "returnType": "bool", "parameters": [] },
         { "name": "elideMode", "returnType": "Qt::TextElideMode", "parameters": [] },
-        { "name": "hasHeightForWidth", "returnType": "bool", "parameters": [] },
-        { "name": "heightForWidth", "returnType": "int", "parameters": [{ "name": "width", "type": "int" }] },
         { "name": "iconSize", "returnType": "QSize", "parameters": [] },
         { "name": "indexOf", "returnType": "int", "parameters": [{ "name": "widget", "type": "QWidget*" }] },
         { "name": "insertTab", "returnType": "int", "parameters": [{ "name": "index", "type": "int" }, { "name": "widget", "type": "QWidget*" }, { "name": "arg2", "type": "QString" }] },
@@ -11507,7 +11531,6 @@
         { "name": "isTabEnabled", "returnType": "bool", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "isTabVisible", "returnType": "bool", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "removeTab", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "setCornerWidget", "returnType": "void", "parameters": [{ "name": "w", "type": "QWidget*" }, { "name": "corner", "type": "Qt::Corner", "optional": true, "default": "Qt.Corner.TopRightCorner" }] },
         { "name": "setCurrentIndex", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
@@ -11527,7 +11550,6 @@
         { "name": "setTabWhatsThis", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "text", "type": "QString" }] },
         { "name": "setTabsClosable", "returnType": "void", "parameters": [{ "name": "closeable", "type": "bool" }] },
         { "name": "setUsesScrollButtons", "returnType": "void", "parameters": [{ "name": "useButtons", "type": "bool" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "tabBar", "returnType": "QTabBar*", "parameters": [] },
         { "name": "tabBarAutoHide", "returnType": "bool", "parameters": [] },
         { "name": "tabIcon", "returnType": "QIcon", "parameters": [{ "name": "index", "type": "int" }] },
@@ -11544,10 +11566,14 @@
       "virtuals": [
         { "name": "changeEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QEvent*" }] },
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "arg0", "type": "QEvent*" }] },
+        { "name": "hasHeightForWidth", "const": true, "returnType": "bool", "parameters": [] },
+        { "name": "heightForWidth", "const": true, "returnType": "int", "parameters": [{ "name": "width", "type": "int" }] },
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QKeyEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
         { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QResizeEvent*" }] },
-        { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QShowEvent*" }] }
+        { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QShowEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
         { "name": "currentChanged", "parameters": [{ "name": "index", "type": "int" }] },
@@ -12796,6 +12822,7 @@
         { "name": "displayName", "returnType": "QString", "parameters": [{ "name": "timeType", "type": "QTimeZone::TimeType" }, { "name": "nameType", "type": "QTimeZone::NameType", "optional": true }] },
         { "name": "fixedSecondsAheadOfUtc", "returnType": "int", "parameters": [] },
         { "name": "fromSecondsAheadOfUtc", "static": true, "returnType": "QTimeZone", "parameters": [{ "name": "offset", "type": "int" }] },
+        { "name": "hasAlternativeName", "returnType": "bool", "parameters": [{ "name": "alias", "type": "QByteArrayView" }] },
         { "name": "hasDaylightTime", "returnType": "bool", "parameters": [] },
         { "name": "hasTransitions", "returnType": "bool", "parameters": [] },
         { "name": "ianaIdToWindowsId", "static": true, "returnType": "QByteArray", "parameters": [{ "name": "ianaId", "type": "QByteArray" }] },
@@ -12972,7 +12999,6 @@
         { "name": "defaultAction", "returnType": "QAction*", "parameters": [] },
         { "name": "menu", "returnType": "QMenu*", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "popupMode", "returnType": "QToolButton::ToolButtonPopupMode", "parameters": [] },
         { "name": "setArrowType", "returnType": "void", "parameters": [{ "name": "type", "type": "Qt::ArrowType" }] },
         { "name": "setAutoRaise", "returnType": "void", "parameters": [{ "name": "enable", "type": "bool" }] },
@@ -12981,7 +13007,6 @@
         { "name": "setPopupMode", "returnType": "void", "parameters": [{ "name": "mode", "type": "QToolButton::ToolButtonPopupMode" }] },
         { "name": "setToolButtonStyle", "returnType": "void", "parameters": [{ "name": "style", "type": "Qt::ToolButtonStyle" }] },
         { "name": "showMenu", "returnType": "void", "parameters": [] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "toolButtonStyle", "returnType": "Qt::ToolButtonStyle", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
@@ -12990,9 +13015,11 @@
         { "name": "enterEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QEnterEvent*" }] },
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "e", "type": "QEvent*" }] },
         { "name": "leaveEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "timerEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QTimerEvent*" }] }
       ],
       "signals": [
@@ -13524,6 +13551,7 @@
         { "name": "fileName", "returnType": "QString", "parameters": [{ "name": "options", "type": "QUrl::ComponentFormattingOptions", "optional": true }] },
         { "name": "fragment", "returnType": "QString", "parameters": [{ "name": "options", "type": "QUrl::ComponentFormattingOptions", "optional": true }] },
         { "name": "fromAce", "static": true, "returnType": "QString", "parameters": [{ "name": "domain", "type": "QByteArray" }, { "name": "options", "type": "QUrl::AceProcessingOptions", "optional": true }] },
+        { "name": "fromEncoded", "static": true, "returnType": "QUrl", "parameters": [{ "name": "input", "type": "QByteArrayView" }, { "name": "mode", "type": "QUrl::ParsingMode", "optional": true }] },
         { "name": "fromLocalFile", "static": true, "returnType": "QUrl", "parameters": [{ "name": "localfile", "type": "QString" }] },
         { "name": "fromPercentEncoding", "static": true, "returnType": "QString", "parameters": [{ "name": "arg0", "type": "QByteArray" }] },
         { "name": "fromStringList", "static": true, "returnType": "QList<QUrl>", "parameters": [{ "name": "uris", "type": "QStringList" }, { "name": "mode", "type": "QUrl::ParsingMode", "optional": true }] },
@@ -13946,11 +13974,9 @@
         { "name": "graphicsEffect", "returnType": "QGraphicsEffect*", "parameters": [] },
         { "name": "graphicsProxyWidget", "returnType": "QGraphicsProxyWidget*", "parameters": [] },
         { "name": "hasFocus", "returnType": "bool", "parameters": [] },
-        { "name": "hasHeightForWidth", "returnType": "bool", "parameters": [] },
         { "name": "hasMouseTracking", "returnType": "bool", "parameters": [] },
         { "name": "hasTabletTracking", "returnType": "bool", "parameters": [] },
         { "name": "height", "returnType": "int", "parameters": [] },
-        { "name": "heightForWidth", "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "hide", "returnType": "void", "parameters": [] },
         { "name": "inputMethodHints", "returnType": "Qt::InputMethodHints", "parameters": [] },
         { "name": "inputMethodQuery", "returnType": "QVariant", "parameters": [{ "name": "arg0", "type": "Qt::InputMethodQuery" }] },
@@ -13997,7 +14023,6 @@
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "minimumHeight", "returnType": "int", "parameters": [] },
         { "name": "minimumSize", "returnType": "QSize", "parameters": [] },
-        { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "minimumWidth", "returnType": "int", "parameters": [] },
         { "name": "mouseGrabber", "static": true, "returnType": "QWidget*", "parameters": [] },
         { "name": "move", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPoint" }] },
@@ -14111,7 +14136,6 @@
         { "name": "showMinimized", "returnType": "void", "parameters": [] },
         { "name": "showNormal", "returnType": "void", "parameters": [] },
         { "name": "size", "returnType": "QSize", "parameters": [] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "sizeIncrement", "returnType": "QSize", "parameters": [] },
         { "name": "sizePolicy", "returnType": "QSizePolicy", "parameters": [] },
         { "name": "stackUnder", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QWidget*" }] },
@@ -14164,10 +14188,13 @@
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "event", "type": "QEvent*" }] },
         { "name": "focusInEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QFocusEvent*" }] },
         { "name": "focusOutEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QFocusEvent*" }] },
+        { "name": "hasHeightForWidth", "const": true, "returnType": "bool", "parameters": [] },
+        { "name": "heightForWidth", "const": true, "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "hideEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QHideEvent*" }] },
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QKeyEvent*" }] },
         { "name": "keyReleaseEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QKeyEvent*" }] },
         { "name": "leaveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QEvent*" }] },
+        { "name": "minimumSizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "mouseDoubleClickEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QMouseEvent*" }] },
         { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QMouseEvent*" }] },
         { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QMouseEvent*" }] },
@@ -14176,6 +14203,7 @@
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QPaintEvent*" }] },
         { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QResizeEvent*" }] },
         { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QShowEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] },
         { "name": "wheelEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QWheelEvent*" }] }
       ],
       "signals": [
@@ -14224,17 +14252,17 @@
         { "name": "controlTypes", "returnType": "QSizePolicy::ControlTypes", "parameters": [] },
         { "name": "expandingDirections", "returnType": "Qt::Orientations", "parameters": [] },
         { "name": "geometry", "returnType": "QRect", "parameters": [] },
-        { "name": "hasHeightForWidth", "returnType": "bool", "parameters": [] },
-        { "name": "heightForWidth", "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "isEmpty", "returnType": "bool", "parameters": [] },
         { "name": "maximumSize", "returnType": "QSize", "parameters": [] },
         { "name": "minimumHeightForWidth", "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "minimumSize", "returnType": "QSize", "parameters": [] },
         { "name": "setGeometry", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QRect" }] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "widget", "returnType": "QWidget*", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "hasHeightForWidth", "const": true, "returnType": "bool", "parameters": [] },
+        { "name": "heightForWidth", "const": true, "returnType": "int", "parameters": [{ "name": "arg0", "type": "int" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
       ]
@@ -14284,7 +14312,6 @@
         { "name": "setVisible", "returnType": "void", "parameters": [{ "name": "visible", "type": "bool" }] },
         { "name": "setWizardStyle", "returnType": "void", "parameters": [{ "name": "style", "type": "QWizard::WizardStyle" }] },
         { "name": "sideWidget", "returnType": "QWidget*", "parameters": [] },
-        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "startId", "returnType": "int", "parameters": [] },
         { "name": "subTitleFormat", "returnType": "Qt::TextFormat", "parameters": [] },
         { "name": "testOption", "returnType": "bool", "parameters": [{ "name": "option", "type": "QWizard::WizardOption" }] },
@@ -14297,7 +14324,8 @@
       "virtuals": [
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "event", "type": "QEvent*" }] },
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QPaintEvent*" }] },
-        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QResizeEvent*" }] }
+        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QResizeEvent*" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
         { "name": "currentIdChanged", "parameters": [{ "name": "id", "type": "int" }] },

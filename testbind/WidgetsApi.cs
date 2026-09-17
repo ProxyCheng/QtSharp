@@ -148,6 +148,15 @@ public sealed class ApiWidgetsWindow : QMainWindow
     public QCalendarWidget Calendar => (QCalendarWidget)Tabs.Widget(3);
 }
 
+// A managed widget that answers Qt's size hint from C#: the override goes through the generated
+// native subclass, and Qt's own layout code reads it back (the Calculator example's CalcButton
+// sizes itself the same way).
+public sealed class SizedWidget : QWidget
+{
+    public override QSize SizeHint() => new QSize(123, 45);
+    public override QSize MinimumSizeHint() => new QSize(60, 20);
+}
+
 public static class ApiWidgetsDemo
 {
     public static int Run()
@@ -312,6 +321,26 @@ public static class ApiWidgetsDemo
         var mime = new QMimeData();
         mime.SetText("payload");
         Check(mime.HasText() && mime.Text() == "payload", $"QMimeData text round-trip (got '{mime.Text()}')");
+
+        // ------------------------------------------------------------------ a managed widget's size hint
+        var sized = new SizedWidget();
+        Check(sized.SizeHint().Width() == 123, $"managed sizeHint override (got {sized.SizeHint().Width()})");
+        Check(sized.MinimumSizeHint().Height() == 20, "managed minimumSizeHint override");
+        sized.AdjustSize();
+        Check(sized.Size().Width() == 123 && sized.Size().Height() == 45,
+            $"Qt sized the widget from the override (got {sized.Size().Width()}x{sized.Size().Height()})");
+
+        // ------------------------------------------------------------------ byte buffers
+        // A byte[] argument crosses as a QByteArray (which the QByteArrayView parameter takes
+        // implicitly), and a QByteArrayView return is copied out as a byte[].
+        var payload = new QByteArray("hello");
+        payload.Append(new byte[] { (byte)'!' });
+        Check(payload.Size() == 6, $"byte[] argument reached append (got {payload.Size()})");
+        Check(payload.Compare(new byte[] { (byte)'h', (byte)'e', (byte)'l', (byte)'l', (byte)'o', (byte)'!' }) == 0,
+            "byte[] argument reached compare");
+        var methodName = meta.Method(0).NameView();
+        Check(methodName != null && methodName.Length > 0,
+            $"QByteArrayView return (got {methodName?.Length ?? 0} byte(s))");
 
         Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
         return failures == 0 ? 0 : 1;
