@@ -13,6 +13,7 @@
 #include <qcoreapplication.h>
 #include <qapplication.h>
 #include <private/qobject_p.h>
+#include <unordered_set>
 #include <vector>
 #include "QtSharpApiRuntime.h"
 
@@ -63,6 +64,19 @@ extern "C" __declspec(dllexport) void qs_api_qstringlist_append(void* list, cons
 extern "C" __declspec(dllexport) void qs_api_qstringlist_free(void* list)
 {
     delete static_cast<QStringList*>(list);
+}
+
+// The virtual-dispatch counterparts of the two above: there the managed override *produced* the
+// value, and it has to land in the slot the native caller provided rather than in a heap object.
+extern "C" __declspec(dllexport) void qs_api_write_qstring(void* destination, const char16_t* text)
+{
+    *static_cast<QString*>(destination) = text ? QString::fromUtf16(text) : QString();
+}
+
+extern "C" __declspec(dllexport) void qs_api_write_qstringlist(void* destination, void* list)
+{
+    if (list)
+        *static_cast<QStringList*>(destination) = *static_cast<QStringList*>(list);
 }
 
 // QByteArray: built from a managed byte[] for the duration of a call, and copied out when a
@@ -163,6 +177,80 @@ extern "C" __declspec(dllexport) int qs_api_connect(void* sender, const char* si
         return 0;
     }
     return 1;
+}
+
+// ------------------------------------------------------------------ object destruction
+// Qt is the only thing that knows when an object dies (a parent is destroyed, a scene is
+// cleared, the application shuts down), and a managed wrapper that keeps using it afterwards
+// would be a use-after-free. One hook is installed once for the whole process: it is called with
+// the address of the object that Qt destroyed, and the managed side marks every wrapper of that
+// address invalid (and every item whose owner it was).
+//
+// There is deliberately no per-object delegate or GCHandle here: the slot's userData *is* the
+// object address, and Qt frees the slot when it frees the object's connections.
+typedef void (*QsApiDestroyedCallback)(void* object);
+static QsApiDestroyedCallback g_destroyedCallback = nullptr;
+static std::unordered_set<void*> g_watchedObjects;
+
+class QsApiDestroyedSlot : public QtPrivate::QSlotObjectBase
+{
+public:
+    explicit QsApiDestroyedSlot(void* object)
+        : QSlotObjectBase(&QsApiDestroyedSlot::impl)
+        , m_object(object)
+    {
+    }
+
+private:
+    static void impl(int which, QSlotObjectBase* self_, QObject* receiver, void** args, bool* ret)
+    {
+        Q_UNUSED(receiver);
+        Q_UNUSED(args);
+        auto* self = static_cast<QsApiDestroyedSlot*>(self_);
+        if (which == Call)
+        {
+            // The object is being destroyed: unregister before handing the news over.
+            g_watchedObjects.erase(self->m_object);
+            if (g_destroyedCallback)
+                g_destroyedCallback(self->m_object);
+        }
+        else if (which == Destroy)
+        {
+            delete self;
+        }
+        else if (which == Compare)
+        {
+            if (ret)
+                *ret = false;
+        }
+    }
+
+    void* m_object;
+};
+
+extern "C" __declspec(dllexport) void qs_api_set_destroyed_callback(QsApiDestroyedCallback callback)
+{
+    g_destroyedCallback = callback;
+}
+
+// Watching is idempotent and cheap: one slot per object, and nothing for an object that was
+// already watched.
+extern "C" __declspec(dllexport) void qs_api_watch_destroyed(void* object)
+{
+    if (!object || !g_destroyedCallback)
+        return;
+    if (!g_watchedObjects.insert(object).second)
+        return;
+
+    auto* sender = static_cast<QObject*>(object);
+    const int index = sender->metaObject()->indexOfSignal("destroyed(QObject*)");
+    if (index < 0)
+        return;
+    auto* slot = new QsApiDestroyedSlot(object);
+    const QMetaObject::Connection connection =
+        QObjectPrivate::connect(sender, index, slot, Qt::DirectConnection);
+    if (!connection)
+        slot->destroyIfLastRef();
 }
 
 // PoC probe: call a virtual from native code so the generated C++ wrapper's override
