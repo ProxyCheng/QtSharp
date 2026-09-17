@@ -104,6 +104,17 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-events
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+# The Calculator example, rewritten on the new pipeline: a managed QToolButton subclass whose
+# sizeHint Qt lays out with, and a keyPressEvent override that reads the key code out of a bound
+# QKeyEvent - the demo that used to be impossible without binding the input events.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-calculator
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The Spin Boxes example: the whole spin box property surface (range, step, prefix, suffix,
+# special value text, integer base, group separator) plus the date and time edits.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-spinboxes
+exit $LASTEXITCODE
+
 # The extension points: a table model and an item delegate written in C#, with Qt itself driving
 # them (the view asks for rowCount/data, the delegate is asked to paint).
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-custommodel
