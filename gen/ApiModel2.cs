@@ -59,9 +59,17 @@ public static partial class ApiModel
         var index2 = BuildIndex(tu);
         Console.WriteLine($"[model2] indexed {index2.Classes.Count} class(es), {index2.Enums.Count} enum(s)");
 
+        // The extension points a managed subclass has to be able to implement: publishing them is
+        // a *name* closure, because a name published only on the class that declares it would
+        // leave concrete subclasses (QStandardItemModel::data) without an implementation to chain
+        // to. Done before any class is rendered, so every class sees the same set.
+        CollectVirtualExtensionNames(index2);
+        Console.WriteLine($"[model2] {VirtualExtensionNames.Count} virtual name(s) published for {VirtualExtensionClasses.Length} extension class(es)");
+
         var part = new ModelPart();
         Skipped2.Clear();
         ClassBases.Clear();
+        extensionTree.Clear();
 
         // Signals still come from the header scan: they are metadata the C++ declarations do not
         // carry, and the scanner is the same for both front ends.
@@ -77,6 +85,16 @@ public static partial class ApiModel
                 .All(p => Program.MapSignalType(p.CppType, out _, out _, out _, out _, out _)))
             .ToList();
         var allSignalNames = new HashSet<string>(rootSignals.Select(s => s.ClassName + "::" + s.SignalName));
+
+        // Q_PROPERTY declarations come from the same header scan; which of them can be published
+        // is decided per class, once the accessors they name are known.
+        var rootProperties = ActiveRoots
+            .Select(r => (r.Module, r.Header))
+            .Distinct()
+            .SelectMany(h => Program.ScanProperties(h.Module, h.Header))
+            .Where(p => RootClasses.Contains(p.ClassName))
+            .ToList();
+        Console.WriteLine($"[model2] scanned {rootProperties.Count} Q_PROPERTY declaration(s)");
 
         // A chunk is one header's roots. It matters for the "owned" rule, which is a relation
         // between classes of the same chunk in the CppSharp extractor.
@@ -98,7 +116,7 @@ public static partial class ApiModel
                     Console.WriteLine($"[model2] WARNING: root class {root.Class} was not found in the parsed headers");
                     continue;
                 }
-                part.Classes[root.Class] = ClassJson(classRecord, root, index2, chunkClasses, signals, allSignalNames, part.Enums);
+                part.Classes[root.Class] = ClassJson(classRecord, root, index2, chunkClasses, signals, allSignalNames, rootProperties, part.Enums);
             }
             Console.WriteLine($"[model2]   {chunk.Key.Module}/{chunk.Key.Header}: {chunk.Count()} class(es)");
         }
@@ -266,9 +284,27 @@ public static partial class ApiModel
     // The model's vocabulary, applied to a clang type. Like the CppSharp one it desugars
     // typedefs (qreal -> double) but keeps a *named* QFlags typedef, because that name is what
     // the managed surface publishes as a [Flags] enum.
+    // The std::chrono durations Qt uses for its "as a duration" overloads (QTimer::setInterval,
+    // QThread::sleep, QDeadlineTimer, QElapsedTimer): they all cross as a managed TimeSpan. The
+    // unit stays in the clang spelling, which the code generator uses for the conversion.
+    static readonly HashSet<string> ChronoDurations = new(StringComparer.Ordinal)
+    {
+        "std::chrono::nanoseconds", "std::chrono::microseconds", "std::chrono::milliseconds",
+        "std::chrono::seconds", "std::chrono::minutes", "std::chrono::hours",
+    };
+
+    static bool IsChronoDuration(CXType type)
+        => ChronoDurations.Contains(clang.getTypeSpelling(type).ToString())
+           || ChronoDurations.Contains(clang.getTypeSpelling(type.CanonicalType).ToString());
+
     static string ModelName(CXType type)
     {
         type = Unwrap(type);
+
+        // Checked before the typedef/class branches: the canonical spelling of
+        // std::chrono::milliseconds is a duration<...> specialization, which would lose the unit.
+        if (IsChronoDuration(type))
+            return "TimeSpan";
 
         if (type.kind == CXTypeKind.CXType_LValueReference ||
             type.kind == CXTypeKind.CXType_RValueReference)
@@ -287,6 +323,15 @@ public static partial class ApiModel
             return "QStringList";
         if (IsQList(type, out var element))
             return "QList<" + element + ">";
+        // QMap<K, V> and QHash<K, V> keep both halves of the template; QMultiMap/QMultiHash are
+        // different classes and stay unbound.
+        if (IsAssoc(type, "QMap", out var mapKey, out var mapValue))
+            return "QMap<" + mapKey + "," + mapValue + ">";
+        if (IsAssoc(type, "QHash", out var hashKey, out var hashValue))
+            return "QHash<" + hashKey + "," + hashValue + ">";
+        // QBindable<T> is the handle Qt's property-binding API hands out (bindableFoo()).
+        if (IsQBindable(type, out var bound))
+            return "QBindable<" + bound + ">";
 
         if (type.kind == CXTypeKind.CXType_Pointer)
         {
@@ -297,17 +342,18 @@ public static partial class ApiModel
             if (IsChar(canonical))
                 return pointee.IsConstQualified ? "char*" : null;
             var builtin = BuiltinName(canonical);
-            // A const byte buffer with the length passed separately (QImage scanlines and the
-            // other raw-data entry points) surfaces as a managed byte[].
+            // A byte buffer with the length passed separately (QImage's pixel data and the other
+            // raw-data entry points) surfaces as a managed byte[]; Qt only reads it.
             if (builtin == "unsigned char")
-                return pointee.IsConstQualified ? "uchar*" : null;
+                return "uchar*";
             if (builtin == "void")
                 // An untyped pointer crosses as a raw handle; there is nothing to dereference.
                 return "void*";
             if (builtin != null)
-                // Only const input arrays; a non-const pointer means an out parameter whose
-                // write-back managed code could not see, so it must not be bound.
-                return builtin == "int" && pointee.IsConstQualified ? "int*" : null;
+                // A pointer to any other scalar. A const one is an input array; a non-const one
+                // is an out parameter (QColor::getRgb(int *r, ...)), which the code generator
+                // surfaces as a C# `out`.
+                return builtin == "char16_t" || !IsScalarName(builtin) ? null : builtin + "*";
             var inner = ModelName(pointee);
             return inner == null ? null : inner + "*";
         }
@@ -355,6 +401,12 @@ public static partial class ApiModel
     static bool IsChar(CXType type)
         => type.kind == CXTypeKind.CXType_Char_S || type.kind == CXTypeKind.CXType_Char_U;
 
+    // The type as clang spells it, with runs of whitespace collapsed: the model has to stay
+    // byte-reproducible and the spelling carries the declaration's own spacing.
+    static string Spelling(CXType type)
+        => string.Join(" ", clang.getTypeSpelling(type).ToString()
+            .Split((char[])null, StringSplitOptions.RemoveEmptyEntries));
+
     static bool IsQStringList(CXType type)
     {
         var spelling = clang.getTypeSpelling(type.CanonicalType).ToString();
@@ -383,6 +435,65 @@ public static partial class ApiModel
             return false;
         element = ModelName(clang.Cursor_getTemplateArgumentType(declaration, 0));
         return element != null;
+    }
+
+    // A QMap/QHash specialization's two template arguments, references unwrapped. The arguments
+    // come from the specialization rather than from parsing the spelling, exactly as they do for
+    // QList.
+    static bool TryUnwrapAssoc(CXType type, string container, out CXType key, out CXType value)
+    {
+        key = value = default;
+        type = Unwrap(type);
+        while (type.kind == CXTypeKind.CXType_LValueReference || type.kind == CXTypeKind.CXType_RValueReference)
+            type = Unwrap(type.PointeeType);
+        var canonical = type.CanonicalType;
+        var declaration = canonical.Declaration;
+        if (clang.getCursorKind(declaration) != CXCursorKind.CXCursor_ClassDecl)
+            return false;
+        if (clang.getCursorSpelling(declaration).ToString() != container)
+            return false;
+        if (clang.Cursor_getNumTemplateArguments(declaration) != 2)
+            return false;
+        key = clang.Cursor_getTemplateArgumentType(declaration, 0);
+        value = clang.Cursor_getTemplateArgumentType(declaration, 1);
+        return true;
+    }
+
+    // A QMap/KHash whose key and value types the vocabulary can express.
+    static bool IsAssoc(CXType type, string container, out string key, out string value)
+    {
+        key = value = null;
+        if (!TryUnwrapAssoc(type, container, out var keyType, out var valueType))
+            return false;
+        key = ModelName(keyType);
+        value = ModelName(valueType);
+        return key != null && value != null;
+    }
+
+    // A QBindable<T> specialization, with its single template argument.
+    static bool TryUnwrapBindable(CXType type, out CXType element)
+    {
+        element = default;
+        type = Unwrap(type);
+        while (type.kind == CXTypeKind.CXType_LValueReference || type.kind == CXTypeKind.CXType_RValueReference)
+            type = Unwrap(type.PointeeType);
+        var canonical = type.CanonicalType;
+        var declaration = canonical.Declaration;
+        if (clang.getCursorKind(declaration) != CXCursorKind.CXCursor_ClassDecl)
+            return false;
+        if (clang.getCursorSpelling(declaration).ToString() != "QBindable")
+            return false;
+        if (clang.Cursor_getNumTemplateArguments(declaration) != 1)
+            return false;
+        element = clang.Cursor_getTemplateArgumentType(declaration, 0);
+        return true;
+    }
+
+    // A QBindable<T> whose T the vocabulary can express.
+    static bool IsQBindable(CXType type, out string element)
+    {
+        element = null;
+        return TryUnwrapBindable(type, out var elementType) && (element = ModelName(elementType)) != null;
     }
 
     static string BuiltinName(CXType type) => type.kind switch
@@ -458,33 +569,253 @@ public static partial class ApiModel
         return scope.Length == 0 ? name : scope + "::" + name;
     }
 
-    // A non-const reference to something that is not a bound class is an out parameter
-    // (QClipboard::text(QString &subtype)): managed code would pass a temporary and never see the
-    // write-back, so it must not be bound - the same rule the non-const int* case follows. A
-    // reference to a bound class is fine: the managed object *is* the native object, which is why
-    // Qt's own swap(QBrush &other) keeps working.
-    static bool OutParameter(CXType type)
+    // The scalar vocabulary, spelled the way the model spells it.
+    static readonly HashSet<string> ScalarNames = new(StringComparer.Ordinal)
     {
-        type = Unwrap(type);
-        if (type.kind != CXTypeKind.CXType_LValueReference || type.PointeeType.IsConstQualified)
-            return false;
-        var pointee = ModelName(type.PointeeType);
-        return pointee == null || !RootClasses.Contains(pointee);
+        "bool", "int", "float", "double",
+        "long long", "unsigned long long", "unsigned int",
+        "short", "unsigned short", "long", "unsigned long",
+    };
+
+    static bool IsScalarName(string t) => ScalarNames.Contains(t);
+
+    // A pointer to a scalar: `int*`'s base is a scalar, `QWidget*`'s is not.
+    static bool IsScalarPointer(string t)
+        => t.EndsWith("*") && IsScalarName(t.Substring(0, t.Length - 1));
+
+    // A public data member the model publishes as a C# property. Qt's option/style structs are
+    // plain aggregates (QStyleOption::rect, QJsonParseError::error), and without their fields a
+    // managed QStyledItemDelegate has no way to know where to paint.
+    class FieldFact
+    {
+        public string Name;
+        public string Type;
+        public CXType ClangType;
     }
 
-    // The class/enum vocabulary the model is allowed to express.
-    static bool SupportedType(CXType type, bool isParameter = false)
+    // The public, non-static, non-bitfield data members whose type the vocabulary can express.
+    static List<FieldFact> FieldsOf(CXCursor record)
     {
-        if (isParameter && OutParameter(type))
+        var fields = new List<FieldFact>();
+        foreach (var child in Children(record))
+        {
+            if (clang.getCursorKind(child) != CXCursorKind.CXCursor_FieldDecl)
+                continue;
+            if (Access(child) != CX_CXXAccessSpecifier.CX_CXXPublic)
+                continue;
+            // A bit field has no address to take, and an anonymous member has no name to publish.
+            if (clang.Cursor_isBitField(child) != 0)
+                continue;
+            var name = clang.getCursorSpelling(child).ToString();
+            if (name.Length == 0)
+                continue;
+            var type = clang.getCursorType(child);
+            var modelType = ModelName(type);
+            if (modelType == null || !SupportedType(type))
+                continue;
+            fields.Add(new FieldFact { Name = name, Type = modelType, ClangType = type });
+        }
+        return fields.OrderBy(f => f.Name, StringComparer.Ordinal).ToList();
+    }
+
+    // Whether a managed subclass of this (abstract) class can exist. The generated native
+    // subclass is concrete only if every pure virtual it inherits is one we publish as an
+    // override point - otherwise `new QsApi_X` does not compile. QAbstractTableModel qualifies
+    // (all of QAbstractItemModel's pure virtuals are published), QLayout does not (itemAt /
+    // takeAt are neither published nor implemented).
+    static bool CanSubclassFromManaged(string className, ClangIndex index, HashSet<string> seen)
+    {
+        if (!seen.Add(className))
+            return true;                        // already visited on this path
+        if (!index.Classes.TryGetValue(className, out var record))
+            return true;                        // an unbound base: nothing we can check
+        foreach (var child in Children(record))
+        {
+            if (clang.getCursorKind(child) != CXCursorKind.CXCursor_CXXMethod)
+                continue;
+            if (clang.CXXMethod_isPureVirtual(child) == 0)
+                continue;
+            var name = clang.getCursorSpelling(child).ToString();
+            if (!PublishAsVirtual(name, className))
+                return false;
+        }
+        if (ClassBases.TryGetValue(className, out var bases))
+            foreach (var b in bases)
+                if (!CanSubclassFromManaged(b, index, seen))
+                    return false;
+        return true;
+    }
+
+    // Which virtuals a managed subclass may override. The curated list (VirtualAllow) is the
+    // event handlers and the layout hooks; `VirtualExtensionNames` adds the extension points a
+    // real application needs - without them a custom QAbstractItemModel or QStyledItemDelegate
+    // cannot be written from C# at all. The rule is by *name*, not by class: publishing a name
+    // only on the class that declares it would leave every concrete subclass without an
+    // implementation to chain to (QStandardItemModel::data would fall back to the pure virtual),
+    // so every class declaring that name gets it.
+    static bool PublishAsVirtual(string name, string className)
+        => VirtualAllow.Contains(name)
+           || (VirtualExtensionNames.Contains(name) && IsInExtensionTree(className));
+
+    // Whether the class is one of the extension classes or inherits from one. The name closure
+    // has to stay inside that subtree: a name like `setData` is also declared, completely
+    // unrelated, by QPicture/QPixmap as `setData(const char *, uint)`, and publishing that as an
+    // override point would generate a slot for a method no model ever calls.
+    static readonly Dictionary<string, bool> extensionTree = new(StringComparer.Ordinal);
+
+    static bool IsInExtensionTree(string className)
+    {
+        if (extensionTree.TryGetValue(className, out bool known))
+            return known;
+        extensionTree[className] = false;       // a cycle would otherwise not terminate
+        bool result = false;
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var queue = new Queue<string>();
+        queue.Enqueue(className);
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            if (!seen.Add(current))
+                continue;
+            if (Array.IndexOf(VirtualExtensionClasses, current) >= 0)
+            {
+                result = true;
+                break;
+            }
+            if (ClassBases.TryGetValue(current, out var bases))
+                foreach (var b in bases)
+                    queue.Enqueue(b);
+        }
+        extensionTree[className] = result;
+        return result;
+    }
+
+    // The union of the virtual names declared by the extension classes, filled once per run
+    // (RunExtract2) so `PublishAsVirtual` stays a set lookup.
+    static readonly HashSet<string> VirtualExtensionNames = new(StringComparer.Ordinal);
+
+    // The classes whose virtualls a managed subclass must be able to implement: the item model and
+    // the item delegate are the two extension points every real Qt application uses.
+    static readonly string[] VirtualExtensionClasses =
+    {
+        "QAbstractItemModel", "QAbstractListModel", "QAbstractTableModel",
+        "QAbstractItemDelegate", "QStyledItemDelegate", "QItemDelegate",
+        // Work handed to a thread: a managed QRunnable implements run(), and a managed QThread
+        // subclass overrides the same name (both are the standard Qt extension points).
+        "QRunnable", "QThread",
+    };
+
+    // Collect the virtual names those classes declare, by walking their own members.
+    static void CollectVirtualExtensionNames(ClangIndex index)
+    {
+        VirtualExtensionNames.Clear();
+        foreach (var className in VirtualExtensionClasses)
+        {
+            if (!index.Classes.TryGetValue(className, out var record))
+                continue;
+            foreach (var child in Children(record))
+            {
+                var kind = clang.getCursorKind(child);
+                if (kind != CXCursorKind.CXCursor_CXXMethod && kind != CXCursorKind.CXCursor_FunctionTemplate)
+                    continue;
+                if (clang.CXXMethod_isVirtual(child) == 0)
+                    continue;
+                var name = clang.getCursorSpelling(child).ToString();
+                // The Q_OBJECT scaffolding is not an API: moc generates metaObject, qt_metacall
+                // and qt_metacast in every QObject subclass, and they must not become overridable
+                // C# members.
+                if (name.Length == 0 || name == "metaObject" || name.StartsWith("qt_", StringComparison.Ordinal))
+                    continue;
+                VirtualExtensionNames.Add(name);
+            }
+        }
+    }
+
+    // How one parameter crosses the boundary.
+    enum ParamMode
+    {
+        In,         // a plain input
+        Out,        // a non-const scalar pointer: Qt writes one value back (QColor::getRgb)
+        Ref,        // a non-const scalar reference: in and out (QValidator::validate's int &pos)
+        Invalid,    // we cannot express it; the declaration is rejected
+    }
+
+    // Qt's convention for "one extra output" is a non-const pointer, and for "in and out" a
+    // non-const reference. A non-const reference to a *bound class* is neither: the managed
+    // object *is* the native object, which is why Qt's own swap(QBrush &other) keeps working.
+    // Anything else (a container, an enum, a string, a pointer to a pointer) is not expressible
+    // and poisons the declaration.
+    static ParamMode ParamModeOf(CXType type)
+    {
+        type = Unwrap(type);
+        if (type.kind == CXTypeKind.CXType_Pointer)
+        {
+            if (type.PointeeType.IsConstQualified)
+                return ParamMode.In;
+            var name = ModelName(type);
+            if (name == null)
+                return ParamMode.Invalid;
+            // uchar* is a byte buffer Qt *reads* (QImage's pixel data), not an output.
+            if (name == "uchar*")
+                return ParamMode.In;
+            return IsScalarPointer(name) ? ParamMode.Out : ParamMode.In;
+        }
+        if (type.kind == CXTypeKind.CXType_LValueReference && !type.PointeeType.IsConstQualified)
+        {
+            var pointee = ModelName(type.PointeeType);
+            if (pointee == null)
+                return ParamMode.Invalid;
+            if (RootClasses.Contains(pointee))
+                return ParamMode.In;
+            // QString is the one non-scalar Qt rewrites in place (QValidator::validate/fixup
+            // rewrite the text, QClipboard::text fills in the subtype): the native side gets a
+            // local QString and hands the updated copy back. The views are left out - a
+            // QStringView local cannot bind to a QString&.
+            if (pointee == "QString")
+                return ParamMode.Ref;
+            return IsScalarName(pointee) ? ParamMode.Ref : ParamMode.Invalid;
+        }
+        return ParamMode.In;
+    }
+
+    // A non-const scalar pointer is a single value *except* where Qt means "a buffer of N":
+    // QMatrix4x4::copyDataTo(float *values) writes 16 floats and QMetaMethod::getParameterTypes
+    // writes one int per parameter, neither of which an `out int`/`out float` can hold. The
+    // pointer carries no length, so the only safe thing is to leave the declaration unbound.
+    static bool IsOutBufferMethod(string name)
+        => name is "copyDataTo" or "getParameterTypes";
+
+    // The class/enum vocabulary the model is allowed to express.
+    static bool SupportedType(CXType type, bool isParameter = false, bool isReturn = false)
+    {
+        if (isParameter && ParamModeOf(type) == ParamMode.Invalid)
             return false;
         var name = ModelName(type);
         if (name == null)
             return false;
         if (name.EndsWith("*"))
+        {
+            // A raw scalar pointer in return position has no length and no owner, so managed
+            // code could neither bound nor free the buffer (QImage::bits(), QMatrix4x4::data()).
+            // The parameter position is fine: it is an input array or an out value.
+            if (isReturn && IsScalarPointer(name))
+                return false;
             return SupportedTypes.Contains(name);
+        }
         // A QList<E> is bindable exactly when its element type is.
         if (ListElement(name) is string element)
             return SupportedTypes.Contains(element);
+        // A QMap/QHash is bindable when both halves are, checked as the value types they are
+        // (so a pointer half still has to name a bound class, and an enum half a publishable
+        // scope).
+        if (TryUnwrapAssoc(type, "QMap", out var mapKeyType, out var mapValueType)
+            || TryUnwrapAssoc(type, "QHash", out mapKeyType, out mapValueType))
+            return SupportedType(mapKeyType) && SupportedType(mapValueType);
+        // A QBindable<T> only ever comes *out* of Qt (the bindableFoo() accessors). Handing one
+        // back in would need a native QBindable object, which the managed side has no way to
+        // make, so a bindable parameter is not bindable.
+        if (TryUnwrapBindable(type, out var boundType))
+            return !isParameter && SupportedType(boundType);
 
         var flags = FlagsName(type);
         if (flags != null)
@@ -521,6 +852,11 @@ public static partial class ApiModel
         public string Name;
         public string Type;         // model type, null when the vocabulary cannot express it
         public CXType ClangType;
+        // The spelling clang printed for the declaration. Only virtuals publish it: an override
+        // has to repeat the base declaration exactly, and the model type has already dropped the
+        // pointee const and the reference (const QMimeData * -> QMimeData*).
+        public string CppType;
+        public ParamMode Mode;      // input, out (non-const scalar pointer) or ref
         public bool Optional;       // the C++ declaration has a default here
         public string Default;      // a literal the code generator can emit, or null
     }
@@ -533,6 +869,7 @@ public static partial class ApiModel
         public bool IsVirtual;
         public bool IsPure;
         public bool IsConst;
+        public bool Private;
         public bool IsCtor;
         public string ReturnType;
         public CXType ReturnClangType;
@@ -543,6 +880,7 @@ public static partial class ApiModel
 
     static string ClassJson(CXCursor record, Root root, ClangIndex index, HashSet<string> chunkClasses,
                             List<Program.SignalInfo> signals, HashSet<string> allSignalNames,
+                            List<Program.PropertyInfo> properties,
                             Dictionary<string, EnumEntry> enums)
     {
         var className = clang.getCursorSpelling(record).ToString();
@@ -564,7 +902,7 @@ public static partial class ApiModel
                 // CppSharp only marks copy constructors after its own passes, so they have to be
                 // recognised by shape here (QColor(const QColor&)).
                 .Where(m => m.Visible.Count != 1 || m.Visible[0].Type != className)
-                .Where(Accept)
+                .Where(m => Accept(m, className))
                 .GroupBy(CtorDedupeKey)
                 .Select(g => g.First())
                 .OrderBy(m => m.Params.Count)
@@ -577,14 +915,14 @@ public static partial class ApiModel
             // it belongs here as a plain callable member (QAbstractItemView::setModel,
             // QDialog::accept, QWidget::sizeHint). Only the whitelisted ones are published as
             // overridable C# virtuals instead.
-            .Where(m => !m.IsCtor && !(m.IsVirtual && VirtualAllow.Contains(m.Name)))
+            .Where(m => !m.IsCtor && !(m.IsVirtual && PublishAsVirtual(m.Name, className)))
             // Qt's "qt_" members are macro scaffolding (Q_OBJECT), not API, and have no exported
             // symbol either.
             .Where(m => !m.Name.StartsWith("qt_", StringComparison.Ordinal))
             .Where(m => !m.Name.StartsWith("operator", StringComparison.Ordinal))
             .Where(m => Access(m.Cursor) == CX_CXXAccessSpecifier.CX_CXXPublic)
             .Where(m => !allSignalNames.Contains(className + "::" + m.Name))
-            .Where(Accept)
+            .Where(m => Accept(m, className))
             .GroupBy(DedupeKey)
             .Select(g => g.First())
             .OrderBy(m => m.Name, StringComparer.Ordinal)
@@ -596,14 +934,41 @@ public static partial class ApiModel
         // install. The dispatch chain is merged from the model by the code generator.
         var virtuals = callable
             .Where(m => m.IsVirtual && !m.IsCtor)
-            .Where(m => VirtualAllow.Contains(m.Name))
+            .Where(m => PublishAsVirtual(m.Name, className))
             // An override has to repeat the base declaration exactly, so a virtual keeps its
             // whole parameter list - the marshalable-prefix rule is for callable members only.
-            .Where(m => { m.Visible = m.Params; return Accept(m); })
+            .Where(m => { m.Visible = m.Params; return Accept(m, className); })
             .GroupBy(DedupeKey)
             .Select(g => g.First())
             .OrderBy(m => m.Name, StringComparer.Ordinal)
             .ThenBy(m => m.Params.Count)
+            .ToList();
+
+        // A Q_PROPERTY is sugar over the accessors: both the READ getter and the (optional)
+        // WRITE setter have to be published methods already, and the setter has to take exactly
+        // the type the getter returns. Anything else - a QIcon-typed property whose accessors the
+        // vocabulary rejects, an echoMode whose accessor returns an enum the class also nests -
+        // is skipped, and the methods stay.
+        var published = methods.Concat(virtuals).ToList();
+        var classProperties = properties
+            .Where(p => p.ClassName == className && p.Getter != null)
+            .GroupBy(p => p.Name, StringComparer.Ordinal)
+            .Select(g => g.First())
+            .Select(p => (
+                Property: p,
+                Getter: published.FirstOrDefault(m => m.Name == p.Getter && m.Visible.Count == 0)))
+            .Where(x => x.Getter != null && x.Getter.ReturnType != null && x.Getter.ReturnType != "void")
+            .Select(x => (
+                x.Property,
+                x.Getter,
+                // The setter is matched by *type*, not by name: Qt has several overloads
+                // (QTimer::setInterval(int) and setInterval(std::chrono::milliseconds)) and only
+                // the one that takes what the getter returns can be the property's setter.
+                Setter: published.FirstOrDefault(m => m.Name == x.Property.Setter && m.Visible.Count == 1
+                    && ApiTypes.Managed(m.Visible[0].Type ?? "?", RootClasses.ToArray())
+                       == ApiTypes.Managed(x.Getter.ReturnType, RootClasses.ToArray()))))
+            .Where(x => x.Property.Setter == null || x.Setter != null)
+            .OrderBy(x => x.Property.Name, StringComparer.Ordinal)
             .ToList();
 
         // A signal is exposed as a property named after it, so two of the same name cannot
@@ -617,6 +982,10 @@ public static partial class ApiModel
 
         foreach (var fn in ctors.Concat(methods).Concat(virtuals))
             CollectEnums2(fn.ReturnClangType, fn.Visible, index, enums);
+        // A published data member can be the only place an enum appears (QStyleOption::state is
+        // QStyle::State), so its type has to contribute enums too.
+        foreach (var field in FieldsOf(record))
+            CollectEnums2(field.ClangType, new List<ParamFact>(), index, enums);
 
         var body = new StringBuilder();
         body.Append("    {\n");
@@ -625,10 +994,30 @@ public static partial class ApiModel
         body.Append($"      \"bases\": [{string.Join(", ", bases.Select(Json))}],\n");
         body.Append($"      \"isAbstract\": {(isAbstract ? "true" : "false")},\n");
         body.Append($"      \"subclassable\": {(subclassable ? "true" : "false")},\n");
+        // An abstract class a managed subclass can still derive from: the native subclass is
+        // concrete because every pure virtual it inherits is published as an override point, so
+        // the code generator can give it a constructor (QAbstractItemModel/QAbstractTableModel).
+        bool subclassCtor = isAbstract && subclassable && virtuals.Count > 0
+                            && CanSubclassFromManaged(className, index, new HashSet<string>(StringComparer.Ordinal));
+        if (subclassCtor)
+            body.Append("      \"subclassCtor\": true,\n");
         body.Append($"      \"owned\": {(OwnedOf(root, chunkClasses) ? "true" : "false")},\n");
+        var fields = FieldsOf(record);
+        if (fields.Count > 0)
+        {
+            body.Append("      \"fields\": [\n");
+            for (int i = 0; i < fields.Count; i++)
+            {
+                body.Append($"        {{ \"name\": {Json(fields[i].Name)}, \"type\": {Json(fields[i].Type)} }}");
+                body.Append(i + 1 < fields.Count ? ",\n" : "\n");
+            }
+            body.Append("      ],\n");
+        }
         WriteConstructors2(body, ctors);
         WriteFunctions2(body, "methods", methods);
         WriteVirtuals2(body, virtuals);
+        // Before the signals: WriteSignals is the last key and relies on having no trailing comma.
+        WriteProperties2(body, classProperties);
         WriteSignals(body, classSignals);
         body.Append("    }\n");
         return body.ToString();
@@ -719,6 +1108,18 @@ public static partial class ApiModel
         }
 
         var isCtor = clang.getCursorKind(handle) == CXCursorKind.CXCursor_Constructor;
+        // A member whose name equals its class's is a constructor, whatever libclang calls it:
+        // Q_WEAK_OVERLOAD wraps a constructor in the `template <typename = void>` trick
+        // (QVersionNumber(const QList<int> &)), and the cursor then reads as a function template.
+        // Without this the constructor is published as a method named after the class, and the
+        // generated forwarder (`self->QVersionNumber(...)`) does not compile.
+        if (!isCtor)
+        {
+            var parent = clang.getCursorSemanticParent(handle);
+            if (clang.getCursorKind(parent) == CXCursorKind.CXCursor_ClassDecl ||
+                clang.getCursorKind(parent) == CXCursorKind.CXCursor_StructDecl)
+                isCtor = clang.getCursorSpelling(handle).ToString() == clang.getCursorSpelling(parent).ToString();
+        }
         if (!isCtor && !IsCopyableResult(clang.getCursorResultType(handle)))
             return null;
         // A byte buffer only makes sense as an argument: a returned one would have no length.
@@ -734,6 +1135,10 @@ public static partial class ApiModel
             IsVirtual = clang.CXXMethod_isVirtual(handle) != 0,
             IsPure = clang.CXXMethod_isPureVirtual(handle) != 0,
             IsConst = clang.CXXMethod_isConst(handle) != 0,
+            // A *private* virtual cannot be called from the generated subclass at all, so a
+            // managed override has no base implementation to chain to (Qt declares
+            // QAbstractListModel::columnCount private).
+            Private = !isCtor && Access(handle) == CX_CXXAccessSpecifier.CX_CXXPrivate,
             ReturnType = isCtor ? "void" : ModelName(clang.getCursorResultType(handle)),
             ReturnClangType = clang.getCursorResultType(handle),
         };
@@ -754,6 +1159,7 @@ public static partial class ApiModel
                     Name = spelled ?? "arg" + i,
                     Type = ModelName(type),
                     ClangType = type,
+                    CppType = Spelling(type),
                 });
             }
         }
@@ -769,6 +1175,7 @@ public static partial class ApiModel
                     Name = spelled.Length > 0 ? spelled : "arg" + i,
                     Type = ModelName(type),
                     ClangType = type,
+                    CppType = Spelling(type),
                 };
                 // libclang has no "has default argument" query: the default argument shows up as
                 // the expression child of the ParmDecl cursor.
@@ -786,6 +1193,8 @@ public static partial class ApiModel
             }
         }
 
+        foreach (var p in fn.Params)
+            p.Mode = ParamModeOf(p.ClangType);
         fn.Visible = VisibleParamsOf(fn);
         return fn;
     }
@@ -1024,6 +1433,11 @@ public static partial class ApiModel
         {
             if (p.Type != null && SupportedType(p.ClangType, isParameter: true))
             {
+                // A by-reference parameter cannot carry a C# default (`out int a = 0` is not
+                // legal), so an optional one is dropped and the C++ default applies - which is
+                // exactly what QColor::getRgb(int *r, int *g, int *b, int *a = nullptr) means.
+                if (p.Mode != ParamMode.In && p.Optional)
+                    break;
                 // A boxed value parameter whose optional default we cannot express (QRect(),
                 // QVariant(), QSize(-1, -1)) would reach the generated glue as a null handle and
                 // be dereferenced. Leaving it out makes the C++ default apply, which is what the
@@ -1040,9 +1454,24 @@ public static partial class ApiModel
         return result;
     }
 
-    static bool Accept(FnFact fn)
+    static bool Accept(FnFact fn, string className)
     {
-        var blocker = SupportedType(fn.ReturnClangType) ? null : DescribeBlocked(fn.ReturnClangType);
+        var blocker = SupportedType(fn.ReturnClangType, isReturn: true) ? null : DescribeBlocked(fn.ReturnClangType);
+        if (blocker == null && fn.Visible.Any(p => p.Mode != ParamMode.In))
+        {
+            // A by-reference parameter is only supported on a plain method: the native wrapper
+            // the virtual dispatch path builds has no way to hand an out value back through the
+            // argv slot convention. No whitelisted virtual declares one today; this keeps it
+            // that way.
+            if (fn.IsVirtual && PublishAsVirtual(fn.Name, className))
+                blocker = "out parameter on an overridable virtual";
+            else if (fn.IsCtor)
+                // The generated constructor forwarders take the flat C ABI types and have no
+                // room for the extra out slot a by-reference parameter needs.
+                blocker = "a by-reference constructor parameter";
+            else if (IsOutBufferMethod(fn.Name))
+                blocker = "a buffer written through a non-const pointer";
+        }
         if (blocker == null)
         {
             foreach (var p in fn.Visible)
@@ -1058,6 +1487,10 @@ public static partial class ApiModel
 
         Skipped2.TryGetValue(blocker, out int n);
         Skipped2[blocker] = n + 1;
+        // Which declaration the type blocks is what says whether the gap is worth closing, so
+        // the debug log names the function and the blocker together.
+        if (Environment.GetEnvironmentVariable("QTSHARP_MODEL_DEBUG") == "1")
+            Console.WriteLine($"[model2-debug] skipped {fn.Name}({string.Join(",", fn.Visible.Select(p => p.Type ?? "?"))}) blocked by {blocker}");
         return false;
     }
 
@@ -1089,11 +1522,18 @@ public static partial class ApiModel
             return type != null && (type.EndsWith("*") || type == "QString" || RootClasses.Contains(type)) ? "null" : "0";
         if (text is "true" or "false")
             return text;
-        if (type != null && type.Contains("::") && text.Contains("::") && !text.Contains("("))
+        // An enumerator, or a set of them joined with `|`. Two spellings have to work: the
+        // qualified one Qt writes for a plain enum (Qt::AutoColor) and the bare one it writes for
+        // a QFlags enumerator (QDir::NoFilter, spelled `NoFilter` because the parameter's type is
+        // already the flag type). Both fold to the same C# member reference. Getting this wrong is
+        // silent: `default` is 0, and 0 is not what Qt declared (QDir's NoFilter is -1, so a
+        // zero-valued filter returns no entries at all).
+        if (type != null && type.Contains("::"))
         {
-            var item = text.Substring(text.LastIndexOf("::", StringComparison.Ordinal) + 2);
-            if (item.Length > 0 && item.All(char.IsLetterOrDigit))
-                return ApiTypes.Managed(type, RootClasses.ToArray()) + "." + item;
+            var parts = text.Split('|').Select(p => p.Trim()).ToList();
+            if (parts.Count > 0 && parts.All(IsEnumeratorName))
+                return string.Join(" | ", parts.Select(p =>
+                    ApiTypes.Managed(type, RootClasses.ToArray()) + "." + ItemOf(p)));
         }
         var isHex = text.StartsWith("0x") || text.StartsWith("0X");
         var digits = isHex ? text.Substring(2) : text;
@@ -1105,6 +1545,42 @@ public static partial class ApiModel
         {
             return null;
         }
+    }
+
+    // The enumerator out of `Qt::AutoColor` or a bare `NoFilter` (Qt writes the bare spelling when
+    // the parameter's type is already the flag type).
+    static string ItemOf(string qualified)
+    {
+        int at = qualified.LastIndexOf("::", StringComparison.Ordinal);
+        return at < 0 ? qualified : qualified.Substring(at + 2);
+    }
+
+    // `NoFilter`, `Qt::AutoColor`: a single qualified name with no operators of any kind. Anything
+    // that mentions a function call, a template or arithmetic stays out.
+    static bool IsEnumeratorName(string text)
+    {
+        bool expectLetter = true;
+        for (int i = 0; i < text.Length; i++)
+        {
+            char c = text[i];
+            if (expectLetter)
+            {
+                if (!char.IsLetter(c) && c != '_')
+                    return false;
+                expectLetter = false;
+            }
+            else if (c == ':')
+            {
+                // Only ever as the "::" separator.
+                if (i + 1 >= text.Length || text[i + 1] != ':')
+                    return false;
+                i++;
+                expectLetter = true;
+            }
+            else if (!char.IsLetterOrDigit(c) && c != '_')
+                return false;
+        }
+        return !expectLetter;
     }
 
     // Any enum that reaches an accepted signature is part of the model; enums are open (plain
@@ -1168,7 +1644,7 @@ public static partial class ApiModel
         for (int i = 0; i < ctors.Count; i++)
         {
             sb.Append("        { \"parameters\": [");
-            sb.Append(string.Join(", ", ctors[i].Visible.Select(ParamJson2)));
+            sb.Append(string.Join(", ", ctors[i].Visible.Select(p => ParamJson2(p))));
             sb.Append("] }");
             sb.Append(i + 1 < ctors.Count ? ",\n" : "\n");
         }
@@ -1186,7 +1662,7 @@ public static partial class ApiModel
                 sb.Append(", \"static\": true");
             sb.Append(", \"returnType\": ").Append(Json(m.ReturnType));
             sb.Append(", \"parameters\": [");
-            sb.Append(string.Join(", ", m.Visible.Select(ParamJson2)));
+            sb.Append(string.Join(", ", m.Visible.Select(p => ParamJson2(p))));
             sb.Append("] }");
             sb.Append(i + 1 < methods.Count ? ",\n" : "\n");
         }
@@ -1208,20 +1684,52 @@ public static partial class ApiModel
             // override anything (QWidget::sizeHint() const).
             if (v.IsConst)
                 sb.Append(", \"const\": true");
+            // A private virtual has no accessible base implementation, so a managed override
+            // cannot chain to it (and Qt's own behaviour is only reachable by overriding).
+            if (v.Private)
+                sb.Append(", \"noBase\": true");
             sb.Append(", \"returnType\": ").Append(Json(v.ReturnType));
             sb.Append(", \"parameters\": [");
-            sb.Append(string.Join(", ", v.Visible.Select(ParamJson2)));
+            sb.Append(string.Join(", ", v.Visible.Select(p => ParamJson2(p, withCpp: true))));
             sb.Append("] }");
             sb.Append(i + 1 < virtuals.Count ? ",\n" : "\n");
         }
         sb.Append("      ],\n");
     }
 
-    static string ParamJson2(ParamFact p)
+    // The properties a class publishes: the Qt name, the model type (the getter's return type)
+    // and the accessors the generated C# property calls.
+    static void WriteProperties2(StringBuilder sb, List<(Program.PropertyInfo Property, FnFact Getter, FnFact Setter)> properties)
+    {
+        if (properties.Count == 0)
+            return;
+        sb.Append("      \"properties\": [\n");
+        for (int i = 0; i < properties.Count; i++)
+        {
+            var (property, getter, setter) = properties[i];
+            sb.Append($"        {{ \"name\": {Json(property.Name)}, \"type\": {Json(getter.ReturnType)}, \"getter\": {Json(getter.Name)}");
+            if (setter != null)
+                sb.Append($", \"setter\": {Json(setter.Name)}");
+            sb.Append(" }");
+            sb.Append(i + 1 < properties.Count ? ",\n" : "\n");
+        }
+        sb.Append("      ],\n");
+    }
+
+    static string ParamJson2(ParamFact p, bool withCpp = false)
     {
         var sb = new StringBuilder();
         sb.Append("{ \"name\": ").Append(Json(p.Name));
         sb.Append(", \"type\": ").Append(Json(p.Type));
+        // A virtual override has to repeat Qt's declaration exactly, so its parameters carry the
+        // spelling clang printed. A duration needs it too: which unit it is decides the C++
+        // conversion (std::chrono::duration_cast<std::chrono::milliseconds>).
+        if ((withCpp || p.Type == "TimeSpan") && p.CppType != null)
+            sb.Append(", \"cpp\": ").Append(Json(p.CppType));
+        if (p.Mode == ParamMode.Out)
+            sb.Append(", \"out\": true");
+        else if (p.Mode == ParamMode.Ref)
+            sb.Append(", \"ref\": true");
         if (p.Optional)
         {
             sb.Append(", \"optional\": true");

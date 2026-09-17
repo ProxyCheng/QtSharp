@@ -62,15 +62,31 @@ public static class ApiTypes
         if (modelType.StartsWith("QList<", StringComparison.Ordinal) && modelType.EndsWith(">"))
             return Managed(modelType.Substring("QList<".Length, modelType.Length - "QList<".Length - 1), classes) + "[]";
 
-        if (modelType == "int*")
-            return "int[]";
-        // Byte buffers: a const uchar* whose length is passed separately, and the Qt6 byte view
-        // that carries its own length.
+        // An associative container: the managed surface is a dictionary
+        // (QMap<int, QVariant> / QHash<int, QByteArray> -> Dictionary<int, ...>).
+        foreach (var container in new[] { "QMap", "QHash" })
+            if (modelType.StartsWith(container + "<", StringComparison.Ordinal) && modelType.EndsWith(">"))
+            {
+                var (key, value) = SplitPair(modelType.Substring(container.Length + 1, modelType.Length - container.Length - 2));
+                return $"Dictionary<{Managed(key, classes)}, {Managed(value, classes)}>";
+            }
+
+        // A handle to a Qt property (the bindableFoo() accessors): a wrapper the generated code
+        // publishes once, generic over the value type.
+        if (modelType.StartsWith("QBindable<", StringComparison.Ordinal) && modelType.EndsWith(">"))
+            return $"QBindable<{Managed(modelType.Substring("QBindable<".Length, modelType.Length - "QBindable<".Length - 1), classes)}>";
+
+        // Byte buffers: a uchar* whose length is passed separately, and the Qt6 byte view that
+        // carries its own length.
         if (modelType == "uchar*" || modelType == "QByteArrayView")
             return "byte[]";
         if (modelType.EndsWith("*"))
         {
             var pointee = modelType.Substring(0, modelType.Length - 1);
+            // A pointer to a scalar is an array of that scalar (QPolygon's int*, and the out
+            // parameters QColor::getRgb writes back).
+            if (IsScalar(pointee))
+                return Managed(pointee, classes) + "[]";
             return classes != null && classes.Contains(pointee) ? pointee : "IntPtr";
         }
         if (modelType.Contains("::"))
@@ -84,6 +100,34 @@ public static class ApiTypes
             "double" => "double",
             _ => modelType,     // a bound class, boxed by value
         };
+    }
+
+    // The scalar vocabulary of the model, which is what tells an array of values apart from a
+    // handle ("int*" vs "QWidget*").
+    static readonly HashSet<string> ScalarModelTypes = new(StringComparer.Ordinal)
+    {
+        "bool", "int", "float", "double",
+        "long long", "unsigned long long", "unsigned int",
+        "short", "unsigned short", "long", "unsigned long",
+        "char", "unsigned char", "char16_t", "void",
+    };
+
+    public static bool IsScalar(string modelType) => ScalarModelTypes.Contains(modelType);
+
+    // "K,V" -> K and V, honouring nested angle brackets (QMap<int, QList<int>>).
+    public static (string Key, string Value) SplitPair(string inner)
+    {
+        int depth = 0;
+        for (int i = 0; i < inner.Length; i++)
+        {
+            if (inner[i] == '<')
+                depth++;
+            else if (inner[i] == '>')
+                depth--;
+            else if (inner[i] == ',' && depth == 0)
+                return (inner.Substring(0, i), inner.Substring(i + 1));
+        }
+        return (inner, inner);
     }
 }
 
@@ -480,6 +524,76 @@ public static partial class ApiModel
         R("QUrl",                  "qurl.h", "QtCore"),
         R("QVariant",              "qvariant.h", "QtCore"),
         R("QWidgetItem",           "qlayoutitem.h", "QtWidgets", owned: false),
+
+        // ---------------------------------------------------------------- QtCore batch 1
+        // The QtCore value classes: QtCore was 42 classes against PySide's ~200, and these are
+        // the ones a real application reaches for (files, JSON, ids, random numbers, the
+        // command line). Every one of them is a plain value type - none derives from QObject -
+        // so the "managed owns it" rule holds unchanged.
+        R("QDeadlineTimer",        "qdeadlinetimer.h", "QtCore"),
+        R("QDir",                  "qdir.h", "QtCore"),
+        R("QDirIterator",          "qdiriterator.h", "QtCore"),
+        R("QTemporaryDir",         "qtemporarydir.h", "QtCore"),
+        R("QFileInfo",             "qfileinfo.h", "QtCore"),
+        // Statics only: both the constructor and the destructor are private.
+        R("QStandardPaths",        "qstandardpaths.h", "QtCore", bindCtors: false),
+        R("QUuid",                 "quuid.h", "QtCore"),
+        R("QRandomGenerator",      "qrandom.h", "QtCore"),
+        R("QElapsedTimer",         "qelapsedtimer.h", "QtCore"),
+        R("QEasingCurve",          "qeasingcurve.h", "QtCore"),
+        R("QVersionNumber",        "qversionnumber.h", "QtCore"),
+        // No declared constructor at all.
+        R("QSysInfo",              "qsysinfo.h", "QtCore", bindCtors: false),
+        R("QJsonValue",            "qjsonvalue.h", "QtCore"),
+        R("QJsonObject",           "qjsonobject.h", "QtCore"),
+        R("QJsonArray",            "qjsonarray.h", "QtCore"),
+        R("QJsonDocument",         "qjsondocument.h", "QtCore"),
+        // An aggregate of public fields; nothing to construct or own.
+        R("QJsonParseError",       "qjsonparseerror.h", "QtCore", bindCtors: false),
+        R("QCommandLineOption",    "qcommandlineoption.h", "QtCore"),
+        R("QCommandLineParser",    "qcommandlineparser.h", "QtCore"),
+        R("QProcessEnvironment",   "qprocess.h", "QtCore"),
+        // QtGui value types that other QtGui classes keep asking for.
+        R("QSurfaceFormat",        "qsurfaceformat.h", "QtGui"),
+        R("QGlyphRun",             "qglyphrun.h", "QtGui"),
+
+        // ---------------------------------------------------------------- QtCore batch 2
+        // The QObject-derived QtCore classes. These only became safe once the generated
+        // destructor learned to ask Qt first (`if (parent()) return;`): a QFile/QThread a program
+        // creates is ours to delete, but one Qt adopted is not.
+        // The enum holder QIODevice derives from: without it QIODeviceBase::OpenMode is a flag
+        // type whose scope is unbound, and every open()/read()/write() signature is dropped.
+        R("QIODeviceBase",         "qiodevicebase.h", "QtCore", bindCtors: false),
+        R("QWindow",               "qwindow.h", "QtGui"),
+        R("QFileDevice",           "qfiledevice.h", "QtCore", bindCtors: false),
+        R("QFile",                 "qfile.h", "QtCore"),
+        R("QSaveFile",             "qsavefile.h", "QtCore"),
+        R("QTemporaryFile",        "qtemporaryfile.h", "QtCore"),
+        R("QProcess",              "qprocess.h", "QtCore"),
+        R("QThread",               "qthread.h", "QtCore"),
+        R("QLockFile",             "qlockfile.h", "QtCore"),
+        // Static-only in practice: the constructors take `int &argc, char **argv`, which the
+        // model cannot express, so the class lands with its statics (instance, arguments,
+        // applicationDirPath, ...) and no way to build one - which is right, Qt already did.
+        R("QCoreApplication",      "qcoreapplication.h", "QtCore"),
+        R("QGuiApplication",       "qguiapplication.h", "QtGui"),
+        R("QLibrary",              "qlibrary.h", "QtCore"),
+        R("QPluginLoader",         "qpluginloader.h", "QtCore"),
+        R("QXmlStreamReader",      "qxmlstream.h", "QtCore"),
+        R("QXmlStreamWriter",      "qxmlstream.h", "QtCore"),
+        R("QTextDocumentWriter",   "qtextdocumentwriter.h", "QtGui"),
+        // The thread primitives. QBasic* are the bases that actually declare lock()/unlock(), so
+        // without them the QMutex/QReadWriteLock methods would silently disappear.
+        R("QBasicMutex",           "qmutex.h", "QtCore"),
+        R("QMutex",                "qmutex.h", "QtCore"),
+        R("QBasicReadWriteLock",   "qreadwritelock.h", "QtCore"),
+        R("QReadWriteLock",        "qreadwritelock.h", "QtCore"),
+        R("QSemaphore",            "qsemaphore.h", "QtCore"),
+        R("QWaitCondition",        "qwaitcondition.h", "QtCore"),
+        // The thread pool and the task a managed class implements: a managed QRunnable subclass is
+        // how C# code hands work to Qt's pool.
+        R("QRunnable",             "qrunnable.h", "QtCore"),
+        R("QThreadPool",           "qthreadpool.h", "QtCore"),
     };
 
     // Names that only ever occur as a pointer and are deliberately left opaque (IntPtr).
@@ -518,11 +632,18 @@ public static partial class ApiModel
             // The Qt6 byte view: a length-carrying byte buffer, so returns are fine here.
             "QByteArrayView",
             "QString", "char*", "int*",
+            // A pointer to any other scalar: an input array (QPolygon's int*) or the out
+            // parameter Qt writes a value back through (QColor::getRgb(int *r, ...)).
+            "float*", "double*", "bool*", "short*", "unsigned short*",
+            "unsigned int*", "long*", "unsigned long*", "long long*", "unsigned long long*",
             // The string views Qt declares next to QString; they all surface as a managed
             // string, and folding the overloads is what ApiTypes.Managed is for.
             "QStringView", "QAnyStringView", "QLatin1StringView",
             // The one container: QList<QString>, marshalled as a managed string array.
             "QStringList",
+            // A std::chrono duration (QTimer::setInterval, QThread::sleep, QDeadlineTimer):
+            // managed code sees a TimeSpan, the C ABI carries nanoseconds.
+            "TimeSpan",
         };
         foreach (var root in ActiveRoots)
         {
