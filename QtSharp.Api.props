@@ -1,0 +1,51 @@
+<Project>
+
+  <!--
+    Everything a program needs to use the generated Qt binding without living inside this
+    repository's test app:
+
+      * the binding itself  - out/api/QtSharp.Api.cs (produced by tools/regen-api.ps1)
+      * the hand-written managed runtime - runtime/ApiRuntime.cs
+      * the native side     - out/api/QtSharp.Api.dll, plus the Qt DLLs and the platform plugin
+
+    Import it and the project is complete:
+
+        <Import Project="..\..\QtSharp.Api.props" />
+
+    Override QtSharpRoot / QtSharpApiDir / QtRuntimeDir if the pieces live elsewhere.
+  -->
+  <PropertyGroup>
+    <QtSharpRoot Condition="'$(QtSharpRoot)' == ''">$(MSBuildThisFileDirectory)</QtSharpRoot>
+    <QtSharpApiDir Condition="'$(QtSharpApiDir)' == ''">$(QtSharpRoot)out\api</QtSharpApiDir>
+    <QtRuntimeDir Condition="'$(QtRuntimeDir)' == ''">$(QtSharpRoot)Qt\6.11.0\runtime</QtRuntimeDir>
+    <!-- The generated binding keeps the C ABI in pointers and blittable structures. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(QtSharpRoot)runtime\ApiRuntime.cs" />
+    <Compile Include="$(QtSharpApiDir)\QtSharp.Api.cs" />
+  </ItemGroup>
+
+  <Target Name="CopyQtSharpNativeDeps" AfterTargets="Build">
+    <ItemGroup>
+      <QtSharpApiNative Include="$(QtSharpApiDir)\QtSharp.Api.dll" />
+      <QtRuntimeDll Include="$(QtRuntimeDir)\*.dll" />
+      <QtPlatformPlugin Include="$(QtRuntimeDir)\platforms\qwindows.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(QtSharpApiNative)" DestinationFolder="$(OutDir)" />
+    <Copy SourceFiles="@(QtRuntimeDll)" DestinationFolder="$(OutDir)" />
+    <Copy SourceFiles="@(QtPlatformPlugin)" DestinationFolder="$(OutDir)platforms\" />
+  </Target>
+
+  <!-- A stale binding is the one thing that fails confusingly (a missing method rather than a
+       build error), so say so loudly when it has not been generated yet. -->
+  <Target Name="QtSharpApiCheck" BeforeTargets="BeforeBuild">
+    <Error Condition="!Exists('$(QtSharpApiDir)\QtSharp.Api.cs')"
+           Text="QtSharp.Api.cs is missing - run: powershell -File $(QtSharpRoot)tools\regen-api.ps1" />
+    <Error Condition="!Exists('$(QtSharpApiDir)\QtSharp.Api.dll')"
+           Text="QtSharp.Api.dll is missing - run: powershell -File $(QtSharpRoot)tools\regen-api.ps1" />
+  </Target>
+
+</Project>
