@@ -6,7 +6,7 @@
 `testapp.exe` 不带参数 = 平铺 15 个旧链路 demo;新链路自测命令:`api` / `api-analogclock` / `api-lineedits` / `api-widgets` / `api-graphics` / `api-core` / `api-events` / `api-ownership` / `api-custommodel` / `api-calculator` / `api-spinboxes`。
 
 ## 当前状态速览(给新 session)
-> **想直接体验新框架**:`powershell -File D:\QtSharp\tools\regen-api.ps1`(生成 model/C#/native 并跑门禁)→ 打开 `QtSharp.slnx`(gen + testbind + samples/hello + tools/clangprobe)→ 启动 `testbind`,参数给一个 demo 名(`api` / `api-widgets` / `api-core` / `api-events` / `api-calculator` …)。`testapp.exe` 不带参数 = 旧链路 15 个窗口平铺。
+> **想直接体验新框架**:`powershell -File D:\QtSharp\tools\regen-api.ps1`(生成 model/C#/native 并跑门禁)→ 打开 `QtSharp.slnx`(gen + testbind + samples/hello + tools/clangprobe)→ 启动 `testbind`,参数给一个 demo 名(`api` / `api-widgets` / `api-core` / `api-events` / `api-calculator` …)。`testapp.exe` 不带参数 = 旧链路 14 个窗口平铺。
 > **想自己写界面**:照抄 `samples/hello/` —— 一个 `net10.0` 控制台工程,里面只有 `Program.cs` + `<Import Project="..\..\QtSharp.Api.props" />`(props 负责:编译生成的 `out/api/QtSharp.Api.cs` + `runtime/ApiRuntime.cs`,并把 `QtSharp.Api.dll`、Qt 运行时 DLL、`platforms\qwindows.dll` 拷到输出目录);`tools/regen-api.ps1` 会 build+run 它,所以这条路不会烂。
 > **API 的几条命名约定**(不知道叫什么名字时按这几条猜):
 > - `Main` 要 `[STAThread]`;开头 `ApiRuntime.StartApplication()`,结尾 `ApiRuntime.Exec()`(退出用 `ApiRuntime.Quit()`)。
@@ -25,7 +25,7 @@
 | 架构 PoC #3 所有权(Qt-owned 弱引用 + SafeHandle + destroyed 失效) | ✅ `testapp own` 全 PASS |
 | 产品化第 1 步:model(入库)+ codegen | ✅ model **逐字节可复现**、codegen 纯函数(两次一致) |
 | **前端迁移(已决策)** | ✅ **已完成**:`qtgen extract2`(ClangSharp)取代 CppSharp 成为默认前端,~2.5 秒产出**逐字节一致**的 model;原 44 类 model 复刻 **1472/1472** 条事实(见"路线 A 可行性验证"一节) |
-| **两/新旧 demo 都在跑** | ✅ 新链路 **11 个 demo** 全进门禁,共 **331 项断言**(`api` 6 / `api-analogclock` 10 / `api-lineedits` 9 / `api-widgets` 85 / `api-graphics` 9 / `api-core` 110 / `api-events` 22 / `api-ownership` 24 / `api-custommodel` 19 / `api-calculator` 12 / `api-spinboxes` 25),外加 **`samples/hello`**(独立工程,只 `Import` 一个 props 文件)也被门禁 build+run |
+| **两/新旧 demo 都在跑** | ✅ 新链路 **12 个 demo** 全进门禁,共 **347 项断言**(`api` 6 / `api-analogclock` 10 / `api-lineedits` 9 / `api-widgets` 85 / `api-graphics` 9 / `api-core` 108 / `api-events` 22 / `api-ownership` 24 / `api-custommodel` 19 / `api-calculator` 12 / `api-spinboxes` 25 / `api-shortcut` 18),外加 **`samples/hello`**(独立工程,只 `Import` 一个 props 文件)也被门禁 build+run;旧链路现在是 **14 个** demo(`shortcut` 已删,见"㉑") |
 | **覆盖面** | 🚧 **445 类 / 9523 方法 / 858 虚函数 / 444 枚举 / 801 `Q_PROPERTY` 属性 / 266 信号**(QtWidgets 184 / QtGui 136 / QtCore 125)。**输入事件整族已绑**(`QKeyEvent`/`QWheelEvent`/`QDrag*`/`QDropEvent`/`QTabletEvent`/`QTouchEvent`…,见"⑲"):托管 `keyPressEvent` 现在**读得到按键码**。**QtCore batch 3**(事件循环 / `QBuffer` / `QMetaProperty`/`QMetaEnum` / 哈希 / 正则匹配 / `QUrlQuery` / 排序 / mime / 文件监视 / 共享内存 / 平台表)**与富文本整族**(`QTextFormat` 及其派生 / `QAbstractTextDocumentLayout` / `QTextLine` …)已入。**托管子类能写自定义 `QAbstractTableModel`/`QStyledItemDelegate`**(见"⑮")。**Qt 删除对象后访问包装器抛 `ObjectDisposedException`**(见"⑰")。**类型类别**:`const char*`、`QList<T>`、`QStringList`、`QMap`/`QHash`→`Dictionary`、`QBindable<T>`、`QByteArrayView`/`const uchar*`→`byte[]`、`void*`→`IntPtr`、`QStringView`/`QAnyStringView`、`std::chrono`→`TimeSpan`、out 参数、非 const `QString&`→`ref string`。剩 `QList<std::pair<...>>`(6)、`QFont::Tag`(8)、`QLatin1String`(15)等低收益项(见"⑨/⑩/⑲") |
 
 ## 关键背景
@@ -337,6 +337,25 @@ clangprobe --dump CXCursor CXType clang
   - `api-ownership` **19 → 24 项**:新增"我们自己创建的 `QTimer` 的 `Dispose` 真的删掉了它"(用 `ApiRuntime.Connect(handle, "destroyed()", ...)` 收到 Qt 的 `destroyed` 信号作为证据)、"有 parent 的 `QTimer` 的 `Dispose` 不会删"、"parent 是编辑器的 `QTextDocument` 的 `Dispose` 不会删"、"`QMimeData` 故意不可 `Dispose`"。
 - **踩到的坑(写进"给新 session 的提醒")**:改 `build_api.bat`(native)后**必须**重建托管侧再跑 —— 中间态(native 是新的、托管仍是旧的)会让 `ApiNative.Destroy_<X>` 落到错误的函数上,表现为**偶发**的 `0xC0000005`(实测过一次 `QAbstractButton_text`,重建后 10/10 干净)。
 
+**㉑ 本轮完成:托管**树模型**(protected `createIndex`/`beginInsertRows`…)+ Shortcut Editor 搬过来(旧的那个点一下就崩)**
+起因是用户点开旧链路 Shortcut Editor 的树节点就崩(实测:手工点崩、无人值守也有 ~1/7 概率崩在 8 秒后)。结论:**旧链路那个 demo 的 model/delegate 生命周期不可靠**(旧绑定会释放 Qt 还持有的东西),而新链路此前**根本写不了树模型** —— 因为 `QAbstractItemModel::createIndex` 是 **protected**。所以修的是新链路的能力,顺手把 demo 搬过来。
+- **抽取器:发布扩展类里的 protected 成员**(`gen/ApiModel2.cs`)。规则:公开成员照旧;**扩展树内**(`IsInExtensionTree`)且类可子类化时,protected 成员也发布,并在 model 里记 `"protected": true`。排除两种形态:protected **static**(没有对象可挂,`QThread::setTerminationEnabled` 直接不要)与**带 by-ref 参数**的(生成的是表达式 helper,out 参数是语句)。
+  `QAbstractItemModel` 因此多出 **21 个方法**:`createIndex`×2、`beginInsertRows`/`endInsertRows`、`beginRemoveRows`/`endRemoveRows`、`beginMoveRows`(及 Columns)、`beginResetModel`/`endResetModel`、`changePersistentIndex(List)`、`persistentIndexList`、`encodeData`/`decodeData`。
+- **codegen:C++ 只允许"成员"调 protected 成员**,所以这些方法由生成的 native 子类暴露 `static CallXxx(QsApi_X* self, ...)`(就是 `CallBase_*` 的那个形状),extern "C" 转发器先 `static_cast<QsApi_X*>(self)` 再调 helper ✓。helper 的参数用**扁平 C ABI 类型**(它自己做转换),否则 `QDataStream&` 这类"编译器才知道 const 不 const"的引用没法拼。
+- **顺带修两个静默 bug**:
+  1. **生成的 `ToString()` 之前是 `new`(隐藏)而不是 `override`** → 字符串插值 `$"{variant}"` 打印出 `QtSharp.Api.QVariant` 而不是值(显式调用 `.ToString()` 却是对的 —— 极难查)。现在 `QString toString() const` 一律发 `public override string ToString()`。
+  2. **`Qt::ItemDataRole` 不在 model 里**:role 在签名里全是 `int`,`data(index, role)` 那张表因此缺了整个 —— 加进 `ExtraEnums`(和 `Qt::Key` 同一机制)。
+- **新 demo `api-shortcut`**(`testbind/ShortcutEditorApi.cs`,18 项断言,进门禁),对齐官方 `examples/widgets/widgets/shortcuteditor`:
+  - **三层树模型**(context → category → action)用 C# 写:`CreateIndex(row, column, (ulong)id)` 建索引、`index.InternalId()` 取回、`BeginInsertRows/EndInsertRows` 公告结构变化、`BeginResetModel/EndResetModel` 重建。
+  - `QStyledItemDelegate` 子类用 `QKeySequenceEdit` 编辑快捷键列(`CreateEditor`/`SetEditorData`/`SetModelData`/`UpdateEditorGeometry` 全重写)。
+  - 断言覆盖**崩过的那条路径**:`ExpandAll()` + `SetCurrentIndex` + `Grab()`(触发 Qt 回调模型的 `data`/`rowCount` 与委托的 sizeHint)、索引 id 往返、委托的编辑器契约、插入一行后视图仍能渲染,以及**反复 full GC 后 model/view 仍然可用**(旧 demo 的崩溃模式)。
+  - **注意 `Data(index, role)` 的第二个参数是 role 不是 column**(我一开始写成 `Data(index, 1)` 想读第二列,结果拿到空 variant;两列要用两个 column 索引)。
+- **旧链路 `shortcut` demo 已从 `Program.cs` 与 `AllDemos` 移除**(15 → 14 个窗口):它崩,而且 `api-shortcut` 已经取代它。类 `ShortcutWindow` 保留在源码里(旧链路随时可删)。
+- **`ApiRuntime.SendMousePress` 现在在 `Exec()` 之前发**(`api-analogclock`):往一个已经 `quit()` 的应用里投递鼠标事件的返回不可靠(Qt 自己的 dispatch 会看应用状态),表现为偶发失败 —— 和绑定无关。
+- **环境相关的 SKIP**:`QClipboard` 是单所有者资源,别的进程占着时 `setText` 静默失败、读回空串(PowerShell 自己的 `Set-Clipboard` 同时也会报错);`QClipboard::error()` 在 **Qt 6.11 已经不存在**,没法查错误码。`api-core` 因此把剪贴板往返改成**读回非空才断言、否则打 `[SKIP]`**(实测用户机器上就遇到了这个状态)。
+- 验收:model 逐字节一致、codegen 两次一致、**12 个 demo + sample + 3 个 PoC 全 PASS**(347 项断言);旧链路 14 个 demo 各存活 9 秒 + all-mode 12 秒无崩溃。
+- **下一步(㉑ 暴露出的最大缺口)**:**信号是"只能 connect、不能 emit"**。两层要补:①**抽取器**还在用 legacy 的 `Program.MapSignalType` 过滤信号(它只认 bool/int/qint64/QString/QStringList…),于是参数带非标量的信号被**整个丢掉**,而且**同名方法也一起被 `allSignalNames` 排除**(`QAbstractItemDelegate::commitData(QWidget*)`/`closeEditor`/`sizeHintChanged`、`QTreeView::expanded(QModelIndex)` 这类全没了 —— 换成"参数在 model 词汇表里就收",并按 `RawType` 写回带 `*` 的类型);②**运行时 + codegen 提供 emit**(`QMetaMethod::invoke`),托管委托才能像官方那样在 `editingFinished` 里 `commitData(editor); closeEditor(editor);`(`QSignal<T>` 目前只有 `Connect`)。
+
 ### 解析配置清单(CppSharp 实际传给 clang 的东西 —— 已 dump,`qtgen dumpopts`)
 来源:`gen/ApiModel.cs` 的 `ModelLibrary.Setup` + `QtLibrary.QtIncludeRoot` + `CppSharp.Parser.ParserOptions.SetupMSVC`。
 ```
@@ -379,8 +398,8 @@ CppSharp 替我们解决了一个不小的坑:**Qt 头的 MSVC 兼容解析**(`-
 
 ## 下一 agent 的第一件事:四条轴的落地路线(2026-09-17,勘察已完成)
 > 用户已决定**四条轴全做**。已经用 4 个并行子 agent 做完**只读勘察**,下面是可以直接照做的方案摘要;完整数字见各自的勘察结论(本节的数字都是实测)。
-> **进度:四条轴(A1/A2/B/C/D)+ QtCore batch 1/2/3 全部完成 + 输入事件整族 + 富文本整族(见"⑬…⑲")。剩下的低收益项:`QDebug`(入口全是自由函数/`operator<<`)、`QLatin1String`(9,需要 Latin-1 转换)、`QFont::Tag`(8,嵌套类)、`QList<std::pair<...>>`(6,pair 元素类别)、`QMetaObject::invokeMethod`(`QGenericArgument`,11)与 `QMetaObject::Connection`(5)。**
-> **按收益排序的下一步(⑳ 之后的建议)**:①**继续批量入库**剩余 QtCore/QtGui 类(`QAbstractAnimation` 家族/`QTimeLine`、`QPageSize`/`QPageLayout`/`QPdfWriter`(真 PDF 输出!)、`QIconEngine`/`QPaintEngine`、`QSessionManager`、`QAccessible*`、`QOffscreenSurface`/`QOpenGLContext`);②**剩余 demo 搬迁**(Menus / Basic Layouts / Sliders / WindowFlags / Scribble / Calendar / SystemTray —— 依赖已基本齐);③`QDrag` + 拖放 demo(`QMimeData`/`QDropEvent` 已绑);④低收益词汇表项(`QLatin1String` 9 / `QFont::Tag` 8 / `QList<std::pair<...>>` 6 / `QMetaObject::invokeMethod` 11 / `Connection` 5)。
+> **进度:四条轴(A1/A2/B/C/D)+ QtCore batch 1/2/3 + 输入事件整族 + 富文本整族 + 托管树模型(见"⑬…㉑")。剩下的低收益项:`QDebug`(入口全是自由函数/`operator<<`)、`QLatin1String`(9,需要 Latin-1 转换)、`QFont::Tag`(8,嵌套类)、`QList<std::pair<...>>`(6,pair 元素类别)、`QMetaObject::invokeMethod`(`QGenericArgument`,11)与 `QMetaObject::Connection`(5)。**
+> **按收益排序的下一步(㉑ 之后的建议)**:①**信号的"收与发"**(见 ㉑ 末尾:抽取器改用 model 词汇表收信号 + 运行时/codegen 提供 `Emit`,否则托管委托没法像官方那样 `commitData/closeEditor`);②**继续批量入库**剩余 QtCore/QtGui 类(`QAbstractAnimation` 家族/`QTimeLine`、`QPageSize`/`QPageLayout`/`QPdfWriter`(真 PDF 输出!)、`QIconEngine`/`QPaintEngine`、`QSessionManager`、`QAccessible*`、`QOffscreenSurface`/`QOpenGLContext`);③**剩余 demo 搬迁**(Menus / Basic Layouts / Sliders / WindowFlags / Scribble / Calendar / SystemTray —— 依赖已基本齐);④`QDrag` + 拖放 demo(`QMimeData`/`QDropEvent` 已绑)。
 > **注意:剩下的 2/3/4 都要改 `gen/ApiCodeGen.cs`,必须串行落地,不要并发改同一批文件。**
 
 **A. 所有权 —— ✅ A1+A2 全部完成(见"⑭/⑰")。下面是勘察记录:**
@@ -595,10 +614,10 @@ sliders / spinboxes / windowflags / lineedits / shapedclock / calendar / systray
   - `gen/ApiModel.cs`(`extract`:parse-only AST → model;**分块 + 每块两次解析自校验**(CppSharp 大 parse 不可复现,见"⑤ C");`Roots` 表 = 类名+头文件+模块+是否绑 ctor+`owned`;按自有类型白名单判定;处理间接返回/引用/property/QPrivateSignal;按 **C# 映射后签名** 折叠重载)
   - `gen/ApiCodeGen.cs`(`codegen`:model → C# + C++ wrapper + P/Invoke;纯函数。继承/次要基类视图/枚举/flags/ctor 重载/boxed 值类型/整链虚函数 `__base` 转发/静态方法/`int[]` 数组参数)
   - `native/QtSharpApiRuntime.{h,cpp}`(手写运行时:moc 信号转发器 + QString 桥 + 应用启动 `qs_api_app_*` + `qs_api_event_type` + 事件探针)
-  - `build_api.bat`(→ `out/api/QtSharp.Api.dll`)、`tools/regen-api.ps1`(两道门禁 + 11 个 demo + 独立 sample;`-Adopt` 才采纳新 model)
+  - `build_api.bat`(→ `out/api/QtSharp.Api.dll`)、`tools/regen-api.ps1`(两道门禁 + 12 个 demo + 独立 sample;`-Adopt` 才采纳新 model)
   - **`QtSharp.Api.props`(用户侧唯一入口:一个 `<Import>` 就拿到生成的绑定 + 运行时 + native/Qt DLL 拷贝)**,配套 `samples/hello/`(一个真界面工程,门禁会 build+run)
   - `runtime/ApiRuntime.cs`(C# 侧运行时,随绑定发布,不在 testbind 里:`QSignal<T>`/`Wrap`(按 handle 存多视图)/信号解包/`SendUserEvent`/`SendMousePress`/`SendWheel`/`SendKeyPress`/**`IQtObjectView` + `destroyed` 注册表 + `Forget`/`Watch`/`AssociateOwner`**)
-  - 11 个新链路 demo(都在 `tools/regen-api.ps1` 门禁里,共 331 项断言):`testbind/ApiSmoke.cs`(`testapp api`)、`testbind/AnalogClockApi.cs`(`api-analogclock`)、`testbind/LineEditsApi.cs`(`api-lineedits`)、`testbind/WidgetsApi.cs`(`api-widgets`)、`testbind/GraphicsApi.cs`(`api-graphics`)、`testbind/CoreApi.cs`(`api-core`,**QtCore 值类 + batch 3 + 文件/进程/线程/XML/剪贴板/TimeSpan/QThreadPool/元对象反射**)、`testbind/EventsApi.cs`(`api-events`,**输入事件(滚轮/按键)+ 富文本类型**)、`testbind/OwnershipApi.cs`(`api-ownership`,**所有权 + Qt 删除后失效 + 谁能被释放**)、`testbind/CustomModelApi.cs`(`api-custommodel`,**C# 写的 `QAbstractTableModel` + `QStyledItemDelegate`**)、`testbind/CalculatorApi.cs`(`api-calculator`,**托管 `sizeHint` + `keyPressEvent` 重写**)、`testbind/SpinBoxesApi.cs`(`api-spinboxes`,**spin box 属性面 + 日期时间编辑**)
+  - 12 个新链路 demo(都在 `tools/regen-api.ps1` 门禁里,共 347 项断言):`testbind/ApiSmoke.cs`(`testapp api`)、`testbind/AnalogClockApi.cs`(`api-analogclock`)、`testbind/LineEditsApi.cs`(`api-lineedits`)、`testbind/WidgetsApi.cs`(`api-widgets`)、`testbind/GraphicsApi.cs`(`api-graphics`)、`testbind/CoreApi.cs`(`api-core`,**QtCore 值类 + batch 3 + 文件/进程/线程/XML/剪贴板/TimeSpan/QThreadPool/元对象反射**)、`testbind/EventsApi.cs`(`api-events`,**输入事件(滚轮/按键)+ 富文本类型**)、`testbind/OwnershipApi.cs`(`api-ownership`,**所有权 + Qt 删除后失效 + 谁能被释放**)、`testbind/CustomModelApi.cs`(`api-custommodel`,**C# 写的 `QAbstractTableModel` + `QStyledItemDelegate`**)、`testbind/CalculatorApi.cs`(`api-calculator`,**托管 `sizeHint` + `keyPressEvent` 重写**)、`testbind/SpinBoxesApi.cs`(`api-spinboxes`,**spin box 属性面 + 日期时间编辑**)、`testbind/ShortcutEditorApi.cs`(`api-shortcut`,**托管三层树模型 + 委托编辑器 + 结构变化公告**)
 - **三个 PoC**:
   - `native/QtSharp_meta.cpp` + `testbind/MetaSignal.cs`/`MetaSignalTest.cs`(PoC #1 信号)
   - `native/QtSharp_vdispatch.cpp` + `testbind/VirtualDispatch.cs`(PoC #2 虚函数)
@@ -639,6 +658,11 @@ sliders / spinboxes / windowflags / lineedits / shapedclock / calendar / systray
 10. `Let the Roots table decide who may be released, not a per-header guess` —— `gen/ApiModel.cs` + `gen/ApiModel2.cs` + `model/qtsharp.api.json` + `testbind/OwnershipApi.cs`
 
 **注意**:`testbind/QtSharp.Api.cs`(生成物,被 gitignore)必须由 `tools/regen-api.ps1` 产出。
+
+**㉑(本轮)3 个 commit**
+11. `Publish the protected members a managed model needs, and stop hiding object.ToString` —— `gen/ApiModel2.cs` + `gen/ApiCodeGen.cs` + `model/qtsharp.api.json`
+12. `Port the Shortcut Editor onto the new pipeline; drop the legacy one that crashed on a tree node` —— `testbind/ShortcutEditorApi.cs` + `testbind/Program.cs` + `testbind/AllDemos.cs` + `testbind/AnalogClockApi.cs`(鼠标事件改在 `Exec()` 前发)+ `testbind/CoreApi.cs`(剪贴板 SKIP)+ `tools/regen-api.ps1`
+13. 记录 CONTEXT.md(本条)
 
 ## 扩展示例覆盖(进行中)
 目标:把 Qt 官方 **所有** examples/widgets 都改写成 C# 并跑通(不止 examples-widgets.html 那 16 个)。
@@ -865,7 +889,7 @@ powershell -File %TEMP%\codemaker\regen_once.ps1        # 单次生成(排查用
 - `QSettings(string,string)` ctor 时有时无;用 `QSettings(Scope, org, app)` 更稳。
 - 生成器不确定性的根因是 **pass 按 `HashSet<Declaration>` 哈希序迭代 + `DeclarationsList` 按 `DefinitionOrder` 二分(并列退化)**,新链路的 model 通过"全排序"已规避;而**新链路自己的不确定性根因是 CppSharp 的 AST 转换**(见"⑤ C. 核心修复"),已用"分块 + 两次一致"挡住。改 `Roots` 后**必须**跑完整 `extract` 看它是否报 `FAILED`。
 - `extract` 现在 ~190 秒(分块自校验),不是慢得离谱但也别在循环里跑;`QTSHARP_ROOTS` 可以只跑子集排查。
-- **`extract2` 只有 ~2.5 秒**,`tools/regen-api.ps1` 全程(含 native 编译与 11 个 demo + sample)约 5–7 分钟;**别并发跑**(会争 `testbind/bin/testapp.exe`,报 `MSB3021 文件被另一个进程占用`)。
+- **`extract2` 只有 ~2.5 秒**,`tools/regen-api.ps1` 全程(含 native 编译与 12 个 demo + sample)约 5–7 分钟;**别并发跑**(会争 `testbind/bin/testapp.exe`,报 `MSB3021 文件被另一个进程占用`)。
 - **僵尸 `testapp` 会锁住 exe**:跑 demo 中断/超时后会留进程,下次构建直接 `MSB3021`。`Get-Process testapp | Stop-Process -Force` 清掉即可。
 - **改生成代码的调用点时注意 `Q_PROPERTY` 改名**:属性占 Pascal 名后访问器退回 C++ 原名(`window.Children()`→`children()`、`QTimer.Interval()`→`interval()`、`QWidget.Width()`→`width()`);编译错误 `CS1955/CS1501`("X 不是函数" / "该方法没有采用 N 个参数的重载")就是这个信号,按报错行把 `.Prop(` 改成 `.prop(` 即可(`CS1501` 的报文里没有类名前缀)。
 - **PowerShell 5.1 的字符串比较是大小写不敏感的**:`$a -ne $b` 对只有大小写差异的字符串返回"相等" → 用 `-cne`;写"改大小写"的批量脚本时曾因此静默失败两次。
