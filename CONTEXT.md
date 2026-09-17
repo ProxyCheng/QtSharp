@@ -6,7 +6,14 @@
 `testapp.exe` 不带参数 = 平铺 15 个旧链路 demo;新链路自测命令:`api` / `api-analogclock` / `api-lineedits` / `api-widgets` / `api-graphics` / `api-core` / `api-events` / `api-ownership` / `api-custommodel` / `api-calculator` / `api-spinboxes`。
 
 ## 当前状态速览(给新 session)
-> **想直接体验新框架**:`powershell -File D:\QtSharp\tools\regen-api.ps1`(生成 model/C#/native 并跑门禁)→ 打开 `QtSharp.slnx`(gen + testbind + tools/clangprobe)→ 启动 `testbind`,参数给一个 demo 名(`api` / `api-widgets` / `api-core` / `api-events` / `api-calculator` …)。`testapp.exe` 不带参数 = 旧链路 15 个窗口平铺。
+> **想直接体验新框架**:`powershell -File D:\QtSharp\tools\regen-api.ps1`(生成 model/C#/native 并跑门禁)→ 打开 `QtSharp.slnx`(gen + testbind + samples/hello + tools/clangprobe)→ 启动 `testbind`,参数给一个 demo 名(`api` / `api-widgets` / `api-core` / `api-events` / `api-calculator` …)。`testapp.exe` 不带参数 = 旧链路 15 个窗口平铺。
+> **想自己写界面**:照抄 `samples/hello/` —— 一个 `net10.0` 控制台工程,里面只有 `Program.cs` + `<Import Project="..\..\QtSharp.Api.props" />`(props 负责:编译生成的 `out/api/QtSharp.Api.cs` + `runtime/ApiRuntime.cs`,并把 `QtSharp.Api.dll`、Qt 运行时 DLL、`platforms\qwindows.dll` 拷到输出目录);`tools/regen-api.ps1` 会 build+run 它,所以这条路不会烂。
+> **API 的几条命名约定**(不知道叫什么名字时按这几条猜):
+> - `Main` 要 `[STAThread]`;开头 `ApiRuntime.StartApplication()`,结尾 `ApiRuntime.Exec()`(退出用 `ApiRuntime.Quit()`)。
+> - **`Q_PROPERTY` 变成 PascalCase 属性,访问器退回 C++ 原名**:`edit.Text`(属性)/`edit.text()`/`edit.SetText(...)`;`widget.Width`/`widget.width()`;`timer.Interval`/`timer.interval()`;`QMimeType.Name`。编译报 `CS1955 "X 不是函数"`/`CS1501 没有采用 N 个参数的重载` 就是这个信号 —— 去掉括号或改用属性名。
+> - **信号**是 `XxxSignal` 属性(`button.ClickedSignal`、`edit.TextChangedSignal`),`Connect(handler)` 即可;`QSignal<T>` 的 `T` 就是信号的参数类型(无参数是 `bool`,所以写 `_ => ...`)。
+> - **托管子类**直接 `override`,`sizeHint`/`paintEvent`/`keyPressEvent`/`mousePressEvent`/`closeEvent`/模型与委托的虚函数都在白名单里;native 侧由生成的 C++ 子类转发。
+> - **所有权**:`new` 出来的对象由你负责(`Dispose()`/终结器会真的 delete);一旦交给 Qt(放进 layout、设成 parent、交给 scene/view)**就不能再删** —— 生成的析构会先问 `parent()`,所以 `Dispose()` 是安全的 no-op;Qt 删除对象后再访问包装器会抛 `ObjectDisposedException`。
 > `testbind/QtSharp.Api.cs` 是生成物(被 gitignore,由 `regen-api.ps1` 产出)。
 
 | 项 | 状态 |
@@ -18,7 +25,7 @@
 | 架构 PoC #3 所有权(Qt-owned 弱引用 + SafeHandle + destroyed 失效) | ✅ `testapp own` 全 PASS |
 | 产品化第 1 步:model(入库)+ codegen | ✅ model **逐字节可复现**、codegen 纯函数(两次一致) |
 | **前端迁移(已决策)** | ✅ **已完成**:`qtgen extract2`(ClangSharp)取代 CppSharp 成为默认前端,~2.5 秒产出**逐字节一致**的 model;原 44 类 model 复刻 **1472/1472** 条事实(见"路线 A 可行性验证"一节) |
-| **两/新旧 demo 都在跑** | ✅ 新链路 **11 个 demo** 全进门禁,共 **326 项断言**(`api` 6 / `api-analogclock` 10 / `api-lineedits` 9 / `api-widgets` 85 / `api-graphics` 9 / `api-core` 110 / `api-events` 22 / `api-ownership` 19 / `api-custommodel` 19 / `api-calculator` 12 / `api-spinboxes` 25) |
+| **两/新旧 demo 都在跑** | ✅ 新链路 **11 个 demo** 全进门禁,共 **331 项断言**(`api` 6 / `api-analogclock` 10 / `api-lineedits` 9 / `api-widgets` 85 / `api-graphics` 9 / `api-core` 110 / `api-events` 22 / `api-ownership` 24 / `api-custommodel` 19 / `api-calculator` 12 / `api-spinboxes` 25),外加 **`samples/hello`**(独立工程,只 `Import` 一个 props 文件)也被门禁 build+run |
 | **覆盖面** | 🚧 **445 类 / 9523 方法 / 858 虚函数 / 444 枚举 / 801 `Q_PROPERTY` 属性 / 266 信号**(QtWidgets 184 / QtGui 136 / QtCore 125)。**输入事件整族已绑**(`QKeyEvent`/`QWheelEvent`/`QDrag*`/`QDropEvent`/`QTabletEvent`/`QTouchEvent`…,见"⑲"):托管 `keyPressEvent` 现在**读得到按键码**。**QtCore batch 3**(事件循环 / `QBuffer` / `QMetaProperty`/`QMetaEnum` / 哈希 / 正则匹配 / `QUrlQuery` / 排序 / mime / 文件监视 / 共享内存 / 平台表)**与富文本整族**(`QTextFormat` 及其派生 / `QAbstractTextDocumentLayout` / `QTextLine` …)已入。**托管子类能写自定义 `QAbstractTableModel`/`QStyledItemDelegate`**(见"⑮")。**Qt 删除对象后访问包装器抛 `ObjectDisposedException`**(见"⑰")。**类型类别**:`const char*`、`QList<T>`、`QStringList`、`QMap`/`QHash`→`Dictionary`、`QBindable<T>`、`QByteArrayView`/`const uchar*`→`byte[]`、`void*`→`IntPtr`、`QStringView`/`QAnyStringView`、`std::chrono`→`TimeSpan`、out 参数、非 const `QString&`→`ref string`。剩 `QList<std::pair<...>>`(6)、`QFont::Tag`(8)、`QLatin1String`(15)等低收益项(见"⑨/⑩/⑲") |
 
 ## 关键背景
@@ -318,6 +325,18 @@ clangprobe --dump CXCursor CXType clang
 - **数字**:352 → **445 类**(QtCore 81→125、QtGui 85→136、QtWidgets 184)、8367 → **9523 方法**、852 → **858 虚函数**、393 → **444 枚举**、772 → **801 属性**、258 → **266 信号**;model 仍逐字节可复现、codegen 仍两次一致。
 - **发现的既有瑕疵(下一步的好入口)**:`owned: false` 现在是"**永不 delete**"的意思,而 `DerivesFromQObject` 是**按 chunk** 判断的,于是**直接继承 `QObject` 的类**(`QSharedMemory`/`QEventLoop`/`QTimer`/`QFileSystemWatcher`…)没有 `Dispose`(只能靠 Qt 的 parent 释放,或泄漏),而 `QPushButton : QAbstractButton : QWidget : QObject` 这类跨头文件的却有。A1 的 `if (parent()) return;` 已经让"owned=true 也安全",所以正解是**让 owned 沿全量基类图判断**(或按"能不能终结"统一给 Dispose + dtor 守卫),但 item 类(`QGraphicsRectItem`,非 QObject、由 scene 拥有)**必须保持 owned:false**。`api-calculator`/`api-spinboxes` 里已经没有"必须 keepAlive"那套旧写法了(有 parent 的对象由 Qt 持有)。
 
+**⑳ 本轮完成:绑定的"用户侧"入口(props + samples/hello)+ 统一 `owned` 语义(那条瑕疵已修)**
+- **`QtSharp.Api.props` + `samples/hello/`(回答"我想自己写界面怎么做")**:以前新绑定只能从 `testbind` 里用 —— 一个用户拿到仓库**没有可用入口**。现在:
+  - `runtime/ApiRuntime.cs` 从 `testbind/` 移到 `runtime/`(**它是随绑定发布的托管运行时,不是测试代码**);`QtSharp.Api.props` 把"生成的 `out/api/QtSharp.Api.cs` + 这份运行时 + `QtSharp.Api.dll` + Qt 运行时 DLL + `platforms/qwindows.dll`"收进一个 `<Import>`;`regen-api.ps1` 不再把生成文件拷到 testbind(两个工程都直接编译 codegen 写出的那一份,少一个会漂移的副本)。
+  - `samples/hello` = 一个 70 行的**真界面**(窗口 + layout + `ClickedSignal` 处理器 + 一个从 C# 画自己的 `CircleWidget`,`Rect`/`Width` 都是属性),`dotnet build` 后直接跑;门禁 **build+run 它**(`HELLO_AUTOCLOSE_MS` 自动退出),所以"用户侧入口"这条路径不会烂。
+- **★ 统一 `owned` 语义**(② 里排第一的下一步):**"Qt 是否拥有这个对象"是关于对象的问题,不是关于类的问题** —— 模型不再回答它。
+  - 旧规则 `owned = Roots 标志 && 不继承 QObject`,而"是否继承 QObject"是**按 chunk(同头文件)**判断的 → 结果恰好反了:程序自己创建、本该能释放的 `QSharedMemory`/`QTimer`/`QThread`/`QEventLoop`/`QUndoStack`/`QIntValidator`/`QTextDocument` 一个 `Dispose` 都没有,而 `QPushButton` 有。现在 `owned` **只**取 Roots 标志;运行期的两半由生成代码负责:`__ownsNative`(只释放自己创建的)+ dtor 里的 `if (object->parent()) return;`。
+  - **41 个类因此第一次有了 `Dispose`/终结器**(`QAbstractItemModel`/`QAbstractTableModel`/`QAbstractItemDelegate`/`QTimer`/`QThread`/`QEventLoop`/`QFileSystemWatcher`/`QCompleter`/`QTextDocument`/`QGraphicsScene`/`QSharedMemory`/`QSystemTrayIcon`/手势家族/…),另有 13 个"拿到了标志但没有公开构造函数"的抽象类照旧没有释放路径(`QLayout`/`QValidator`/`QStyle`/`QClipboard`/`QScreen`/`QCoreApplication`…)。
+  - **`QObject` 自己永远不给释放路径**:释放路径是**继承**的,否则一个标了 `owned:false` 的子类(`QMimeData`、图形 item)会通过基类拿到 `Dispose`,那正是 `owned:false` 要防的事(实测:加上 QObject 的 `Dispose` 后,`QMimeData` 就真的"可释放"了)。
+  - **Qt 用"没有 QObject parent"的方式收养的类保持 `owned:false`**:`QMimeData`(剪贴板/`QDrag` 收养)、**图形 item 整族**(item 的归属是 `parentItem()/scene()`,QObject 根本看不见 —— 新加了 `QGraphicsObject`,它虽然是 QObject 但同样是 item)、图形 effect/transform(`setGraphicsEffect`/`setTransformations` 收养)。这些正是"按类判断"永远判断不准的部分,现在按"收养方式"逐个标注并写明理由。
+  - `api-ownership` **19 → 24 项**:新增"我们自己创建的 `QTimer` 的 `Dispose` 真的删掉了它"(用 `ApiRuntime.Connect(handle, "destroyed()", ...)` 收到 Qt 的 `destroyed` 信号作为证据)、"有 parent 的 `QTimer` 的 `Dispose` 不会删"、"parent 是编辑器的 `QTextDocument` 的 `Dispose` 不会删"、"`QMimeData` 故意不可 `Dispose`"。
+- **踩到的坑(写进"给新 session 的提醒")**:改 `build_api.bat`(native)后**必须**重建托管侧再跑 —— 中间态(native 是新的、托管仍是旧的)会让 `ApiNative.Destroy_<X>` 落到错误的函数上,表现为**偶发**的 `0xC0000005`(实测过一次 `QAbstractButton_text`,重建后 10/10 干净)。
+
 ### 解析配置清单(CppSharp 实际传给 clang 的东西 —— 已 dump,`qtgen dumpopts`)
 来源:`gen/ApiModel.cs` 的 `ModelLibrary.Setup` + `QtLibrary.QtIncludeRoot` + `CppSharp.Parser.ParserOptions.SetupMSVC`。
 ```
@@ -361,7 +380,7 @@ CppSharp 替我们解决了一个不小的坑:**Qt 头的 MSVC 兼容解析**(`-
 ## 下一 agent 的第一件事:四条轴的落地路线(2026-09-17,勘察已完成)
 > 用户已决定**四条轴全做**。已经用 4 个并行子 agent 做完**只读勘察**,下面是可以直接照做的方案摘要;完整数字见各自的勘察结论(本节的数字都是实测)。
 > **进度:四条轴(A1/A2/B/C/D)+ QtCore batch 1/2/3 全部完成 + 输入事件整族 + 富文本整族(见"⑬…⑲")。剩下的低收益项:`QDebug`(入口全是自由函数/`operator<<`)、`QLatin1String`(9,需要 Latin-1 转换)、`QFont::Tag`(8,嵌套类)、`QList<std::pair<...>>`(6,pair 元素类别)、`QMetaObject::invokeMethod`(`QGenericArgument`,11)与 `QMetaObject::Connection`(5)。**
-> **按收益排序的下一步(⑲ 之后的建议)**:①**统一 `owned` 的语义**(见 ⑲ 末尾那条瑕疵:直接继承 `QObject` 的类现在没有 `Dispose` → 泄漏;沿全量基类图判断 + dtor 守卫即可,item 类保持 `owned:false`);②**继续批量入库**剩余 QtCore/QtGui 类(`QAbstractAnimation` 家族/`QTimeLine`、`QPageSize`/`QPageLayout`/`QPdfWriter`(真 PDF 输出!)、`QIconEngine`/`QPaintEngine`、`QSessionManager`、`QAccessible*`、`QOffscreenSurface`/`QOpenGLContext`);③**剩余 demo 搬迁**(Menus / Basic Layouts / Sliders / WindowFlags / Scribble / Calendar / SystemTray —— 依赖已基本齐);④`QDrag` + 拖放 demo(`QMimeData`/`QDropEvent` 已绑)。
+> **按收益排序的下一步(⑳ 之后的建议)**:①**继续批量入库**剩余 QtCore/QtGui 类(`QAbstractAnimation` 家族/`QTimeLine`、`QPageSize`/`QPageLayout`/`QPdfWriter`(真 PDF 输出!)、`QIconEngine`/`QPaintEngine`、`QSessionManager`、`QAccessible*`、`QOffscreenSurface`/`QOpenGLContext`);②**剩余 demo 搬迁**(Menus / Basic Layouts / Sliders / WindowFlags / Scribble / Calendar / SystemTray —— 依赖已基本齐);③`QDrag` + 拖放 demo(`QMimeData`/`QDropEvent` 已绑);④低收益词汇表项(`QLatin1String` 9 / `QFont::Tag` 8 / `QList<std::pair<...>>` 6 / `QMetaObject::invokeMethod` 11 / `Connection` 5)。
 > **注意:剩下的 2/3/4 都要改 `gen/ApiCodeGen.cs`,必须串行落地,不要并发改同一批文件。**
 
 **A. 所有权 —— ✅ A1+A2 全部完成(见"⑭/⑰")。下面是勘察记录:**
@@ -576,9 +595,10 @@ sliders / spinboxes / windowflags / lineedits / shapedclock / calendar / systray
   - `gen/ApiModel.cs`(`extract`:parse-only AST → model;**分块 + 每块两次解析自校验**(CppSharp 大 parse 不可复现,见"⑤ C");`Roots` 表 = 类名+头文件+模块+是否绑 ctor+`owned`;按自有类型白名单判定;处理间接返回/引用/property/QPrivateSignal;按 **C# 映射后签名** 折叠重载)
   - `gen/ApiCodeGen.cs`(`codegen`:model → C# + C++ wrapper + P/Invoke;纯函数。继承/次要基类视图/枚举/flags/ctor 重载/boxed 值类型/整链虚函数 `__base` 转发/静态方法/`int[]` 数组参数)
   - `native/QtSharpApiRuntime.{h,cpp}`(手写运行时:moc 信号转发器 + QString 桥 + 应用启动 `qs_api_app_*` + `qs_api_event_type` + 事件探针)
-  - `build_api.bat`(→ `out/api/QtSharp.Api.dll`)、`tools/regen-api.ps1`(两道门禁 + 三个冒烟 demo;`-Adopt` 才采纳新 model)
-  - `testbind/ApiRuntime.cs`(C# 侧运行时:`QSignal<T>`/`Wrap`(按 handle 存多视图)/信号解包/`SendUserEvent`/`SendMousePress`/**`IQtObjectView` + `destroyed` 注册表 + `Forget`/`Watch`/`AssociateOwner`**)
-  - 11 个新链路 demo(都在 `tools/regen-api.ps1` 门禁里,共 326 项断言):`testbind/ApiSmoke.cs`(`testapp api`)、`testbind/AnalogClockApi.cs`(`api-analogclock`)、`testbind/LineEditsApi.cs`(`api-lineedits`)、`testbind/WidgetsApi.cs`(`api-widgets`)、`testbind/GraphicsApi.cs`(`api-graphics`)、`testbind/CoreApi.cs`(`api-core`,**QtCore 值类 + batch 3 + 文件/进程/线程/XML/剪贴板/TimeSpan/QThreadPool/元对象反射**)、`testbind/EventsApi.cs`(`api-events`,**输入事件(滚轮/按键)+ 富文本类型**)、`testbind/OwnershipApi.cs`(`api-ownership`,**所有权 + Qt 删除后失效**)、`testbind/CustomModelApi.cs`(`api-custommodel`,**C# 写的 `QAbstractTableModel` + `QStyledItemDelegate`**)、`testbind/CalculatorApi.cs`(`api-calculator`,**托管 `sizeHint` + `keyPressEvent` 重写**)、`testbind/SpinBoxesApi.cs`(`api-spinboxes`,**spin box 属性面 + 日期时间编辑**)
+  - `build_api.bat`(→ `out/api/QtSharp.Api.dll`)、`tools/regen-api.ps1`(两道门禁 + 11 个 demo + 独立 sample;`-Adopt` 才采纳新 model)
+  - **`QtSharp.Api.props`(用户侧唯一入口:一个 `<Import>` 就拿到生成的绑定 + 运行时 + native/Qt DLL 拷贝)**,配套 `samples/hello/`(一个真界面工程,门禁会 build+run)
+  - `runtime/ApiRuntime.cs`(C# 侧运行时,随绑定发布,不在 testbind 里:`QSignal<T>`/`Wrap`(按 handle 存多视图)/信号解包/`SendUserEvent`/`SendMousePress`/`SendWheel`/`SendKeyPress`/**`IQtObjectView` + `destroyed` 注册表 + `Forget`/`Watch`/`AssociateOwner`**)
+  - 11 个新链路 demo(都在 `tools/regen-api.ps1` 门禁里,共 331 项断言):`testbind/ApiSmoke.cs`(`testapp api`)、`testbind/AnalogClockApi.cs`(`api-analogclock`)、`testbind/LineEditsApi.cs`(`api-lineedits`)、`testbind/WidgetsApi.cs`(`api-widgets`)、`testbind/GraphicsApi.cs`(`api-graphics`)、`testbind/CoreApi.cs`(`api-core`,**QtCore 值类 + batch 3 + 文件/进程/线程/XML/剪贴板/TimeSpan/QThreadPool/元对象反射**)、`testbind/EventsApi.cs`(`api-events`,**输入事件(滚轮/按键)+ 富文本类型**)、`testbind/OwnershipApi.cs`(`api-ownership`,**所有权 + Qt 删除后失效 + 谁能被释放**)、`testbind/CustomModelApi.cs`(`api-custommodel`,**C# 写的 `QAbstractTableModel` + `QStyledItemDelegate`**)、`testbind/CalculatorApi.cs`(`api-calculator`,**托管 `sizeHint` + `keyPressEvent` 重写**)、`testbind/SpinBoxesApi.cs`(`api-spinboxes`,**spin box 属性面 + 日期时间编辑**)
 - **三个 PoC**:
   - `native/QtSharp_meta.cpp` + `testbind/MetaSignal.cs`/`MetaSignalTest.cs`(PoC #1 信号)
   - `native/QtSharp_vdispatch.cpp` + `testbind/VirtualDispatch.cs`(PoC #2 虚函数)
@@ -613,6 +633,10 @@ sliders / spinboxes / windowflags / lineedits / shapedclock / calendar / systray
 6. `Demos: a wheel turn, a key press and the rich text types reach C#` —— `native/QtSharpApiRuntime.cpp`(两个探针)+ `testbind/ApiRuntime.cs` + `testbind/CoreApi.cs` + `testbind/EventsApi.cs` + `Program.cs` + `tools/regen-api.ps1`
 7. `Port the Calculator and Spin Boxes examples onto the new pipeline` —— `testbind/CalculatorApi.cs` + `testbind/SpinBoxesApi.cs` + `Program.cs` + `tools/regen-api.ps1`(+ `gen/ApiModel.cs` 删掉一个 legacy 里没人用的 `classCount`,消掉 build warning)
 8. 记录 CONTEXT.md(本条)
+
+**⑳(本轮)2 个 commit**
+9. `Make the binding usable outside the test app: a props file and a sample project` —— `QtSharp.Api.props` + `samples/hello/` + `runtime/ApiRuntime.cs`(从 `testbind/` 移出)+ `testbind/testbind.csproj` + `QtSharp.slnx` + `tools/regen-api.ps1`(去掉拷贝步骤,顺手修好 `api-spinboxes` 的 `exit` 把 `api-custommodel` 挡掉的 bug)
+10. `Let the Roots table decide who may be released, not a per-header guess` —— `gen/ApiModel.cs` + `gen/ApiModel2.cs` + `model/qtsharp.api.json` + `testbind/OwnershipApi.cs`
 
 **注意**:`testbind/QtSharp.Api.cs`(生成物,被 gitignore)必须由 `tools/regen-api.ps1` 产出。
 
@@ -830,6 +854,9 @@ powershell -File %TEMP%\codemaker\regen_once.ps1        # 单次生成(排查用
 7. 已知不可行:RHI×2(需 QRhi + `.qsb` shader blob)、Window Embedding、QtStateMachine(模块未安装)、QtSvg/PrintSupport(运行时不带 DLL)、QtPdf。
 
 ## 给新 session 的提醒(踩坑清单)
+- **手写 UI 从 `samples/hello/` 抄**:一个 `<Import Project="..\..\QtSharp.Api.props" />` 就够(生成绑定 + 运行时 + native/Qt DLL 拷贝)。门禁会 build+run 它,所以这条路不会烂。
+- **改 native(`build_api.bat`)之后必须重建托管侧再跑**:中间态(native 是新的、生成绑定仍是旧的)会让 `ApiNative.Destroy_<X>`/`<X>_get_...` 落到错误的导出函数上,表现为**偶发**的 `0xC0000005`(⑳ 实测过一次 `QAbstractButton_text`;干净重建后 10/10 无事)。`regen-api.ps1` 的顺序是对的,手敲命令时别漏 `dotnet build`。
+- **`owned` 语义**(⑳):模型里的 `owned` = "**托管侧是否可以释放它**";运行时由 `__ownsNative` + 生成的 `if (object->parent()) return;` 把关。加新类时:凡"Qt 通过 **非 parent 途径**收养"的类(交给 scene/view/clipboard/`setGraphicsEffect`/`setTransformations`)必须写 `owned: false`,否则 GC 会把 Qt 还在用的对象删掉。`QObject` 自己永远 `owned:false`(释放路径是继承的,否则子类的 `owned:false` 形同虚设)。
 - **新链路**(`gen/ApiModel.cs` + `gen/ApiCodeGen.cs`)是产品方向,**旧链路**(`gen/Program.cs` 的 `QtLibrary` + `QtSharp.def` + `build_glue.bat`)只作 conformance suite;两者产物互不干扰(`QtSharp.dll` vs `QtSharp.Api.dll`)。
 - **不要用 PowerShell 的文本 cmdlet 改非 ASCII 文件**(`Get-Content` 默认按 ANSI/GBK 解码,`Set-Content -Encoding utf8` 再写回 → 中文永久损坏)。改 `.md`/含中文的源码请用编辑工具。CONTEXT.md 因此被毁过一次,靠 `git checkout` 恢复。
 - 旧链路生成**很不稳定**,必须用 retry 直到 `dotnet build testbind` + `build_glue.bat` 都干净(见"踩过的坑")。
@@ -838,7 +865,7 @@ powershell -File %TEMP%\codemaker\regen_once.ps1        # 单次生成(排查用
 - `QSettings(string,string)` ctor 时有时无;用 `QSettings(Scope, org, app)` 更稳。
 - 生成器不确定性的根因是 **pass 按 `HashSet<Declaration>` 哈希序迭代 + `DeclarationsList` 按 `DefinitionOrder` 二分(并列退化)**,新链路的 model 通过"全排序"已规避;而**新链路自己的不确定性根因是 CppSharp 的 AST 转换**(见"⑤ C. 核心修复"),已用"分块 + 两次一致"挡住。改 `Roots` 后**必须**跑完整 `extract` 看它是否报 `FAILED`。
 - `extract` 现在 ~190 秒(分块自校验),不是慢得离谱但也别在循环里跑;`QTSHARP_ROOTS` 可以只跑子集排查。
-- **`extract2` 只有 ~2.5 秒**,`tools/regen-api.ps1` 全程(含 native 编译与 8 个 demo)约 4–6 分钟;**别并发跑**(会争 `testbind/bin/testapp.exe`,报 `MSB3021 文件被另一个进程占用`)。
+- **`extract2` 只有 ~2.5 秒**,`tools/regen-api.ps1` 全程(含 native 编译与 11 个 demo + sample)约 5–7 分钟;**别并发跑**(会争 `testbind/bin/testapp.exe`,报 `MSB3021 文件被另一个进程占用`)。
 - **僵尸 `testapp` 会锁住 exe**:跑 demo 中断/超时后会留进程,下次构建直接 `MSB3021`。`Get-Process testapp | Stop-Process -Force` 清掉即可。
 - **改生成代码的调用点时注意 `Q_PROPERTY` 改名**:属性占 Pascal 名后访问器退回 C++ 原名(`window.Children()`→`children()`、`QTimer.Interval()`→`interval()`、`QWidget.Width()`→`width()`);编译错误 `CS1955/CS1501`("X 不是函数" / "该方法没有采用 N 个参数的重载")就是这个信号,按报错行把 `.Prop(` 改成 `.prop(` 即可(`CS1501` 的报文里没有类名前缀)。
 - **PowerShell 5.1 的字符串比较是大小写不敏感的**:`$a -ne $b` 对只有大小写差异的字符串返回"相等" → 用 `-cne`;写"改大小写"的批量脚本时曾因此静默失败两次。
