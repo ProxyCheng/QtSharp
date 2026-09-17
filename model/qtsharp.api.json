@@ -60,6 +60,7 @@
     { "name": "DockWidgetFeatures", "qualified": "QDockWidget::DockWidgetFeatures", "flags": true, "items": [{ "name": "DockWidgetClosable", "value": 1 }, { "name": "DockWidgetMovable", "value": 2 }, { "name": "DockWidgetFloatable", "value": 4 }, { "name": "DockWidgetVerticalTitleBar", "value": 8 }, { "name": "DockWidgetFeatureMask", "value": 15 }, { "name": "NoDockWidgetFeatures", "value": 0 }, { "name": "Reserved", "value": 255 }] },
     { "name": "Notation", "qualified": "QDoubleValidator::Notation", "flags": false, "items": [{ "name": "StandardNotation", "value": 0 }, { "name": "ScientificNotation", "value": 1 }] },
     { "name": "Type", "qualified": "QEvent::Type", "flags": false, "items": [{ "name": "None", "value": 0 }, { "name": "Timer", "value": 1 }, { "name": "MouseButtonPress", "value": 2 }, { "name": "MouseButtonRelease", "value": 3 }, { "name": "MouseButtonDblClick", "value": 4 }, { "name": "MouseMove", "value": 5 }, { "name": "KeyPress", "value": 6 }, { "name": "KeyRelease", "value": 7 }, { "name": "FocusIn", "value": 8 }, { "name": "FocusOut", "value": 9 }, { "name": "FocusAboutToChange", "value": 23 }, { "name": "Enter", "value": 10 }, { "name": "Leave", "value": 11 }, { "name": "Paint", "value": 12 }, { "name": "Move", "value": 13 }, { "name": "Resize", "value": 14 }, { "name": "Create", "value": 15 }, { "name": "Destroy", "value": 16 }, { "name": "Show", "value": 17 }, { "name": "Hide", "value": 18 }, { "name": "Close", "value": 19 }, { "name": "Quit", "value": 20 }, { "name": "ParentChange", "value": 21 }, { "name": "ParentAboutToChange", "value": 131 }, { "name": "ThreadChange", "value": 22 }, { "name": "WindowActivate", "value": 24 }, { "name": "WindowDeactivate", "value": 25 }, { "name": "ShowToParent", "value": 26 }, { "name": "HideToParent", "value": 27 }, { "name": "Wheel", "value": 31 }, { "name": "WindowTitleChange", "value": 33 }, { "name": "WindowIconChange", "value": 34 }, { "name": "ApplicationWindowIconChange", "value": 35 }, { "name": "ApplicationFontChange", "value": 36 }, { "name": "ApplicationLayoutDirectionChange", "value": 37 }, { "name": "ApplicationPaletteChange", "value": 38 }, { "name": "PaletteChange", "value": 39 }, { "name": "Clipboard", "value": 40 }, { "name": "Speech", "value": 42 }, { "name": "MetaCall", "value": 43 }, { "name": "SockAct", "value": 50 }, { "name": "WinEventAct", "value": 132 }, { "name": "DeferredDelete", "value": 52 }, { "name": "DragEnter", "value": 60 }, { "name": "DragMove", "value": 61 }, { "name": "DragLeave", "value": 62 }, { "name": "Drop", "value": 63 }, { "name": "DragResponse", "value": 64 }, { "name": "ChildAdded", "value": 68 }, { "name": "ChildPolished", "value": 69 }, { "name": "ChildRemoved", "value": 71 }, { "name": "ShowWindowRequest", "value": 73 }, { "name": "PolishRequest", "value": 74 }, { "name": "Polish", "value": 75 }, { "name": "LayoutRequest", "value": 76 }, { "name": "UpdateRequest", "value": 77 }, { "name": "UpdateLater", "value": 78 }, { "name": "EmbeddingControl", "value": 79 }, { "name": "ActivateControl", "value": 80 }, { "name": "DeactivateControl", "value": 81 }, { "name": "ContextMenu", "value": 82 }, { "name": "InputMethod", "value": 83 }, { "name": "TabletMove", "value": 87 }, { "name": "LocaleChange", "value": 88 }, { "name": "LanguageChange", "value": 89 }, { "name": "LayoutDirectionChange", "value": 90 }, { "name": "Style", "value": 91 }, { "name": "TabletPress", "value": 92 }, { "name": "TabletRelease", "value": 93 }, { "name": "OkRequest", "value": 94 }, { "name": "HelpRequest", "value": 95 }, { "name": "IconDrag", "value": 96 }, { "name": "FontChange", "value": 97 }, { "name": "EnabledChange", "value": 98 }, { "name": "ActivationChange", "value": 99 }, { "name": "StyleChange", "value": 100 }, { "name": "IconTextChange", "value": 101 }, { "name": "ModifiedChange", "value": 102 }, { "name": "MouseTrackingChange", "value": 109 }, { "name": "WindowBlocked", "value": 103 }, { "name": "WindowUnblocked", "value": 104 }, { "name": "WindowStateChange", "value": 105 }, { "name": "ReadOnlyChange", "value": 106 }, { "name": "ToolTip", "value": 110 }, { "name": "WhatsThis", "value": 111 }, { "name": "StatusTip", "value": 112 }, { "name": "ActionChanged", "value": 113 }, { "name": "ActionAdded", "value": 114 }, { "name": "ActionRemoved", "value": 115 }, { "name": "FileOpen", "value": 116 }, { "name": "Shortcut", "value": 117 }, { "name": "ShortcutOverride", "value": 51 }, { "name": "WhatsThisClicked", "value": 118 }, { "name": "ToolBarChange", "value": 120 }, { "name": "ApplicationActivate", "value": 121 }, { "name": "ApplicationActivated", "value": 121 }, { "name": "ApplicationDeactivate", "value": 122 }, { "name": "ApplicationDeactivated", "value": 122 }, { "name": "QueryWhatsThis", "value": 123 }, { "name": "EnterWhatsThisMode", "value": 124 }, { "name": "LeaveWhatsThisMode", "value": 125 }, { "name": "ZOrderChange", "value": 126 }, { "name": "HoverEnter", "value": 127 }, { "name": "HoverLeave", "value": 128 }, { "name": "HoverMove", "value": 129 }, { "name": "AcceptDropsChange", "value": 152 }, { "name": "ZeroTimerEvent", "value": 154 }, { "name": "GraphicsSceneMouseMove", "value": 155 }, { "name": "GraphicsSceneMousePress", "value": 156 }, { "name": "GraphicsSceneMouseRelease", "value": 157 }, { "name": "GraphicsSceneMouseDoubleClick", "value": 158 }, { "name": "GraphicsSceneContextMenu", "value": 159 }, { "name": "GraphicsSceneHoverEnter", "value": 160 }, { "name": "GraphicsSceneHoverMove", "value": 161 }, { "name": "GraphicsSceneHoverLeave", "value": 162 }, { "name": "GraphicsSceneHelp", "value": 163 }, { "name": "GraphicsSceneDragEnter", "value": 164 }, { "name": "GraphicsSceneDragMove", "value": 165 }, { "name": "GraphicsSceneDragLeave", "value": 166 }, { "name": "GraphicsSceneDrop", "value": 167 }, { "name": "GraphicsSceneWheel", "value": 168 }, { "name": "GraphicsSceneLeave", "value": 220 }, { "name": "KeyboardLayoutChange", "value": 169 }, { "name": "DynamicPropertyChange", "value": 170 }, { "name": "TabletEnterProximity", "value": 171 }, { "name": "TabletLeaveProximity", "value": 172 }, { "name": "NonClientAreaMouseMove", "value": 173 }, { "name": "NonClientAreaMouseButtonPress", "value": 174 }, { "name": "NonClientAreaMouseButtonRelease", "value": 175 }, { "name": "NonClientAreaMouseButtonDblClick", "value": 176 }, { "name": "MacSizeChange", "value": 177 }, { "name": "ContentsRectChange", "value": 178 }, { "name": "MacGLWindowChange", "value": 179 }, { "name": "FutureCallOut", "value": 180 }, { "name": "GraphicsSceneResize", "value": 181 }, { "name": "GraphicsSceneMove", "value": 182 }, { "name": "CursorChange", "value": 183 }, { "name": "ToolTipChange", "value": 184 }, { "name": "NetworkReplyUpdated", "value": 185 }, { "name": "GrabMouse", "value": 186 }, { "name": "UngrabMouse", "value": 187 }, { "name": "GrabKeyboard", "value": 188 }, { "name": "UngrabKeyboard", "value": 189 }, { "name": "StateMachineSignal", "value": 192 }, { "name": "StateMachineWrapped", "value": 193 }, { "name": "TouchBegin", "value": 194 }, { "name": "TouchUpdate", "value": 195 }, { "name": "TouchEnd", "value": 196 }, { "name": "NativeGesture", "value": 197 }, { "name": "RequestSoftwareInputPanel", "value": 199 }, { "name": "CloseSoftwareInputPanel", "value": 200 }, { "name": "WinIdChange", "value": 203 }, { "name": "Gesture", "value": 198 }, { "name": "GestureOverride", "value": 202 }, { "name": "ScrollPrepare", "value": 204 }, { "name": "Scroll", "value": 205 }, { "name": "Expose", "value": 206 }, { "name": "InputMethodQuery", "value": 207 }, { "name": "OrientationChange", "value": 208 }, { "name": "TouchCancel", "value": 209 }, { "name": "ThemeChange", "value": 210 }, { "name": "SockClose", "value": 211 }, { "name": "PlatformPanel", "value": 212 }, { "name": "StyleAnimationUpdate", "value": 213 }, { "name": "ApplicationStateChange", "value": 214 }, { "name": "WindowChangeInternal", "value": 215 }, { "name": "ScreenChangeInternal", "value": 216 }, { "name": "PlatformSurface", "value": 217 }, { "name": "Pointer", "value": 218 }, { "name": "TabletTrackingChange", "value": 219 }, { "name": "WindowAboutToChangeInternal", "value": 221 }, { "name": "DevicePixelRatioChange", "value": 222 }, { "name": "ChildWindowAdded", "value": 223 }, { "name": "ChildWindowRemoved", "value": 224 }, { "name": "ParentWindowAboutToChange", "value": 225 }, { "name": "ParentWindowChange", "value": 226 }, { "name": "SafeAreaMarginsChange", "value": 227 }, { "name": "User", "value": 1000 }, { "name": "MaxUser", "value": 65535 }] },
+    { "name": "State", "qualified": "QEventPoint::State", "flags": false, "items": [{ "name": "Unknown", "value": 0 }, { "name": "Stationary", "value": 4 }, { "name": "Pressed", "value": 1 }, { "name": "Updated", "value": 2 }, { "name": "Released", "value": 8 }] },
     { "name": "AcceptMode", "qualified": "QFileDialog::AcceptMode", "flags": false, "items": [{ "name": "AcceptOpen", "value": 0 }, { "name": "AcceptSave", "value": 1 }] },
     { "name": "DialogLabel", "qualified": "QFileDialog::DialogLabel", "flags": false, "items": [{ "name": "LookIn", "value": 0 }, { "name": "FileName", "value": 1 }, { "name": "FileType", "value": 2 }, { "name": "Accept", "value": 3 }, { "name": "Reject", "value": 4 }] },
     { "name": "FileMode", "qualified": "QFileDialog::FileMode", "flags": false, "items": [{ "name": "AnyFile", "value": 0 }, { "name": "ExistingFile", "value": 1 }, { "name": "Directory", "value": 2 }, { "name": "ExistingFiles", "value": 3 }] },
@@ -145,6 +146,7 @@
     { "name": "Script", "qualified": "QLocale::Script", "flags": false, "items": [{ "name": "AnyScript", "value": 0 }, { "name": "AdlamScript", "value": 1 }, { "name": "AhomScript", "value": 2 }, { "name": "AnatolianHieroglyphsScript", "value": 3 }, { "name": "ArabicScript", "value": 4 }, { "name": "ArmenianScript", "value": 5 }, { "name": "AvestanScript", "value": 6 }, { "name": "BalineseScript", "value": 7 }, { "name": "BamumScript", "value": 8 }, { "name": "BanglaScript", "value": 9 }, { "name": "BassaVahScript", "value": 10 }, { "name": "BatakScript", "value": 11 }, { "name": "BhaiksukiScript", "value": 12 }, { "name": "BopomofoScript", "value": 13 }, { "name": "BrahmiScript", "value": 14 }, { "name": "BrailleScript", "value": 15 }, { "name": "BugineseScript", "value": 16 }, { "name": "BuhidScript", "value": 17 }, { "name": "CanadianAboriginalScript", "value": 18 }, { "name": "CarianScript", "value": 19 }, { "name": "CaucasianAlbanianScript", "value": 20 }, { "name": "ChakmaScript", "value": 21 }, { "name": "ChamScript", "value": 22 }, { "name": "CherokeeScript", "value": 23 }, { "name": "CopticScript", "value": 24 }, { "name": "CuneiformScript", "value": 25 }, { "name": "CypriotScript", "value": 26 }, { "name": "CyrillicScript", "value": 27 }, { "name": "DeseretScript", "value": 28 }, { "name": "DevanagariScript", "value": 29 }, { "name": "DuployanScript", "value": 30 }, { "name": "EgyptianHieroglyphsScript", "value": 31 }, { "name": "ElbasanScript", "value": 32 }, { "name": "EthiopicScript", "value": 33 }, { "name": "FraserScript", "value": 34 }, { "name": "GeorgianScript", "value": 35 }, { "name": "GlagoliticScript", "value": 36 }, { "name": "GothicScript", "value": 37 }, { "name": "GranthaScript", "value": 38 }, { "name": "GreekScript", "value": 39 }, { "name": "GujaratiScript", "value": 40 }, { "name": "GurmukhiScript", "value": 41 }, { "name": "HangulScript", "value": 42 }, { "name": "HanScript", "value": 43 }, { "name": "HanunooScript", "value": 44 }, { "name": "HanWithBopomofoScript", "value": 45 }, { "name": "HatranScript", "value": 46 }, { "name": "HebrewScript", "value": 47 }, { "name": "HiraganaScript", "value": 48 }, { "name": "ImperialAramaicScript", "value": 49 }, { "name": "InscriptionalPahlaviScript", "value": 50 }, { "name": "InscriptionalParthianScript", "value": 51 }, { "name": "JamoScript", "value": 52 }, { "name": "JapaneseScript", "value": 53 }, { "name": "JavaneseScript", "value": 54 }, { "name": "KaithiScript", "value": 55 }, { "name": "KannadaScript", "value": 56 }, { "name": "KatakanaScript", "value": 57 }, { "name": "KayahLiScript", "value": 58 }, { "name": "KharoshthiScript", "value": 59 }, { "name": "KhmerScript", "value": 60 }, { "name": "KhojkiScript", "value": 61 }, { "name": "KhudawadiScript", "value": 62 }, { "name": "KoreanScript", "value": 63 }, { "name": "LannaScript", "value": 64 }, { "name": "LaoScript", "value": 65 }, { "name": "LatinScript", "value": 66 }, { "name": "LepchaScript", "value": 67 }, { "name": "LimbuScript", "value": 68 }, { "name": "LinearAScript", "value": 69 }, { "name": "LinearBScript", "value": 70 }, { "name": "LycianScript", "value": 71 }, { "name": "LydianScript", "value": 72 }, { "name": "MahajaniScript", "value": 73 }, { "name": "MalayalamScript", "value": 74 }, { "name": "MandaeanScript", "value": 75 }, { "name": "ManichaeanScript", "value": 76 }, { "name": "MarchenScript", "value": 77 }, { "name": "MeiteiMayekScript", "value": 78 }, { "name": "MendeScript", "value": 79 }, { "name": "MeroiticCursiveScript", "value": 80 }, { "name": "MeroiticScript", "value": 81 }, { "name": "ModiScript", "value": 82 }, { "name": "MongolianScript", "value": 83 }, { "name": "MroScript", "value": 84 }, { "name": "MultaniScript", "value": 85 }, { "name": "MyanmarScript", "value": 86 }, { "name": "NabataeanScript", "value": 87 }, { "name": "NewaScript", "value": 88 }, { "name": "NewTaiLueScript", "value": 89 }, { "name": "NkoScript", "value": 90 }, { "name": "OdiaScript", "value": 91 }, { "name": "OghamScript", "value": 92 }, { "name": "OlChikiScript", "value": 93 }, { "name": "OldHungarianScript", "value": 94 }, { "name": "OldItalicScript", "value": 95 }, { "name": "OldNorthArabianScript", "value": 96 }, { "name": "OldPermicScript", "value": 97 }, { "name": "OldPersianScript", "value": 98 }, { "name": "OldSouthArabianScript", "value": 99 }, { "name": "OrkhonScript", "value": 100 }, { "name": "OsageScript", "value": 101 }, { "name": "OsmanyaScript", "value": 102 }, { "name": "PahawhHmongScript", "value": 103 }, { "name": "PalmyreneScript", "value": 104 }, { "name": "PauCinHauScript", "value": 105 }, { "name": "PhagsPaScript", "value": 106 }, { "name": "PhoenicianScript", "value": 107 }, { "name": "PollardPhoneticScript", "value": 108 }, { "name": "PsalterPahlaviScript", "value": 109 }, { "name": "RejangScript", "value": 110 }, { "name": "RunicScript", "value": 111 }, { "name": "SamaritanScript", "value": 112 }, { "name": "SaurashtraScript", "value": 113 }, { "name": "SharadaScript", "value": 114 }, { "name": "ShavianScript", "value": 115 }, { "name": "SiddhamScript", "value": 116 }, { "name": "SignWritingScript", "value": 117 }, { "name": "SimplifiedHanScript", "value": 118 }, { "name": "SinhalaScript", "value": 119 }, { "name": "SoraSompengScript", "value": 120 }, { "name": "SundaneseScript", "value": 121 }, { "name": "SylotiNagriScript", "value": 122 }, { "name": "SyriacScript", "value": 123 }, { "name": "TagalogScript", "value": 124 }, { "name": "TagbanwaScript", "value": 125 }, { "name": "TaiLeScript", "value": 126 }, { "name": "TaiVietScript", "value": 127 }, { "name": "TakriScript", "value": 128 }, { "name": "TamilScript", "value": 129 }, { "name": "TangutScript", "value": 130 }, { "name": "TeluguScript", "value": 131 }, { "name": "ThaanaScript", "value": 132 }, { "name": "ThaiScript", "value": 133 }, { "name": "TibetanScript", "value": 134 }, { "name": "TifinaghScript", "value": 135 }, { "name": "TirhutaScript", "value": 136 }, { "name": "TraditionalHanScript", "value": 137 }, { "name": "UgariticScript", "value": 138 }, { "name": "VaiScript", "value": 139 }, { "name": "VarangKshitiScript", "value": 140 }, { "name": "YiScript", "value": 141 }, { "name": "HanifiScript", "value": 142 }, { "name": "BengaliScript", "value": 9 }, { "name": "MendeKikakuiScript", "value": 79 }, { "name": "OriyaScript", "value": 91 }, { "name": "SimplifiedChineseScript", "value": 118 }, { "name": "TraditionalChineseScript", "value": 137 }, { "name": "LastScript", "value": 142 }] },
     { "name": "TagSeparator", "qualified": "QLocale::TagSeparator", "flags": false, "items": [{ "name": "Dash", "value": 45 }, { "name": "Underscore", "value": 95 }] },
     { "name": "DockOptions", "qualified": "QMainWindow::DockOptions", "flags": true, "items": [{ "name": "AnimatedDocks", "value": 1 }, { "name": "AllowNestedDocks", "value": 2 }, { "name": "AllowTabbedDocks", "value": 4 }, { "name": "ForceTabbedDocks", "value": 8 }, { "name": "VerticalTabs", "value": 16 }, { "name": "GroupedDragging", "value": 32 }] },
+    { "name": "Flags", "qualified": "QMatrix4x4::Flags", "flags": true, "items": [{ "name": "Identity", "value": 0 }, { "name": "Translation", "value": 1 }, { "name": "Scale", "value": 2 }, { "name": "Rotation2D", "value": 4 }, { "name": "Rotation", "value": 8 }, { "name": "Perspective", "value": 16 }, { "name": "General", "value": 31 }] },
     { "name": "AreaOption", "qualified": "QMdiArea::AreaOption", "flags": false, "items": [{ "name": "DontMaximizeSubWindowOnActivation", "value": 1 }] },
     { "name": "ViewMode", "qualified": "QMdiArea::ViewMode", "flags": false, "items": [{ "name": "SubWindowView", "value": 0 }, { "name": "TabbedView", "value": 1 }] },
     { "name": "WindowOrder", "qualified": "QMdiArea::WindowOrder", "flags": false, "items": [{ "name": "CreationOrder", "value": 0 }, { "name": "StackingOrder", "value": 1 }, { "name": "ActivationHistoryOrder", "value": 2 }] },
@@ -166,6 +168,8 @@
     { "name": "ColorRole", "qualified": "QPalette::ColorRole", "flags": false, "items": [{ "name": "WindowText", "value": 0 }, { "name": "Button", "value": 1 }, { "name": "Light", "value": 2 }, { "name": "Midlight", "value": 3 }, { "name": "Dark", "value": 4 }, { "name": "Mid", "value": 5 }, { "name": "Text", "value": 6 }, { "name": "BrightText", "value": 7 }, { "name": "ButtonText", "value": 8 }, { "name": "Base", "value": 9 }, { "name": "Window", "value": 10 }, { "name": "Shadow", "value": 11 }, { "name": "Highlight", "value": 12 }, { "name": "HighlightedText", "value": 13 }, { "name": "Link", "value": 14 }, { "name": "LinkVisited", "value": 15 }, { "name": "AlternateBase", "value": 16 }, { "name": "NoRole", "value": 17 }, { "name": "ToolTipBase", "value": 18 }, { "name": "ToolTipText", "value": 19 }, { "name": "PlaceholderText", "value": 20 }, { "name": "Accent", "value": 21 }, { "name": "NColorRoles", "value": 22 }] },
     { "name": "ChangeFlags", "qualified": "QPinchGesture::ChangeFlags", "flags": true, "items": [{ "name": "ScaleFactorChanged", "value": 1 }, { "name": "RotationAngleChanged", "value": 2 }, { "name": "CenterPointChanged", "value": 4 }] },
     { "name": "LineWrapMode", "qualified": "QPlainTextEdit::LineWrapMode", "flags": false, "items": [{ "name": "NoWrap", "value": 0 }, { "name": "WidgetWidth", "value": 1 }] },
+    { "name": "GrabTransition", "qualified": "QPointingDevice::GrabTransition", "flags": false, "items": [{ "name": "GrabPassive", "value": 1 }, { "name": "UngrabPassive", "value": 2 }, { "name": "CancelGrabPassive", "value": 3 }, { "name": "OverrideGrabPassive", "value": 4 }, { "name": "GrabExclusive", "value": 16 }, { "name": "UngrabExclusive", "value": 32 }, { "name": "CancelGrabExclusive", "value": 48 }] },
+    { "name": "PointerType", "qualified": "QPointingDevice::PointerType", "flags": false, "items": [{ "name": "Unknown", "value": 0 }, { "name": "Generic", "value": 1 }, { "name": "Finger", "value": 2 }, { "name": "Pen", "value": 4 }, { "name": "Eraser", "value": 8 }, { "name": "Cursor", "value": 16 }, { "name": "AllPointerTypes", "value": 32767 }] },
     { "name": "Direction", "qualified": "QProgressBar::Direction", "flags": false, "items": [{ "name": "TopToBottom", "value": 0 }, { "name": "BottomToTop", "value": 1 }] },
     { "name": "RegionType", "qualified": "QRegion::RegionType", "flags": false, "items": [{ "name": "Rectangle", "value": 0 }, { "name": "Ellipse", "value": 1 }] },
     { "name": "PatternOptions", "qualified": "QRegularExpression::PatternOptions", "flags": true, "items": [{ "name": "NoPatternOption", "value": 0 }, { "name": "CaseInsensitiveOption", "value": 1 }, { "name": "DotMatchesEverythingOption", "value": 2 }, { "name": "MultilineOption", "value": 4 }, { "name": "ExtendedPatternSyntaxOption", "value": 8 }, { "name": "InvertedGreedinessOption", "value": 16 }, { "name": "DontCaptureOption", "value": 32 }, { "name": "UseUnicodePropertiesOption", "value": 64 }] },
@@ -289,6 +293,7 @@
     { "name": "PenJoinStyle", "qualified": "Qt::PenJoinStyle", "flags": false, "items": [{ "name": "MiterJoin", "value": 0 }, { "name": "BevelJoin", "value": 64 }, { "name": "RoundJoin", "value": 128 }, { "name": "SvgMiterJoin", "value": 256 }, { "name": "MPenJoinStyle", "value": 448 }] },
     { "name": "PenStyle", "qualified": "Qt::PenStyle", "flags": false, "items": [{ "name": "NoPen", "value": 0 }, { "name": "SolidLine", "value": 1 }, { "name": "DashLine", "value": 2 }, { "name": "DotLine", "value": 3 }, { "name": "DashDotLine", "value": 4 }, { "name": "DashDotDotLine", "value": 5 }, { "name": "CustomDashLine", "value": 6 }, { "name": "MPenStyle", "value": 15 }] },
     { "name": "ReturnByValueConstant", "qualified": "Qt::ReturnByValueConstant", "flags": false, "items": [{ "name": "ReturnByValue", "value": 0 }] },
+    { "name": "ScreenOrientation", "qualified": "Qt::ScreenOrientation", "flags": false, "items": [{ "name": "PrimaryOrientation", "value": 0 }, { "name": "PortraitOrientation", "value": 1 }, { "name": "LandscapeOrientation", "value": 2 }, { "name": "InvertedPortraitOrientation", "value": 4 }, { "name": "InvertedLandscapeOrientation", "value": 8 }] },
     { "name": "ScrollBarPolicy", "qualified": "Qt::ScrollBarPolicy", "flags": false, "items": [{ "name": "ScrollBarAsNeeded", "value": 0 }, { "name": "ScrollBarAlwaysOff", "value": 1 }, { "name": "ScrollBarAlwaysOn", "value": 2 }] },
     { "name": "ScrollPhase", "qualified": "Qt::ScrollPhase", "flags": false, "items": [{ "name": "NoScrollPhase", "value": 0 }, { "name": "ScrollBegin", "value": 1 }, { "name": "ScrollUpdate", "value": 2 }, { "name": "ScrollEnd", "value": 3 }, { "name": "ScrollMomentum", "value": 4 }] },
     { "name": "ShortcutContext", "qualified": "Qt::ShortcutContext", "flags": false, "items": [{ "name": "WidgetShortcut", "value": 0 }, { "name": "WindowShortcut", "value": 1 }, { "name": "ApplicationShortcut", "value": 2 }, { "name": "WidgetWithChildrenShortcut", "value": 3 }] },
@@ -1870,10 +1875,33 @@
         { "name": "swap", "returnType": "void", "parameters": [{ "name": "colorSpace", "type": "QColorSpace" }] },
         { "name": "transferFunction", "returnType": "QColorSpace::TransferFunction", "parameters": [] },
         { "name": "transformModel", "returnType": "QColorSpace::TransformModel", "parameters": [] },
+        { "name": "transformationToColorSpace", "returnType": "QColorTransform", "parameters": [{ "name": "colorspace", "type": "QColorSpace" }] },
         { "name": "whitePoint", "returnType": "QPointF", "parameters": [] },
         { "name": "withTransferFunction", "returnType": "QColorSpace", "parameters": [{ "name": "transferFunctionTable", "type": "QList<unsigned short>" }] },
         { "name": "withTransferFunction", "returnType": "QColorSpace", "parameters": [{ "name": "transferFunction", "type": "QColorSpace::TransferFunction" }, { "name": "gamma", "type": "float", "optional": true }] },
         { "name": "withTransferFunctions", "returnType": "QColorSpace", "parameters": [{ "name": "redTransferFunctionTable", "type": "QList<unsigned short>" }, { "name": "greenTransferFunctionTable", "type": "QList<unsigned short>" }, { "name": "blueTransferFunctionTable", "type": "QList<unsigned short>" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QColorTransform",
+      "header": "QtGui/qcolortransform.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] }
+      ],
+      "methods": [
+        { "name": "isIdentity", "returnType": "bool", "parameters": [] },
+        { "name": "map", "returnType": "QColor", "parameters": [{ "name": "color", "type": "QColor" }] },
+        { "name": "map", "returnType": "unsigned int", "parameters": [{ "name": "argb", "type": "unsigned int" }] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QColorTransform" }] }
       ],
       "virtuals": [
       ],
@@ -2226,8 +2254,11 @@
         { "name": "mask", "returnType": "QBitmap", "parameters": [{ "name": "arg0", "type": "Qt::ReturnByValueConstant" }] },
         { "name": "pixmap", "returnType": "QPixmap", "parameters": [] },
         { "name": "pos", "static": true, "returnType": "QPoint", "parameters": [] },
+        { "name": "pos", "static": true, "returnType": "QPoint", "parameters": [{ "name": "screen", "type": "QScreen*" }] },
         { "name": "setPos", "static": true, "returnType": "void", "parameters": [{ "name": "p", "type": "QPoint" }] },
+        { "name": "setPos", "static": true, "returnType": "void", "parameters": [{ "name": "screen", "type": "QScreen*" }, { "name": "p", "type": "QPoint" }] },
         { "name": "setPos", "static": true, "returnType": "void", "parameters": [{ "name": "x", "type": "int" }, { "name": "y", "type": "int" }] },
+        { "name": "setPos", "static": true, "returnType": "void", "parameters": [{ "name": "screen", "type": "QScreen*" }, { "name": "x", "type": "int" }, { "name": "y", "type": "int" }] },
         { "name": "setShape", "returnType": "void", "parameters": [{ "name": "newShape", "type": "Qt::CursorShape" }] },
         { "name": "shape", "returnType": "Qt::CursorShape", "parameters": [] },
         { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QCursor" }] }
@@ -2862,6 +2893,64 @@
         { "name": "setAccepted", "returnType": "void", "parameters": [{ "name": "accepted", "type": "bool" }] },
         { "name": "spontaneous", "returnType": "bool", "parameters": [] },
         { "name": "type", "returnType": "QEvent::Type", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QEventPoint",
+      "header": "QtGui/qeventpoint.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "id", "type": "int", "optional": true, "default": "-1" }, { "name": "device", "type": "QPointingDevice*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "pointId", "type": "int" }, { "name": "state", "type": "QEventPoint::State" }, { "name": "scenePosition", "type": "QPointF" }, { "name": "globalPosition", "type": "QPointF" }] }
+      ],
+      "methods": [
+        { "name": "device", "returnType": "QPointingDevice*", "parameters": [] },
+        { "name": "ellipseDiameters", "returnType": "QSizeF", "parameters": [] },
+        { "name": "globalGrabPosition", "returnType": "QPointF", "parameters": [] },
+        { "name": "globalLastPosition", "returnType": "QPointF", "parameters": [] },
+        { "name": "globalPosition", "returnType": "QPointF", "parameters": [] },
+        { "name": "globalPressPosition", "returnType": "QPointF", "parameters": [] },
+        { "name": "grabPosition", "returnType": "QPointF", "parameters": [] },
+        { "name": "id", "returnType": "int", "parameters": [] },
+        { "name": "isAccepted", "returnType": "bool", "parameters": [] },
+        { "name": "lastNormalizedPos", "returnType": "QPointF", "parameters": [] },
+        { "name": "lastPos", "returnType": "QPointF", "parameters": [] },
+        { "name": "lastPosition", "returnType": "QPointF", "parameters": [] },
+        { "name": "lastScenePos", "returnType": "QPointF", "parameters": [] },
+        { "name": "lastScreenPos", "returnType": "QPointF", "parameters": [] },
+        { "name": "lastTimestamp", "returnType": "unsigned long", "parameters": [] },
+        { "name": "normalizedPos", "returnType": "QPointF", "parameters": [] },
+        { "name": "normalizedPosition", "returnType": "QPointF", "parameters": [] },
+        { "name": "pos", "returnType": "QPointF", "parameters": [] },
+        { "name": "position", "returnType": "QPointF", "parameters": [] },
+        { "name": "pressPosition", "returnType": "QPointF", "parameters": [] },
+        { "name": "pressTimestamp", "returnType": "unsigned long", "parameters": [] },
+        { "name": "pressure", "returnType": "double", "parameters": [] },
+        { "name": "rotation", "returnType": "double", "parameters": [] },
+        { "name": "sceneGrabPosition", "returnType": "QPointF", "parameters": [] },
+        { "name": "sceneLastPosition", "returnType": "QPointF", "parameters": [] },
+        { "name": "scenePos", "returnType": "QPointF", "parameters": [] },
+        { "name": "scenePosition", "returnType": "QPointF", "parameters": [] },
+        { "name": "scenePressPosition", "returnType": "QPointF", "parameters": [] },
+        { "name": "screenPos", "returnType": "QPointF", "parameters": [] },
+        { "name": "setAccepted", "returnType": "void", "parameters": [{ "name": "accepted", "type": "bool", "optional": true, "default": "true" }] },
+        { "name": "startNormalizedPos", "returnType": "QPointF", "parameters": [] },
+        { "name": "startPos", "returnType": "QPointF", "parameters": [] },
+        { "name": "startScenePos", "returnType": "QPointF", "parameters": [] },
+        { "name": "startScreenPos", "returnType": "QPointF", "parameters": [] },
+        { "name": "state", "returnType": "QEventPoint::State", "parameters": [] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QEventPoint" }] },
+        { "name": "timeHeld", "returnType": "double", "parameters": [] },
+        { "name": "timestamp", "returnType": "unsigned long", "parameters": [] },
+        { "name": "velocity", "returnType": "QVector2D", "parameters": [] }
       ],
       "virtuals": [
       ],
@@ -4574,9 +4663,14 @@
       ],
       "methods": [
         { "name": "angle", "returnType": "double", "parameters": [] },
+        { "name": "applyTo", "returnType": "void", "parameters": [{ "name": "matrix", "type": "QMatrix4x4*" }] },
+        { "name": "axis", "returnType": "QVector3D", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "origin", "returnType": "QVector3D", "parameters": [] },
         { "name": "setAngle", "returnType": "void", "parameters": [{ "name": "arg0", "type": "double" }] },
+        { "name": "setAxis", "returnType": "void", "parameters": [{ "name": "axis", "type": "QVector3D" }] },
         { "name": "setAxis", "returnType": "void", "parameters": [{ "name": "axis", "type": "Qt::Axis" }] },
+        { "name": "setOrigin", "returnType": "void", "parameters": [{ "name": "point", "type": "QVector3D" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
@@ -4599,7 +4693,10 @@
         { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
       ],
       "methods": [
+        { "name": "applyTo", "returnType": "void", "parameters": [{ "name": "matrix", "type": "QMatrix4x4*" }] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "origin", "returnType": "QVector3D", "parameters": [] },
+        { "name": "setOrigin", "returnType": "void", "parameters": [{ "name": "point", "type": "QVector3D" }] },
         { "name": "setXScale", "returnType": "void", "parameters": [{ "name": "arg0", "type": "double" }] },
         { "name": "setYScale", "returnType": "void", "parameters": [{ "name": "arg0", "type": "double" }] },
         { "name": "setZScale", "returnType": "void", "parameters": [{ "name": "arg0", "type": "double" }] },
@@ -5101,6 +5198,7 @@
       "constructors": [
       ],
       "methods": [
+        { "name": "applyTo", "returnType": "void", "parameters": [{ "name": "matrix", "type": "QMatrix4x4*" }] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
@@ -5732,6 +5830,8 @@
       ],
       "methods": [
         { "name": "allGray", "returnType": "bool", "parameters": [] },
+        { "name": "applyColorTransform", "returnType": "void", "parameters": [{ "name": "transform", "type": "QColorTransform" }] },
+        { "name": "applyColorTransform", "returnType": "void", "parameters": [{ "name": "transform", "type": "QColorTransform" }, { "name": "format", "type": "QImage::Format" }, { "name": "flags", "type": "Qt::ImageConversionFlags", "optional": true, "default": "Qt.ImageConversionFlags.AutoColor" }] },
         { "name": "bitPlaneCount", "returnType": "int", "parameters": [] },
         { "name": "bytesPerLine", "returnType": "long long", "parameters": [] },
         { "name": "cacheKey", "returnType": "long long", "parameters": [] },
@@ -5739,6 +5839,8 @@
         { "name": "colorCount", "returnType": "int", "parameters": [] },
         { "name": "colorSpace", "returnType": "QColorSpace", "parameters": [] },
         { "name": "colorTable", "returnType": "QList<unsigned int>", "parameters": [] },
+        { "name": "colorTransformed", "returnType": "QImage", "parameters": [{ "name": "transform", "type": "QColorTransform" }] },
+        { "name": "colorTransformed", "returnType": "QImage", "parameters": [{ "name": "transform", "type": "QColorTransform" }, { "name": "format", "type": "QImage::Format" }, { "name": "flags", "type": "Qt::ImageConversionFlags", "optional": true, "default": "Qt.ImageConversionFlags.AutoColor" }] },
         { "name": "convertTo", "returnType": "void", "parameters": [{ "name": "f", "type": "QImage::Format" }, { "name": "flags", "type": "Qt::ImageConversionFlags", "optional": true, "default": "Qt.ImageConversionFlags.AutoColor" }] },
         { "name": "convertToColorSpace", "returnType": "void", "parameters": [{ "name": "colorSpace", "type": "QColorSpace" }] },
         { "name": "convertToColorSpace", "returnType": "void", "parameters": [{ "name": "colorSpace", "type": "QColorSpace" }, { "name": "format", "type": "QImage::Format" }, { "name": "flags", "type": "Qt::ImageConversionFlags", "optional": true, "default": "Qt.ImageConversionFlags.AutoColor" }] },
@@ -6313,6 +6415,8 @@
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "minimumSizeHint", "returnType": "QSize", "parameters": [] },
         { "name": "openExternalLinks", "returnType": "bool", "parameters": [] },
+        { "name": "picture", "returnType": "QPicture", "parameters": [] },
+        { "name": "picture", "returnType": "QPicture", "parameters": [{ "name": "arg0", "type": "Qt::ReturnByValueConstant" }] },
         { "name": "pixmap", "returnType": "QPixmap", "parameters": [] },
         { "name": "pixmap", "returnType": "QPixmap", "parameters": [{ "name": "arg0", "type": "Qt::ReturnByValueConstant" }] },
         { "name": "selectedText", "returnType": "QString", "parameters": [] },
@@ -6324,6 +6428,7 @@
         { "name": "setNum", "returnType": "void", "parameters": [{ "name": "arg0", "type": "double" }] },
         { "name": "setNum", "returnType": "void", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "setOpenExternalLinks", "returnType": "void", "parameters": [{ "name": "open", "type": "bool" }] },
+        { "name": "setPicture", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPicture" }] },
         { "name": "setPixmap", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPixmap" }] },
         { "name": "setScaledContents", "returnType": "void", "parameters": [{ "name": "arg0", "type": "bool" }] },
         { "name": "setSelection", "returnType": "void", "parameters": [{ "name": "arg0", "type": "int" }, { "name": "arg1", "type": "int" }] },
@@ -7136,6 +7241,70 @@
     }
 ,
     {
+      "name": "QMatrix4x4",
+      "header": "QtGui/qmatrix4x4.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] },
+        { "parameters": [{ "name": "transform", "type": "QTransform" }] },
+        { "parameters": [{ "name": "arg0", "type": "Qt::Initialization" }] },
+        { "parameters": [{ "name": "m11", "type": "float" }, { "name": "m12", "type": "float" }, { "name": "m13", "type": "float" }, { "name": "m14", "type": "float" }, { "name": "m21", "type": "float" }, { "name": "m22", "type": "float" }, { "name": "m23", "type": "float" }, { "name": "m24", "type": "float" }, { "name": "m31", "type": "float" }, { "name": "m32", "type": "float" }, { "name": "m33", "type": "float" }, { "name": "m34", "type": "float" }, { "name": "m41", "type": "float" }, { "name": "m42", "type": "float" }, { "name": "m43", "type": "float" }, { "name": "m44", "type": "float" }] }
+      ],
+      "methods": [
+        { "name": "column", "returnType": "QVector4D", "parameters": [{ "name": "index", "type": "int" }] },
+        { "name": "determinant", "returnType": "double", "parameters": [] },
+        { "name": "fill", "returnType": "void", "parameters": [{ "name": "value", "type": "float" }] },
+        { "name": "flags", "returnType": "QMatrix4x4::Flags", "parameters": [] },
+        { "name": "flipCoordinates", "returnType": "void", "parameters": [] },
+        { "name": "frustum", "returnType": "void", "parameters": [{ "name": "left", "type": "float" }, { "name": "right", "type": "float" }, { "name": "bottom", "type": "float" }, { "name": "top", "type": "float" }, { "name": "nearPlane", "type": "float" }, { "name": "farPlane", "type": "float" }] },
+        { "name": "inverted", "returnType": "QMatrix4x4", "parameters": [] },
+        { "name": "isAffine", "returnType": "bool", "parameters": [] },
+        { "name": "isIdentity", "returnType": "bool", "parameters": [] },
+        { "name": "lookAt", "returnType": "void", "parameters": [{ "name": "eye", "type": "QVector3D" }, { "name": "center", "type": "QVector3D" }, { "name": "up", "type": "QVector3D" }] },
+        { "name": "map", "returnType": "QPoint", "parameters": [{ "name": "point", "type": "QPoint" }] },
+        { "name": "map", "returnType": "QPointF", "parameters": [{ "name": "point", "type": "QPointF" }] },
+        { "name": "map", "returnType": "QVector3D", "parameters": [{ "name": "point", "type": "QVector3D" }] },
+        { "name": "map", "returnType": "QVector4D", "parameters": [{ "name": "point", "type": "QVector4D" }] },
+        { "name": "mapRect", "returnType": "QRect", "parameters": [{ "name": "rect", "type": "QRect" }] },
+        { "name": "mapRect", "returnType": "QRectF", "parameters": [{ "name": "rect", "type": "QRectF" }] },
+        { "name": "mapVector", "returnType": "QVector3D", "parameters": [{ "name": "vector", "type": "QVector3D" }] },
+        { "name": "optimize", "returnType": "void", "parameters": [] },
+        { "name": "ortho", "returnType": "void", "parameters": [{ "name": "rect", "type": "QRect" }] },
+        { "name": "ortho", "returnType": "void", "parameters": [{ "name": "rect", "type": "QRectF" }] },
+        { "name": "ortho", "returnType": "void", "parameters": [{ "name": "left", "type": "float" }, { "name": "right", "type": "float" }, { "name": "bottom", "type": "float" }, { "name": "top", "type": "float" }, { "name": "nearPlane", "type": "float" }, { "name": "farPlane", "type": "float" }] },
+        { "name": "perspective", "returnType": "void", "parameters": [{ "name": "verticalAngle", "type": "float" }, { "name": "aspectRatio", "type": "float" }, { "name": "nearPlane", "type": "float" }, { "name": "farPlane", "type": "float" }] },
+        { "name": "projectedRotate", "returnType": "void", "parameters": [{ "name": "angle", "type": "float" }, { "name": "x", "type": "float" }, { "name": "y", "type": "float" }, { "name": "z", "type": "float" }] },
+        { "name": "projectedRotate", "returnType": "void", "parameters": [{ "name": "angle", "type": "float" }, { "name": "x", "type": "float" }, { "name": "y", "type": "float" }, { "name": "z", "type": "float" }, { "name": "distanceToPlane", "type": "float" }] },
+        { "name": "rotate", "returnType": "void", "parameters": [{ "name": "quaternion", "type": "QQuaternion" }] },
+        { "name": "rotate", "returnType": "void", "parameters": [{ "name": "angle", "type": "float" }, { "name": "vector", "type": "QVector3D" }] },
+        { "name": "rotate", "returnType": "void", "parameters": [{ "name": "angle", "type": "float" }, { "name": "x", "type": "float" }, { "name": "y", "type": "float" }, { "name": "z", "type": "float", "optional": true }] },
+        { "name": "row", "returnType": "QVector4D", "parameters": [{ "name": "index", "type": "int" }] },
+        { "name": "scale", "returnType": "void", "parameters": [{ "name": "vector", "type": "QVector3D" }] },
+        { "name": "scale", "returnType": "void", "parameters": [{ "name": "factor", "type": "float" }] },
+        { "name": "scale", "returnType": "void", "parameters": [{ "name": "x", "type": "float" }, { "name": "y", "type": "float" }] },
+        { "name": "scale", "returnType": "void", "parameters": [{ "name": "x", "type": "float" }, { "name": "y", "type": "float" }, { "name": "z", "type": "float" }] },
+        { "name": "setColumn", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "value", "type": "QVector4D" }] },
+        { "name": "setRow", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "value", "type": "QVector4D" }] },
+        { "name": "setToIdentity", "returnType": "void", "parameters": [] },
+        { "name": "toTransform", "returnType": "QTransform", "parameters": [] },
+        { "name": "toTransform", "returnType": "QTransform", "parameters": [{ "name": "distanceToPlane", "type": "float" }] },
+        { "name": "translate", "returnType": "void", "parameters": [{ "name": "vector", "type": "QVector3D" }] },
+        { "name": "translate", "returnType": "void", "parameters": [{ "name": "x", "type": "float" }, { "name": "y", "type": "float" }] },
+        { "name": "translate", "returnType": "void", "parameters": [{ "name": "x", "type": "float" }, { "name": "y", "type": "float" }, { "name": "z", "type": "float" }] },
+        { "name": "transposed", "returnType": "QMatrix4x4", "parameters": [] },
+        { "name": "viewport", "returnType": "void", "parameters": [{ "name": "rect", "type": "QRectF" }] },
+        { "name": "viewport", "returnType": "void", "parameters": [{ "name": "left", "type": "float" }, { "name": "bottom", "type": "float" }, { "name": "width", "type": "float" }, { "name": "height", "type": "float" }, { "name": "nearPlane", "type": "float", "optional": true }, { "name": "farPlane", "type": "float", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
       "name": "QMdiArea",
       "header": "QtWidgets/qmdiarea.h",
       "bases": ["QAbstractScrollArea"],
@@ -7575,6 +7744,17 @@
         { "name": "alignOf", "returnType": "long long", "parameters": [] },
         { "name": "canConvert", "static": true, "returnType": "bool", "parameters": [{ "name": "fromType", "type": "QMetaType" }, { "name": "toType", "type": "QMetaType" }] },
         { "name": "canView", "static": true, "returnType": "bool", "parameters": [{ "name": "fromType", "type": "QMetaType" }, { "name": "toType", "type": "QMetaType" }] },
+        { "name": "construct", "returnType": "void*", "parameters": [{ "name": "where", "type": "void*" }, { "name": "copy", "type": "void*", "optional": true, "default": "null" }] },
+        { "name": "construct", "static": true, "returnType": "void*", "parameters": [{ "name": "type", "type": "int" }, { "name": "where", "type": "void*" }, { "name": "copy", "type": "void*" }] },
+        { "name": "convert", "static": true, "returnType": "bool", "parameters": [{ "name": "fromType", "type": "QMetaType" }, { "name": "from", "type": "void*" }, { "name": "toType", "type": "QMetaType" }, { "name": "to", "type": "void*" }] },
+        { "name": "convert", "static": true, "returnType": "bool", "parameters": [{ "name": "from", "type": "void*" }, { "name": "fromTypeId", "type": "int" }, { "name": "to", "type": "void*" }, { "name": "toTypeId", "type": "int" }] },
+        { "name": "create", "returnType": "void*", "parameters": [{ "name": "copy", "type": "void*", "optional": true, "default": "null" }] },
+        { "name": "create", "static": true, "returnType": "void*", "parameters": [{ "name": "type", "type": "int" }, { "name": "copy", "type": "void*", "optional": true, "default": "null" }] },
+        { "name": "destroy", "returnType": "void", "parameters": [{ "name": "data", "type": "void*" }] },
+        { "name": "destroy", "static": true, "returnType": "void", "parameters": [{ "name": "type", "type": "int" }, { "name": "data", "type": "void*" }] },
+        { "name": "destruct", "returnType": "void", "parameters": [{ "name": "data", "type": "void*" }] },
+        { "name": "destruct", "static": true, "returnType": "void", "parameters": [{ "name": "type", "type": "int" }, { "name": "where", "type": "void*" }] },
+        { "name": "equals", "returnType": "bool", "parameters": [{ "name": "lhs", "type": "void*" }, { "name": "rhs", "type": "void*" }] },
         { "name": "flags", "returnType": "QMetaType::TypeFlags", "parameters": [] },
         { "name": "hasRegisteredConverterFunction", "static": true, "returnType": "bool", "parameters": [{ "name": "fromType", "type": "QMetaType" }, { "name": "toType", "type": "QMetaType" }] },
         { "name": "hasRegisteredDataStreamOperators", "returnType": "bool", "parameters": [] },
@@ -7591,11 +7771,15 @@
         { "name": "isRegistered", "returnType": "bool", "parameters": [] },
         { "name": "isRegistered", "static": true, "returnType": "bool", "parameters": [{ "name": "type", "type": "int" }] },
         { "name": "isValid", "returnType": "bool", "parameters": [] },
+        { "name": "load", "returnType": "bool", "parameters": [{ "name": "stream", "type": "QDataStream" }, { "name": "data", "type": "void*" }] },
+        { "name": "load", "static": true, "returnType": "bool", "parameters": [{ "name": "stream", "type": "QDataStream" }, { "name": "type", "type": "int" }, { "name": "data", "type": "void*" }] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "metaObjectForType", "static": true, "returnType": "QMetaObject*", "parameters": [{ "name": "type", "type": "int" }] },
         { "name": "name", "returnType": "char*", "parameters": [] },
         { "name": "registerNormalizedTypedef", "static": true, "returnType": "void", "parameters": [{ "name": "normalizedTypeName", "type": "QByteArray" }, { "name": "type", "type": "QMetaType" }] },
         { "name": "registerType", "returnType": "void", "parameters": [] },
+        { "name": "save", "returnType": "bool", "parameters": [{ "name": "stream", "type": "QDataStream" }, { "name": "data", "type": "void*" }] },
+        { "name": "save", "static": true, "returnType": "bool", "parameters": [{ "name": "stream", "type": "QDataStream" }, { "name": "type", "type": "int" }, { "name": "data", "type": "void*" }] },
         { "name": "sizeOf", "returnType": "long long", "parameters": [] },
         { "name": "sizeOf", "static": true, "returnType": "int", "parameters": [{ "name": "type", "type": "int" }] },
         { "name": "type", "static": true, "returnType": "int", "parameters": [{ "name": "typeName", "type": "QByteArray" }] },
@@ -7605,7 +7789,8 @@
         { "name": "underlyingType", "returnType": "QMetaType", "parameters": [] },
         { "name": "unregisterConverterFunction", "static": true, "returnType": "void", "parameters": [{ "name": "from", "type": "QMetaType" }, { "name": "to", "type": "QMetaType" }] },
         { "name": "unregisterMetaType", "static": true, "returnType": "void", "parameters": [{ "name": "type", "type": "QMetaType" }] },
-        { "name": "unregisterMutableViewFunction", "static": true, "returnType": "void", "parameters": [{ "name": "from", "type": "QMetaType" }, { "name": "to", "type": "QMetaType" }] }
+        { "name": "unregisterMutableViewFunction", "static": true, "returnType": "void", "parameters": [{ "name": "from", "type": "QMetaType" }, { "name": "to", "type": "QMetaType" }] },
+        { "name": "view", "static": true, "returnType": "bool", "parameters": [{ "name": "fromType", "type": "QMetaType" }, { "name": "from", "type": "void*" }, { "name": "toType", "type": "QMetaType" }, { "name": "to", "type": "void*" }] }
       ],
       "virtuals": [
       ],
@@ -7666,9 +7851,11 @@
       ],
       "methods": [
         { "name": "column", "returnType": "int", "parameters": [] },
+        { "name": "constInternalPointer", "returnType": "void*", "parameters": [] },
         { "name": "data", "returnType": "QVariant", "parameters": [{ "name": "role", "type": "int", "optional": true }] },
         { "name": "flags", "returnType": "Qt::ItemFlags", "parameters": [] },
         { "name": "internalId", "returnType": "unsigned long long", "parameters": [] },
+        { "name": "internalPointer", "returnType": "void*", "parameters": [] },
         { "name": "isValid", "returnType": "bool", "parameters": [] },
         { "name": "model", "returnType": "QAbstractItemModel*", "parameters": [] },
         { "name": "parent", "returnType": "QModelIndex", "parameters": [] },
@@ -7906,6 +8093,9 @@
         { "name": "drawLines", "returnType": "void", "parameters": [{ "name": "pointPairs", "type": "QPoint*" }, { "name": "lineCount", "type": "int" }] },
         { "name": "drawLines", "returnType": "void", "parameters": [{ "name": "pointPairs", "type": "QPointF*" }, { "name": "lineCount", "type": "int" }] },
         { "name": "drawPath", "returnType": "void", "parameters": [{ "name": "path", "type": "QPainterPath" }] },
+        { "name": "drawPicture", "returnType": "void", "parameters": [{ "name": "p", "type": "QPoint" }, { "name": "picture", "type": "QPicture" }] },
+        { "name": "drawPicture", "returnType": "void", "parameters": [{ "name": "p", "type": "QPointF" }, { "name": "picture", "type": "QPicture" }] },
+        { "name": "drawPicture", "returnType": "void", "parameters": [{ "name": "x", "type": "int" }, { "name": "y", "type": "int" }, { "name": "picture", "type": "QPicture" }] },
         { "name": "drawPie", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QRect" }, { "name": "a", "type": "int" }, { "name": "alen", "type": "int" }] },
         { "name": "drawPie", "returnType": "void", "parameters": [{ "name": "rect", "type": "QRectF" }, { "name": "a", "type": "int" }, { "name": "alen", "type": "int" }] },
         { "name": "drawPie", "returnType": "void", "parameters": [{ "name": "x", "type": "int" }, { "name": "y", "type": "int" }, { "name": "w", "type": "int" }, { "name": "h", "type": "int" }, { "name": "a", "type": "int" }, { "name": "alen", "type": "int" }] },
@@ -8308,15 +8498,50 @@
       ],
       "methods": [
         { "name": "column", "returnType": "int", "parameters": [] },
+        { "name": "constInternalPointer", "returnType": "void*", "parameters": [] },
         { "name": "data", "returnType": "QVariant", "parameters": [{ "name": "role", "type": "int", "optional": true }] },
         { "name": "flags", "returnType": "Qt::ItemFlags", "parameters": [] },
         { "name": "internalId", "returnType": "unsigned long long", "parameters": [] },
+        { "name": "internalPointer", "returnType": "void*", "parameters": [] },
         { "name": "isValid", "returnType": "bool", "parameters": [] },
         { "name": "model", "returnType": "QAbstractItemModel*", "parameters": [] },
         { "name": "parent", "returnType": "QModelIndex", "parameters": [] },
         { "name": "row", "returnType": "int", "parameters": [] },
         { "name": "sibling", "returnType": "QModelIndex", "parameters": [{ "name": "row", "type": "int" }, { "name": "column", "type": "int" }] },
         { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QPersistentModelIndex" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QPicture",
+      "header": "QtGui/qpicture.h",
+      "bases": ["QPaintDevice"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "formatVersion", "type": "int", "optional": true, "default": "-1" }] }
+      ],
+      "methods": [
+        { "name": "boundingRect", "returnType": "QRect", "parameters": [] },
+        { "name": "data", "returnType": "char*", "parameters": [] },
+        { "name": "detach", "returnType": "void", "parameters": [] },
+        { "name": "devType", "returnType": "int", "parameters": [] },
+        { "name": "isDetached", "returnType": "bool", "parameters": [] },
+        { "name": "isNull", "returnType": "bool", "parameters": [] },
+        { "name": "load", "returnType": "bool", "parameters": [{ "name": "dev", "type": "QIODevice*" }] },
+        { "name": "load", "returnType": "bool", "parameters": [{ "name": "fileName", "type": "QString" }] },
+        { "name": "play", "returnType": "bool", "parameters": [{ "name": "p", "type": "QPainter*" }] },
+        { "name": "save", "returnType": "bool", "parameters": [{ "name": "dev", "type": "QIODevice*" }] },
+        { "name": "save", "returnType": "bool", "parameters": [{ "name": "fileName", "type": "QString" }] },
+        { "name": "setBoundingRect", "returnType": "void", "parameters": [{ "name": "r", "type": "QRect" }] },
+        { "name": "setData", "returnType": "void", "parameters": [{ "name": "data", "type": "char*" }, { "name": "size", "type": "unsigned int" }] },
+        { "name": "size", "returnType": "unsigned int", "parameters": [] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QPicture" }] }
       ],
       "virtuals": [
       ],
@@ -8642,15 +8867,51 @@
       "constructors": [
       ],
       "methods": [
+        { "name": "addPassiveGrabber", "returnType": "bool", "parameters": [{ "name": "point", "type": "QEventPoint" }, { "name": "grabber", "type": "QObject*" }] },
         { "name": "allPointsAccepted", "returnType": "bool", "parameters": [] },
         { "name": "allPointsGrabbed", "returnType": "bool", "parameters": [] },
+        { "name": "clearPassiveGrabbers", "returnType": "void", "parameters": [{ "name": "point", "type": "QEventPoint" }] },
         { "name": "clone", "returnType": "QPointerEvent*", "parameters": [] },
+        { "name": "exclusiveGrabber", "returnType": "QObject*", "parameters": [{ "name": "point", "type": "QEventPoint" }] },
         { "name": "isBeginEvent", "returnType": "bool", "parameters": [] },
         { "name": "isEndEvent", "returnType": "bool", "parameters": [] },
         { "name": "isUpdateEvent", "returnType": "bool", "parameters": [] },
+        { "name": "point", "returnType": "QEventPoint", "parameters": [{ "name": "i", "type": "long long" }] },
+        { "name": "pointById", "returnType": "QEventPoint*", "parameters": [{ "name": "id", "type": "int" }] },
         { "name": "pointCount", "returnType": "long long", "parameters": [] },
+        { "name": "pointerType", "returnType": "QPointingDevice::PointerType", "parameters": [] },
+        { "name": "pointingDevice", "returnType": "QPointingDevice*", "parameters": [] },
+        { "name": "points", "returnType": "QList<QEventPoint>", "parameters": [] },
+        { "name": "removePassiveGrabber", "returnType": "bool", "parameters": [{ "name": "point", "type": "QEventPoint" }, { "name": "grabber", "type": "QObject*" }] },
         { "name": "setAccepted", "returnType": "void", "parameters": [{ "name": "accepted", "type": "bool" }] },
+        { "name": "setExclusiveGrabber", "returnType": "void", "parameters": [{ "name": "point", "type": "QEventPoint" }, { "name": "exclusiveGrabber", "type": "QObject*" }] },
         { "name": "setTimestamp", "returnType": "void", "parameters": [{ "name": "timestamp", "type": "unsigned long long" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QPointingDevice",
+      "header": "QtGui/qpointingdevice.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "buttonCount", "returnType": "int", "parameters": [] },
+        { "name": "grabChanged", "returnType": "void", "parameters": [{ "name": "grabber", "type": "QObject*" }, { "name": "transition", "type": "QPointingDevice::GrabTransition" }, { "name": "event", "type": "QPointerEvent*" }, { "name": "point", "type": "QEventPoint" }] },
+        { "name": "maximumPoints", "returnType": "int", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "pointerType", "returnType": "QPointingDevice::PointerType", "parameters": [] },
+        { "name": "primaryPointingDevice", "static": true, "returnType": "QPointingDevice*", "parameters": [{ "name": "seatName", "type": "QString", "optional": true }] },
+        { "name": "setMaximumTouchPoints", "returnType": "void", "parameters": [{ "name": "c", "type": "int" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
       ],
@@ -8911,6 +9172,61 @@
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QKeyEvent*" }] },
         { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
         { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QQuaternion",
+      "header": "QtGui/qquaternion.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] },
+        { "parameters": [{ "name": "vector", "type": "QVector4D" }] },
+        { "parameters": [{ "name": "arg0", "type": "Qt::Initialization" }] },
+        { "parameters": [{ "name": "scalar", "type": "float" }, { "name": "vector", "type": "QVector3D" }] },
+        { "parameters": [{ "name": "scalar", "type": "float" }, { "name": "xpos", "type": "float" }, { "name": "ypos", "type": "float" }, { "name": "zpos", "type": "float" }] }
+      ],
+      "methods": [
+        { "name": "conjugated", "returnType": "QQuaternion", "parameters": [] },
+        { "name": "dotProduct", "static": true, "returnType": "float", "parameters": [{ "name": "q1", "type": "QQuaternion" }, { "name": "q2", "type": "QQuaternion" }] },
+        { "name": "fromAxes", "static": true, "returnType": "QQuaternion", "parameters": [{ "name": "xAxis", "type": "QVector3D" }, { "name": "yAxis", "type": "QVector3D" }, { "name": "zAxis", "type": "QVector3D" }] },
+        { "name": "fromAxisAndAngle", "static": true, "returnType": "QQuaternion", "parameters": [{ "name": "axis", "type": "QVector3D" }, { "name": "angle", "type": "float" }] },
+        { "name": "fromAxisAndAngle", "static": true, "returnType": "QQuaternion", "parameters": [{ "name": "x", "type": "float" }, { "name": "y", "type": "float" }, { "name": "z", "type": "float" }, { "name": "angle", "type": "float" }] },
+        { "name": "fromDirection", "static": true, "returnType": "QQuaternion", "parameters": [{ "name": "direction", "type": "QVector3D" }, { "name": "up", "type": "QVector3D" }] },
+        { "name": "fromEulerAngles", "static": true, "returnType": "QQuaternion", "parameters": [{ "name": "angles", "type": "QVector3D" }] },
+        { "name": "fromEulerAngles", "static": true, "returnType": "QQuaternion", "parameters": [{ "name": "pitch", "type": "float" }, { "name": "yaw", "type": "float" }, { "name": "roll", "type": "float" }] },
+        { "name": "getAxes", "returnType": "void", "parameters": [{ "name": "xAxis", "type": "QVector3D*" }, { "name": "yAxis", "type": "QVector3D*" }, { "name": "zAxis", "type": "QVector3D*" }] },
+        { "name": "inverted", "returnType": "QQuaternion", "parameters": [] },
+        { "name": "isIdentity", "returnType": "bool", "parameters": [] },
+        { "name": "isNull", "returnType": "bool", "parameters": [] },
+        { "name": "length", "returnType": "float", "parameters": [] },
+        { "name": "lengthSquared", "returnType": "float", "parameters": [] },
+        { "name": "nlerp", "static": true, "returnType": "QQuaternion", "parameters": [{ "name": "q1", "type": "QQuaternion" }, { "name": "q2", "type": "QQuaternion" }, { "name": "t", "type": "float" }] },
+        { "name": "normalize", "returnType": "void", "parameters": [] },
+        { "name": "normalized", "returnType": "QQuaternion", "parameters": [] },
+        { "name": "rotatedVector", "returnType": "QVector3D", "parameters": [{ "name": "vector", "type": "QVector3D" }] },
+        { "name": "rotationTo", "static": true, "returnType": "QQuaternion", "parameters": [{ "name": "from", "type": "QVector3D" }, { "name": "to", "type": "QVector3D" }] },
+        { "name": "scalar", "returnType": "float", "parameters": [] },
+        { "name": "setScalar", "returnType": "void", "parameters": [{ "name": "scalar", "type": "float" }] },
+        { "name": "setVector", "returnType": "void", "parameters": [{ "name": "vector", "type": "QVector3D" }] },
+        { "name": "setVector", "returnType": "void", "parameters": [{ "name": "x", "type": "float" }, { "name": "y", "type": "float" }, { "name": "z", "type": "float" }] },
+        { "name": "setX", "returnType": "void", "parameters": [{ "name": "x", "type": "float" }] },
+        { "name": "setY", "returnType": "void", "parameters": [{ "name": "y", "type": "float" }] },
+        { "name": "setZ", "returnType": "void", "parameters": [{ "name": "z", "type": "float" }] },
+        { "name": "slerp", "static": true, "returnType": "QQuaternion", "parameters": [{ "name": "q1", "type": "QQuaternion" }, { "name": "q2", "type": "QQuaternion" }, { "name": "t", "type": "float" }] },
+        { "name": "toEulerAngles", "returnType": "QVector3D", "parameters": [] },
+        { "name": "toVector4D", "returnType": "QVector4D", "parameters": [] },
+        { "name": "vector", "returnType": "QVector3D", "parameters": [] },
+        { "name": "x", "returnType": "float", "parameters": [] },
+        { "name": "y", "returnType": "float", "parameters": [] },
+        { "name": "z", "returnType": "float", "parameters": [] }
+      ],
+      "virtuals": [
       ],
       "signals": [
       ]
@@ -9274,6 +9590,61 @@
         { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QShowEvent*" }] }
       ],
       "signals": [
+      ]
+    }
+,
+    {
+      "name": "QScreen",
+      "header": "QtGui/qscreen.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "angleBetween", "returnType": "int", "parameters": [{ "name": "a", "type": "Qt::ScreenOrientation" }, { "name": "b", "type": "Qt::ScreenOrientation" }] },
+        { "name": "availableGeometry", "returnType": "QRect", "parameters": [] },
+        { "name": "availableSize", "returnType": "QSize", "parameters": [] },
+        { "name": "availableVirtualGeometry", "returnType": "QRect", "parameters": [] },
+        { "name": "availableVirtualSize", "returnType": "QSize", "parameters": [] },
+        { "name": "depth", "returnType": "int", "parameters": [] },
+        { "name": "devicePixelRatio", "returnType": "double", "parameters": [] },
+        { "name": "geometry", "returnType": "QRect", "parameters": [] },
+        { "name": "grabWindow", "returnType": "QPixmap", "parameters": [{ "name": "window", "type": "unsigned long long", "optional": true, "default": "0" }, { "name": "x", "type": "int", "optional": true, "default": "0" }, { "name": "y", "type": "int", "optional": true, "default": "0" }, { "name": "w", "type": "int", "optional": true, "default": "-1" }, { "name": "h", "type": "int", "optional": true, "default": "-1" }] },
+        { "name": "isLandscape", "returnType": "bool", "parameters": [{ "name": "orientation", "type": "Qt::ScreenOrientation" }] },
+        { "name": "isPortrait", "returnType": "bool", "parameters": [{ "name": "orientation", "type": "Qt::ScreenOrientation" }] },
+        { "name": "logicalDotsPerInch", "returnType": "double", "parameters": [] },
+        { "name": "logicalDotsPerInchX", "returnType": "double", "parameters": [] },
+        { "name": "logicalDotsPerInchY", "returnType": "double", "parameters": [] },
+        { "name": "manufacturer", "returnType": "QString", "parameters": [] },
+        { "name": "mapBetween", "returnType": "QRect", "parameters": [{ "name": "a", "type": "Qt::ScreenOrientation" }, { "name": "b", "type": "Qt::ScreenOrientation" }, { "name": "rect", "type": "QRect" }] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "model", "returnType": "QString", "parameters": [] },
+        { "name": "name", "returnType": "QString", "parameters": [] },
+        { "name": "nativeOrientation", "returnType": "Qt::ScreenOrientation", "parameters": [] },
+        { "name": "orientation", "returnType": "Qt::ScreenOrientation", "parameters": [] },
+        { "name": "physicalDotsPerInch", "returnType": "double", "parameters": [] },
+        { "name": "physicalDotsPerInchX", "returnType": "double", "parameters": [] },
+        { "name": "physicalDotsPerInchY", "returnType": "double", "parameters": [] },
+        { "name": "physicalSize", "returnType": "QSizeF", "parameters": [] },
+        { "name": "primaryOrientation", "returnType": "Qt::ScreenOrientation", "parameters": [] },
+        { "name": "refreshRate", "returnType": "double", "parameters": [] },
+        { "name": "serialNumber", "returnType": "QString", "parameters": [] },
+        { "name": "size", "returnType": "QSize", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "transformBetween", "returnType": "QTransform", "parameters": [{ "name": "a", "type": "Qt::ScreenOrientation" }, { "name": "b", "type": "Qt::ScreenOrientation" }, { "name": "target", "type": "QRect" }] },
+        { "name": "virtualGeometry", "returnType": "QRect", "parameters": [] },
+        { "name": "virtualSiblingAt", "returnType": "QScreen*", "parameters": [{ "name": "point", "type": "QPoint" }] },
+        { "name": "virtualSiblings", "returnType": "QList<QScreen*>", "parameters": [] },
+        { "name": "virtualSize", "returnType": "QSize", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+        { "name": "logicalDotsPerInchChanged", "parameters": [{ "name": "dpi", "type": "double" }] },
+        { "name": "physicalDotsPerInchChanged", "parameters": [{ "name": "dpi", "type": "double" }] },
+        { "name": "refreshRateChanged", "parameters": [{ "name": "refreshRate", "type": "double" }] }
       ]
     }
 ,
@@ -9831,7 +10202,8 @@
       "subclassable": true,
       "owned": true,
       "constructors": [
-        { "parameters": [] }
+        { "parameters": [] },
+        { "parameters": [{ "name": "screen", "type": "QScreen*" }] }
       ],
       "methods": [
         { "name": "clearMessage", "returnType": "void", "parameters": [] },
@@ -13284,17 +13656,19 @@
         { "parameters": [{ "name": "ll", "type": "long long" }] },
         { "parameters": [{ "name": "ui", "type": "unsigned int" }] },
         { "parameters": [{ "name": "ull", "type": "unsigned long long" }] },
-        { "parameters": [{ "name": "type", "type": "QMetaType" }] }
+        { "parameters": [{ "name": "type", "type": "QMetaType" }, { "name": "copy", "type": "void*", "optional": true, "default": "null" }] }
       ],
       "methods": [
         { "name": "canConvert", "returnType": "bool", "parameters": [{ "name": "targetType", "type": "QMetaType" }] },
         { "name": "canConvert", "returnType": "bool", "parameters": [{ "name": "targetTypeId", "type": "int" }] },
         { "name": "canView", "returnType": "bool", "parameters": [{ "name": "targetType", "type": "QMetaType" }] },
         { "name": "clear", "returnType": "void", "parameters": [] },
+        { "name": "constData", "returnType": "void*", "parameters": [] },
         { "name": "convert", "returnType": "bool", "parameters": [{ "name": "type", "type": "QMetaType" }] },
         { "name": "convert", "returnType": "bool", "parameters": [{ "name": "targetTypeId", "type": "int" }] },
+        { "name": "data", "returnType": "void*", "parameters": [] },
         { "name": "detach", "returnType": "void", "parameters": [] },
-        { "name": "fromMetaType", "static": true, "returnType": "QVariant", "parameters": [{ "name": "type", "type": "QMetaType" }] },
+        { "name": "fromMetaType", "static": true, "returnType": "QVariant", "parameters": [{ "name": "type", "type": "QMetaType" }, { "name": "copy", "type": "void*", "optional": true, "default": "null" }] },
         { "name": "isDetached", "returnType": "bool", "parameters": [] },
         { "name": "isNull", "returnType": "bool", "parameters": [] },
         { "name": "isValid", "returnType": "bool", "parameters": [] },
@@ -13339,6 +13713,142 @@
         { "name": "typeName", "returnType": "char*", "parameters": [] },
         { "name": "typeToName", "static": true, "returnType": "char*", "parameters": [{ "name": "typeId", "type": "int" }] },
         { "name": "userType", "returnType": "int", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QVector2D",
+      "header": "QtGui/qvectornd.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] },
+        { "parameters": [{ "name": "point", "type": "QPoint" }] },
+        { "parameters": [{ "name": "point", "type": "QPointF" }] },
+        { "parameters": [{ "name": "vector", "type": "QVector3D" }] },
+        { "parameters": [{ "name": "vector", "type": "QVector4D" }] },
+        { "parameters": [{ "name": "arg0", "type": "Qt::Initialization" }] },
+        { "parameters": [{ "name": "xpos", "type": "float" }, { "name": "ypos", "type": "float" }] }
+      ],
+      "methods": [
+        { "name": "distanceToLine", "returnType": "float", "parameters": [{ "name": "point", "type": "QVector2D" }, { "name": "direction", "type": "QVector2D" }] },
+        { "name": "distanceToPoint", "returnType": "float", "parameters": [{ "name": "point", "type": "QVector2D" }] },
+        { "name": "dotProduct", "static": true, "returnType": "float", "parameters": [{ "name": "v1", "type": "QVector2D" }, { "name": "v2", "type": "QVector2D" }] },
+        { "name": "isNull", "returnType": "bool", "parameters": [] },
+        { "name": "length", "returnType": "float", "parameters": [] },
+        { "name": "lengthSquared", "returnType": "float", "parameters": [] },
+        { "name": "normalize", "returnType": "void", "parameters": [] },
+        { "name": "normalized", "returnType": "QVector2D", "parameters": [] },
+        { "name": "setX", "returnType": "void", "parameters": [{ "name": "x", "type": "float" }] },
+        { "name": "setY", "returnType": "void", "parameters": [{ "name": "y", "type": "float" }] },
+        { "name": "toPoint", "returnType": "QPoint", "parameters": [] },
+        { "name": "toPointF", "returnType": "QPointF", "parameters": [] },
+        { "name": "toVector3D", "returnType": "QVector3D", "parameters": [] },
+        { "name": "toVector4D", "returnType": "QVector4D", "parameters": [] },
+        { "name": "x", "returnType": "float", "parameters": [] },
+        { "name": "y", "returnType": "float", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QVector3D",
+      "header": "QtGui/qvectornd.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] },
+        { "parameters": [{ "name": "point", "type": "QPoint" }] },
+        { "parameters": [{ "name": "point", "type": "QPointF" }] },
+        { "parameters": [{ "name": "vector", "type": "QVector2D" }] },
+        { "parameters": [{ "name": "vector", "type": "QVector4D" }] },
+        { "parameters": [{ "name": "arg0", "type": "Qt::Initialization" }] },
+        { "parameters": [{ "name": "vector", "type": "QVector2D" }, { "name": "zpos", "type": "float" }] },
+        { "parameters": [{ "name": "xpos", "type": "float" }, { "name": "ypos", "type": "float" }, { "name": "zpos", "type": "float" }] }
+      ],
+      "methods": [
+        { "name": "crossProduct", "static": true, "returnType": "QVector3D", "parameters": [{ "name": "v1", "type": "QVector3D" }, { "name": "v2", "type": "QVector3D" }] },
+        { "name": "distanceToLine", "returnType": "float", "parameters": [{ "name": "point", "type": "QVector3D" }, { "name": "direction", "type": "QVector3D" }] },
+        { "name": "distanceToPlane", "returnType": "float", "parameters": [{ "name": "plane", "type": "QVector3D" }, { "name": "normal", "type": "QVector3D" }] },
+        { "name": "distanceToPlane", "returnType": "float", "parameters": [{ "name": "plane1", "type": "QVector3D" }, { "name": "plane2", "type": "QVector3D" }, { "name": "plane3", "type": "QVector3D" }] },
+        { "name": "distanceToPoint", "returnType": "float", "parameters": [{ "name": "point", "type": "QVector3D" }] },
+        { "name": "dotProduct", "static": true, "returnType": "float", "parameters": [{ "name": "v1", "type": "QVector3D" }, { "name": "v2", "type": "QVector3D" }] },
+        { "name": "isNull", "returnType": "bool", "parameters": [] },
+        { "name": "length", "returnType": "float", "parameters": [] },
+        { "name": "lengthSquared", "returnType": "float", "parameters": [] },
+        { "name": "normal", "static": true, "returnType": "QVector3D", "parameters": [{ "name": "v1", "type": "QVector3D" }, { "name": "v2", "type": "QVector3D" }] },
+        { "name": "normal", "static": true, "returnType": "QVector3D", "parameters": [{ "name": "v1", "type": "QVector3D" }, { "name": "v2", "type": "QVector3D" }, { "name": "v3", "type": "QVector3D" }] },
+        { "name": "normalize", "returnType": "void", "parameters": [] },
+        { "name": "normalized", "returnType": "QVector3D", "parameters": [] },
+        { "name": "project", "returnType": "QVector3D", "parameters": [{ "name": "modelView", "type": "QMatrix4x4" }, { "name": "projection", "type": "QMatrix4x4" }, { "name": "viewport", "type": "QRect" }] },
+        { "name": "setX", "returnType": "void", "parameters": [{ "name": "x", "type": "float" }] },
+        { "name": "setY", "returnType": "void", "parameters": [{ "name": "y", "type": "float" }] },
+        { "name": "setZ", "returnType": "void", "parameters": [{ "name": "z", "type": "float" }] },
+        { "name": "toPoint", "returnType": "QPoint", "parameters": [] },
+        { "name": "toPointF", "returnType": "QPointF", "parameters": [] },
+        { "name": "toVector2D", "returnType": "QVector2D", "parameters": [] },
+        { "name": "toVector4D", "returnType": "QVector4D", "parameters": [] },
+        { "name": "unproject", "returnType": "QVector3D", "parameters": [{ "name": "modelView", "type": "QMatrix4x4" }, { "name": "projection", "type": "QMatrix4x4" }, { "name": "viewport", "type": "QRect" }] },
+        { "name": "x", "returnType": "float", "parameters": [] },
+        { "name": "y", "returnType": "float", "parameters": [] },
+        { "name": "z", "returnType": "float", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QVector4D",
+      "header": "QtGui/qvectornd.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] },
+        { "parameters": [{ "name": "point", "type": "QPoint" }] },
+        { "parameters": [{ "name": "point", "type": "QPointF" }] },
+        { "parameters": [{ "name": "vector", "type": "QVector2D" }] },
+        { "parameters": [{ "name": "vector", "type": "QVector3D" }] },
+        { "parameters": [{ "name": "arg0", "type": "Qt::Initialization" }] },
+        { "parameters": [{ "name": "vector", "type": "QVector3D" }, { "name": "wpos", "type": "float" }] },
+        { "parameters": [{ "name": "vector", "type": "QVector2D" }, { "name": "zpos", "type": "float" }, { "name": "wpos", "type": "float" }] },
+        { "parameters": [{ "name": "xpos", "type": "float" }, { "name": "ypos", "type": "float" }, { "name": "zpos", "type": "float" }, { "name": "wpos", "type": "float" }] }
+      ],
+      "methods": [
+        { "name": "dotProduct", "static": true, "returnType": "float", "parameters": [{ "name": "v1", "type": "QVector4D" }, { "name": "v2", "type": "QVector4D" }] },
+        { "name": "isNull", "returnType": "bool", "parameters": [] },
+        { "name": "length", "returnType": "float", "parameters": [] },
+        { "name": "lengthSquared", "returnType": "float", "parameters": [] },
+        { "name": "normalize", "returnType": "void", "parameters": [] },
+        { "name": "normalized", "returnType": "QVector4D", "parameters": [] },
+        { "name": "setW", "returnType": "void", "parameters": [{ "name": "w", "type": "float" }] },
+        { "name": "setX", "returnType": "void", "parameters": [{ "name": "x", "type": "float" }] },
+        { "name": "setY", "returnType": "void", "parameters": [{ "name": "y", "type": "float" }] },
+        { "name": "setZ", "returnType": "void", "parameters": [{ "name": "z", "type": "float" }] },
+        { "name": "toPoint", "returnType": "QPoint", "parameters": [] },
+        { "name": "toPointF", "returnType": "QPointF", "parameters": [] },
+        { "name": "toVector2D", "returnType": "QVector2D", "parameters": [] },
+        { "name": "toVector2DAffine", "returnType": "QVector2D", "parameters": [] },
+        { "name": "toVector3D", "returnType": "QVector3D", "parameters": [] },
+        { "name": "toVector3DAffine", "returnType": "QVector3D", "parameters": [] },
+        { "name": "w", "returnType": "float", "parameters": [] },
+        { "name": "x", "returnType": "float", "parameters": [] },
+        { "name": "y", "returnType": "float", "parameters": [] },
+        { "name": "z", "returnType": "float", "parameters": [] }
       ],
       "virtuals": [
       ],
@@ -13517,6 +14027,7 @@
         { "name": "resize", "returnType": "void", "parameters": [{ "name": "w", "type": "int" }, { "name": "h", "type": "int" }] },
         { "name": "restoreGeometry", "returnType": "bool", "parameters": [{ "name": "geometry", "type": "QByteArray" }] },
         { "name": "saveGeometry", "returnType": "QByteArray", "parameters": [] },
+        { "name": "screen", "returnType": "QScreen*", "parameters": [] },
         { "name": "scroll", "returnType": "void", "parameters": [{ "name": "dx", "type": "int" }, { "name": "dy", "type": "int" }] },
         { "name": "scroll", "returnType": "void", "parameters": [{ "name": "dx", "type": "int" }, { "name": "dy", "type": "int" }, { "name": "arg2", "type": "QRect" }] },
         { "name": "setAcceptDrops", "returnType": "void", "parameters": [{ "name": "on", "type": "bool" }] },
@@ -13566,6 +14077,7 @@
         { "name": "setPalette", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPalette" }] },
         { "name": "setParent", "returnType": "void", "parameters": [{ "name": "parent", "type": "QWidget*" }] },
         { "name": "setParent", "returnType": "void", "parameters": [{ "name": "parent", "type": "QWidget*" }, { "name": "f", "type": "Qt::WindowFlags" }] },
+        { "name": "setScreen", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QScreen*" }] },
         { "name": "setShortcutAutoRepeat", "returnType": "void", "parameters": [{ "name": "id", "type": "int" }, { "name": "enable", "type": "bool", "optional": true, "default": "true" }] },
         { "name": "setShortcutEnabled", "returnType": "void", "parameters": [{ "name": "id", "type": "int" }, { "name": "enable", "type": "bool", "optional": true, "default": "true" }] },
         { "name": "setSizeIncrement", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QSize" }] },
