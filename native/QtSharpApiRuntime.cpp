@@ -285,6 +285,27 @@ extern "C" __declspec(dllexport) int qs_api_probe_mouse_press(void* widget, int 
     return QCoreApplication::sendEvent(static_cast<QObject*>(widget), &event) ? 1 : 0;
 }
 
+// Delivers a synthetic wheel turn (the delta in eighths of a degree, as Qt's own events carry
+// it, with the vertical component set - a wheel turn is a vertical scroll) so a managed
+// wheelEvent override has a real QWheelEvent to read.
+extern "C" __declspec(dllexport) int qs_api_probe_wheel(void* widget, int x, int y, int degrees, int modifiers)
+{
+    const QPointF pos(x, y);
+    const QPoint angle(0, degrees * 8);
+    QWheelEvent event(pos, pos, QPoint(0, 0), angle, Qt::NoButton,
+                      Qt::NoModifier | Qt::KeyboardModifier(modifiers), Qt::NoScrollPhase, false);
+    return QCoreApplication::sendEvent(static_cast<QObject*>(widget), &event) ? 1 : 0;
+}
+
+// Delivers a synthetic key press, so a managed keyPressEvent override can read the key code and
+// the text the event carries.
+extern "C" __declspec(dllexport) int qs_api_probe_key_press(void* widget, int key, int modifiers)
+{
+    const QString text = key < 0x10000 ? QString(QChar(key)) : QString();
+    QKeyEvent event(QEvent::KeyPress, key, Qt::KeyboardModifier(modifiers), text);
+    return QCoreApplication::sendEvent(static_cast<QObject*>(widget), &event) ? 1 : 0;
+}
+
 // ------------------------------------------------------------------ application bootstrap
 // QApplication's constructor takes int&/char**, which the model deliberately does not
 // describe (it cannot be marshalled meaningfully), so starting the event loop is a runtime
