@@ -7,23 +7,120 @@ using System.Text.Json;
 
 // Deterministic code generator: model/qtsharp.api.json -> C# bindings + C++ wrapper.
 // Pure function of the model: same input file, byte-identical output.
+//
+// Type mapping (one row per kind of model type):
+//   string            C#                        P/Invoke            C++
+//   int/bool/double   int/bool/double           same                same
+//   QString           string                    marshalled string   const char16_t* -> QString::fromUtf16
+//   X::Y (enum)       X.Y (enum)                int                 int, cast to X::Y
+//   int*              int[]                     int[]               const int*
+//   Foo* (bound)      Foo                       IntPtr              Foo*
+//   Foo* (opaque)     IntPtr                    IntPtr              Foo*
+//   Foo (by value)    Foo, owned wrapper        IntPtr              Foo* (boxed, dereferenced)
 public static class ApiCodeGen
 {
+    static List<JsonElement> Classes;
+    static List<JsonElement> Enums;
+    static Dictionary<string, JsonElement> ByName;
+    static HashSet<string> ClassNames;
+    static HashSet<string> EnumNames;
+    static HashSet<string> FlagsEnums;
+
+    // Whether a value of this class returned by value is ours to free (a boxed value type) or
+    // belongs to Qt (an event, which Qt builds on the stack).
+    // "Owned" only means anything when the managed side can actually create the object: the
+    // release path (FromOwnedHandle/Dispose/Destroy_*) is generated together with the
+    // constructors, so a boxed class without published constructors has to be wrapped the
+    // transient way (QItemSelection, whose constructors take an unbound QModelIndex).
+    static bool IsOwned(string className)
+        => ByName.TryGetValue(className, out var cls)
+           && cls.GetProperty("owned").GetBoolean()
+           && cls.GetProperty("constructors").GetArrayLength() > 0;
+
     public static void Run(string modelPath, string outDir)
     {
         using var document = JsonDocument.Parse(File.ReadAllText(modelPath));
         var root = document.RootElement;
         string ns = root.GetProperty("namespace").GetString();
-        var classes = root.GetProperty("classes").EnumerateArray().ToList();
+        Classes = root.GetProperty("classes").EnumerateArray().ToList();
+        Enums = root.GetProperty("enums").EnumerateArray().ToList();
+        ByName = Classes.ToDictionary(c => c.GetProperty("name").GetString(), c => c, StringComparer.Ordinal);
+        ClassNames = new HashSet<string>(Classes.Select(c => c.GetProperty("name").GetString()), StringComparer.Ordinal);
+        EnumNames = new HashSet<string>(Enums.Select(e => e.GetProperty("qualified").GetString()), StringComparer.Ordinal);
+        FlagsEnums = new HashSet<string>(
+            Enums.Where(e => e.TryGetProperty("flags", out var f) && f.ValueKind == JsonValueKind.True)
+                 .Select(e => e.GetProperty("qualified").GetString()), StringComparer.Ordinal);
+        PrepareNames();
 
         Directory.CreateDirectory(outDir);
-        File.WriteAllText(Path.Combine(outDir, "QtSharp.Api.cs"), GenerateCSharp(ns, classes));
-        File.WriteAllText(Path.Combine(outDir, "QtSharp.Api.native.cpp"), GenerateNative(classes));
+        File.WriteAllText(Path.Combine(outDir, "QtSharp.Api.cs"), GenerateCSharp(ns));
+        File.WriteAllText(Path.Combine(outDir, "QtSharp.Api.native.cpp"), GenerateNative());
         Console.WriteLine($"[codegen] wrote {outDir}/QtSharp.Api.cs + QtSharp.Api.native.cpp");
     }
 
+    // ------------------------------------------------------------------ model queries
+    static string Name(JsonElement e) => e.GetProperty("name").GetString();
+    static string ReturnType(JsonElement m) => m.GetProperty("returnType").GetString();
+    static List<JsonElement> Params(JsonElement m) => m.GetProperty("parameters").EnumerateArray().ToList();
+    static string PType(JsonElement p) => p.GetProperty("type").GetString();
+    static string PName(JsonElement p) => p.GetProperty("name").GetString();
+
+    static bool IsStatic(JsonElement m)
+        => m.TryGetProperty("static", out var s) && s.ValueKind == JsonValueKind.True;
+
+    // C++ lets us derive from the class, so a native subclass can install the vtable hooks.
+    static bool Subclassable(JsonElement cls)
+        => !cls.TryGetProperty("subclassable", out var s) || s.ValueKind != JsonValueKind.False;
+
+    // A pure virtual has no C++ body, so there is nothing to chain a managed override to.
+    static bool IsPure(JsonElement v)
+        => v.TryGetProperty("pure", out var p) && p.ValueKind == JsonValueKind.True;
+
+    // Whether a value type can be default-constructed in C++ (needed when a managed null is
+    // passed for a boxed parameter).
+    static bool HasDefaultCtor(string className)
+        => ByName.TryGetValue(className, out var cls)
+           && cls.GetProperty("constructors").EnumerateArray().Any(c => Params(c).Count == 0);
+
+    static bool IsInheritedVirtual(JsonElement v)
+        => v.TryGetProperty("inherited", out var i) && i.ValueKind == JsonValueKind.True;
+
+    static string DeclaringClass(JsonElement v) => v.GetProperty("declaring").GetString();
+
+    static bool IsOptional(JsonElement p)
+        => p.TryGetProperty("optional", out var o) && o.ValueKind == JsonValueKind.True;
+
+    // Qt's headers are full of default arguments; carrying them into C# keeps navigation
+    // like `new QObject()` or `SetRenderHint(hint)` working.
+    static string ParamSig(JsonElement p)
+    {
+        string type = PType(p);
+        string sig = $"{ManagedType(type)} {SafeName(PName(p))}";
+        if (!IsOptional(p))
+            return sig;
+        string literal = p.TryGetProperty("default", out var d) && d.ValueKind == JsonValueKind.String
+            ? d.GetString()
+            : null;
+        return sig + " = " + (literal ?? CSharpDefault(type));
+    }
+
+    static string CSharpDefault(string type)
+    {
+        if (IsArray(type) || IsPtr(type) || IsBoxed(type) || type == "QString")
+            return "null";
+        return "default";
+    }
+
+    static bool IsArray(string t) => t == "int*";
+    static bool IsPtr(string t) => !IsArray(t) && t.EndsWith("*");
+    static bool IsClassPtr(string t) => IsPtr(t) && ClassNames.Contains(t.Substring(0, t.Length - 1));
+    static bool IsEnum(string t) => EnumNames.Contains(t);
+    static bool IsFlags(string t) => FlagsEnums.Contains(t);
+    static bool IsBoxed(string t) => ClassNames.Contains(t);
+    static string CsEnum(string t) => t.Replace("::", ".");
+
     // ------------------------------------------------------------------ C#
-    static string GenerateCSharp(string ns, List<JsonElement> classes)
+    static string GenerateCSharp(string ns)
     {
         var sb = new StringBuilder();
         sb.AppendLine("// <auto-generated> generated from model/qtsharp.api.json - do not edit");
@@ -35,115 +132,359 @@ public static class ApiCodeGen
         sb.AppendLine($"namespace {ns}");
         sb.AppendLine("{");
 
-        foreach (var cls in classes)
-        {
-            string name = cls.GetProperty("name").GetString();
-            var methods = cls.GetProperty("methods").EnumerateArray().ToList();
-            var virtuals = cls.GetProperty("virtuals").EnumerateArray().ToList();
-            var signals = cls.GetProperty("signals").EnumerateArray().ToList();
+        WriteEnums(sb, "", 1);
+        WriteEnums(sb, "Qt", 1);
 
-            sb.AppendLine($"    public unsafe partial class {name}");
-            sb.AppendLine("    {");
-            sb.AppendLine("        public IntPtr Handle { get; private set; }");
+        foreach (var cls in Classes)
+            WriteClass(sb, cls);
+
+        sb.AppendLine("    internal static partial class ApiNative");
+        sb.AppendLine("    {");
+        foreach (var cls in Classes)
+            WriteNativeDeclarations(sb, cls);
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+        return sb.ToString();
+    }
+
+    static void WriteEnums(StringBuilder sb, string scope, int indent)
+    {
+        // Enums live either in the Qt namespace or nested inside the class that declares
+        // them, mirroring how they are written in C++.
+        var scoped = Enums.Where(e => ScopeOf(e) == scope).ToList();
+        if (scoped.Count == 0)
+            return;
+        var pad = new string(' ', indent * 4);
+        if (scope != "Qt")
+        {
+            // Namespace level, or nested inside the class that declares them.
+            foreach (var e in scoped)
+                WriteEnum(sb, e, indent);
+            return;
+        }
+        sb.AppendLine($"{pad}public static partial class Qt");
+        sb.AppendLine($"{pad}{{");
+        foreach (var e in scoped)
+            WriteEnum(sb, e, indent + 1);
+        sb.AppendLine($"{pad}}}");
+        sb.AppendLine();
+    }
+
+    static string ScopeOf(JsonElement e)
+    {
+        var qualified = e.GetProperty("qualified").GetString();
+        int i = qualified.LastIndexOf("::", StringComparison.Ordinal);
+        return i < 0 ? string.Empty : qualified.Substring(0, i);
+    }
+
+    static void WriteEnum(StringBuilder sb, JsonElement e, int indent)
+    {
+        var pad = new string(' ', indent * 4);
+        var items = e.GetProperty("items").EnumerateArray().ToList();
+        var values = items.Select(i => i.GetProperty("value").GetInt64()).ToList();
+        var underlying = values.Any(v => v < int.MinValue || v > int.MaxValue) ? "long" : "int";
+        if (IsFlags(e.GetProperty("qualified").GetString()))
+            sb.AppendLine($"{pad}[Flags]");
+        sb.AppendLine($"{pad}public enum {Name(e)} : {underlying}");
+        sb.AppendLine($"{pad}{{");
+        foreach (var item in items)
+            sb.AppendLine($"{pad}    {SafeName(Name(item))} = {item.GetProperty("value").GetInt64()},");
+        sb.AppendLine($"{pad}}}");
+        sb.AppendLine();
+    }
+
+    // A member cannot share a name with a nested type, so something has to give when Qt
+    // declares both (QColor::Spec enum and QColor::spec()). Qt's owning type wins and the
+    // accessor keeps its C++ name, which is also what the legacy pipeline does.
+    //
+    // The mapping is computed per class and looked up through the *declaring* class, because a
+    // derived class dispatches into an inherited virtual whose name the base already chose.
+    static Dictionary<string, HashSet<string>> reservedByClass;
+
+    static void PrepareNames()
+    {
+        reservedByClass = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+        foreach (var cls in Classes)
+        {
+            var reserved = new HashSet<string>(StringComparer.Ordinal)
+            {
+                Name(cls), "Handle", "FromHandle", "FromOwnedHandle", "Dispose", "Dispatch",
+            };
+            foreach (var e in Enums.Where(e => ScopeOf(e) == Name(cls)))
+                reserved.Add(Name(e));
+            foreach (var b in cls.GetProperty("bases").EnumerateArray().Select(x => x.GetString()).Skip(1))
+                reserved.Add("As" + b);
+            reservedByClass[Name(cls)] = reserved;
+        }
+    }
+
+    static string MemberName(string className, string member)
+        => reservedByClass.TryGetValue(className, out var reserved) && reserved.Contains(Pascal(member))
+            ? member
+            : Pascal(member);
+
+    // One vtable slot a generated native subclass has to install: the method to forward, and
+    // the class whose declaration of it we chain to.
+    class VirtualSlot
+    {
+        public JsonElement Virtual;
+        public string Declaring;
+        public bool DeclaredHere;
+    }
+
+    static readonly Dictionary<string, List<VirtualSlot>> virtualChains = new(StringComparer.Ordinal);
+
+    // Every virtual in the class's inheritance chain, base-first, one slot per signature. A
+    // class that redeclares an inherited virtual keeps the slot where the base put it, which
+    // is what makes the generated native override table and the managed dispatch switch agree.
+    static List<VirtualSlot> ChainOf(string className)
+    {
+        if (virtualChains.TryGetValue(className, out var cached))
+            return cached;
+
+        var slots = new List<VirtualSlot>();
+        if (ByName.TryGetValue(className, out var cls))
+        {
+            var bases = cls.GetProperty("bases").EnumerateArray().Select(b => b.GetString()).ToList();
+            if (bases.Count > 0)
+                foreach (var inherited in ChainOf(bases[0]))
+                    slots.Add(new VirtualSlot
+                    {
+                        Virtual = inherited.Virtual,
+                        Declaring = inherited.Declaring,
+                        DeclaredHere = false,
+                    });
+
+            // A class C++ will not let us derive from (private destructor) has no native subclass
+            // to install its hooks, so its slots cannot be part of the chain at all - the managed
+            // dispatch of a *derived* class would otherwise point at a member that class never
+            // declared.
+            if (Subclassable(cls))
+                foreach (var v in cls.GetProperty("virtuals").EnumerateArray())
+                {
+                    var key = VirtualKey(v);
+                    var index = slots.FindIndex(s => VirtualKey(s.Virtual) == key);
+                    var slot = new VirtualSlot { Virtual = v, Declaring = className, DeclaredHere = true };
+                    if (index >= 0)
+                        slots[index] = slot;
+                    else
+                        slots.Add(slot);
+                }
+        }
+
+        virtualChains[className] = slots;
+        return slots;
+    }
+
+    static string VirtualKey(JsonElement v)
+        => Name(v) + "(" + string.Join(",", Params(v).Select(PType)) + ")";
+
+    static void WriteClass(StringBuilder sb, JsonElement cls)
+    {
+        string name = Name(cls);
+        bool boxed = cls.GetProperty("owned").GetBoolean();
+        var bases = cls.GetProperty("bases").EnumerateArray().Select(b => b.GetString()).ToList();
+        string baseName = bases.Count > 0 ? bases[0] : null;
+        var extraBases = bases.Skip(1).ToList();
+        var ctors = cls.GetProperty("constructors").EnumerateArray().ToList();
+        var methods = cls.GetProperty("methods").EnumerateArray().ToList();
+        var virtuals = ChainOf(Name(cls));
+        var signals = cls.GetProperty("signals").EnumerateArray().ToList();
+
+        // A class we allocate ourselves needs a release path; Qt-owned objects must not get
+        // one, or the GC would free an object the parent still owns (ownership PoC rule 1).
+        bool owned = boxed && ctors.Count > 0;
+        var declared = new List<string>();
+        if (baseName != null)
+            declared.Add(baseName);
+        if (owned)
+            declared.Add("IDisposable");
+        string ifaces = declared.Count > 0 ? " : " + string.Join(", ", declared) : "";
+
+        sb.AppendLine($"    public unsafe partial class {name}{ifaces}");
+        sb.AppendLine("    {");
+        if (baseName == null)
+        {
+            sb.AppendLine("        public IntPtr Handle { get; protected set; }");
             sb.AppendLine();
-            sb.AppendLine($"        public {name}()   // managed-created: native subclass that forwards virtuals");
+        }
+
+        // wrapping constructor (never allocates: it adopts an object someone else owns)
+        sb.AppendLine($"        protected {name}(IntPtr handle){(baseName != null ? " : base(handle)" : "")}");
+        sb.AppendLine("        {");
+        if (baseName == null)
+            sb.AppendLine("            Handle = handle;");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+
+        int ctorIndex = 0;
+        foreach (var ctor in ctors)
+        {
+            var ps = Params(ctor);
+            string sig = string.Join(", ", ps.Select(ParamSig));
+            sb.AppendLine($"        public {name}({sig}){(baseName != null ? " : base(IntPtr.Zero)" : "")}");
             sb.AppendLine("        {");
             sb.AppendLine("            var context = GCHandle.Alloc(this);");
-            sb.AppendLine($"            Handle = ApiNative.Create_{name}(GCHandle.ToIntPtr(context), (IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, int, IntPtr, void>)&Dispatch);");
+            string args = string.Join(", ", ps.Select(p => ArgToNative(PType(p), SafeName(PName(p)))));
+            string dispatch = virtuals.Count > 0
+                ? "(IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, int, IntPtr, void>)&Dispatch"
+                : "IntPtr.Zero";
+            sb.AppendLine($"            Handle = ApiNative.Create_{name}{CtorSuffix(ctorIndex++)}(GCHandle.ToIntPtr(context), {dispatch}{(args.Length > 0 ? ", " + args : "")});");
             sb.AppendLine("            ApiRuntime.Register(Handle, this);");
             sb.AppendLine("        }");
             sb.AppendLine();
-            sb.AppendLine($"        internal {name}(IntPtr handle)");
+        }
+
+        sb.AppendLine($"        public static {name} FromHandle(IntPtr handle)");
+        sb.AppendLine($"            => handle == IntPtr.Zero ? null : ApiRuntime.Wrap(handle, h => new {name}(h));");
+        // Arguments handed to a virtual come from an object with a very short life (an event
+        // lives on the caller's stack), so they must not enter the identity cache: the next
+        // event would reuse the same address and get the previous wrapper back.
+        sb.AppendLine();
+        sb.AppendLine($"        internal static {name} FromTransientHandle(IntPtr handle)");
+        sb.AppendLine($"            => handle == IntPtr.Zero ? null : new {name}(handle);");
+        if (owned)
+        {
+            sb.AppendLine();
+            sb.AppendLine($"        internal static {name} FromOwnedHandle(IntPtr handle)");
+            sb.AppendLine($"            => handle == IntPtr.Zero ? null : new {name}(handle);");
+            sb.AppendLine();
+            sb.AppendLine($"        public void Dispose()");
             sb.AppendLine("        {");
-            sb.AppendLine("            Handle = handle;");
-            sb.AppendLine("            ApiRuntime.Register(handle, this);");
+            sb.AppendLine("            if (Handle == IntPtr.Zero)");
+            sb.AppendLine("                return;");
+            sb.AppendLine($"            ApiNative.Destroy_{name}(Handle);");
+            sb.AppendLine("            Handle = IntPtr.Zero;");
+            sb.AppendLine("            GC.SuppressFinalize(this);");
             sb.AppendLine("        }");
             sb.AppendLine();
-            sb.AppendLine($"        /// <summary>Wraps an existing native object (Qt keeps ownership).</summary>");
-            sb.AppendLine($"        public static {name} FromHandle(IntPtr handle)");
-            sb.AppendLine($"            => handle == IntPtr.Zero ? null : ApiRuntime.Wrap(handle, h => new {name}(h));");
+            sb.AppendLine($"        ~{name}() => Dispose();");
+        }
+        sb.AppendLine();
+
+        // A member cannot share a name with a nested type, so something has to give when Qt
+        // declares both (QColor::Spec enum and QColor::spec()); see MemberName.
+        string CSharpMemberName(string member) => MemberName(name, member);
+
+        // Secondary bases live at a different address inside the object, so the raw handle
+        // (which is the complete-object address) cannot simply be reinterpreted.
+        foreach (var b in extraBases)
+        {
+            sb.AppendLine($"        /// <summary>View of this object as its {b} base (a separate subobject).</summary>");
+            sb.AppendLine($"        public {b} As{b}() => {b}.FromHandle(ApiNative.{name}__as_{b}(Handle));");
             sb.AppendLine();
+        }
 
-            // methods
-            foreach (var m in methods)
+        // methods
+        var overloadCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var m in methods)
+        {
+            string mname = Name(m);
+            overloadCounts.TryGetValue(mname, out int seen);
+            overloadCounts[mname] = seen + 1;
+            string entrySuffix = seen == 0 ? "" : (seen + 1).ToString();
+
+            var ps = Params(m);
+            string sig = string.Join(", ", ps.Select(ParamSig));
+            string ret = ReturnType(m);
+            string staticMod = IsStatic(m) ? "static " : "";
+            sb.AppendLine($"        public {staticMod}{ManagedType(ret)} {CSharpMemberName(mname)}({sig})");
+            sb.AppendLine("        {");
+            var allArgs = ps.Select(p => ArgToNative(PType(p), SafeName(PName(p)))).ToList();
+            if (!IsStatic(m))
+                allArgs.Insert(0, "Handle");
+            string args = string.Join(", ", allArgs);
+            string call = $"ApiNative.{name}_{mname}{entrySuffix}({args})";
+            if (ret == "void")
+                sb.AppendLine($"            {call};");
+            else
+                sb.AppendLine($"            return {RetToManaged(ret, call)};");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+        }
+
+        // virtuals a managed subclass may override. Only the ones this class declares become
+        // C# virtuals; inherited slots are dispatched but already declared by their base. The
+        // default implementation chains to the C++ base implementation: the native subclass
+        // overrides the virtual for every instance we create, so a managed override that
+        // ignores the base would silently disable Qt's own handling (QWidget::event
+        // dispatches everything).
+        var virtualOverloads = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var slot in virtuals.Where(s => s.DeclaredHere))
+        {
+            var v = slot.Virtual;
+            string vname = Name(v);
+            virtualOverloads.TryGetValue(vname, out int vseen);
+            virtualOverloads[vname] = vseen + 1;
+            string vSuffix = vseen == 0 ? "" : (vseen + 1).ToString();
+
+            var ps = Params(v);
+            string sig = string.Join(", ", ps.Select(ParamSig));
+            string ret = ReturnType(v);
+            sb.AppendLine($"        /// <summary>Virtual from {name}; override in a managed subclass.</summary>");
+            sb.AppendLine($"        public virtual {ManagedType(ret)} {CSharpMemberName(vname)}({sig})");
+            sb.AppendLine("        {");
+            if (IsPure(v))
             {
-                string mname = m.GetProperty("name").GetString();
-                string ret = m.GetProperty("returnType").GetString();
-                var ps = m.GetProperty("parameters").EnumerateArray().ToList();
-                string paramSig = string.Join(", ", ps.Select(p => CSharpType(p.GetProperty("type").GetString()) + " " + SafeName(p.GetProperty("name").GetString())));
-                sb.AppendLine($"        public {CSharpType(ret)} {Pascal(mname)}({paramSig})");
-                sb.AppendLine("        {");
-                string call = string.Join(", ", new[] { "Handle" }.Concat(ps.Select(p => CppToNativeCSharp(p.GetProperty("type").GetString(), SafeName(p.GetProperty("name").GetString())))));
-                string nativeCall = $"ApiNative.{Safe(name)}_{mname}({call})";
+                // Nothing to chain to: a managed subclass that does not override this simply
+                // does nothing (Qt never calls a pure virtual it has no implementation for).
+                sb.AppendLine("            // pure virtual: no base implementation to call");
+            }
+            else
+            {
+                string args = string.Join(", ", new[] { "Handle" }.Concat(ps.Select(p => ArgToNative(PType(p), SafeName(PName(p))))));
+                string baseCall = $"ApiNative.{name}_{vname}__base{vSuffix}({args})";
                 if (ret == "void")
-                    sb.AppendLine($"            {nativeCall};");
-                else if (ret == "QString")
-                    sb.AppendLine($"            return ApiRuntime.ToManaged({nativeCall});");
-                else if (ret == "QObject*")
-                    sb.AppendLine($"            return {name}.FromHandle({nativeCall});");
+                    sb.AppendLine($"            {baseCall};");
                 else
-                    sb.AppendLine($"            return {nativeCall};");
-                sb.AppendLine("        }");
-                sb.AppendLine();
+                    sb.AppendLine($"            return {RetToManaged(ret, baseCall)};");
             }
+            sb.AppendLine("        }");
+            sb.AppendLine();
+        }
 
-            // virtuals
-            foreach (var v in virtuals)
-            {
-                string vname = v.GetProperty("name").GetString();
-                var ps = v.GetProperty("parameters").EnumerateArray().ToList();
-                string paramSig = string.Join(", ", ps.Select(p => CSharpType(p.GetProperty("type").GetString()) + " " + SafeName(p.GetProperty("name").GetString())));
-                string ret = v.GetProperty("returnType").GetString();
-                sb.AppendLine($"        /// <summary>Virtual from {name}; override in a managed subclass.</summary>");
-                sb.AppendLine($"        public virtual {CSharpType(ret)} {Pascal(vname)}({paramSig})");
-                sb.AppendLine("        {");
-                if (ret != "void")
-                    sb.AppendLine("            return default;");
-                sb.AppendLine("        }");
-                sb.AppendLine();
-            }
+        // signals
+        foreach (var s in signals)
+        {
+            string sname = Name(s);
+            var ps = Params(s);
+            var csTypes = ps.Select(p => ManagedType(PType(p))).ToList();
+            string argType = csTypes.Count == 0 ? "Action" : "Action<" + string.Join(", ", csTypes) + ">";
+            string mocSig = sname + "(" + string.Join(",", ps.Select(PType)) + ")";
+            string adapter = csTypes.Count == 0
+                ? "args => h()"
+                : "args => h(" + string.Join(", ", csTypes.Select((t, i) => $"({t})args[{i}]")) + ")";
+            sb.AppendLine($"        public QSignal<{argType}> {Pascal(sname)}Signal =>");
+            sb.AppendLine($"            new QSignal<{argType}>(h => ApiRuntime.Connect(Handle, \"{mocSig}\", {adapter}));");
+            sb.AppendLine();
+        }
 
-            // signals
-            foreach (var s in signals)
-            {
-                string sname = s.GetProperty("name").GetString();
-                var ps = s.GetProperty("parameters").EnumerateArray().ToList();
-                var csTypes = ps.Select(p => CSharpType(p.GetProperty("type").GetString())).ToList();
-                string argType = csTypes.Count == 0 ? "Action" : "Action<" + string.Join(", ", csTypes) + ">";
-                string sig = sname + "(" + string.Join(",", ps.Select(p => CppType(p.GetProperty("type").GetString()))) + ")";
-                string adapter = csTypes.Count == 0
-                    ? "args => h()"
-                    : "args => h(" + string.Join(", ", csTypes.Select((t, i) => $"({t})args[{i}]")) + ")";
-                sb.AppendLine($"        public QSignal<{argType}> {Pascal(sname)}Signal =>");
-                sb.AppendLine($"            new QSignal<{argType}>(h => ApiRuntime.Connect(Handle, \"{sig}\", {adapter}));");
-                sb.AppendLine();
-            }
-
-            sb.AppendLine($"        [UnmanagedCallersOnly(CallConvs = new[] {{ typeof(CallConvCdecl) }})]");
-        sb.AppendLine($"        internal static void Dispatch(IntPtr userData, int methodId, IntPtr argv)");
+        // native subclass forwarding the virtuals into Dispatch
+        if (virtuals.Count > 0)
+        {
+            sb.AppendLine("        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]");
+            string modifier = baseName != null ? "new " : "";
+            sb.AppendLine($"        internal {modifier}static void Dispatch(IntPtr userData, int methodId, IntPtr argv)");
             sb.AppendLine("        {");
             sb.AppendLine($"            var target = ({name})GCHandle.FromIntPtr(userData).Target;");
             sb.AppendLine("            switch (methodId)");
             sb.AppendLine("            {");
             for (int i = 0; i < virtuals.Count; i++)
             {
-                var v = virtuals[i];
-                string vname = v.GetProperty("name").GetString();
-                string ret = v.GetProperty("returnType").GetString();
-                var ps = v.GetProperty("parameters").EnumerateArray().ToList();
-                sb.AppendLine($"                case {i + 1}: // {vname}");
+                var v = virtuals[i].Virtual;
+                var ps = Params(v);
+                // The slot id is the position in the whole chain, and an inherited slot is
+                // dispatched into the member the declaring class already published.
+                string member = MemberName(virtuals[i].Declaring, Name(v));
+                sb.AppendLine($"                case {i + 1}: // {Name(v)}");
                 sb.AppendLine("                {");
-                var reads = new List<string>();
-                for (int a = 0; a < ps.Count; a++)
-                    reads.Add(DispatchRead(ps[a].GetProperty("type").GetString(), a + 1));
+                var reads = ps.Select((p, a) => DispatchRead(PType(p), a + 1)).ToList();
                 string args = string.Join(", ", reads);
-                if (ret == "void")
-                {
-                    sb.AppendLine($"                    target.{Pascal(vname)}({args});");
-                }
+                if (ReturnType(v) == "void")
+                    sb.AppendLine($"                    target.{member}({args});");
                 else
                 {
-                    sb.AppendLine($"                    var result = target.{Pascal(vname)}({args});");
+                    sb.AppendLine($"                    var result = target.{member}({args});");
                     sb.AppendLine($"                    ApiRuntime.WriteResult(Marshal.ReadIntPtr(argv, 0), result);");
                 }
                 sb.AppendLine("                    break;");
@@ -151,227 +492,416 @@ public static class ApiCodeGen
             }
             sb.AppendLine("            }");
             sb.AppendLine("        }");
-            sb.AppendLine("    }");
-            sb.AppendLine();
-
-            // P/Invoke surface for this class
-            sb.AppendLine($"    internal static partial class ApiNative");
-            sb.AppendLine("    {");
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{Safe(name)}_create\", CallingConvention = CallingConvention.Cdecl)]");
-            sb.AppendLine($"        internal static extern IntPtr Create_{name}(IntPtr userData, IntPtr dispatch);");
-            foreach (var m in methods)
-            {
-                string mname = m.GetProperty("name").GetString();
-                string ret = m.GetProperty("returnType").GetString();
-                var ps = m.GetProperty("parameters").EnumerateArray().ToList();
-                string paramSig = string.Join(", ", new[] { "IntPtr self" }.Concat(ps.Select(p => NativeCppSharp(p.GetProperty("type").GetString()) + " " + p.GetProperty("name").GetString())));
-                string attr = ret == "bool" ? "[return: MarshalAs(UnmanagedType.I1)]\n        " : "";
-                sb.AppendLine();
-                sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{Safe(name)}_{mname}\", CallingConvention = CallingConvention.Cdecl)]");
-                if (attr.Length > 0)
-                    sb.AppendLine($"        {attr}internal static extern {NativeRetSharp(ret)} {Safe(name)}_{mname}({paramSig});");
-                else
-                    sb.AppendLine($"        internal static extern {NativeRetSharp(ret)} {Safe(name)}_{mname}({paramSig});");
-            }
-            sb.AppendLine("    }");
             sb.AppendLine();
         }
 
-        sb.AppendLine("}");
-        return sb.ToString();
+        WriteEnums(sb, name, 2);
+
+        sb.AppendLine("    }");
+        sb.AppendLine();
     }
 
-    static string DispatchRead(string type, int index) => type switch
-    {
-        "QObject*" => $"QObject.FromHandle(Marshal.ReadIntPtr(argv, {index} * IntPtr.Size))",
-        "QEvent*" => $"Marshal.ReadIntPtr(argv, {index} * IntPtr.Size)",
-        "QString" => $"ApiRuntime.ToManaged(Marshal.ReadIntPtr(argv, {index} * IntPtr.Size))",
-        "int" => $"Marshal.ReadInt32(Marshal.ReadIntPtr(argv, {index} * IntPtr.Size))",
-        "bool" => $"Marshal.ReadByte(Marshal.ReadIntPtr(argv, {index} * IntPtr.Size)) != 0",
-        _ => "default",
-    };
+    static string CtorSuffix(int index) => index == 0 ? "" : (index + 1).ToString();
 
-    // ------------------------------------------------------------------ C++
-    static string GenerateNative(List<JsonElement> classes)
+    static void WriteNativeDeclarations(StringBuilder sb, JsonElement cls)
     {
-        var sb = new StringBuilder();
-        sb.AppendLine("// <auto-generated> generated from model/qtsharp.api.json - do not edit");
-        sb.AppendLine("#include <qobject.h>");
-        sb.AppendLine("#include <qevent.h>");
-        sb.AppendLine("#include <qstring.h>");
-        sb.AppendLine("#include \"QtSharpApiRuntime.h\"");
-        sb.AppendLine();
+        string name = Name(cls);
+        var ctors = cls.GetProperty("constructors").EnumerateArray().ToList();
+        var methods = cls.GetProperty("methods").EnumerateArray().ToList();
+        var virtuals = ChainOf(Name(cls));
 
-        foreach (var cls in classes)
+        var virtualOverloads = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var slot in virtuals.Where(s => s.DeclaredHere))
         {
-            string name = cls.GetProperty("name").GetString();
-            var methods = cls.GetProperty("methods").EnumerateArray().ToList();
-            var virtuals = cls.GetProperty("virtuals").EnumerateArray().ToList();
-
-            // native subclass forwarding virtuals
-            sb.AppendLine($"class QsApi_{Safe(name)} : public {name}");
-            sb.AppendLine("{");
-            sb.AppendLine("public:");
-            sb.AppendLine($"    QsApi_{Safe(name)}(void* userData, QsApiDispatch dispatch) : m_userData(userData), m_dispatch(dispatch) {{}}");
+            var v = slot.Virtual;
+            string vname = Name(v);
+            virtualOverloads.TryGetValue(vname, out int vseen);
+            virtualOverloads[vname] = vseen + 1;
+            string vSuffix = vseen == 0 ? "" : (vseen + 1).ToString();
+            var ps = Params(v);
+            string sig = string.Join(", ", new[] { "IntPtr self" }.Concat(ps.Select(p => $"{NativeParamType(PType(p))} {SafeName(PName(p))}")));
+            string ret = ReturnType(v);
             sb.AppendLine();
-            sb.AppendLine("protected:");
-            for (int i = 0; i < virtuals.Count; i++)
-            {
-                var v = virtuals[i];
-                string vname = v.GetProperty("name").GetString();
-                string ret = v.GetProperty("returnType").GetString();
-                var ps = v.GetProperty("parameters").EnumerateArray().ToList();
-                string paramSig = string.Join(", ", ps.Select(p => VirtualParamCpp(p.GetProperty("type").GetString()) + " " + p.GetProperty("name").GetString()));
-                sb.AppendLine($"    {NativeRetCpp(ret)} {vname}({paramSig}) override");
-                sb.AppendLine("    {");
-                if (ret != "void")
-                    sb.AppendLine($"        {NativeRetCpp(ret)} result = {{}};");
-                var argv = new List<string> { ret == "void" ? "nullptr" : "&result" };
-                argv.AddRange(ps.Select(p => "&" + p.GetProperty("name").GetString()));
-                sb.AppendLine($"        void* argv[] = {{ {string.Join(", ", argv)} }};");
-                sb.AppendLine($"        m_dispatch(m_userData, {i + 1}, argv);");
-                if (ret != "void")
-                    sb.AppendLine("        return result;");
-                sb.AppendLine("    }");
-                sb.AppendLine();
-            }
-            sb.AppendLine("private:");
-            sb.AppendLine("    void* m_userData;");
-            sb.AppendLine("    QsApiDispatch m_dispatch;");
-            sb.AppendLine("};");
-            sb.AppendLine();
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) void* qs_api_{Safe(name)}_create(void* userData, QsApiDispatch dispatch)");
-            sb.AppendLine("{");
-            sb.AppendLine($"    return new QsApi_{Safe(name)}(userData, dispatch);");
-            sb.AppendLine("}");
-            sb.AppendLine();
-
-            foreach (var m in methods)
-            {
-                string mname = m.GetProperty("name").GetString();
-                string ret = m.GetProperty("returnType").GetString();
-                var ps = m.GetProperty("parameters").EnumerateArray().ToList();
-                string paramSig = string.Join(", ", new[] { "void* self" }.Concat(ps.Select(p => NativeParamCpp(p.GetProperty("type").GetString()) + " " + p.GetProperty("name").GetString())));
-                sb.AppendLine($"extern \"C\" __declspec(dllexport) {NativeRetCpp(ret)} qs_api_{Safe(name)}_{mname}({paramSig})");
-                sb.AppendLine("{");
-                var args = ps.Select(p => ParamToCpp(p.GetProperty("type").GetString(), p.GetProperty("name").GetString()));
-                string call = $"static_cast<{name}*>(self)->{mname}({string.Join(", ", args)})";
-                if (ret == "void")
-                    sb.AppendLine($"    {call};");
-                else if (ret == "QString")
-                    sb.AppendLine($"    return new QString({call});");
-                else if (ret == "QObject*" || ret == "QEvent*")
-                    sb.AppendLine($"    return static_cast<void*>({call});");
-                else
-                    sb.AppendLine($"    return {call};");
-                sb.AppendLine("}");
-                sb.AppendLine();
-            }
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_{vname}__base{vSuffix}\", CallingConvention = CallingConvention.Cdecl)]");
+            if (ret == "bool")
+                sb.AppendLine($"        [return: MarshalAs(UnmanagedType.I1)]");
+            sb.AppendLine($"        internal static extern {NativeRetType(ret)} {name}_{vname}__base{vSuffix}({sig});");
         }
-        return sb.ToString();
+
+        for (int i = 0; i < ctors.Count; i++)
+        {
+            var ps = Params(ctors[i]);
+            string sig = string.Join(", ", new[] { "IntPtr userData", "IntPtr dispatch" }
+                .Concat(ps.Select(p => $"{NativeParamType(PType(p))} {SafeName(PName(p))}")));
+            sb.AppendLine();
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_create{CtorSuffix(i)}\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        internal static extern IntPtr Create_{name}{CtorSuffix(i)}({sig});");
+        }
+
+        if (cls.GetProperty("owned").GetBoolean() && ctors.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_destroy\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        internal static extern void Destroy_{name}(IntPtr self);");
+        }
+
+        foreach (var b in cls.GetProperty("bases").EnumerateArray().Select(x => x.GetString()).Skip(1))
+        {
+            sb.AppendLine();
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}__as_{b}\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        internal static extern IntPtr {name}__as_{b}(IntPtr self);");
+        }
+
+        var overloadCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var m in methods)
+        {
+            string mname = Name(m);
+            overloadCounts.TryGetValue(mname, out int seen);
+            overloadCounts[mname] = seen + 1;
+            string entrySuffix = seen == 0 ? "" : (seen + 1).ToString();
+
+            var ps = Params(m);
+            var nativeParams = new List<string>();
+            if (!IsStatic(m))
+                nativeParams.Add("IntPtr self");
+            nativeParams.AddRange(ps.Select(p => $"{NativeParamType(PType(p))} {SafeName(PName(p))}"));
+            string sig = string.Join(", ", nativeParams);
+            string ret = ReturnType(m);
+            sb.AppendLine();
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_{mname}{entrySuffix}\", CallingConvention = CallingConvention.Cdecl)]");
+            if (ret == "bool")
+                sb.AppendLine($"        [return: MarshalAs(UnmanagedType.I1)]");
+            sb.AppendLine($"        internal static extern {NativeRetType(ret)} {name}_{mname}{entrySuffix}({sig});");
+        }
+    }
+
+    // argv[i] carries the argument itself: an object pointer is already an address the
+    // managed side can use, while a scalar/enum/QString has to be published by address.
+    static string DispatchArgStore(string t, string name) => IsPtr(t) ? name : "&" + name;
+
+    static string DispatchRead(string t, int index)
+    {
+        string slot = $"Marshal.ReadIntPtr(argv, {index} * IntPtr.Size)";
+        if (IsPtr(t)) return IsClassPtr(t) ? $"{t.Substring(0, t.Length - 1)}.FromTransientHandle({slot})" : slot;
+        if (t == "bool") return $"Marshal.ReadByte({slot}) != 0";
+        if (t == "int") return $"Marshal.ReadInt32({slot})";
+        if (t == "double") return $"BitConverter.Int64BitsToDouble(Marshal.ReadInt64({slot}))";
+        if (t == "QString") return $"ApiRuntime.ToManaged({slot})";
+        if (IsEnum(t)) return $"({CsEnum(t)})Marshal.ReadInt32({slot})";
+        if (IsBoxed(t)) return $"{t}.FromHandle({slot})";
+        return slot;
     }
 
     // ------------------------------------------------------------------ type maps
-    static string CSharpType(string t) => t switch
+    static string ManagedType(string t)
     {
-        "void" => "void",
-        "bool" => "bool",
-        "int" => "int",
-        "QString" => "string",
-                "QAnyStringView" => "string",
-        "QObject*" => "QObject",
-        "QEvent*" => "IntPtr",
-        _ => "IntPtr",
-    };
+        if (IsArray(t)) return "int[]";
+        if (IsPtr(t)) return IsClassPtr(t) ? t.Substring(0, t.Length - 1) : "IntPtr";
+        if (IsEnum(t)) return CsEnum(t);
+        return ApiTypes.Managed(t, ClassNames);
+    }
 
-    static string CppType(string t) => t switch
+    static string NativeParamType(string t)
     {
-        "QString" => "QString",
-                "QAnyStringView" => "QAnyStringView",
-        "QObject*" => "QObject*",
-        "QEvent*" => "QEvent*",
-        "void" => "",
-        _ => t,
-    };
+        if (IsArray(t)) return "int[]";
+        if (IsPtr(t) || IsBoxed(t)) return "IntPtr";
+        if (IsEnum(t)) return "int";
+        if (t == "QString") return "[MarshalAs(UnmanagedType.LPWStr)] string";
+        return t;
+    }
 
-    static string NativeRetSharp(string t) => t switch
+    static string NativeRetType(string t)
     {
-        "void" => "void",
-        "bool" => "bool",
-        "int" => "int",
-        "QString" => "IntPtr",
-                "QAnyStringView" => "IntPtr",
-        "QObject*" => "IntPtr",
-        "QEvent*" => "IntPtr",
-        _ => "IntPtr",
-    };
+        if (t == "void" || t == "bool" || t == "int" || t == "float" || t == "double")
+            return t;
+        return IsEnum(t) ? "int" : "IntPtr";
+    }
 
-    static string NativeCppSharp(string t) => t switch
+    static string ArgToNative(string t, string name)
     {
-        "bool" => "bool",
-        "int" => "int",
-        "QString" => "[MarshalAs(UnmanagedType.LPWStr)] string",
-                "QAnyStringView" => "[MarshalAs(UnmanagedType.LPWStr)] string",
-        "QObject*" => "IntPtr",
-        "QEvent*" => "IntPtr",
-        _ => "IntPtr",
-    };
+        if (IsArray(t) || t == "QString") return name;
+        if (IsEnum(t)) return $"(int){name}";
+        // Opaque pointers (QEvent*) are already raw handles and must not be dereferenced.
+        if (IsClassPtr(t) || IsBoxed(t)) return $"{name}?.Handle ?? IntPtr.Zero";
+        return name;
+    }
 
-    static string CppToNativeCSharp(string type, string name) => type switch
+    static string RetToManaged(string t, string call)
     {
-        "QString" => name,
-                "QAnyStringView" => name,
-        "QObject*" => name + "?.Handle ?? IntPtr.Zero",
-        _ => name,
-    };
+        if (t == "QString") return $"ApiRuntime.ToManaged({call})";
+        if (IsEnum(t)) return $"({CsEnum(t)}){call}";
+        if (IsClassPtr(t)) return $"{t.Substring(0, t.Length - 1)}.FromHandle({call})";
+        if (IsBoxed(t)) return IsOwned(t) ? $"{t}.FromOwnedHandle({call})" : $"{t}.FromTransientHandle({call})";
+        return call;
+    }
 
-    static string NativeRetCpp(string t) => t switch
+    // ------------------------------------------------------------------ C++
+    static string GenerateNative()
     {
-        "void" => "void",
-        "bool" => "bool",
-        "int" => "int",
-        "QString" => "void*",
-        "QObject*" => "void*",
-        "QEvent*" => "void*",
-        _ => "void*",
-    };
+        var sb = new StringBuilder();
+        sb.AppendLine("// <auto-generated> generated from model/qtsharp.api.json - do not edit");
+        foreach (var header in Classes.Select(c => c.GetProperty("header").GetString()).Distinct().OrderBy(h => h, StringComparer.Ordinal))
+            sb.AppendLine($"#include <{header}>");
+        sb.AppendLine("#include \"QtSharpApiRuntime.h\"");
+        sb.AppendLine();
+        // A managed null for a boxed parameter means "nothing was passed". Most parameters can
+        // take a default-constructed value, but a reference parameter needs an lvalue, so it
+        // gets a process-wide instance instead.
+        sb.AppendLine("template <class T> T& QsApiDefaultValue() { static T value{}; return value; }");
+        sb.AppendLine();
 
-    static string NativeParamCpp(string t) => t switch
+        foreach (var cls in Classes)
+            WriteNativeClass(sb, cls);
+        return sb.ToString();
+    }
+
+    static void WriteNativeClass(StringBuilder sb, JsonElement cls)
     {
-        "QString" => "const char16_t*",
-                "QAnyStringView" => "const char16_t*",
-        "QObject*" => "void*",
-        "QEvent*" => "void*",
-        "bool" => "bool",
-        "int" => "int",
-        _ => "void*",
-    };
+        string name = Name(cls);
+        var ctors = cls.GetProperty("constructors").EnumerateArray().ToList();
+        var methods = cls.GetProperty("methods").EnumerateArray().ToList();
+        var virtuals = ChainOf(Name(cls));
 
-    // Virtual overrides must match the base declaration exactly, so these are the real
-    // C++ types (not the void* used by the exported C entry points).
-    static string VirtualParamCpp(string t) => t switch
+        var declaredVirtuals = virtuals.Where(s => s.DeclaredHere).ToList();
+
+        // The native subclass exists to install the vtable hooks of a managed subclass. A class
+        // C++ would not let us derive from (private destructor: QClipboard, QStyleHints) simply
+        // gets no subclass - its methods are still reachable through the free forwarders below.
+        bool subclassable = Subclassable(cls);
+        if (subclassable)
+        {
+        sb.AppendLine($"class QsApi_{name} : public {name}");
+        sb.AppendLine("{");
+        sb.AppendLine("public:");
+        // One constructor per model constructor; the dispatch pair comes first so that the
+        // generated forwarders below stay a mechanical translation. The parameters use the
+        // C ABI types and are converted where the base constructor is called.
+        for (int i = 0; i < ctors.Count; i++)
+        {
+            var ps = Params(ctors[i]);
+            // The native subclass constructor keeps the real C++ parameter types, because
+            // two constructors that differ only by enum (QColor::Spec vs Qt::GlobalColor)
+            // would otherwise collapse into one signature through the flat C ABI.
+            string sig = string.Join(", ", ps.Select(p => $"{CppCtorParamType(PType(p))} {NativeName(PName(p))}"));
+            string args = string.Join(", ", ps.Select(p => NativeName(PName(p))));
+            sb.AppendLine($"    QsApi_{name}(void* userData, QsApiDispatch dispatch{(ps.Count > 0 ? ", " + sig : "")})");
+            sb.AppendLine($"        : {name}({args}), m_userData(userData), m_dispatch(dispatch) {{}}");
+        }
+        sb.AppendLine();
+        // Qt declares most override points protected, and a protected base member is only
+        // reachable through an object of the derived type - hence these members. Only the
+        // slots this class declares need one: an inherited slot chains through the forwarder
+        // that the class declaring it already generated.
+        //
+        // NOTE: the `self` parameter is typed as the generated subclass even though the object
+        // may be an instance of a *further* generated subclass (a managed QLineEdit subclass
+        // chains through the forwarder QObject generated). That is only sound because every
+        // chain in this model puts the declaring base at offset 0 of the complete object, so
+        // the cast is the identity; a fully conforming version would need the forwarder to be
+        // a friend of a helper derived from the declaring class.
+        var declaredOverloads = new Dictionary<string, int>(StringComparer.Ordinal);
+        for (int i = 0; i < declaredVirtuals.Count; i++)
+        {
+            var v = declaredVirtuals[i].Virtual;
+            string vname = Name(v);
+            declaredOverloads.TryGetValue(vname, out int vseen);
+            declaredOverloads[vname] = vseen + 1;
+            string vSuffix = vseen == 0 ? "" : (vseen + 1).ToString();
+            if (IsPure(v))
+                continue;
+            var ps = Params(v);
+            string sig = string.Join(", ", ps.Select(p => $"{CppVirtualParamType(PType(p))} {NativeName(PName(p))}"));
+            string args = string.Join(", ", ps.Select(p => NativeName(PName(p))));
+            string ret = ReturnType(v);
+            sb.AppendLine($"    static {ret} CallBase_{vname}{vSuffix}(QsApi_{name}* self{(ps.Count > 0 ? ", " + sig : "")})");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        {(ret == "void" ? "" : "return ")}self->{name}::{vname}({args});");
+            sb.AppendLine("    }");
+        }
+        sb.AppendLine();
+        sb.AppendLine("protected:");
+        for (int i = 0; i < virtuals.Count; i++)
+        {
+            var v = virtuals[i].Virtual;
+            var ps = Params(v);
+            string sig = string.Join(", ", ps.Select(p => $"{CppVirtualParamType(PType(p))} {NativeName(PName(p))}"));
+            string ret = ReturnType(v);
+            sb.AppendLine($"    {ret} {Name(v)}({sig}) override");
+            sb.AppendLine("    {");
+            if (ret != "void")
+                sb.AppendLine($"        {ret} result = {{}};");
+            var argv = new List<string> { ret == "void" ? "nullptr" : "&result" };
+            argv.AddRange(ps.Select(p => DispatchArgStore(PType(p), NativeName(PName(p)))));
+            sb.AppendLine($"        void* argv[] = {{ {string.Join(", ", argv)} }};");
+            sb.AppendLine($"        m_dispatch(m_userData, {i + 1}, argv);");
+            if (ret != "void")
+                sb.AppendLine("        return result;");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+        }
+        sb.AppendLine("private:");
+        sb.AppendLine("    void* m_userData;");
+        sb.AppendLine("    QsApiDispatch m_dispatch;");
+        sb.AppendLine("};");
+        sb.AppendLine();
+        }
+
+        for (int i = 0; i < ctors.Count && subclassable; i++)
+        {
+            var ps = Params(ctors[i]);
+            string sig = string.Join(", ", new[] { "void* userData", "QsApiDispatch dispatch" }
+                .Concat(ps.Select(p => $"{CppParamType(PType(p))} {NativeName(PName(p))}")));
+            string args = string.Join(", ", new[] { "userData", "dispatch" }
+                .Concat(ps.Select(p => CppArg(PType(p), NativeName(PName(p))))));
+            sb.AppendLine($"extern \"C\" __declspec(dllexport) void* qs_api_{name}_create{CtorSuffix(i)}({sig})");
+            sb.AppendLine("{");
+            sb.AppendLine($"    return new QsApi_{name}({args});");
+            sb.AppendLine("}");
+            sb.AppendLine();
+        }
+
+        if (subclassable && cls.GetProperty("owned").GetBoolean() && ctors.Count > 0)
+        {
+            sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_{name}_destroy(void* self)");
+            sb.AppendLine("{");
+            sb.AppendLine($"    delete static_cast<{name}*>(self);");
+            sb.AppendLine("}");
+            sb.AppendLine();
+        }
+
+        foreach (var b in cls.GetProperty("bases").EnumerateArray().Select(x => x.GetString()).Skip(1))
+        {
+            sb.AppendLine($"extern \"C\" __declspec(dllexport) void* qs_api_{name}__as_{b}(void* self)");
+            sb.AppendLine("{");
+            sb.AppendLine($"    return static_cast<{b}*>(static_cast<{name}*>(self));");
+            sb.AppendLine("}");
+            sb.AppendLine();
+        }
+
+        var overloadCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var m in methods)
+        {
+            string mname = Name(m);
+            overloadCounts.TryGetValue(mname, out int seen);
+            overloadCounts[mname] = seen + 1;
+            string entrySuffix = seen == 0 ? "" : (seen + 1).ToString();
+
+            var ps = Params(m);
+            var nativeParams = new List<string>();
+            if (!IsStatic(m))
+                nativeParams.Add("void* self");
+            nativeParams.AddRange(ps.Select(p => $"{CppParamType(PType(p))} {NativeName(PName(p))}"));
+            string sig = string.Join(", ", nativeParams);
+            string ret = ReturnType(m);
+            string args = string.Join(", ", ps.Select(p => CppArg(PType(p), NativeName(PName(p)))));
+            string call = IsStatic(m)
+                ? $"{name}::{mname}({args})"
+                : $"static_cast<{name}*>(self)->{mname}({args})";
+            sb.AppendLine($"extern \"C\" __declspec(dllexport) {NativeRetCpp(ret)} qs_api_{name}_{mname}{entrySuffix}({sig})");
+            sb.AppendLine("{");
+            sb.AppendLine("    " + NativeRetExpr(ret, call));
+            sb.AppendLine("}");
+            sb.AppendLine();
+        }
+
+        // Explicitly qualified call to the base implementation of each declared virtual, so a
+        // managed override can chain to it (and so the default override does not disable Qt's
+        // own handling). The qualification also keeps this from dispatching back into the
+        // override, which would recurse forever.
+        var virtualOverloads = new Dictionary<string, int>(StringComparer.Ordinal);
+        for (int i = 0; i < declaredVirtuals.Count && subclassable; i++)
+        {
+            var v = declaredVirtuals[i].Virtual;
+            if (IsPure(v))
+                continue;
+            string vname = Name(v);
+            virtualOverloads.TryGetValue(vname, out int vseen);
+            virtualOverloads[vname] = vseen + 1;
+            string vSuffix = vseen == 0 ? "" : (vseen + 1).ToString();
+
+            var ps = Params(v);
+            string sig = string.Join(", ", new[] { "void* self" }
+                .Concat(ps.Select(p => $"{CppParamType(PType(p))} {NativeName(PName(p))}")));
+            string ret = ReturnType(v);
+            string baseArgs = string.Join(", ", new[] { $"static_cast<QsApi_{name}*>(self)" }
+                .Concat(ps.Select(p => CppArg(PType(p), NativeName(PName(p))))));
+            sb.AppendLine($"extern \"C\" __declspec(dllexport) {NativeRetCpp(ret)} qs_api_{name}_{vname}__base{vSuffix}({sig})");
+            sb.AppendLine("{");
+            sb.AppendLine("    " + NativeRetExpr(ret, $"QsApi_{name}::CallBase_{vname}{vSuffix}({baseArgs})"));
+            sb.AppendLine("}");
+            sb.AppendLine();
+        }
+    }
+
+    static string CppParamType(string t)
     {
-        "QString" => "const QString&",
-        "QObject*" => "QObject*",
-        "QEvent*" => "QEvent*",
-        "bool" => "bool",
-        "int" => "int",
-        _ => "void*",
-    };
+        if (t == "QString") return "const char16_t*";
+        if (t == "int*") return "const int*";
+        if (IsPtr(t) || IsBoxed(t)) return "void*";
+        if (IsEnum(t)) return "int";
+        return t;
+    }
 
-    static string ParamToCpp(string type, string name) => type switch
+    // The real C++ types, used where the generated code has to speak to Qt directly.
+    static string CppCtorParamType(string t)
     {
-        "QString" => $"QString::fromUtf16({name})",
-                "QAnyStringView" => $"QString::fromUtf16({name})",
-        "QObject*" => $"static_cast<QObject*>({name})",
-        "QEvent*" => $"static_cast<QEvent*>({name})",
-        _ => name,
-    };
+        if (t == "QString") return "const QString&";
+        if (t == "int*") return "const int*";
+        if (IsEnum(t) || IsPtr(t)) return t;
+        if (IsBoxed(t)) return $"const {t}&";
+        return t;
+    }
 
+    static string CppArg(string t, string name)
+    {
+        // A null managed string must not reach QString::fromUtf16 as a null pointer.
+        if (t == "QString") return $"{name} ? QString::fromUtf16({name}) : QString()";
+        if (IsPtr(t)) return $"static_cast<{t.Substring(0, t.Length - 1)}*>({name})";
+        // QFlags has no cast from int; the named constructor is the documented way back.
+        if (IsFlags(t)) return $"{t}::fromInt({name})";
+        if (IsEnum(t)) return $"static_cast<{t}>({name})";
+        // A managed null would otherwise be dereferenced; a default-constructed value is the
+        // closest thing to "the parameter was not given".
+        if (IsBoxed(t))
+            return HasDefaultCtor(t)
+                ? $"({name} ? *static_cast<{t}*>({name}) : QsApiDefaultValue<{t}>())"
+                : $"*static_cast<{t}*>({name})";
+        return name;
+    }
+
+    static string NativeRetCpp(string t)
+    {
+        if (t == "void" || t == "bool" || t == "int" || t == "float" || t == "double")
+            return t;
+        return IsEnum(t) ? "int" : "void*";
+    }
+
+    static string NativeRetExpr(string t, string call)
+    {
+        if (t == "void") return call + ";";
+        if (t == "QString") return $"return new QString({call});";
+        if (IsFlags(t)) return $"return static_cast<int>({call}.toInt());";
+        if (IsEnum(t)) return $"return static_cast<int>({call});";
+        if (IsBoxed(t)) return $"return new {t}({call});";
+        // Iterators and other const accessors return const pointers; the C ABI is void*.
+        if (IsPtr(t)) return $"return static_cast<void*>(const_cast<{t.Substring(0, t.Length - 1)}*>({call}));";
+        return $"return {call};";
+    }
+
+    // Overrides must repeat the base declaration exactly, so these are the real C++ types
+    // rather than the void* used by the exported C entry points.
+    static string CppVirtualParamType(string t)
+    {
+        if (t == "QString") return "const QString&";
+        if (IsPtr(t)) return t.Substring(0, t.Length - 1) + "*";
+        if (IsEnum(t)) return t;
+        return t;
+    }
+
+    // ------------------------------------------------------------------ identifiers
     static string Pascal(string s) => string.IsNullOrEmpty(s) ? s : char.ToUpperInvariant(s[0]) + s.Substring(1);
-    static string Safe(string s) => s;
+    static string NativeName(string s) => s == "this" ? "self_" : s;
 
-    // Qt parameter names collide with C# keywords (notably `event`), so escape them.
     static readonly HashSet<string> CSharpKeywords = new(StringComparer.Ordinal)
     {
         "event", "base", "this", "object", "string", "params", "ref", "out", "in", "lock",

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -27,24 +27,55 @@ namespace QtSharp.Api
         private delegate void SignalCallback(IntPtr userData, int argc, IntPtr argv, IntPtr typeIds);
 
         static readonly List<object> keepAlive = new();
-        static readonly Dictionary<IntPtr, WeakReference> wrappers = new();
+
+        // A native object is reachable through several managed views (a QWidget is also a
+        // QPaintDevice, and a managed subclass is itself a view of its base), so each handle
+        // keeps a list of live wrappers and a lookup takes the first assignable one.
+        static readonly Dictionary<IntPtr, List<WeakReference>> wrappers = new();
 
         public static void Register(IntPtr handle, object wrapper)
         {
-            if (handle != IntPtr.Zero)
-                wrappers[handle] = new WeakReference(wrapper);
+            if (handle == IntPtr.Zero)
+                return;
+            if (!wrappers.TryGetValue(handle, out var list))
+                wrappers[handle] = list = new List<WeakReference>();
+            list.RemoveAll(w => !w.IsAlive);
+            list.Add(new WeakReference(wrapper));
         }
 
         public static T Wrap<T>(IntPtr handle, Func<IntPtr, T> factory) where T : class
         {
             if (handle == IntPtr.Zero)
                 return null;
-            if (wrappers.TryGetValue(handle, out var weak) && weak.Target is T alive)
-                return alive;
+            if (wrappers.TryGetValue(handle, out var list))
+                foreach (var weak in list)
+                    if (weak.Target is T alive)
+                        return alive;
             var created = factory(handle);
-            wrappers[handle] = new WeakReference(created);
+            Register(handle, created);
             return created;
         }
+
+        // Boxed value types (QColor, QTime, ...) are heap-allocated per call and owned by
+        // the managed wrapper, so they deliberately skip the cache and are freed by the
+        // generated Dispose/finalizer.
+        public static int EventType(IntPtr eventPtr) => EventTypeNative(eventPtr);
+
+        /// <summary>
+        /// Delivers a user event, which QObject::event routes to the virtual customEvent().
+        /// Lets a test check that a managed override of an inherited virtual is reached.
+        /// </summary>
+        public static bool SendUserEvent(IntPtr objectHandle) => ProbeUserEvent(objectHandle) != 0;
+
+        /// <summary>Delivers a synthetic left mouse press at (x, y) to a widget.</summary>
+        public static bool SendMousePress(IntPtr widgetHandle, int x, int y)
+            => ProbeMousePress(widgetHandle, x, y) != 0;
+
+        public static void StartApplication() => AppCreate();
+
+        public static int Exec() => AppExec();
+
+        public static void Quit() => AppQuit();
 
         // Copies a QString returned by the generated accessors and frees it.
         public static string ToManaged(IntPtr qstring)
@@ -98,11 +129,32 @@ namespace QtSharp.Api
             6 => BitConverter.Int64BitsToDouble(Marshal.ReadInt64(value)),  // Double
             7 => (char)Marshal.ReadInt16(value),                            // QChar
             10 => CopyString(value),                                        // QString (owned by caller)
+            11 => CopyStringList(value),                                    // QStringList
             _ => value,                                                     // unknown -> raw pointer
         };
 
         static string CopyString(IntPtr qstring)
             => Marshal.PtrToStringUni(StringUtf16(qstring), (int)StringSize(qstring));
+
+        // The list belongs to the signal's caller; the elements are copied out one by one.
+        static string[] CopyStringList(IntPtr list)
+        {
+            int count = StringListCount(list);
+            var result = new string[count];
+            for (int i = 0; i < count; i++)
+            {
+                var element = StringListAt(list, i);
+                result[i] = CopyString(element);
+                StringFree(element);
+            }
+            return result;
+        }
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_qstringlist_count", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int StringListCount(IntPtr list);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_qstringlist_at", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr StringListAt(IntPtr list, int index);
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_connect", CallingConvention = CallingConvention.Cdecl)]
         private static extern int ConnectNative(IntPtr sender, [MarshalAs(UnmanagedType.LPUTF8Str)] string signature,
@@ -119,5 +171,23 @@ namespace QtSharp.Api
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_qstring_free", CallingConvention = CallingConvention.Cdecl)]
         private static extern void StringFree(IntPtr qstring);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_event_type", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int EventTypeNative(IntPtr eventPtr);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_probe_user_event", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ProbeUserEvent(IntPtr objectHandle);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_probe_mouse_press", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ProbeMousePress(IntPtr widgetHandle, int x, int y);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_app_create", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int AppCreate();
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_app_exec", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int AppExec();
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_app_quit", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void AppQuit();
     }
 }

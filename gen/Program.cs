@@ -11,6 +11,8 @@ using CppSharp.Parser;
 
 class QtLibrary : ILibrary
 {
+    internal const string QtIncludeRoot = @"D:\QtSharp\Qt\6.11.0\msvc2022_64\include";
+
     public void Setup(Driver driver)
     {
         driver.ParserOptions.LanguageVersion = LanguageVersion.CPP17;
@@ -21,7 +23,7 @@ class QtLibrary : ILibrary
         options.GetClassGenerationOptions = _ => new ClassGenerationOptions { GenerateNativeToManaged = true };
         options.GenerateDefaultValuesForArguments = true;
 
-        string inc = @"D:\QtSharp\Qt\6.11.0\msvc2022_64\include";
+        string inc = QtIncludeRoot;
 
         void ConfigureModule(Module m, string moduleDir)
         {
@@ -215,12 +217,8 @@ class QtLibrary : ILibrary
         LimitScope(ctx);
     }
 
-    public static string ExtractModelPath;
-
     public void Postprocess(Driver driver, ASTContext ctx)
     {
-        if (ExtractModelPath != null)
-            ApiModel.Extract(ctx, ExtractModelPath);
         ClearInvalidInitializers(ctx);
         ReportCoverage(ctx);
         DedupeAll(ctx);
@@ -734,17 +732,20 @@ class Program
     internal static List<SignalInfo> ScanSignals()
     {
         var result = new List<SignalInfo>();
-        var inc = @"D:\QtSharp\Qt\6.11.0\msvc2022_64\include";
         foreach (var (dir, headers) in SignalModules)
-        {
             foreach (var header in headers)
-            {
-                var path = Path.Combine(inc, dir, header);
-                if (!File.Exists(path))
-                    continue;
-                ScanSignalsInFile(path, dir, header, result);
-            }
-        }
+                result.AddRange(ScanSignals(dir, header));
+        return result;
+    }
+
+    // Scans one header; the model uses this per root class so that the root table stays the
+    // single description of what the model is made of.
+    internal static List<SignalInfo> ScanSignals(string dir, string header)
+    {
+        var result = new List<SignalInfo>();
+        var path = Path.Combine(QtLibrary.QtIncludeRoot, dir, header);
+        if (File.Exists(path))
+            ScanSignalsInFile(path, dir, header, result);
         return result;
     }
 
@@ -1098,7 +1099,14 @@ class Program
             }
 
             if (args.Length > 0 && args[0] == "extract")
-                QtLibrary.ExtractModelPath = args[1];
+                return ApiModel.RunExtract(args[1]);
+
+            // The same model, read out of libclang instead of CppSharp.
+            if (args.Length > 0 && args[0] == "extract2")
+                return ApiModel.RunExtract2(args[1]);
+
+            if (args.Length > 0 && args[0] == "dumpopts")
+                return ApiModel.DumpParseOptions();
 
             bool ok = ConsoleDriver.Run(new QtLibrary());
             if (ok)

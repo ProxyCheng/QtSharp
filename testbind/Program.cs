@@ -8,6 +8,23 @@ static class Program
     {
         try
         {
+            // The new pipeline creates its own QApplication through its runtime, so its
+            // commands have to run before the legacy one below is constructed.
+            if (args.Length > 0 && args[0] == "api-analogclock")
+            {
+                return ApiAnalogClockDemo.Run();
+            }
+
+            if (args.Length > 0 && args[0] == "api-lineedits")
+            {
+                return ApiLineEditsDemo.Run();
+            }
+
+            if (args.Length > 0 && args[0] == "api-widgets")
+            {
+                return ApiWidgetsDemo.Run();
+            }
+
             using var app = new QApplication(new[] { "qtsharp-examples" });
 
             if (args.Length > 0 && args[0] == "metasig")

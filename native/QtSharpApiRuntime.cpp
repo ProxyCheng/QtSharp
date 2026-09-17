@@ -1,4 +1,4 @@
-// Hand-written runtime that ships with the generated bindings (not model-derived).
+﻿// Hand-written runtime that ships with the generated bindings (not model-derived).
 //
 // Holds the two mechanisms the PoCs proved:
 //   * one generic moc-metadata signal forwarder (no per-signal generated glue)
@@ -10,6 +10,8 @@
 #include <qmetatype.h>
 #include <qbytearray.h>
 #include <qstring.h>
+#include <qcoreapplication.h>
+#include <qapplication.h>
 #include <private/qobject_p.h>
 #include <vector>
 #include "QtSharpApiRuntime.h"
@@ -33,6 +35,18 @@ extern "C" __declspec(dllexport) long long qs_api_qstring_size(const void* s)
 extern "C" __declspec(dllexport) void qs_api_qstring_free(void* s)
 {
     delete static_cast<QString*>(s);
+}
+
+// QStringList: the managed side copies the elements out one by one. The list itself belongs to
+// the signal's caller, so only the copies have to be freed.
+extern "C" __declspec(dllexport) int qs_api_qstringlist_count(const void* list)
+{
+    return static_cast<int>(static_cast<const QStringList*>(list)->size());
+}
+
+extern "C" __declspec(dllexport) void* qs_api_qstringlist_at(const void* list, int index)
+{
+    return new QString(static_cast<const QStringList*>(list)->at(index));
 }
 
 // ------------------------------------------------------------------ signal forwarder
@@ -119,4 +133,52 @@ extern "C" __declspec(dllexport) int qs_api_probe_event_filter(void* self, void*
 {
     return static_cast<QObject*>(self)->eventFilter(
         static_cast<QObject*>(watched), static_cast<QEvent*>(event)) ? 1 : 0;
+}
+
+// Diagnostic/lookup helper for the managed event layer: the numeric QEvent::Type.
+extern "C" __declspec(dllexport) int qs_api_event_type(const void* event)
+{
+    return event ? int(static_cast<const QEvent*>(event)->type()) : -1;
+}
+
+// Delivers a user event, which QObject::event routes to the virtual customEvent(). Used to
+// check that a managed override of a virtual declared in an *ancestor* class is reached.
+extern "C" __declspec(dllexport) int qs_api_probe_user_event(void* object)
+{
+    QEvent event(QEvent::User);
+    return QCoreApplication::sendEvent(static_cast<QObject*>(object), &event) ? 1 : 0;
+}
+
+// Delivers a synthetic mouse press, so a managed mousePressEvent override can be exercised
+// (and its event payload read) without a real input device.
+extern "C" __declspec(dllexport) int qs_api_probe_mouse_press(void* widget, int x, int y)
+{
+    const QPointF pos(x, y);
+    QMouseEvent event(QEvent::MouseButtonPress, pos, pos,
+                      Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    return QCoreApplication::sendEvent(static_cast<QObject*>(widget), &event) ? 1 : 0;
+}
+
+// ------------------------------------------------------------------ application bootstrap
+// QApplication's constructor takes int&/char**, which the model deliberately does not
+// describe (it cannot be marshalled meaningfully), so starting the event loop is a runtime
+// concern rather than a generated one.
+extern "C" __declspec(dllexport) int qs_api_app_create()
+{
+    static int argc = 1;
+    static char arg0[] = "qtsharp";
+    static char* argv[] = { arg0, nullptr };
+    static QApplication app(argc, argv);
+    Q_UNUSED(app);
+    return 0;
+}
+
+extern "C" __declspec(dllexport) int qs_api_app_exec()
+{
+    return QApplication::exec();
+}
+
+extern "C" __declspec(dllexport) void qs_api_app_quit()
+{
+    QCoreApplication::quit();
 }
