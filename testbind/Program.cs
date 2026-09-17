@@ -50,6 +50,11 @@ static class Program
                 return ApiSpinBoxesDemo.Run();
             }
 
+            if (args.Length > 0 && args[0] == "api-shortcut")
+            {
+                return ApiShortcutDemo.Run();
+            }
+
 
             if (args.Length > 0 && args[0] == "api-custommodel") { return ApiCustomModelDemo.Run(); }
             if (args.Length > 0 && args[0] == "api-ownership")
@@ -90,7 +95,9 @@ static class Program
                 "calendar" => new CalendarWindow(),
                 "systray" => new SystemTrayWindow(),
                 "scribble" => new ScribbleWindow(),
-                "shortcut" => new ShortcutWindow(),
+                // The Shortcut Editor used to be the legacy "shortcut" demo. It crashed when a
+                // tree node was opened - the legacy model/delegate binding frees something Qt
+                // still holds - so it now lives on the new pipeline only: `api-shortcut`.
                 "analogclock" => new AnalogClock(),
                 "calculator" => new Calculator(),
                 "gallery" => new WidgetGalleryWindow(),
