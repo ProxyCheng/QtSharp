@@ -17,7 +17,7 @@
 | 产品化第 1 步:model(入库)+ codegen | ✅ 44 类 / 1309 方法;**model 可复现**(按头文件分块自校验)、codegen 纯函数 |
 | **两个 demo 跑在新链路上** | ✅ `testapp api-analogclock`(事件循环 + 渲染 + 鼠标/自定义事件)✅ `testapp api-lineedits`(布局 + 控件 + 校验器 + 信号) |
 | **前端迁移(已决策)** | ✅ **已完成**:`qtgen extract2`(ClangSharp)取代 CppSharp 成为默认前端,~2.5 秒产出**逐字节一致**的 model;原 44 类 model 复刻 **1472/1472** 条事实(见"路线 A 可行性验证"一节) |
-| **QtWidgets 覆盖面** | 🚧 **44 → 233 类**(QtWidgets 121 + QtGui 70 + QtCore 42)/ **6521 方法** / 216 信号 / 292 枚举;`testapp api-widgets` 53 项断言全 PASS。**类型类别已补**:`const char*`、**泛型 `QList<T>`**(参数+返回)、`QStringList`、`QStringView`/`QAnyStringView`、`qsizetype`/`qint64`/`uint`/`QRgb`、`short`/`ushort`/`long`/`ulong`/`char`/`uchar`/`char16_t`/`char32_t`;类补了 `QMetaObject`/`QCalendar`/`QMimeData`/`QBitArray`/`QIODevice`/`QDataStream`/`QMetaType`/`QRegularExpression`/`QTextStream`/`QColorSpace`/`QTimeZone`。仍缺:`QByteArrayView`、`QBindable<T>`、`QMap<...>`、`const uchar*`、`QGraphics*` 整组 |
+| **QtWidgets 覆盖面** | 🚧 **44 → 296 类**(QtWidgets 184 + QtGui 70 + QtCore 42)/ **7209 方法** / 233 信号 / 309 枚举;5 个新链路 demo 共 87 项断言全 PASS(`api` 6 / `api-analogclock` 10 / `api-lineedits` 9 / `api-widgets` 53 / `api-graphics` 9)。**QGraphics\* 整组已入**(scene/view/15 个 item 类/9 个 scene event/effect/transform/layout)。**类型类别已补**:`const char*`、**泛型 `QList<T>`**(参数+返回)、`QStringList`、`QStringView`/`QAnyStringView`、`qsizetype`/`qint64`/`uint`/`QRgb`、`short`/`ushort`/`long`/`ulong`/`char`/`uchar`/`char16_t`/`char32_t`;类补了 `QMetaObject`/`QCalendar`/`QMimeData`/`QBitArray`/`QIODevice`/`QDataStream`/`QMetaType`/`QRegularExpression`/`QTextStream`/`QColorSpace`/`QTimeZone`。仍缺:`QByteArrayView`、`QBindable<T>`、`QMap<...>`、`const uchar*`、`QGraphics*` 整组 |
 
 ## 关键背景
 - 仓库:`D:\QtSharp`(QtSharp + vendored CppSharp)
@@ -143,7 +143,7 @@ clangprobe --dump CXCursor CXType clang
 **⑥ 新增 demo:`testapp api-widgets`**(`testbind/WidgetsApi.cs`,44 条断言全 PASS,已进 `regen-api.ps1` 门禁)
 一个窗口串起菜单/工具栏/状态栏、QTabWidget、QSplitter、按钮/数值输入/复选框/单选、QComboBox/QFontComboBox、QListWidget/QTreeWidget/QTableWidget(含 `QTreeWidgetItem`/`QTableWidgetItem`)、QTextEdit/QPlainTextEdit、QStandardItemModel + QTableView + QSortFilterProxyModel、QModelIndex/QVariant、QDataWidgetMapper、QCalendarWidget、QProgressBar、QDialogButtonBox、QCompleter、QUndoStack。每个都得通过生成的 API 驱动并回读状态。
 
-**⑦ 类覆盖到什么程度**:QtWidgets 头文件里能绑的 198 个顶层类中,**121 个已入库**;未入的 77 个主要是:①**QGraphics\* 整组(~35)**:item 不是 QObject、需要 QGraphicsItem/QGraphicsSceneMouseEvent/QStyleOptionGraphicsItem 一整套(下一批可做);②手势/触摸输入(QGesture 家族 8 个、QScroller、QTouchEventWidgetSequence);③不需要绑的小工具(QColormap/QTileRules/QWidgetData/QAccessibleWidget/QStylePlugin/QItemEditorCreatorBase/QStyleHintReturn\*);④还差几行 Roots 的散类(QSplashScreen/QToolTip/QWidgetAction/QWizardPage/QUndoGroup/QSplitterHandle/QStylePainter/QPlainTextDocumentLayout/QTreeWidgetItemIterator/QTableWidgetSelectionRange)。
+**⑦ 类覆盖到什么程度**:QtWidgets 头文件里能绑的 198 个顶层类中,**184 个已入库**;剩下 14 个是:①需要别的 Qt 模块或不可绑(`QRhiWidget` 需要 QtRhi、`QTouchEventWidgetSequence`/`QWidgetData`/`QAccessibleWidget`/`QStylePlugin` 是内部实现);②纯静态工具(`QStyleFactory`)或工厂基类(`QItemEditorCreatorBase`);③X11 遗留(`QColormap`)与样式小结构(`QTileRules`)。另外 6 个类(QAction/QActionGroup/QShortcut/QFileSystemModel/QUndoStack/QUndoCommand)在 Qt6 属于 **QtGui**,已绑但不在 QtWidgets 头文件里。
 
 **⑧ 类型类别:已补的那一批(本轮下半场)**
 - **`const char*`** → C# `string`:参数直接透传 `const char*`(P/Invoke 用 `LPUTF8Str`),返回用 `QString::fromUtf8` 拷成 QString 交给既有的 QString 桥(native 侧 `NativeRetExpr`)。
@@ -155,6 +155,8 @@ clangprobe --dump CXCursor CXType clang
 - **不可拷贝的返回值**:`QDataStream::writeBytes` 之类的流式 API 返回 `QDataStream&`,而生成的 glue 要 `new QDataStream(call)`(拷贝)—— `QDataStream` 的拷贝构造是 deleted。抽取器新增 `IsCopyableResult`(找 copy ctor,deleted 就拒),这类方法直接不入 model。
 - **`ApiTypes.Managed` 的坑**:`char*` 也以 `*` 结尾,必须先判字符串再判指针,否则 `char*`→`IntPtr` 而 codegen 渲染成 `string` → **同一 C# 签名出现两个重载(CS0111)**。
 - 顺带:生成的 ctor 局部变量 `context` 撞了 `QShortcut(... Qt.ShortcutContext context)`,已改名 `__context`。
+- **QGraphics\* 整组入库**(scene/view/15 个 item 类/9 个 scene event/effect/transform/layout/anchor):item **不是 QObject**且由 scene 拥有,所以一律 `owned: false`(GC 不删,暂时会泄漏,等所有权服务);scene event 由 Qt 在栈上构造 → `bindCtors: false`。**新增 demo `testapp api-graphics`**(9 项断言,含 `scene.items()` 的 `QList<QGraphicsItem*>` 返回、`itemAt()` 的身份一致、离屏 `view.Grab()` 真的渲染出 240x120)。
+- 又补 29 个类(其余 QtWidgets):`QSplashScreen`/`QToolTip`/`QWidgetAction`/`QWizardPage`/`QUndoGroup`/`QSplitterHandle`/`QStylePainter`/`QTableWidgetSelectionRange`/`QTreeWidgetItemIterator`/`QPlainTextDocumentLayout`/`QItemEditorFactory`/`QStyleOption*` 4 个/`QStyleHintReturn*` 3 个/`QScroller`/`QScrollerProperties`/手势家族 5 个/`QGestureEvent`/`QGestureRecognizer`。
 
 **⑨ 已知瑕疵 / 下一步(按收益排序)**
 1. **`QMap<...>`**(x15)和 **`QByteArrayView`**(x27)、**`QBindable<T>`**(x18)是现在最大的三块:`QMap` 可以照抄 `QList` 的写法(需要 count/key/value 三个访问器);`QByteArrayView` 是字节视图(定成 `byte[]` 最自然);`QBindable<T>` 需要 `bindable*()` 那族。
@@ -205,8 +207,8 @@ BuiltinsDir = <assemblies>\lib\clang\19\include
 CppSharp 替我们解决了一个不小的坑:**Qt 头的 MSVC 兼容解析**(`-fms-compatibility`、`__cplusplus`、`_MSC_VER` 等)和 libclang 分发。换前端必须精确复刻这套配置(约 20 行,但要**验证**)。另外**模板/默认参数的提取会比 CppSharp 的"结构化 AST"更手工** —— 这正是路线 B 作为备选的原因(自己吐 JSON 可以只吐我们要的那几个事实)。
 
 ## 下一 agent 的第一件事
-**继续啃类型类别**(`const char*`/`QStringList`/**`QList<T>`**/整数 typedef/字符串视图/小标量已补完,见"⑧")。
-剩下的按收益:①**`QMap<K,V>`**(15 处,照抄 `QList<T>` 的写法 + key/value 访问器);②`QByteArrayView`(27,字节视图 → `byte[]`)、`QBindable<T>`(18);③**QGraphics\* 整组**(~35 个类,需要 QGraphicsItem/QStyleOptionGraphicsItem 那套;`QList<QGraphicsItem*>` 也在等着它)。
+**继续啃类型类别**(`const char*`/`QStringList`/**`QList<T>`**/整数 typedef/字符串视图/小标量已补完,见"⑧";QGraphics\* 整组与其余 QtWidgets 类已入库)。
+剩下的按收益:①**`QMap<K,V>`**(15 处,照抄 `QList<T>` 的写法 + key/value 访问器);②`QByteArrayView`(27,字节视图 → `byte[]`)、`QBindable<T>`(18);③`const uchar*`(10,scanline 缓冲)与 `void*`/`const void*`(27);④`QMetaMethod`/`QMetaProperty` 那族(动态派发/属性读写)。
 做法:改 `ApiModel2.ModelName` 的词汇表 + `ApiTypes.Managed` + `ApiCodeGen` 的 `ManagedType`/`NativeParamType`/`CppParamType`/`CppArg`/`NativeRetCpp`(+ 需要临时对象的参数走 `MarshalParams`/`EmitGuarded`),每加一类就跑 `tools/regen-api.ps1` 看 `blocked by` 榜往下走。
 
 ## 其它可继续的方向
