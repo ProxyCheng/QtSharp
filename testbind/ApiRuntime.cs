@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -19,6 +19,15 @@ namespace QtSharp.Api
         public void Connect(T handler) => connector(handler);
     }
 
+    // A managed view of a Qt object. Qt owns the lifetime (a parent, a scene, the application),
+    // so the wrapper cannot free it - but it has to stop working the moment Qt destroys it,
+    // instead of calling into native memory that is gone. Every generated class implements this
+    // through its root class.
+    internal interface IQtObjectView
+    {
+        void MarkDestroyed();
+    }
+
     public static unsafe class ApiRuntime
     {
         public const string Library = "QtSharp.Api";
@@ -28,9 +37,42 @@ namespace QtSharp.Api
 
         static readonly List<object> keepAlive = new();
 
+        // The destroyed hook is one function pointer for the whole process (never a delegate per
+        // object): it points at static code, so nothing has to be kept alive.
+        //
+        // Shutdown is the one moment it must not be called: the CLR stops accepting managed entry
+        // points while Qt is still tearing objects down (and the finalizers of the remaining
+        // wrappers are still deleting them), which trips
+        // "Attempt to execute managed code after the .NET runtime thread state has been destroyed".
+        // Installing the hook's absence first - and refusing to release anything after that -
+        // keeps the teardown entirely native.
+        static bool shuttingDown;
+
+        /// <summary>Whether the process is past the point where a native callback may enter managed code.</summary>
+        public static bool ShuttingDown => shuttingDown;
+
+        static ApiRuntime()
+        {
+            unsafe
+            {
+                SetDestroyedCallback((IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, void>)&OnDestroyed);
+            }
+            AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+            {
+                shuttingDown = true;
+                SetDestroyedCallback(IntPtr.Zero);
+            };
+        }
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_set_destroyed_callback", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void SetDestroyedCallback(IntPtr callback);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_watch_destroyed", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void WatchDestroyed(IntPtr handle);
+
         // A native object is reachable through several managed views (a QWidget is also a
         // QPaintDevice, and a managed subclass is itself a view of its base), so each handle
-        // keeps a list of live wrappers and a lookup takes the first assignable one.
+        // keeps a list of live wrappers and a lookup takes the newest assignable one.
         static readonly Dictionary<IntPtr, List<WeakReference>> wrappers = new();
 
         public static void Register(IntPtr handle, object wrapper)
@@ -43,17 +85,119 @@ namespace QtSharp.Api
             list.Add(new WeakReference(wrapper));
         }
 
+        /// <summary>
+        /// Drops a wrapper that is not usable any more (it disposed, so its handle is gone).
+        /// Without this a *reused* native address would hand the dead wrapper back: the allocator
+        /// hands the same block to the next object of the same size.
+        /// </summary>
+        public static void Forget(IntPtr handle, object wrapper)
+        {
+            if (handle == IntPtr.Zero || !wrappers.TryGetValue(handle, out var list))
+                return;
+            list.RemoveAll(w => !w.IsAlive || ReferenceEquals(w.Target, wrapper));
+            if (list.Count == 0)
+                wrappers.Remove(handle);
+        }
+
         public static T Wrap<T>(IntPtr handle, Func<IntPtr, T> factory) where T : class
         {
             if (handle == IntPtr.Zero)
                 return null;
             if (wrappers.TryGetValue(handle, out var list))
-                foreach (var weak in list)
-                    if (weak.Target is T alive)
+            {
+                // Newest first: an address that was freed and reused belongs to the newer object,
+                // and only the newer wrapper owns it.
+                for (int i = list.Count - 1; i >= 0; i--)
+                    if (list[i].Target is T alive)
                         return alive;
+            }
             var created = factory(handle);
             Register(handle, created);
             return created;
+        }
+
+        // ------------------------------------------------------------------ destruction
+        // Which objects Qt has destroyed, and which items belong to which owner. An item is not a
+        // QObject (a QGraphicsRectItem has no destroyed signal), so its owner's destruction is the
+        // only lifetime signal there is.
+        static readonly HashSet<IntPtr> destroyed = new();
+        static readonly Dictionary<IntPtr, List<IntPtr>> ownedItems = new();
+
+        [System.Runtime.InteropServices.UnmanagedCallersOnly(CallConvs = new[] { typeof(System.Runtime.CompilerServices.CallConvCdecl) })]
+        static void OnDestroyed(IntPtr handle)
+        {
+            // Called from Qt, on whatever thread destroyed the object.
+            lock (destroyed)
+            {
+                destroyed.Add(handle);
+                if (wrappers.TryGetValue(handle, out var list))
+                {
+                    foreach (var weak in list)
+                        if (weak.Target is IQtObjectView view)
+                            view.MarkDestroyed();
+                    wrappers.Remove(handle);
+                }
+                // Everything the object owned goes with it.
+                if (ownedItems.TryGetValue(handle, out var items))
+                {
+                    ownedItems.Remove(handle);
+                    foreach (var item in items)
+                        MarkItemDestroyed(item);
+                }
+            }
+        }
+
+        static void MarkItemDestroyed(IntPtr item)
+        {
+            if (wrappers.TryGetValue(item, out var list))
+            {
+                foreach (var weak in list)
+                    if (weak.Target is IQtObjectView view)
+                        view.MarkDestroyed();
+                wrappers.Remove(item);
+            }
+            destroyed.Add(item);
+        }
+
+        /// <summary>Whether Qt has already destroyed this object.</summary>
+        internal static bool IsDestroyed(IntPtr handle)
+        {
+            lock (destroyed)
+                return destroyed.Contains(handle);
+        }
+
+        /// <summary>
+        /// Starts watching a QObject: one native slot per object, and the managed hook tells every
+        /// wrapper of it that Qt destroyed it. Idempotent, and a no-op for an object that is
+        /// already gone.
+        /// </summary>
+        public static void Watch(IntPtr handle)
+        {
+            if (handle == IntPtr.Zero || IsDestroyed(handle))
+                return;
+            WatchDestroyed(handle);
+        }
+
+        /// <summary>
+        /// Records that <paramref name="owner"/> owns <paramref name="item"/>. When the owner is
+        /// destroyed, the item's wrappers are invalidated too - the only lifetime rule a
+        /// non-QObject item (a QGraphicsItem) has.
+        /// </summary>
+        public static void AssociateOwner(IntPtr owner, IntPtr item)
+        {
+            if (owner == IntPtr.Zero || item == IntPtr.Zero)
+                return;
+            lock (destroyed)
+            {
+                if (destroyed.Contains(owner))
+                {
+                    MarkItemDestroyed(item);
+                    return;
+                }
+                if (!ownedItems.TryGetValue(owner, out var items))
+                    ownedItems[owner] = items = new List<IntPtr>();
+                items.Add(item);
+            }
         }
 
         // Boxed value types (QColor, QTime, ...) are heap-allocated per call and owned by
@@ -91,6 +235,12 @@ namespace QtSharp.Api
                 StringFree(qstring);
             }
         }
+
+        // A QString that belongs to Qt - the argument of a virtual override - is read without
+        // being freed. (ToManaged releases the copy the native side allocated for us.)
+        public static string ToManagedTransient(IntPtr qstring)
+            => qstring == IntPtr.Zero ? null
+               : Marshal.PtrToStringUni(StringUtf16(qstring), (int)StringSize(qstring));
 
         public static bool Connect(IntPtr sender, string signature, Action<object[]> handler)
         {
@@ -194,6 +344,41 @@ namespace QtSharp.Api
             StringListFree(list);
             return result;
         }
+
+        // The same, for a list Qt handed to a virtual override: that one is Qt's, so it is copied
+        // out without being freed.
+        public static string[] ToManagedStringListTransient(IntPtr list)
+            => list == IntPtr.Zero ? null : CopyStringList(list);
+
+        // A virtual override that returns a string writes it into the caller's slot.
+        public static void Write(IntPtr destination, string value)
+        {
+            if (value == null)
+                WriteQStringNative(destination, null);
+            else
+                WriteQStringNative(destination, value);
+        }
+
+        // ...and the same for a string list: the managed array becomes a native QStringList that
+        // is copied into the slot and then released.
+        public static void WriteStringList(IntPtr destination, string[] value)
+        {
+            var list = NewStringList(value);
+            try
+            {
+                WriteStringListNative(destination, list);
+            }
+            finally
+            {
+                FreeStringList(list);
+            }
+        }
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_write_qstring", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void WriteQStringNative(IntPtr destination, [MarshalAs(UnmanagedType.LPWStr)] string text);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_write_qstringlist", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void WriteStringListNative(IntPtr destination, IntPtr list);
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_qstringlist_new", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr StringListNew();
