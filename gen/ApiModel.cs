@@ -594,14 +594,138 @@ public static partial class ApiModel
         // how C# code hands work to Qt's pool.
         R("QRunnable",             "qrunnable.h", "QtCore"),
         R("QThreadPool",           "qthreadpool.h", "QtCore"),
+
+        // ---------------------------------------------------------- the input events (QtGui)
+        // Every event Qt delivers used to be an opaque pointer, so a handler could tell that
+        // something happened but not what: keyPressEvent had no key code and wheelEvent no delta.
+        // The CppSharp front end could not bind these (a chunk containing QInputEvent never
+        // produced the same model twice), which is why they were left opaque; the clang front end
+        // has no such limit, so the whole family is a plain Roots entry now.
+        // Like every event they are built by Qt - on the stack, inside the dispatch - so they are
+        // neither constructible nor owned by us; the GC must never free one.
+        R("QInputEvent",                 "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QKeyEvent",                   "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QWheelEvent",                 "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QHoverEvent",                 "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QEnterEvent",                 "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QTabletEvent",                "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QNativeGestureEvent",         "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QTouchEvent",                 "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QScrollEvent",                "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QScrollPrepareEvent",         "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QExposeEvent",                "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QFileOpenEvent",              "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QChildWindowEvent",           "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QWindowStateChangeEvent",     "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QScreenOrientationChangeEvent", "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QPlatformSurfaceEvent",       "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QShortcutEvent",              "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QInputMethodEvent",           "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QInputMethodQueryEvent",      "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QHelpEvent",                  "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QStatusTipEvent",             "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QWhatsThisClickedEvent",      "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QToolBarChangeEvent",         "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QIconDragEvent",              "qevent.h", "QtGui", bindCtors: false, owned: false),
+        // The drag-and-drop pair: a drag carries its QMimeData, a drop reports where it landed.
+        R("QDragEnterEvent",             "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QDragMoveEvent",              "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QDragLeaveEvent",             "qevent.h", "QtGui", bindCtors: false, owned: false),
+        R("QDropEvent",                  "qevent.h", "QtGui", bindCtors: false, owned: false),
+        // The input devices, so a handler can tell a mouse from a touch screen.
+        R("QInputDevice",                "qinputdevice.h", "QtGui", bindCtors: false, owned: false),
+        R("QPointingDeviceUniqueId",     "qpointingdevice.h", "QtGui"),
+
+        // ---------------------------------------------------------- QtCore batch 3
+        // The runtime services a real application reaches for next: waiting, byte buffers, the
+        // meta-object, matching, hashing, mime types, translation and shared memory.
+        R("QEventLoop",            "qeventloop.h", "QtCore"),
+        R("QEventLoopLocker",      "qeventloop.h", "QtCore"),
+        R("QBasicTimer",           "qbasictimer.h", "QtCore"),
+        R("QBuffer",               "qbuffer.h", "QtCore"),
+        // The meta-object, now introspectable from C# (QMetaObject::indexOfSignal alone could
+        // only answer "does this exist"; QMetaProperty/QMetaEnum say what a property is).
+        R("QMetaClassInfo",        "qmetaobject.h", "QtCore"),
+        R("QMetaEnum",             "qmetaobject.h", "QtCore"),
+        R("QMetaProperty",         "qmetaobject.h", "QtCore"),
+        R("QItemSelectionRange",   "qitemselectionmodel.h", "QtCore"),
+        R("QRegularExpressionMatch",         "qregularexpression.h", "QtCore"),
+        R("QRegularExpressionMatchIterator", "qregularexpression.h", "QtCore"),
+        R("QUrlQuery",             "qurlquery.h", "QtCore"),
+        R("QCollator",             "qcollator.h", "QtCore"),
+        R("QCollatorSortKey",      "qcollator.h", "QtCore"),
+        R("QCryptographicHash",    "qcryptographichash.h", "QtCore"),
+        R("QMessageAuthenticationCode", "qmessageauthenticationcode.h", "QtCore"),
+        R("QTranslator",           "qtranslator.h", "QtCore"),
+        // Static-only: the only constructor is private, so the class lands as a table of paths.
+        R("QLibraryInfo",          "qlibraryinfo.h", "QtCore", bindCtors: false),
+        R("QStorageInfo",          "qstorageinfo.h", "QtCore"),
+        R("QMimeDatabase",         "qmimedatabase.h", "QtCore"),
+        R("QMimeType",             "qmimetype.h", "QtCore"),
+        R("QFileSystemWatcher",    "qfilesystemwatcher.h", "QtCore"),
+        R("QSharedMemory",         "qsharedmemory.h", "QtCore"),
+        R("QSystemSemaphore",      "qsystemsemaphore.h", "QtCore"),
+        // Qt6 keys a shared segment by this value type rather than by a bare string; without it
+        // the QSharedMemory/QSystemSemaphore constructors and nativeKey() are all dropped.
+        R("QNativeIpcKey",         "qtipccommon.h", "QtCore"),
+        // The base declares the version constants, so it has to be a root as well.
+        R("QOperatingSystemVersionBase", "qoperatingsystemversion.h", "QtCore", bindCtors: false),
+        // ... and the middle of the chain too: QOperatingSystemVersion derives from this
+        // unexported class, so without it the version accessors (majorVersion/minorVersion)
+        // would be two inheritance steps away and silently disappear.
+        R("QOperatingSystemVersionUnexported", "qoperatingsystemversion.h", "QtCore"),
+        R("QOperatingSystemVersion",     "qoperatingsystemversion.h", "QtCore"),
+        R("QTextBoundaryFinder",   "qtextboundaryfinder.h", "QtCore"),
+        R("QSignalMapper",         "qsignalmapper.h", "QtCore"),
+        R("QRandomGenerator64",    "qrandom.h", "QtCore"),
+        R("QRecursiveMutex",       "qmutex.h", "QtCore"),
+        R("QSocketNotifier",       "qsocketnotifier.h", "QtCore"),
+        R("QXmlStreamAttribute",            "qxmlstream.h", "QtCore"),
+        R("QXmlStreamNamespaceDeclaration", "qxmlstream.h", "QtCore"),
+        R("QXmlStreamEntityDeclaration",    "qxmlstream.h", "QtCore"),
+        R("QXmlStreamNotationDeclaration",  "qxmlstream.h", "QtCore"),
+        R("QXmlStreamEntityResolver",       "qxmlstream.h", "QtCore"),
+        R("QCborValue",            "qcborvalue.h", "QtCore"),
+        R("QCborArray",            "qcborarray.h", "QtCore"),
+        R("QCborMap",              "qcbormap.h", "QtCore"),
+        R("QCborStreamReader",     "qcborstreamreader.h", "QtCore"),
+        R("QCborStreamWriter",     "qcborstreamwriter.h", "QtCore"),
+
+        // ---------------------------------------------------------- the rich text types
+        // QTextFormat is the base of every format the already-bound QTextCharFormat/QTextBlockFormat
+        // derive from: without it in the model those classes had no base at all, so a C# caller
+        // could not pass a QTextCharFormat where a QTextFormat is wanted.
+        R("QTextFormat",           "qtextformat.h", "QtGui"),
+        R("QTextLength",           "qtextformat.h", "QtGui"),
+        R("QTextFrameFormat",      "qtextformat.h", "QtGui"),
+        R("QTextImageFormat",      "qtextformat.h", "QtGui"),
+        R("QTextTableCellFormat",  "qtextformat.h", "QtGui"),
+        R("QTextDocumentFragment", "qtextdocumentfragment.h", "QtGui"),
+        R("QTextTableCell",        "qtexttable.h", "QtGui"),
+        R("QTextBlockGroup",       "qtextobject.h", "QtGui"),
+        R("QTextFragment",         "qtextobject.h", "QtGui"),
+        R("QTextBlockUserData",    "qtextobject.h", "QtGui"),
+        // Laying text out by hand: a QTextLine is a line of a QTextLayout.
+        R("QTextLine",             "qtextlayout.h", "QtGui"),
+        R("QTextInlineObject",     "qtextlayout.h", "QtGui"),
+        R("QAbstractTextDocumentLayout", "qabstracttextdocumentlayout.h", "QtGui", bindCtors: false),
+        R("QTextObjectInterface",  "qabstracttextdocumentlayout.h", "QtGui"),
+        R("QRegularExpressionValidator", "qvalidator.h", "QtGui"),
+        R("QStaticText",           "qstatictext.h", "QtGui"),
+        R("QRawFont",              "qrawfont.h", "QtGui"),
+        R("QPixmapCache",          "qpixmapcache.h", "QtGui"),
+        R("QPixelFormat",          "qpixelformat.h", "QtGui"),
+        R("QRgba64",               "qrgba64.h", "QtGui"),
+        R("QMovie",                "qmovie.h", "QtGui"),
     };
 
     // Names that only ever occur as a pointer and are deliberately left opaque (IntPtr).
     //
-    // QInputEvent, QKeyEvent and QWheelEvent are here rather than bound on purpose: adding
-    // them to the parse makes CppSharp's AST conversion irreproducible (verified by
-    // bisection - a chunk containing QInputEvent never produces the same model twice), and
-    // an unreproducible model is worse than a missing key code.
+    // This list is the *legacy* extractor's: QInputEvent, QKeyEvent and QWheelEvent are here
+    // because adding them to a CppSharp parse made its AST conversion irreproducible (verified by
+    // bisection - a chunk containing QInputEvent never produced the same model twice). The clang
+    // front end (extract2) does not use this list at all and binds the whole event family as
+    // ordinary roots, which is why a managed keyPressEvent can read a key code now.
     static readonly string[] OpaquePointers =
     {
         "QTimerEvent", "QChildEvent", "QEnterEvent", "QInputEvent", "QKeyEvent", "QWheelEvent",
@@ -687,6 +811,8 @@ public static partial class ApiModel
         "wheelEvent", "keyPressEvent", "keyReleaseEvent", "focusInEvent", "focusOutEvent",
         "enterEvent", "leaveEvent", "changeEvent", "contextMenuEvent",
         "dragEnterEvent", "dragMoveEvent", "dragLeaveEvent", "dropEvent",
+        // The tablet pen, next to the mouse handlers above.
+        "tabletEvent",
         // The layout side of a custom widget: without these a managed widget cannot say how big
         // it wants to be (the Calculator example's CalcButton overrides sizeHint).
         "sizeHint", "minimumSizeHint", "heightForWidth", "hasHeightForWidth",

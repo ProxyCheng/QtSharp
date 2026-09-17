@@ -2251,7 +2251,24 @@ public static class ApiCodeGen
         // no constructor from QStringView.
         if (IsStringT(t)) return t == "QString" ? $"return new QString({call});" : $"return new QString({call}.toString());";
         if (IsStringListT(t)) return $"return new QStringList({call});";
-        if (IsListT(t) || IsAssocT(t)) return $"return new {t}({call});";
+        if (IsListT(t))
+        {
+            // Qt hands back a list of *const* pointers where the model can only say T*
+            // (QInputDevice::devices() returns QList<const QInputDevice *>), and a QList is not
+            // covariant, so that call does not even compile as a copy. The copy is built element
+            // by element, with the const taken off - the pointers are the same objects.
+            string elem = ListElem(t);
+            if (IsClassPtr(elem))
+                return "{\n"
+                     + $"        auto qs_source = {call};\n"
+                     + $"        auto* qs_list = new {t}();\n"
+                     + "        for (auto qs_item : qs_source)\n"
+                     + $"            qs_list->append(const_cast<{elem}>(qs_item));\n"
+                     + "        return qs_list;\n"
+                     + "    }";
+            return $"return new {t}({call});";
+        }
+        if (IsAssocT(t)) return $"return new {t}({call});";
         // The bindable handle is a small value; managed code gets a heap copy it disposes.
         if (IsBindableT(t)) return $"return new {t}({call});";
         if (t == "QByteArrayView") return $"return new QByteArray({call});";

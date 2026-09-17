@@ -123,6 +123,9 @@ public static partial class ApiModel
 
         ReportCoverage2();
 
+        // Enums that are part of the published vocabulary but never appear in a signature.
+        CollectExtraEnums(index2, part.Enums);
+
         var text = part.Serialize();
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(modelPath)));
         File.WriteAllText(modelPath, text);
@@ -244,6 +247,11 @@ public static partial class ApiModel
 
     static int ChildCount(CXCursor cursor) => Children(cursor).Count;
 
+    // The index of the translation unit being extracted. Default-literal translation needs it:
+    // `QNativeIpcKey::DefaultTypeForOs` looks exactly like an enumerator but is a static constexpr
+    // member of the class, and only the enum's own declaration can tell the two apart.
+    static ClangIndex CurrentIndex;
+
     static ClangIndex BuildIndex(CXTranslationUnit tu)
     {
         var index = new ClangIndex();
@@ -277,6 +285,7 @@ public static partial class ApiModel
             },
         };
         walker.Walk(tu.Cursor);
+        CurrentIndex = index;
         return index;
     }
 
@@ -372,6 +381,15 @@ public static partial class ApiModel
         if (kind == CXCursorKind.CXCursor_EnumDecl)
         {
             if (clang.getCursorSpelling(declaration).ToString().Length == 0)
+                return null;
+            // An enum with no enumerators is a strong integer - `enum class QCborTag : quint64 {}`
+            // exists so that a CBOR tag is a type of its own. It is deliberately left out of the
+            // vocabulary: mapped to the integer it is built on, every entry point taking one needs
+            // an explicit static_cast the code generator cannot know about (QCborValue::tag came
+            // back ambiguous), and published as an enum it would be a type with no members that no
+            // caller can name a value of. Skipping it costs the four QCbor value facts and keeps
+            // the rest of the class.
+            if (!Children(declaration).Any(c => clang.getCursorKind(c) == CXCursorKind.CXCursor_EnumConstantDecl))
                 return null;
             return EnumTypeName(declaration);
         }
@@ -703,6 +721,9 @@ public static partial class ApiModel
         // Work handed to a thread: a managed QRunnable implements run(), and a managed QThread
         // subclass overrides the same name (both are the standard Qt extension points).
         "QRunnable", "QThread",
+        // A document object drawn by the application: QTextDocument asks the layout handler for
+        // its intrinsic size and to paint itself, which is the textobject example.
+        "QTextObjectInterface",
     };
 
     // Collect the virtual names those classes declare, by walking their own members.
@@ -1122,6 +1143,11 @@ public static partial class ApiModel
         }
         if (!isCtor && !IsCopyableResult(clang.getCursorResultType(handle)))
             return null;
+        // `= delete` removes a member from the API rather than declaring one. Qt uses it to turn a
+        // stray argument into a compile error (QCborValue(const void *) = delete), and taking the
+        // declaration at face value publishes an untyped-pointer constructor that cannot compile.
+        if (clang.CXXMethod_isDeleted(handle) != 0)
+            return null;
         // A byte buffer only makes sense as an argument: a returned one would have no length.
         if (!isCtor && ModelName(clang.getCursorResultType(handle)) == "uchar*")
             return null;
@@ -1441,8 +1467,11 @@ public static partial class ApiModel
                 // A boxed value parameter whose optional default we cannot express (QRect(),
                 // QVariant(), QSize(-1, -1)) would reach the generated glue as a null handle and
                 // be dereferenced. Leaving it out makes the C++ default apply, which is what the
-                // declaration meant.
-                if (p.Optional && p.Default == null && RootClasses.Contains(p.Type))
+                // declaration meant. The same goes for an enum whose default is not an enumerator
+                // (QNativeIpcKey::DefaultTypeForOs): the C# default would be 0, and 0 is the one
+                // value Qt reserved for "invalid".
+                if (p.Optional && p.Default == null
+                    && (RootClasses.Contains(p.Type) || p.Type.Contains("::")))
                     break;
                 result.Add(p);
                 continue;
@@ -1518,10 +1547,40 @@ public static partial class ApiModel
         text = text?.Trim();
         if (string.IsNullOrEmpty(text))
             return null;
+        // The slice starts at the `=` of the assignment (clang reports the range from there), so
+        // `= {}` is what a value-initialised default looks like.
+        if (text.StartsWith("=", StringComparison.Ordinal))
+            text = text.Substring(1).Trim();
+        if (text.Length == 0)
+            return null;
         if (text is "nullptr" or "NULL" or "0")
             return type != null && (type.EndsWith("*") || type == "QString" || RootClasses.Contains(type)) ? "null" : "0";
         if (text is "true" or "false")
             return text;
+        // A value-initialised default: `{}`, `Type()` or `Type{}`. An empty pair of braces is the
+        // zero of the type - a flag set with no bits for the flags and enum types Qt writes this
+        // for (QUrl::AceProcessingOptions, Qt::WindowFlags), and "let the C++ default stand in"
+        // for a class-typed one (QRect()).
+        if (text is "{}" or "()")
+            return IsFlagLike(type) ? "0" : null;
+        // Qt also writes a flag set it builds: `StandardButtons(Yes | No)`, `Qt::WindowFlags(...)`.
+        // Only the argument list matters.
+        if (type != null)
+        {
+            int open = text.IndexOfAny(new[] { '(', '{' });
+            char close = open >= 0 && text[open] == '(' ? ')' : '}';
+            if (open > 0 && text[text.Length - 1] == close)
+            {
+                string head = text.Substring(0, open).Trim();
+                string inner = text.Substring(open + 1, text.Length - open - 2);
+                if (head == type || head == ItemOf(type))
+                {
+                    if (inner.Trim().Length == 0)
+                        return IsFlagLike(type) ? "0" : null;
+                    return DefaultLiteral2(inner, type);
+                }
+            }
+        }
         // An enumerator, or a set of them joined with `|`. Two spellings have to work: the
         // qualified one Qt writes for a plain enum (Qt::AutoColor) and the bare one it writes for
         // a QFlags enumerator (QDir::NoFilter, spelled `NoFilter` because the parameter's type is
@@ -1531,7 +1590,7 @@ public static partial class ApiModel
         if (type != null && type.Contains("::"))
         {
             var parts = text.Split('|').Select(p => p.Trim()).ToList();
-            if (parts.Count > 0 && parts.All(IsEnumeratorName))
+            if (parts.Count > 0 && parts.All(IsEnumeratorName) && parts.All(p => IsEnumeratorOf(type, p)))
                 return string.Join(" | ", parts.Select(p =>
                     ApiTypes.Managed(type, RootClasses.ToArray()) + "." + ItemOf(p)));
         }
@@ -1547,12 +1606,56 @@ public static partial class ApiModel
         }
     }
 
+    // The model types whose zero is `0` rather than a null handle: an enum, or a QFlags typedef
+    // (both are published as a managed enum). A class is the other case.
+    static bool IsFlagLike(string type)
+        => type != null && type.Contains("::") && !RootClasses.Contains(type);
+
+
     // The enumerator out of `Qt::AutoColor` or a bare `NoFilter` (Qt writes the bare spelling when
     // the parameter's type is already the flag type).
     static string ItemOf(string qualified)
     {
         int at = qualified.LastIndexOf("::", StringComparison.Ordinal);
         return at < 0 ? qualified : qualified.Substring(at + 2);
+    }
+
+    // Whether the default argument really names an enumerator of something the parameter's type
+    // could mean. `Qt::AutoColor` and the bare `QDir::NoFilter` do; `QNativeIpcKey::DefaultTypeForOs`
+    // only looks like it does - it is a static constexpr member of the class - and translating it
+    // into `QNativeIpcKey.Type.DefaultTypeForOs` names a member that does not exist. The spelling
+    // alone cannot tell the two apart, so the parse index decides.
+    static bool IsEnumeratorOf(string type, string qualified)
+    {
+        string item = ItemOf(qualified);
+        // `Qt::AutoColor` names the namespace its enum lives in, while `CheckIndexOption::NoOption`
+        // names the enum itself (the parameter's type is the *flags* typedef around it). Both are
+        // accepted as long as some enum with that name contains the enumerator.
+        string head = qualified.Contains("::")
+            ? qualified.Substring(0, qualified.LastIndexOf("::", StringComparison.Ordinal))
+            : null;
+        // A bare enumerator (`NoFilter`) is looked up in the type's own scope (QDir::Filters -> QDir::).
+        string scope = head == null && type.LastIndexOf("::", StringComparison.Ordinal) is int at && at >= 0
+            ? type.Substring(0, at + 2)
+            : null;
+        foreach (var kv in CurrentIndex.Enums)
+        {
+            if (head != null)
+            {
+                if (kv.Key != head
+                    && !kv.Key.StartsWith(head + "::", StringComparison.Ordinal)
+                    && !kv.Key.EndsWith("::" + head, StringComparison.Ordinal))
+                    continue;
+            }
+            else if (kv.Key != type && (scope == null || !kv.Key.StartsWith(scope, StringComparison.Ordinal)))
+            {
+                continue;
+            }
+            if (Children(kv.Value).Any(c => clang.getCursorKind(c) == CXCursorKind.CXCursor_EnumConstantDecl
+                                            && clang.getCursorSpelling(c).ToString() == item))
+                return true;
+        }
+        return false;
     }
 
     // `NoFilter`, `Qt::AutoColor`: a single qualified name with no operators of any kind. Anything
@@ -1620,6 +1723,29 @@ public static partial class ApiModel
                 Name = clang.getCursorSpelling(declaration).ToString(),
                 Qualified = name,
                 Items = EnumItems(declaration),
+                Flags = false,
+            };
+        }
+    }
+
+    // Enums an application needs but no bound *signature* mentions. QKeyEvent::key() returns a
+    // plain int, so Qt::Key - the table every key handler compares against - would otherwise be
+    // missing from the model entirely, and the keyboard modifiers only reach it through the
+    // QFlags spelling (Qt::KeyboardModifiers, which carries the same items). Both are published
+    // as enums of their own so managed code can name the values.
+    static readonly string[] ExtraEnums = { "Qt::Key", "Qt::KeyboardModifier", "QTextFormat::FormatType" };
+
+    static void CollectExtraEnums(ClangIndex index, Dictionary<string, EnumEntry> enums)
+    {
+        foreach (var qualified in ExtraEnums)
+        {
+            if (!index.Enums.TryGetValue(qualified, out var cursor))
+                continue;
+            enums[qualified] = new EnumEntry
+            {
+                Name = qualified.Substring(qualified.LastIndexOf("::", StringComparison.Ordinal) + 2),
+                Qualified = qualified,
+                Items = EnumItems(cursor),
                 Flags = false,
             };
         }
