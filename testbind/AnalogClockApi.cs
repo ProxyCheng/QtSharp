@@ -136,6 +136,13 @@ public static class ApiAnalogClockDemo
         // A forced synchronous repaint, so the test also passes when the session never
         // exposes the window.
         clock.Repaint();
+
+        // The mouse press goes in *before* the loop runs. Sending one into an application that
+        // has already quit (the timer below does that) is not reliable: Qt's own dispatch checks
+        // the application state, so the probe used to fail once in a while for a reason that had
+        // nothing to do with the binding.
+        bool pressed = ApiRuntime.SendMousePress(clock.Handle, 42, 24);
+
         ApiRuntime.Exec();
         sw.Stop();
 
@@ -160,10 +167,10 @@ public static class ApiAnalogClockDemo
 
         // A real mouse press, delivered by Qt, with its payload read through the bound
         // event classes (QMouseEvent::position()/button() come from the bound base chain).
-        bool pressed = ApiRuntime.SendMousePress(clock.Handle, 42, 24);
         Check(pressed && clock.PressCount == 1 && clock.LastPressX == 42 && clock.LastPressY == 24
               && clock.LastButton == Qt.MouseButton.LeftButton,
-            $"mousePressEvent payload reached C# (button={clock.LastButton}, at {clock.LastPressX},{clock.LastPressY})");
+            $"mousePressEvent payload reached C# (delivered={pressed}, count={clock.PressCount}, "
+            + $"button={clock.LastButton}, at {clock.LastPressX},{clock.LastPressY})");
 
         // QFlags surfaces as a [Flags] enum over the native QFlags type, so a mask has to
         // survive both directions.

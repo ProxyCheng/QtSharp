@@ -117,6 +117,12 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-spinboxes
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+# The Shortcut Editor example: a *hierarchical* model written in C#, which needs the protected
+# createIndex/beginInsertRows/... the model publishes, plus a delegate that edits the shortcut
+# column. This is the demo the legacy pipeline crashed on when a tree node was opened.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-shortcut
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 # The sample a user starts from: a project outside this repository's test app that only imports
 # QtSharp.Api.props. Covered here so the "write your own UI" path cannot rot.
 Write-Host "=== [6] Build + run the standalone sample ==="

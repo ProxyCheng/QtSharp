@@ -20,7 +20,6 @@ public static class AllDemos
             new MenusWindow(),
             new ScribbleWindow(),
             new ShapedClock(),
-            new ShortcutWindow(),
             new SlidersWindow(),
             new SpinBoxesWindow(),
             new SystemTrayWindow(),
