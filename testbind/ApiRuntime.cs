@@ -215,6 +215,17 @@ namespace QtSharp.Api
         public static bool SendMousePress(IntPtr widgetHandle, int x, int y)
             => ProbeMousePress(widgetHandle, x, y) != 0;
 
+        /// <summary>
+        /// Delivers a synthetic wheel turn to a widget, <paramref name="degrees"/> being how far
+        /// the wheel turned (Qt carries eighths of a degree in the event, and so does this).
+        /// </summary>
+        public static bool SendWheel(IntPtr widgetHandle, int x, int y, int degrees, int modifiers = 0)
+            => ProbeWheel(widgetHandle, x, y, degrees, modifiers) != 0;
+
+        /// <summary>Delivers a synthetic key press (the key code is a Qt::Key value).</summary>
+        public static bool SendKeyPress(IntPtr widgetHandle, int key, int modifiers = 0)
+            => ProbeKeyPress(widgetHandle, key, modifiers) != 0;
+
         public static void StartApplication() => AppCreate();
 
         public static int Exec() => AppExec();
@@ -454,6 +465,12 @@ namespace QtSharp.Api
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_probe_mouse_press", CallingConvention = CallingConvention.Cdecl)]
         private static extern int ProbeMousePress(IntPtr widgetHandle, int x, int y);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_probe_wheel", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ProbeWheel(IntPtr widgetHandle, int x, int y, int degrees, int modifiers);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_probe_key_press", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ProbeKeyPress(IntPtr widgetHandle, int key, int modifiers);
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_app_create", CallingConvention = CallingConvention.Cdecl)]
         private static extern int AppCreate();
