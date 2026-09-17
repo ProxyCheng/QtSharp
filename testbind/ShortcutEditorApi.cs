@@ -486,6 +486,17 @@ public static class ApiShortcutDemo
             Check(!rendered.IsNull(), "and the tree still renders afterwards");
 
         Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
+
+        // Then leave the window up so it can be *used*: expand the nodes, edit a shortcut. The
+        // default is short enough for the gate; QTSHARP_DEMO_MS=60000 to play with it properly
+        // (the official example's own interactions: open a context, then a category, then edit).
+        var stop = new QTimer();
+        stop.SetSingleShot(true);
+        stop.TimeoutSignal.Connect(() => ApiRuntime.Quit());
+        int runFor = int.TryParse(Environment.GetEnvironmentVariable("QTSHARP_DEMO_MS"), out var ms) ? ms : 1500;
+        stop.Start(runFor);
+        ApiRuntime.Exec();
+
         return failures == 0 ? 0 : 1;
     }
 }
