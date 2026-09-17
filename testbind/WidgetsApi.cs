@@ -241,6 +241,14 @@ public static class ApiWidgetsDemo
         proxy.SetFilterFixedString("a");
         Check(proxy.SourceModel().RowCount() == 2, "proxy exposes its source model");
 
+        // A QList<QStandardItem*> argument, and the QList<QModelIndex> that match() returns.
+        model.AppendColumn(new[] { new QStandardItem("c0"), new QStandardItem("c1") });
+        Check(model.ColumnCount() == 3, $"QList<QStandardItem*> argument grew the model (got {model.ColumnCount()})");
+        // role 0 is Qt::DisplayRole.
+        var matches = model.Match(model.Index(0, 0), 0, new QVariant("alpha"));
+        Check(matches.Length == 1 && matches[0].Row() == 0,
+            $"QList<QModelIndex> returned by match() (got {matches.Length} hit(s))");
+
         // ------------------------------------------------------------------ data widget mapper
         window.Mapper.ToFirst();
         Check(window.Mapper.CurrentIndex() == 0, $"mapper moved to the first row (got {window.Mapper.CurrentIndex()})");
