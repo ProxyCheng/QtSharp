@@ -85,11 +85,14 @@
     { "name": "RowWrapPolicy", "qualified": "QFormLayout::RowWrapPolicy", "flags": false, "items": [{ "name": "DontWrapRows", "value": 0 }, { "name": "WrapLongRows", "value": 1 }, { "name": "WrapAllRows", "value": 2 }] },
     { "name": "Shadow", "qualified": "QFrame::Shadow", "flags": false, "items": [{ "name": "Plain", "value": 16 }, { "name": "Raised", "value": 32 }, { "name": "Sunken", "value": 48 }] },
     { "name": "Shape", "qualified": "QFrame::Shape", "flags": false, "items": [{ "name": "NoFrame", "value": 0 }, { "name": "Box", "value": 1 }, { "name": "Panel", "value": 2 }, { "name": "WinPanel", "value": 3 }, { "name": "HLine", "value": 4 }, { "name": "VLine", "value": 5 }, { "name": "StyledPanel", "value": 6 }] },
+    { "name": "GestureCancelPolicy", "qualified": "QGesture::GestureCancelPolicy", "flags": false, "items": [{ "name": "CancelNone", "value": 0 }, { "name": "CancelAllInContext", "value": 1 }] },
+    { "name": "Result", "qualified": "QGestureRecognizer::Result", "flags": true, "items": [{ "name": "Ignore", "value": 1 }, { "name": "MayBeGesture", "value": 2 }, { "name": "TriggerGesture", "value": 4 }, { "name": "FinishGesture", "value": 8 }, { "name": "CancelGesture", "value": 16 }, { "name": "ResultState_Mask", "value": 255 }, { "name": "ConsumeEventHint", "value": 256 }, { "name": "ResultHint_Mask", "value": 65280 }] },
     { "name": "CoordinateMode", "qualified": "QGradient::CoordinateMode", "flags": false, "items": [{ "name": "LogicalMode", "value": 0 }, { "name": "StretchToDeviceMode", "value": 1 }, { "name": "ObjectBoundingMode", "value": 2 }, { "name": "ObjectMode", "value": 3 }] },
     { "name": "InterpolationMode", "qualified": "QGradient::InterpolationMode", "flags": false, "items": [{ "name": "ColorInterpolation", "value": 0 }, { "name": "ComponentInterpolation", "value": 1 }] },
     { "name": "Preset", "qualified": "QGradient::Preset", "flags": false, "items": [{ "name": "WarmFlame", "value": 1 }, { "name": "NightFade", "value": 2 }, { "name": "SpringWarmth", "value": 3 }, { "name": "JuicyPeach", "value": 4 }, { "name": "YoungPassion", "value": 5 }, { "name": "LadyLips", "value": 6 }, { "name": "SunnyMorning", "value": 7 }, { "name": "RainyAshville", "value": 8 }, { "name": "FrozenDreams", "value": 9 }, { "name": "WinterNeva", "value": 10 }, { "name": "DustyGrass", "value": 11 }, { "name": "TemptingAzure", "value": 12 }, { "name": "HeavyRain", "value": 13 }, { "name": "AmyCrisp", "value": 14 }, { "name": "MeanFruit", "value": 15 }, { "name": "DeepBlue", "value": 16 }, { "name": "RipeMalinka", "value": 17 }, { "name": "CloudyKnoxville", "value": 18 }, { "name": "MalibuBeach", "value": 19 }, { "name": "NewLife", "value": 20 }, { "name": "TrueSunset", "value": 21 }, { "name": "MorpheusDen", "value": 22 }, { "name": "RareWind", "value": 23 }, { "name": "NearMoon", "value": 24 }, { "name": "WildApple", "value": 25 }, { "name": "SaintPetersburg", "value": 26 }, { "name": "PlumPlate", "value": 28 }, { "name": "EverlastingSky", "value": 29 }, { "name": "HappyFisher", "value": 30 }, { "name": "Blessing", "value": 31 }, { "name": "SharpeyeEagle", "value": 32 }, { "name": "LadogaBottom", "value": 33 }, { "name": "LemonGate", "value": 34 }, { "name": "ItmeoBranding", "value": 35 }, { "name": "ZeusMiracle", "value": 36 }, { "name": "OldHat", "value": 37 }, { "name": "StarWine", "value": 38 }, { "name": "HappyAcid", "value": 41 }, { "name": "AwesomePine", "value": 42 }, { "name": "NewYork", "value": 43 }, { "name": "ShyRainbow", "value": 44 }, { "name": "MixedHopes", "value": 46 }, { "name": "FlyHigh", "value": 47 }, { "name": "StrongBliss", "value": 48 }, { "name": "FreshMilk", "value": 49 }, { "name": "SnowAgain", "value": 50 }, { "name": "FebruaryInk", "value": 51 }, { "name": "KindSteel", "value": 52 }, { "name": "SoftGrass", "value": 53 }, { "name": "GrownEarly", "value": 54 }, { "name": "SharpBlues", "value": 55 }, { "name": "ShadyWater", "value": 56 }, { "name": "DirtyBeauty", "value": 57 }, { "name": "GreatWhale", "value": 58 }, { "name": "TeenNotebook", "value": 59 }, { "name": "PoliteRumors", "value": 60 }, { "name": "SweetPeriod", "value": 61 }, { "name": "WideMatrix", "value": 62 }, { "name": "SoftCherish", "value": 63 }, { "name": "RedSalvation", "value": 64 }, { "name": "BurningSpring", "value": 65 }, { "name": "NightParty", "value": 66 }, { "name": "SkyGlider", "value": 67 }, { "name": "HeavenPeach", "value": 68 }, { "name": "PurpleDivision", "value": 69 }, { "name": "AquaSplash", "value": 70 }, { "name": "SpikyNaga", "value": 72 }, { "name": "LoveKiss", "value": 73 }, { "name": "CleanMirror", "value": 75 }, { "name": "PremiumDark", "value": 76 }, { "name": "ColdEvening", "value": 77 }, { "name": "CochitiLake", "value": 78 }, { "name": "SummerGames", "value": 79 }, { "name": "PassionateBed", "value": 80 }, { "name": "MountainRock", "value": 81 }, { "name": "DesertHump", "value": 82 }, { "name": "JungleDay", "value": 83 }, { "name": "PhoenixStart", "value": 84 }, { "name": "OctoberSilence", "value": 85 }, { "name": "FarawayRiver", "value": 86 }, { "name": "AlchemistLab", "value": 87 }, { "name": "OverSun", "value": 88 }, { "name": "PremiumWhite", "value": 89 }, { "name": "MarsParty", "value": 90 }, { "name": "EternalConstance", "value": 91 }, { "name": "JapanBlush", "value": 92 }, { "name": "SmilingRain", "value": 93 }, { "name": "CloudyApple", "value": 94 }, { "name": "BigMango", "value": 95 }, { "name": "HealthyWater", "value": 96 }, { "name": "AmourAmour", "value": 97 }, { "name": "RiskyConcrete", "value": 98 }, { "name": "StrongStick", "value": 99 }, { "name": "ViciousStance", "value": 100 }, { "name": "PaloAlto", "value": 101 }, { "name": "HappyMemories", "value": 102 }, { "name": "MidnightBloom", "value": 103 }, { "name": "Crystalline", "value": 104 }, { "name": "PartyBliss", "value": 106 }, { "name": "ConfidentCloud", "value": 107 }, { "name": "LeCocktail", "value": 108 }, { "name": "RiverCity", "value": 109 }, { "name": "FrozenBerry", "value": 110 }, { "name": "ChildCare", "value": 112 }, { "name": "FlyingLemon", "value": 113 }, { "name": "NewRetrowave", "value": 114 }, { "name": "HiddenJaguar", "value": 115 }, { "name": "AboveTheSky", "value": 116 }, { "name": "Nega", "value": 117 }, { "name": "DenseWater", "value": 118 }, { "name": "Seashore", "value": 120 }, { "name": "MarbleWall", "value": 121 }, { "name": "CheerfulCaramel", "value": 122 }, { "name": "NightSky", "value": 123 }, { "name": "MagicLake", "value": 124 }, { "name": "YoungGrass", "value": 125 }, { "name": "ColorfulPeach", "value": 126 }, { "name": "GentleCare", "value": 127 }, { "name": "PlumBath", "value": 128 }, { "name": "HappyUnicorn", "value": 129 }, { "name": "AfricanField", "value": 131 }, { "name": "SolidStone", "value": 132 }, { "name": "OrangeJuice", "value": 133 }, { "name": "GlassWater", "value": 134 }, { "name": "NorthMiracle", "value": 136 }, { "name": "FruitBlend", "value": 137 }, { "name": "MillenniumPine", "value": 138 }, { "name": "HighFlight", "value": 139 }, { "name": "MoleHall", "value": 140 }, { "name": "SpaceShift", "value": 142 }, { "name": "ForestInei", "value": 143 }, { "name": "RoyalGarden", "value": 144 }, { "name": "RichMetal", "value": 145 }, { "name": "JuicyCake", "value": 146 }, { "name": "SmartIndigo", "value": 147 }, { "name": "SandStrike", "value": 148 }, { "name": "NorseBeauty", "value": 149 }, { "name": "AquaGuidance", "value": 150 }, { "name": "SunVeggie", "value": 151 }, { "name": "SeaLord", "value": 152 }, { "name": "BlackSea", "value": 153 }, { "name": "GrassShampoo", "value": 154 }, { "name": "LandingAircraft", "value": 155 }, { "name": "WitchDance", "value": 156 }, { "name": "SleeplessNight", "value": 157 }, { "name": "AngelCare", "value": 158 }, { "name": "CrystalRiver", "value": 159 }, { "name": "SoftLipstick", "value": 160 }, { "name": "SaltMountain", "value": 161 }, { "name": "PerfectWhite", "value": 162 }, { "name": "FreshOasis", "value": 163 }, { "name": "StrictNovember", "value": 164 }, { "name": "MorningSalad", "value": 165 }, { "name": "DeepRelief", "value": 166 }, { "name": "SeaStrike", "value": 167 }, { "name": "NightCall", "value": 168 }, { "name": "SupremeSky", "value": 169 }, { "name": "LightBlue", "value": 170 }, { "name": "MindCrawl", "value": 171 }, { "name": "LilyMeadow", "value": 172 }, { "name": "SugarLollipop", "value": 173 }, { "name": "SweetDessert", "value": 174 }, { "name": "MagicRay", "value": 175 }, { "name": "TeenParty", "value": 176 }, { "name": "FrozenHeat", "value": 177 }, { "name": "GagarinView", "value": 178 }, { "name": "FabledSunset", "value": 179 }, { "name": "PerfectBlue", "value": 180 }, { "name": "NumPresets", "value": 181 }] },
     { "name": "Spread", "qualified": "QGradient::Spread", "flags": false, "items": [{ "name": "PadSpread", "value": 0 }, { "name": "ReflectSpread", "value": 1 }, { "name": "RepeatSpread", "value": 2 }] },
     { "name": "Type", "qualified": "QGradient::Type", "flags": false, "items": [{ "name": "LinearGradient", "value": 0 }, { "name": "RadialGradient", "value": 1 }, { "name": "ConicalGradient", "value": 2 }, { "name": "NoGradient", "value": 3 }] },
+    { "name": "BlurHints", "qualified": "QGraphicsBlurEffect::BlurHints", "flags": true, "items": [{ "name": "PerformanceHint", "value": 0 }, { "name": "QualityHint", "value": 1 }, { "name": "AnimationHint", "value": 2 }] },
     { "name": "CacheMode", "qualified": "QGraphicsItem::CacheMode", "flags": false, "items": [{ "name": "NoCache", "value": 0 }, { "name": "ItemCoordinateCache", "value": 1 }, { "name": "DeviceCoordinateCache", "value": 2 }] },
     { "name": "GraphicsItemFlag", "qualified": "QGraphicsItem::GraphicsItemFlag", "flags": false, "items": [{ "name": "ItemIsMovable", "value": 1 }, { "name": "ItemIsSelectable", "value": 2 }, { "name": "ItemIsFocusable", "value": 4 }, { "name": "ItemClipsToShape", "value": 8 }, { "name": "ItemClipsChildrenToShape", "value": 16 }, { "name": "ItemIgnoresTransformations", "value": 32 }, { "name": "ItemIgnoresParentOpacity", "value": 64 }, { "name": "ItemDoesntPropagateOpacityToChildren", "value": 128 }, { "name": "ItemStacksBehindParent", "value": 256 }, { "name": "ItemUsesExtendedStyleOption", "value": 512 }, { "name": "ItemHasNoContents", "value": 1024 }, { "name": "ItemSendsGeometryChanges", "value": 2048 }, { "name": "ItemAcceptsInputMethod", "value": 4096 }, { "name": "ItemNegativeZStacksBehindParent", "value": 8192 }, { "name": "ItemIsPanel", "value": 16384 }, { "name": "ItemIsFocusScope", "value": 32768 }, { "name": "ItemSendsScenePositionChanges", "value": 65536 }, { "name": "ItemStopsClickFocusPropagation", "value": 131072 }, { "name": "ItemStopsFocusHandling", "value": 262144 }, { "name": "ItemContainsChildrenInShape", "value": 524288 }] },
     { "name": "GraphicsItemFlags", "qualified": "QGraphicsItem::GraphicsItemFlags", "flags": true, "items": [{ "name": "ItemIsMovable", "value": 1 }, { "name": "ItemIsSelectable", "value": 2 }, { "name": "ItemIsFocusable", "value": 4 }, { "name": "ItemClipsToShape", "value": 8 }, { "name": "ItemClipsChildrenToShape", "value": 16 }, { "name": "ItemIgnoresTransformations", "value": 32 }, { "name": "ItemIgnoresParentOpacity", "value": 64 }, { "name": "ItemDoesntPropagateOpacityToChildren", "value": 128 }, { "name": "ItemStacksBehindParent", "value": 256 }, { "name": "ItemUsesExtendedStyleOption", "value": 512 }, { "name": "ItemHasNoContents", "value": 1024 }, { "name": "ItemSendsGeometryChanges", "value": 2048 }, { "name": "ItemAcceptsInputMethod", "value": 4096 }, { "name": "ItemNegativeZStacksBehindParent", "value": 8192 }, { "name": "ItemIsPanel", "value": 16384 }, { "name": "ItemIsFocusScope", "value": 32768 }, { "name": "ItemSendsScenePositionChanges", "value": 65536 }, { "name": "ItemStopsClickFocusPropagation", "value": 131072 }, { "name": "ItemStopsFocusHandling", "value": 262144 }, { "name": "ItemContainsChildrenInShape", "value": 524288 }] },
@@ -97,6 +100,7 @@
     { "name": "ShapeMode", "qualified": "QGraphicsPixmapItem::ShapeMode", "flags": false, "items": [{ "name": "MaskShape", "value": 0 }, { "name": "BoundingRectShape", "value": 1 }, { "name": "HeuristicMaskShape", "value": 2 }] },
     { "name": "ItemIndexMethod", "qualified": "QGraphicsScene::ItemIndexMethod", "flags": false, "items": [{ "name": "BspTreeIndex", "value": 0 }, { "name": "NoIndex", "value": -1 }] },
     { "name": "SceneLayers", "qualified": "QGraphicsScene::SceneLayers", "flags": true, "items": [{ "name": "ItemLayer", "value": 1 }, { "name": "BackgroundLayer", "value": 2 }, { "name": "ForegroundLayer", "value": 4 }, { "name": "AllLayers", "value": 65535 }] },
+    { "name": "Reason", "qualified": "QGraphicsSceneContextMenuEvent::Reason", "flags": false, "items": [{ "name": "Mouse", "value": 0 }, { "name": "Keyboard", "value": 1 }, { "name": "Other", "value": 2 }] },
     { "name": "CacheMode", "qualified": "QGraphicsView::CacheMode", "flags": true, "items": [{ "name": "CacheNone", "value": 0 }, { "name": "CacheBackground", "value": 1 }] },
     { "name": "DragMode", "qualified": "QGraphicsView::DragMode", "flags": false, "items": [{ "name": "NoDrag", "value": 0 }, { "name": "ScrollHandDrag", "value": 1 }, { "name": "RubberBandDrag", "value": 2 }] },
     { "name": "OptimizationFlag", "qualified": "QGraphicsView::OptimizationFlag", "flags": false, "items": [{ "name": "DontSavePainterState", "value": 1 }, { "name": "DontAdjustForAntialiasing", "value": 2 }, { "name": "IndirectPainting", "value": 4 }] },
@@ -160,12 +164,17 @@
     { "name": "RenderHints", "qualified": "QPainter::RenderHints", "flags": true, "items": [{ "name": "Antialiasing", "value": 1 }, { "name": "TextAntialiasing", "value": 2 }, { "name": "SmoothPixmapTransform", "value": 4 }, { "name": "VerticalSubpixelPositioning", "value": 8 }, { "name": "LosslessImageRendering", "value": 64 }, { "name": "NonCosmeticBrushPatterns", "value": 128 }] },
     { "name": "ColorGroup", "qualified": "QPalette::ColorGroup", "flags": false, "items": [{ "name": "Active", "value": 0 }, { "name": "Disabled", "value": 1 }, { "name": "Inactive", "value": 2 }, { "name": "NColorGroups", "value": 3 }, { "name": "Current", "value": 4 }, { "name": "All", "value": 5 }, { "name": "Normal", "value": 0 }] },
     { "name": "ColorRole", "qualified": "QPalette::ColorRole", "flags": false, "items": [{ "name": "WindowText", "value": 0 }, { "name": "Button", "value": 1 }, { "name": "Light", "value": 2 }, { "name": "Midlight", "value": 3 }, { "name": "Dark", "value": 4 }, { "name": "Mid", "value": 5 }, { "name": "Text", "value": 6 }, { "name": "BrightText", "value": 7 }, { "name": "ButtonText", "value": 8 }, { "name": "Base", "value": 9 }, { "name": "Window", "value": 10 }, { "name": "Shadow", "value": 11 }, { "name": "Highlight", "value": 12 }, { "name": "HighlightedText", "value": 13 }, { "name": "Link", "value": 14 }, { "name": "LinkVisited", "value": 15 }, { "name": "AlternateBase", "value": 16 }, { "name": "NoRole", "value": 17 }, { "name": "ToolTipBase", "value": 18 }, { "name": "ToolTipText", "value": 19 }, { "name": "PlaceholderText", "value": 20 }, { "name": "Accent", "value": 21 }, { "name": "NColorRoles", "value": 22 }] },
+    { "name": "ChangeFlags", "qualified": "QPinchGesture::ChangeFlags", "flags": true, "items": [{ "name": "ScaleFactorChanged", "value": 1 }, { "name": "RotationAngleChanged", "value": 2 }, { "name": "CenterPointChanged", "value": 4 }] },
     { "name": "LineWrapMode", "qualified": "QPlainTextEdit::LineWrapMode", "flags": false, "items": [{ "name": "NoWrap", "value": 0 }, { "name": "WidgetWidth", "value": 1 }] },
     { "name": "Direction", "qualified": "QProgressBar::Direction", "flags": false, "items": [{ "name": "TopToBottom", "value": 0 }, { "name": "BottomToTop", "value": 1 }] },
     { "name": "RegionType", "qualified": "QRegion::RegionType", "flags": false, "items": [{ "name": "Rectangle", "value": 0 }, { "name": "Ellipse", "value": 1 }] },
     { "name": "PatternOptions", "qualified": "QRegularExpression::PatternOptions", "flags": true, "items": [{ "name": "NoPatternOption", "value": 0 }, { "name": "CaseInsensitiveOption", "value": 1 }, { "name": "DotMatchesEverythingOption", "value": 2 }, { "name": "MultilineOption", "value": 4 }, { "name": "ExtendedPatternSyntaxOption", "value": 8 }, { "name": "InvertedGreedinessOption", "value": 16 }, { "name": "DontCaptureOption", "value": 32 }, { "name": "UseUnicodePropertiesOption", "value": 64 }] },
     { "name": "WildcardConversionOptions", "qualified": "QRegularExpression::WildcardConversionOptions", "flags": true, "items": [{ "name": "DefaultWildcardConversion", "value": 0 }, { "name": "UnanchoredWildcardConversion", "value": 1 }, { "name": "NonPathWildcardConversion", "value": 2 }] },
     { "name": "Shape", "qualified": "QRubberBand::Shape", "flags": false, "items": [{ "name": "Line", "value": 0 }, { "name": "Rectangle", "value": 1 }] },
+    { "name": "Input", "qualified": "QScroller::Input", "flags": false, "items": [{ "name": "InputPress", "value": 1 }, { "name": "InputMove", "value": 2 }, { "name": "InputRelease", "value": 3 }] },
+    { "name": "ScrollerGestureType", "qualified": "QScroller::ScrollerGestureType", "flags": false, "items": [{ "name": "TouchGesture", "value": 0 }, { "name": "LeftMouseButtonGesture", "value": 1 }, { "name": "RightMouseButtonGesture", "value": 2 }, { "name": "MiddleMouseButtonGesture", "value": 3 }] },
+    { "name": "State", "qualified": "QScroller::State", "flags": false, "items": [{ "name": "Inactive", "value": 0 }, { "name": "Pressed", "value": 1 }, { "name": "Dragging", "value": 2 }, { "name": "Scrolling", "value": 3 }] },
+    { "name": "ScrollMetric", "qualified": "QScrollerProperties::ScrollMetric", "flags": false, "items": [{ "name": "MousePressEventDelay", "value": 0 }, { "name": "DragStartDistance", "value": 1 }, { "name": "DragVelocitySmoothingFactor", "value": 2 }, { "name": "AxisLockThreshold", "value": 3 }, { "name": "ScrollingCurve", "value": 4 }, { "name": "DecelerationFactor", "value": 5 }, { "name": "MinimumVelocity", "value": 6 }, { "name": "MaximumVelocity", "value": 7 }, { "name": "MaximumClickThroughVelocity", "value": 8 }, { "name": "AcceleratingFlickMaximumTime", "value": 9 }, { "name": "AcceleratingFlickSpeedupFactor", "value": 10 }, { "name": "SnapPositionRatio", "value": 11 }, { "name": "SnapTime", "value": 12 }, { "name": "OvershootDragResistanceFactor", "value": 13 }, { "name": "OvershootDragDistanceFactor", "value": 14 }, { "name": "OvershootScrollDistanceFactor", "value": 15 }, { "name": "OvershootScrollTime", "value": 16 }, { "name": "HorizontalOvershootPolicy", "value": 17 }, { "name": "VerticalOvershootPolicy", "value": 18 }, { "name": "FrameRate", "value": 19 }, { "name": "ScrollMetricCount", "value": 20 }] },
     { "name": "ControlType", "qualified": "QSizePolicy::ControlType", "flags": false, "items": [{ "name": "DefaultType", "value": 1 }, { "name": "ButtonBox", "value": 2 }, { "name": "CheckBox", "value": 4 }, { "name": "ComboBox", "value": 8 }, { "name": "Frame", "value": 16 }, { "name": "GroupBox", "value": 32 }, { "name": "Label", "value": 64 }, { "name": "Line", "value": 128 }, { "name": "LineEdit", "value": 256 }, { "name": "PushButton", "value": 512 }, { "name": "RadioButton", "value": 1024 }, { "name": "Slider", "value": 2048 }, { "name": "SpinBox", "value": 4096 }, { "name": "TabWidget", "value": 8192 }, { "name": "ToolButton", "value": 16384 }] },
     { "name": "ControlTypes", "qualified": "QSizePolicy::ControlTypes", "flags": true, "items": [{ "name": "DefaultType", "value": 1 }, { "name": "ButtonBox", "value": 2 }, { "name": "CheckBox", "value": 4 }, { "name": "ComboBox", "value": 8 }, { "name": "Frame", "value": 16 }, { "name": "GroupBox", "value": 32 }, { "name": "Label", "value": 64 }, { "name": "Line", "value": 128 }, { "name": "LineEdit", "value": 256 }, { "name": "PushButton", "value": 512 }, { "name": "RadioButton", "value": 1024 }, { "name": "Slider", "value": 2048 }, { "name": "SpinBox", "value": 4096 }, { "name": "TabWidget", "value": 8192 }, { "name": "ToolButton", "value": 16384 }] },
     { "name": "Policy", "qualified": "QSizePolicy::Policy", "flags": false, "items": [{ "name": "Fixed", "value": 0 }, { "name": "Minimum", "value": 1 }, { "name": "Maximum", "value": 4 }, { "name": "Preferred", "value": 5 }, { "name": "MinimumExpanding", "value": 3 }, { "name": "Expanding", "value": 7 }, { "name": "Ignored", "value": 13 }] },
@@ -180,6 +189,7 @@
     { "name": "StyleHint", "qualified": "QStyle::StyleHint", "flags": false, "items": [{ "name": "SH_EtchDisabledText", "value": 0 }, { "name": "SH_DitherDisabledText", "value": 1 }, { "name": "SH_ScrollBar_MiddleClickAbsolutePosition", "value": 2 }, { "name": "SH_ScrollBar_ScrollWhenPointerLeavesControl", "value": 3 }, { "name": "SH_TabBar_SelectMouseType", "value": 4 }, { "name": "SH_TabBar_Alignment", "value": 5 }, { "name": "SH_Header_ArrowAlignment", "value": 6 }, { "name": "SH_Slider_SnapToValue", "value": 7 }, { "name": "SH_Slider_SloppyKeyEvents", "value": 8 }, { "name": "SH_ProgressDialog_CenterCancelButton", "value": 9 }, { "name": "SH_ProgressDialog_TextLabelAlignment", "value": 10 }, { "name": "SH_PrintDialog_RightAlignButtons", "value": 11 }, { "name": "SH_MainWindow_SpaceBelowMenuBar", "value": 12 }, { "name": "SH_FontDialog_SelectAssociatedText", "value": 13 }, { "name": "SH_Menu_AllowActiveAndDisabled", "value": 14 }, { "name": "SH_Menu_SpaceActivatesItem", "value": 15 }, { "name": "SH_Menu_SubMenuPopupDelay", "value": 16 }, { "name": "SH_ScrollView_FrameOnlyAroundContents", "value": 17 }, { "name": "SH_MenuBar_AltKeyNavigation", "value": 18 }, { "name": "SH_ComboBox_ListMouseTracking", "value": 19 }, { "name": "SH_ComboBox_ListMouseTracking_Current", "value": 19 }, { "name": "SH_Menu_MouseTracking", "value": 20 }, { "name": "SH_MenuBar_MouseTracking", "value": 21 }, { "name": "SH_ItemView_ChangeHighlightOnFocus", "value": 22 }, { "name": "SH_Widget_ShareActivation", "value": 23 }, { "name": "SH_Workspace_FillSpaceOnMaximize", "value": 24 }, { "name": "SH_ComboBox_Popup", "value": 25 }, { "name": "SH_TitleBar_NoBorder", "value": 26 }, { "name": "SH_Slider_StopMouseOverSlider", "value": 27 }, { "name": "SH_BlinkCursorWhenTextSelected", "value": 28 }, { "name": "SH_RichText_FullWidthSelection", "value": 29 }, { "name": "SH_Menu_Scrollable", "value": 30 }, { "name": "SH_GroupBox_TextLabelVerticalAlignment", "value": 31 }, { "name": "SH_GroupBox_TextLabelColor", "value": 32 }, { "name": "SH_Menu_SloppySubMenus", "value": 33 }, { "name": "SH_Table_GridLineColor", "value": 34 }, { "name": "SH_LineEdit_PasswordCharacter", "value": 35 }, { "name": "SH_DialogButtons_DefaultButton", "value": 36 }, { "name": "SH_ToolBox_SelectedPageTitleBold", "value": 37 }, { "name": "SH_TabBar_PreferNoArrows", "value": 38 }, { "name": "SH_ScrollBar_LeftClickAbsolutePosition", "value": 39 }, { "name": "SH_ListViewExpand_SelectMouseType", "value": 40 }, { "name": "SH_UnderlineShortcut", "value": 41 }, { "name": "SH_SpinBox_AnimateButton", "value": 42 }, { "name": "SH_SpinBox_KeyPressAutoRepeatRate", "value": 43 }, { "name": "SH_SpinBox_ClickAutoRepeatRate", "value": 44 }, { "name": "SH_Menu_FillScreenWithScroll", "value": 45 }, { "name": "SH_ToolTipLabel_Opacity", "value": 46 }, { "name": "SH_DrawMenuBarSeparator", "value": 47 }, { "name": "SH_TitleBar_ModifyNotification", "value": 48 }, { "name": "SH_Button_FocusPolicy", "value": 49 }, { "name": "SH_MessageBox_UseBorderForButtonSpacing", "value": 50 }, { "name": "SH_TitleBar_AutoRaise", "value": 51 }, { "name": "SH_ToolButton_PopupDelay", "value": 52 }, { "name": "SH_FocusFrame_Mask", "value": 53 }, { "name": "SH_RubberBand_Mask", "value": 54 }, { "name": "SH_WindowFrame_Mask", "value": 55 }, { "name": "SH_SpinControls_DisableOnBounds", "value": 56 }, { "name": "SH_Dial_BackgroundRole", "value": 57 }, { "name": "SH_ComboBox_LayoutDirection", "value": 58 }, { "name": "SH_ItemView_EllipsisLocation", "value": 59 }, { "name": "SH_ItemView_ShowDecorationSelected", "value": 60 }, { "name": "SH_ItemView_ActivateItemOnSingleClick", "value": 61 }, { "name": "SH_ScrollBar_ContextMenu", "value": 62 }, { "name": "SH_ScrollBar_RollBetweenButtons", "value": 63 }, { "name": "SH_Slider_AbsoluteSetButtons", "value": 64 }, { "name": "SH_Slider_PageSetButtons", "value": 65 }, { "name": "SH_Menu_KeyboardSearch", "value": 66 }, { "name": "SH_TabBar_ElideMode", "value": 67 }, { "name": "SH_DialogButtonLayout", "value": 68 }, { "name": "SH_ComboBox_PopupFrameStyle", "value": 69 }, { "name": "SH_MessageBox_TextInteractionFlags", "value": 70 }, { "name": "SH_DialogButtonBox_ButtonsHaveIcons", "value": 71 }, { "name": "SH_MessageBox_CenterButtons", "value": 72 }, { "name": "SH_Menu_SelectionWrap", "value": 73 }, { "name": "SH_ItemView_MovementWithoutUpdatingSelection", "value": 74 }, { "name": "SH_ToolTip_Mask", "value": 75 }, { "name": "SH_FocusFrame_AboveWidget", "value": 76 }, { "name": "SH_TextControl_FocusIndicatorTextCharFormat", "value": 77 }, { "name": "SH_WizardStyle", "value": 78 }, { "name": "SH_ItemView_ArrowKeysNavigateIntoChildren", "value": 79 }, { "name": "SH_Menu_Mask", "value": 80 }, { "name": "SH_Menu_FlashTriggeredItem", "value": 81 }, { "name": "SH_Menu_FadeOutOnHide", "value": 82 }, { "name": "SH_SpinBox_ClickAutoRepeatThreshold", "value": 83 }, { "name": "SH_ItemView_PaintAlternatingRowColorsForEmptyArea", "value": 84 }, { "name": "SH_FormLayoutWrapPolicy", "value": 85 }, { "name": "SH_TabWidget_DefaultTabPosition", "value": 86 }, { "name": "SH_ToolBar_Movable", "value": 87 }, { "name": "SH_FormLayoutFieldGrowthPolicy", "value": 88 }, { "name": "SH_FormLayoutFormAlignment", "value": 89 }, { "name": "SH_FormLayoutLabelAlignment", "value": 90 }, { "name": "SH_ItemView_DrawDelegateFrame", "value": 91 }, { "name": "SH_TabBar_CloseButtonPosition", "value": 92 }, { "name": "SH_DockWidget_ButtonsHaveFrame", "value": 93 }, { "name": "SH_ToolButtonStyle", "value": 94 }, { "name": "SH_RequestSoftwareInputPanel", "value": 95 }, { "name": "SH_ScrollBar_Transient", "value": 96 }, { "name": "SH_Menu_SupportsSections", "value": 97 }, { "name": "SH_ToolTip_WakeUpDelay", "value": 98 }, { "name": "SH_ToolTip_FallAsleepDelay", "value": 99 }, { "name": "SH_Widget_Animate", "value": 100 }, { "name": "SH_Splitter_OpaqueResize", "value": 101 }, { "name": "SH_ComboBox_UseNativePopup", "value": 102 }, { "name": "SH_LineEdit_PasswordMaskDelay", "value": 103 }, { "name": "SH_TabBar_ChangeCurrentDelay", "value": 104 }, { "name": "SH_Menu_SubMenuUniDirection", "value": 105 }, { "name": "SH_Menu_SubMenuUniDirectionFailCount", "value": 106 }, { "name": "SH_Menu_SubMenuSloppySelectOtherActions", "value": 107 }, { "name": "SH_Menu_SubMenuSloppyCloseTimeout", "value": 108 }, { "name": "SH_Menu_SubMenuResetWhenReenteringParent", "value": 109 }, { "name": "SH_Menu_SubMenuDontStartSloppyOnLeave", "value": 110 }, { "name": "SH_ItemView_ScrollMode", "value": 111 }, { "name": "SH_TitleBar_ShowToolTipsOnButtons", "value": 112 }, { "name": "SH_Widget_Animation_Duration", "value": 113 }, { "name": "SH_ComboBox_AllowWheelScrolling", "value": 114 }, { "name": "SH_SpinBox_ButtonsInsideFrame", "value": 115 }, { "name": "SH_SpinBox_StepModifier", "value": 116 }, { "name": "SH_TabBar_AllowWheelScrolling", "value": 117 }, { "name": "SH_Table_AlwaysDrawLeftTopGridLines", "value": 118 }, { "name": "SH_SpinBox_SelectOnStep", "value": 119 }, { "name": "SH_ComboBox_ListMouseTracking_Active", "value": 120 }, { "name": "SH_CustomBase", "value": -268435456 }] },
     { "name": "SubControl", "qualified": "QStyle::SubControl", "flags": false, "items": [{ "name": "SC_None", "value": 0 }, { "name": "SC_ScrollBarAddLine", "value": 1 }, { "name": "SC_ScrollBarSubLine", "value": 2 }, { "name": "SC_ScrollBarAddPage", "value": 4 }, { "name": "SC_ScrollBarSubPage", "value": 8 }, { "name": "SC_ScrollBarFirst", "value": 16 }, { "name": "SC_ScrollBarLast", "value": 32 }, { "name": "SC_ScrollBarSlider", "value": 64 }, { "name": "SC_ScrollBarGroove", "value": 128 }, { "name": "SC_SpinBoxUp", "value": 1 }, { "name": "SC_SpinBoxDown", "value": 2 }, { "name": "SC_SpinBoxFrame", "value": 4 }, { "name": "SC_SpinBoxEditField", "value": 8 }, { "name": "SC_ComboBoxFrame", "value": 1 }, { "name": "SC_ComboBoxEditField", "value": 2 }, { "name": "SC_ComboBoxArrow", "value": 4 }, { "name": "SC_ComboBoxListBoxPopup", "value": 8 }, { "name": "SC_SliderGroove", "value": 1 }, { "name": "SC_SliderHandle", "value": 2 }, { "name": "SC_SliderTickmarks", "value": 4 }, { "name": "SC_ToolButton", "value": 1 }, { "name": "SC_ToolButtonMenu", "value": 2 }, { "name": "SC_TitleBarSysMenu", "value": 1 }, { "name": "SC_TitleBarMinButton", "value": 2 }, { "name": "SC_TitleBarMaxButton", "value": 4 }, { "name": "SC_TitleBarCloseButton", "value": 8 }, { "name": "SC_TitleBarNormalButton", "value": 16 }, { "name": "SC_TitleBarShadeButton", "value": 32 }, { "name": "SC_TitleBarUnshadeButton", "value": 64 }, { "name": "SC_TitleBarContextHelpButton", "value": 128 }, { "name": "SC_TitleBarLabel", "value": 256 }, { "name": "SC_DialGroove", "value": 1 }, { "name": "SC_DialHandle", "value": 2 }, { "name": "SC_DialTickmarks", "value": 4 }, { "name": "SC_GroupBoxCheckBox", "value": 1 }, { "name": "SC_GroupBoxLabel", "value": 2 }, { "name": "SC_GroupBoxContents", "value": 4 }, { "name": "SC_GroupBoxFrame", "value": 8 }, { "name": "SC_MdiMinButton", "value": 1 }, { "name": "SC_MdiNormalButton", "value": 2 }, { "name": "SC_MdiCloseButton", "value": 4 }, { "name": "SC_CustomBase", "value": -268435456 }, { "name": "SC_All", "value": -1 }] },
     { "name": "SubElement", "qualified": "QStyle::SubElement", "flags": false, "items": [{ "name": "SE_PushButtonContents", "value": 0 }, { "name": "SE_PushButtonFocusRect", "value": 1 }, { "name": "SE_CheckBoxIndicator", "value": 2 }, { "name": "SE_CheckBoxContents", "value": 3 }, { "name": "SE_CheckBoxFocusRect", "value": 4 }, { "name": "SE_CheckBoxClickRect", "value": 5 }, { "name": "SE_RadioButtonIndicator", "value": 6 }, { "name": "SE_RadioButtonContents", "value": 7 }, { "name": "SE_RadioButtonFocusRect", "value": 8 }, { "name": "SE_RadioButtonClickRect", "value": 9 }, { "name": "SE_ComboBoxFocusRect", "value": 10 }, { "name": "SE_SliderFocusRect", "value": 11 }, { "name": "SE_ProgressBarGroove", "value": 12 }, { "name": "SE_ProgressBarContents", "value": 13 }, { "name": "SE_ProgressBarLabel", "value": 14 }, { "name": "SE_ToolBoxTabContents", "value": 15 }, { "name": "SE_HeaderLabel", "value": 16 }, { "name": "SE_HeaderArrow", "value": 17 }, { "name": "SE_TabWidgetTabBar", "value": 18 }, { "name": "SE_TabWidgetTabPane", "value": 19 }, { "name": "SE_TabWidgetTabContents", "value": 20 }, { "name": "SE_TabWidgetLeftCorner", "value": 21 }, { "name": "SE_TabWidgetRightCorner", "value": 22 }, { "name": "SE_ItemViewItemCheckIndicator", "value": 23 }, { "name": "SE_TabBarTearIndicator", "value": 24 }, { "name": "SE_TabBarTearIndicatorLeft", "value": 24 }, { "name": "SE_TreeViewDisclosureItem", "value": 25 }, { "name": "SE_LineEditContents", "value": 26 }, { "name": "SE_FrameContents", "value": 27 }, { "name": "SE_DockWidgetCloseButton", "value": 28 }, { "name": "SE_DockWidgetFloatButton", "value": 29 }, { "name": "SE_DockWidgetTitleBarText", "value": 30 }, { "name": "SE_DockWidgetIcon", "value": 31 }, { "name": "SE_CheckBoxLayoutItem", "value": 32 }, { "name": "SE_ComboBoxLayoutItem", "value": 33 }, { "name": "SE_DateTimeEditLayoutItem", "value": 34 }, { "name": "SE_LabelLayoutItem", "value": 35 }, { "name": "SE_ProgressBarLayoutItem", "value": 36 }, { "name": "SE_PushButtonLayoutItem", "value": 37 }, { "name": "SE_RadioButtonLayoutItem", "value": 38 }, { "name": "SE_SliderLayoutItem", "value": 39 }, { "name": "SE_SpinBoxLayoutItem", "value": 40 }, { "name": "SE_ToolButtonLayoutItem", "value": 41 }, { "name": "SE_FrameLayoutItem", "value": 42 }, { "name": "SE_GroupBoxLayoutItem", "value": 43 }, { "name": "SE_TabWidgetLayoutItem", "value": 44 }, { "name": "SE_ItemViewItemDecoration", "value": 45 }, { "name": "SE_ItemViewItemText", "value": 46 }, { "name": "SE_ItemViewItemFocusRect", "value": 47 }, { "name": "SE_TabBarTabLeftButton", "value": 48 }, { "name": "SE_TabBarTabRightButton", "value": 49 }, { "name": "SE_TabBarTabText", "value": 50 }, { "name": "SE_ShapedFrameContents", "value": 51 }, { "name": "SE_ToolBarHandle", "value": 52 }, { "name": "SE_TabBarScrollLeftButton", "value": 53 }, { "name": "SE_TabBarScrollRightButton", "value": 54 }, { "name": "SE_TabBarTearIndicatorRight", "value": 55 }, { "name": "SE_PushButtonBevel", "value": 56 }, { "name": "SE_CustomBase", "value": -268435456 }] },
+    { "name": "SwipeDirection", "qualified": "QSwipeGesture::SwipeDirection", "flags": false, "items": [{ "name": "NoDirection", "value": 0 }, { "name": "Left", "value": 1 }, { "name": "Right", "value": 2 }, { "name": "Up", "value": 3 }, { "name": "Down", "value": 4 }] },
     { "name": "MessageIcon", "qualified": "QSystemTrayIcon::MessageIcon", "flags": false, "items": [{ "name": "NoIcon", "value": 0 }, { "name": "Information", "value": 1 }, { "name": "Warning", "value": 2 }, { "name": "Critical", "value": 3 }] },
     { "name": "ButtonPosition", "qualified": "QTabBar::ButtonPosition", "flags": false, "items": [{ "name": "LeftSide", "value": 0 }, { "name": "RightSide", "value": 1 }] },
     { "name": "SelectionBehavior", "qualified": "QTabBar::SelectionBehavior", "flags": false, "items": [{ "name": "SelectLeftTab", "value": 0 }, { "name": "SelectRightTab", "value": 1 }, { "name": "SelectPreviousTab", "value": 2 }] },
@@ -214,6 +224,7 @@
     { "name": "ToolButtonPopupMode", "qualified": "QToolButton::ToolButtonPopupMode", "flags": false, "items": [{ "name": "DelayedPopup", "value": 0 }, { "name": "MenuButtonPopup", "value": 1 }, { "name": "InstantPopup", "value": 2 }] },
     { "name": "TransformationType", "qualified": "QTransform::TransformationType", "flags": false, "items": [{ "name": "TxNone", "value": 0 }, { "name": "TxTranslate", "value": 1 }, { "name": "TxScale", "value": 2 }, { "name": "TxRotate", "value": 4 }, { "name": "TxShear", "value": 8 }, { "name": "TxProject", "value": 16 }] },
     { "name": "ChildIndicatorPolicy", "qualified": "QTreeWidgetItem::ChildIndicatorPolicy", "flags": false, "items": [{ "name": "ShowIndicator", "value": 0 }, { "name": "DontShowIndicator", "value": 1 }, { "name": "DontShowIndicatorWhenChildless", "value": 2 }] },
+    { "name": "IteratorFlags", "qualified": "QTreeWidgetItemIterator::IteratorFlags", "flags": true, "items": [{ "name": "All", "value": 0 }, { "name": "Hidden", "value": 1 }, { "name": "NotHidden", "value": 2 }, { "name": "Selected", "value": 4 }, { "name": "Unselected", "value": 8 }, { "name": "Selectable", "value": 16 }, { "name": "NotSelectable", "value": 32 }, { "name": "DragEnabled", "value": 64 }, { "name": "DragDisabled", "value": 128 }, { "name": "DropEnabled", "value": 256 }, { "name": "DropDisabled", "value": 512 }, { "name": "HasChildren", "value": 1024 }, { "name": "NoChildren", "value": 2048 }, { "name": "Checked", "value": 4096 }, { "name": "NotChecked", "value": 8192 }, { "name": "Enabled", "value": 16384 }, { "name": "Disabled", "value": 32768 }, { "name": "Editable", "value": 65536 }, { "name": "NotEditable", "value": 131072 }, { "name": "UserFlag", "value": 16777216 }] },
     { "name": "AceProcessingOptions", "qualified": "QUrl::AceProcessingOptions", "flags": true, "items": [{ "name": "IgnoreIDNWhitelist", "value": 1 }, { "name": "AceTransitionalProcessing", "value": 2 }] },
     { "name": "ComponentFormattingOptions", "qualified": "QUrl::ComponentFormattingOptions", "flags": true, "items": [{ "name": "PrettyDecoded", "value": 0 }, { "name": "EncodeSpaces", "value": 1048576 }, { "name": "EncodeUnicode", "value": 2097152 }, { "name": "EncodeDelimiters", "value": 12582912 }, { "name": "EncodeReserved", "value": 16777216 }, { "name": "DecodeReserved", "value": 33554432 }, { "name": "FullyEncoded", "value": 32505856 }, { "name": "FullyDecoded", "value": 133169152 }] },
     { "name": "ParsingMode", "qualified": "QUrl::ParsingMode", "flags": false, "items": [{ "name": "TolerantMode", "value": 0 }, { "name": "StrictMode", "value": 1 }, { "name": "DecodedMode", "value": 2 }] },
@@ -226,6 +237,7 @@
     { "name": "WizardStyle", "qualified": "QWizard::WizardStyle", "flags": false, "items": [{ "name": "ClassicStyle", "value": 0 }, { "name": "ModernStyle", "value": 1 }, { "name": "MacStyle", "value": 2 }, { "name": "AeroStyle", "value": 3 }, { "name": "NStyles", "value": 4 }] },
     { "name": "Alignment", "qualified": "Qt::Alignment", "flags": true, "items": [{ "name": "AlignLeft", "value": 1 }, { "name": "AlignLeading", "value": 1 }, { "name": "AlignRight", "value": 2 }, { "name": "AlignTrailing", "value": 2 }, { "name": "AlignHCenter", "value": 4 }, { "name": "AlignJustify", "value": 8 }, { "name": "AlignAbsolute", "value": 16 }, { "name": "AlignHorizontal_Mask", "value": 31 }, { "name": "AlignTop", "value": 32 }, { "name": "AlignBottom", "value": 64 }, { "name": "AlignVCenter", "value": 128 }, { "name": "AlignBaseline", "value": 256 }, { "name": "AlignVertical_Mask", "value": 480 }, { "name": "AlignCenter", "value": 132 }] },
     { "name": "AlignmentFlag", "qualified": "Qt::AlignmentFlag", "flags": false, "items": [{ "name": "AlignLeft", "value": 1 }, { "name": "AlignLeading", "value": 1 }, { "name": "AlignRight", "value": 2 }, { "name": "AlignTrailing", "value": 2 }, { "name": "AlignHCenter", "value": 4 }, { "name": "AlignJustify", "value": 8 }, { "name": "AlignAbsolute", "value": 16 }, { "name": "AlignHorizontal_Mask", "value": 31 }, { "name": "AlignTop", "value": 32 }, { "name": "AlignBottom", "value": 64 }, { "name": "AlignVCenter", "value": 128 }, { "name": "AlignBaseline", "value": 256 }, { "name": "AlignVertical_Mask", "value": 480 }, { "name": "AlignCenter", "value": 132 }] },
+    { "name": "AnchorPoint", "qualified": "Qt::AnchorPoint", "flags": false, "items": [{ "name": "AnchorLeft", "value": 0 }, { "name": "AnchorHorizontalCenter", "value": 1 }, { "name": "AnchorRight", "value": 2 }, { "name": "AnchorTop", "value": 3 }, { "name": "AnchorVerticalCenter", "value": 4 }, { "name": "AnchorBottom", "value": 5 }] },
     { "name": "ArrowType", "qualified": "Qt::ArrowType", "flags": false, "items": [{ "name": "NoArrow", "value": 0 }, { "name": "UpArrow", "value": 1 }, { "name": "DownArrow", "value": 2 }, { "name": "LeftArrow", "value": 3 }, { "name": "RightArrow", "value": 4 }] },
     { "name": "AspectRatioMode", "qualified": "Qt::AspectRatioMode", "flags": false, "items": [{ "name": "IgnoreAspectRatio", "value": 0 }, { "name": "KeepAspectRatio", "value": 1 }, { "name": "KeepAspectRatioByExpanding", "value": 2 }] },
     { "name": "Axis", "qualified": "Qt::Axis", "flags": false, "items": [{ "name": "XAxis", "value": 0 }, { "name": "YAxis", "value": 1 }, { "name": "ZAxis", "value": 2 }] },
@@ -252,8 +264,10 @@
     { "name": "FocusPolicy", "qualified": "Qt::FocusPolicy", "flags": false, "items": [{ "name": "NoFocus", "value": 0 }, { "name": "TabFocus", "value": 1 }, { "name": "ClickFocus", "value": 2 }, { "name": "StrongFocus", "value": 11 }, { "name": "WheelFocus", "value": 15 }] },
     { "name": "FocusReason", "qualified": "Qt::FocusReason", "flags": false, "items": [{ "name": "MouseFocusReason", "value": 0 }, { "name": "TabFocusReason", "value": 1 }, { "name": "BacktabFocusReason", "value": 2 }, { "name": "ActiveWindowFocusReason", "value": 3 }, { "name": "PopupFocusReason", "value": 4 }, { "name": "ShortcutFocusReason", "value": 5 }, { "name": "MenuBarFocusReason", "value": 6 }, { "name": "OtherFocusReason", "value": 7 }, { "name": "NoFocusReason", "value": 8 }] },
     { "name": "GestureFlags", "qualified": "Qt::GestureFlags", "flags": true, "items": [{ "name": "DontStartGestureOnChildren", "value": 1 }, { "name": "ReceivePartialGestures", "value": 2 }, { "name": "IgnoredGesturesPropagateToParent", "value": 4 }] },
+    { "name": "GestureState", "qualified": "Qt::GestureState", "flags": false, "items": [{ "name": "NoGesture", "value": 0 }, { "name": "GestureStarted", "value": 1 }, { "name": "GestureUpdated", "value": 2 }, { "name": "GestureFinished", "value": 3 }, { "name": "GestureCanceled", "value": 4 }] },
     { "name": "GestureType", "qualified": "Qt::GestureType", "flags": false, "items": [{ "name": "TapGesture", "value": 1 }, { "name": "TapAndHoldGesture", "value": 2 }, { "name": "PanGesture", "value": 3 }, { "name": "PinchGesture", "value": 4 }, { "name": "SwipeGesture", "value": 5 }, { "name": "CustomGesture", "value": 256 }, { "name": "LastGestureType", "value": -1 }] },
     { "name": "GlobalColor", "qualified": "Qt::GlobalColor", "flags": false, "items": [{ "name": "color0", "value": 0 }, { "name": "color1", "value": 1 }, { "name": "black", "value": 2 }, { "name": "white", "value": 3 }, { "name": "darkGray", "value": 4 }, { "name": "gray", "value": 5 }, { "name": "lightGray", "value": 6 }, { "name": "red", "value": 7 }, { "name": "green", "value": 8 }, { "name": "blue", "value": 9 }, { "name": "cyan", "value": 10 }, { "name": "magenta", "value": 11 }, { "name": "yellow", "value": 12 }, { "name": "darkRed", "value": 13 }, { "name": "darkGreen", "value": 14 }, { "name": "darkBlue", "value": 15 }, { "name": "darkCyan", "value": 16 }, { "name": "darkMagenta", "value": 17 }, { "name": "darkYellow", "value": 18 }, { "name": "transparent", "value": 19 }] },
+    { "name": "HitTestAccuracy", "qualified": "Qt::HitTestAccuracy", "flags": false, "items": [{ "name": "ExactHit", "value": 0 }, { "name": "FuzzyHit", "value": 1 }] },
     { "name": "ImageConversionFlags", "qualified": "Qt::ImageConversionFlags", "flags": true, "items": [{ "name": "ColorMode_Mask", "value": 3 }, { "name": "AutoColor", "value": 0 }, { "name": "ColorOnly", "value": 3 }, { "name": "MonoOnly", "value": 2 }, { "name": "AlphaDither_Mask", "value": 12 }, { "name": "ThresholdAlphaDither", "value": 0 }, { "name": "OrderedAlphaDither", "value": 4 }, { "name": "DiffuseAlphaDither", "value": 8 }, { "name": "NoAlpha", "value": 12 }, { "name": "Dither_Mask", "value": 48 }, { "name": "DiffuseDither", "value": 0 }, { "name": "OrderedDither", "value": 16 }, { "name": "ThresholdDither", "value": 32 }, { "name": "DitherMode_Mask", "value": 192 }, { "name": "AutoDither", "value": 0 }, { "name": "PreferDither", "value": 64 }, { "name": "AvoidDither", "value": 128 }, { "name": "NoOpaqueDetection", "value": 256 }, { "name": "NoFormatConversion", "value": 512 }] },
     { "name": "Initialization", "qualified": "Qt::Initialization", "flags": false, "items": [{ "name": "Uninitialized", "value": 0 }] },
     { "name": "InputMethodHints", "qualified": "Qt::InputMethodHints", "flags": true, "items": [{ "name": "ImhNone", "value": 0 }, { "name": "ImhHiddenText", "value": 1 }, { "name": "ImhSensitiveData", "value": 2 }, { "name": "ImhNoAutoUppercase", "value": 4 }, { "name": "ImhPreferNumbers", "value": 8 }, { "name": "ImhPreferUppercase", "value": 16 }, { "name": "ImhPreferLowercase", "value": 32 }, { "name": "ImhNoPredictiveText", "value": 64 }, { "name": "ImhDate", "value": 128 }, { "name": "ImhTime", "value": 256 }, { "name": "ImhPreferLatin", "value": 512 }, { "name": "ImhMultiLine", "value": 1024 }, { "name": "ImhNoEditMenu", "value": 2048 }, { "name": "ImhNoTextHandles", "value": 4096 }, { "name": "ImhDigitsOnly", "value": 65536 }, { "name": "ImhFormattedNumbersOnly", "value": 131072 }, { "name": "ImhUppercaseOnly", "value": 262144 }, { "name": "ImhLowercaseOnly", "value": 524288 }, { "name": "ImhDialableCharactersOnly", "value": 1048576 }, { "name": "ImhEmailCharactersOnly", "value": 2097152 }, { "name": "ImhUrlCharactersOnly", "value": 4194304 }, { "name": "ImhLatinOnly", "value": 8388608 }, { "name": "ImhExclusiveInputMask", "value": -65536 }] },
@@ -261,6 +275,7 @@
     { "name": "ItemFlags", "qualified": "Qt::ItemFlags", "flags": true, "items": [{ "name": "NoItemFlags", "value": 0 }, { "name": "ItemIsSelectable", "value": 1 }, { "name": "ItemIsEditable", "value": 2 }, { "name": "ItemIsDragEnabled", "value": 4 }, { "name": "ItemIsDropEnabled", "value": 8 }, { "name": "ItemIsUserCheckable", "value": 16 }, { "name": "ItemIsEnabled", "value": 32 }, { "name": "ItemIsAutoTristate", "value": 64 }, { "name": "ItemNeverHasChildren", "value": 128 }, { "name": "ItemIsUserTristate", "value": 256 }] },
     { "name": "ItemSelectionMode", "qualified": "Qt::ItemSelectionMode", "flags": false, "items": [{ "name": "ContainsItemShape", "value": 0 }, { "name": "IntersectsItemShape", "value": 1 }, { "name": "ContainsItemBoundingRect", "value": 2 }, { "name": "IntersectsItemBoundingRect", "value": 3 }] },
     { "name": "ItemSelectionOperation", "qualified": "Qt::ItemSelectionOperation", "flags": false, "items": [{ "name": "ReplaceSelection", "value": 0 }, { "name": "AddToSelection", "value": 1 }] },
+    { "name": "KeyboardModifiers", "qualified": "Qt::KeyboardModifiers", "flags": true, "items": [{ "name": "NoModifier", "value": 0 }, { "name": "ShiftModifier", "value": 33554432 }, { "name": "ControlModifier", "value": 67108864 }, { "name": "AltModifier", "value": 134217728 }, { "name": "MetaModifier", "value": 268435456 }, { "name": "KeypadModifier", "value": 536870912 }, { "name": "GroupSwitchModifier", "value": 1073741824 }, { "name": "KeyboardModifierMask", "value": -33554432 }] },
     { "name": "LayoutDirection", "qualified": "Qt::LayoutDirection", "flags": false, "items": [{ "name": "LeftToRight", "value": 0 }, { "name": "RightToLeft", "value": 1 }, { "name": "LayoutDirectionAuto", "value": 2 }] },
     { "name": "MaskMode", "qualified": "Qt::MaskMode", "flags": false, "items": [{ "name": "MaskInColor", "value": 0 }, { "name": "MaskOutColor", "value": 1 }] },
     { "name": "MatchFlags", "qualified": "Qt::MatchFlags", "flags": true, "items": [{ "name": "MatchExactly", "value": 0 }, { "name": "MatchContains", "value": 1 }, { "name": "MatchStartsWith", "value": 2 }, { "name": "MatchEndsWith", "value": 3 }, { "name": "MatchRegularExpression", "value": 4 }, { "name": "MatchWildcard", "value": 5 }, { "name": "MatchFixedString", "value": 8 }, { "name": "MatchTypeMask", "value": 15 }, { "name": "MatchCaseSensitive", "value": 16 }, { "name": "MatchWrap", "value": 32 }, { "name": "MatchRecursive", "value": 64 }] },
@@ -275,7 +290,9 @@
     { "name": "PenStyle", "qualified": "Qt::PenStyle", "flags": false, "items": [{ "name": "NoPen", "value": 0 }, { "name": "SolidLine", "value": 1 }, { "name": "DashLine", "value": 2 }, { "name": "DotLine", "value": 3 }, { "name": "DashDotLine", "value": 4 }, { "name": "DashDotDotLine", "value": 5 }, { "name": "CustomDashLine", "value": 6 }, { "name": "MPenStyle", "value": 15 }] },
     { "name": "ReturnByValueConstant", "qualified": "Qt::ReturnByValueConstant", "flags": false, "items": [{ "name": "ReturnByValue", "value": 0 }] },
     { "name": "ScrollBarPolicy", "qualified": "Qt::ScrollBarPolicy", "flags": false, "items": [{ "name": "ScrollBarAsNeeded", "value": 0 }, { "name": "ScrollBarAlwaysOff", "value": 1 }, { "name": "ScrollBarAlwaysOn", "value": 2 }] },
+    { "name": "ScrollPhase", "qualified": "Qt::ScrollPhase", "flags": false, "items": [{ "name": "NoScrollPhase", "value": 0 }, { "name": "ScrollBegin", "value": 1 }, { "name": "ScrollUpdate", "value": 2 }, { "name": "ScrollEnd", "value": 3 }, { "name": "ScrollMomentum", "value": 4 }] },
     { "name": "ShortcutContext", "qualified": "Qt::ShortcutContext", "flags": false, "items": [{ "name": "WidgetShortcut", "value": 0 }, { "name": "WindowShortcut", "value": 1 }, { "name": "ApplicationShortcut", "value": 2 }, { "name": "WidgetWithChildrenShortcut", "value": 3 }] },
+    { "name": "SizeHint", "qualified": "Qt::SizeHint", "flags": false, "items": [{ "name": "MinimumSize", "value": 0 }, { "name": "PreferredSize", "value": 1 }, { "name": "MaximumSize", "value": 2 }, { "name": "MinimumDescent", "value": 3 }, { "name": "NSizeHints", "value": 4 }] },
     { "name": "SizeMode", "qualified": "Qt::SizeMode", "flags": false, "items": [{ "name": "AbsoluteSize", "value": 0 }, { "name": "RelativeSize", "value": 1 }] },
     { "name": "SortOrder", "qualified": "Qt::SortOrder", "flags": false, "items": [{ "name": "AscendingOrder", "value": 0 }, { "name": "DescendingOrder", "value": 1 }] },
     { "name": "TabFocusBehavior", "qualified": "Qt::TabFocusBehavior", "flags": false, "items": [{ "name": "NoTabFocus", "value": 0 }, { "name": "TabFocusTextControls", "value": 1 }, { "name": "TabFocusListControls", "value": 2 }, { "name": "TabFocusAllControls", "value": 255 }] },
@@ -354,6 +371,29 @@
         { "name": "pressed", "parameters": [] },
         { "name": "released", "parameters": [] },
         { "name": "toggled", "parameters": [{ "name": "checked", "type": "bool" }] }
+      ]
+    }
+,
+    {
+      "name": "QAbstractGraphicsShapeItem",
+      "header": "QtWidgets/qgraphicsitem.h",
+      "bases": ["QGraphicsItem"],
+      "isAbstract": true,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "brush", "returnType": "QBrush", "parameters": [] },
+        { "name": "isObscuredBy", "returnType": "bool", "parameters": [{ "name": "item", "type": "QGraphicsItem*" }] },
+        { "name": "opaqueArea", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "pen", "returnType": "QPen", "parameters": [] },
+        { "name": "setBrush", "returnType": "void", "parameters": [{ "name": "brush", "type": "QBrush" }] },
+        { "name": "setPen", "returnType": "void", "parameters": [{ "name": "pen", "type": "QPen" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
       ]
     }
 ,
@@ -2043,7 +2083,7 @@
         { "name": "sizeFromContents", "returnType": "QSize", "parameters": [{ "name": "ct", "type": "QStyle::ContentsType" }, { "name": "opt", "type": "QStyleOption*" }, { "name": "contentsSize", "type": "QSize" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
         { "name": "standardIcon", "returnType": "QIcon", "parameters": [{ "name": "standardIcon", "type": "QStyle::StandardPixmap" }, { "name": "opt", "type": "QStyleOption*", "optional": true, "default": "null" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
         { "name": "standardPixmap", "returnType": "QPixmap", "parameters": [{ "name": "sp", "type": "QStyle::StandardPixmap" }, { "name": "opt", "type": "QStyleOption*", "optional": true, "default": "null" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
-        { "name": "styleHint", "returnType": "int", "parameters": [{ "name": "sh", "type": "QStyle::StyleHint" }, { "name": "opt", "type": "QStyleOption*", "optional": true, "default": "null" }, { "name": "w", "type": "QWidget*", "optional": true, "default": "null" }] },
+        { "name": "styleHint", "returnType": "int", "parameters": [{ "name": "sh", "type": "QStyle::StyleHint" }, { "name": "opt", "type": "QStyleOption*", "optional": true, "default": "null" }, { "name": "w", "type": "QWidget*", "optional": true, "default": "null" }, { "name": "shret", "type": "QStyleHintReturn*", "optional": true, "default": "null" }] },
         { "name": "subControlRect", "returnType": "QRect", "parameters": [{ "name": "cc", "type": "QStyle::ComplexControl" }, { "name": "opt", "type": "QStyleOptionComplex*" }, { "name": "sc", "type": "QStyle::SubControl" }, { "name": "w", "type": "QWidget*", "optional": true, "default": "null" }] },
         { "name": "subElementRect", "returnType": "QRect", "parameters": [{ "name": "r", "type": "QStyle::SubElement" }, { "name": "opt", "type": "QStyleOption*" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
@@ -3497,6 +3537,89 @@
     }
 ,
     {
+      "name": "QGesture",
+      "header": "QtWidgets/qgesture.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "gestureCancelPolicy", "returnType": "QGesture::GestureCancelPolicy", "parameters": [] },
+        { "name": "gestureType", "returnType": "Qt::GestureType", "parameters": [] },
+        { "name": "hasHotSpot", "returnType": "bool", "parameters": [] },
+        { "name": "hotSpot", "returnType": "QPointF", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setGestureCancelPolicy", "returnType": "void", "parameters": [{ "name": "policy", "type": "QGesture::GestureCancelPolicy" }] },
+        { "name": "setHotSpot", "returnType": "void", "parameters": [{ "name": "value", "type": "QPointF" }] },
+        { "name": "state", "returnType": "Qt::GestureState", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "unsetHotSpot", "returnType": "void", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGestureEvent",
+      "header": "QtWidgets/qgesture.h",
+      "bases": ["QEvent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "gestures", "type": "QList<QGesture*>" }] }
+      ],
+      "methods": [
+        { "name": "accept", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QGesture*" }] },
+        { "name": "accept", "returnType": "void", "parameters": [{ "name": "arg0", "type": "Qt::GestureType" }] },
+        { "name": "activeGestures", "returnType": "QList<QGesture*>", "parameters": [] },
+        { "name": "canceledGestures", "returnType": "QList<QGesture*>", "parameters": [] },
+        { "name": "gesture", "returnType": "QGesture*", "parameters": [{ "name": "type", "type": "Qt::GestureType" }] },
+        { "name": "gestures", "returnType": "QList<QGesture*>", "parameters": [] },
+        { "name": "ignore", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QGesture*" }] },
+        { "name": "ignore", "returnType": "void", "parameters": [{ "name": "arg0", "type": "Qt::GestureType" }] },
+        { "name": "isAccepted", "returnType": "bool", "parameters": [{ "name": "arg0", "type": "QGesture*" }] },
+        { "name": "isAccepted", "returnType": "bool", "parameters": [{ "name": "arg0", "type": "Qt::GestureType" }] },
+        { "name": "mapToGraphicsScene", "returnType": "QPointF", "parameters": [{ "name": "gesturePoint", "type": "QPointF" }] },
+        { "name": "setAccepted", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QGesture*" }, { "name": "arg1", "type": "bool" }] },
+        { "name": "setAccepted", "returnType": "void", "parameters": [{ "name": "arg0", "type": "Qt::GestureType" }, { "name": "arg1", "type": "bool" }] },
+        { "name": "setWidget", "returnType": "void", "parameters": [{ "name": "widget", "type": "QWidget*" }] },
+        { "name": "widget", "returnType": "QWidget*", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGestureRecognizer",
+      "header": "QtWidgets/qgesturerecognizer.h",
+      "bases": [],
+      "isAbstract": true,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "create", "returnType": "QGesture*", "parameters": [{ "name": "target", "type": "QObject*" }] },
+        { "name": "recognize", "returnType": "QGestureRecognizer::Result", "parameters": [{ "name": "state", "type": "QGesture*" }, { "name": "watched", "type": "QObject*" }, { "name": "event", "type": "QEvent*" }] },
+        { "name": "registerRecognizer", "static": true, "returnType": "Qt::GestureType", "parameters": [{ "name": "recognizer", "type": "QGestureRecognizer*" }] },
+        { "name": "reset", "returnType": "void", "parameters": [{ "name": "state", "type": "QGesture*" }] },
+        { "name": "unregisterRecognizer", "static": true, "returnType": "void", "parameters": [{ "name": "type", "type": "Qt::GestureType" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
       "name": "QGradient",
       "header": "QtGui/qbrush.h",
       "bases": [],
@@ -3516,6 +3639,269 @@
         { "name": "setSpread", "returnType": "void", "parameters": [{ "name": "spread", "type": "QGradient::Spread" }] },
         { "name": "spread", "returnType": "QGradient::Spread", "parameters": [] },
         { "name": "type", "returnType": "QGradient::Type", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsAnchor",
+      "header": "QtWidgets/qgraphicsanchorlayout.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setSizePolicy", "returnType": "void", "parameters": [{ "name": "policy", "type": "QSizePolicy::Policy" }] },
+        { "name": "setSpacing", "returnType": "void", "parameters": [{ "name": "spacing", "type": "double" }] },
+        { "name": "sizePolicy", "returnType": "QSizePolicy::Policy", "parameters": [] },
+        { "name": "spacing", "returnType": "double", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "unsetSpacing", "returnType": "void", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsAnchorLayout",
+      "header": "QtWidgets/qgraphicsanchorlayout.h",
+      "bases": ["QGraphicsLayout"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QGraphicsLayoutItem*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "addAnchor", "returnType": "QGraphicsAnchor*", "parameters": [{ "name": "firstItem", "type": "QGraphicsLayoutItem*" }, { "name": "firstEdge", "type": "Qt::AnchorPoint" }, { "name": "secondItem", "type": "QGraphicsLayoutItem*" }, { "name": "secondEdge", "type": "Qt::AnchorPoint" }] },
+        { "name": "addAnchors", "returnType": "void", "parameters": [{ "name": "firstItem", "type": "QGraphicsLayoutItem*" }, { "name": "secondItem", "type": "QGraphicsLayoutItem*" }, { "name": "orientations", "type": "Qt::Orientations", "optional": true, "default": "Qt.Orientations.Vertical" }] },
+        { "name": "addCornerAnchors", "returnType": "void", "parameters": [{ "name": "firstItem", "type": "QGraphicsLayoutItem*" }, { "name": "firstCorner", "type": "Qt::Corner" }, { "name": "secondItem", "type": "QGraphicsLayoutItem*" }, { "name": "secondCorner", "type": "Qt::Corner" }] },
+        { "name": "anchor", "returnType": "QGraphicsAnchor*", "parameters": [{ "name": "firstItem", "type": "QGraphicsLayoutItem*" }, { "name": "firstEdge", "type": "Qt::AnchorPoint" }, { "name": "secondItem", "type": "QGraphicsLayoutItem*" }, { "name": "secondEdge", "type": "Qt::AnchorPoint" }] },
+        { "name": "count", "returnType": "int", "parameters": [] },
+        { "name": "horizontalSpacing", "returnType": "double", "parameters": [] },
+        { "name": "invalidate", "returnType": "void", "parameters": [] },
+        { "name": "itemAt", "returnType": "QGraphicsLayoutItem*", "parameters": [{ "name": "index", "type": "int" }] },
+        { "name": "removeAt", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
+        { "name": "setGeometry", "returnType": "void", "parameters": [{ "name": "rect", "type": "QRectF" }] },
+        { "name": "setHorizontalSpacing", "returnType": "void", "parameters": [{ "name": "spacing", "type": "double" }] },
+        { "name": "setSpacing", "returnType": "void", "parameters": [{ "name": "spacing", "type": "double" }] },
+        { "name": "setVerticalSpacing", "returnType": "void", "parameters": [{ "name": "spacing", "type": "double" }] },
+        { "name": "verticalSpacing", "returnType": "double", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsBlurEffect",
+      "header": "QtWidgets/qgraphicseffect.h",
+      "bases": ["QGraphicsEffect"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "blurHints", "returnType": "QGraphicsBlurEffect::BlurHints", "parameters": [] },
+        { "name": "blurRadius", "returnType": "double", "parameters": [] },
+        { "name": "boundingRectFor", "returnType": "QRectF", "parameters": [{ "name": "rect", "type": "QRectF" }] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setBlurHints", "returnType": "void", "parameters": [{ "name": "hints", "type": "QGraphicsBlurEffect::BlurHints" }] },
+        { "name": "setBlurRadius", "returnType": "void", "parameters": [{ "name": "blurRadius", "type": "double" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+        { "name": "blurRadiusChanged", "parameters": [{ "name": "blurRadius", "type": "double" }] }
+      ]
+    }
+,
+    {
+      "name": "QGraphicsColorizeEffect",
+      "header": "QtWidgets/qgraphicseffect.h",
+      "bases": ["QGraphicsEffect"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "color", "returnType": "QColor", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setColor", "returnType": "void", "parameters": [{ "name": "c", "type": "QColor" }] },
+        { "name": "setStrength", "returnType": "void", "parameters": [{ "name": "strength", "type": "double" }] },
+        { "name": "strength", "returnType": "double", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+        { "name": "strengthChanged", "parameters": [{ "name": "strength", "type": "double" }] }
+      ]
+    }
+,
+    {
+      "name": "QGraphicsDropShadowEffect",
+      "header": "QtWidgets/qgraphicseffect.h",
+      "bases": ["QGraphicsEffect"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "blurRadius", "returnType": "double", "parameters": [] },
+        { "name": "boundingRectFor", "returnType": "QRectF", "parameters": [{ "name": "rect", "type": "QRectF" }] },
+        { "name": "color", "returnType": "QColor", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "offset", "returnType": "QPointF", "parameters": [] },
+        { "name": "setBlurRadius", "returnType": "void", "parameters": [{ "name": "blurRadius", "type": "double" }] },
+        { "name": "setColor", "returnType": "void", "parameters": [{ "name": "color", "type": "QColor" }] },
+        { "name": "setOffset", "returnType": "void", "parameters": [{ "name": "ofs", "type": "QPointF" }] },
+        { "name": "setOffset", "returnType": "void", "parameters": [{ "name": "d", "type": "double" }] },
+        { "name": "setOffset", "returnType": "void", "parameters": [{ "name": "dx", "type": "double" }, { "name": "dy", "type": "double" }] },
+        { "name": "setXOffset", "returnType": "void", "parameters": [{ "name": "dx", "type": "double" }] },
+        { "name": "setYOffset", "returnType": "void", "parameters": [{ "name": "dy", "type": "double" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "xOffset", "returnType": "double", "parameters": [] },
+        { "name": "yOffset", "returnType": "double", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+        { "name": "blurRadiusChanged", "parameters": [{ "name": "blurRadius", "type": "double" }] }
+      ]
+    }
+,
+    {
+      "name": "QGraphicsEffect",
+      "header": "QtWidgets/qgraphicseffect.h",
+      "bases": ["QObject"],
+      "isAbstract": true,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "boundingRect", "returnType": "QRectF", "parameters": [] },
+        { "name": "boundingRectFor", "returnType": "QRectF", "parameters": [{ "name": "sourceRect", "type": "QRectF" }] },
+        { "name": "isEnabled", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setEnabled", "returnType": "void", "parameters": [{ "name": "enable", "type": "bool" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "update", "returnType": "void", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+        { "name": "enabledChanged", "parameters": [{ "name": "enabled", "type": "bool" }] }
+      ]
+    }
+,
+    {
+      "name": "QGraphicsEllipseItem",
+      "header": "QtWidgets/qgraphicsitem.h",
+      "bases": ["QAbstractGraphicsShapeItem"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "rect", "type": "QRectF" }, { "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "x", "type": "double" }, { "name": "y", "type": "double" }, { "name": "w", "type": "double" }, { "name": "h", "type": "double" }, { "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "boundingRect", "returnType": "QRectF", "parameters": [] },
+        { "name": "contains", "returnType": "bool", "parameters": [{ "name": "point", "type": "QPointF" }] },
+        { "name": "isObscuredBy", "returnType": "bool", "parameters": [{ "name": "item", "type": "QGraphicsItem*" }] },
+        { "name": "opaqueArea", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*" }, { "name": "option", "type": "QStyleOptionGraphicsItem*" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
+        { "name": "rect", "returnType": "QRectF", "parameters": [] },
+        { "name": "setRect", "returnType": "void", "parameters": [{ "name": "rect", "type": "QRectF" }] },
+        { "name": "setRect", "returnType": "void", "parameters": [{ "name": "x", "type": "double" }, { "name": "y", "type": "double" }, { "name": "w", "type": "double" }, { "name": "h", "type": "double" }] },
+        { "name": "setSpanAngle", "returnType": "void", "parameters": [{ "name": "angle", "type": "int" }] },
+        { "name": "setStartAngle", "returnType": "void", "parameters": [{ "name": "angle", "type": "int" }] },
+        { "name": "shape", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "spanAngle", "returnType": "int", "parameters": [] },
+        { "name": "startAngle", "returnType": "int", "parameters": [] },
+        { "name": "type", "returnType": "int", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsGridLayout",
+      "header": "QtWidgets/qgraphicsgridlayout.h",
+      "bases": ["QGraphicsLayout"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QGraphicsLayoutItem*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "addItem", "returnType": "void", "parameters": [{ "name": "item", "type": "QGraphicsLayoutItem*" }, { "name": "row", "type": "int" }, { "name": "column", "type": "int" }, { "name": "alignment", "type": "Qt::Alignment", "optional": true }] },
+        { "name": "addItem", "returnType": "void", "parameters": [{ "name": "item", "type": "QGraphicsLayoutItem*" }, { "name": "row", "type": "int" }, { "name": "column", "type": "int" }, { "name": "rowSpan", "type": "int" }, { "name": "columnSpan", "type": "int" }, { "name": "alignment", "type": "Qt::Alignment", "optional": true }] },
+        { "name": "alignment", "returnType": "Qt::Alignment", "parameters": [{ "name": "item", "type": "QGraphicsLayoutItem*" }] },
+        { "name": "columnAlignment", "returnType": "Qt::Alignment", "parameters": [{ "name": "column", "type": "int" }] },
+        { "name": "columnCount", "returnType": "int", "parameters": [] },
+        { "name": "columnMaximumWidth", "returnType": "double", "parameters": [{ "name": "column", "type": "int" }] },
+        { "name": "columnMinimumWidth", "returnType": "double", "parameters": [{ "name": "column", "type": "int" }] },
+        { "name": "columnPreferredWidth", "returnType": "double", "parameters": [{ "name": "column", "type": "int" }] },
+        { "name": "columnSpacing", "returnType": "double", "parameters": [{ "name": "column", "type": "int" }] },
+        { "name": "columnStretchFactor", "returnType": "int", "parameters": [{ "name": "column", "type": "int" }] },
+        { "name": "count", "returnType": "int", "parameters": [] },
+        { "name": "horizontalSpacing", "returnType": "double", "parameters": [] },
+        { "name": "invalidate", "returnType": "void", "parameters": [] },
+        { "name": "itemAt", "returnType": "QGraphicsLayoutItem*", "parameters": [{ "name": "index", "type": "int" }] },
+        { "name": "itemAt", "returnType": "QGraphicsLayoutItem*", "parameters": [{ "name": "row", "type": "int" }, { "name": "column", "type": "int" }] },
+        { "name": "removeAt", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
+        { "name": "removeItem", "returnType": "void", "parameters": [{ "name": "item", "type": "QGraphicsLayoutItem*" }] },
+        { "name": "rowAlignment", "returnType": "Qt::Alignment", "parameters": [{ "name": "row", "type": "int" }] },
+        { "name": "rowCount", "returnType": "int", "parameters": [] },
+        { "name": "rowMaximumHeight", "returnType": "double", "parameters": [{ "name": "row", "type": "int" }] },
+        { "name": "rowMinimumHeight", "returnType": "double", "parameters": [{ "name": "row", "type": "int" }] },
+        { "name": "rowPreferredHeight", "returnType": "double", "parameters": [{ "name": "row", "type": "int" }] },
+        { "name": "rowSpacing", "returnType": "double", "parameters": [{ "name": "row", "type": "int" }] },
+        { "name": "rowStretchFactor", "returnType": "int", "parameters": [{ "name": "row", "type": "int" }] },
+        { "name": "setAlignment", "returnType": "void", "parameters": [{ "name": "item", "type": "QGraphicsLayoutItem*" }, { "name": "alignment", "type": "Qt::Alignment" }] },
+        { "name": "setColumnAlignment", "returnType": "void", "parameters": [{ "name": "column", "type": "int" }, { "name": "alignment", "type": "Qt::Alignment" }] },
+        { "name": "setColumnFixedWidth", "returnType": "void", "parameters": [{ "name": "column", "type": "int" }, { "name": "width", "type": "double" }] },
+        { "name": "setColumnMaximumWidth", "returnType": "void", "parameters": [{ "name": "column", "type": "int" }, { "name": "width", "type": "double" }] },
+        { "name": "setColumnMinimumWidth", "returnType": "void", "parameters": [{ "name": "column", "type": "int" }, { "name": "width", "type": "double" }] },
+        { "name": "setColumnPreferredWidth", "returnType": "void", "parameters": [{ "name": "column", "type": "int" }, { "name": "width", "type": "double" }] },
+        { "name": "setColumnSpacing", "returnType": "void", "parameters": [{ "name": "column", "type": "int" }, { "name": "spacing", "type": "double" }] },
+        { "name": "setColumnStretchFactor", "returnType": "void", "parameters": [{ "name": "column", "type": "int" }, { "name": "stretch", "type": "int" }] },
+        { "name": "setGeometry", "returnType": "void", "parameters": [{ "name": "rect", "type": "QRectF" }] },
+        { "name": "setHorizontalSpacing", "returnType": "void", "parameters": [{ "name": "spacing", "type": "double" }] },
+        { "name": "setRowAlignment", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }, { "name": "alignment", "type": "Qt::Alignment" }] },
+        { "name": "setRowFixedHeight", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }, { "name": "height", "type": "double" }] },
+        { "name": "setRowMaximumHeight", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }, { "name": "height", "type": "double" }] },
+        { "name": "setRowMinimumHeight", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }, { "name": "height", "type": "double" }] },
+        { "name": "setRowPreferredHeight", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }, { "name": "height", "type": "double" }] },
+        { "name": "setRowSpacing", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }, { "name": "spacing", "type": "double" }] },
+        { "name": "setRowStretchFactor", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }, { "name": "stretch", "type": "int" }] },
+        { "name": "setSpacing", "returnType": "void", "parameters": [{ "name": "spacing", "type": "double" }] },
+        { "name": "setVerticalSpacing", "returnType": "void", "parameters": [{ "name": "spacing", "type": "double" }] },
+        { "name": "sizeHint", "returnType": "QSizeF", "parameters": [{ "name": "which", "type": "Qt::SizeHint" }] },
+        { "name": "verticalSpacing", "returnType": "double", "parameters": [] }
       ],
       "virtuals": [
       ],
@@ -3564,6 +3950,8 @@
         { "name": "focusScopeItem", "returnType": "QGraphicsItem*", "parameters": [] },
         { "name": "grabKeyboard", "returnType": "void", "parameters": [] },
         { "name": "grabMouse", "returnType": "void", "parameters": [] },
+        { "name": "graphicsEffect", "returnType": "QGraphicsEffect*", "parameters": [] },
+        { "name": "group", "returnType": "QGraphicsItemGroup*", "parameters": [] },
         { "name": "handlesChildEvents", "returnType": "bool", "parameters": [] },
         { "name": "hasCursor", "returnType": "bool", "parameters": [] },
         { "name": "hasFocus", "returnType": "bool", "parameters": [] },
@@ -3668,6 +4056,8 @@
         { "name": "setFlags", "returnType": "void", "parameters": [{ "name": "flags", "type": "QGraphicsItem::GraphicsItemFlags" }] },
         { "name": "setFocus", "returnType": "void", "parameters": [{ "name": "focusReason", "type": "Qt::FocusReason", "optional": true, "default": "Qt.FocusReason.OtherFocusReason" }] },
         { "name": "setFocusProxy", "returnType": "void", "parameters": [{ "name": "item", "type": "QGraphicsItem*" }] },
+        { "name": "setGraphicsEffect", "returnType": "void", "parameters": [{ "name": "effect", "type": "QGraphicsEffect*" }] },
+        { "name": "setGroup", "returnType": "void", "parameters": [{ "name": "group", "type": "QGraphicsItemGroup*" }] },
         { "name": "setHandlesChildEvents", "returnType": "void", "parameters": [{ "name": "enabled", "type": "bool" }] },
         { "name": "setInputMethodHints", "returnType": "void", "parameters": [{ "name": "hints", "type": "Qt::InputMethodHints" }] },
         { "name": "setOpacity", "returnType": "void", "parameters": [{ "name": "opacity", "type": "double" }] },
@@ -3682,6 +4072,7 @@
         { "name": "setTransform", "returnType": "void", "parameters": [{ "name": "matrix", "type": "QTransform" }, { "name": "combine", "type": "bool", "optional": true, "default": "false" }] },
         { "name": "setTransformOriginPoint", "returnType": "void", "parameters": [{ "name": "origin", "type": "QPointF" }] },
         { "name": "setTransformOriginPoint", "returnType": "void", "parameters": [{ "name": "ax", "type": "double" }, { "name": "ay", "type": "double" }] },
+        { "name": "setTransformations", "returnType": "void", "parameters": [{ "name": "transformations", "type": "QList<QGraphicsTransform*>" }] },
         { "name": "setVisible", "returnType": "void", "parameters": [{ "name": "visible", "type": "bool" }] },
         { "name": "setX", "returnType": "void", "parameters": [{ "name": "x", "type": "double" }] },
         { "name": "setY", "returnType": "void", "parameters": [{ "name": "y", "type": "double" }] },
@@ -3695,6 +4086,7 @@
         { "name": "topLevelWidget", "returnType": "QGraphicsWidget*", "parameters": [] },
         { "name": "transform", "returnType": "QTransform", "parameters": [] },
         { "name": "transformOriginPoint", "returnType": "QPointF", "parameters": [] },
+        { "name": "transformations", "returnType": "QList<QGraphicsTransform*>", "parameters": [] },
         { "name": "type", "returnType": "int", "parameters": [] },
         { "name": "ungrabKeyboard", "returnType": "void", "parameters": [] },
         { "name": "ungrabMouse", "returnType": "void", "parameters": [] },
@@ -3707,10 +4099,236 @@
         { "name": "zValue", "returnType": "double", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "contextMenuEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneContextMenuEvent*" }] },
+        { "name": "dragEnterEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneDragDropEvent*" }] },
+        { "name": "dragLeaveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneDragDropEvent*" }] },
+        { "name": "dragMoveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneDragDropEvent*" }] },
+        { "name": "dropEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneDragDropEvent*" }] },
         { "name": "focusInEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QFocusEvent*" }] },
         { "name": "focusOutEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QFocusEvent*" }] },
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QKeyEvent*" }] },
-        { "name": "keyReleaseEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QKeyEvent*" }] }
+        { "name": "keyReleaseEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QKeyEvent*" }] },
+        { "name": "mouseDoubleClickEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] },
+        { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] },
+        { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] },
+        { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] },
+        { "name": "wheelEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneWheelEvent*" }] }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsItemAnimation",
+      "header": "QtWidgets/qgraphicsitemanimation.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "clear", "returnType": "void", "parameters": [] },
+        { "name": "horizontalScaleAt", "returnType": "double", "parameters": [{ "name": "step", "type": "double" }] },
+        { "name": "horizontalShearAt", "returnType": "double", "parameters": [{ "name": "step", "type": "double" }] },
+        { "name": "item", "returnType": "QGraphicsItem*", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "posAt", "returnType": "QPointF", "parameters": [{ "name": "step", "type": "double" }] },
+        { "name": "rotationAt", "returnType": "double", "parameters": [{ "name": "step", "type": "double" }] },
+        { "name": "setItem", "returnType": "void", "parameters": [{ "name": "item", "type": "QGraphicsItem*" }] },
+        { "name": "setPosAt", "returnType": "void", "parameters": [{ "name": "step", "type": "double" }, { "name": "pos", "type": "QPointF" }] },
+        { "name": "setRotationAt", "returnType": "void", "parameters": [{ "name": "step", "type": "double" }, { "name": "angle", "type": "double" }] },
+        { "name": "setScaleAt", "returnType": "void", "parameters": [{ "name": "step", "type": "double" }, { "name": "sx", "type": "double" }, { "name": "sy", "type": "double" }] },
+        { "name": "setShearAt", "returnType": "void", "parameters": [{ "name": "step", "type": "double" }, { "name": "sh", "type": "double" }, { "name": "sv", "type": "double" }] },
+        { "name": "setStep", "returnType": "void", "parameters": [{ "name": "x", "type": "double" }] },
+        { "name": "setTranslationAt", "returnType": "void", "parameters": [{ "name": "step", "type": "double" }, { "name": "dx", "type": "double" }, { "name": "dy", "type": "double" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "transformAt", "returnType": "QTransform", "parameters": [{ "name": "step", "type": "double" }] },
+        { "name": "verticalScaleAt", "returnType": "double", "parameters": [{ "name": "step", "type": "double" }] },
+        { "name": "verticalShearAt", "returnType": "double", "parameters": [{ "name": "step", "type": "double" }] },
+        { "name": "xTranslationAt", "returnType": "double", "parameters": [{ "name": "step", "type": "double" }] },
+        { "name": "yTranslationAt", "returnType": "double", "parameters": [{ "name": "step", "type": "double" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsItemGroup",
+      "header": "QtWidgets/qgraphicsitem.h",
+      "bases": ["QGraphicsItem"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "addToGroup", "returnType": "void", "parameters": [{ "name": "item", "type": "QGraphicsItem*" }] },
+        { "name": "boundingRect", "returnType": "QRectF", "parameters": [] },
+        { "name": "isObscuredBy", "returnType": "bool", "parameters": [{ "name": "item", "type": "QGraphicsItem*" }] },
+        { "name": "opaqueArea", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*" }, { "name": "option", "type": "QStyleOptionGraphicsItem*" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
+        { "name": "removeFromGroup", "returnType": "void", "parameters": [{ "name": "item", "type": "QGraphicsItem*" }] },
+        { "name": "type", "returnType": "int", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsLayout",
+      "header": "QtWidgets/qgraphicslayout.h",
+      "bases": ["QGraphicsLayoutItem"],
+      "isAbstract": true,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "activate", "returnType": "void", "parameters": [] },
+        { "name": "count", "returnType": "int", "parameters": [] },
+        { "name": "instantInvalidatePropagation", "static": true, "returnType": "bool", "parameters": [] },
+        { "name": "invalidate", "returnType": "void", "parameters": [] },
+        { "name": "isActivated", "returnType": "bool", "parameters": [] },
+        { "name": "itemAt", "returnType": "QGraphicsLayoutItem*", "parameters": [{ "name": "i", "type": "int" }] },
+        { "name": "removeAt", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
+        { "name": "setContentsMargins", "returnType": "void", "parameters": [{ "name": "left", "type": "double" }, { "name": "top", "type": "double" }, { "name": "right", "type": "double" }, { "name": "bottom", "type": "double" }] },
+        { "name": "setInstantInvalidatePropagation", "static": true, "returnType": "void", "parameters": [{ "name": "enable", "type": "bool" }] },
+        { "name": "updateGeometry", "returnType": "void", "parameters": [] },
+        { "name": "widgetEvent", "returnType": "void", "parameters": [{ "name": "e", "type": "QEvent*" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsLayoutItem",
+      "header": "QtWidgets/qgraphicslayoutitem.h",
+      "bases": [],
+      "isAbstract": true,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "contentsRect", "returnType": "QRectF", "parameters": [] },
+        { "name": "effectiveSizeHint", "returnType": "QSizeF", "parameters": [{ "name": "which", "type": "Qt::SizeHint" }] },
+        { "name": "geometry", "returnType": "QRectF", "parameters": [] },
+        { "name": "graphicsItem", "returnType": "QGraphicsItem*", "parameters": [] },
+        { "name": "isEmpty", "returnType": "bool", "parameters": [] },
+        { "name": "isLayout", "returnType": "bool", "parameters": [] },
+        { "name": "maximumHeight", "returnType": "double", "parameters": [] },
+        { "name": "maximumSize", "returnType": "QSizeF", "parameters": [] },
+        { "name": "maximumWidth", "returnType": "double", "parameters": [] },
+        { "name": "minimumHeight", "returnType": "double", "parameters": [] },
+        { "name": "minimumSize", "returnType": "QSizeF", "parameters": [] },
+        { "name": "minimumWidth", "returnType": "double", "parameters": [] },
+        { "name": "ownedByLayout", "returnType": "bool", "parameters": [] },
+        { "name": "parentLayoutItem", "returnType": "QGraphicsLayoutItem*", "parameters": [] },
+        { "name": "preferredHeight", "returnType": "double", "parameters": [] },
+        { "name": "preferredSize", "returnType": "QSizeF", "parameters": [] },
+        { "name": "preferredWidth", "returnType": "double", "parameters": [] },
+        { "name": "setGeometry", "returnType": "void", "parameters": [{ "name": "rect", "type": "QRectF" }] },
+        { "name": "setMaximumHeight", "returnType": "void", "parameters": [{ "name": "height", "type": "double" }] },
+        { "name": "setMaximumSize", "returnType": "void", "parameters": [{ "name": "size", "type": "QSizeF" }] },
+        { "name": "setMaximumSize", "returnType": "void", "parameters": [{ "name": "w", "type": "double" }, { "name": "h", "type": "double" }] },
+        { "name": "setMaximumWidth", "returnType": "void", "parameters": [{ "name": "width", "type": "double" }] },
+        { "name": "setMinimumHeight", "returnType": "void", "parameters": [{ "name": "height", "type": "double" }] },
+        { "name": "setMinimumSize", "returnType": "void", "parameters": [{ "name": "size", "type": "QSizeF" }] },
+        { "name": "setMinimumSize", "returnType": "void", "parameters": [{ "name": "w", "type": "double" }, { "name": "h", "type": "double" }] },
+        { "name": "setMinimumWidth", "returnType": "void", "parameters": [{ "name": "width", "type": "double" }] },
+        { "name": "setParentLayoutItem", "returnType": "void", "parameters": [{ "name": "parent", "type": "QGraphicsLayoutItem*" }] },
+        { "name": "setPreferredHeight", "returnType": "void", "parameters": [{ "name": "height", "type": "double" }] },
+        { "name": "setPreferredSize", "returnType": "void", "parameters": [{ "name": "size", "type": "QSizeF" }] },
+        { "name": "setPreferredSize", "returnType": "void", "parameters": [{ "name": "w", "type": "double" }, { "name": "h", "type": "double" }] },
+        { "name": "setPreferredWidth", "returnType": "void", "parameters": [{ "name": "width", "type": "double" }] },
+        { "name": "setSizePolicy", "returnType": "void", "parameters": [{ "name": "policy", "type": "QSizePolicy" }] },
+        { "name": "setSizePolicy", "returnType": "void", "parameters": [{ "name": "hPolicy", "type": "QSizePolicy::Policy" }, { "name": "vPolicy", "type": "QSizePolicy::Policy" }, { "name": "controlType", "type": "QSizePolicy::ControlType", "optional": true, "default": "QSizePolicy.ControlType.DefaultType" }] },
+        { "name": "sizePolicy", "returnType": "QSizePolicy", "parameters": [] },
+        { "name": "updateGeometry", "returnType": "void", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsLineItem",
+      "header": "QtWidgets/qgraphicsitem.h",
+      "bases": ["QGraphicsItem"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "line", "type": "QLineF" }, { "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "x1", "type": "double" }, { "name": "y1", "type": "double" }, { "name": "x2", "type": "double" }, { "name": "y2", "type": "double" }, { "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "boundingRect", "returnType": "QRectF", "parameters": [] },
+        { "name": "contains", "returnType": "bool", "parameters": [{ "name": "point", "type": "QPointF" }] },
+        { "name": "isObscuredBy", "returnType": "bool", "parameters": [{ "name": "item", "type": "QGraphicsItem*" }] },
+        { "name": "line", "returnType": "QLineF", "parameters": [] },
+        { "name": "opaqueArea", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*" }, { "name": "option", "type": "QStyleOptionGraphicsItem*" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
+        { "name": "pen", "returnType": "QPen", "parameters": [] },
+        { "name": "setLine", "returnType": "void", "parameters": [{ "name": "line", "type": "QLineF" }] },
+        { "name": "setLine", "returnType": "void", "parameters": [{ "name": "x1", "type": "double" }, { "name": "y1", "type": "double" }, { "name": "x2", "type": "double" }, { "name": "y2", "type": "double" }] },
+        { "name": "setPen", "returnType": "void", "parameters": [{ "name": "pen", "type": "QPen" }] },
+        { "name": "shape", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "type", "returnType": "int", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsLinearLayout",
+      "header": "QtWidgets/qgraphicslinearlayout.h",
+      "bases": ["QGraphicsLayout"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QGraphicsLayoutItem*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "orientation", "type": "Qt::Orientation" }, { "name": "parent", "type": "QGraphicsLayoutItem*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "addItem", "returnType": "void", "parameters": [{ "name": "item", "type": "QGraphicsLayoutItem*" }] },
+        { "name": "addStretch", "returnType": "void", "parameters": [{ "name": "stretch", "type": "int", "optional": true, "default": "1" }] },
+        { "name": "alignment", "returnType": "Qt::Alignment", "parameters": [{ "name": "item", "type": "QGraphicsLayoutItem*" }] },
+        { "name": "count", "returnType": "int", "parameters": [] },
+        { "name": "dump", "returnType": "void", "parameters": [{ "name": "indent", "type": "int", "optional": true, "default": "0" }] },
+        { "name": "insertItem", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "item", "type": "QGraphicsLayoutItem*" }] },
+        { "name": "insertStretch", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "stretch", "type": "int", "optional": true, "default": "1" }] },
+        { "name": "invalidate", "returnType": "void", "parameters": [] },
+        { "name": "itemAt", "returnType": "QGraphicsLayoutItem*", "parameters": [{ "name": "index", "type": "int" }] },
+        { "name": "itemSpacing", "returnType": "double", "parameters": [{ "name": "index", "type": "int" }] },
+        { "name": "orientation", "returnType": "Qt::Orientation", "parameters": [] },
+        { "name": "removeAt", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
+        { "name": "removeItem", "returnType": "void", "parameters": [{ "name": "item", "type": "QGraphicsLayoutItem*" }] },
+        { "name": "setAlignment", "returnType": "void", "parameters": [{ "name": "item", "type": "QGraphicsLayoutItem*" }, { "name": "alignment", "type": "Qt::Alignment" }] },
+        { "name": "setGeometry", "returnType": "void", "parameters": [{ "name": "rect", "type": "QRectF" }] },
+        { "name": "setItemSpacing", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "spacing", "type": "double" }] },
+        { "name": "setOrientation", "returnType": "void", "parameters": [{ "name": "orientation", "type": "Qt::Orientation" }] },
+        { "name": "setSpacing", "returnType": "void", "parameters": [{ "name": "spacing", "type": "double" }] },
+        { "name": "setStretchFactor", "returnType": "void", "parameters": [{ "name": "item", "type": "QGraphicsLayoutItem*" }, { "name": "stretch", "type": "int" }] },
+        { "name": "sizeHint", "returnType": "QSizeF", "parameters": [{ "name": "which", "type": "Qt::SizeHint" }] },
+        { "name": "spacing", "returnType": "double", "parameters": [] },
+        { "name": "stretchFactor", "returnType": "int", "parameters": [{ "name": "item", "type": "QGraphicsLayoutItem*" }] }
+      ],
+      "virtuals": [
       ],
       "signals": [
       ]
@@ -3751,6 +4369,59 @@
     }
 ,
     {
+      "name": "QGraphicsOpacityEffect",
+      "header": "QtWidgets/qgraphicseffect.h",
+      "bases": ["QGraphicsEffect"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "opacity", "returnType": "double", "parameters": [] },
+        { "name": "opacityMask", "returnType": "QBrush", "parameters": [] },
+        { "name": "setOpacity", "returnType": "void", "parameters": [{ "name": "opacity", "type": "double" }] },
+        { "name": "setOpacityMask", "returnType": "void", "parameters": [{ "name": "mask", "type": "QBrush" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+        { "name": "opacityChanged", "parameters": [{ "name": "opacity", "type": "double" }] }
+      ]
+    }
+,
+    {
+      "name": "QGraphicsPathItem",
+      "header": "QtWidgets/qgraphicsitem.h",
+      "bases": ["QAbstractGraphicsShapeItem"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "path", "type": "QPainterPath" }, { "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "boundingRect", "returnType": "QRectF", "parameters": [] },
+        { "name": "contains", "returnType": "bool", "parameters": [{ "name": "point", "type": "QPointF" }] },
+        { "name": "isObscuredBy", "returnType": "bool", "parameters": [{ "name": "item", "type": "QGraphicsItem*" }] },
+        { "name": "opaqueArea", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*" }, { "name": "option", "type": "QStyleOptionGraphicsItem*" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
+        { "name": "path", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "setPath", "returnType": "void", "parameters": [{ "name": "path", "type": "QPainterPath" }] },
+        { "name": "shape", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "type", "returnType": "int", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
       "name": "QGraphicsPixmapItem",
       "header": "QtWidgets/qgraphicsitem.h",
       "bases": ["QGraphicsItem"],
@@ -3786,6 +4457,169 @@
     }
 ,
     {
+      "name": "QGraphicsPolygonItem",
+      "header": "QtWidgets/qgraphicsitem.h",
+      "bases": ["QAbstractGraphicsShapeItem"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "polygon", "type": "QPolygonF" }, { "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "boundingRect", "returnType": "QRectF", "parameters": [] },
+        { "name": "contains", "returnType": "bool", "parameters": [{ "name": "point", "type": "QPointF" }] },
+        { "name": "fillRule", "returnType": "Qt::FillRule", "parameters": [] },
+        { "name": "isObscuredBy", "returnType": "bool", "parameters": [{ "name": "item", "type": "QGraphicsItem*" }] },
+        { "name": "opaqueArea", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*" }, { "name": "option", "type": "QStyleOptionGraphicsItem*" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
+        { "name": "polygon", "returnType": "QPolygonF", "parameters": [] },
+        { "name": "setFillRule", "returnType": "void", "parameters": [{ "name": "rule", "type": "Qt::FillRule" }] },
+        { "name": "setPolygon", "returnType": "void", "parameters": [{ "name": "polygon", "type": "QPolygonF" }] },
+        { "name": "shape", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "type", "returnType": "int", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsProxyWidget",
+      "header": "QtWidgets/qgraphicsproxywidget.h",
+      "bases": ["QGraphicsWidget"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }, { "name": "wFlags", "type": "Qt::WindowFlags", "optional": true }] }
+      ],
+      "methods": [
+        { "name": "createProxyForChildWidget", "returnType": "QGraphicsProxyWidget*", "parameters": [{ "name": "child", "type": "QWidget*" }] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*" }, { "name": "option", "type": "QStyleOptionGraphicsItem*" }, { "name": "widget", "type": "QWidget*" }] },
+        { "name": "setGeometry", "returnType": "void", "parameters": [{ "name": "rect", "type": "QRectF" }] },
+        { "name": "setWidget", "returnType": "void", "parameters": [{ "name": "widget", "type": "QWidget*" }] },
+        { "name": "subWidgetRect", "returnType": "QRectF", "parameters": [{ "name": "widget", "type": "QWidget*" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "type", "returnType": "int", "parameters": [] },
+        { "name": "widget", "returnType": "QWidget*", "parameters": [] }
+      ],
+      "virtuals": [
+        { "name": "contextMenuEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneContextMenuEvent*" }] },
+        { "name": "dragEnterEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneDragDropEvent*" }] },
+        { "name": "dragLeaveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneDragDropEvent*" }] },
+        { "name": "dragMoveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneDragDropEvent*" }] },
+        { "name": "dropEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneDragDropEvent*" }] },
+        { "name": "event", "returnType": "bool", "parameters": [{ "name": "event", "type": "QEvent*" }] },
+        { "name": "eventFilter", "returnType": "bool", "parameters": [{ "name": "object", "type": "QObject*" }, { "name": "event", "type": "QEvent*" }] },
+        { "name": "focusInEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QFocusEvent*" }] },
+        { "name": "focusOutEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QFocusEvent*" }] },
+        { "name": "hideEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QHideEvent*" }] },
+        { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QKeyEvent*" }] },
+        { "name": "keyReleaseEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QKeyEvent*" }] },
+        { "name": "mouseDoubleClickEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] },
+        { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] },
+        { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] },
+        { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] },
+        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneResizeEvent*" }] },
+        { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QShowEvent*" }] },
+        { "name": "wheelEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneWheelEvent*" }] }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsRectItem",
+      "header": "QtWidgets/qgraphicsitem.h",
+      "bases": ["QAbstractGraphicsShapeItem"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "rect", "type": "QRectF" }, { "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "x", "type": "double" }, { "name": "y", "type": "double" }, { "name": "w", "type": "double" }, { "name": "h", "type": "double" }, { "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "boundingRect", "returnType": "QRectF", "parameters": [] },
+        { "name": "contains", "returnType": "bool", "parameters": [{ "name": "point", "type": "QPointF" }] },
+        { "name": "isObscuredBy", "returnType": "bool", "parameters": [{ "name": "item", "type": "QGraphicsItem*" }] },
+        { "name": "opaqueArea", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*" }, { "name": "option", "type": "QStyleOptionGraphicsItem*" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
+        { "name": "rect", "returnType": "QRectF", "parameters": [] },
+        { "name": "setRect", "returnType": "void", "parameters": [{ "name": "rect", "type": "QRectF" }] },
+        { "name": "setRect", "returnType": "void", "parameters": [{ "name": "x", "type": "double" }, { "name": "y", "type": "double" }, { "name": "w", "type": "double" }, { "name": "h", "type": "double" }] },
+        { "name": "shape", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "type", "returnType": "int", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsRotation",
+      "header": "QtWidgets/qgraphicstransform.h",
+      "bases": ["QGraphicsTransform"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "angle", "returnType": "double", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setAngle", "returnType": "void", "parameters": [{ "name": "arg0", "type": "double" }] },
+        { "name": "setAxis", "returnType": "void", "parameters": [{ "name": "axis", "type": "Qt::Axis" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+        { "name": "angleChanged", "parameters": [] },
+        { "name": "axisChanged", "parameters": [] },
+        { "name": "originChanged", "parameters": [] }
+      ]
+    }
+,
+    {
+      "name": "QGraphicsScale",
+      "header": "QtWidgets/qgraphicstransform.h",
+      "bases": ["QGraphicsTransform"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setXScale", "returnType": "void", "parameters": [{ "name": "arg0", "type": "double" }] },
+        { "name": "setYScale", "returnType": "void", "parameters": [{ "name": "arg0", "type": "double" }] },
+        { "name": "setZScale", "returnType": "void", "parameters": [{ "name": "arg0", "type": "double" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "xScale", "returnType": "double", "parameters": [] },
+        { "name": "yScale", "returnType": "double", "parameters": [] },
+        { "name": "zScale", "returnType": "double", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+        { "name": "originChanged", "parameters": [] },
+        { "name": "scaleChanged", "parameters": [] },
+        { "name": "xScaleChanged", "parameters": [] },
+        { "name": "yScaleChanged", "parameters": [] },
+        { "name": "zScaleChanged", "parameters": [] }
+      ]
+    }
+,
+    {
       "name": "QGraphicsScene",
       "header": "QtWidgets/qgraphicsscene.h",
       "bases": ["QObject"],
@@ -3800,8 +4634,19 @@
       "methods": [
         { "name": "activePanel", "returnType": "QGraphicsItem*", "parameters": [] },
         { "name": "activeWindow", "returnType": "QGraphicsWidget*", "parameters": [] },
+        { "name": "addEllipse", "returnType": "QGraphicsEllipseItem*", "parameters": [{ "name": "rect", "type": "QRectF" }] },
+        { "name": "addEllipse", "returnType": "QGraphicsEllipseItem*", "parameters": [{ "name": "x", "type": "double" }, { "name": "y", "type": "double" }, { "name": "w", "type": "double" }, { "name": "h", "type": "double" }] },
         { "name": "addItem", "returnType": "void", "parameters": [{ "name": "item", "type": "QGraphicsItem*" }] },
+        { "name": "addLine", "returnType": "QGraphicsLineItem*", "parameters": [{ "name": "line", "type": "QLineF" }] },
+        { "name": "addLine", "returnType": "QGraphicsLineItem*", "parameters": [{ "name": "x1", "type": "double" }, { "name": "y1", "type": "double" }, { "name": "x2", "type": "double" }, { "name": "y2", "type": "double" }] },
+        { "name": "addPath", "returnType": "QGraphicsPathItem*", "parameters": [{ "name": "path", "type": "QPainterPath" }] },
         { "name": "addPixmap", "returnType": "QGraphicsPixmapItem*", "parameters": [{ "name": "pixmap", "type": "QPixmap" }] },
+        { "name": "addPolygon", "returnType": "QGraphicsPolygonItem*", "parameters": [{ "name": "polygon", "type": "QPolygonF" }] },
+        { "name": "addRect", "returnType": "QGraphicsRectItem*", "parameters": [{ "name": "rect", "type": "QRectF" }] },
+        { "name": "addRect", "returnType": "QGraphicsRectItem*", "parameters": [{ "name": "x", "type": "double" }, { "name": "y", "type": "double" }, { "name": "w", "type": "double" }, { "name": "h", "type": "double" }] },
+        { "name": "addSimpleText", "returnType": "QGraphicsSimpleTextItem*", "parameters": [{ "name": "text", "type": "QString" }] },
+        { "name": "addText", "returnType": "QGraphicsTextItem*", "parameters": [{ "name": "text", "type": "QString" }] },
+        { "name": "addWidget", "returnType": "QGraphicsProxyWidget*", "parameters": [{ "name": "widget", "type": "QWidget*" }, { "name": "wFlags", "type": "Qt::WindowFlags", "optional": true }] },
         { "name": "advance", "returnType": "void", "parameters": [] },
         { "name": "backgroundBrush", "returnType": "QBrush", "parameters": [] },
         { "name": "bspTreeDepth", "returnType": "int", "parameters": [] },
@@ -3809,6 +4654,8 @@
         { "name": "clearFocus", "returnType": "void", "parameters": [] },
         { "name": "clearSelection", "returnType": "void", "parameters": [] },
         { "name": "collidingItems", "returnType": "QList<QGraphicsItem*>", "parameters": [{ "name": "item", "type": "QGraphicsItem*" }, { "name": "mode", "type": "Qt::ItemSelectionMode", "optional": true, "default": "Qt.ItemSelectionMode.IntersectsItemShape" }] },
+        { "name": "createItemGroup", "returnType": "QGraphicsItemGroup*", "parameters": [{ "name": "items", "type": "QList<QGraphicsItem*>" }] },
+        { "name": "destroyItemGroup", "returnType": "void", "parameters": [{ "name": "group", "type": "QGraphicsItemGroup*" }] },
         { "name": "focusItem", "returnType": "QGraphicsItem*", "parameters": [] },
         { "name": "focusOnTouch", "returnType": "bool", "parameters": [] },
         { "name": "font", "returnType": "QFont", "parameters": [] },
@@ -3866,15 +4713,400 @@
         { "name": "width", "returnType": "double", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "contextMenuEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneContextMenuEvent*" }] },
+        { "name": "dragEnterEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneDragDropEvent*" }] },
+        { "name": "dragLeaveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneDragDropEvent*" }] },
+        { "name": "dragMoveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneDragDropEvent*" }] },
+        { "name": "dropEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneDragDropEvent*" }] },
         { "name": "event", "returnType": "bool", "parameters": [{ "name": "event", "type": "QEvent*" }] },
         { "name": "eventFilter", "returnType": "bool", "parameters": [{ "name": "watched", "type": "QObject*" }, { "name": "event", "type": "QEvent*" }] },
         { "name": "focusInEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QFocusEvent*" }] },
         { "name": "focusOutEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QFocusEvent*" }] },
         { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QKeyEvent*" }] },
-        { "name": "keyReleaseEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QKeyEvent*" }] }
+        { "name": "keyReleaseEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QKeyEvent*" }] },
+        { "name": "mouseDoubleClickEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] },
+        { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] },
+        { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] },
+        { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] },
+        { "name": "wheelEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneWheelEvent*" }] }
       ],
       "signals": [
         { "name": "selectionChanged", "parameters": [] }
+      ]
+    }
+,
+    {
+      "name": "QGraphicsSceneContextMenuEvent",
+      "header": "QtWidgets/qgraphicssceneevent.h",
+      "bases": ["QGraphicsSceneEvent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "modifiers", "returnType": "Qt::KeyboardModifiers", "parameters": [] },
+        { "name": "pos", "returnType": "QPointF", "parameters": [] },
+        { "name": "reason", "returnType": "QGraphicsSceneContextMenuEvent::Reason", "parameters": [] },
+        { "name": "scenePos", "returnType": "QPointF", "parameters": [] },
+        { "name": "screenPos", "returnType": "QPoint", "parameters": [] },
+        { "name": "setModifiers", "returnType": "void", "parameters": [{ "name": "modifiers", "type": "Qt::KeyboardModifiers" }] },
+        { "name": "setPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setReason", "returnType": "void", "parameters": [{ "name": "reason", "type": "QGraphicsSceneContextMenuEvent::Reason" }] },
+        { "name": "setScenePos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setScreenPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPoint" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsSceneDragDropEvent",
+      "header": "QtWidgets/qgraphicssceneevent.h",
+      "bases": ["QGraphicsSceneEvent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "acceptProposedAction", "returnType": "void", "parameters": [] },
+        { "name": "buttons", "returnType": "Qt::MouseButtons", "parameters": [] },
+        { "name": "dropAction", "returnType": "Qt::DropAction", "parameters": [] },
+        { "name": "mimeData", "returnType": "QMimeData*", "parameters": [] },
+        { "name": "modifiers", "returnType": "Qt::KeyboardModifiers", "parameters": [] },
+        { "name": "pos", "returnType": "QPointF", "parameters": [] },
+        { "name": "possibleActions", "returnType": "Qt::DropActions", "parameters": [] },
+        { "name": "proposedAction", "returnType": "Qt::DropAction", "parameters": [] },
+        { "name": "scenePos", "returnType": "QPointF", "parameters": [] },
+        { "name": "screenPos", "returnType": "QPoint", "parameters": [] },
+        { "name": "setButtons", "returnType": "void", "parameters": [{ "name": "buttons", "type": "Qt::MouseButtons" }] },
+        { "name": "setDropAction", "returnType": "void", "parameters": [{ "name": "action", "type": "Qt::DropAction" }] },
+        { "name": "setMimeData", "returnType": "void", "parameters": [{ "name": "data", "type": "QMimeData*" }] },
+        { "name": "setModifiers", "returnType": "void", "parameters": [{ "name": "modifiers", "type": "Qt::KeyboardModifiers" }] },
+        { "name": "setPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setPossibleActions", "returnType": "void", "parameters": [{ "name": "actions", "type": "Qt::DropActions" }] },
+        { "name": "setProposedAction", "returnType": "void", "parameters": [{ "name": "action", "type": "Qt::DropAction" }] },
+        { "name": "setScenePos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setScreenPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPoint" }] },
+        { "name": "setSource", "returnType": "void", "parameters": [{ "name": "source", "type": "QWidget*" }] },
+        { "name": "source", "returnType": "QWidget*", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsSceneEvent",
+      "header": "QtWidgets/qgraphicssceneevent.h",
+      "bases": ["QEvent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "setTimestamp", "returnType": "void", "parameters": [{ "name": "ts", "type": "unsigned long long" }] },
+        { "name": "setWidget", "returnType": "void", "parameters": [{ "name": "widget", "type": "QWidget*" }] },
+        { "name": "timestamp", "returnType": "unsigned long long", "parameters": [] },
+        { "name": "widget", "returnType": "QWidget*", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsSceneHelpEvent",
+      "header": "QtWidgets/qgraphicssceneevent.h",
+      "bases": ["QGraphicsSceneEvent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "scenePos", "returnType": "QPointF", "parameters": [] },
+        { "name": "screenPos", "returnType": "QPoint", "parameters": [] },
+        { "name": "setScenePos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setScreenPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPoint" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsSceneHoverEvent",
+      "header": "QtWidgets/qgraphicssceneevent.h",
+      "bases": ["QGraphicsSceneEvent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "lastPos", "returnType": "QPointF", "parameters": [] },
+        { "name": "lastScenePos", "returnType": "QPointF", "parameters": [] },
+        { "name": "lastScreenPos", "returnType": "QPoint", "parameters": [] },
+        { "name": "modifiers", "returnType": "Qt::KeyboardModifiers", "parameters": [] },
+        { "name": "pos", "returnType": "QPointF", "parameters": [] },
+        { "name": "scenePos", "returnType": "QPointF", "parameters": [] },
+        { "name": "screenPos", "returnType": "QPoint", "parameters": [] },
+        { "name": "setLastPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setLastScenePos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setLastScreenPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPoint" }] },
+        { "name": "setModifiers", "returnType": "void", "parameters": [{ "name": "modifiers", "type": "Qt::KeyboardModifiers" }] },
+        { "name": "setPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setScenePos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setScreenPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPoint" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsSceneMouseEvent",
+      "header": "QtWidgets/qgraphicssceneevent.h",
+      "bases": ["QGraphicsSceneEvent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "button", "returnType": "Qt::MouseButton", "parameters": [] },
+        { "name": "buttonDownPos", "returnType": "QPointF", "parameters": [{ "name": "button", "type": "Qt::MouseButton" }] },
+        { "name": "buttonDownScenePos", "returnType": "QPointF", "parameters": [{ "name": "button", "type": "Qt::MouseButton" }] },
+        { "name": "buttonDownScreenPos", "returnType": "QPoint", "parameters": [{ "name": "button", "type": "Qt::MouseButton" }] },
+        { "name": "buttons", "returnType": "Qt::MouseButtons", "parameters": [] },
+        { "name": "flags", "returnType": "Qt::MouseEventFlags", "parameters": [] },
+        { "name": "lastPos", "returnType": "QPointF", "parameters": [] },
+        { "name": "lastScenePos", "returnType": "QPointF", "parameters": [] },
+        { "name": "lastScreenPos", "returnType": "QPoint", "parameters": [] },
+        { "name": "modifiers", "returnType": "Qt::KeyboardModifiers", "parameters": [] },
+        { "name": "pos", "returnType": "QPointF", "parameters": [] },
+        { "name": "scenePos", "returnType": "QPointF", "parameters": [] },
+        { "name": "screenPos", "returnType": "QPoint", "parameters": [] },
+        { "name": "setButton", "returnType": "void", "parameters": [{ "name": "button", "type": "Qt::MouseButton" }] },
+        { "name": "setButtonDownPos", "returnType": "void", "parameters": [{ "name": "button", "type": "Qt::MouseButton" }, { "name": "pos", "type": "QPointF" }] },
+        { "name": "setButtonDownScenePos", "returnType": "void", "parameters": [{ "name": "button", "type": "Qt::MouseButton" }, { "name": "pos", "type": "QPointF" }] },
+        { "name": "setButtonDownScreenPos", "returnType": "void", "parameters": [{ "name": "button", "type": "Qt::MouseButton" }, { "name": "pos", "type": "QPoint" }] },
+        { "name": "setButtons", "returnType": "void", "parameters": [{ "name": "buttons", "type": "Qt::MouseButtons" }] },
+        { "name": "setFlags", "returnType": "void", "parameters": [{ "name": "arg0", "type": "Qt::MouseEventFlags" }] },
+        { "name": "setLastPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setLastScenePos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setLastScreenPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPoint" }] },
+        { "name": "setModifiers", "returnType": "void", "parameters": [{ "name": "modifiers", "type": "Qt::KeyboardModifiers" }] },
+        { "name": "setPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setScenePos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setScreenPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPoint" }] },
+        { "name": "setSource", "returnType": "void", "parameters": [{ "name": "source", "type": "Qt::MouseEventSource" }] },
+        { "name": "source", "returnType": "Qt::MouseEventSource", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsSceneMoveEvent",
+      "header": "QtWidgets/qgraphicssceneevent.h",
+      "bases": ["QGraphicsSceneEvent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "newPos", "returnType": "QPointF", "parameters": [] },
+        { "name": "oldPos", "returnType": "QPointF", "parameters": [] },
+        { "name": "setNewPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setOldPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsSceneResizeEvent",
+      "header": "QtWidgets/qgraphicssceneevent.h",
+      "bases": ["QGraphicsSceneEvent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "newSize", "returnType": "QSizeF", "parameters": [] },
+        { "name": "oldSize", "returnType": "QSizeF", "parameters": [] },
+        { "name": "setNewSize", "returnType": "void", "parameters": [{ "name": "size", "type": "QSizeF" }] },
+        { "name": "setOldSize", "returnType": "void", "parameters": [{ "name": "size", "type": "QSizeF" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsSceneWheelEvent",
+      "header": "QtWidgets/qgraphicssceneevent.h",
+      "bases": ["QGraphicsSceneEvent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "buttons", "returnType": "Qt::MouseButtons", "parameters": [] },
+        { "name": "delta", "returnType": "int", "parameters": [] },
+        { "name": "isInverted", "returnType": "bool", "parameters": [] },
+        { "name": "modifiers", "returnType": "Qt::KeyboardModifiers", "parameters": [] },
+        { "name": "orientation", "returnType": "Qt::Orientation", "parameters": [] },
+        { "name": "phase", "returnType": "Qt::ScrollPhase", "parameters": [] },
+        { "name": "pixelDelta", "returnType": "QPoint", "parameters": [] },
+        { "name": "pos", "returnType": "QPointF", "parameters": [] },
+        { "name": "scenePos", "returnType": "QPointF", "parameters": [] },
+        { "name": "screenPos", "returnType": "QPoint", "parameters": [] },
+        { "name": "setButtons", "returnType": "void", "parameters": [{ "name": "buttons", "type": "Qt::MouseButtons" }] },
+        { "name": "setDelta", "returnType": "void", "parameters": [{ "name": "delta", "type": "int" }] },
+        { "name": "setInverted", "returnType": "void", "parameters": [{ "name": "inverted", "type": "bool" }] },
+        { "name": "setModifiers", "returnType": "void", "parameters": [{ "name": "modifiers", "type": "Qt::KeyboardModifiers" }] },
+        { "name": "setOrientation", "returnType": "void", "parameters": [{ "name": "orientation", "type": "Qt::Orientation" }] },
+        { "name": "setPhase", "returnType": "void", "parameters": [{ "name": "scrollPhase", "type": "Qt::ScrollPhase" }] },
+        { "name": "setPixelDelta", "returnType": "void", "parameters": [{ "name": "delta", "type": "QPoint" }] },
+        { "name": "setPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setScenePos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setScreenPos", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPoint" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsSimpleTextItem",
+      "header": "QtWidgets/qgraphicsitem.h",
+      "bases": ["QAbstractGraphicsShapeItem"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "text", "type": "QString" }, { "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "boundingRect", "returnType": "QRectF", "parameters": [] },
+        { "name": "contains", "returnType": "bool", "parameters": [{ "name": "point", "type": "QPointF" }] },
+        { "name": "font", "returnType": "QFont", "parameters": [] },
+        { "name": "isObscuredBy", "returnType": "bool", "parameters": [{ "name": "item", "type": "QGraphicsItem*" }] },
+        { "name": "opaqueArea", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*" }, { "name": "option", "type": "QStyleOptionGraphicsItem*" }, { "name": "widget", "type": "QWidget*" }] },
+        { "name": "setFont", "returnType": "void", "parameters": [{ "name": "font", "type": "QFont" }] },
+        { "name": "setText", "returnType": "void", "parameters": [{ "name": "text", "type": "QString" }] },
+        { "name": "shape", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "text", "returnType": "QString", "parameters": [] },
+        { "name": "type", "returnType": "int", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsTextItem",
+      "header": "QtWidgets/qgraphicsitem.h",
+      "bases": ["QGraphicsObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "text", "type": "QString" }, { "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "adjustSize", "returnType": "void", "parameters": [] },
+        { "name": "boundingRect", "returnType": "QRectF", "parameters": [] },
+        { "name": "contains", "returnType": "bool", "parameters": [{ "name": "point", "type": "QPointF" }] },
+        { "name": "defaultTextColor", "returnType": "QColor", "parameters": [] },
+        { "name": "document", "returnType": "QTextDocument*", "parameters": [] },
+        { "name": "font", "returnType": "QFont", "parameters": [] },
+        { "name": "isObscuredBy", "returnType": "bool", "parameters": [{ "name": "item", "type": "QGraphicsItem*" }] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "opaqueArea", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "openExternalLinks", "returnType": "bool", "parameters": [] },
+        { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*" }, { "name": "option", "type": "QStyleOptionGraphicsItem*" }, { "name": "widget", "type": "QWidget*" }] },
+        { "name": "setDefaultTextColor", "returnType": "void", "parameters": [{ "name": "c", "type": "QColor" }] },
+        { "name": "setDocument", "returnType": "void", "parameters": [{ "name": "document", "type": "QTextDocument*" }] },
+        { "name": "setFont", "returnType": "void", "parameters": [{ "name": "font", "type": "QFont" }] },
+        { "name": "setHtml", "returnType": "void", "parameters": [{ "name": "html", "type": "QString" }] },
+        { "name": "setOpenExternalLinks", "returnType": "void", "parameters": [{ "name": "open", "type": "bool" }] },
+        { "name": "setPlainText", "returnType": "void", "parameters": [{ "name": "text", "type": "QString" }] },
+        { "name": "setTabChangesFocus", "returnType": "void", "parameters": [{ "name": "b", "type": "bool" }] },
+        { "name": "setTextCursor", "returnType": "void", "parameters": [{ "name": "cursor", "type": "QTextCursor" }] },
+        { "name": "setTextInteractionFlags", "returnType": "void", "parameters": [{ "name": "flags", "type": "Qt::TextInteractionFlags" }] },
+        { "name": "setTextWidth", "returnType": "void", "parameters": [{ "name": "width", "type": "double" }] },
+        { "name": "shape", "returnType": "QPainterPath", "parameters": [] },
+        { "name": "tabChangesFocus", "returnType": "bool", "parameters": [] },
+        { "name": "textCursor", "returnType": "QTextCursor", "parameters": [] },
+        { "name": "textInteractionFlags", "returnType": "Qt::TextInteractionFlags", "parameters": [] },
+        { "name": "textWidth", "returnType": "double", "parameters": [] },
+        { "name": "toHtml", "returnType": "QString", "parameters": [] },
+        { "name": "toPlainText", "returnType": "QString", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "type", "returnType": "int", "parameters": [] }
+      ],
+      "virtuals": [
+        { "name": "contextMenuEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneContextMenuEvent*" }] },
+        { "name": "dragEnterEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneDragDropEvent*" }] },
+        { "name": "dragLeaveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneDragDropEvent*" }] },
+        { "name": "dragMoveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneDragDropEvent*" }] },
+        { "name": "dropEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneDragDropEvent*" }] },
+        { "name": "focusInEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QFocusEvent*" }] },
+        { "name": "focusOutEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QFocusEvent*" }] },
+        { "name": "keyPressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QKeyEvent*" }] },
+        { "name": "keyReleaseEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QKeyEvent*" }] },
+        { "name": "mouseDoubleClickEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] },
+        { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] },
+        { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] },
+        { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMouseEvent*" }] }
+      ],
+      "signals": [
+        { "name": "linkActivated", "parameters": [{ "name": "arg0", "type": "QString" }] },
+        { "name": "linkHovered", "parameters": [{ "name": "arg0", "type": "QString" }] }
+      ]
+    }
+,
+    {
+      "name": "QGraphicsTransform",
+      "header": "QtWidgets/qgraphicstransform.h",
+      "bases": ["QObject"],
+      "isAbstract": true,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
       ]
     }
 ,
@@ -3998,7 +5230,7 @@
     {
       "name": "QGraphicsWidget",
       "header": "QtWidgets/qgraphicswidget.h",
-      "bases": ["QGraphicsObject"],
+      "bases": ["QGraphicsObject", "QGraphicsLayoutItem"],
       "isAbstract": false,
       "subclassable": true,
       "owned": false,
@@ -4020,6 +5252,7 @@
         { "name": "insertAction", "returnType": "void", "parameters": [{ "name": "before", "type": "QAction*" }, { "name": "action", "type": "QAction*" }] },
         { "name": "insertActions", "returnType": "void", "parameters": [{ "name": "before", "type": "QAction*" }, { "name": "actions", "type": "QList<QAction*>" }] },
         { "name": "isActiveWindow", "returnType": "bool", "parameters": [] },
+        { "name": "layout", "returnType": "QGraphicsLayout*", "parameters": [] },
         { "name": "layoutDirection", "returnType": "Qt::LayoutDirection", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*" }, { "name": "option", "type": "QStyleOptionGraphicsItem*" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
@@ -4038,6 +5271,7 @@
         { "name": "setFont", "returnType": "void", "parameters": [{ "name": "font", "type": "QFont" }] },
         { "name": "setGeometry", "returnType": "void", "parameters": [{ "name": "rect", "type": "QRectF" }] },
         { "name": "setGeometry", "returnType": "void", "parameters": [{ "name": "x", "type": "double" }, { "name": "y", "type": "double" }, { "name": "w", "type": "double" }, { "name": "h", "type": "double" }] },
+        { "name": "setLayout", "returnType": "void", "parameters": [{ "name": "layout", "type": "QGraphicsLayout*" }] },
         { "name": "setLayoutDirection", "returnType": "void", "parameters": [{ "name": "direction", "type": "Qt::LayoutDirection" }] },
         { "name": "setPalette", "returnType": "void", "parameters": [{ "name": "palette", "type": "QPalette" }] },
         { "name": "setShortcutAutoRepeat", "returnType": "void", "parameters": [{ "name": "id", "type": "int" }, { "name": "enabled", "type": "bool", "optional": true, "default": "true" }] },
@@ -4069,6 +5303,8 @@
         { "name": "focusInEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QFocusEvent*" }] },
         { "name": "focusOutEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QFocusEvent*" }] },
         { "name": "hideEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QHideEvent*" }] },
+        { "name": "moveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneMoveEvent*" }] },
+        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QGraphicsSceneResizeEvent*" }] },
         { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QShowEvent*" }] }
       ],
       "signals": [
@@ -4821,10 +6057,12 @@
       "methods": [
         { "name": "createEditor", "returnType": "QWidget*", "parameters": [{ "name": "parent", "type": "QWidget*" }, { "name": "option", "type": "QStyleOptionViewItem" }, { "name": "index", "type": "QModelIndex" }] },
         { "name": "hasClipping", "returnType": "bool", "parameters": [] },
+        { "name": "itemEditorFactory", "returnType": "QItemEditorFactory*", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*" }, { "name": "option", "type": "QStyleOptionViewItem" }, { "name": "index", "type": "QModelIndex" }] },
         { "name": "setClipping", "returnType": "void", "parameters": [{ "name": "clip", "type": "bool" }] },
         { "name": "setEditorData", "returnType": "void", "parameters": [{ "name": "editor", "type": "QWidget*" }, { "name": "index", "type": "QModelIndex" }] },
+        { "name": "setItemEditorFactory", "returnType": "void", "parameters": [{ "name": "factory", "type": "QItemEditorFactory*" }] },
         { "name": "setModelData", "returnType": "void", "parameters": [{ "name": "editor", "type": "QWidget*" }, { "name": "model", "type": "QAbstractItemModel*" }, { "name": "index", "type": "QModelIndex" }] },
         { "name": "sizeHint", "returnType": "QSize", "parameters": [{ "name": "option", "type": "QStyleOptionViewItem" }, { "name": "index", "type": "QModelIndex" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
@@ -4832,6 +6070,48 @@
       ],
       "virtuals": [
         { "name": "eventFilter", "returnType": "bool", "parameters": [{ "name": "object", "type": "QObject*" }, { "name": "event", "type": "QEvent*" }] }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QItemEditorCreatorBase",
+      "header": "QtWidgets/qitemeditorfactory.h",
+      "bases": [],
+      "isAbstract": true,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "createWidget", "returnType": "QWidget*", "parameters": [{ "name": "parent", "type": "QWidget*" }] },
+        { "name": "valuePropertyName", "returnType": "QByteArray", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QItemEditorFactory",
+      "header": "QtWidgets/qitemeditorfactory.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] }
+      ],
+      "methods": [
+        { "name": "createEditor", "returnType": "QWidget*", "parameters": [{ "name": "userType", "type": "int" }, { "name": "parent", "type": "QWidget*" }] },
+        { "name": "defaultFactory", "static": true, "returnType": "QItemEditorFactory*", "parameters": [] },
+        { "name": "registerEditor", "returnType": "void", "parameters": [{ "name": "userType", "type": "int" }, { "name": "creator", "type": "QItemEditorCreatorBase*" }] },
+        { "name": "setDefaultFactory", "static": true, "returnType": "void", "parameters": [{ "name": "factory", "type": "QItemEditorFactory*" }] },
+        { "name": "valuePropertyName", "returnType": "QByteArray", "parameters": [{ "name": "userType", "type": "int" }] }
+      ],
+      "virtuals": [
       ],
       "signals": [
       ]
@@ -6943,6 +8223,33 @@
     }
 ,
     {
+      "name": "QPanGesture",
+      "header": "QtWidgets/qgesture.h",
+      "bases": ["QGesture"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "acceleration", "returnType": "double", "parameters": [] },
+        { "name": "delta", "returnType": "QPointF", "parameters": [] },
+        { "name": "lastOffset", "returnType": "QPointF", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "offset", "returnType": "QPointF", "parameters": [] },
+        { "name": "setAcceleration", "returnType": "void", "parameters": [{ "name": "value", "type": "double" }] },
+        { "name": "setLastOffset", "returnType": "void", "parameters": [{ "name": "value", "type": "QPointF" }] },
+        { "name": "setOffset", "returnType": "void", "parameters": [{ "name": "value", "type": "QPointF" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
       "name": "QPen",
       "header": "QtGui/qpen.h",
       "bases": [],
@@ -7018,6 +8325,48 @@
     }
 ,
     {
+      "name": "QPinchGesture",
+      "header": "QtWidgets/qgesture.h",
+      "bases": ["QGesture"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "centerPoint", "returnType": "QPointF", "parameters": [] },
+        { "name": "changeFlags", "returnType": "QPinchGesture::ChangeFlags", "parameters": [] },
+        { "name": "lastCenterPoint", "returnType": "QPointF", "parameters": [] },
+        { "name": "lastRotationAngle", "returnType": "double", "parameters": [] },
+        { "name": "lastScaleFactor", "returnType": "double", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "rotationAngle", "returnType": "double", "parameters": [] },
+        { "name": "scaleFactor", "returnType": "double", "parameters": [] },
+        { "name": "setCenterPoint", "returnType": "void", "parameters": [{ "name": "value", "type": "QPointF" }] },
+        { "name": "setChangeFlags", "returnType": "void", "parameters": [{ "name": "value", "type": "QPinchGesture::ChangeFlags" }] },
+        { "name": "setLastCenterPoint", "returnType": "void", "parameters": [{ "name": "value", "type": "QPointF" }] },
+        { "name": "setLastRotationAngle", "returnType": "void", "parameters": [{ "name": "value", "type": "double" }] },
+        { "name": "setLastScaleFactor", "returnType": "void", "parameters": [{ "name": "value", "type": "double" }] },
+        { "name": "setRotationAngle", "returnType": "void", "parameters": [{ "name": "value", "type": "double" }] },
+        { "name": "setScaleFactor", "returnType": "void", "parameters": [{ "name": "value", "type": "double" }] },
+        { "name": "setStartCenterPoint", "returnType": "void", "parameters": [{ "name": "value", "type": "QPointF" }] },
+        { "name": "setTotalChangeFlags", "returnType": "void", "parameters": [{ "name": "value", "type": "QPinchGesture::ChangeFlags" }] },
+        { "name": "setTotalRotationAngle", "returnType": "void", "parameters": [{ "name": "value", "type": "double" }] },
+        { "name": "setTotalScaleFactor", "returnType": "void", "parameters": [{ "name": "value", "type": "double" }] },
+        { "name": "startCenterPoint", "returnType": "QPointF", "parameters": [] },
+        { "name": "totalChangeFlags", "returnType": "QPinchGesture::ChangeFlags", "parameters": [] },
+        { "name": "totalRotationAngle", "returnType": "double", "parameters": [] },
+        { "name": "totalScaleFactor", "returnType": "double", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
       "name": "QPixmap",
       "header": "QtGui/qpixmap.h",
       "bases": ["QPaintDevice"],
@@ -7072,6 +8421,35 @@
         { "name": "transformed", "returnType": "QPixmap", "parameters": [{ "name": "arg0", "type": "QTransform" }, { "name": "mode", "type": "Qt::TransformationMode", "optional": true, "default": "Qt.TransformationMode.FastTransformation" }] },
         { "name": "trueMatrix", "static": true, "returnType": "QTransform", "parameters": [{ "name": "m", "type": "QTransform" }, { "name": "w", "type": "int" }, { "name": "h", "type": "int" }] },
         { "name": "width", "returnType": "int", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QPlainTextDocumentLayout",
+      "header": "QtWidgets/qplaintextedit.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "document", "type": "QTextDocument*" }] }
+      ],
+      "methods": [
+        { "name": "blockBoundingRect", "returnType": "QRectF", "parameters": [{ "name": "block", "type": "QTextBlock" }] },
+        { "name": "cursorWidth", "returnType": "int", "parameters": [] },
+        { "name": "documentSize", "returnType": "QSizeF", "parameters": [] },
+        { "name": "ensureBlockLayout", "returnType": "void", "parameters": [{ "name": "block", "type": "QTextBlock" }] },
+        { "name": "frameBoundingRect", "returnType": "QRectF", "parameters": [{ "name": "arg0", "type": "QTextFrame*" }] },
+        { "name": "hitTest", "returnType": "int", "parameters": [{ "name": "arg0", "type": "QPointF" }, { "name": "arg1", "type": "Qt::HitTestAccuracy" }] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "pageCount", "returnType": "int", "parameters": [] },
+        { "name": "requestUpdate", "returnType": "void", "parameters": [] },
+        { "name": "setCursorWidth", "returnType": "void", "parameters": [{ "name": "width", "type": "int" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
       ],
@@ -7485,7 +8863,7 @@
         { "name": "standardIcon", "returnType": "QIcon", "parameters": [{ "name": "standardIcon", "type": "QStyle::StandardPixmap" }, { "name": "option", "type": "QStyleOption*", "optional": true, "default": "null" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
         { "name": "standardPalette", "returnType": "QPalette", "parameters": [] },
         { "name": "standardPixmap", "returnType": "QPixmap", "parameters": [{ "name": "standardPixmap", "type": "QStyle::StandardPixmap" }, { "name": "opt", "type": "QStyleOption*" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
-        { "name": "styleHint", "returnType": "int", "parameters": [{ "name": "hint", "type": "QStyle::StyleHint" }, { "name": "option", "type": "QStyleOption*", "optional": true, "default": "null" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
+        { "name": "styleHint", "returnType": "int", "parameters": [{ "name": "hint", "type": "QStyle::StyleHint" }, { "name": "option", "type": "QStyleOption*", "optional": true, "default": "null" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }, { "name": "returnData", "type": "QStyleHintReturn*", "optional": true, "default": "null" }] },
         { "name": "subControlRect", "returnType": "QRect", "parameters": [{ "name": "cc", "type": "QStyle::ComplexControl" }, { "name": "opt", "type": "QStyleOptionComplex*" }, { "name": "sc", "type": "QStyle::SubControl" }, { "name": "widget", "type": "QWidget*" }] },
         { "name": "subElementRect", "returnType": "QRect", "parameters": [{ "name": "element", "type": "QStyle::SubElement" }, { "name": "option", "type": "QStyleOption*" }, { "name": "widget", "type": "QWidget*" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
@@ -7965,6 +9343,71 @@
     }
 ,
     {
+      "name": "QScroller",
+      "header": "QtWidgets/qscroller.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": false,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "activeScrollers", "static": true, "returnType": "QList<QScroller*>", "parameters": [] },
+        { "name": "ensureVisible", "returnType": "void", "parameters": [{ "name": "rect", "type": "QRectF" }, { "name": "xmargin", "type": "double" }, { "name": "ymargin", "type": "double" }] },
+        { "name": "ensureVisible", "returnType": "void", "parameters": [{ "name": "rect", "type": "QRectF" }, { "name": "xmargin", "type": "double" }, { "name": "ymargin", "type": "double" }, { "name": "scrollTime", "type": "int" }] },
+        { "name": "finalPosition", "returnType": "QPointF", "parameters": [] },
+        { "name": "grabGesture", "static": true, "returnType": "Qt::GestureType", "parameters": [{ "name": "target", "type": "QObject*" }, { "name": "gestureType", "type": "QScroller::ScrollerGestureType", "optional": true }] },
+        { "name": "grabbedGesture", "static": true, "returnType": "Qt::GestureType", "parameters": [{ "name": "target", "type": "QObject*" }] },
+        { "name": "handleInput", "returnType": "bool", "parameters": [{ "name": "input", "type": "QScroller::Input" }, { "name": "position", "type": "QPointF" }, { "name": "timestamp", "type": "long long", "optional": true, "default": "0" }] },
+        { "name": "hasScroller", "static": true, "returnType": "bool", "parameters": [{ "name": "target", "type": "QObject*" }] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "pixelPerMeter", "returnType": "QPointF", "parameters": [] },
+        { "name": "resendPrepareEvent", "returnType": "void", "parameters": [] },
+        { "name": "scrollTo", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "scrollTo", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }, { "name": "scrollTime", "type": "int" }] },
+        { "name": "scroller", "static": true, "returnType": "QScroller*", "parameters": [{ "name": "target", "type": "QObject*" }] },
+        { "name": "scrollerProperties", "returnType": "QScrollerProperties", "parameters": [] },
+        { "name": "setScrollerProperties", "returnType": "void", "parameters": [{ "name": "prop", "type": "QScrollerProperties" }] },
+        { "name": "setSnapPositionsX", "returnType": "void", "parameters": [{ "name": "positions", "type": "QList<double>" }] },
+        { "name": "setSnapPositionsX", "returnType": "void", "parameters": [{ "name": "first", "type": "double" }, { "name": "interval", "type": "double" }] },
+        { "name": "setSnapPositionsY", "returnType": "void", "parameters": [{ "name": "positions", "type": "QList<double>" }] },
+        { "name": "setSnapPositionsY", "returnType": "void", "parameters": [{ "name": "first", "type": "double" }, { "name": "interval", "type": "double" }] },
+        { "name": "state", "returnType": "QScroller::State", "parameters": [] },
+        { "name": "stop", "returnType": "void", "parameters": [] },
+        { "name": "target", "returnType": "QObject*", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "ungrabGesture", "static": true, "returnType": "void", "parameters": [{ "name": "target", "type": "QObject*" }] },
+        { "name": "velocity", "returnType": "QPointF", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QScrollerProperties",
+      "header": "QtWidgets/qscrollerproperties.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] }
+      ],
+      "methods": [
+        { "name": "scrollMetric", "returnType": "QVariant", "parameters": [{ "name": "metric", "type": "QScrollerProperties::ScrollMetric" }] },
+        { "name": "setDefaultScrollerProperties", "static": true, "returnType": "void", "parameters": [{ "name": "sp", "type": "QScrollerProperties" }] },
+        { "name": "setScrollMetric", "returnType": "void", "parameters": [{ "name": "metric", "type": "QScrollerProperties::ScrollMetric" }, { "name": "value", "type": "QVariant" }] },
+        { "name": "unsetDefaultScrollerProperties", "static": true, "returnType": "void", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
       "name": "QShortcut",
       "header": "QtGui/qshortcut.h",
       "bases": ["QObject"],
@@ -8381,6 +9824,36 @@
     }
 ,
     {
+      "name": "QSplashScreen",
+      "header": "QtWidgets/qsplashscreen.h",
+      "bases": ["QWidget"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] }
+      ],
+      "methods": [
+        { "name": "clearMessage", "returnType": "void", "parameters": [] },
+        { "name": "finish", "returnType": "void", "parameters": [{ "name": "w", "type": "QWidget*" }] },
+        { "name": "message", "returnType": "QString", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "pixmap", "returnType": "QPixmap", "parameters": [] },
+        { "name": "repaint", "returnType": "void", "parameters": [] },
+        { "name": "setPixmap", "returnType": "void", "parameters": [{ "name": "pixmap", "type": "QPixmap" }] },
+        { "name": "showMessage", "returnType": "void", "parameters": [{ "name": "message", "type": "QString" }, { "name": "alignment", "type": "int", "optional": true }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+        { "name": "event", "returnType": "bool", "parameters": [{ "name": "e", "type": "QEvent*" }] },
+        { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] }
+      ],
+      "signals": [
+        { "name": "messageChanged", "parameters": [{ "name": "message", "type": "QString" }] }
+      ]
+    }
+,
+    {
       "name": "QSplitter",
       "header": "QtWidgets/qsplitter.h",
       "bases": ["QFrame"],
@@ -8395,6 +9868,7 @@
         { "name": "addWidget", "returnType": "void", "parameters": [{ "name": "widget", "type": "QWidget*" }] },
         { "name": "childrenCollapsible", "returnType": "bool", "parameters": [] },
         { "name": "count", "returnType": "int", "parameters": [] },
+        { "name": "handle", "returnType": "QSplitterHandle*", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "handleWidth", "returnType": "int", "parameters": [] },
         { "name": "indexOf", "returnType": "int", "parameters": [{ "name": "w", "type": "QWidget*" }] },
         { "name": "insertWidget", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "widget", "type": "QWidget*" }] },
@@ -8427,6 +9901,37 @@
       ],
       "signals": [
         { "name": "splitterMoved", "parameters": [{ "name": "pos", "type": "int" }, { "name": "index", "type": "int" }] }
+      ]
+    }
+,
+    {
+      "name": "QSplitterHandle",
+      "header": "QtWidgets/qsplitter.h",
+      "bases": ["QWidget"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "o", "type": "Qt::Orientation" }, { "name": "parent", "type": "QSplitter*" }] }
+      ],
+      "methods": [
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "opaqueResize", "returnType": "bool", "parameters": [] },
+        { "name": "orientation", "returnType": "Qt::Orientation", "parameters": [] },
+        { "name": "setOrientation", "returnType": "void", "parameters": [{ "name": "o", "type": "Qt::Orientation" }] },
+        { "name": "sizeHint", "returnType": "QSize", "parameters": [] },
+        { "name": "splitter", "returnType": "QSplitter*", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+        { "name": "event", "returnType": "bool", "parameters": [{ "name": "arg0", "type": "QEvent*" }] },
+        { "name": "mouseMoveEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
+        { "name": "mousePressEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
+        { "name": "mouseReleaseEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMouseEvent*" }] },
+        { "name": "paintEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPaintEvent*" }] },
+        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QResizeEvent*" }] }
+      ],
+      "signals": [
       ]
     }
 ,
@@ -8788,7 +10293,7 @@
         { "name": "standardIcon", "returnType": "QIcon", "parameters": [{ "name": "standardIcon", "type": "QStyle::StandardPixmap" }, { "name": "option", "type": "QStyleOption*", "optional": true, "default": "null" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
         { "name": "standardPalette", "returnType": "QPalette", "parameters": [] },
         { "name": "standardPixmap", "returnType": "QPixmap", "parameters": [{ "name": "standardPixmap", "type": "QStyle::StandardPixmap" }, { "name": "opt", "type": "QStyleOption*", "optional": true, "default": "null" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
-        { "name": "styleHint", "returnType": "int", "parameters": [{ "name": "stylehint", "type": "QStyle::StyleHint" }, { "name": "opt", "type": "QStyleOption*", "optional": true, "default": "null" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
+        { "name": "styleHint", "returnType": "int", "parameters": [{ "name": "stylehint", "type": "QStyle::StyleHint" }, { "name": "opt", "type": "QStyleOption*", "optional": true, "default": "null" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }, { "name": "returnData", "type": "QStyleHintReturn*", "optional": true, "default": "null" }] },
         { "name": "subControlRect", "returnType": "QRect", "parameters": [{ "name": "cc", "type": "QStyle::ComplexControl" }, { "name": "opt", "type": "QStyleOptionComplex*" }, { "name": "sc", "type": "QStyle::SubControl" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
         { "name": "subElementRect", "returnType": "QRect", "parameters": [{ "name": "subElement", "type": "QStyle::SubElement" }, { "name": "option", "type": "QStyleOption*" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
@@ -8797,6 +10302,60 @@
         { "name": "visualAlignment", "static": true, "returnType": "Qt::Alignment", "parameters": [{ "name": "direction", "type": "Qt::LayoutDirection" }, { "name": "alignment", "type": "Qt::Alignment" }] },
         { "name": "visualPos", "static": true, "returnType": "QPoint", "parameters": [{ "name": "direction", "type": "Qt::LayoutDirection" }, { "name": "boundingRect", "type": "QRect" }, { "name": "logicalPos", "type": "QPoint" }] },
         { "name": "visualRect", "static": true, "returnType": "QRect", "parameters": [{ "name": "direction", "type": "Qt::LayoutDirection" }, { "name": "boundingRect", "type": "QRect" }, { "name": "logicalRect", "type": "QRect" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QStyleHintReturn",
+      "header": "QtWidgets/qstyleoption.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "version", "type": "int", "optional": true }, { "name": "type", "type": "int", "optional": true }] }
+      ],
+      "methods": [
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QStyleHintReturnMask",
+      "header": "QtWidgets/qstyleoption.h",
+      "bases": ["QStyleHintReturn"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] }
+      ],
+      "methods": [
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QStyleHintReturnVariant",
+      "header": "QtWidgets/qstyleoption.h",
+      "bases": ["QStyleHintReturn"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] }
+      ],
+      "methods": [
       ],
       "virtuals": [
       ],
@@ -9111,6 +10670,24 @@
     }
 ,
     {
+      "name": "QStyleOptionSizeGrip",
+      "header": "QtWidgets/qstyleoption.h",
+      "bases": ["QStyleOptionComplex"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] }
+      ],
+      "methods": [
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
       "name": "QStyleOptionSlider",
       "header": "QtWidgets/qstyleoption.h",
       "bases": ["QStyleOptionComplex"],
@@ -9165,6 +10742,42 @@
     }
 ,
     {
+      "name": "QStyleOptionTabBarBase",
+      "header": "QtWidgets/qstyleoption.h",
+      "bases": ["QStyleOption"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] }
+      ],
+      "methods": [
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QStyleOptionTabWidgetFrame",
+      "header": "QtWidgets/qstyleoption.h",
+      "bases": ["QStyleOption"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] }
+      ],
+      "methods": [
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
       "name": "QStyleOptionTitleBar",
       "header": "QtWidgets/qstyleoption.h",
       "bases": ["QStyleOptionComplex"],
@@ -9184,6 +10797,24 @@
 ,
     {
       "name": "QStyleOptionToolBar",
+      "header": "QtWidgets/qstyleoption.h",
+      "bases": ["QStyleOption"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] }
+      ],
+      "methods": [
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QStyleOptionToolBox",
       "header": "QtWidgets/qstyleoption.h",
       "bases": ["QStyleOption"],
       "isAbstract": false,
@@ -9237,6 +10868,34 @@
     }
 ,
     {
+      "name": "QStylePainter",
+      "header": "QtWidgets/qstylepainter.h",
+      "bases": ["QPainter"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] },
+        { "parameters": [{ "name": "w", "type": "QWidget*" }] },
+        { "parameters": [{ "name": "pd", "type": "QPaintDevice*" }, { "name": "w", "type": "QWidget*" }] }
+      ],
+      "methods": [
+        { "name": "begin", "returnType": "bool", "parameters": [{ "name": "w", "type": "QWidget*" }] },
+        { "name": "begin", "returnType": "bool", "parameters": [{ "name": "pd", "type": "QPaintDevice*" }, { "name": "w", "type": "QWidget*" }] },
+        { "name": "drawComplexControl", "returnType": "void", "parameters": [{ "name": "cc", "type": "QStyle::ComplexControl" }, { "name": "opt", "type": "QStyleOptionComplex" }] },
+        { "name": "drawControl", "returnType": "void", "parameters": [{ "name": "ce", "type": "QStyle::ControlElement" }, { "name": "opt", "type": "QStyleOption" }] },
+        { "name": "drawItemPixmap", "returnType": "void", "parameters": [{ "name": "r", "type": "QRect" }, { "name": "flags", "type": "int" }, { "name": "pixmap", "type": "QPixmap" }] },
+        { "name": "drawItemText", "returnType": "void", "parameters": [{ "name": "r", "type": "QRect" }, { "name": "flags", "type": "int" }, { "name": "pal", "type": "QPalette" }, { "name": "enabled", "type": "bool" }, { "name": "text", "type": "QString" }, { "name": "textRole", "type": "QPalette::ColorRole", "optional": true, "default": "QPalette.ColorRole.NoRole" }] },
+        { "name": "drawPrimitive", "returnType": "void", "parameters": [{ "name": "pe", "type": "QStyle::PrimitiveElement" }, { "name": "opt", "type": "QStyleOption" }] },
+        { "name": "style", "returnType": "QStyle*", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
       "name": "QStyledItemDelegate",
       "header": "QtWidgets/qstyleditemdelegate.h",
       "bases": ["QAbstractItemDelegate"],
@@ -9249,9 +10908,11 @@
       "methods": [
         { "name": "createEditor", "returnType": "QWidget*", "parameters": [{ "name": "parent", "type": "QWidget*" }, { "name": "option", "type": "QStyleOptionViewItem" }, { "name": "index", "type": "QModelIndex" }] },
         { "name": "displayText", "returnType": "QString", "parameters": [{ "name": "value", "type": "QVariant" }, { "name": "locale", "type": "QLocale" }] },
+        { "name": "itemEditorFactory", "returnType": "QItemEditorFactory*", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*" }, { "name": "option", "type": "QStyleOptionViewItem" }, { "name": "index", "type": "QModelIndex" }] },
         { "name": "setEditorData", "returnType": "void", "parameters": [{ "name": "editor", "type": "QWidget*" }, { "name": "index", "type": "QModelIndex" }] },
+        { "name": "setItemEditorFactory", "returnType": "void", "parameters": [{ "name": "factory", "type": "QItemEditorFactory*" }] },
         { "name": "setModelData", "returnType": "void", "parameters": [{ "name": "editor", "type": "QWidget*" }, { "name": "model", "type": "QAbstractItemModel*" }, { "name": "index", "type": "QModelIndex" }] },
         { "name": "sizeHint", "returnType": "QSize", "parameters": [{ "name": "option", "type": "QStyleOptionViewItem" }, { "name": "index", "type": "QModelIndex" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
@@ -9259,6 +10920,30 @@
       ],
       "virtuals": [
         { "name": "eventFilter", "returnType": "bool", "parameters": [{ "name": "object", "type": "QObject*" }, { "name": "event", "type": "QEvent*" }] }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QSwipeGesture",
+      "header": "QtWidgets/qgesture.h",
+      "bases": ["QGesture"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "horizontalDirection", "returnType": "QSwipeGesture::SwipeDirection", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setSwipeAngle", "returnType": "void", "parameters": [{ "name": "value", "type": "double" }] },
+        { "name": "swipeAngle", "returnType": "double", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "verticalDirection", "returnType": "QSwipeGesture::SwipeDirection", "parameters": [] }
+      ],
+      "virtuals": [
       ],
       "signals": [
       ]
@@ -9615,6 +11300,7 @@
         { "name": "rowCount", "returnType": "int", "parameters": [] },
         { "name": "scrollToItem", "returnType": "void", "parameters": [{ "name": "item", "type": "QTableWidgetItem*" }, { "name": "hint", "type": "QAbstractItemView::ScrollHint", "optional": true }] },
         { "name": "selectedItems", "returnType": "QList<QTableWidgetItem*>", "parameters": [] },
+        { "name": "selectedRanges", "returnType": "QList<QTableWidgetSelectionRange>", "parameters": [] },
         { "name": "setCellWidget", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }, { "name": "column", "type": "int" }, { "name": "widget", "type": "QWidget*" }] },
         { "name": "setColumnCount", "returnType": "void", "parameters": [{ "name": "columns", "type": "int" }] },
         { "name": "setCurrentCell", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }, { "name": "column", "type": "int" }] },
@@ -9625,6 +11311,7 @@
         { "name": "setHorizontalHeaderLabels", "returnType": "void", "parameters": [{ "name": "labels", "type": "QStringList" }] },
         { "name": "setItem", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }, { "name": "column", "type": "int" }, { "name": "item", "type": "QTableWidgetItem*" }] },
         { "name": "setItemPrototype", "returnType": "void", "parameters": [{ "name": "item", "type": "QTableWidgetItem*" }] },
+        { "name": "setRangeSelected", "returnType": "void", "parameters": [{ "name": "range", "type": "QTableWidgetSelectionRange" }, { "name": "select", "type": "bool" }] },
         { "name": "setRowCount", "returnType": "void", "parameters": [{ "name": "rows", "type": "int" }] },
         { "name": "setSortingEnabled", "returnType": "void", "parameters": [{ "name": "enable", "type": "bool" }] },
         { "name": "setSupportedDragActions", "returnType": "void", "parameters": [{ "name": "actions", "type": "Qt::DropActions" }] },
@@ -9707,6 +11394,77 @@
         { "name": "type", "returnType": "int", "parameters": [] },
         { "name": "whatsThis", "returnType": "QString", "parameters": [] },
         { "name": "write", "returnType": "void", "parameters": [{ "name": "out", "type": "QDataStream" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QTableWidgetSelectionRange",
+      "header": "QtWidgets/qtablewidget.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] },
+        { "parameters": [{ "name": "top", "type": "int" }, { "name": "left", "type": "int" }, { "name": "bottom", "type": "int" }, { "name": "right", "type": "int" }] }
+      ],
+      "methods": [
+        { "name": "bottomRow", "returnType": "int", "parameters": [] },
+        { "name": "columnCount", "returnType": "int", "parameters": [] },
+        { "name": "leftColumn", "returnType": "int", "parameters": [] },
+        { "name": "rightColumn", "returnType": "int", "parameters": [] },
+        { "name": "rowCount", "returnType": "int", "parameters": [] },
+        { "name": "topRow", "returnType": "int", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QTapAndHoldGesture",
+      "header": "QtWidgets/qgesture.h",
+      "bases": ["QGesture"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "position", "returnType": "QPointF", "parameters": [] },
+        { "name": "setPosition", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "setTimeout", "static": true, "returnType": "void", "parameters": [{ "name": "msecs", "type": "int" }] },
+        { "name": "timeout", "static": true, "returnType": "int", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QTapGesture",
+      "header": "QtWidgets/qgesture.h",
+      "bases": ["QGesture"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "position", "returnType": "QPointF", "parameters": [] },
+        { "name": "setPosition", "returnType": "void", "parameters": [{ "name": "pos", "type": "QPointF" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
       ],
@@ -10870,6 +12628,31 @@
     }
 ,
     {
+      "name": "QToolTip",
+      "header": "QtWidgets/qtooltip.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "font", "static": true, "returnType": "QFont", "parameters": [] },
+        { "name": "hideText", "static": true, "returnType": "void", "parameters": [] },
+        { "name": "isVisible", "static": true, "returnType": "bool", "parameters": [] },
+        { "name": "palette", "static": true, "returnType": "QPalette", "parameters": [] },
+        { "name": "setFont", "static": true, "returnType": "void", "parameters": [{ "name": "arg0", "type": "QFont" }] },
+        { "name": "setPalette", "static": true, "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPalette" }] },
+        { "name": "showText", "static": true, "returnType": "void", "parameters": [{ "name": "pos", "type": "QPoint" }, { "name": "text", "type": "QString" }, { "name": "w", "type": "QWidget*", "optional": true, "default": "null" }] },
+        { "name": "text", "static": true, "returnType": "QString", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
       "name": "QTransform",
       "header": "QtGui/qtransform.h",
       "bases": [],
@@ -11180,6 +12963,25 @@
     }
 ,
     {
+      "name": "QTreeWidgetItemIterator",
+      "header": "QtWidgets/qtreewidgetitemiterator.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "widget", "type": "QTreeWidget*" }, { "name": "flags", "type": "QTreeWidgetItemIterator::IteratorFlags", "optional": true }] },
+        { "parameters": [{ "name": "item", "type": "QTreeWidgetItem*" }, { "name": "flags", "type": "QTreeWidgetItemIterator::IteratorFlags", "optional": true }] }
+      ],
+      "methods": [
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
       "name": "QUndoCommand",
       "header": "QtGui/qundostack.h",
       "bases": [],
@@ -11202,6 +13004,47 @@
         { "name": "setText", "returnType": "void", "parameters": [{ "name": "text", "type": "QString" }] },
         { "name": "text", "returnType": "QString", "parameters": [] },
         { "name": "undo", "returnType": "void", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QUndoGroup",
+      "header": "QtWidgets/qundogroup.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "activeStack", "returnType": "QUndoStack*", "parameters": [] },
+        { "name": "activeStackChanged", "returnType": "void", "parameters": [{ "name": "stack", "type": "QUndoStack*" }] },
+        { "name": "addStack", "returnType": "void", "parameters": [{ "name": "stack", "type": "QUndoStack*" }] },
+        { "name": "canRedo", "returnType": "bool", "parameters": [] },
+        { "name": "canRedoChanged", "returnType": "void", "parameters": [{ "name": "canRedo", "type": "bool" }] },
+        { "name": "canUndo", "returnType": "bool", "parameters": [] },
+        { "name": "canUndoChanged", "returnType": "void", "parameters": [{ "name": "canUndo", "type": "bool" }] },
+        { "name": "cleanChanged", "returnType": "void", "parameters": [{ "name": "clean", "type": "bool" }] },
+        { "name": "createRedoAction", "returnType": "QAction*", "parameters": [{ "name": "parent", "type": "QObject*" }, { "name": "prefix", "type": "QString", "optional": true }] },
+        { "name": "createUndoAction", "returnType": "QAction*", "parameters": [{ "name": "parent", "type": "QObject*" }, { "name": "prefix", "type": "QString", "optional": true }] },
+        { "name": "indexChanged", "returnType": "void", "parameters": [{ "name": "idx", "type": "int" }] },
+        { "name": "isClean", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "redo", "returnType": "void", "parameters": [] },
+        { "name": "redoText", "returnType": "QString", "parameters": [] },
+        { "name": "redoTextChanged", "returnType": "void", "parameters": [{ "name": "redoText", "type": "QString" }] },
+        { "name": "removeStack", "returnType": "void", "parameters": [{ "name": "stack", "type": "QUndoStack*" }] },
+        { "name": "setActiveStack", "returnType": "void", "parameters": [{ "name": "stack", "type": "QUndoStack*" }] },
+        { "name": "stacks", "returnType": "QList<QUndoStack*>", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "undo", "returnType": "void", "parameters": [] },
+        { "name": "undoText", "returnType": "QString", "parameters": [] },
+        { "name": "undoTextChanged", "returnType": "void", "parameters": [{ "name": "undoText", "type": "QString" }] }
       ],
       "virtuals": [
       ],
@@ -11269,14 +13112,17 @@
       "owned": true,
       "constructors": [
         { "parameters": [{ "name": "parent", "type": "QWidget*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "group", "type": "QUndoGroup*" }, { "name": "parent", "type": "QWidget*", "optional": true, "default": "null" }] },
         { "parameters": [{ "name": "stack", "type": "QUndoStack*" }, { "name": "parent", "type": "QWidget*", "optional": true, "default": "null" }] }
       ],
       "methods": [
         { "name": "cleanIcon", "returnType": "QIcon", "parameters": [] },
         { "name": "emptyLabel", "returnType": "QString", "parameters": [] },
+        { "name": "group", "returnType": "QUndoGroup*", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setCleanIcon", "returnType": "void", "parameters": [{ "name": "icon", "type": "QIcon" }] },
         { "name": "setEmptyLabel", "returnType": "void", "parameters": [{ "name": "label", "type": "QString" }] },
+        { "name": "setGroup", "returnType": "void", "parameters": [{ "name": "group", "type": "QUndoGroup*" }] },
         { "name": "setStack", "returnType": "void", "parameters": [{ "name": "stack", "type": "QUndoStack*" }] },
         { "name": "stack", "returnType": "QUndoStack*", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
@@ -11587,6 +13433,8 @@
         { "name": "grabMouse", "returnType": "void", "parameters": [] },
         { "name": "grabMouse", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QCursor" }] },
         { "name": "grabShortcut", "returnType": "int", "parameters": [{ "name": "key", "type": "QKeySequence" }, { "name": "context", "type": "Qt::ShortcutContext", "optional": true, "default": "Qt.ShortcutContext.WindowShortcut" }] },
+        { "name": "graphicsEffect", "returnType": "QGraphicsEffect*", "parameters": [] },
+        { "name": "graphicsProxyWidget", "returnType": "QGraphicsProxyWidget*", "parameters": [] },
         { "name": "hasFocus", "returnType": "bool", "parameters": [] },
         { "name": "hasHeightForWidth", "returnType": "bool", "parameters": [] },
         { "name": "hasMouseTracking", "returnType": "bool", "parameters": [] },
@@ -11698,6 +13546,7 @@
         { "name": "setForegroundRole", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QPalette::ColorRole" }] },
         { "name": "setGeometry", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QRect" }] },
         { "name": "setGeometry", "returnType": "void", "parameters": [{ "name": "x", "type": "int" }, { "name": "y", "type": "int" }, { "name": "w", "type": "int" }, { "name": "h", "type": "int" }] },
+        { "name": "setGraphicsEffect", "returnType": "void", "parameters": [{ "name": "effect", "type": "QGraphicsEffect*" }] },
         { "name": "setHidden", "returnType": "void", "parameters": [{ "name": "hidden", "type": "bool" }] },
         { "name": "setInputMethodHints", "returnType": "void", "parameters": [{ "name": "hints", "type": "Qt::InputMethodHints" }] },
         { "name": "setLayout", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QLayout*" }] },
@@ -11824,6 +13673,32 @@
     }
 ,
     {
+      "name": "QWidgetAction",
+      "header": "QtWidgets/qwidgetaction.h",
+      "bases": ["QAction"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*" }] }
+      ],
+      "methods": [
+        { "name": "defaultWidget", "returnType": "QWidget*", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "releaseWidget", "returnType": "void", "parameters": [{ "name": "widget", "type": "QWidget*" }] },
+        { "name": "requestWidget", "returnType": "QWidget*", "parameters": [{ "name": "parent", "type": "QWidget*" }] },
+        { "name": "setDefaultWidget", "returnType": "void", "parameters": [{ "name": "w", "type": "QWidget*" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+        { "name": "event", "returnType": "bool", "parameters": [{ "name": "arg0", "type": "QEvent*" }] },
+        { "name": "eventFilter", "returnType": "bool", "parameters": [{ "name": "arg0", "type": "QObject*" }, { "name": "arg1", "type": "QEvent*" }] }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
       "name": "QWidgetItem",
       "header": "QtWidgets/qlayoutitem.h",
       "bases": ["QLayoutItem"],
@@ -11864,16 +13739,19 @@
         { "parameters": [{ "name": "parent", "type": "QWidget*", "optional": true, "default": "null" }, { "name": "flags", "type": "Qt::WindowFlags", "optional": true }] }
       ],
       "methods": [
+        { "name": "addPage", "returnType": "int", "parameters": [{ "name": "page", "type": "QWizardPage*" }] },
         { "name": "back", "returnType": "void", "parameters": [] },
         { "name": "button", "returnType": "QAbstractButton*", "parameters": [{ "name": "which", "type": "QWizard::WizardButton" }] },
         { "name": "buttonText", "returnType": "QString", "parameters": [{ "name": "which", "type": "QWizard::WizardButton" }] },
         { "name": "currentId", "returnType": "int", "parameters": [] },
+        { "name": "currentPage", "returnType": "QWizardPage*", "parameters": [] },
         { "name": "field", "returnType": "QVariant", "parameters": [{ "name": "name", "type": "QString" }] },
         { "name": "hasVisitedPage", "returnType": "bool", "parameters": [{ "name": "id", "type": "int" }] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "next", "returnType": "void", "parameters": [] },
         { "name": "nextId", "returnType": "int", "parameters": [] },
         { "name": "options", "returnType": "QWizard::WizardOptions", "parameters": [] },
+        { "name": "page", "returnType": "QWizardPage*", "parameters": [{ "name": "id", "type": "int" }] },
         { "name": "pageIds", "returnType": "QList<int>", "parameters": [] },
         { "name": "pixmap", "returnType": "QPixmap", "parameters": [{ "name": "which", "type": "QWizard::WizardPixmap" }] },
         { "name": "removePage", "returnType": "void", "parameters": [{ "name": "id", "type": "int" }] },
@@ -11885,6 +13763,7 @@
         { "name": "setField", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }, { "name": "value", "type": "QVariant" }] },
         { "name": "setOption", "returnType": "void", "parameters": [{ "name": "option", "type": "QWizard::WizardOption" }, { "name": "on", "type": "bool", "optional": true, "default": "true" }] },
         { "name": "setOptions", "returnType": "void", "parameters": [{ "name": "options", "type": "QWizard::WizardOptions" }] },
+        { "name": "setPage", "returnType": "void", "parameters": [{ "name": "id", "type": "int" }, { "name": "page", "type": "QWizardPage*" }] },
         { "name": "setPixmap", "returnType": "void", "parameters": [{ "name": "which", "type": "QWizard::WizardPixmap" }, { "name": "pixmap", "type": "QPixmap" }] },
         { "name": "setSideWidget", "returnType": "void", "parameters": [{ "name": "widget", "type": "QWidget*" }] },
         { "name": "setStartId", "returnType": "void", "parameters": [{ "name": "id", "type": "int" }] },
@@ -11914,6 +13793,44 @@
         { "name": "helpRequested", "parameters": [] },
         { "name": "pageAdded", "parameters": [{ "name": "id", "type": "int" }] },
         { "name": "pageRemoved", "parameters": [{ "name": "id", "type": "int" }] }
+      ]
+    }
+,
+    {
+      "name": "QWizardPage",
+      "header": "QtWidgets/qwizard.h",
+      "bases": ["QWidget"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QWidget*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "buttonText", "returnType": "QString", "parameters": [{ "name": "which", "type": "QWizard::WizardButton" }] },
+        { "name": "cleanupPage", "returnType": "void", "parameters": [] },
+        { "name": "initializePage", "returnType": "void", "parameters": [] },
+        { "name": "isCommitPage", "returnType": "bool", "parameters": [] },
+        { "name": "isComplete", "returnType": "bool", "parameters": [] },
+        { "name": "isFinalPage", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "nextId", "returnType": "int", "parameters": [] },
+        { "name": "pixmap", "returnType": "QPixmap", "parameters": [{ "name": "which", "type": "QWizard::WizardPixmap" }] },
+        { "name": "setButtonText", "returnType": "void", "parameters": [{ "name": "which", "type": "QWizard::WizardButton" }, { "name": "text", "type": "QString" }] },
+        { "name": "setCommitPage", "returnType": "void", "parameters": [{ "name": "commitPage", "type": "bool" }] },
+        { "name": "setFinalPage", "returnType": "void", "parameters": [{ "name": "finalPage", "type": "bool" }] },
+        { "name": "setPixmap", "returnType": "void", "parameters": [{ "name": "which", "type": "QWizard::WizardPixmap" }, { "name": "pixmap", "type": "QPixmap" }] },
+        { "name": "setSubTitle", "returnType": "void", "parameters": [{ "name": "subTitle", "type": "QString" }] },
+        { "name": "setTitle", "returnType": "void", "parameters": [{ "name": "title", "type": "QString" }] },
+        { "name": "subTitle", "returnType": "QString", "parameters": [] },
+        { "name": "title", "returnType": "QString", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "validatePage", "returnType": "bool", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+        { "name": "completeChanged", "parameters": [] }
       ]
     }
 

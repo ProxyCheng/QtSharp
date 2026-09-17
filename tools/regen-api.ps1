@@ -82,4 +82,8 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 # The QtWidgets tour: menus, tool bars, tabs, splitters, item views, model/view/proxy, a data
 # widget mapper, a calendar and an undo stack - the whole widget surface the model now covers.
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-widgets
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The graphics view family: scene, view, three item kinds and an off-screen render.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-graphics
 exit $LASTEXITCODE
