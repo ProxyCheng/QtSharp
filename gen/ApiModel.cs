@@ -180,7 +180,12 @@ public static partial class ApiModel
     {
         // The QObject cluster is one chunk: a class must never be separated from the
         // ancestors that declare the virtuals it inherits.
-        R("QObject",      "qobject.h",      "QtCore"),
+        //
+        // QObject is the one class that never gets a release path. A bare QObject is not something
+        // a program needs to own, and the release path is inherited: a subclass marked owned:false
+        // (QMimeData, the graphics items) would otherwise still be disposable through its base,
+        // which would undo exactly the guarantee owned:false is for.
+        R("QObject",      "qobject.h",      "QtCore", owned: false),
         R("QTimer",       "qtimer.h",       "QtCore"),
         R("QAction",      "qaction.h",      "QtGui"),
         R("QWidget",      "qwidget.h",      "QtWidgets"),
@@ -365,7 +370,11 @@ public static partial class ApiModel
         // the calendar/date engine, the drag-and-drop payload, and the bit array.
         R("QMetaObject",      "qobjectdefs.h",      "QtCore"),
         R("QCalendar",        "qcalendar.h",        "QtCore"),
-        R("QMimeData",        "qmimedata.h",        "QtCore"),
+        // Not ours to delete even though we can build one: QDrag and QClipboard::setMimeData adopt
+        // the payload, and neither route leaves a QObject parent behind for the generated
+        // destructor to notice (unlike the widget/layout adoption, which reparents). The wrapper
+        // therefore never releases it - the one case where that costs a leak rather than a crash.
+        R("QMimeData",        "qmimedata.h",        "QtCore", owned: false),
         R("QBitArray",        "qbitarray.h",        "QtCore"),
         R("QTimeZone",        "qtimezone.h",        "QtCore"),
         R("QIODevice",        "qiodevice.h",        "QtCore"),
@@ -399,14 +408,16 @@ public static partial class ApiModel
         R("QGraphicsItemGroup",    "qgraphicsitem.h", "QtWidgets", owned: false),
         R("QGraphicsProxyWidget",  "qgraphicsproxywidget.h", "QtWidgets", owned: false),
         R("QGraphicsItemAnimation", "qgraphicsitemanimation.h", "QtWidgets"),
-        R("QGraphicsTransform",    "qgraphicstransform.h", "QtWidgets"),
-        R("QGraphicsRotation",     "qgraphicstransform.h", "QtWidgets"),
-        R("QGraphicsScale",        "qgraphicstransform.h", "QtWidgets"),
-        R("QGraphicsEffect",       "qgraphicseffect.h", "QtWidgets"),
-        R("QGraphicsBlurEffect",   "qgraphicseffect.h", "QtWidgets"),
-        R("QGraphicsColorizeEffect", "qgraphicseffect.h", "QtWidgets"),
-        R("QGraphicsDropShadowEffect", "qgraphicseffect.h", "QtWidgets"),
-        R("QGraphicsOpacityEffect", "qgraphicseffect.h", "QtWidgets"),
+        // A transform or an effect is handed to an item (setTransformations/setGraphicsEffect),
+        // which adopts it - again with no QObject parent to hide behind.
+        R("QGraphicsTransform",    "qgraphicstransform.h", "QtWidgets", owned: false),
+        R("QGraphicsRotation",     "qgraphicstransform.h", "QtWidgets", owned: false),
+        R("QGraphicsScale",        "qgraphicstransform.h", "QtWidgets", owned: false),
+        R("QGraphicsEffect",       "qgraphicseffect.h", "QtWidgets", owned: false),
+        R("QGraphicsBlurEffect",   "qgraphicseffect.h", "QtWidgets", owned: false),
+        R("QGraphicsColorizeEffect", "qgraphicseffect.h", "QtWidgets", owned: false),
+        R("QGraphicsDropShadowEffect", "qgraphicseffect.h", "QtWidgets", owned: false),
+        R("QGraphicsOpacityEffect", "qgraphicseffect.h", "QtWidgets", owned: false),
         R("QGraphicsLayoutItem",   "qgraphicslayoutitem.h", "QtWidgets", owned: false),
         R("QGraphicsLayout",       "qgraphicslayout.h", "QtWidgets", owned: false),
         R("QGraphicsGridLayout",   "qgraphicsgridlayout.h", "QtWidgets", owned: false),
@@ -473,7 +484,11 @@ public static partial class ApiModel
         R("QDate",                 "qdatetime.h", "QtCore"),
         R("QDateTime",             "qdatetime.h", "QtCore"),
         R("QGraphicsItem",         "qgraphicsitem.h", "QtWidgets", owned: false),
-        R("QGraphicsObject",       "qgraphicsitem.h", "QtWidgets"),
+        // A QObject-shaped item is in the same boat as the plain ones, and this is the case the
+        // generated destructor cannot see: it asks QObject::parent(), while an item's owner is
+        // *parentItem()/scene()* - a QGraphicsItem relationship QObject knows nothing about.
+        // Releasing one because its wrapper was collected would take it out from under the scene.
+        R("QGraphicsObject",       "qgraphicsitem.h", "QtWidgets", owned: false),
         R("QGraphicsPixmapItem",   "qgraphicsitem.h", "QtWidgets", owned: false),
         R("QGraphicsScene",        "qgraphicsscene.h", "QtWidgets"),
         R("QGraphicsView",         "qgraphicsview.h", "QtWidgets"),
