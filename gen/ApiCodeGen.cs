@@ -149,6 +149,12 @@ public static class ApiCodeGen
     static bool IsOptional(JsonElement p)
         => p.TryGetProperty("optional", out var o) && o.ValueKind == JsonValueKind.True;
 
+    // A protected member of an extension class (QAbstractItemModel::createIndex, beginInsertRows,
+    // ...). C++ only lets a *member* call it, so the generated subclass exposes a static helper
+    // the native forwarders go through - the same shape as the CallBase_* forwarders.
+    static bool IsProtected(JsonElement m)
+        => m.TryGetProperty("protected", out var p) && p.ValueKind == JsonValueKind.True;
+
     // A parameter Qt writes back: a non-const scalar pointer (`out`, QColor::getRgb) or a
     // non-const scalar reference (`ref`, QValidator::validate's int &pos). The extractor records
     // which, and neither can carry a C# default value.
@@ -1225,7 +1231,14 @@ public static class ApiCodeGen
             string sig = string.Join(", ", ps.Select(ParamSig));
             string ret = ReturnType(m);
             string staticMod = IsStatic(m) ? "static " : "";
-            sb.AppendLine($"        public {staticMod}{ManagedType(ret)} {CSharpMemberName(mname)}({sig})");
+            // Qt's toString() *is* object.ToString(): spelled without `override` it hides the
+            // base member, and then string interpolation and Console.WriteLine print the type
+            // name instead of the value (the C# call itself is unaffected, which makes it a
+            // thoroughly confusing bug to chase).
+            string overrideMod = !IsStatic(m) && mname == "toString" && ps.Count == 0 && ret == "QString"
+                ? "override "
+                : "";
+            sb.AppendLine($"        public {overrideMod}{staticMod}{ManagedType(ret)} {CSharpMemberName(mname)}({sig})");
             sb.AppendLine("        {");
             var marshal = MarshalParams(ps, IsStatic(m) ? null : "Handle");
             foreach (string line in marshal.Prelude)
@@ -1973,6 +1986,31 @@ public static class ApiCodeGen
             sb.AppendLine($"        {(ret == "void" ? "" : "return ")}self->{name}::{vname}({args});");
             sb.AppendLine("    }");
         }
+        // The protected members the model publishes (createIndex, beginInsertRows, ...): C++ lets
+        // only a member call them, so the forwarder goes through one of these. The overload
+        // suffix is counted exactly like the forwarder loop below counts it.
+        var protectedOverloads = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var m in methods)
+        {
+            string pname = Name(m);
+            protectedOverloads.TryGetValue(pname, out int pseen);
+            protectedOverloads[pname] = pseen + 1;
+            if (!IsProtected(m) || IsStatic(m))
+                continue;
+            string pSuffix = pseen == 0 ? "" : (pseen + 1).ToString();
+            var pps = Params(m);
+            // The helper takes the flat C ABI parameters and does the same conversion the free
+            // forwarders do, so no C++ reference type has to be spelled here (QDataStream arrives
+            // as void* and is dereferenced inside - spelling it as a parameter would mean knowing
+            // whether the base declared it const, which the model does not record).
+            string psig = string.Join(", ", pps.SelectMany(CppParamsFor));
+            string pargs = string.Join(", ", pps.SelectMany(CppArgsFor));
+            string pret = ReturnType(m);
+            sb.AppendLine($"    static {pret} Call{Pascal(pname)}{pSuffix}(QsApi_{name}* self{(pps.Count > 0 ? ", " + psig : "")})");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        {(pret == "void" ? "" : "return ")}self->{pname}({pargs});");
+            sb.AppendLine("    }");
+        }
         sb.AppendLine();
         sb.AppendLine("protected:");
         for (int i = 0; i < virtuals.Count; i++)
@@ -2101,9 +2139,17 @@ public static class ApiCodeGen
             string sig = string.Join(", ", nativeParams);
             string ret = ReturnType(m);
             string args = string.Join(", ", ps.SelectMany(CppArgsFor));
-            string call = IsStatic(m)
-                ? $"{name}::{mname}({args})"
-                : $"static_cast<{name}*>(self)->{mname}({args})";
+            // The protected helper takes the flat C ABI parameters and converts them itself, so it
+            // is handed the raw values rather than the already-converted arguments.
+            string rawArgs = string.Join(", ", ps.Select(p => NativeName(PName(p))));
+            string call;
+            if (IsStatic(m))
+                call = $"{name}::{mname}({args})";
+            else if (IsProtected(m))
+                call = $"QsApi_{name}::Call{Pascal(mname)}{entrySuffix}(static_cast<QsApi_{name}*>(self)"
+                     + (rawArgs.Length > 0 ? ", " + rawArgs : "") + ")";
+            else
+                call = $"static_cast<{name}*>(self)->{mname}({args})";
             sb.AppendLine($"extern \"C\" __declspec(dllexport) {NativeRetCpp(ret)} qs_api_{name}_{mname}{entrySuffix}({sig})");
             sb.AppendLine("{");
             foreach (string line in NativeBody(m, call))
