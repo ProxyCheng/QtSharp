@@ -175,22 +175,22 @@ public static class ApiWidgetsDemo
         window.Show();
 
         // ------------------------------------------------------------------ menus and bars
-        Check(window.FileMenu.Title() == "&File", $"menu has a title (got '{window.FileMenu.Title()}')");
-        Check(window.ExitAction.Text() == "E&xit", $"action text round-trip (got '{window.ExitAction.Text()}')");
+        Check(window.FileMenu.title() == "&File", $"menu has a title (got '{window.FileMenu.title()}')");
+        Check(window.ExitAction.text() == "E&xit", $"action text round-trip (got '{window.ExitAction.text()}')");
         window.ExitAction.Trigger();
         Check(window.ExitTriggers == 1, $"action trigger reached the managed handler (got {window.ExitTriggers})");
         Check(window.StatusBar().CurrentMessage() == "ready", "status bar shows the message");
 
         // ------------------------------------------------------------------ inputs
         window.NameEdit.SetText("typed");
-        Check(window.NameEdit.Text() == "typed", $"line edit round-trip (got '{window.NameEdit.Text()}')");
+        Check(window.NameEdit.text() == "typed", $"line edit round-trip (got '{window.NameEdit.text()}')");
 
         window.CountSpin.SetValue(42);
-        Check(window.CountSpin.Value() == 42, $"spin box round-trip (got {window.CountSpin.Value()})");
-        Check(window.CountSpin.Maximum() == 100, "spin box kept its range");
+        Check(window.CountSpin.value() == 42, $"spin box round-trip (got {window.CountSpin.value()})");
+        Check(window.CountSpin.maximum() == 100, "spin box kept its range");
 
         window.LevelSlider.SetValue(70);
-        Check(window.LevelSlider.Value() == 70, $"slider round-trip (got {window.LevelSlider.Value()})");
+        Check(window.LevelSlider.value() == 70, $"slider round-trip (got {window.LevelSlider.value()})");
         Check(window.SliderChanges == 1, $"slider signal delivered once (got {window.SliderChanges})");
 
         window.BoldCheck.SetChecked(true);
@@ -199,26 +199,26 @@ public static class ApiWidgetsDemo
         Check(window.LeftRadio.IsChecked() && !window.RightRadio.IsChecked(), "radio buttons are exclusive");
 
         window.ModeCombo.SetCurrentIndex(1);
-        Check(window.ModeCombo.CurrentIndex() == 1 && window.ModeCombo.Count() == 3,
-            $"combo box index/count (got {window.ModeCombo.CurrentIndex()} of {window.ModeCombo.Count()})");
-        Check(window.ModeCombo.CurrentText() == "Password", $"combo box current text (got '{window.ModeCombo.CurrentText()}')");
+        Check(window.ModeCombo.currentIndex() == 1 && window.ModeCombo.count() == 3,
+            $"combo box index/count (got {window.ModeCombo.currentIndex()} of {window.ModeCombo.count()})");
+        Check(window.ModeCombo.currentText() == "Password", $"combo box current text (got '{window.ModeCombo.currentText()}')");
 
-        Check(window.FontCombo.CurrentFont().Family().Length > 0,
-            $"font combo reports a family (got '{window.FontCombo.CurrentFont().Family()}')");
+        Check(window.FontCombo.currentFont().Family().Length > 0,
+            $"font combo reports a family (got '{window.FontCombo.currentFont().Family()}')");
 
         // ------------------------------------------------------------------ items
-        Check(window.List.Count() == 3, $"list widget items (got {window.List.Count()})");
+        Check(window.List.count() == 3, $"list widget items (got {window.List.count()})");
         Check(window.List.Item(1).Text() == "item 1", $"list item text (got '{window.List.Item(1).Text()}')");
         window.List.SetCurrentRow(2);
-        Check(window.List.CurrentRow() == 2, "list current row");
+        Check(window.List.currentRow() == 2, "list current row");
 
-        Check(window.Tree.TopLevelItemCount() == 1, $"tree top level (got {window.Tree.TopLevelItemCount()})");
+        Check(window.Tree.topLevelItemCount() == 1, $"tree top level (got {window.Tree.topLevelItemCount()})");
         var treeRoot = window.Tree.TopLevelItem(0);
         Check(treeRoot.Text(0) == "root" && treeRoot.Text(1) == "folder", "tree item text round-trip");
         Check(treeRoot.Child(0).Text(0) == "child", $"tree child text (got '{treeRoot.Child(0).Text(0)}')");
-        Check(window.Tree.ColumnCount() == 2, "tree column count");
+        Check(window.Tree.columnCount() == 2, "tree column count");
 
-        Check(window.Table.RowCount() == 2 && window.Table.ColumnCount() == 2, "table dimensions");
+        Check(window.Table.rowCount() == 2 && window.Table.columnCount() == 2, "table dimensions");
         Check(window.Table.Item(0, 0).Text() == "a0", $"table item text (got '{window.Table.Item(0, 0).Text()}')");
         Check(window.Table.Item(1, 0).Text() == "b0", "table item text (second row)");
 
@@ -229,9 +229,9 @@ public static class ApiWidgetsDemo
         Check(window.Plain.ToPlainText() == "plain text", "plain text edit round-trip");
 
         // ------------------------------------------------------------------ tabs and splitters
-        Check(window.Tabs.Count() == 4, $"tab count (got {window.Tabs.Count()})");
+        Check(window.Tabs.count() == 4, $"tab count (got {window.Tabs.count()})");
         window.Tabs.SetCurrentIndex(2);
-        Check(window.Tabs.CurrentIndex() == 2, "tab selection");
+        Check(window.Tabs.currentIndex() == 2, "tab selection");
         Check(window.Tabs.TabText(1) == "Items", $"tab text (got '{window.Tabs.TabText(1)}')");
         var splitter = (QSplitter)window.Tabs.Widget(1);
         Check(splitter.Count() == 3, $"splitter children (got {splitter.Count()})");
@@ -248,7 +248,7 @@ public static class ApiWidgetsDemo
         var proxy = window.Proxy;
         Check(proxy.RowCount() == 2, $"proxy row count before filtering (got {proxy.RowCount()})");
         proxy.SetFilterFixedString("a");
-        Check(proxy.SourceModel().RowCount() == 2, "proxy exposes its source model");
+        Check(proxy.sourceModel().RowCount() == 2, "proxy exposes its source model");
 
         // A QList<QStandardItem*> argument, and the QList<QModelIndex> that match() returns.
         model.AppendColumn(new[] { new QStandardItem("c0"), new QStandardItem("c1") });
@@ -260,14 +260,14 @@ public static class ApiWidgetsDemo
 
         // ------------------------------------------------------------------ data widget mapper
         window.Mapper.ToFirst();
-        Check(window.Mapper.CurrentIndex() == 0, $"mapper moved to the first row (got {window.Mapper.CurrentIndex()})");
+        Check(window.Mapper.currentIndex() == 0, $"mapper moved to the first row (got {window.Mapper.currentIndex()})");
 
         // ------------------------------------------------------------------ calendar and progress
         var calendar = window.Calendar;
-        Check(calendar.SelectedDate().Year() == 2024 && calendar.SelectedDate().Day() == 15,
-            $"calendar date round-trip (got {calendar.SelectedDate().Year()}-{calendar.SelectedDate().Month()}-{calendar.SelectedDate().Day()})");
+        Check(calendar.selectedDate().Year() == 2024 && calendar.selectedDate().Day() == 15,
+            $"calendar date round-trip (got {calendar.selectedDate().Year()}-{calendar.selectedDate().Month()}-{calendar.selectedDate().Day()})");
         window.Progress.SetValue(66);
-        Check(window.Progress.Value() == 66, $"progress bar round-trip (got {window.Progress.Value()})");
+        Check(window.Progress.value() == 66, $"progress bar round-trip (got {window.Progress.value()})");
 
         // ------------------------------------------------------------------ dialog button box
         var dialog = new QDialog();
@@ -289,7 +289,7 @@ public static class ApiWidgetsDemo
         Check(completer.CompletionCount() == 1, $"completer matched one entry (got {completer.CompletionCount()})");
 
         var undo = new QUndoStack();
-        Check(!undo.CanUndo() && undo.Count() == 0, "undo stack starts empty");
+        Check(!undo.canUndo() && undo.Count() == 0, "undo stack starts empty");
         undo.Undo();
         Check(undo.Index() == 0, "undo on an empty stack is a no-op");
 
@@ -297,7 +297,7 @@ public static class ApiWidgetsDemo
         // A QStringList argument: the managed array becomes a native QStringList for the call.
         var listCombo = new QComboBox();
         listCombo.AddItems(new[] { "one", "two", "three" });
-        Check(listCombo.Count() == 3, $"string[] argument reached addItems (got {listCombo.Count()})");
+        Check(listCombo.count() == 3, $"string[] argument reached addItems (got {listCombo.count()})");
 
         // ...and a QStringList return: the native list is copied into a managed array.
         var families = QFontDatabase.Families();
@@ -327,8 +327,8 @@ public static class ApiWidgetsDemo
         Check(sized.SizeHint().Width() == 123, $"managed sizeHint override (got {sized.SizeHint().Width()})");
         Check(sized.MinimumSizeHint().Height() == 20, "managed minimumSizeHint override");
         sized.AdjustSize();
-        Check(sized.Size().Width() == 123 && sized.Size().Height() == 45,
-            $"Qt sized the widget from the override (got {sized.Size().Width()}x{sized.Size().Height()})");
+        Check(sized.size().Width() == 123 && sized.size().Height() == 45,
+            $"Qt sized the widget from the override (got {sized.size().Width()}x{sized.size().Height()})");
 
         // ------------------------------------------------------------------ byte buffers
         // A byte[] argument crosses as a QByteArray (which the QByteArrayView parameter takes
@@ -341,6 +341,138 @@ public static class ApiWidgetsDemo
         var methodName = meta.Method(0).NameView();
         Check(methodName != null && methodName.Length > 0,
             $"QByteArrayView return (got {methodName?.Length ?? 0} byte(s))");
+
+        // ------------------------------------------------------------------ out parameters
+        // Qt's "one extra output" convention is a non-const pointer, which surfaces as a C# `out`.
+        var rgb = new QColor(255, 128, 0);
+        rgb.GetRgb(out int outR, out int outG, out int outB);
+        Check(outR == 255 && outG == 128 && outB == 0,
+            $"QColor::getRgb out parameters (got {outR},{outG},{outB})");
+        rgb.GetHsvF(out float hue, out float sat, out float val);
+        Check(hue >= 0 && sat == 1 && val == 1,
+            $"QColor::getHsvF out floats (got {hue:F3},{sat:F3},{val:F3})");
+
+        var rect = new QRect(1, 2, 3, 4);
+        rect.GetRect(out int rx, out int ry, out int rw, out int rh);
+        Check(rx == 1 && ry == 2 && rw == 3 && rh == 4,
+            $"QRect::getRect out parameters (got {rx},{ry},{rw},{rh})");
+
+        // A qreal out parameter is a double on the wire.
+        var fractional = new QRectF(0.5, 1.5, 2.5, 3.5);
+        fractional.GetCoords(out double fx1, out double fy1, out double fx2, out double fy2);
+        Check(fx1 == 0.5 && fy1 == 1.5 && fx2 == 3 && fy2 == 5,
+            $"QRectF::getCoords out doubles (got {fx1},{fy1},{fx2},{fy2})");
+
+        var date = new QDate(2024, 3, 15);
+        date.GetDate(out int dy, out int dm, out int dd);
+        Check(dy == 2024 && dm == 3 && dd == 15, $"QDate::getDate out parameters (got {dy}-{dm}-{dd})");
+
+        var transform = QTransform.FromScale(2, 3);
+        transform.Map(1.0, 1.0, out double tx, out double ty);
+        Check(tx == 2 && ty == 3, $"QTransform::map out parameters (got {tx},{ty})");
+
+        // QLayout's four margins come back through non-const int pointers.
+        var boxedLayout = new QVBoxLayout();
+        boxedLayout.GetContentsMargins(out int mleft, out int mtop, out int mright, out int mbottom);
+        Check(mleft >= 0 && mtop >= 0 && mright >= 0 && mbottom >= 0,
+            $"QLayout::getContentsMargins out ints (got {mleft},{mtop},{mright},{mbottom})");
+
+        // ------------------------------------------------------------------ QHash<K, V>
+        // QHash is unordered, but it surfaces as the same managed Dictionary (the value here is
+        // a QByteArray, which is a boxed class like any other).
+        var roleNames = model.RoleNames();
+        Check(roleNames.Count > 0, $"QHash<int, QByteArray> return (got {roleNames.Count} role name(s))");
+        Check(roleNames.TryGetValue(0, out var displayRole) && displayRole.ConstData() == "display",
+            $"roleNames()[DisplayRole] (got '{displayRole?.ConstData()}')");
+
+        // QVariant carries the unordered container too.
+        var hashVariant = new QVariant(new Dictionary<string, QVariant> { ["n"] = new QVariant(3) });
+        var hash = hashVariant.ToHash();
+        Check(hash.Count == 1 && hash["n"].ToInt() == 3, $"QVariant::toHash round-trip (got {hash.Count})");
+
+        // ------------------------------------------------------------------ QMap<int, QVariant>
+        // The role map a view hands a model: a managed Dictionary becomes a native QMap for the
+        // call, and the map the model hands back is copied out into a Dictionary.
+        var mapModel = new QStandardItemModel(1, 1);
+        var mapIndex = mapModel.Index(0, 0);
+        var roles = new Dictionary<int, QVariant>
+        {
+            [0] = new QVariant("from-map"),     // Qt::DisplayRole
+            [3] = new QVariant("tool tip"),     // Qt::ToolTipRole
+        };
+        Check(mapModel.SetItemData(mapIndex, roles), "Dictionary<int, QVariant> argument reached setItemData");
+        var readBack = mapModel.ItemData(mapIndex);
+        Check(readBack.Count == 2 && readBack[0].ToString() == "from-map" && readBack[3].ToString() == "tool tip",
+            $"Dictionary<int, QVariant> return (got {readBack.Count} role(s): {string.Join(",", readBack.Keys)})");
+
+        // ------------------------------------------------------------------ QBindable<T>
+        // The handle Qt's property-binding API hands out (bindableFoo()): a generic wrapper that
+        // reads and writes the property through the codec generated for its value type.
+        var boundTimer = new QTimer();
+        using (var interval = boundTimer.BindableInterval())
+        {
+            interval.Value = 250;
+            Check(interval.Value == 250 && boundTimer.interval() == 250,
+                $"QBindable<int> round-trip (got {interval.Value} / {boundTimer.interval()})");
+        }
+        using (var active = boundTimer.BindableActive())
+            Check(!active.IsDisposed && !active.Value, "QBindable<bool> reads the property");
+        using (var timerType = boundTimer.BindableTimerType())
+            Check(timerType.Value == Qt.TimerType.CoarseTimer,
+                $"QBindable<Qt.TimerType> reads the enum default (got {timerType.Value})");
+        using (var name = window.BindableObjectName())
+        {
+            name.Value = "renamed";
+            Check(name.Value == "renamed" && window.objectName() == "renamed",
+                $"QBindable<string> round-trip (got '{name.Value}')");
+        }
+
+        // QVariant itself carries a QMap<QString, QVariant> (QVariantMap).
+        var variantMap = new QVariant(new Dictionary<string, QVariant>
+        {
+            ["name"] = new QVariant("qtsharp"),
+            ["count"] = new QVariant(7),
+        });
+        var roundTripped = variantMap.ToMap();
+        Check(roundTripped.Count == 2 && roundTripped["name"].ToString() == "qtsharp"
+              && roundTripped["count"].ToInt() == 7,
+            $"QVariantMap round-trip (got {roundTripped.Count} entries)");
+
+        // ------------------------------------------------------------------ Q_PROPERTY properties
+        // The properties are sugar over the accessors that were generated anyway: reading one
+        // calls the getter, assigning one calls the setter, and the accessors keep working under
+        // their own (C++) names.
+        var propertyEdit = new QLineEdit();
+        propertyEdit.Text = "property";
+        Check(propertyEdit.Text == "property" && propertyEdit.text() == "property",
+            $"QLineEdit.Text property round-trip (got '{propertyEdit.Text}')");
+        Check(propertyEdit.DisplayText == "property", "a read-only property (displayText)");
+        propertyEdit.ReadOnly = true;
+        Check(propertyEdit.ReadOnly && propertyEdit.IsReadOnly(),
+            "a bool property whose getter is isReadOnly()");
+        propertyEdit.Frame = false;
+        Check(!propertyEdit.Frame && !propertyEdit.HasFrame(),
+            "a bool property whose getter is hasFrame()");
+        propertyEdit.MaxLength = 8;
+        Check(propertyEdit.MaxLength == 8, $"an int property (got {propertyEdit.MaxLength})");
+        propertyEdit.Alignment = Qt.Alignment.AlignRight;
+        Check(propertyEdit.alignment() == Qt.Alignment.AlignRight, "a flag property");
+
+        // echoMode has no property: its name would collide with the nested EchoMode enum, so the
+        // accessor stays the only way in.
+        propertyEdit.SetEchoMode(QLineEdit.EchoMode.Password);
+        Check(propertyEdit.echoMode() == QLineEdit.EchoMode.Password, "echoMode stays a method");
+
+        // The NOTIFY signal is still the signal property, not a C# event.
+        int textChanges = 0;
+        propertyEdit.TextChangedSignal.Connect(_ => textChanges++);
+        propertyEdit.Text = "changed";
+        Check(textChanges == 1, $"the NOTIFY signal still fires (got {textChanges})");
+
+        var propertyTimer = new QTimer();
+        propertyTimer.Interval = 500;
+        Check(propertyTimer.Interval == 500 && propertyTimer.interval() == 500,
+            $"QTimer.Interval property (got {propertyTimer.Interval})");
 
         Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
         return failures == 0 ? 0 : 1;

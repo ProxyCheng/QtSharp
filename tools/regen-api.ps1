@@ -86,4 +86,19 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # The graphics view family: scene, view, three item kinds and an off-screen render.
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-graphics
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The QtCore value classes: files and directories, JSON, ids, random numbers, timers and the
+# command line - the batch that took QtCore from 42 bound classes to 64.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-core
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# Ownership: only the wrapper that created an object may release it, and Qt is asked first
+# (a reparented QObject belongs to its parent, not to the GC).
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-ownership
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The extension points: a table model and an item delegate written in C#, with Qt itself driving
+# them (the view asks for rowCount/data, the delegate is asked to paint).
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-custommodel
 exit $LASTEXITCODE
