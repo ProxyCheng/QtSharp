@@ -221,13 +221,13 @@ public static class ApiLineEditsDemo
 
         // Alignment: a QFlags argument through the generated binding.
         window.Boxes[2].SetCurrentIndex(2);
-        Check(window.AlignmentEdit.Alignment().HasFlag(Qt.Alignment.AlignRight),
-            $"alignment flag applied (got {(int)window.AlignmentEdit.Alignment():X})");
+        Check(window.AlignmentEdit.alignment().HasFlag(Qt.Alignment.AlignRight),
+            $"alignment flag applied (got {(int)window.AlignmentEdit.alignment():X})");
 
         // Input mask: the handler sets the mask and fills the text.
         window.Boxes[3].SetCurrentIndex(2);
-        Check(window.InputMaskEdit.InputMask() == "0000-00-00" && window.InputMaskEdit.HasAcceptableInput(),
-            $"input mask applied and satisfied (mask='{window.InputMaskEdit.InputMask()}')");
+        Check(window.InputMaskEdit.inputMask() == "0000-00-00" && window.InputMaskEdit.HasAcceptableInput(),
+            $"input mask applied and satisfied (mask='{window.InputMaskEdit.inputMask()}')");
 
         // Read-only switch.
         window.Boxes[4].SetCurrentIndex(1);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using QtSharp.Api;
 
 // The official widgets/analogclock example, ported onto the *new* pipeline: every type below
@@ -66,13 +66,13 @@ public sealed class ApiAnalogClock : QWidget
         using var minuteColor = new QColor(0, 127, 127, 255);
         using var time = QTime.CurrentTime();
 
-        int side = Math.Min(Width(), Height());
+        int side = Math.Min(width(), height());
 
         // QWidget is both a QObject and a QPaintDevice; the painting view of the same native
         // object is a separate subobject and is reached through the generated cast.
         using var painter = new QPainter(AsQPaintDevice());
         painter.SetRenderHint(QPainter.RenderHint.Antialiasing);
-        painter.Translate(Width() / 2.0, Height() / 2.0);
+        painter.Translate(width() / 2.0, height() / 2.0);
         painter.Scale(side / 200.0, side / 200.0);
 
         painter.SetPen(Qt.PenStyle.NoPen);
@@ -176,11 +176,11 @@ public static class ApiAnalogClockDemo
         // Geometry value types are boxed handles too, so a round-trip exercises construction,
         // by-const-reference parameters, by-value returns and ownership at once.
         probe.Resize(123, 45);
-        using (var rect = probe.Rect())
+        using (var rect = probe.rect())
             Check(rect.Width() == 123 && rect.Height() == 45,
                 $"QRect return + accessors (got {rect.Width()}x{rect.Height()})");
         probe.Move(new QPoint(7, 9));
-        using (var pos = probe.Pos())
+        using (var pos = probe.pos())
             Check(pos.X() == 7 && pos.Y() == 9,
                 $"QPoint round-trip through move() (got {pos.X()},{pos.Y()})");
 
@@ -216,7 +216,7 @@ public static class ApiAnalogClockDemo
         }
 
         var action = new QAction("Open");
-        Check(action.Text() == "Open", $"QAction constructed and read back (got '{action.Text()}')");
+        Check(action.text() == "Open", $"QAction constructed and read back (got '{action.text()}')");
 
         Console.WriteLine($"[info] {sw.Elapsed.TotalMilliseconds:F0} ms of a real Qt event loop, driven by a generated QTimer signal");
         Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");

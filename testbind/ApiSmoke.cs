@@ -30,7 +30,7 @@ public static class ApiSmokeTest
         Check(obj.Handle != IntPtr.Zero, "QObject created through the generated binding");
 
         obj.SetObjectName("hello");
-        Check(obj.ObjectName() == "hello", $"generated accessor round-trip (got '{obj.ObjectName()}')");
+        Check(obj.objectName() == "hello", $"generated accessor round-trip (got '{obj.objectName()}')");
 
         string seen = null;
         Check(obj.ObjectNameChangedSignal != null, "generated signal property exists");
