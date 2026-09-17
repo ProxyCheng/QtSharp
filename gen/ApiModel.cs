@@ -21,6 +21,27 @@ public static class ApiTypes
     {
         if (modelType == null)
             return "IntPtr";
+
+        // The special cases come first: "char*" also ends in '*', but it is a string rather
+        // than a handle, and the scalar typedefs would otherwise keep their C++ spelling.
+        switch (modelType)
+        {
+            case "QString":
+            case "QAnyStringView":
+            case "QStringView":
+            case "QLatin1StringView":
+            case "char*":
+                return "string";
+            case "QStringList":
+                return "string[]";
+            case "long long":
+                return "long";
+            case "unsigned long long":
+                return "ulong";
+            case "unsigned int":
+                return "uint";
+        }
+
         if (modelType == "int*")
             return "int[]";
         if (modelType.EndsWith("*"))
@@ -37,13 +58,6 @@ public static class ApiTypes
             "int" => "int",
             "float" => "float",
             "double" => "double",
-            "QString" => "string",
-            // Qt declares view types next to the owning one; they all surface as a string.
-            "QAnyStringView" => "string",
-            "QStringView" => "string",
-            "QLatin1StringView" => "string",
-            // A signal may carry a QStringList; the runtime copies it into a managed array.
-            "QStringList" => "string[]",
             _ => modelType,     // a bound class, boxed by value
         };
     }
@@ -279,6 +293,12 @@ public static partial class ApiModel
         R("QRadialGradient",  "qbrush.h",           "QtGui"),
         R("QConicalGradient", "qbrush.h",           "QtGui"),
         R("QGradient",        "qbrush.h",           "QtGui"),
+        // Meta-objects (the Q_OBJECT scaffolding becomes usable: metaObject().className()),
+        // the calendar/date engine, the drag-and-drop payload, and the bit array.
+        R("QMetaObject",      "qobjectdefs.h",      "QtCore"),
+        R("QCalendar",        "qcalendar.h",        "QtCore"),
+        R("QMimeData",        "qmimedata.h",        "QtCore"),
+        R("QBitArray",        "qbitarray.h",        "QtCore"),
         // ------------------------------------------------------------------ item views, styles, values
         // The item-model data types and the item-view item classes, the style option structs that
         // every custom paintEvent receives, and the value types (QModelIndex, QVariant, bytes,
@@ -368,7 +388,21 @@ public static partial class ApiModel
 
     static HashSet<string> BuildVocabulary()
     {
-        var types = new HashSet<string> { "void", "bool", "int", "float", "double", "QString", "int*" };
+        // The scalar vocabulary plus the two string conventions Qt uses in signatures: QString
+        // and the NUL-terminated "char*" (always const - a writable char buffer is an out
+        // parameter). The 64-bit and unsigned typedefs (qsizetype, qint64, uint, QRgb) resolve
+        // to these through their canonical types.
+        var types = new HashSet<string>
+        {
+            "void", "bool", "int", "float", "double",
+            "long long", "unsigned long long", "unsigned int",
+            "QString", "char*", "int*",
+            // The string views Qt declares next to QString; they all surface as a managed
+            // string, and folding the overloads is what ApiTypes.Managed is for.
+            "QStringView", "QAnyStringView", "QLatin1StringView",
+            // The one container: QList<QString>, marshalled as a managed string array.
+            "QStringList",
+        };
         foreach (var root in ActiveRoots)
         {
             types.Add(root.Class);

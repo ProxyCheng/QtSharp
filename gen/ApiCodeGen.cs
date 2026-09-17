@@ -106,12 +106,20 @@ public static class ApiCodeGen
 
     static string CSharpDefault(string type)
     {
-        if (IsArray(type) || IsPtr(type) || IsBoxed(type) || type == "QString")
+        if (IsArray(type) || IsPtr(type) || IsBoxed(type) || IsStringT(type) || type == "char*" || IsStringListT(type))
             return "null";
         return "default";
     }
 
     static bool IsArray(string t) => t == "int*";
+
+    // Everything that surfaces as a managed string: QString, the views Qt declares next to it,
+    // and the NUL-terminated C string convention.
+    static bool IsStringT(string t) => t == "QString" || t == "QStringView" || t == "QAnyStringView";
+
+    // The container the model carries; the runtime builds a QStringList around the managed
+    // array for the duration of the call.
+    static bool IsStringListT(string t) => t == "QStringList";
     static bool IsPtr(string t) => !IsArray(t) && t.EndsWith("*");
     static bool IsClassPtr(string t) => IsPtr(t) && ClassNames.Contains(t.Substring(0, t.Length - 1));
     static bool IsEnum(string t) => EnumNames.Contains(t);
@@ -324,13 +332,17 @@ public static class ApiCodeGen
             string sig = string.Join(", ", ps.Select(ParamSig));
             sb.AppendLine($"        public {name}({sig}){(baseName != null ? " : base(IntPtr.Zero)" : "")}");
             sb.AppendLine("        {");
-            sb.AppendLine("            var context = GCHandle.Alloc(this);");
-            string args = string.Join(", ", ps.Select(p => ArgToNative(PType(p), SafeName(PName(p)))));
+            // Deliberately not "context": Qt has parameters with that name (QShortcut).
+            sb.AppendLine("            var __context = GCHandle.Alloc(this);");
+            var marshal = MarshalParams(ps, null);
+            foreach (string line in marshal.Prelude)
+                sb.AppendLine("            " + line);
             string dispatch = virtuals.Count > 0
                 ? "(IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, int, IntPtr, void>)&Dispatch"
                 : "IntPtr.Zero";
-            sb.AppendLine($"            Handle = ApiNative.Create_{name}{CtorSuffix(ctorIndex++)}(GCHandle.ToIntPtr(context), {dispatch}{(args.Length > 0 ? ", " + args : "")});");
-            sb.AppendLine("            ApiRuntime.Register(Handle, this);");
+            string args = string.Join(", ", marshal.Args);
+            string create = $"Handle = ApiNative.Create_{name}{CtorSuffix(ctorIndex++)}(GCHandle.ToIntPtr(__context), {dispatch}{(args.Length > 0 ? ", " + args : "")});";
+            EmitGuarded(sb, "            ", create + "\n            ApiRuntime.Register(Handle, this);", marshal.Cleanup);
             sb.AppendLine("        }");
             sb.AppendLine();
         }
@@ -390,15 +402,12 @@ public static class ApiCodeGen
             string staticMod = IsStatic(m) ? "static " : "";
             sb.AppendLine($"        public {staticMod}{ManagedType(ret)} {CSharpMemberName(mname)}({sig})");
             sb.AppendLine("        {");
-            var allArgs = ps.Select(p => ArgToNative(PType(p), SafeName(PName(p)))).ToList();
-            if (!IsStatic(m))
-                allArgs.Insert(0, "Handle");
-            string args = string.Join(", ", allArgs);
-            string call = $"ApiNative.{name}_{mname}{entrySuffix}({args})";
-            if (ret == "void")
-                sb.AppendLine($"            {call};");
-            else
-                sb.AppendLine($"            return {RetToManaged(ret, call)};");
+            var marshal = MarshalParams(ps, IsStatic(m) ? null : "Handle");
+            foreach (string line in marshal.Prelude)
+                sb.AppendLine("            " + line);
+            string call = $"ApiNative.{name}_{mname}{entrySuffix}({string.Join(", ", marshal.Args)})";
+            string body = ret == "void" ? $"{call};" : $"return {RetToManaged(ret, call)};";
+            EmitGuarded(sb, "            ", body, marshal.Cleanup);
             sb.AppendLine("        }");
             sb.AppendLine();
         }
@@ -503,6 +512,54 @@ public static class ApiCodeGen
 
     static string CtorSuffix(int index) => index == 0 ? "" : (index + 1).ToString();
 
+    // A parameter that is not a plain scalar/pointer/handle needs a temporary native object for
+    // the duration of the call: the managed array becomes a QStringList here, and the cleanup
+    // runs in a finally so an exception cannot leak it.
+    static (List<string> Prelude, List<string> Args, List<string> Cleanup) MarshalParams(
+        IEnumerable<JsonElement> ps, string self)
+    {
+        var prelude = new List<string>();
+        var args = new List<string>();
+        var cleanup = new List<string>();
+        if (self != null)
+            args.Add(self);
+        foreach (var p in ps)
+        {
+            string t = PType(p), n = SafeName(PName(p));
+            if (IsStringListT(t))
+            {
+                prelude.Add($"var {n}Handle = ApiRuntime.NewStringList({n});");
+                cleanup.Add($"ApiRuntime.FreeStringList({n}Handle);");
+                args.Add($"{n}Handle");
+            }
+            else
+            {
+                args.Add(ArgToNative(t, n));
+            }
+        }
+        return (prelude, args, cleanup);
+    }
+
+    static void EmitGuarded(StringBuilder sb, string indent, string body, List<string> cleanup)
+    {
+        if (cleanup.Count == 0)
+        {
+            foreach (var line in body.Split('\n'))
+                sb.AppendLine(indent + line);
+            return;
+        }
+        sb.AppendLine(indent + "try");
+        sb.AppendLine(indent + "{");
+        foreach (var line in body.Split('\n'))
+            sb.AppendLine(indent + "    " + line);
+        sb.AppendLine(indent + "}");
+        sb.AppendLine(indent + "finally");
+        sb.AppendLine(indent + "{");
+        foreach (var line in cleanup)
+            sb.AppendLine(indent + "    " + line);
+        sb.AppendLine(indent + "}");
+    }
+
     static void WriteNativeDeclarations(StringBuilder sb, JsonElement cls)
     {
         string name = Name(cls);
@@ -587,6 +644,10 @@ public static class ApiCodeGen
         if (t == "int") return $"Marshal.ReadInt32({slot})";
         if (t == "double") return $"BitConverter.Int64BitsToDouble(Marshal.ReadInt64({slot}))";
         if (t == "QString") return $"ApiRuntime.ToManaged({slot})";
+        if (t == "char*") return $"ApiRuntime.FromUtf8({slot})";
+        if (t == "long long") return $"Marshal.ReadInt64({slot})";
+        if (t == "unsigned long long") return $"(ulong)Marshal.ReadInt64({slot})";
+        if (t == "unsigned int") return $"(uint)Marshal.ReadInt32({slot})";
         if (IsEnum(t)) return $"({CsEnum(t)})Marshal.ReadInt32({slot})";
         if (IsBoxed(t)) return $"{t}.FromHandle({slot})";
         return slot;
@@ -596,6 +657,7 @@ public static class ApiCodeGen
     static string ManagedType(string t)
     {
         if (IsArray(t)) return "int[]";
+        if (t == "char*") return "string";
         if (IsPtr(t)) return IsClassPtr(t) ? t.Substring(0, t.Length - 1) : "IntPtr";
         if (IsEnum(t)) return CsEnum(t);
         return ApiTypes.Managed(t, ClassNames);
@@ -604,22 +666,37 @@ public static class ApiCodeGen
     static string NativeParamType(string t)
     {
         if (IsArray(t)) return "int[]";
+        if (t == "char*") return "[MarshalAs(UnmanagedType.LPUTF8Str)] string";
+        if (IsStringListT(t)) return "IntPtr";
         if (IsPtr(t) || IsBoxed(t)) return "IntPtr";
         if (IsEnum(t)) return "int";
-        if (t == "QString") return "[MarshalAs(UnmanagedType.LPWStr)] string";
-        return t;
+        if (IsStringT(t)) return "[MarshalAs(UnmanagedType.LPWStr)] string";
+        return CSharpScalar(t) ?? t;
     }
 
     static string NativeRetType(string t)
     {
         if (t == "void" || t == "bool" || t == "int" || t == "float" || t == "double")
             return t;
+        var scalar = CSharpScalar(t);
+        if (scalar != null)
+            return scalar;
         return IsEnum(t) ? "int" : "IntPtr";
     }
 
+    // The model's scalar types whose C# spelling is not the C++ one.
+    static string CSharpScalar(string t) => t switch
+    {
+        "long long" => "long",
+        "unsigned long long" => "ulong",
+        "unsigned int" => "uint",
+        _ => null,
+    };
+
     static string ArgToNative(string t, string name)
     {
-        if (IsArray(t) || t == "QString") return name;
+        if (IsArray(t) || IsStringT(t) || t == "char*") return name;
+        if (IsStringListT(t)) return $"{name}Handle";
         if (IsEnum(t)) return $"(int){name}";
         // Opaque pointers (QEvent*) are already raw handles and must not be dereferenced.
         if (IsClassPtr(t) || IsBoxed(t)) return $"{name}?.Handle ?? IntPtr.Zero";
@@ -628,7 +705,9 @@ public static class ApiCodeGen
 
     static string RetToManaged(string t, string call)
     {
-        if (t == "QString") return $"ApiRuntime.ToManaged({call})";
+        // The native side hands back a newly allocated QString for both string conventions.
+        if (IsStringT(t) || t == "char*") return $"ApiRuntime.ToManaged({call})";
+        if (IsStringListT(t)) return $"ApiRuntime.ToManagedStringList({call})";
         if (IsEnum(t)) return $"({CsEnum(t)}){call}";
         if (IsClassPtr(t)) return $"{t.Substring(0, t.Length - 1)}.FromHandle({call})";
         if (IsBoxed(t)) return IsOwned(t) ? $"{t}.FromOwnedHandle({call})" : $"{t}.FromTransientHandle({call})";
@@ -835,8 +914,10 @@ public static class ApiCodeGen
 
     static string CppParamType(string t)
     {
-        if (t == "QString") return "const char16_t*";
+        if (IsStringT(t)) return "const char16_t*";
+        if (t == "char*") return "const char*";
         if (t == "int*") return "const int*";
+        if (IsStringListT(t)) return "void*";
         if (IsPtr(t) || IsBoxed(t)) return "void*";
         if (IsEnum(t)) return "int";
         return t;
@@ -845,8 +926,10 @@ public static class ApiCodeGen
     // The real C++ types, used where the generated code has to speak to Qt directly.
     static string CppCtorParamType(string t)
     {
-        if (t == "QString") return "const QString&";
+        if (IsStringT(t)) return "QString";
+        if (t == "char*") return "const char*";
         if (t == "int*") return "const int*";
+        if (IsStringListT(t)) return "const QStringList&";
         if (IsEnum(t) || IsPtr(t)) return t;
         if (IsBoxed(t)) return $"const {t}&";
         return t;
@@ -855,7 +938,9 @@ public static class ApiCodeGen
     static string CppArg(string t, string name)
     {
         // A null managed string must not reach QString::fromUtf16 as a null pointer.
-        if (t == "QString") return $"{name} ? QString::fromUtf16({name}) : QString()";
+        if (IsStringT(t)) return $"{name} ? QString::fromUtf16({name}) : QString()";
+        if (IsStringListT(t)) return $"*static_cast<QStringList*>({name})";
+        if (t == "char*") return name;      // already a const char*
         if (IsPtr(t)) return $"static_cast<{t.Substring(0, t.Length - 1)}*>({name})";
         // QFlags has no cast from int; the named constructor is the documented way back.
         if (IsFlags(t)) return $"{t}::fromInt({name})";
@@ -871,7 +956,11 @@ public static class ApiCodeGen
 
     static string NativeRetCpp(string t)
     {
+        // The scalar types the C ABI can return directly; everything else comes back as a
+        // pointer to something the managed side converts.
         if (t == "void" || t == "bool" || t == "int" || t == "float" || t == "double")
+            return t;
+        if (CSharpScalar(t) != null)
             return t;
         return IsEnum(t) ? "int" : "void*";
     }
@@ -879,7 +968,9 @@ public static class ApiCodeGen
     static string NativeRetExpr(string t, string call)
     {
         if (t == "void") return call + ";";
-        if (t == "QString") return $"return new QString({call});";
+        if (IsStringT(t)) return $"return new QString({call});";
+        if (IsStringListT(t)) return $"return new QStringList({call});";
+        if (t == "char*") return $"{{ const char* text = ({call}); return new QString(text ? QString::fromUtf8(text) : QString()); }}";
         if (IsFlags(t)) return $"return static_cast<int>({call}.toInt());";
         if (IsEnum(t)) return $"return static_cast<int>({call});";
         if (IsBoxed(t)) return $"return new {t}({call});";
@@ -892,7 +983,8 @@ public static class ApiCodeGen
     // rather than the void* used by the exported C entry points.
     static string CppVirtualParamType(string t)
     {
-        if (t == "QString") return "const QString&";
+        if (IsStringT(t)) return "QString";
+        if (t == "char*") return "const char*";
         if (IsPtr(t)) return t.Substring(0, t.Length - 1) + "*";
         if (IsEnum(t)) return t;
         return t;

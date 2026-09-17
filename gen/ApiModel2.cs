@@ -279,10 +279,21 @@ public static partial class ApiModel
         if (flags != null)
             return flags;
 
+        // QStringList is the one container the model carries: it is QList<QString>, and the
+        // runtime already has a bridge for it (the signals use it). Any other QList<...> is
+        // still skipped rather than guessed.
+        if (IsQStringList(type))
+            return "QStringList";
+
         if (type.kind == CXTypeKind.CXType_Pointer)
         {
             var pointee = Unwrap(type.PointeeType);
-            var builtin = BuiltinName(pointee.CanonicalType);
+            var canonical = pointee.CanonicalType;
+            // Qt's other string convention: a NUL-terminated UTF-8 buffer, always const (a
+            // writable char buffer is an out parameter and stays unbound).
+            if (IsChar(canonical))
+                return pointee.IsConstQualified ? "char*" : null;
+            var builtin = BuiltinName(canonical);
             if (builtin != null)
                 // Only const input arrays; a non-const pointer means an out parameter whose
                 // write-back managed code could not see, so it must not be bound.
@@ -331,6 +342,15 @@ public static partial class ApiModel
         return type;
     }
 
+    static bool IsChar(CXType type)
+        => type.kind == CXTypeKind.CXType_Char_S || type.kind == CXTypeKind.CXType_Char_U;
+
+    static bool IsQStringList(CXType type)
+    {
+        var spelling = clang.getTypeSpelling(type.CanonicalType).ToString();
+        return spelling.Replace(" ", "") == "QList<QString>";
+    }
+
     static string BuiltinName(CXType type) => type.kind switch
     {
         CXTypeKind.CXType_Void => "void",
@@ -338,6 +358,13 @@ public static partial class ApiModel
         CXTypeKind.CXType_Int => "int",
         CXTypeKind.CXType_Float => "float",
         CXTypeKind.CXType_Double => "double",
+        // Qt spells its 64-bit and unsigned integers as typedefs (qsizetype, qint64, uint,
+        // QRgb); the canonical type is the builtin, and these are the ones the model can carry.
+        CXTypeKind.CXType_LongLong => "long long",
+        CXTypeKind.CXType_ULongLong => "unsigned long long",
+        CXTypeKind.CXType_UInt => "unsigned int",
+        // A UTF-32 code unit is a 32-bit unsigned value, which is how managed code sees it.
+        CXTypeKind.CXType_Char32 => "unsigned int",
         _ => null,
     };
 
