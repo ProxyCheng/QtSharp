@@ -98,6 +98,12 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-ownership
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+# The input events and the rich text types: a wheel turn and a key press are delivered by Qt and
+# read through the generated event classes, and a QTextCharFormat is used through its QTextFormat
+# base (the model's base lists, not just the layout side).
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-events
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 # The extension points: a table model and an item delegate written in C#, with Qt itself driving
 # them (the view asks for rowCount/data, the delegate is asked to paint).
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-custommodel

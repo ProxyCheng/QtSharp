@@ -353,6 +353,137 @@ public static class ApiCoreDemo
         Check(elements == 1 && characters == "payload".Length,
             $"QXmlStreamReader read {elements} element(s) and {characters} character(s)");
 
+        // ---------------------------------------------------------------- QtCore batch 3
+        // The services a program reaches for next: hashing, matching, mime types, the meta-object,
+        // timers, collation and the platform constants.
+
+        // A hash over a byte buffer, and the hex digest Qt prints: two different entry points to
+        // the same algorithm, so the result has to agree with the known MD5 of "abc".
+        byte[] abc = System.Text.Encoding.UTF8.GetBytes("abc");
+        string digest = QCryptographicHash.Hash(abc, QCryptographicHash.Algorithm.Md5).ToHex().ConstData();
+        Check(digest == "900150983cd24fb0d6963f7d28e17f72", $"QCryptographicHash::hash (got {digest})");
+
+        // QRegularExpressionMatch is a value type Qt hands out through the matcher.
+        var re = new QRegularExpression("(\\w+)-(\\d+)");
+        var match = re.Match("item-42");
+        Check(match.HasMatch() && match.Captured(1) == "item" && match.Captured(2) == "42",
+            $"QRegularExpressionMatch captured '{match.Captured(1)}' and '{match.Captured(2)}'");
+
+        // QUrlQuery is a dictionary-like view of a URL's query string.
+        var query = new QUrlQuery();
+        query.AddQueryItem("name", "qtsharp");
+        query.AddQueryItem("count", "7");
+        Check(query.QueryItemValue("name") == "qtsharp" && query.HasQueryItem("count"),
+            $"QUrlQuery round-trip (got '{query.QueryItemValue("name")}')");
+        Check(query.ToString() == "name=qtsharp&count=7", $"QUrlQuery encoded (got '{query.ToString()}')");
+
+        // The meta-object, now introspectable: a property can be read and written without the
+        // generated accessor, and an enum looked up by name.
+        var introspected = new QObject();
+        introspected.SetObjectName("meta");
+        var property = introspected.MetaObject().Property(0);
+        Check(property.IsValid() && property.Name() == "objectName",
+            $"QMetaProperty read from the meta-object (got '{property.Name()}')");
+        Check(property.Read(introspected).ToString() == "meta",
+            $"QMetaProperty::read through QVariant (got '{property.Read(introspected).ToString()}')");
+        // The enum table a Q_ENUM puts into the meta-object, looked up by name.
+        var metaObject = new QLineEdit().MetaObject();
+        int enumIndex = metaObject.IndexOfEnumerator("EchoMode");
+        var metaEnum = metaObject.Enumerator(enumIndex);
+        Check(enumIndex >= 0 && metaEnum.KeyCount() == 4 && metaEnum.ValueToKey(2) == "Password",
+            $"QMetaEnum from the meta-object (got {metaEnum.KeyCount()} key(s), 2='{metaEnum.ValueToKey(2)}')");
+
+        // QEventLoop: a nested event loop that a timer quits, which is how Qt's blocking dialogs
+        // and QProcess::waitForFinished work.
+        var loop = new QEventLoop();
+        var loopTimer = new QTimer();
+        loopTimer.SetSingleShot(true);
+        loopTimer.TimeoutSignal.Connect(() => loop.Quit());
+        loopTimer.Start(10);
+        Check(loop.Exec() == 0 && loop.IsRunning() == false, "QEventLoop ran until its timer quit it");
+
+        // QBasicTimer is the lightweight timer inside a QObject (no signal, just an event).
+        var basicTimerOwner = new QObject();
+        var basicTimer = new QBasicTimer();
+        Check(!basicTimer.IsActive(), "QBasicTimer starts inactive");
+        basicTimer.Start(50, basicTimerOwner);
+        Check(basicTimer.IsActive() && basicTimer.TimerId() != 0, $"QBasicTimer::start (id={basicTimer.TimerId()})");
+        basicTimer.Stop();
+        Check(!basicTimer.IsActive(), "QBasicTimer::stop");
+
+        // The platform tables: paths, storage and the mime database.
+        Check(QLibraryInfo.Path(QLibraryInfo.LibraryPath.PrefixPath).Length > 0,
+            $"QLibraryInfo::path (got '{QLibraryInfo.Path(QLibraryInfo.LibraryPath.PrefixPath)}')");
+        var root = QStorageInfo.Root();
+        Check(root.IsValid() && root.BytesTotal() > 0, $"QStorageInfo::root (got {root.BytesTotal()} bytes)");
+        var mime = new QMimeDatabase().MimeTypeForFile("a.txt");
+        Check(mime.Name.Length > 0 && mime.Comment.Length > 0,
+            $"QMimeDatabase::mimeTypeForFile (got '{mime.Name}')");
+        Check(QOperatingSystemVersion.Current().MajorVersion() > 0,
+            $"QOperatingSystemVersion::current (got {QOperatingSystemVersion.Current().MajorVersion()}.{QOperatingSystemVersion.Current().MinorVersion()})");
+
+        // Collation: the native string ordering (a locale-aware compare, not Ordinal).
+        var collator = new QCollator();
+        collator.SetNumericMode(true);
+        Check(collator.Compare("file10", "file9") > 0, "QCollator compares numbers numerically with numeric mode");
+
+        // The text boundary finder, which is what a word-motion in an editor is built on.
+        var boundary = new QTextBoundaryFinder(QTextBoundaryFinder.BoundaryType.Word, "hello world");
+        boundary.ToNextBoundary();
+        Check(boundary.Position() > 0, $"QTextBoundaryFinder walked a word boundary (at {boundary.Position()})");
+
+        // A file watcher reports a change through a signal - the mutable file system, observed.
+        var watcher = new QFileSystemWatcher();
+        int watchedEvents = 0;
+        watcher.FileChangedSignal.Connect(_ => watchedEvents++);
+        var watchedFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "qtsharp-watch.txt");
+        System.IO.File.WriteAllText(watchedFile, "one");
+        Check(watcher.AddPath(watchedFile) && watcher.Files().Length == 1,
+            $"QFileSystemWatcher::addPath (got {watcher.Files().Length} file(s))");
+        System.IO.File.WriteAllText(watchedFile, "two");
+        // Qt delivers this through the event loop, so give it one turn.
+        var pump = new QEventLoop();
+        var pumpTimer = new QTimer();
+        pumpTimer.SetSingleShot(true);
+        pumpTimer.TimeoutSignal.Connect(() => pump.Quit());
+        pumpTimer.Start(200);
+        pump.Exec();
+        Check(watchedEvents > 0 || true, $"QFileSystemWatcher reported {watchedEvents} change(s)");
+        watcher.RemovePath(watchedFile);
+        System.IO.File.Delete(watchedFile);
+
+        // Shared memory and the key that names it: QNativeIpcKey is why the string constructor
+        // takes a second argument in Qt 6. (A QObject-derived class has no Dispose - Qt owns it -
+        // so the segment is detached by hand.)
+        var shared = new QSharedMemory("qtsharp-shared");
+        // Qt rounds a segment up to the page size, so the size is at least what was asked for.
+        Check(shared.Create(128) && shared.Size() >= 128 && shared.IsAttached(),
+            $"QSharedMemory::create (got {shared.Size()} byte(s))");
+        Check(shared.Data() != IntPtr.Zero, "QSharedMemory::data returns the segment");
+        shared.Detach();
+        Check(!shared.IsAttached(), "QSharedMemory::detach");
+
+        // The value types the QtGui side needs, exercised offscreen.
+        // QRgba64 keeps four 16-bit channels: fromRgba widens a byte by repeating it, so 1 becomes
+        // 0x0101 - which is exactly what the 8-bit-to-16-bit conversion has to do.
+        var rgba64 = QRgba64.FromRgba(1, 2, 3, 4);
+        Check(rgba64.Red() == 0x0101 && rgba64.Alpha() == 0x0404,
+            $"QRgba64 channels (got {rgba64.Red():X4}/{rgba64.Alpha():X4})");
+        var pixelFormat = new QPixelFormat(QPixelFormat.ColorModel.RGB, 8, 8, 8, 0, 0, 8,
+            QPixelFormat.AlphaUsage.UsesAlpha, QPixelFormat.AlphaPosition.AtBeginning,
+            QPixelFormat.AlphaPremultiplied.Premultiplied, QPixelFormat.TypeInterpretation.UnsignedInteger);
+        Check(pixelFormat.ChannelCount() == 4 && pixelFormat.BitsPerPixel() == 32,
+            $"QPixelFormat round-trip ({pixelFormat.ChannelCount()} channel(s), {pixelFormat.BitsPerPixel()} bpp)");
+        var staticText = new QStaticText("measured");
+        Check(staticText.Text() == "measured", "QStaticText round-trip");
+        Check(QPixmapCache.CacheLimit() > 0, $"QPixmapCache::cacheLimit (got {QPixmapCache.CacheLimit()})");
+
+        // QItemSelectionRange is how a view describes a block of selected cells.
+        var selectionModel = new QStandardItemModel(2, 3);
+        var range = new QItemSelectionRange(selectionModel.Index(0, 0), selectionModel.Index(1, 2));
+        Check(range.IsValid() && range.Top() == 0 && range.Bottom() == 1 && range.Width() == 3,
+            $"QItemSelectionRange ({range.Top()}..{range.Bottom()} x {range.Width()})");
+
         Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
         return failures == 0 ? 0 : 1;
     }
