@@ -276,6 +276,35 @@ public static class ApiWidgetsDemo
         undo.Undo();
         Check(undo.Index() == 0, "undo on an empty stack is a no-op");
 
+        // ------------------------------------------------------------------ containers, C strings, meta-object
+        // A QStringList argument: the managed array becomes a native QStringList for the call.
+        var listCombo = new QComboBox();
+        listCombo.AddItems(new[] { "one", "two", "three" });
+        Check(listCombo.Count() == 3, $"string[] argument reached addItems (got {listCombo.Count()})");
+
+        // ...and a QStringList return: the native list is copied into a managed array.
+        var families = QFontDatabase.Families();
+        Check(families.Length > 0, $"string[] return carried the font families (got {families.Length})");
+
+        // A const char* argument and a qsizetype return on the same call.
+        var bytes = new QByteArray("hello");
+        Check(bytes.Size() == 5, $"const char* argument + qsizetype return (got {bytes.Size()})");
+
+        // The meta-object is a bound class now, and className() is a const char* return.
+        var meta = window.MetaObject();
+        Check(meta.ClassName() == "QMainWindow", $"metaObject().className() (got '{meta.ClassName()}')");
+        Check(meta.IndexOfSignal("destroyed(QObject*)") >= 0,
+            $"the meta-object resolves a signal signature (got {meta.IndexOfSignal("destroyed(QObject*)")})");
+
+        // QCalendar is a value class with QDate in and out.
+        var cal = new QCalendar();
+        Check(cal.DateFromParts(2024, 3, 15).Day() == 15, "QCalendar round-trip through QDate");
+
+        // QMimeData: a QObject whose payload is a string.
+        var mime = new QMimeData();
+        mime.SetText("payload");
+        Check(mime.HasText() && mime.Text() == "payload", $"QMimeData text round-trip (got '{mime.Text()}')");
+
         Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
         return failures == 0 ? 0 : 1;
     }

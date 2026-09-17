@@ -136,6 +136,9 @@ namespace QtSharp.Api
         static string CopyString(IntPtr qstring)
             => Marshal.PtrToStringUni(StringUtf16(qstring), (int)StringSize(qstring));
 
+        // A NUL-terminated UTF-8 buffer handed to us by a virtual (const char* parameters).
+        public static string FromUtf8(IntPtr utf8) => utf8 == IntPtr.Zero ? null : Marshal.PtrToStringUTF8(utf8);
+
         // The list belongs to the signal's caller; the elements are copied out one by one.
         static string[] CopyStringList(IntPtr list)
         {
@@ -149,6 +152,43 @@ namespace QtSharp.Api
             }
             return result;
         }
+
+        // A container argument: the managed array becomes a native QStringList for the duration
+        // of the call (the generated wrapper frees it in a finally).
+        public static IntPtr NewStringList(string[] items)
+        {
+            var list = StringListNew();
+            if (items == null)
+                return list;
+            foreach (var item in items)
+                StringListAppend(list, item);
+            return list;
+        }
+
+        public static void FreeStringList(IntPtr list)
+        {
+            if (list != IntPtr.Zero)
+                StringListFree(list);
+        }
+
+        // A container return: the native side hands over a freshly allocated QStringList.
+        public static string[] ToManagedStringList(IntPtr list)
+        {
+            if (list == IntPtr.Zero)
+                return null;
+            var result = CopyStringList(list);
+            StringListFree(list);
+            return result;
+        }
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_qstringlist_new", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr StringListNew();
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_qstringlist_append", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void StringListAppend(IntPtr list, [MarshalAs(UnmanagedType.LPWStr)] string text);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_qstringlist_free", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void StringListFree(IntPtr list);
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_qstringlist_count", CallingConvention = CallingConvention.Cdecl)]
         private static extern int StringListCount(IntPtr list);
