@@ -890,6 +890,10 @@ public static partial class ApiModel
         public bool IsConst;
         public bool Private;
         public bool IsCtor;
+        // A protected member. Qt declares the ones a model must call on itself
+        // (QAbstractItemModel::createIndex, beginInsertRows, ...) protected, so they are only
+        // reachable through the generated subclass - the code generator emits them as such.
+        public bool IsProtected;
         public string ReturnType;
         public CXType ReturnClangType;
         public List<ParamFact> Params = new();
@@ -939,7 +943,20 @@ public static partial class ApiModel
             // symbol either.
             .Where(m => !m.Name.StartsWith("qt_", StringComparison.Ordinal))
             .Where(m => !m.Name.StartsWith("operator", StringComparison.Ordinal))
-            .Where(m => Access(m.Cursor) == CX_CXXAccessSpecifier.CX_CXXPublic)
+            // Public members, plus the protected ones a *managed subclass* has to call on itself.
+            // A model is the case: QAbstractItemModel declares createIndex/beginInsertRows/... as
+            // protected, so without them a C# model can never produce a valid index or announce a
+            // structural change. The generated native subclass exposes them (they stay protected
+            // in C++, where nobody else can reach them); outside the extension tree protected
+            // members are of no use and stay unpublished.
+            //
+            // Two shapes are left out: a protected *static* (there is no object to hang it on, and
+            // QThread::setTerminationEnabled is not worth a shim) and one with a by-reference
+            // parameter (the subclass helper takes the flat C ABI parameters, and an out parameter
+            // is a statement rather than an expression there).
+            .Where(m => Access(m.Cursor) == CX_CXXAccessSpecifier.CX_CXXPublic
+                        || (m.IsProtected && subclassable && IsInExtensionTree(className)
+                            && !m.IsStatic && m.Visible.All(p => p.Mode == ParamMode.In)))
             .Where(m => !allSignalNames.Contains(className + "::" + m.Name))
             .Where(m => Accept(m, className))
             .GroupBy(DedupeKey)
@@ -1157,6 +1174,7 @@ public static partial class ApiModel
             // managed override has no base implementation to chain to (Qt declares
             // QAbstractListModel::columnCount private).
             Private = !isCtor && Access(handle) == CX_CXXAccessSpecifier.CX_CXXPrivate,
+            IsProtected = !isCtor && Access(handle) == CX_CXXAccessSpecifier.CX_CXXProtected,
             ReturnType = isCtor ? "void" : ModelName(clang.getCursorResultType(handle)),
             ReturnClangType = clang.getCursorResultType(handle),
         };
@@ -1725,7 +1743,13 @@ public static partial class ApiModel
     // missing from the model entirely, and the keyboard modifiers only reach it through the
     // QFlags spelling (Qt::KeyboardModifiers, which carries the same items). Both are published
     // as enums of their own so managed code can name the values.
-    static readonly string[] ExtraEnums = { "Qt::Key", "Qt::KeyboardModifier", "QTextFormat::FormatType" };
+    static readonly string[] ExtraEnums =
+    {
+        "Qt::Key", "Qt::KeyboardModifier", "QTextFormat::FormatType",
+        // Item roles are plain ints in every signature (QAbstractItemModel::data), so the table
+        // every model implementation switches on would otherwise be missing.
+        "Qt::ItemDataRole",
+    };
 
     static void CollectExtraEnums(ClangIndex index, Dictionary<string, EnumEntry> enums)
     {
@@ -1778,6 +1802,8 @@ public static partial class ApiModel
             sb.Append("        { \"name\": ").Append(Json(m.Name));
             if (m.IsStatic)
                 sb.Append(", \"static\": true");
+            if (m.IsProtected)
+                sb.Append(", \"protected\": true");
             sb.Append(", \"returnType\": ").Append(Json(m.ReturnType));
             sb.Append(", \"parameters\": [");
             sb.Append(string.Join(", ", m.Visible.Select(p => ParamJson2(p))));
