@@ -1088,8 +1088,6 @@ public static partial class ApiModel
 
         var enums = part.Enums;
 
-        var classCount = 0;
-
         foreach (var c in classes)
         {
             if (Environment.GetEnvironmentVariable("QTSHARP_MODEL_DEBUG") == "1")
