@@ -326,6 +326,16 @@ public static partial class ApiModel
         R("QRegularExpression", "qregularexpression.h", "QtCore"),
         R("QTextStream",      "qtextstream.h",      "QtCore"),
         R("QColorSpace",      "qcolorspace.h",      "QtGui"),
+        R("QPicture",       "qpicture.h",       "QtGui"),
+        R("QScreen",        "qscreen.h",        "QtGui"),
+        R("QVector2D",      "qvectornd.h",      "QtGui"),
+        R("QVector3D",      "qvectornd.h",      "QtGui"),
+        R("QVector4D",      "qvectornd.h",      "QtGui"),
+        R("QQuaternion",    "qquaternion.h",    "QtGui"),
+        R("QEventPoint",    "qeventpoint.h",    "QtGui"),
+        R("QColorTransform","qcolortransform.h","QtGui"),
+        R("QMatrix4x4",     "qmatrix4x4.h",     "QtGui"),
+        R("QPointingDevice","qpointingdevice.h","QtGui"),
         // ------------------------------------------------------------------ graphics view
         // The scene/view/item family. Items are owned by the scene they are added to, so they are
         // added with owned: false (the GC must not delete them); the scene events are built by Qt
@@ -497,6 +507,10 @@ public static partial class ApiModel
             "long long", "unsigned long long", "unsigned int",
             "short", "unsigned short", "long", "unsigned long",
             "char", "unsigned char", "char16_t",
+            // An untyped pointer: a raw handle, kept as IntPtr.
+            "void*",
+            // A const byte buffer with its length passed separately.
+            "uchar*",
             "QString", "char*", "int*",
             // The string views Qt declares next to QString; they all surface as a managed
             // string, and folding the overloads is what ApiTypes.Managed is for.
