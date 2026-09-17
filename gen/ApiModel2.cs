@@ -532,6 +532,7 @@ public static partial class ApiModel
         public bool IsStatic;
         public bool IsVirtual;
         public bool IsPure;
+        public bool IsConst;
         public bool IsCtor;
         public string ReturnType;
         public CXType ReturnClangType;
@@ -596,7 +597,9 @@ public static partial class ApiModel
         var virtuals = callable
             .Where(m => m.IsVirtual && !m.IsCtor)
             .Where(m => VirtualAllow.Contains(m.Name))
-            .Where(Accept)
+            // An override has to repeat the base declaration exactly, so a virtual keeps its
+            // whole parameter list - the marshalable-prefix rule is for callable members only.
+            .Where(m => { m.Visible = m.Params; return Accept(m); })
             .GroupBy(DedupeKey)
             .Select(g => g.First())
             .OrderBy(m => m.Name, StringComparer.Ordinal)
@@ -730,6 +733,7 @@ public static partial class ApiModel
             IsStatic = clang.CXXMethod_isStatic(handle) != 0,
             IsVirtual = clang.CXXMethod_isVirtual(handle) != 0,
             IsPure = clang.CXXMethod_isPureVirtual(handle) != 0,
+            IsConst = clang.CXXMethod_isConst(handle) != 0,
             ReturnType = isCtor ? "void" : ModelName(clang.getCursorResultType(handle)),
             ReturnClangType = clang.getCursorResultType(handle),
         };
@@ -1200,6 +1204,10 @@ public static partial class ApiModel
             // is declared "= 0"), so the code generator must not emit a base call for it.
             if (v.IsPure)
                 sb.Append(", \"pure\": true");
+            // A const virtual has to be declared const in the native override or it does not
+            // override anything (QWidget::sizeHint() const).
+            if (v.IsConst)
+                sb.Append(", \"const\": true");
             sb.Append(", \"returnType\": ").Append(Json(v.ReturnType));
             sb.Append(", \"parameters\": [");
             sb.Append(string.Join(", ", v.Visible.Select(ParamJson2)));
