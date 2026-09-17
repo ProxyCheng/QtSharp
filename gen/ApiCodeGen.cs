@@ -101,18 +101,24 @@ public static class ApiCodeGen
         string literal = p.TryGetProperty("default", out var d) && d.ValueKind == JsonValueKind.String
             ? d.GetString()
             : null;
+        // An opaque handle is a value type: IntPtr.Zero is not a compile-time constant, so the
+        // only usable default is `default`.
+        if (literal == "null" && ManagedType(type) == "IntPtr")
+            literal = "default";
         return sig + " = " + (literal ?? CSharpDefault(type));
     }
 
     static string CSharpDefault(string type)
     {
+        if (ManagedType(type) == "IntPtr")
+            return "default";       // a value type: IntPtr.Zero is not a constant
         if (IsArray(type) || IsPtr(type) || IsBoxed(type) || IsStringT(type) || type == "char*"
             || IsStringListT(type) || IsListT(type))
             return "null";
         return "default";
     }
 
-    static bool IsArray(string t) => t == "int*";
+    static bool IsArray(string t) => t == "int*" || t == "uchar*";
 
     // Everything that surfaces as a managed string: QString, the views Qt declares next to it,
     // and the NUL-terminated C string convention.
@@ -499,7 +505,7 @@ public static class ApiCodeGen
                 ? "(IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, int, IntPtr, void>)&Dispatch"
                 : "IntPtr.Zero";
             string args = string.Join(", ", marshal.Args);
-            string create = $"Handle = ApiNative.Create_{name}{CtorSuffix(ctorIndex++)}(GCHandle.ToIntPtr(__context), {dispatch}{(args.Length > 0 ? ", " + args : "")});";
+            string create = $"Handle = ApiNative.Ctor_{name}{CtorSuffix(ctorIndex++)}(GCHandle.ToIntPtr(__context), {dispatch}{(args.Length > 0 ? ", " + args : "")});";
             EmitGuarded(sb, "            ", create + "\n            ApiRuntime.Register(Handle, this);", marshal.Cleanup);
             sb.AppendLine("        }");
             sb.AppendLine();
@@ -756,14 +762,14 @@ public static class ApiCodeGen
             string sig = string.Join(", ", new[] { "IntPtr userData", "IntPtr dispatch" }
                 .Concat(ps.Select(p => $"{NativeParamType(PType(p))} {SafeName(PName(p))}")));
             sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_create{CtorSuffix(i)}\", CallingConvention = CallingConvention.Cdecl)]");
-            sb.AppendLine($"        internal static extern IntPtr Create_{name}{CtorSuffix(i)}({sig});");
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_ctor{CtorSuffix(i)}\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        internal static extern IntPtr Ctor_{name}{CtorSuffix(i)}({sig});");
         }
 
         if (cls.GetProperty("owned").GetBoolean() && ctors.Count > 0)
         {
             sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_destroy\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_dtor\", CallingConvention = CallingConvention.Cdecl)]");
             sb.AppendLine($"        internal static extern void Destroy_{name}(IntPtr self);");
         }
 
@@ -826,7 +832,7 @@ public static class ApiCodeGen
     // ------------------------------------------------------------------ type maps
     static string ManagedType(string t)
     {
-        if (IsArray(t)) return "int[]";
+        if (IsArray(t)) return ApiTypes.Managed(t, ClassNames);
         if (t == "char*") return "string";
         if (IsListT(t)) return ApiTypes.Managed(t, ClassNames);
         if (IsPtr(t)) return IsClassPtr(t) ? t.Substring(0, t.Length - 1) : "IntPtr";
@@ -836,7 +842,7 @@ public static class ApiCodeGen
 
     static string NativeParamType(string t)
     {
-        if (IsArray(t)) return "int[]";
+        if (IsArray(t)) return ManagedType(t);
         if (t == "char*") return "[MarshalAs(UnmanagedType.LPUTF8Str)] string";
         if (IsStringListT(t) || IsListT(t)) return "IntPtr";
         if (IsPtr(t) || IsBoxed(t)) return "IntPtr";
@@ -1014,7 +1020,7 @@ public static class ApiCodeGen
                 .Concat(ps.Select(p => $"{CppParamType(PType(p))} {NativeName(PName(p))}")));
             string args = string.Join(", ", new[] { "userData", "dispatch" }
                 .Concat(ps.Select(p => CppArg(PType(p), NativeName(PName(p))))));
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) void* qs_api_{name}_create{CtorSuffix(i)}({sig})");
+            sb.AppendLine($"extern \"C\" __declspec(dllexport) void* qs_api_{name}_ctor{CtorSuffix(i)}({sig})");
             sb.AppendLine("{");
             sb.AppendLine($"    return new QsApi_{name}({args});");
             sb.AppendLine("}");
@@ -1023,7 +1029,7 @@ public static class ApiCodeGen
 
         if (subclassable && cls.GetProperty("owned").GetBoolean() && ctors.Count > 0)
         {
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_{name}_destroy(void* self)");
+            sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_{name}_dtor(void* self)");
             sb.AppendLine("{");
             sb.AppendLine($"    delete static_cast<{name}*>(self);");
             sb.AppendLine("}");
@@ -1099,6 +1105,7 @@ public static class ApiCodeGen
         if (IsStringT(t)) return "const char16_t*";
         if (t == "char*") return "const char*";
         if (t == "int*") return "const int*";
+        if (t == "uchar*") return "const unsigned char*";
         if (IsStringListT(t) || IsListT(t)) return "void*";
         if (IsPtr(t) || IsBoxed(t)) return "void*";
         if (IsEnum(t)) return "int";
@@ -1111,6 +1118,7 @@ public static class ApiCodeGen
         if (IsStringT(t)) return "QString";
         if (t == "char*") return "const char*";
         if (t == "int*") return "const int*";
+        if (t == "uchar*") return "const unsigned char*";
         if (IsStringListT(t)) return "const QStringList&";
         if (IsListT(t)) return $"const {t}&";
         if (IsEnum(t) || IsPtr(t)) return t;
@@ -1124,7 +1132,7 @@ public static class ApiCodeGen
         if (IsStringT(t)) return $"{name} ? QString::fromUtf16({name}) : QString()";
         if (IsStringListT(t)) return $"*static_cast<QStringList*>({name})";
         if (IsListT(t)) return $"*static_cast<{t}*>({name})";
-        if (t == "char*") return name;      // already a const char*
+        if (t == "char*" || t == "uchar*") return name;      // already a matching pointer
         if (IsPtr(t)) return $"static_cast<{t.Substring(0, t.Length - 1)}*>({name})";
         // QFlags has no cast from int; the named constructor is the documented way back.
         if (IsFlags(t)) return $"{t}::fromInt({name})";

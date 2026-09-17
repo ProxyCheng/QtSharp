@@ -297,6 +297,13 @@ public static partial class ApiModel
             if (IsChar(canonical))
                 return pointee.IsConstQualified ? "char*" : null;
             var builtin = BuiltinName(canonical);
+            // A const byte buffer with the length passed separately (QImage scanlines and the
+            // other raw-data entry points) surfaces as a managed byte[].
+            if (builtin == "unsigned char")
+                return pointee.IsConstQualified ? "uchar*" : null;
+            if (builtin == "void")
+                // An untyped pointer crosses as a raw handle; there is nothing to dereference.
+                return "void*";
             if (builtin != null)
                 // Only const input arrays; a non-const pointer means an out parameter whose
                 // write-back managed code could not see, so it must not be bound.
@@ -710,6 +717,9 @@ public static partial class ApiModel
 
         var isCtor = clang.getCursorKind(handle) == CXCursorKind.CXCursor_Constructor;
         if (!isCtor && !IsCopyableResult(clang.getCursorResultType(handle)))
+            return null;
+        // A byte buffer only makes sense as an argument: a returned one would have no length.
+        if (!isCtor && ModelName(clang.getCursorResultType(handle)) == "uchar*")
             return null;
 
         var fn = new FnFact
