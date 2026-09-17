@@ -56,14 +56,11 @@ $h2 = (Get-FileHash "$root\out\api2\QtSharp.Api.cs").Hash
 if ($h1 -eq $h2) { Write-Host "codegen is deterministic (identical output on two runs)" }
 else { Write-Host "CODEGEN NOT DETERMINISTIC"; exit 1 }
 
-Write-Host "=== [4] Copy generated C# next to the test app ==="
-Copy-Item "$root\out\api\QtSharp.Api.cs" "$root\testbind\QtSharp.Api.cs" -Force
-
-Write-Host "=== [5] Build native bindings ==="
+Write-Host "=== [4] Build native bindings ==="
 & cmd /c "`"$root\build_api.bat`"" *> "$root\out\api_native.log"
 if ($LASTEXITCODE -ne 0) { Write-Host "native build failed"; Get-Content "$root\out\api_native.log" | Select-String "error" | Select-Object -First 6; exit 1 }
 
-Write-Host "=== [6] Build + run the smoke tests ==="
+Write-Host "=== [5] Build + run the smoke tests ==="
 dotnet build "$root\testbind\testbind.csproj" -c Release --nologo *> "$root\out\api_testbuild.log"
 if ($LASTEXITCODE -ne 0) { Write-Host "testbind build failed"; Select-String -Path "$root\out\api_testbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }; exit 1 }
 
@@ -104,6 +101,11 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-events
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+# The extension points: a table model and an item delegate written in C#, with Qt itself driving
+# them (the view asks for rowCount/data, the delegate is asked to paint).
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-custommodel
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 # The Calculator example, rewritten on the new pipeline: a managed QToolButton subclass whose
 # sizeHint Qt lays out with, and a keyPressEvent override that reads the key code out of a bound
 # QKeyEvent - the demo that used to be impossible without binding the input events.
@@ -113,9 +115,19 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 # The Spin Boxes example: the whole spin box property surface (range, step, prefix, suffix,
 # special value text, integer base, group separator) plus the date and time edits.
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-spinboxes
-exit $LASTEXITCODE
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-# The extension points: a table model and an item delegate written in C#, with Qt itself driving
-# them (the view asks for rowCount/data, the delegate is asked to paint).
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-custommodel
-exit $LASTEXITCODE
+# The sample a user starts from: a project outside this repository's test app that only imports
+# QtSharp.Api.props. Covered here so the "write your own UI" path cannot rot.
+Write-Host "=== [6] Build + run the standalone sample ==="
+dotnet build "$root\samples\hello\Hello.csproj" -c Release --nologo *> "$root\out\api_samplebuild.log"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "sample build failed"
+    Select-String -Path "$root\out\api_samplebuild.log" -Pattern "error CS" | Select-Object -First 6 | ForEach-Object { Write-Host $_.Line.Trim() }
+    exit 1
+}
+$env:HELLO_AUTOCLOSE_MS = "1500"
+& "$root\samples\hello\bin\Release\net10.0\hello.exe"
+$sampleExit = $LASTEXITCODE
+Remove-Item Env:\HELLO_AUTOCLOSE_MS -ErrorAction SilentlyContinue
+exit $sampleExit
