@@ -25,7 +25,7 @@
 | 架构 PoC #3 所有权(Qt-owned 弱引用 + SafeHandle + destroyed 失效) | ✅ 已验证(源码已删,机制进了产品:`ApiRuntime` 的 destroyed 注册表,见"⑰") |
 | 产品化第 1 步:model(入库)+ codegen | ✅ model **逐字节可复现**、codegen 纯函数(两次一致) |
 | **前端迁移(已决策)** | ✅ **已完成**:`qtgen extract2`(ClangSharp)取代 CppSharp 成为默认前端,~2.5 秒产出**逐字节一致**的 model;原 44 类 model 复刻 **1472/1472** 条事实(见"路线 A 可行性验证"一节) |
-| **两/新旧 demo 都在跑** | ✅ 新链路 **22 个 demo** 全进门禁,共 **909 项断言**(`api` 8 / `api-analogclock` 27 / `api-lineedits` 9 / `api-widgets` 85 / `api-graphics` 9 / `api-core` 108 / `api-events` 22 / `api-ownership` 24 / `api-custommodel` 19 / `api-calculator` 12 / `api-spinboxes` 25 / `api-shortcut` 18 / `api-metaobject` 14 / `api-shapedclock` 13 / `api-sliders` 40 / `api-calendarwidget` 59 / `api-menus` 55 / `api-basiclayouts` 55 / `api-scribble` 66 / `api-gallery` 78 / `api-systray` 63 / `api-docviewer` 100),外加 **`samples/hello`**(独立工程,只 `Import` 一个 props 文件)也被门禁 build+run;另有一个**停牌**的 `WindowFlagsApi`(115 项断言全过但退出时 3/10 崩,见"㉔/㉗")。**旧链路(CppSharp)已整块删除** —— 14 个 legacy demo 全部搬成 `api-*`,3 个 PoC、CppSharp 源码、legacy native、`QtSharp.def`、`build_glue.bat` 都不在了;`testapp` 不带参数只打印用法(见"㉔/㉕/㉖/㉗/㉘") |
+| **demo 都在跑** | ✅ **25 个 demo** 全进门禁,共 **993 项断言**(`api` 8 / `api-analogclock` 27 / `api-lineedits` 9 / `api-widgets` 85 / `api-graphics` 9 / `api-core` 108 / `api-events` 22 / `api-ownership` 24 / `api-custommodel` 19 / `api-calculator` 12 / `api-spinboxes` 25 / `api-shortcut` 18 / `api-metaobject` 14 / `api-shapedclock` 13 / `api-sliders` 40 / `api-calendarwidget` 59 / `api-menus` 55 / `api-basiclayouts` 55 / `api-scribble` 66 / `api-gallery` 78 / `api-systray` 63 / `api-docviewer` 100 / **`api-basicdrawing` 34 / `api-gradients` 18 / `api-painterpaths` 32**(见"㉚")),外加 **`samples/hello`**(独立工程,只 `Import` 一个 props 文件)也被门禁 build+run;另有一个**停牌**的 `WindowFlagsApi`(115 项断言全过但退出时 3/10 崩,见"㉔/㉗")。**旧链路(CppSharp)已整块删除** —— 14 个 legacy demo 全部搬成 `api-*`,3 个 PoC、CppSharp 源码、legacy native、`QtSharp.def`、`build_glue.bat` 都不在了;`testapp` 不带参数只打印用法(见"㉔/㉕/㉖/㉗/㉘") |
 | **覆盖面** | 🚧 **445 类 / 9523 方法 / 858 虚函数 / 448 枚举 / 801 `Q_PROPERTY` 属性 / 428 信号**(QtWidgets 184 / QtGui 136 / QtCore 125)。**信号全类型可连、可 `Emit`,且托管类能在 C# 里声明自己的信号/属性**(`QMetaSignal`/`QMetaProperty` + 运行期 meta-object,见"㉒")。**输入事件整族已绑**(`QKeyEvent`/`QWheelEvent`/`QDrag*`/`QDropEvent`/`QTabletEvent`/`QTouchEvent`…,见"⑲"):托管 `keyPressEvent` 现在**读得到按键码**。**QtCore batch 3**(事件循环 / `QBuffer` / `QMetaProperty`/`QMetaEnum` / 哈希 / 正则匹配 / `QUrlQuery` / 排序 / mime / 文件监视 / 共享内存 / 平台表)**与富文本整族**(`QTextFormat` 及其派生 / `QAbstractTextDocumentLayout` / `QTextLine` …)已入。**托管子类能写自定义 `QAbstractTableModel`/`QStyledItemDelegate`**(见"⑮")。**Qt 删除对象后访问包装器抛 `ObjectDisposedException`**(见"⑰")。**类型类别**:`const char*`、`QList<T>`、`QStringList`、`QMap`/`QHash`→`Dictionary`、`QBindable<T>`、`QByteArrayView`/`const uchar*`→`byte[]`、`void*`→`IntPtr`、`QStringView`/`QAnyStringView`、`std::chrono`→`TimeSpan`、out 参数、非 const `QString&`→`ref string`。剩 `QList<std::pair<...>>`(6)、`QFont::Tag`(8)、`QLatin1String`(15)等低收益项(见"⑨/⑩/⑲") |
 
 ## 关键背景
@@ -428,8 +428,8 @@ clangprobe --dump CXCursor CXType clang
 - 验收:model 逐字节一致(446 类 / 451 枚举)、codegen 两次一致、**22 个 demo + sample + 3 个 PoC 全 PASS**。
 
 **㉘ 本轮完成:整个旧链路已删除(CppSharp 前端 / legacy native / legacy demo / PoC / 生成器源码全部清掉)**
-> **状态:旧链路在本仓库里已不存在。`git log` 上是 `280aa0a`(gen/)之后这一步:`testbind` 只剩 22 个 `api-*` demo + 门禁;**CppSharp 源码(`CppSharp/`)、`tools/rebuild-generator/`、`lib/CppSharp*.dll`、`lib/native/CppSharp.CppParser.dll`、`lib/native/Std-symbols.dll` 全部删除**;`native/` 只剩 `QtSharpApiRuntime.{h,cpp}` 与 `CrashTracer.cpp`;**唯一保留的第三方是 `lib/lib/clang/19`(libClangSharp 的 builtin headers,删不得)**。
-> 验收:`powershell -File tools\regen-api.ps1` 全绿 —— model 逐字节一致(446 类 / 451 枚举)、codegen 两次一致、native+C# 编译、**22 个 demo + sample 全 PASS**;`dotnet build tools\clangprobe` 与 `dotnet sln QtSharp.slnx list`(gen / testbind / samples\hello / tools\clangprobe 四个工程)均正常。
+> **状态:旧链路在本仓库里已不存在。`git log` 上是 `280aa0a`(gen/)之后这一步:`testbind` 只剩 `api-*` demo + 门禁(当轮 22 个,现已 25 个);**CppSharp 源码(`CppSharp/`)、`tools/rebuild-generator/`、`lib/CppSharp*.dll`、`lib/native/CppSharp.CppParser.dll`、`lib/native/Std-symbols.dll` 全部删除**;`native/` 只剩 `QtSharpApiRuntime.{h,cpp}` 与 `CrashTracer.cpp`;**唯一保留的第三方是 `lib/lib/clang/19`(libClangSharp 的 builtin headers,删不得)**。
+> 验收:`powershell -File tools\regen-api.ps1` 全绿 —— model 逐字节一致(446 类 / 451 枚举)、codegen 两次一致、native+C# 编译、**demo + sample 全 PASS**(删除当轮是 22 个 demo);`dotnet build tools\clangprobe` 与 `dotnet sln QtSharp.slnx list`(gen / testbind / samples\hello / tools\clangprobe 四个工程)均正常。
 > **下面保留本轮删了什么、以及"差点删错"的记录;㉔ 那 6 步删除计划到此收尾。**
 - **已完成:`gen/` 里的 CppSharp 前端整块删掉**(`gen/Program.cs` 1239 → 273 行,`gen/ApiModel.cs` 1768 → 933 行)。保留的是新链路真正在用的:`QtIncludeRoot`;`SignalParamInfo`/`SignalInfo`/`PropertyInfo`、`ScanProperties`/`EnclosingClass`、`ScanSignals(dir,header)`/`ScanSignalsInFile`/`TryParseSignal`;`Json`/`CleanName`;`ApiTypes`、`Roots`/`ActiveRoots`/`RootClasses`/`BindsCtors`、`SupportedTypes`/`BuildVocabulary`、`VirtualAllow`、`ModelPart`、`WriteSignals`/`SignalParamJson`/`WriteEnum`;`Program.Main` 现在只有 `extract2` 和 `codegen`。删掉的是:`QtLibrary : ILibrary` 全部(`Setup`/`RootNames`/白名单/`LimitScope`/`CollectRoots`/`PruneMembers`/`GenerateDef`/`AddMethodDef`/`ReportCoverage`…)、`FixDtorHooks`/`FixDuplicateFields`/`DedupeStructs`、`SignalModules`+无参 `ScanSignals()`、`MapSignalType`、`GenerateSignals*`、`DumpParseOptions`、`RunExtract`/`ExtractChunk`/`ParseChunk`/`Extract`、`ModelLibrary`、`ParamJson`/`DefaultLiteral`/`ReturnTypeOf`/`VisibleParams`/`Supported`/`Normalize`/`EnumTypeName`/`CollectEnums`/`BoundBases`/`DerivesFromQObject`/`PublishesOwnership`/`SignalModelType` 等。`gen.csproj` 去掉 6 个 CppSharp `Reference` 与两个 native 拷贝;`gen/QFlagsTypeMap.cs`/`QStringTypeMap.cs`/`QStringListTypeMap.cs`/`gen/sample/Sample.h` 删除。
 - **★ 两个"差点删错"的点(下个 session 必读)**:
@@ -444,6 +444,20 @@ clangprobe --dump CXCursor CXType clang
   - **Step E(验收 + 记录)✅**:`powershell -File tools\regen-api.ps1` 全绿(model 逐字节一致、codegen 两次一致、22 个 demo + sample 全 PASS);顺带清掉 `gen/` 里两处指向已删命令的过时注释(`qtgen dumpopts`、`OpaquePointers` 的"legacy extractor"说法——该表还在,但作用只是**词汇表**)。
   - **保留(与新旧链路无关)**:`native/CrashTracer.cpp` + `build_crashtracer.bat`(崩溃 tracer,查㉗那个 flake 要用)、`tools/disasm.py`(capstone RVA 反汇编)、`tools/clangprobe/`。
 - **另一件待办(#1,用户已排期)**:㉗ 里那个偶发 `0xC000041D` 退出崩溃(`api-windowflags` 3/10、`api-systray` 约 1/22)。两条待验证假设见㉗。**验证要几十次重复运行,每次会在桌面闪一个窗口**(本机没有 `qoffscreen.dll`),用户说等他下班机器空出来再跑。
+
+**㉚ 本轮完成:painting 组第一批(`basicdrawing` / `gradients` / `painterpaths`,+84 项断言)**
+一句话:**QPainter 这一整块(画笔/画刷/渐变/路径/抗锯齿/变换)第一次被官方示例压过**——三个 demo 全部把窗口画进 `QImage` 再**读像素**做断言,不靠人眼看。
+- **`api-basicdrawing`(34 项)**:官方形状枚举的 13 个形状逐个渲染并统计墨迹(黑=笔、白=刷、其他=贴图/抗锯齿),`sizeHint`/`minimumSizeHint` 重写、笔宽/笔型(`NoPen` 一点不画、`DashLine` 比 `SolidLine` 少)、画刷(`NoBrush` 不填)、**抗锯齿真的产生混合边**(off=0 / on=86)、**translate/rotate/scale 组合改变渲染**、圆角矩形真的切掉角(角点像素 `0xFFC0C0C0` vs 直角 `0xFFFFFFFF`)、`drawText`/`drawPixmap`,以及控制窗口的 5 个 combo/2 个 checkbox 的范围与**信号→槽**联动(13 个形状项、6 笔型、3 端帽、3 连接、15 画刷)。
+- **`api-gradients`(18 项)**:三种渐变的 `type()`、`start/finalStop`、`center/radius`、`angle`、**带焦点的 radial 保留焦点**;线性渐变真的从红到蓝、中点是绿;radial 中心黄、`PadSpread` 在半径外夹到边缘色、`RepeatSpread` 不同、`ReflectSpread` 与 Repeat 渲染出 23636 个不同像素;conical 0°/180° 射线红/蓝、**`SetAngle` 移动色标**;`QGradient::Preset` 经 `QPainter::FillRect` 出多色渐变;combo → 模式 → 重绘。
+- **`api-painterpaths`(32 项)**:官方 `Window` 的**九个 `QPainterPath` 逐字复刻**(rect / roundRect 四个 `arcTo` / ellipse / pie / polygon / **两个子路径的 group** / **`addText` + `ForceOutline` 文字轮廓** / cubic bezier / **五角星**),每个都在自己的 RenderArea 里缩放+旋转+描边+**线性渐变填充**后统计墨迹;`BoundingRect()` 与官方坐标一致;`sizeHint`/`minimumSizeHint`;填充规则用 **`QPainterPath::Contains`** 验证(五角星中心被穿过两次 ⇒ `OddEvenFill` 不含、`WindingFill` 含);笔宽 0→9 墨迹增长;旋转 45° 后扫描线不同;渐变填充上红下蓝;控制窗口的九个区域、颜色 combo 由 **`QColor::ColorNames()`** 填充、官方默认色(`mediumslateblue`/`cornsilk`/`darkslateblue`)、笔宽 `0..20`、旋转 `0..359` + **`Wrapping`** + `°` 后缀,以及 spin box/slider→**九个区域一起**联动。
+- **本轮为移植做的取舍(都写进了文件头注释)**:
+  - `QPainterPath` **没有绑拷贝构造函数** ⇒ 官方 `RenderArea(const QPainterPath &path)` 的"复制"用 `new QPainterPath(); copy.AddPath(src)` 表达(几何与填充规则等价,验证方式是**先 Dispose 源路径再渲染**)。
+  - 官方 `basicdrawing` 的 `pixmap` 是 `fill(Qt::transparent)` 且从未画过 ⇒ Pixmap 分支什么都看不见;移植版给它填了色并画了个椭圆,否则这条断言没有意义。`paintEvent` 开头另外填了一层已知浅灰背景,让"背景色"可命名。
+  - `QPen(QColor, width, ...)` 与 `QPen(Qt::GlobalColor)` **都没绑**(只有 `QPen(QColor)` 与 `QPen(QBrush, double, style, cap, join)`)⇒ 用 `new QPen(new QBrush(color), width, ...)`。
+  - `QComboBox::addItem(QString, QVariant)` 未绑(老问题)⇒ 颜色 combo 用 `AddItem(name)` + 表内 `Dictionary<QComboBox, List<QColor>>` 代替 `itemData`(`QVariant` 也没有 QColor 转换)。
+  - `Qt.GlobalColor` 的成员是**小写原名**(`Qt.GlobalColor.black`/`white`/`lightGray`),不是 PascalCase。
+  - RenderArea 存的是**颜色副本**(`new QColor(c.Red(), c.Green(), c.Blue(), c.Alpha())`),不是引用 —— 否则调用方 `using` 掉 QColor 后重绘会抛 `ObjectDisposedException`(踩到过)。
+- 门禁:model 逐字节一致、codegen 两次一致、**25 个 demo + sample 全 PASS**(993 项断言)。
 
 ### 解析配置清单(历史上 CppSharp 传给 clang 的东西 —— 迁移时的等价基准;`qtgen dumpopts` 已随旧链路删除)
 来源曾是 `gen/ApiModel.cs` 的 `ModelLibrary.Setup` + `QtLibrary.QtIncludeRoot` + `CppSharp.Parser.ParserOptions.SetupMSVC`;`ApiModel2.cs` 复刻的就是这套配置。
@@ -680,7 +694,7 @@ sliders / spinboxes / windowflags / lineedits / shapedclock / calendar / systray
   - `build_api.bat`(→ `out/api/QtSharp.Api.dll`)、`tools/regen-api.ps1`(两道门禁 + 12 个 demo + 独立 sample;`-Adopt` 才采纳新 model)
   - **`QtSharp.Api.props`(用户侧唯一入口:一个 `<Import>` 就拿到生成的绑定 + 运行时 + native/Qt DLL 拷贝)**,配套 `samples/hello/`(一个真界面工程,门禁会 build+run)
   - `runtime/ApiRuntime.cs`(C# 侧运行时,随绑定发布,不在 testbind 里:`QSignal<T>`/`Wrap`(按 handle 存多视图)/信号解包/`SendUserEvent`/`SendMousePress`/`SendWheel`/`SendKeyPress`/**`IQtObjectView` + `destroyed` 注册表 + `Forget`/`Watch`/`AssociateOwner`**)
-  - 22 个 demo(都在 `tools/regen-api.ps1` 门禁里,共 909 项断言):`testbind/ApiSmoke.cs`(`testapp api`)、`AnalogClockApi.cs`(`api-analogclock`)、`LineEditsApi.cs`(`api-lineedits`)、`WidgetsApi.cs`(`api-widgets`)、`GraphicsApi.cs`(`api-graphics`)、`CoreApi.cs`(`api-core`)、`EventsApi.cs`(`api-events`)、`OwnershipApi.cs`(`api-ownership`)、`CustomModelApi.cs`(`api-custommodel`)、`CalculatorApi.cs`(`api-calculator`)、`SpinBoxesApi.cs`(`api-spinboxes`)、`ShortcutEditorApi.cs`(`api-shortcut`)、`MetaObjectApi.cs`(`api-metaobject`)、`ShapedClockApi.cs`(`api-shapedclock`)、`SlidersApi.cs`(`api-sliders`)、`CalendarWidgetApi.cs`(`api-calendarwidget`)、`MenusApi.cs`(`api-menus`)、`BasicLayoutsApi.cs`(`api-basiclayouts`)、`ScribbleApi.cs`(`api-scribble`)、`WidgetsGalleryApi.cs`(`api-gallery`)、`SystemTrayApi.cs`(`api-systray`)、`DocumentViewerApi.cs`(`api-docviewer`);`WindowFlagsApi.cs` 存在但**停牌**(见"㉔/㉗")。
+  - 25 个 demo(都在 `tools/regen-api.ps1` 门禁里,共 993 项断言):`testbind/ApiSmoke.cs`(`testapp api`)、`AnalogClockApi.cs`(`api-analogclock`)、`LineEditsApi.cs`(`api-lineedits`)、`WidgetsApi.cs`(`api-widgets`)、`GraphicsApi.cs`(`api-graphics`)、`CoreApi.cs`(`api-core`)、`EventsApi.cs`(`api-events`)、`OwnershipApi.cs`(`api-ownership`)、`CustomModelApi.cs`(`api-custommodel`)、`CalculatorApi.cs`(`api-calculator`)、`SpinBoxesApi.cs`(`api-spinboxes`)、`ShortcutEditorApi.cs`(`api-shortcut`)、`MetaObjectApi.cs`(`api-metaobject`)、`ShapedClockApi.cs`(`api-shapedclock`)、`SlidersApi.cs`(`api-sliders`)、`CalendarWidgetApi.cs`(`api-calendarwidget`)、`MenusApi.cs`(`api-menus`)、`BasicLayoutsApi.cs`(`api-basiclayouts`)、`ScribbleApi.cs`(`api-scribble`)、`WidgetsGalleryApi.cs`(`api-gallery`)、`SystemTrayApi.cs`(`api-systray`)、`DocumentViewerApi.cs`(`api-docviewer`)、**`BasicDrawingApi.cs`(`api-basicdrawing`)/`GradientsApi.cs`(`api-gradients`)/`PainterPathsApi.cs`(`api-painterpaths`)**;`WindowFlagsApi.cs` 存在但**停牌**(见"㉔/㉗")。
   - **三个 PoC(源码已删)**:`native/QtSharp_meta.cpp`/`QtSharp_vdispatch.cpp`/`QtSharp_ownership.cpp` 与对应的 `testbind/MetaSignal*.cs`/`VirtualDispatch.cs`/`Ownership.cs` 不在了;机制分别进了 `native/QtSharpApiRuntime.cpp`、`ApiCodeGen`、`ApiRuntime`。
 
 ## 提交状态
@@ -728,43 +742,23 @@ sliders / spinboxes / windowflags / lineedits / shapedclock / calendar / systray
 
 **㉙(本轮)**:`gen/` 之后那 5 步全部完成 —— **整个旧链路已删除**。改动集中在 `testbind/`(`Program.cs` 变成纯 switch、删 10 个 legacy 文件 + 5 个生成物、csproj 去掉 `CppSharp.Runtime` 与 `CopyLegacyNativeDeps`)、`native/`(删 6 个 legacy 文件)、`lib/`(删 CppSharp dll,保留 `lib/lib/clang/19`)、`.gitignore`、`tools/regen-api.ps1`(`-Extractor1` 移除)、`gen/ApiModel.cs`(清掉两处指向已删命令的过时注释),以及 `CppSharp/`(253 跟踪文件)与 `tools/rebuild-generator/`。
 
+**㉚(本轮)**:painting 组第一批 —— **不需要改 `gen/`,纯 `testbind/` 新增 3 个 demo + 门禁**。`BasicDrawingApi.cs`(34 项)/`GradientsApi.cs`(18 项)/`PainterPathsApi.cs`(32 项),`Program.cs` 与 `tools/regen-api.ps1` 各加 3 行;若干 API 缺口记在"㉚"的取舍清单里(最有价值的一条:`QPainterPath` 没有拷贝构造函数)。
+
 ## 扩展示例覆盖(进行中)
 目标:把 Qt 官方 **所有** examples/widgets 都改写成 C# 并跑通(不止 examples-widgets.html 那 16 个)。
 
-### 已完成的新增示例(除原有 13 个 demo 外)
-- **Menus**(`examples/widgets/mainwindows/menus`):菜单栏 File/Edit/Format/Help、可勾选格式动作、status tip、右键 `QContextMenuEvent` 上下文菜单、状态标签回显。
-- **Basic Layouts**(`examples/widgets/layouts/basiclayouts`):layout 内嵌 QMenuBar、horizontal/grid/form 分组、大编辑器、QDialogButtonBox 的 accept/reject、QScrollArea + 自定义竖直滚动条样式。
-- `AllDemos` 现在平铺 **15** 个窗口;`Program.cs` 新增命令 `menus`、`basiclayouts`。
+### 已完成的官方示例(全部在新链路上,共 25 个 `api-*`)
+widgets/lineedits、analogclock、calculator、spinboxes、sliders、shapedclock、calendarwidget、menus、basiclayouts、scribble、widgetsgallery(Widgets Gallery)、systray、shortcut editor、widgets(tour)、graphics view、documentviewer、**painting/basicdrawing、painting/gradients、painting/painterpaths**(㉚)。另有 5 个不是示例的 demo(`api` 冒烟 / `api-core` QtCore 巡礼 / `api-events` / `api-ownership` / `api-metaobject`)。
 
-### 本轮为覆盖更多示例新增的绑定
-- 头文件/根类:`QAbstractAnimation`/`QPropertyAnimation`/`QEasingCurve`、`QSortFilterProxyModel`、`QStringListModel`、`QStandardItem`、`QSyntaxHighlighter`、`QImageReader`/`QImageWriter`、`QPainterPath`、`QCompleter`、`QFileSystemModel`、`QDataWidgetMapper`、`QItemDelegate`、`QWizard`/`QWizardPage`、`QErrorMessage`、`QFocusFrame`、`QScroller`、`QUndoStack`/`QUndoCommand`/`QUndoView`。
-- 事件类型:`QInputEvent`/`QContextMenuEvent`/`QHoverEvent`/`QDragEnterEvent`/`QDragMoveEvent`/`QDragLeaveEvent`/`QDropEvent`/`QHelpEvent`/`QActionEvent` + `QMimeData`(qmimedata.h)。
-- **信号生成器改进**(`gen/Program.cs`):解析**无名参数**;忽略 `QPrivateSignal` 标记(既不出现在托管签名,也不出现在 connect lambda;成员指针强转只在**重载信号**时使用,因为 QPrivateSignal 无法在类外命名)。
-- 注意:`QSpinBox/QDoubleSpinBox::valueChanged` 现在正确带值(此前因无名参数 bug 变成 0 参);`Sliders.cs`/`SpinBoxes.cs` 已改为 `_ =>`。
+### painting 组剩余(㉚ 已证明 **不需要新的绑定**)
+`affine` / `composition` / `deform` / `imagecomposition` / `pathstroke` / `transformations`:`QPainter`(含 `setCompositionMode`/`setOpacity`)、`QPainterPathStroker`、`QTransform`(含 `QuadToQuad`/`Map`)、三种渐变都已绑。**唯一障碍是资源**:`affine`/`deform`/`imagecomposition` 依赖 `:/res/...jpg`(仓库里没有 qrc),`affine` 还依赖 `ArthurFrame`/`HoverPoints`/`ArthurStyle` 三个示例私有类(可移植,但要几百行);`composition`/`pathstroke`/`transformations` 是自包含的,随时可加。
 
-### 踩过的坑(生成器脆弱点,务必 retry)
-- 生成**很不稳定**:同一份源码反复跑会出现 `mask`/`other` 未定义、`nint +=`、`PopBack`、`QFlagsStorage`/`QTextEdit.operator_` 之类**错误重命名**、`QGridLayout` 不实现抽象成员、`QSettings(string,string)` ctor 消失、`QScrollArea.WidgetResizable` 变只读等。**必须**用"生成→编译 testbind→编译 glue"全部通过的 retry 循环(见下)。
-- 加入 `qmdiarea.h`/`qmdisubwindow.h` 会触发 CppSharp 的 `event`→`QFlagsStorage` 重命名 bug(QPushButton 等被污染),**已放弃 MDI**。
-- `QSyntaxHighlighter` 仍未生成(头文件已加、RootName 已加,原因未查明)。
-
-### retry 命令(临时脚本,未入库)
-```
-powershell -File %TEMP%\codemaker\regen2.ps1            # 重建 AST/Generator/gen + 重试直到 testbind+glue 干净
-powershell -File %TEMP%\codemaker\regen2.ps1 -SkipBuildTools   # 只重跑生成
-powershell -File %TEMP%\codemaker\regen_once.ps1        # 单次生成(排查用)
-```
-
-### 下一批示例需要补的绑定(已确认缺口)
-1. **painting 组**(affine/basicdrawing/composition/deform/gradients/imagecomposition/painterpaths/pathstroke/transformations)需要:
-   - `QLinearGradient`/`QRadialGradient`/`QConicalGradient` 加入 RootNames(qbrush.h 已解析)。
-   - `QPainter::setPen(QPen)`/`setBrush(QBrush)` 实际是 **`QPainter.Pen`/`QPainter.Brush` 属性**(可用);`new QPainter(QWidget)` 用 `QPainter(IQPaintDevice)`。
-   - 示例用的 `:/images/*.png` **资源不存在**(无 qrc),`Pixmap`/`Texture` 分支需用程序化贴图或跳过。
-2. **animation/easing** 需要 `QGraphicsScene`/`QGraphicsView`/`QGraphicsObject`(+ `QPropertyAnimation` 已绑定)以及自定义 `PixmapItem : QGraphicsObject`。
-3. **itemviews**(addressbook/simpletreemodel/editabletreemodel/spreadsheet 等)大体已可用(`QSortFilterProxyModel`/`QStandardItem` 已绑定);`stardelegate` 需 `QStyledItemDelegate`(已绑定)。
-4. **richtext**(orderform/syntaxhighlighter)需修好 `QSyntaxHighlighter`;textobject 需 `QTextObjectInterface`(未绑定)。
-5. **graphicsview** 整组需要绑定 `QGraphicsView/Scene/Item/...` 家族(未绑定)。
-6. **tools**(completer/regexp/settingseditor/undoframework 已具备大部分;plugandpaint 需插件机制,不可行)、**touch**(需 `QTouchEvent`/`QEventPoint`)、**gestures**(需 `QGesture`)、**draganddrop**(`QMimeData`/QUrl 列表,部分可行)。
-7. **不可行**:RHI 两个(需 QRhi + `.qsb` shader blob)、Window Embedding(需嵌入非 Qt 窗口)、quartz/other 平台示例、QtStateMachine(模块未安装)、QtSvg/PrintSupport(运行时不带 DLL)。
+### 其它尚可移植的组(依赖已基本齐)
+- **itemviews**(addressbook / simpletreemodel / editabletreemodel / spreadsheet / stardelegate / customsortfiltermodel):`QSortFilterProxyModel`/`QStandardItem`/`QStyledItemDelegate` 已绑。
+- **richtext**(orderform / textobject / syntaxhighlighter):`QSyntaxHighlighter` 与 `QTextObjectInterface` 已入库(㉒/⑲)。
+- **tools**(completer / regexp / settingseditor):`QCompleter`/`QRegularExpression`/`QSettings` 已绑。
+- **animation/easing、graphicsview 整组、draganddrop、touch、gestures**:依赖类都已入库。
+- **不可行**:RHI×2(需 QRhi + `.qsb`)、Window Embedding、plugandpaint(需原生插件)、quartz/other 平台示例、QtStateMachine(模块未装)、QtSvg/PrintSupport/QtPdf(运行时不带 DLL)。
 
 ## 架构 PoC:通用 moc 信号派发(已验证成功)
 **动机**:现有 `QtSharp_signals.cpp` 是"扫头文件 → 每个信号生成一段编译期 C++ glue → `static_cast<void (Class::*)(...)>` 定位成员指针",因此**重载信号有歧义、`QPrivateSignal` 是 private 无法命名、无名参数解析不出**。PySide 之所以没这些问题,是因为它走 moc 元数据 + 通用 metacall。
@@ -939,7 +933,8 @@ powershell -File %TEMP%\codemaker\regen_once.ps1        # 单次生成(排查用
 4. **容器类型** ✅(`QStringList`/`QList<T>`/`QMap`/`QHash`/`QBindable` 都已入,见"⑧/⑩/⑪");剩 `QList<std::pair<...>>`(6)、`QFont::Tag`(8)、`QLatin1String`。
 5. 复现/验证任何 native 崩溃:用 `native/CrashTracer.cpp`(VEH+StackWalk64)+ `tools/disasm.py`(capstone)。
 6. 已知不可行:RHI×2(需 QRhi + `.qsb` shader blob)、Window Embedding、QtStateMachine(模块未安装)、QtSvg/PrintSupport(运行时不带 DLL)、QtPdf。
-7. **㉗ 那个偶发 `0xC000041D` 退出崩溃**(`api-windowflags` 3/10、`api-systray` 约 1/22)仍未查清,两条待验证假设见"㉗";要几十次重复运行,需与用户确认机器空闲时再跑。
+7. **继续搬示例**:painting 组还剩 `composition` / `pathstroke` / `transformations`(自包含,不需要新绑定,见"扩展示例覆盖"),之后是 itemviews / richtext / tools / animation 各组。
+8. **㉗ 那个偶发 `0xC000041D` 退出崩溃**(`api-windowflags` 3/10、`api-systray` 约 1/22)仍未查清,两条待验证假设见"㉗";要几十次重复运行,需与用户确认机器空闲时再跑。
 
 ## 给新 session 的提醒(踩坑清单)
 - **手写 UI 从 `samples/hello/` 抄**:一个 `<Import Project="..\..\QtSharp.Api.props" />` 就够(生成绑定 + 运行时 + native/Qt DLL 拷贝)。门禁会 build+run 它,所以这条路不会烂。
