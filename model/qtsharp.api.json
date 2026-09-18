@@ -243,6 +243,9 @@
     { "name": "ScrollerGestureType", "qualified": "QScroller::ScrollerGestureType", "flags": false, "items": [{ "name": "TouchGesture", "value": 0 }, { "name": "LeftMouseButtonGesture", "value": 1 }, { "name": "RightMouseButtonGesture", "value": 2 }, { "name": "MiddleMouseButtonGesture", "value": 3 }] },
     { "name": "State", "qualified": "QScroller::State", "flags": false, "items": [{ "name": "Inactive", "value": 0 }, { "name": "Pressed", "value": 1 }, { "name": "Dragging", "value": 2 }, { "name": "Scrolling", "value": 3 }] },
     { "name": "ScrollMetric", "qualified": "QScrollerProperties::ScrollMetric", "flags": false, "items": [{ "name": "MousePressEventDelay", "value": 0 }, { "name": "DragStartDistance", "value": 1 }, { "name": "DragVelocitySmoothingFactor", "value": 2 }, { "name": "AxisLockThreshold", "value": 3 }, { "name": "ScrollingCurve", "value": 4 }, { "name": "DecelerationFactor", "value": 5 }, { "name": "MinimumVelocity", "value": 6 }, { "name": "MaximumVelocity", "value": 7 }, { "name": "MaximumClickThroughVelocity", "value": 8 }, { "name": "AcceleratingFlickMaximumTime", "value": 9 }, { "name": "AcceleratingFlickSpeedupFactor", "value": 10 }, { "name": "SnapPositionRatio", "value": 11 }, { "name": "SnapTime", "value": 12 }, { "name": "OvershootDragResistanceFactor", "value": 13 }, { "name": "OvershootDragDistanceFactor", "value": 14 }, { "name": "OvershootScrollDistanceFactor", "value": 15 }, { "name": "OvershootScrollTime", "value": 16 }, { "name": "HorizontalOvershootPolicy", "value": 17 }, { "name": "VerticalOvershootPolicy", "value": 18 }, { "name": "FrameRate", "value": 19 }, { "name": "ScrollMetricCount", "value": 20 }] },
+    { "name": "Format", "qualified": "QSettings::Format", "flags": false, "items": [{ "name": "NativeFormat", "value": 0 }, { "name": "IniFormat", "value": 1 }, { "name": "Registry32Format", "value": 2 }, { "name": "Registry64Format", "value": 3 }, { "name": "InvalidFormat", "value": 16 }, { "name": "CustomFormat1", "value": 17 }, { "name": "CustomFormat2", "value": 18 }, { "name": "CustomFormat3", "value": 19 }, { "name": "CustomFormat4", "value": 20 }, { "name": "CustomFormat5", "value": 21 }, { "name": "CustomFormat6", "value": 22 }, { "name": "CustomFormat7", "value": 23 }, { "name": "CustomFormat8", "value": 24 }, { "name": "CustomFormat9", "value": 25 }, { "name": "CustomFormat10", "value": 26 }, { "name": "CustomFormat11", "value": 27 }, { "name": "CustomFormat12", "value": 28 }, { "name": "CustomFormat13", "value": 29 }, { "name": "CustomFormat14", "value": 30 }, { "name": "CustomFormat15", "value": 31 }, { "name": "CustomFormat16", "value": 32 }] },
+    { "name": "Scope", "qualified": "QSettings::Scope", "flags": false, "items": [{ "name": "UserScope", "value": 0 }, { "name": "SystemScope", "value": 1 }] },
+    { "name": "Status", "qualified": "QSettings::Status", "flags": false, "items": [{ "name": "NoError", "value": 0 }, { "name": "AccessError", "value": 1 }, { "name": "FormatError", "value": 2 }] },
     { "name": "AccessMode", "qualified": "QSharedMemory::AccessMode", "flags": false, "items": [{ "name": "ReadOnly", "value": 0 }, { "name": "ReadWrite", "value": 1 }] },
     { "name": "SharedMemoryError", "qualified": "QSharedMemory::SharedMemoryError", "flags": false, "items": [{ "name": "NoError", "value": 0 }, { "name": "PermissionDenied", "value": 1 }, { "name": "InvalidSize", "value": 2 }, { "name": "KeyError", "value": 3 }, { "name": "AlreadyExists", "value": 4 }, { "name": "NotFound", "value": 5 }, { "name": "LockError", "value": 6 }, { "name": "OutOfResources", "value": 7 }, { "name": "UnknownError", "value": 8 }] },
     { "name": "ControlType", "qualified": "QSizePolicy::ControlType", "flags": false, "items": [{ "name": "DefaultType", "value": 1 }, { "name": "ButtonBox", "value": 2 }, { "name": "CheckBox", "value": 4 }, { "name": "ComboBox", "value": 8 }, { "name": "Frame", "value": 16 }, { "name": "GroupBox", "value": 32 }, { "name": "Label", "value": 64 }, { "name": "Line", "value": 128 }, { "name": "LineEdit", "value": 256 }, { "name": "PushButton", "value": 512 }, { "name": "RadioButton", "value": 1024 }, { "name": "Slider", "value": 2048 }, { "name": "SpinBox", "value": 4096 }, { "name": "TabWidget", "value": 8192 }, { "name": "ToolButton", "value": 16384 }] },
@@ -13903,6 +13906,63 @@
         { "name": "try_acquire", "returnType": "bool", "parameters": [] }
       ],
       "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QSettings",
+      "header": "QtCore/qsettings.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "scope", "type": "QSettings::Scope" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "fileName", "type": "QString" }, { "name": "format", "type": "QSettings::Format" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "organization", "type": "QString" }, { "name": "application", "type": "QString", "optional": true }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "scope", "type": "QSettings::Scope" }, { "name": "organization", "type": "QString" }, { "name": "application", "type": "QString", "optional": true }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "format", "type": "QSettings::Format" }, { "name": "scope", "type": "QSettings::Scope" }, { "name": "organization", "type": "QString" }, { "name": "application", "type": "QString", "optional": true }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "allKeys", "returnType": "QStringList", "parameters": [] },
+        { "name": "applicationName", "returnType": "QString", "parameters": [] },
+        { "name": "beginGroup", "returnType": "void", "parameters": [{ "name": "prefix", "type": "QAnyStringView" }] },
+        { "name": "beginReadArray", "returnType": "int", "parameters": [{ "name": "prefix", "type": "QAnyStringView" }] },
+        { "name": "beginWriteArray", "returnType": "void", "parameters": [{ "name": "prefix", "type": "QAnyStringView" }, { "name": "size", "type": "int", "optional": true, "default": "-1" }] },
+        { "name": "childGroups", "returnType": "QStringList", "parameters": [] },
+        { "name": "childKeys", "returnType": "QStringList", "parameters": [] },
+        { "name": "clear", "returnType": "void", "parameters": [] },
+        { "name": "contains", "returnType": "bool", "parameters": [{ "name": "key", "type": "QAnyStringView" }] },
+        { "name": "defaultFormat", "static": true, "returnType": "QSettings::Format", "parameters": [] },
+        { "name": "endArray", "returnType": "void", "parameters": [] },
+        { "name": "endGroup", "returnType": "void", "parameters": [] },
+        { "name": "fallbacksEnabled", "returnType": "bool", "parameters": [] },
+        { "name": "fileName", "returnType": "QString", "parameters": [] },
+        { "name": "format", "returnType": "QSettings::Format", "parameters": [] },
+        { "name": "group", "returnType": "QString", "parameters": [] },
+        { "name": "isAtomicSyncRequired", "returnType": "bool", "parameters": [] },
+        { "name": "isWritable", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "organizationName", "returnType": "QString", "parameters": [] },
+        { "name": "remove", "returnType": "void", "parameters": [{ "name": "key", "type": "QAnyStringView" }] },
+        { "name": "scope", "returnType": "QSettings::Scope", "parameters": [] },
+        { "name": "setArrayIndex", "returnType": "void", "parameters": [{ "name": "i", "type": "int" }] },
+        { "name": "setAtomicSyncRequired", "returnType": "void", "parameters": [{ "name": "enable", "type": "bool" }] },
+        { "name": "setDefaultFormat", "static": true, "returnType": "void", "parameters": [{ "name": "format", "type": "QSettings::Format" }] },
+        { "name": "setFallbacksEnabled", "returnType": "void", "parameters": [{ "name": "b", "type": "bool" }] },
+        { "name": "setPath", "static": true, "returnType": "void", "parameters": [{ "name": "format", "type": "QSettings::Format" }, { "name": "scope", "type": "QSettings::Scope" }, { "name": "path", "type": "QString" }] },
+        { "name": "setValue", "returnType": "void", "parameters": [{ "name": "key", "type": "QAnyStringView" }, { "name": "value", "type": "QVariant" }] },
+        { "name": "status", "returnType": "QSettings::Status", "parameters": [] },
+        { "name": "sync", "returnType": "void", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "value", "returnType": "QVariant", "parameters": [{ "name": "key", "type": "QAnyStringView" }] },
+        { "name": "value", "returnType": "QVariant", "parameters": [{ "name": "key", "type": "QAnyStringView" }, { "name": "defaultValue", "type": "QVariant" }] }
+      ],
+      "virtuals": [
+        { "name": "event", "returnType": "bool", "parameters": [{ "name": "event", "type": "QEvent*", "cpp": "QEvent *" }] }
       ],
       "signals": [
       ]
