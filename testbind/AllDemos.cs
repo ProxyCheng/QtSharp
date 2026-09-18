@@ -12,16 +12,8 @@ public static class AllDemos
         return new List<QWidget>
         {
             new AnalogClock(),
-            new BasicLayoutsDialog(),
-            new Calculator(),
-            new CalendarWindow(),
             new DocumentViewerWindow(),
-            new LineEditsWindow(),
-            new MenusWindow(),
             new ScribbleWindow(),
-            new ShapedClock(),
-            new SlidersWindow(),
-            new SpinBoxesWindow(),
             new SystemTrayWindow(),
             new WidgetGalleryWindow(),
             new WindowFlagsWindow(),
