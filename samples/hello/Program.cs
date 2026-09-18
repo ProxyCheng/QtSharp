@@ -76,9 +76,11 @@ public sealed class HelloWindow : QWidget
 static class Program
 {
     [STAThread]
-    static int Main()
+    static int Main(string[] args)
     {
-        ApiRuntime.StartApplication();
+        // The application object is created the same way it is in PyQt/PySide. It belongs to the
+        // process (it has no Dispose), and creating it again would hand back this instance.
+        var app = new QApplication(args);
 
         var window = new HelloWindow();
         window.Show();

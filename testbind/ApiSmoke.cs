@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using QtSharp.Api;
 
 // Smoke test for the generated bindings (model -> codegen -> build -> run).
@@ -25,6 +25,13 @@ public static class ApiSmokeTest
             if (!ok)
                 failures++;
         }
+
+        // The application object is created from C# now, the way PyQt/PySide do it. The runtime
+        // keeps the argv alive and hands back the one instance Qt knows about.
+        var app = new QApplication(new[] { "qtsharp-api", "--qtsharp-selftest" });
+        Check(app.Handle != IntPtr.Zero, "new QApplication(args) wraps the process's application object");
+        Check(QCoreApplication.Instance().Handle == app.Handle,
+            "and it is the same object Qt reports through instance()");
 
         var obj = new QObject();
         Check(obj.Handle != IntPtr.Zero, "QObject created through the generated binding");
@@ -83,3 +90,5 @@ public static class ApiSmokeTest
         return failures == 0 ? 0 : 1;
     }
 }
+
+
