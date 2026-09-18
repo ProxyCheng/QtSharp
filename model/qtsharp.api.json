@@ -3,6 +3,7 @@
   "qtVersion": "6.11.0",
   "namespace": "QtSharp.Api",
   "enums": [
+    { "name": "EndEditHint", "qualified": "QAbstractItemDelegate::EndEditHint", "flags": false, "items": [{ "name": "NoHint", "value": 0 }, { "name": "EditNextItem", "value": 1 }, { "name": "EditPreviousItem", "value": 2 }, { "name": "SubmitModelCache", "value": 3 }, { "name": "RevertModelCache", "value": 4 }] },
     { "name": "CheckIndexOptions", "qualified": "QAbstractItemModel::CheckIndexOptions", "flags": true, "items": [{ "name": "NoOption", "value": 0 }, { "name": "IndexIsValid", "value": 1 }, { "name": "DoNotUseParent", "value": 2 }, { "name": "ParentIsInvalid", "value": 4 }] },
     { "name": "DragDropMode", "qualified": "QAbstractItemView::DragDropMode", "flags": false, "items": [{ "name": "NoDragDrop", "value": 0 }, { "name": "DragOnly", "value": 1 }, { "name": "DropOnly", "value": 2 }, { "name": "DragDrop", "value": 3 }, { "name": "InternalMove", "value": 4 }] },
     { "name": "EditTriggers", "qualified": "QAbstractItemView::EditTriggers", "flags": true, "items": [{ "name": "NoEditTriggers", "value": 0 }, { "name": "CurrentChanged", "value": 1 }, { "name": "DoubleClicked", "value": 2 }, { "name": "SelectedClicked", "value": 4 }, { "name": "EditKeyPressed", "value": 8 }, { "name": "AnyKeyPressed", "value": 16 }, { "name": "AllEditTriggers", "value": 31 }] },
@@ -294,6 +295,7 @@
     { "name": "Endian", "qualified": "QSysInfo::Endian", "flags": false, "items": [{ "name": "BigEndian", "value": 0 }, { "name": "LittleEndian", "value": 1 }, { "name": "ByteOrder", "value": 1 }] },
     { "name": "AccessMode", "qualified": "QSystemSemaphore::AccessMode", "flags": false, "items": [{ "name": "Open", "value": 0 }, { "name": "Create", "value": 1 }] },
     { "name": "SystemSemaphoreError", "qualified": "QSystemSemaphore::SystemSemaphoreError", "flags": false, "items": [{ "name": "NoError", "value": 0 }, { "name": "PermissionDenied", "value": 1 }, { "name": "KeyError", "value": 2 }, { "name": "AlreadyExists", "value": 3 }, { "name": "NotFound", "value": 4 }, { "name": "OutOfResources", "value": 5 }, { "name": "UnknownError", "value": 6 }] },
+    { "name": "ActivationReason", "qualified": "QSystemTrayIcon::ActivationReason", "flags": false, "items": [{ "name": "Unknown", "value": 0 }, { "name": "Context", "value": 1 }, { "name": "DoubleClick", "value": 2 }, { "name": "Trigger", "value": 3 }, { "name": "MiddleClick", "value": 4 }] },
     { "name": "MessageIcon", "qualified": "QSystemTrayIcon::MessageIcon", "flags": false, "items": [{ "name": "NoIcon", "value": 0 }, { "name": "Information", "value": 1 }, { "name": "Warning", "value": 2 }, { "name": "Critical", "value": 3 }] },
     { "name": "ButtonPosition", "qualified": "QTabBar::ButtonPosition", "flags": false, "items": [{ "name": "LeftSide", "value": 0 }, { "name": "RightSide", "value": 1 }] },
     { "name": "SelectionBehavior", "qualified": "QTabBar::SelectionBehavior", "flags": false, "items": [{ "name": "SelectLeftTab", "value": 0 }, { "name": "SelectRightTab", "value": 1 }, { "name": "SelectPreviousTab", "value": 2 }] },
@@ -575,6 +577,9 @@
         { "name": "updateEditorGeometry", "const": true, "returnType": "void", "parameters": [{ "name": "editor", "type": "QWidget*", "cpp": "QWidget *" }, { "name": "option", "type": "QStyleOptionViewItem", "cpp": "const QStyleOptionViewItem &" }, { "name": "index", "type": "QModelIndex", "cpp": "const QModelIndex &" }] }
       ],
       "signals": [
+        { "name": "closeEditor", "parameters": [{ "name": "editor", "type": "QWidget*" }, { "name": "hint", "type": "QAbstractItemDelegate::EndEditHint" }] },
+        { "name": "commitData", "parameters": [{ "name": "editor", "type": "QWidget*" }] },
+        { "name": "sizeHintChanged", "parameters": [{ "name": "arg0", "type": "QModelIndex" }] }
       ]
     }
 ,
@@ -661,8 +666,21 @@
         { "name": "supportedDropActions", "const": true, "returnType": "Qt::DropActions", "parameters": [] }
       ],
       "signals": [
+        { "name": "columnsAboutToBeInserted", "parameters": [{ "name": "parent", "type": "QModelIndex" }, { "name": "first", "type": "int" }, { "name": "last", "type": "int" }] },
+        { "name": "columnsAboutToBeMoved", "parameters": [{ "name": "sourceParent", "type": "QModelIndex" }, { "name": "sourceStart", "type": "int" }, { "name": "sourceEnd", "type": "int" }, { "name": "destinationParent", "type": "QModelIndex" }, { "name": "destinationColumn", "type": "int" }] },
+        { "name": "columnsAboutToBeRemoved", "parameters": [{ "name": "parent", "type": "QModelIndex" }, { "name": "first", "type": "int" }, { "name": "last", "type": "int" }] },
+        { "name": "columnsInserted", "parameters": [{ "name": "parent", "type": "QModelIndex" }, { "name": "first", "type": "int" }, { "name": "last", "type": "int" }] },
+        { "name": "columnsMoved", "parameters": [{ "name": "sourceParent", "type": "QModelIndex" }, { "name": "sourceStart", "type": "int" }, { "name": "sourceEnd", "type": "int" }, { "name": "destinationParent", "type": "QModelIndex" }, { "name": "destinationColumn", "type": "int" }] },
+        { "name": "columnsRemoved", "parameters": [{ "name": "parent", "type": "QModelIndex" }, { "name": "first", "type": "int" }, { "name": "last", "type": "int" }] },
+        { "name": "headerDataChanged", "parameters": [{ "name": "orientation", "type": "Qt::Orientation" }, { "name": "first", "type": "int" }, { "name": "last", "type": "int" }] },
         { "name": "modelAboutToBeReset", "parameters": [] },
-        { "name": "modelReset", "parameters": [] }
+        { "name": "modelReset", "parameters": [] },
+        { "name": "rowsAboutToBeInserted", "parameters": [{ "name": "parent", "type": "QModelIndex" }, { "name": "first", "type": "int" }, { "name": "last", "type": "int" }] },
+        { "name": "rowsAboutToBeMoved", "parameters": [{ "name": "sourceParent", "type": "QModelIndex" }, { "name": "sourceStart", "type": "int" }, { "name": "sourceEnd", "type": "int" }, { "name": "destinationParent", "type": "QModelIndex" }, { "name": "destinationRow", "type": "int" }] },
+        { "name": "rowsAboutToBeRemoved", "parameters": [{ "name": "parent", "type": "QModelIndex" }, { "name": "first", "type": "int" }, { "name": "last", "type": "int" }] },
+        { "name": "rowsInserted", "parameters": [{ "name": "parent", "type": "QModelIndex" }, { "name": "first", "type": "int" }, { "name": "last", "type": "int" }] },
+        { "name": "rowsMoved", "parameters": [{ "name": "sourceParent", "type": "QModelIndex" }, { "name": "sourceStart", "type": "int" }, { "name": "sourceEnd", "type": "int" }, { "name": "destinationParent", "type": "QModelIndex" }, { "name": "destinationRow", "type": "int" }] },
+        { "name": "rowsRemoved", "parameters": [{ "name": "parent", "type": "QModelIndex" }, { "name": "first", "type": "int" }, { "name": "last", "type": "int" }] }
       ]
     }
 ,
@@ -792,6 +810,12 @@
         { "name": "verticalScrollMode", "type": "QAbstractItemView::ScrollMode", "getter": "verticalScrollMode", "setter": "setVerticalScrollMode" }
       ],
       "signals": [
+        { "name": "activated", "parameters": [{ "name": "index", "type": "QModelIndex" }] },
+        { "name": "clicked", "parameters": [{ "name": "index", "type": "QModelIndex" }] },
+        { "name": "doubleClicked", "parameters": [{ "name": "index", "type": "QModelIndex" }] },
+        { "name": "entered", "parameters": [{ "name": "index", "type": "QModelIndex" }] },
+        { "name": "iconSizeChanged", "parameters": [{ "name": "size", "type": "QSize" }] },
+        { "name": "pressed", "parameters": [{ "name": "index", "type": "QModelIndex" }] },
         { "name": "viewportEntered", "parameters": [] }
       ]
     }
@@ -1149,7 +1173,9 @@
       "virtuals": [
       ],
       "signals": [
-        { "name": "pageCountChanged", "parameters": [{ "name": "newPages", "type": "int" }] }
+        { "name": "documentSizeChanged", "parameters": [{ "name": "newSize", "type": "QSizeF" }] },
+        { "name": "pageCountChanged", "parameters": [{ "name": "newPages", "type": "int" }] },
+        { "name": "updateBlock", "parameters": [{ "name": "block", "type": "QTextBlock" }] }
       ]
     }
 ,
@@ -1293,6 +1319,8 @@
         { "name": "visible", "type": "bool", "getter": "isVisible", "setter": "setVisible" }
       ],
       "signals": [
+        { "name": "hovered", "parameters": [{ "name": "arg0", "type": "QAction*" }] },
+        { "name": "triggered", "parameters": [{ "name": "arg0", "type": "QAction*" }] }
       ]
     }
 ,
@@ -1369,6 +1397,7 @@
         { "name": "wheelScrollLines", "type": "int", "getter": "wheelScrollLines", "setter": "setWheelScrollLines" }
       ],
       "signals": [
+        { "name": "focusChanged", "parameters": [{ "name": "old", "type": "QWidget*" }, { "name": "now", "type": "QWidget*" }] }
       ]
     }
 ,
@@ -1675,6 +1704,10 @@
         { "name": "exclusive", "type": "bool", "getter": "exclusive", "setter": "setExclusive" }
       ],
       "signals": [
+        { "name": "buttonClicked", "parameters": [{ "name": "arg0", "type": "QAbstractButton*" }] },
+        { "name": "buttonPressed", "parameters": [{ "name": "arg0", "type": "QAbstractButton*" }] },
+        { "name": "buttonReleased", "parameters": [{ "name": "arg0", "type": "QAbstractButton*" }] },
+        { "name": "buttonToggled", "parameters": [{ "name": "arg0", "type": "QAbstractButton*" }, { "name": "arg1", "type": "bool" }] },
         { "name": "idClicked", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "idPressed", "parameters": [{ "name": "arg0", "type": "int" }] },
         { "name": "idReleased", "parameters": [{ "name": "arg0", "type": "int" }] },
@@ -1968,6 +2001,8 @@
         { "name": "verticalHeaderFormat", "type": "QCalendarWidget::VerticalHeaderFormat", "getter": "verticalHeaderFormat", "setter": "setVerticalHeaderFormat" }
       ],
       "signals": [
+        { "name": "activated", "parameters": [{ "name": "date", "type": "QDate" }] },
+        { "name": "clicked", "parameters": [{ "name": "date", "type": "QDate" }] },
         { "name": "currentPageChanged", "parameters": [{ "name": "year", "type": "int" }, { "name": "month", "type": "int" }] },
         { "name": "selectionChanged", "parameters": [] }
       ]
@@ -2392,6 +2427,7 @@
         { "name": "tristate", "type": "bool", "getter": "isTristate", "setter": "setTristate" }
       ],
       "signals": [
+        { "name": "checkStateChanged", "parameters": [{ "name": "arg0", "type": "Qt::CheckState" }] },
         { "name": "stateChanged", "parameters": [{ "name": "arg0", "type": "int" }] }
       ]
     }
@@ -2446,6 +2482,7 @@
       "virtuals": [
       ],
       "signals": [
+        { "name": "changed", "parameters": [{ "name": "mode", "type": "QClipboard::Mode" }] },
         { "name": "dataChanged", "parameters": [] },
         { "name": "findBufferChanged", "parameters": [] },
         { "name": "selectionChanged", "parameters": [] }
@@ -2675,6 +2712,8 @@
         { "name": "options", "type": "QColorDialog::ColorDialogOptions", "getter": "options", "setter": "setOptions" }
       ],
       "signals": [
+        { "name": "colorSelected", "parameters": [{ "name": "color", "type": "QColor" }] },
+        { "name": "currentColorChanged", "parameters": [{ "name": "color", "type": "QColor" }] }
       ]
     }
 ,
@@ -2790,6 +2829,7 @@
         { "name": "resizeGripsVisible", "type": "bool", "getter": "resizeGripsVisible", "setter": "setResizeGripsVisible" }
       ],
       "signals": [
+        { "name": "updatePreviewWidget", "parameters": [{ "name": "index", "type": "QModelIndex" }] }
       ]
     }
 ,
@@ -3135,7 +3175,9 @@
       ],
       "signals": [
         { "name": "activated", "parameters": [{ "name": "text", "type": "QString" }] },
-        { "name": "highlighted", "parameters": [{ "name": "text", "type": "QString" }] }
+        { "name": "activated", "parameters": [{ "name": "index", "type": "QModelIndex" }] },
+        { "name": "highlighted", "parameters": [{ "name": "text", "type": "QString" }] },
+        { "name": "highlighted", "parameters": [{ "name": "index", "type": "QModelIndex" }] }
       ]
     }
 ,
@@ -3500,6 +3542,7 @@
       "virtuals": [
       ],
       "signals": [
+        { "name": "userDateChanged", "parameters": [{ "name": "date", "type": "QDate" }] }
       ]
     }
 ,
@@ -3672,6 +3715,9 @@
         { "name": "timeZone", "type": "QTimeZone", "getter": "timeZone", "setter": "setTimeZone" }
       ],
       "signals": [
+        { "name": "dateChanged", "parameters": [{ "name": "date", "type": "QDate" }] },
+        { "name": "dateTimeChanged", "parameters": [{ "name": "dateTime", "type": "QDateTime" }] },
+        { "name": "timeChanged", "parameters": [{ "name": "time", "type": "QTime" }] }
       ]
     }
 ,
@@ -3861,6 +3907,7 @@
       ],
       "signals": [
         { "name": "accepted", "parameters": [] },
+        { "name": "clicked", "parameters": [{ "name": "button", "type": "QAbstractButton*" }] },
         { "name": "helpRequested", "parameters": [] },
         { "name": "rejected", "parameters": [] }
       ]
@@ -4016,6 +4063,9 @@
         { "name": "floating", "type": "bool", "getter": "isFloating", "setter": "setFloating" }
       ],
       "signals": [
+        { "name": "allowedAreasChanged", "parameters": [{ "name": "allowedAreas", "type": "Qt::DockWidgetAreas" }] },
+        { "name": "dockLocationChanged", "parameters": [{ "name": "area", "type": "Qt::DockWidgetArea" }] },
+        { "name": "featuresChanged", "parameters": [{ "name": "features", "type": "QDockWidget::DockWidgetFeatures" }] },
         { "name": "topLevelChanged", "parameters": [{ "name": "topLevel", "type": "bool" }] },
         { "name": "visibilityChanged", "parameters": [{ "name": "visible", "type": "bool" }] }
       ]
@@ -4114,6 +4164,7 @@
       "signals": [
         { "name": "bottomChanged", "parameters": [{ "name": "bottom", "type": "double" }] },
         { "name": "decimalsChanged", "parameters": [{ "name": "decimals", "type": "int" }] },
+        { "name": "notationChanged", "parameters": [{ "name": "notation", "type": "QDoubleValidator::Notation" }] },
         { "name": "topChanged", "parameters": [{ "name": "top", "type": "double" }] }
       ]
     }
@@ -4678,10 +4729,14 @@
       ],
       "signals": [
         { "name": "currentChanged", "parameters": [{ "name": "path", "type": "QString" }] },
+        { "name": "currentUrlChanged", "parameters": [{ "name": "url", "type": "QUrl" }] },
         { "name": "directoryEntered", "parameters": [{ "name": "directory", "type": "QString" }] },
+        { "name": "directoryUrlEntered", "parameters": [{ "name": "directory", "type": "QUrl" }] },
         { "name": "fileSelected", "parameters": [{ "name": "file", "type": "QString" }] },
         { "name": "filesSelected", "parameters": [{ "name": "files", "type": "QStringList" }] },
-        { "name": "filterSelected", "parameters": [{ "name": "filter", "type": "QString" }] }
+        { "name": "filterSelected", "parameters": [{ "name": "filter", "type": "QString" }] },
+        { "name": "urlSelected", "parameters": [{ "name": "url", "type": "QUrl" }] },
+        { "name": "urlsSelected", "parameters": [{ "name": "urls", "type": "QList<QUrl>" }] }
       ]
     }
 ,
@@ -5088,6 +5143,7 @@
         { "name": "writingSystem", "type": "QFontDatabase::WritingSystem", "getter": "writingSystem", "setter": "setWritingSystem" }
       ],
       "signals": [
+        { "name": "currentFontChanged", "parameters": [{ "name": "f", "type": "QFont" }] }
       ]
     }
 ,
@@ -5177,6 +5233,8 @@
         { "name": "options", "type": "QFontDialog::FontDialogOptions", "getter": "options", "setter": "setOptions" }
       ],
       "signals": [
+        { "name": "currentFontChanged", "parameters": [{ "name": "font", "type": "QFont" }] },
+        { "name": "fontSelected", "parameters": [{ "name": "font", "type": "QFont" }] }
       ]
     }
 ,
@@ -5694,6 +5752,7 @@
         { "name": "blurRadius", "type": "double", "getter": "blurRadius", "setter": "setBlurRadius" }
       ],
       "signals": [
+        { "name": "blurHintsChanged", "parameters": [{ "name": "hints", "type": "QGraphicsBlurEffect::BlurHints" }] },
         { "name": "blurRadiusChanged", "parameters": [{ "name": "blurRadius", "type": "double" }] }
       ]
     }
@@ -5723,6 +5782,7 @@
         { "name": "strength", "type": "double", "getter": "strength", "setter": "setStrength" }
       ],
       "signals": [
+        { "name": "colorChanged", "parameters": [{ "name": "color", "type": "QColor" }] },
         { "name": "strengthChanged", "parameters": [{ "name": "strength", "type": "double" }] }
       ]
     }
@@ -5764,7 +5824,9 @@
         { "name": "yOffset", "type": "double", "getter": "yOffset", "setter": "setYOffset" }
       ],
       "signals": [
-        { "name": "blurRadiusChanged", "parameters": [{ "name": "blurRadius", "type": "double" }] }
+        { "name": "blurRadiusChanged", "parameters": [{ "name": "blurRadius", "type": "double" }] },
+        { "name": "colorChanged", "parameters": [{ "name": "color", "type": "QColor" }] },
+        { "name": "offsetChanged", "parameters": [{ "name": "offset", "type": "QPointF" }] }
       ]
     }
 ,
@@ -6381,7 +6443,8 @@
         { "name": "opacityMask", "type": "QBrush", "getter": "opacityMask", "setter": "setOpacityMask" }
       ],
       "signals": [
-        { "name": "opacityChanged", "parameters": [{ "name": "opacity", "type": "double" }] }
+        { "name": "opacityChanged", "parameters": [{ "name": "opacity", "type": "double" }] },
+        { "name": "opacityMaskChanged", "parameters": [{ "name": "mask", "type": "QBrush" }] }
       ]
     }
 ,
@@ -6755,6 +6818,9 @@
         { "name": "stickyFocus", "type": "bool", "getter": "stickyFocus", "setter": "setStickyFocus" }
       ],
       "signals": [
+        { "name": "changed", "parameters": [{ "name": "region", "type": "QList<QRectF>" }] },
+        { "name": "focusItemChanged", "parameters": [{ "name": "newFocus", "type": "QGraphicsItem*" }, { "name": "oldFocus", "type": "QGraphicsItem*" }, { "name": "reason", "type": "Qt::FocusReason" }] },
+        { "name": "sceneRectChanged", "parameters": [{ "name": "rect", "type": "QRectF" }] },
         { "name": "selectionChanged", "parameters": [] }
       ]
     }
@@ -7264,6 +7330,7 @@
         { "name": "viewportUpdateMode", "type": "QGraphicsView::ViewportUpdateMode", "getter": "viewportUpdateMode", "setter": "setViewportUpdateMode" }
       ],
       "signals": [
+        { "name": "rubberBandChanged", "parameters": [{ "name": "viewportRect", "type": "QRect" }, { "name": "fromScenePoint", "type": "QPointF" }, { "name": "toScenePoint", "type": "QPointF" }] }
       ]
     }
 ,
@@ -7554,8 +7621,15 @@
       ],
       "signals": [
         { "name": "applicationDisplayNameChanged", "parameters": [] },
+        { "name": "applicationStateChanged", "parameters": [{ "name": "state", "type": "Qt::ApplicationState" }] },
+        { "name": "focusObjectChanged", "parameters": [{ "name": "focusObject", "type": "QObject*" }] },
+        { "name": "focusWindowChanged", "parameters": [{ "name": "focusWindow", "type": "QWindow*" }] },
         { "name": "fontDatabaseChanged", "parameters": [] },
-        { "name": "lastWindowClosed", "parameters": [] }
+        { "name": "lastWindowClosed", "parameters": [] },
+        { "name": "layoutDirectionChanged", "parameters": [{ "name": "direction", "type": "Qt::LayoutDirection" }] },
+        { "name": "primaryScreenChanged", "parameters": [{ "name": "screen", "type": "QScreen*" }] },
+        { "name": "screenAdded", "parameters": [{ "name": "screen", "type": "QScreen*" }] },
+        { "name": "screenRemoved", "parameters": [{ "name": "screen", "type": "QScreen*" }] }
       ]
     }
 ,
@@ -7696,6 +7770,7 @@
         { "name": "sectionMoved", "parameters": [{ "name": "logicalIndex", "type": "int" }, { "name": "oldVisualIndex", "type": "int" }, { "name": "newVisualIndex", "type": "int" }] },
         { "name": "sectionPressed", "parameters": [{ "name": "logicalIndex", "type": "int" }] },
         { "name": "sectionResized", "parameters": [{ "name": "logicalIndex", "type": "int" }, { "name": "oldSize", "type": "int" }, { "name": "newSize", "type": "int" }] },
+        { "name": "sortIndicatorChanged", "parameters": [{ "name": "logicalIndex", "type": "int" }, { "name": "order", "type": "Qt::SortOrder" }] },
         { "name": "sortIndicatorClearableChanged", "parameters": [{ "name": "clearable", "type": "bool" }] }
       ]
     }
@@ -7823,8 +7898,8 @@
       ],
       "signals": [
         { "name": "aboutToClose", "parameters": [] },
-        { "name": "bytesWritten", "parameters": [{ "name": "bytes", "type": "long" }] },
-        { "name": "channelBytesWritten", "parameters": [{ "name": "channel", "type": "int" }, { "name": "bytes", "type": "long" }] },
+        { "name": "bytesWritten", "parameters": [{ "name": "bytes", "type": "long long" }] },
+        { "name": "channelBytesWritten", "parameters": [{ "name": "channel", "type": "int" }, { "name": "bytes", "type": "long long" }] },
         { "name": "channelReadyRead", "parameters": [{ "name": "channel", "type": "int" }] },
         { "name": "readChannelFinished", "parameters": [] },
         { "name": "readyRead", "parameters": [] }
@@ -8234,6 +8309,7 @@
         { "name": "type", "type": "QInputDevice::DeviceType", "getter": "type" }
       ],
       "signals": [
+        { "name": "availableVirtualGeometryChanged", "parameters": [{ "name": "area", "type": "QRect" }] }
       ]
     }
 ,
@@ -8572,6 +8648,11 @@
         { "name": "selection", "type": "QItemSelection", "getter": "selection" }
       ],
       "signals": [
+        { "name": "currentChanged", "parameters": [{ "name": "current", "type": "QModelIndex" }, { "name": "previous", "type": "QModelIndex" }] },
+        { "name": "currentColumnChanged", "parameters": [{ "name": "current", "type": "QModelIndex" }, { "name": "previous", "type": "QModelIndex" }] },
+        { "name": "currentRowChanged", "parameters": [{ "name": "current", "type": "QModelIndex" }, { "name": "previous", "type": "QModelIndex" }] },
+        { "name": "modelChanged", "parameters": [{ "name": "model", "type": "QAbstractItemModel*" }] },
+        { "name": "selectionChanged", "parameters": [{ "name": "selected", "type": "QItemSelection" }, { "name": "deselected", "type": "QItemSelection" }] }
       ]
     }
 ,
@@ -8885,7 +8966,8 @@
         { "name": "maximumSequenceLength", "type": "long long", "getter": "maximumSequenceLength", "setter": "setMaximumSequenceLength" }
       ],
       "signals": [
-        { "name": "editingFinished", "parameters": [] }
+        { "name": "editingFinished", "parameters": [] },
+        { "name": "keySequenceChanged", "parameters": [{ "name": "keySequence", "type": "QKeySequence" }] }
       ]
     }
 ,
@@ -9528,6 +9610,7 @@
         { "name": "wordWrap", "type": "bool", "getter": "wordWrap", "setter": "setWordWrap" }
       ],
       "signals": [
+        { "name": "indexesMoved", "parameters": [{ "name": "indexes", "type": "QList<QModelIndex>" }] }
       ]
     }
 ,
@@ -9595,8 +9678,15 @@
         { "name": "supportedDragActions", "type": "Qt::DropActions", "getter": "supportedDragActions", "setter": "setSupportedDragActions" }
       ],
       "signals": [
+        { "name": "currentItemChanged", "parameters": [{ "name": "current", "type": "QListWidgetItem*" }, { "name": "previous", "type": "QListWidgetItem*" }] },
         { "name": "currentRowChanged", "parameters": [{ "name": "currentRow", "type": "int" }] },
         { "name": "currentTextChanged", "parameters": [{ "name": "currentText", "type": "QString" }] },
+        { "name": "itemActivated", "parameters": [{ "name": "item", "type": "QListWidgetItem*" }] },
+        { "name": "itemChanged", "parameters": [{ "name": "item", "type": "QListWidgetItem*" }] },
+        { "name": "itemClicked", "parameters": [{ "name": "item", "type": "QListWidgetItem*" }] },
+        { "name": "itemDoubleClicked", "parameters": [{ "name": "item", "type": "QListWidgetItem*" }] },
+        { "name": "itemEntered", "parameters": [{ "name": "item", "type": "QListWidgetItem*" }] },
+        { "name": "itemPressed", "parameters": [{ "name": "item", "type": "QListWidgetItem*" }] },
         { "name": "itemSelectionChanged", "parameters": [] }
       ]
     }
@@ -9897,6 +9987,9 @@
         { "name": "unifiedTitleAndToolBarOnMac", "type": "bool", "getter": "unifiedTitleAndToolBarOnMac", "setter": "setUnifiedTitleAndToolBarOnMac" }
       ],
       "signals": [
+        { "name": "iconSizeChanged", "parameters": [{ "name": "iconSize", "type": "QSize" }] },
+        { "name": "tabifiedDockWidgetActivated", "parameters": [{ "name": "dockWidget", "type": "QDockWidget*" }] },
+        { "name": "toolButtonStyleChanged", "parameters": [{ "name": "toolButtonStyle", "type": "Qt::ToolButtonStyle" }] }
       ]
     }
 ,
@@ -10091,6 +10184,7 @@
         { "name": "viewMode", "type": "QMdiArea::ViewMode", "getter": "viewMode", "setter": "setViewMode" }
       ],
       "signals": [
+        { "name": "subWindowActivated", "parameters": [{ "name": "arg0", "type": "QMdiSubWindow*" }] }
       ]
     }
 ,
@@ -10153,7 +10247,8 @@
         { "name": "keyboardSingleStep", "type": "int", "getter": "keyboardSingleStep", "setter": "setKeyboardSingleStep" }
       ],
       "signals": [
-        { "name": "aboutToActivate", "parameters": [] }
+        { "name": "aboutToActivate", "parameters": [] },
+        { "name": "windowStateChanged", "parameters": [{ "name": "oldState", "type": "Qt::WindowStates" }, { "name": "newState", "type": "Qt::WindowStates" }] }
       ]
     }
 ,
@@ -10237,7 +10332,9 @@
       ],
       "signals": [
         { "name": "aboutToHide", "parameters": [] },
-        { "name": "aboutToShow", "parameters": [] }
+        { "name": "aboutToShow", "parameters": [] },
+        { "name": "hovered", "parameters": [{ "name": "action", "type": "QAction*" }] },
+        { "name": "triggered", "parameters": [{ "name": "action", "type": "QAction*" }] }
       ]
     }
 ,
@@ -10296,6 +10393,8 @@
         { "name": "nativeMenuBar", "type": "bool", "getter": "isNativeMenuBar", "setter": "setNativeMenuBar" }
       ],
       "signals": [
+        { "name": "hovered", "parameters": [{ "name": "action", "type": "QAction*" }] },
+        { "name": "triggered", "parameters": [{ "name": "action", "type": "QAction*" }] }
       ]
     }
 ,
@@ -10423,6 +10522,7 @@
         { "name": "textInteractionFlags", "type": "Qt::TextInteractionFlags", "getter": "textInteractionFlags", "setter": "setTextInteractionFlags" }
       ],
       "signals": [
+        { "name": "buttonClicked", "parameters": [{ "name": "button", "type": "QAbstractButton*" }] }
       ]
     }
 ,
@@ -10955,9 +11055,13 @@
         { "name": "speed", "type": "int", "getter": "speed", "setter": "setSpeed" }
       ],
       "signals": [
+        { "name": "error", "parameters": [{ "name": "error", "type": "QImageReader::ImageReaderError" }] },
         { "name": "finished", "parameters": [] },
         { "name": "frameChanged", "parameters": [{ "name": "frameNumber", "type": "int" }] },
-        { "name": "started", "parameters": [] }
+        { "name": "resized", "parameters": [{ "name": "size", "type": "QSize" }] },
+        { "name": "started", "parameters": [] },
+        { "name": "stateChanged", "parameters": [{ "name": "state", "type": "QMovie::MovieState" }] },
+        { "name": "updated", "parameters": [{ "name": "rect", "type": "QRect" }] }
       ]
     }
 ,
@@ -11095,6 +11199,7 @@
         { "name": "objectName", "type": "QString", "getter": "objectName", "setter": "setObjectName" }
       ],
       "signals": [
+        { "name": "destroyed", "parameters": [{ "name": "arg0", "type": "QObject*" }] },
         { "name": "objectNameChanged", "parameters": [{ "name": "objectName", "type": "QString" }] }
       ]
     }
@@ -12094,7 +12199,8 @@
         { "name": "redoAvailable", "parameters": [{ "name": "b", "type": "bool" }] },
         { "name": "selectionChanged", "parameters": [] },
         { "name": "textChanged", "parameters": [] },
-        { "name": "undoAvailable", "parameters": [{ "name": "b", "type": "bool" }] }
+        { "name": "undoAvailable", "parameters": [{ "name": "b", "type": "bool" }] },
+        { "name": "updateRequest", "parameters": [{ "name": "rect", "type": "QRect" }, { "name": "dy", "type": "int" }] }
       ]
     }
 ,
@@ -12453,9 +12559,12 @@
       "virtuals": [
       ],
       "signals": [
+        { "name": "errorOccurred", "parameters": [{ "name": "error", "type": "QProcess::ProcessError" }] },
+        { "name": "finished", "parameters": [{ "name": "exitCode", "type": "int" }, { "name": "exitStatus", "type": "QProcess::ExitStatus" }] },
         { "name": "readyReadStandardError", "parameters": [] },
         { "name": "readyReadStandardOutput", "parameters": [] },
-        { "name": "started", "parameters": [] }
+        { "name": "started", "parameters": [] },
+        { "name": "stateChanged", "parameters": [{ "name": "state", "type": "QProcess::ProcessState" }] }
       ]
     }
 ,
@@ -13334,6 +13443,7 @@
         { "name": "regularExpression", "type": "QRegularExpression", "getter": "regularExpression", "setter": "setRegularExpression" }
       ],
       "signals": [
+        { "name": "regularExpressionChanged", "parameters": [{ "name": "re", "type": "QRegularExpression" }] }
       ]
     }
 ,
@@ -13555,9 +13665,15 @@
         { "name": "virtualSize", "type": "QSize", "getter": "virtualSize" }
       ],
       "signals": [
+        { "name": "availableGeometryChanged", "parameters": [{ "name": "geometry", "type": "QRect" }] },
+        { "name": "geometryChanged", "parameters": [{ "name": "geometry", "type": "QRect" }] },
         { "name": "logicalDotsPerInchChanged", "parameters": [{ "name": "dpi", "type": "double" }] },
+        { "name": "orientationChanged", "parameters": [{ "name": "orientation", "type": "Qt::ScreenOrientation" }] },
         { "name": "physicalDotsPerInchChanged", "parameters": [{ "name": "dpi", "type": "double" }] },
-        { "name": "refreshRateChanged", "parameters": [{ "name": "refreshRate", "type": "double" }] }
+        { "name": "physicalSizeChanged", "parameters": [{ "name": "size", "type": "QSizeF" }] },
+        { "name": "primaryOrientationChanged", "parameters": [{ "name": "orientation", "type": "Qt::ScreenOrientation" }] },
+        { "name": "refreshRateChanged", "parameters": [{ "name": "refreshRate", "type": "double" }] },
+        { "name": "virtualGeometryChanged", "parameters": [{ "name": "rect", "type": "QRect" }] }
       ]
     }
 ,
@@ -13740,6 +13856,8 @@
         { "name": "state", "type": "QScroller::State", "getter": "state" }
       ],
       "signals": [
+        { "name": "scrollerPropertiesChanged", "parameters": [{ "name": "arg0", "type": "QScrollerProperties" }] },
+        { "name": "stateChanged", "parameters": [{ "name": "newstate", "type": "QScroller::State" }] }
       ]
     }
 ,
@@ -13943,6 +14061,7 @@
       ],
       "signals": [
         { "name": "mappedInt", "parameters": [{ "name": "arg0", "type": "int" }] },
+        { "name": "mappedObject", "parameters": [{ "name": "arg0", "type": "QObject*" }] },
         { "name": "mappedString", "parameters": [{ "name": "arg0", "type": "QString" }] }
       ]
     }
@@ -14295,8 +14414,10 @@
       "signals": [
         { "name": "autoAcceptChildRowsChanged", "parameters": [{ "name": "autoAcceptChildRows", "type": "bool" }] },
         { "name": "dynamicSortFilterChanged", "parameters": [{ "name": "dynamicSortFilter", "type": "bool" }] },
+        { "name": "filterCaseSensitivityChanged", "parameters": [{ "name": "filterCaseSensitivity", "type": "Qt::CaseSensitivity" }] },
         { "name": "filterRoleChanged", "parameters": [{ "name": "filterRole", "type": "int" }] },
         { "name": "recursiveFilteringEnabledChanged", "parameters": [{ "name": "recursiveFilteringEnabled", "type": "bool" }] },
+        { "name": "sortCaseSensitivityChanged", "parameters": [{ "name": "sortCaseSensitivity", "type": "Qt::CaseSensitivity" }] },
         { "name": "sortLocaleAwareChanged", "parameters": [{ "name": "sortLocaleAware", "type": "bool" }] },
         { "name": "sortRoleChanged", "parameters": [{ "name": "sortRole", "type": "int" }] }
       ]
@@ -14769,6 +14890,7 @@
         { "name": "sortRole", "type": "int", "getter": "sortRole", "setter": "setSortRole" }
       ],
       "signals": [
+        { "name": "itemChanged", "parameters": [{ "name": "item", "type": "QStandardItem*" }] }
       ]
     }
 ,
@@ -15162,6 +15284,8 @@
         { "name": "wheelScrollLines", "type": "int", "getter": "wheelScrollLines" }
       ],
       "signals": [
+        { "name": "colorSchemeChanged", "parameters": [{ "name": "colorScheme", "type": "Qt::ColorScheme" }] },
+        { "name": "contextMenuTriggerChanged", "parameters": [{ "name": "contextMenuTrigger", "type": "Qt::ContextMenuTrigger" }] },
         { "name": "cursorFlashTimeChanged", "parameters": [{ "name": "cursorFlashTime", "type": "int" }] },
         { "name": "keyboardInputIntervalChanged", "parameters": [{ "name": "keyboardInputInterval", "type": "int" }] },
         { "name": "mouseDoubleClickIntervalChanged", "parameters": [{ "name": "mouseDoubleClickInterval", "type": "int" }] },
@@ -15170,6 +15294,7 @@
         { "name": "showShortcutsInContextMenusChanged", "parameters": [{ "name": "arg0", "type": "bool" }] },
         { "name": "startDragDistanceChanged", "parameters": [{ "name": "startDragDistance", "type": "int" }] },
         { "name": "startDragTimeChanged", "parameters": [{ "name": "startDragTime", "type": "int" }] },
+        { "name": "tabFocusBehaviorChanged", "parameters": [{ "name": "tabFocusBehavior", "type": "Qt::TabFocusBehavior" }] },
         { "name": "useHoverEffectsChanged", "parameters": [{ "name": "useHoverEffects", "type": "bool" }] },
         { "name": "wheelScrollLinesChanged", "parameters": [{ "name": "scrollLines", "type": "int" }] }
       ]
@@ -16073,6 +16198,7 @@
         { "name": "visible", "type": "bool", "getter": "isVisible", "setter": "setVisible" }
       ],
       "signals": [
+        { "name": "activated", "parameters": [{ "name": "reason", "type": "QSystemTrayIcon::ActivationReason" }] },
         { "name": "messageClicked", "parameters": [] }
       ]
     }
@@ -16448,6 +16574,13 @@
         { "name": "cellEntered", "parameters": [{ "name": "row", "type": "int" }, { "name": "column", "type": "int" }] },
         { "name": "cellPressed", "parameters": [{ "name": "row", "type": "int" }, { "name": "column", "type": "int" }] },
         { "name": "currentCellChanged", "parameters": [{ "name": "currentRow", "type": "int" }, { "name": "currentColumn", "type": "int" }, { "name": "previousRow", "type": "int" }, { "name": "previousColumn", "type": "int" }] },
+        { "name": "currentItemChanged", "parameters": [{ "name": "current", "type": "QTableWidgetItem*" }, { "name": "previous", "type": "QTableWidgetItem*" }] },
+        { "name": "itemActivated", "parameters": [{ "name": "item", "type": "QTableWidgetItem*" }] },
+        { "name": "itemChanged", "parameters": [{ "name": "item", "type": "QTableWidgetItem*" }] },
+        { "name": "itemClicked", "parameters": [{ "name": "item", "type": "QTableWidgetItem*" }] },
+        { "name": "itemDoubleClicked", "parameters": [{ "name": "item", "type": "QTableWidgetItem*" }] },
+        { "name": "itemEntered", "parameters": [{ "name": "item", "type": "QTableWidgetItem*" }] },
+        { "name": "itemPressed", "parameters": [{ "name": "item", "type": "QTableWidgetItem*" }] },
         { "name": "itemSelectionChanged", "parameters": [] }
       ]
     }
@@ -16893,9 +17026,12 @@
         { "name": "sourceType", "type": "QTextDocument::ResourceType", "getter": "sourceType" }
       ],
       "signals": [
+        { "name": "anchorClicked", "parameters": [{ "name": "arg0", "type": "QUrl" }] },
         { "name": "backwardAvailable", "parameters": [{ "name": "arg0", "type": "bool" }] },
         { "name": "forwardAvailable", "parameters": [{ "name": "arg0", "type": "bool" }] },
-        { "name": "historyChanged", "parameters": [] }
+        { "name": "highlighted", "parameters": [{ "name": "arg0", "type": "QUrl" }] },
+        { "name": "historyChanged", "parameters": [] },
+        { "name": "sourceChanged", "parameters": [{ "name": "arg0", "type": "QUrl" }] }
       ]
     }
 ,
@@ -17193,9 +17329,11 @@
         { "name": "useDesignMetrics", "type": "bool", "getter": "useDesignMetrics", "setter": "setUseDesignMetrics" }
       ],
       "signals": [
+        { "name": "baseUrlChanged", "parameters": [{ "name": "url", "type": "QUrl" }] },
         { "name": "blockCountChanged", "parameters": [{ "name": "newBlockCount", "type": "int" }] },
         { "name": "contentsChange", "parameters": [{ "name": "from", "type": "int" }, { "name": "charsRemoved", "type": "int" }, { "name": "charsAdded", "type": "int" }] },
         { "name": "contentsChanged", "parameters": [] },
+        { "name": "cursorPositionChanged", "parameters": [{ "name": "cursor", "type": "QTextCursor" }] },
         { "name": "documentLayoutChanged", "parameters": [] },
         { "name": "modificationChanged", "parameters": [{ "name": "m", "type": "bool" }] },
         { "name": "redoAvailable", "parameters": [{ "name": "arg0", "type": "bool" }] },
@@ -17405,6 +17543,7 @@
       ],
       "signals": [
         { "name": "copyAvailable", "parameters": [{ "name": "b", "type": "bool" }] },
+        { "name": "currentCharFormatChanged", "parameters": [{ "name": "format", "type": "QTextCharFormat" }] },
         { "name": "cursorPositionChanged", "parameters": [] },
         { "name": "redoAvailable", "parameters": [{ "name": "b", "type": "bool" }] },
         { "name": "selectionChanged", "parameters": [] },
@@ -18271,6 +18410,7 @@
       "virtuals": [
       ],
       "signals": [
+        { "name": "userTimeChanged", "parameters": [{ "name": "time", "type": "QTime" }] }
       ]
     }
 ,
@@ -18439,7 +18579,12 @@
         { "name": "toolButtonStyle", "type": "Qt::ToolButtonStyle", "getter": "toolButtonStyle", "setter": "setToolButtonStyle" }
       ],
       "signals": [
+        { "name": "actionTriggered", "parameters": [{ "name": "action", "type": "QAction*" }] },
+        { "name": "allowedAreasChanged", "parameters": [{ "name": "allowedAreas", "type": "Qt::ToolBarAreas" }] },
+        { "name": "iconSizeChanged", "parameters": [{ "name": "iconSize", "type": "QSize" }] },
         { "name": "movableChanged", "parameters": [{ "name": "movable", "type": "bool" }] },
+        { "name": "orientationChanged", "parameters": [{ "name": "orientation", "type": "Qt::Orientation" }] },
+        { "name": "toolButtonStyleChanged", "parameters": [{ "name": "toolButtonStyle", "type": "Qt::ToolButtonStyle" }] },
         { "name": "topLevelChanged", "parameters": [{ "name": "topLevel", "type": "bool" }] },
         { "name": "visibilityChanged", "parameters": [{ "name": "visible", "type": "bool" }] }
       ]
@@ -18558,6 +18703,7 @@
         { "name": "toolButtonStyle", "type": "Qt::ToolButtonStyle", "getter": "toolButtonStyle", "setter": "setToolButtonStyle" }
       ],
       "signals": [
+        { "name": "triggered", "parameters": [{ "name": "arg0", "type": "QAction*" }] }
       ]
     }
 ,
@@ -18808,6 +18954,8 @@
         { "name": "wordWrap", "type": "bool", "getter": "wordWrap", "setter": "setWordWrap" }
       ],
       "signals": [
+        { "name": "collapsed", "parameters": [{ "name": "index", "type": "QModelIndex" }] },
+        { "name": "expanded", "parameters": [{ "name": "index", "type": "QModelIndex" }] }
       ]
     }
 ,
@@ -18880,6 +19028,15 @@
         { "name": "topLevelItemCount", "type": "int", "getter": "topLevelItemCount" }
       ],
       "signals": [
+        { "name": "currentItemChanged", "parameters": [{ "name": "current", "type": "QTreeWidgetItem*" }, { "name": "previous", "type": "QTreeWidgetItem*" }] },
+        { "name": "itemActivated", "parameters": [{ "name": "item", "type": "QTreeWidgetItem*" }, { "name": "column", "type": "int" }] },
+        { "name": "itemChanged", "parameters": [{ "name": "item", "type": "QTreeWidgetItem*" }, { "name": "column", "type": "int" }] },
+        { "name": "itemClicked", "parameters": [{ "name": "item", "type": "QTreeWidgetItem*" }, { "name": "column", "type": "int" }] },
+        { "name": "itemCollapsed", "parameters": [{ "name": "item", "type": "QTreeWidgetItem*" }] },
+        { "name": "itemDoubleClicked", "parameters": [{ "name": "item", "type": "QTreeWidgetItem*" }, { "name": "column", "type": "int" }] },
+        { "name": "itemEntered", "parameters": [{ "name": "item", "type": "QTreeWidgetItem*" }, { "name": "column", "type": "int" }] },
+        { "name": "itemExpanded", "parameters": [{ "name": "item", "type": "QTreeWidgetItem*" }] },
+        { "name": "itemPressed", "parameters": [{ "name": "item", "type": "QTreeWidgetItem*" }, { "name": "column", "type": "int" }] },
         { "name": "itemSelectionChanged", "parameters": [] }
       ]
     }
@@ -20103,6 +20260,8 @@
         { "name": "y", "type": "int", "getter": "y" }
       ],
       "signals": [
+        { "name": "customContextMenuRequested", "parameters": [{ "name": "pos", "type": "QPoint" }] },
+        { "name": "windowIconChanged", "parameters": [{ "name": "icon", "type": "QIcon" }] },
         { "name": "windowIconTextChanged", "parameters": [{ "name": "iconText", "type": "QString" }] },
         { "name": "windowTitleChanged", "parameters": [{ "name": "title", "type": "QString" }] }
       ]
@@ -20332,13 +20491,18 @@
         { "name": "y", "type": "int", "getter": "y", "setter": "setY" }
       ],
       "signals": [
+        { "name": "contentOrientationChanged", "parameters": [{ "name": "orientation", "type": "Qt::ScreenOrientation" }] },
+        { "name": "focusObjectChanged", "parameters": [{ "name": "object", "type": "QObject*" }] },
         { "name": "heightChanged", "parameters": [{ "name": "arg", "type": "int" }] },
         { "name": "maximumHeightChanged", "parameters": [{ "name": "arg", "type": "int" }] },
         { "name": "maximumWidthChanged", "parameters": [{ "name": "arg", "type": "int" }] },
         { "name": "minimumHeightChanged", "parameters": [{ "name": "arg", "type": "int" }] },
         { "name": "minimumWidthChanged", "parameters": [{ "name": "arg", "type": "int" }] },
+        { "name": "modalityChanged", "parameters": [{ "name": "modality", "type": "Qt::WindowModality" }] },
+        { "name": "screenChanged", "parameters": [{ "name": "screen", "type": "QScreen*" }] },
         { "name": "visibleChanged", "parameters": [{ "name": "arg", "type": "bool" }] },
         { "name": "widthChanged", "parameters": [{ "name": "arg", "type": "int" }] },
+        { "name": "windowStateChanged", "parameters": [{ "name": "windowState", "type": "Qt::WindowState" }] },
         { "name": "xChanged", "parameters": [{ "name": "arg", "type": "int" }] },
         { "name": "yChanged", "parameters": [{ "name": "arg", "type": "int" }] }
       ]

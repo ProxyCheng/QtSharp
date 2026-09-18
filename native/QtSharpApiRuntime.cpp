@@ -13,6 +13,11 @@
 #include <qcoreapplication.h>
 #include <qapplication.h>
 #include <private/qobject_p.h>
+#include <private/qmetaobject_p.h>
+#include <private/qmetaobjectbuilder_p.h>
+#include <cstring>
+#include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 #include "QtSharpApiRuntime.h"
@@ -176,6 +181,160 @@ extern "C" __declspec(dllexport) int qs_api_connect(void* sender, const char* si
         slot->destroyIfLastRef();
         return 0;
     }
+    return 1;
+}
+
+// Activates a signal from managed code. The argv convention is moc's own: args[0] is the return
+// slot (always null for a signal) and args[i] holds the address of the i-th argument's storage.
+// The managed side builds that storage (a QString object, a pointer variable, a boxed value) and
+// this only has to forward it, which is what makes `Emit` possible for any signal the model
+// publishes - and, with a dynamic meta-object, for a signal a managed class declared itself.
+extern "C" __declspec(dllexport) int qs_api_emit(void* sender, const char* signature, void** args, int argc)
+{
+    if (!sender || !signature)
+        return 0;
+
+    auto* object = static_cast<QObject*>(sender);
+    const QMetaObject* metaObject = object->metaObject();
+    const QByteArray normalized = QMetaObject::normalizedSignature(signature);
+    const int index = metaObject->indexOfSignal(normalized.constData());
+    if (index < 0)
+        return 0;
+
+    std::vector<void*> argv(size_t(argc) + 1, nullptr);
+    for (int i = 0; i < argc; ++i)
+        argv[size_t(i) + 1] = args ? args[i] : nullptr;
+
+    // indexOfSignal answers with an absolute *method* index, while activate wants the signal's
+    // position among this meta-object's own signals. The two numberings differ (slots share the
+    // method table), which is why the naive "index - methodOffset()" silently activates the wrong
+    // signal - or none at all.
+    const QMetaMethod method = metaObject->method(index);
+    const int signalIndex = QMetaObjectPrivate::signalIndex(method);
+    const int localSignalIndex = signalIndex - QMetaObjectPrivate::signalOffset(metaObject);
+    QMetaObject::activate(object, metaObject, localSignalIndex, argv.data());
+    return 1;
+}
+
+// ------------------------------------------------------------------ dynamic meta-object
+// A C# class can declare its own signals and properties, the way pyqtSignal/Property do in
+// PyQt. Qt has no room for them in the meta-object moc generated at compile time, so one is
+// built at run time with QMetaObjectBuilder (a private-but-shipped header) and installed on the
+// object. Once installed, QObject::metaObject() returns it, indexOfSignal/indexOfProperty find
+// the extra members, and QMetaObject::activate emits them like any other signal.
+//
+// The value a property read/write carries is the plain C++ type (moc's qt_metacall writes into
+// a[0] directly), so the managed side is handed that pointer and does its own conversion.
+typedef void (*QsApiMetaPropertyCallback)(void* object, int index, int write, void* value);
+static QsApiMetaPropertyCallback g_metaPropertyCallback = nullptr;
+
+class QsApiDynamicMetaObject : public QAbstractDynamicMetaObject
+{
+public:
+    QsApiDynamicMetaObject(QMetaObject* metaObject, int propertyBase)
+        : m_metaObject(metaObject)
+        , m_propertyBase(propertyBase)
+    {
+        // QObject::metaObject() hands back this very object, so the QMetaObject half has to carry
+        // the built table. The table belongs to QMetaObjectBuilder (its string/method data lives
+        // in separate allocations), is shared by every instance of the managed type, and is never
+        // freed here.
+        std::memcpy(static_cast<void*>(static_cast<QMetaObject*>(this)), metaObject, sizeof(QMetaObject));
+    }
+
+    // Only the members past the base's are ours; everything below is a copy of the base's own
+    // table and is handled by moc's generated qt_metacall.
+    int metaCall(QObject* object, QMetaObject::Call call, int id, void** args) override
+    {
+        if ((call == QMetaObject::ReadProperty || call == QMetaObject::WriteProperty)
+            && id >= m_propertyBase && g_metaPropertyCallback)
+        {
+            g_metaPropertyCallback(object, id - m_propertyBase, call == QMetaObject::WriteProperty,
+                                   args ? args[0] : nullptr);
+            return 0;
+        }
+        return object->qt_metacall(call, id, args);
+    }
+
+private:
+    QMetaObject* m_metaObject;
+    int m_propertyBase;
+};
+
+// The meta-object tables are built once per member list and shared by every instance of the
+// managed type; a managed type is identified by the name it hands over.
+static std::unordered_map<std::string, QMetaObject*> g_dynamicMetaObjects;
+
+extern "C" __declspec(dllexport) void qs_api_set_meta_property_callback(QsApiMetaPropertyCallback callback)
+{
+    g_metaPropertyCallback = callback;
+}
+
+// Installs a meta-object carrying the extra signals and properties. Must be called before any
+// connection to them (i.e. right after the object is constructed).
+// (`signals`/`slots` are macros in Qt, so the parameter names avoid them.)
+extern "C" __declspec(dllexport) int qs_api_attach_metaobject(
+    void* object, const char* className,
+    const char* const* signalSignatures, int signalCount,
+    const char* const* propertyNames, const char* const* propertyTypes, int propertyCount)
+{
+    if (!object || !className)
+        return 0;
+    if (signalCount <= 0 && propertyCount <= 0)
+        return 0;
+
+    auto* qobject = static_cast<QObject*>(object);
+    const QMetaObject* base = qobject->metaObject();
+    if (base->indexOfClassInfo("qtsharp-dynamic") >= 0)
+        return 1;                       // already attached
+
+    std::string key = className;
+    key += '\x1f';
+    for (int i = 0; i < signalCount; ++i)
+    {
+        key += signalSignatures[i];
+        key += '\n';
+    }
+    key += "\x1e";
+    for (int i = 0; i < propertyCount; ++i)
+    {
+        key += propertyNames[i];
+        key += ':';
+        key += propertyTypes[i];
+        key += '\n';
+    }
+
+    auto found = g_dynamicMetaObjects.find(key);
+    QMetaObject* built;
+    if (found == g_dynamicMetaObjects.end())
+    {
+        // Only the members the managed class adds. The base's are reached through superClass(),
+        // which is also what makes the offsets line up: QMetaObject::methodOffset() is
+        // superClass()->methodCount(), so an extra signal lands where moc would have put it.
+        // (Cloning the base's own table instead duplicates those members and leaves the built
+        // table / the object's real class disagreeing about where the signals start.)
+        QMetaObjectBuilder builder;
+        builder.setClassName(className);
+        builder.setSuperClass(base);
+        for (int i = 0; i < signalCount; ++i)
+            builder.addSignal(signalSignatures[i]);
+        for (int i = 0; i < propertyCount; ++i)
+            builder.addProperty(propertyNames[i], propertyTypes[i]);
+        // Marks the object as already carrying our table (and is what makes the check above a
+        // one-time operation).
+        builder.addClassInfo("qtsharp-dynamic", "1");
+        built = builder.toMetaObject();
+        g_dynamicMetaObjects[key] = built;
+    }
+    else
+    {
+        built = found->second;
+    }
+
+    // The built table holds only the managed class's own members, so everything at or past the
+    // base's property count belongs to it.
+    auto* dynamicMetaObject = new QsApiDynamicMetaObject(built, base->propertyCount());
+    QObjectPrivate::get(qobject)->metaObject = dynamicMetaObject;
     return 1;
 }
 

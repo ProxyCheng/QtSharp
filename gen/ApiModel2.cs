@@ -71,8 +71,11 @@ public static partial class ApiModel
         ClassBases.Clear();
         extensionTree.Clear();
 
-        // Signals still come from the header scan: they are metadata the C++ declarations do not
-        // carry, and the scanner is the same for both front ends.
+        // Signals are *identified* by the header scan: moc's Q_SIGNALS leaves no trace clang can
+        // see, and QT_ANNOTATE_ACCESS_SPECIFIER expands to nothing in a normal build. Their
+        // parameters, however, are read out of the AST like every other member's (see
+        // SignalFactsOf) - that is what makes a QModelIndex, a QWidget*, an enum or a container
+        // expressible in a signal instead of the scalar-only vocabulary the text scan could guess.
         var rootSignals = ActiveRoots
             .Select(r => (r.Module, r.Header))
             .Distinct()
@@ -80,10 +83,9 @@ public static partial class ApiModel
             .Where(s => RootClasses.Contains(s.ClassName))
             .ToList();
 
-        var signals = rootSignals
-            .Where(s => s.Params.Where(p => !p.Private)
-                .All(p => Program.MapSignalType(p.CppType, out _, out _, out _, out _, out _)))
-            .ToList();
+        // Every signal name (published or not) so the *signal* is never also published as a plain
+        // callable method: a signal is emit-only API, even when its parameters are beyond the
+        // vocabulary.
         var allSignalNames = new HashSet<string>(rootSignals.Select(s => s.ClassName + "::" + s.SignalName));
 
         // Q_PROPERTY declarations come from the same header scan; which of them can be published
@@ -114,7 +116,7 @@ public static partial class ApiModel
                     Console.WriteLine($"[model2] WARNING: root class {root.Class} was not found in the parsed headers");
                     continue;
                 }
-                part.Classes[root.Class] = ClassJson(classRecord, root, index2, signals, allSignalNames, rootProperties, part.Enums);
+                part.Classes[root.Class] = ClassJson(classRecord, root, index2, rootSignals, allSignalNames, rootProperties, part.Enums);
             }
             Console.WriteLine($"[model2]   {chunk.Key.Module}/{chunk.Key.Header}: {chunk.Count()} class(es)");
         }
@@ -1007,17 +1009,40 @@ public static partial class ApiModel
             .OrderBy(x => x.Property.Name, StringComparer.Ordinal)
             .ToList();
 
+        // The signals this class declares: the header scan says *which* declarations are signals,
+        // the AST says what their parameters are. A signal is published only when every parameter
+        // is one the vocabulary can marshal; otherwise it is dropped (and stays out of `methods`
+        // through allSignalNames - a signal is not a callable member).
+        var signalFacts = SignalFactsOf(className, signals, callable);
         // A signal is exposed as a property named after it, so two of the same name cannot
         // coexist.
-        var classSignals = signals
-            .Where(s => s.ClassName == className)
-            .GroupBy(s => s.SignalName + "(" + string.Join(",", s.Params.Where(p => !p.Private).Select(p => p.CppType)) + ")")
+        var classSignals = signalFacts
+            .GroupBy(f => f.Name + "(" + string.Join(",", f.Params.Select(p => p.Type)) + ")")
             .Select(g => g.First())
-            .OrderBy(s => s.SignalName, StringComparer.Ordinal)
+            .OrderBy(f => f.Name, StringComparer.Ordinal)
+            .Select(f => new Program.SignalInfo
+            {
+                ClassName = className,
+                SignalName = f.Name,
+                // The model type is also the *normalized* spelling Qt stores in the meta-object
+                // (QString, QWidget*, Qt::Orientation), which indexOfSignal matches literally -
+                // clang's "const QString &" is not.
+                Params = f.Params.Select(p => new Program.SignalParamInfo
+                {
+                    Name = p.Name,
+                    CppType = p.Type,
+                    ModelType = p.Type,
+                }).ToList(),
+            })
             .ToList();
 
         foreach (var fn in ctors.Concat(methods).Concat(virtuals))
             CollectEnums2(fn.ReturnClangType, fn.Visible, index, enums);
+        // A signal's parameter types have to reach the enum table too: QAbstractItemDelegate's
+        // commitData(QWidget*) and the signals carrying an enum are the only place that enum
+        // appears.
+        foreach (var f in signalFacts)
+            CollectEnums2(f.Fn.ReturnClangType, f.Params, index, enums);
         // A published data member can be the only place an enum appears (QStyleOption::state is
         // QStyle::State), so its type has to contribute enums too.
         foreach (var field in FieldsOf(record))
@@ -1058,6 +1083,50 @@ public static partial class ApiModel
         body.Append("    }\n");
         return body.ToString();
     }
+
+    // A signal's parameter list, built from the AST declaration the header scan pointed at.
+    // A signal is matched by name and by the number of *public* parameters - the scanner knows
+    // the QPrivateSignal marker the AST spells as a nested type.
+    static List<(FnFact Fn, string Name, List<ParamFact> Params)> SignalFactsOf(
+        string className, List<Program.SignalInfo> signals, List<FnFact> callable)
+    {
+        var result = new List<(FnFact Fn, string Name, List<ParamFact> Params)>();
+        foreach (var info in signals.Where(s => s.ClassName == className))
+        {
+            int arity = info.Params.Count(p => !p.Private);
+            FnFact match = null;
+            foreach (var m in callable)
+            {
+                if (m.IsCtor || m.Name != info.SignalName)
+                    continue;
+                if (result.Any(r => ReferenceEquals(r.Fn, m)))
+                    continue;                       // an overload this run already claimed
+                if (m.Params.Count(p => !IsPrivateSignalParam(p)) != arity)
+                    continue;
+                match = m;
+                break;
+            }
+            if (match == null)
+                continue;
+
+            var ps = match.Params.Where(p => !IsPrivateSignalParam(p)).ToList();
+            // Every parameter has to be marshalable, and a signal parameter is always an input:
+            // there is no such thing as an out parameter on a signal. The string *views* are read
+            // but cannot be emitted (a QStringView is not a QString, and the emit side has to
+            // build the exact storage type Qt declared).
+            if (ps.Any(p => p.Type == null || p.Mode != ParamMode.In
+                            || p.Type is "QStringView" or "QAnyStringView"
+                            || !SupportedType(p.ClangType, isParameter: true)))
+                continue;
+            result.Add((match, info.SignalName, ps));
+        }
+        return result;
+    }
+
+    // moc puts a QPrivateSignal marker parameter on a "private" signal (QTimer::timeout). It
+    // carries no data and is not part of the managed surface.
+    static bool IsPrivateSignalParam(ParamFact p)
+        => p.CppType != null && p.CppType.Contains("QPrivateSignal");
 
     // Whether C++ lets us derive from the class at all: a private (or deleted) destructor makes
     // every subclass undestructible, which MSVC rejects outright.

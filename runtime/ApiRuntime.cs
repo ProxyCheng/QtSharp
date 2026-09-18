@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -9,14 +9,146 @@ using System.Security;
 // moc-metadata forwarder, the QString bridge and the object wrapper cache.
 namespace QtSharp.Api
 {
-    // Same shape as the existing testbind QSignal<T>.
-    public sealed class QSignal<T>
+    // A Qt signal, with the arity in the type so both halves are typed: `Connect(Action<int,string>)`
+    // and `Emit(42, "x")`. The generated binding supplies the two closures (which marshal each
+    // parameter the way Qt declared it); a user-declared signal is built by ApiRuntime.NewSignal.
+    //
+    // The generated binding is what produces the native argument storage, because only it knows
+    // whether a parameter is a bound class pointer, a boxed value or a container - the same
+    // distinction the virtual dispatch makes.
+    public sealed class QSignal
     {
-        readonly Action<T> connector;
+        readonly Action<Action> connector;
+        readonly Action emitter;
 
-        public QSignal(Action<T> connector) => this.connector = connector;
+        public QSignal(Action<Action> connector, Action emitter)
+        {
+            this.connector = connector;
+            this.emitter = emitter;
+        }
 
-        public void Connect(T handler) => connector(handler);
+        public void Connect(Action handler) => connector(handler);
+        public void Emit() => emitter();
+    }
+
+    public sealed class QSignal<T1>
+    {
+        readonly Action<Action<T1>> connector;
+        readonly Action<T1> emitter;
+
+        public QSignal(Action<Action<T1>> connector, Action<T1> emitter)
+        {
+            this.connector = connector;
+            this.emitter = emitter;
+        }
+
+        public void Connect(Action<T1> handler) => connector(handler);
+        public void Emit(T1 a1) => emitter(a1);
+    }
+
+    public sealed class QSignal<T1, T2>
+    {
+        readonly Action<Action<T1, T2>> connector;
+        readonly Action<T1, T2> emitter;
+
+        public QSignal(Action<Action<T1, T2>> connector, Action<T1, T2> emitter)
+        {
+            this.connector = connector;
+            this.emitter = emitter;
+        }
+
+        public void Connect(Action<T1, T2> handler) => connector(handler);
+        public void Emit(T1 a1, T2 a2) => emitter(a1, a2);
+    }
+
+    public sealed class QSignal<T1, T2, T3>
+    {
+        readonly Action<Action<T1, T2, T3>> connector;
+        readonly Action<T1, T2, T3> emitter;
+
+        public QSignal(Action<Action<T1, T2, T3>> connector, Action<T1, T2, T3> emitter)
+        {
+            this.connector = connector;
+            this.emitter = emitter;
+        }
+
+        public void Connect(Action<T1, T2, T3> handler) => connector(handler);
+        public void Emit(T1 a1, T2 a2, T3 a3) => emitter(a1, a2, a3);
+    }
+
+    public sealed class QSignal<T1, T2, T3, T4>
+    {
+        readonly Action<Action<T1, T2, T3, T4>> connector;
+        readonly Action<T1, T2, T3, T4> emitter;
+
+        public QSignal(Action<Action<T1, T2, T3, T4>> connector, Action<T1, T2, T3, T4> emitter)
+        {
+            this.connector = connector;
+            this.emitter = emitter;
+        }
+
+        public void Connect(Action<T1, T2, T3, T4> handler) => connector(handler);
+        public void Emit(T1 a1, T2 a2, T3 a3, T4 a4) => emitter(a1, a2, a3, a4);
+    }
+
+    public sealed class QSignal<T1, T2, T3, T4, T5>
+    {
+        readonly Action<Action<T1, T2, T3, T4, T5>> connector;
+        readonly Action<T1, T2, T3, T4, T5> emitter;
+
+        public QSignal(Action<Action<T1, T2, T3, T4, T5>> connector, Action<T1, T2, T3, T4, T5> emitter)
+        {
+            this.connector = connector;
+            this.emitter = emitter;
+        }
+
+        public void Connect(Action<T1, T2, T3, T4, T5> handler) => connector(handler);
+        public void Emit(T1 a1, T2 a2, T3 a3, T4 a4, T5 a5) => emitter(a1, a2, a3, a4, a5);
+    }
+
+    public sealed class QSignal<T1, T2, T3, T4, T5, T6>
+    {
+        readonly Action<Action<T1, T2, T3, T4, T5, T6>> connector;
+        readonly Action<T1, T2, T3, T4, T5, T6> emitter;
+
+        public QSignal(Action<Action<T1, T2, T3, T4, T5, T6>> connector, Action<T1, T2, T3, T4, T5, T6> emitter)
+        {
+            this.connector = connector;
+            this.emitter = emitter;
+        }
+
+        public void Connect(Action<T1, T2, T3, T4, T5, T6> handler) => connector(handler);
+        public void Emit(T1 a1, T2 a2, T3 a3, T4 a4, T5 a5, T6 a6) => emitter(a1, a2, a3, a4, a5, a6);
+    }
+
+    public sealed class QSignal<T1, T2, T3, T4, T5, T6, T7>
+    {
+        readonly Action<Action<T1, T2, T3, T4, T5, T6, T7>> connector;
+        readonly Action<T1, T2, T3, T4, T5, T6, T7> emitter;
+
+        public QSignal(Action<Action<T1, T2, T3, T4, T5, T6, T7>> connector, Action<T1, T2, T3, T4, T5, T6, T7> emitter)
+        {
+            this.connector = connector;
+            this.emitter = emitter;
+        }
+
+        public void Connect(Action<T1, T2, T3, T4, T5, T6, T7> handler) => connector(handler);
+        public void Emit(T1 a1, T2 a2, T3 a3, T4 a4, T5 a5, T6 a6, T7 a7) => emitter(a1, a2, a3, a4, a5, a6, a7);
+    }
+
+    public sealed class QSignal<T1, T2, T3, T4, T5, T6, T7, T8>
+    {
+        readonly Action<Action<T1, T2, T3, T4, T5, T6, T7, T8>> connector;
+        readonly Action<T1, T2, T3, T4, T5, T6, T7, T8> emitter;
+
+        public QSignal(Action<Action<T1, T2, T3, T4, T5, T6, T7, T8>> connector, Action<T1, T2, T3, T4, T5, T6, T7, T8> emitter)
+        {
+            this.connector = connector;
+            this.emitter = emitter;
+        }
+
+        public void Connect(Action<T1, T2, T3, T4, T5, T6, T7, T8> handler) => connector(handler);
+        public void Emit(T1 a1, T2 a2, T3 a3, T4 a4, T5 a5, T6 a6, T7 a7, T8 a8) => emitter(a1, a2, a3, a4, a5, a6, a7, a8);
     }
 
     // A managed view of a Qt object. Qt owns the lifetime (a parent, a scene, the application),
@@ -26,6 +158,250 @@ namespace QtSharp.Api
     internal interface IQtObjectView
     {
         void MarkDestroyed();
+    }
+
+    // The generated root class implements this, which is what lets a *user-declared* signal or
+    // property carry a bound class (as its native pointer) without the runtime having to know the
+    // type at compile time.
+    public interface IQtHandle
+    {
+        IntPtr Handle { get; }
+    }
+
+    // ------------------------------------------------------------------ user-declared members
+    // A C# class can declare its own signals and properties (the pyqtSignal/Property equivalent):
+    //
+    //     public sealed class Counter : QObject
+    //     {
+    //         public static readonly QMetaSignal<int> ValueChanged = new("valueChanged");
+    //         public static readonly QMetaProperty<int> Value = new("value", o => ((Counter)o)._value, ...);
+    //     }
+    //
+    // ApiRuntime.AttachMetaObject (called by every generated constructor) reflects over the static
+    // fields of the concrete type, builds a meta-object with the extra members, and installs it on
+    // the object. From then on they are ordinary Qt members: indexOfSignal finds them, connect()
+    // works, and the property read/write goes through QObject::property/setProperty.
+
+    public abstract class QMetaSignalBase
+    {
+        internal string Name;
+        internal string Signature;
+    }
+
+    public sealed class QMetaSignal : QMetaSignalBase
+    {
+        public QMetaSignal(string name)
+        {
+            Name = name;
+            Signature = name + "()";
+        }
+
+        public void Connect(QObject sender, Action handler)
+            => ApiRuntime.Connect(sender.Handle, Signature, (argv, _) => handler());
+
+        public void Emit(QObject sender) => ApiRuntime.EmitUser(sender.Handle, Signature, Type.EmptyTypes, Array.Empty<object>());
+    }
+
+    public sealed class QMetaSignal<T1> : QMetaSignalBase
+    {
+        public QMetaSignal(string name)
+        {
+            Name = name;
+            Signature = name + "(" + MetaType.QtName(typeof(T1)) + ")";
+        }
+
+        public void Connect(QObject sender, Action<T1> handler)
+            => ApiRuntime.Connect(sender.Handle, Signature, (argv, _) => handler(MetaType.Read<T1>(argv, 0)));
+
+        public void Emit(QObject sender, T1 a1) => ApiRuntime.EmitUser(sender.Handle, Signature, new[] { typeof(T1) }, new object[] { a1 });
+    }
+
+    public sealed class QMetaSignal<T1, T2> : QMetaSignalBase
+    {
+        public QMetaSignal(string name)
+        {
+            Name = name;
+            Signature = name + "(" + MetaType.QtName(typeof(T1)) + "," + MetaType.QtName(typeof(T2)) + ")";
+        }
+
+        public void Connect(QObject sender, Action<T1, T2> handler)
+            => ApiRuntime.Connect(sender.Handle, Signature,
+                (argv, _) => handler(MetaType.Read<T1>(argv, 0), MetaType.Read<T2>(argv, 1)));
+
+        public void Emit(QObject sender, T1 a1, T2 a2)
+            => ApiRuntime.EmitUser(sender.Handle, Signature, new[] { typeof(T1), typeof(T2) }, new object[] { a1, a2 });
+    }
+
+    public sealed class QMetaSignal<T1, T2, T3> : QMetaSignalBase
+    {
+        public QMetaSignal(string name)
+        {
+            Name = name;
+            Signature = name + "(" + MetaType.QtName(typeof(T1)) + "," + MetaType.QtName(typeof(T2))
+                      + "," + MetaType.QtName(typeof(T3)) + ")";
+        }
+
+        public void Connect(QObject sender, Action<T1, T2, T3> handler)
+            => ApiRuntime.Connect(sender.Handle, Signature,
+                (argv, _) => handler(MetaType.Read<T1>(argv, 0), MetaType.Read<T2>(argv, 1), MetaType.Read<T3>(argv, 2)));
+
+        public void Emit(QObject sender, T1 a1, T2 a2, T3 a3)
+            => ApiRuntime.EmitUser(sender.Handle, Signature, new[] { typeof(T1), typeof(T2), typeof(T3) }, new object[] { a1, a2, a3 });
+    }
+
+    public sealed class QMetaSignal<T1, T2, T3, T4> : QMetaSignalBase
+    {
+        public QMetaSignal(string name)
+        {
+            Name = name;
+            Signature = name + "(" + MetaType.QtName(typeof(T1)) + "," + MetaType.QtName(typeof(T2))
+                      + "," + MetaType.QtName(typeof(T3)) + "," + MetaType.QtName(typeof(T4)) + ")";
+        }
+
+        public void Connect(QObject sender, Action<T1, T2, T3, T4> handler)
+            => ApiRuntime.Connect(sender.Handle, Signature, (argv, _) => handler(
+                MetaType.Read<T1>(argv, 0), MetaType.Read<T2>(argv, 1),
+                MetaType.Read<T3>(argv, 2), MetaType.Read<T4>(argv, 3)));
+
+        public void Emit(QObject sender, T1 a1, T2 a2, T3 a3, T4 a4)
+            => ApiRuntime.EmitUser(sender.Handle, Signature, new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4) }, new object[] { a1, a2, a3, a4 });
+    }
+
+    // A user-declared property: the getter/setter are ordinary C# delegates, and the runtime calls
+    // them when Qt asks for the value (QObject::property, a QML binding, a data widget mapper...).
+    public abstract class QMetaPropertyBase
+    {
+        internal string Name;
+        internal string TypeName;
+        internal abstract void Get(object target, IntPtr value);
+        internal abstract void Set(object target, IntPtr value);
+    }
+
+    public sealed class QMetaProperty<T> : QMetaPropertyBase
+    {
+        readonly Func<object, T> read;
+        readonly Action<object, T> write;
+
+        public QMetaProperty(string name, Func<object, T> read, Action<object, T> write = null)
+        {
+            Name = name;
+            TypeName = MetaType.QtName(typeof(T));
+            this.read = read;
+            this.write = write;
+        }
+
+        internal override void Get(object target, IntPtr value) => MetaType.Write(TypeName, value, read(target));
+
+        internal override void Set(object target, IntPtr value)
+        {
+            if (write != null)
+                write(target, MetaType.Read<T>(value));
+        }
+    }
+
+    // The C# type -> Qt type name map the declared members use, plus the conversions between a
+    // managed value and the native storage moc's qt_metacall would have used.
+    public static class MetaType
+    {
+        public static string QtName(Type t)
+        {
+            if (t == typeof(string)) return "QString";
+            if (t == typeof(bool)) return "bool";
+            if (t == typeof(int)) return "int";
+            if (t == typeof(uint)) return "uint";
+            if (t == typeof(short)) return "short";
+            if (t == typeof(ushort)) return "ushort";
+            if (t == typeof(long)) return "qint64";
+            if (t == typeof(ulong)) return "quint64";
+            if (t == typeof(float)) return "float";
+            if (t == typeof(double)) return "double";
+            if (t == typeof(byte)) return "uchar";
+            if (t == typeof(sbyte)) return "char";
+            if (t == typeof(IntPtr)) return "void*";
+            if (t.IsEnum)
+            {
+                // A nested enum surfaces as Qt::ItemDataRole / QAbstractItemDelegate::EndEditHint,
+                // which is the name QMetaType registered it under.
+                var scope = t.DeclaringType;
+                return scope == null ? t.Name : scope.Name + "::" + t.Name;
+            }
+            // A bound class crosses as its pointer; the runtime wraps it with the generated
+            // FromHandle the type publishes.
+            if (typeof(IQtHandle).IsAssignableFrom(t))
+                return t.Name + "*";
+            return t.Name;
+        }
+
+        /// <summary>Reads the i-th signal argument out of moc's argv.</summary>
+        public static T Read<T>(IntPtr argv, int index)
+            => (T)FromStorage(typeof(T), Marshal.ReadIntPtr(argv, index * IntPtr.Size));
+
+        /// <summary>Reads a value out of a property value slot.</summary>
+        internal static T Read<T>(IntPtr value) => (T)FromStorage(typeof(T), value);
+
+        static readonly Dictionary<Type, System.Reflection.MethodInfo> fromHandle = new();
+
+        // The generated wrapper's FromHandle (an object pointer) or FromTransientHandle (a boxed
+        // value), looked up once per type.
+        static System.Reflection.MethodInfo WrapperFactory(Type t, bool pointer)
+        {
+            lock (fromHandle)
+            {
+                if (fromHandle.TryGetValue(t, out var method))
+                    return method;
+                method = pointer
+                    ? t.GetMethod("FromHandle", new[] { typeof(IntPtr) })
+                    : t.GetMethod("FromTransientHandle",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                      ?? t.GetMethod("FromHandle", new[] { typeof(IntPtr) });
+                fromHandle[t] = method;
+                return method;
+            }
+        }
+
+        static object FromStorage(Type t, IntPtr storage)
+        {
+            if (t == typeof(string)) return ApiRuntime.ToManagedTransient(storage);
+            if (t == typeof(bool)) return Marshal.ReadByte(storage) != 0;
+            if (t == typeof(int)) return Marshal.ReadInt32(storage);
+            if (t == typeof(uint)) return (uint)Marshal.ReadInt32(storage);
+            if (t == typeof(short)) return Marshal.ReadInt16(storage);
+            if (t == typeof(ushort)) return (ushort)Marshal.ReadInt16(storage);
+            if (t == typeof(long)) return Marshal.ReadInt64(storage);
+            if (t == typeof(ulong)) return (ulong)Marshal.ReadInt64(storage);
+            if (t == typeof(float)) return BitConverter.Int32BitsToSingle(Marshal.ReadInt32(storage));
+            if (t == typeof(double)) return BitConverter.Int64BitsToDouble(Marshal.ReadInt64(storage));
+            if (t == typeof(byte)) return Marshal.ReadByte(storage);
+            if (t == typeof(sbyte)) return (sbyte)Marshal.ReadByte(storage);
+            if (t == typeof(IntPtr)) return Marshal.ReadIntPtr(storage);
+            if (t.IsEnum) return Enum.ToObject(t, Marshal.ReadInt32(storage));
+            if (typeof(IQtHandle).IsAssignableFrom(t))
+            {
+                // A pointer argument: the storage holds the pointer itself.
+                IntPtr handle = Marshal.ReadIntPtr(storage);
+                if (handle == IntPtr.Zero)
+                    return null;
+                return WrapperFactory(t, true).Invoke(null, new object[] { handle });
+            }
+            // A boxed value (QModelIndex): the storage *is* the object.
+            return WrapperFactory(t, false).Invoke(null, new object[] { storage });
+        }
+
+        /// <summary>Writes a managed value into a native value slot (a property read).</summary>
+        public static void Write(string qtType, IntPtr destination, object value)
+        {
+            if (qtType == "QString") { ApiRuntime.WriteString(destination, (string)value); return; }
+            if (qtType == "bool") { Marshal.WriteByte(destination, (bool)value ? (byte)1 : (byte)0); return; }
+            if (qtType == "int" || qtType == "uint" || qtType == "short" || qtType == "ushort" || qtType == "uchar")
+            { Marshal.WriteInt32(destination, Convert.ToInt32(value)); return; }
+            if (qtType == "double") { Marshal.WriteInt64(destination, BitConverter.DoubleToInt64Bits((double)value)); return; }
+            if (qtType == "float") { Marshal.WriteInt32(destination, BitConverter.SingleToInt32Bits((float)value)); return; }
+            if (qtType == "qint64" || qtType == "quint64") { Marshal.WriteInt64(destination, Convert.ToInt64(value)); return; }
+            if (qtType == "void*") { Marshal.WriteIntPtr(destination, (value as IQtHandle)?.Handle ?? (IntPtr)value); return; }
+            if (value is IQtHandle handle) { Marshal.WriteIntPtr(destination, handle.Handle); return; }
+            if (value != null && value.GetType().IsEnum) { Marshal.WriteInt32(destination, Convert.ToInt32(value)); return; }
+            throw new NotSupportedException($"A QMetaProperty of type {qtType} is not supported");
+        }
     }
 
     public static unsafe class ApiRuntime
@@ -144,6 +520,8 @@ namespace QtSharp.Api
                     foreach (var item in items)
                         MarkItemDestroyed(item);
                 }
+                // A C#-declared member table is only meaningful while its object is alive.
+                metaByHandle.Remove(handle);
             }
         }
 
@@ -226,6 +604,184 @@ namespace QtSharp.Api
         public static bool SendKeyPress(IntPtr widgetHandle, int key, int modifiers = 0)
             => ProbeKeyPress(widgetHandle, key, modifiers) != 0;
 
+        /// <summary>A string into a native value slot (a property read hands Qt the value).</summary>
+        public static void WriteString(IntPtr destination, string value)
+            => WriteQStringNative(destination, value ?? string.Empty);
+
+        // ------------------------------------------------------------------ user-declared members
+        static readonly Dictionary<Type, MetaObjectSpec> metaSpecs = new();
+        static readonly Dictionary<IntPtr, MetaObjectSpec> metaByHandle = new();
+        static bool metaPropertyCallbackInstalled;
+
+        sealed class MetaObjectSpec
+        {
+            public string Name;
+            public List<QMetaSignalBase> Signals = new();
+            public List<QMetaPropertyBase> Properties = new();
+        }
+
+        /// <summary>
+        /// Gives an object the signals and properties its C# class declared (see QMetaSignal /
+        /// QMetaProperty). Called by every generated constructor; it costs a cached type lookup for
+        /// the overwhelming majority of types, which declare nothing.
+        /// </summary>
+        public static void AttachMetaObject(object target)
+        {
+            // Only a QObject has a meta-object to extend; the interface alone is not enough (the
+            // generated value types implement IQtHandle too).
+            if (shuttingDown || target is not QObject || target is not IQtHandle handle)
+                return;
+            var type = target.GetType();
+            MetaObjectSpec spec;
+            lock (metaSpecs)
+            {
+                if (!metaSpecs.TryGetValue(type, out spec))
+                {
+                    spec = BuildSpec(type);
+                    metaSpecs[type] = spec;
+                }
+            }
+            if (spec == null)
+                return;
+
+            if (spec.Properties.Count > 0 && !metaPropertyCallbackInstalled)
+            {
+                unsafe
+                {
+                    SetMetaPropertyCallback(
+                        (IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, int, int, IntPtr, void>)&OnMetaProperty);
+                }
+                metaPropertyCallbackInstalled = true;
+            }
+
+            var signatures = new string[spec.Signals.Count];
+            for (int i = 0; i < signatures.Length; i++)
+                signatures[i] = spec.Signals[i].Signature;
+            var names = new string[spec.Properties.Count];
+            var types = new string[spec.Properties.Count];
+            for (int i = 0; i < names.Length; i++)
+            {
+                names[i] = spec.Properties[i].Name;
+                types[i] = spec.Properties[i].TypeName;
+            }
+            if (AttachNative(handle.Handle, spec.Name, signatures, signatures.Length, names, types, types.Length) != 0)
+            {
+                lock (metaByHandle)
+                    metaByHandle[handle.Handle] = spec;
+            }
+        }
+
+        static MetaObjectSpec BuildSpec(Type type)
+        {
+            var spec = new MetaObjectSpec { Name = type.Name };
+            foreach (var field in type.GetFields(
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static
+                | System.Reflection.BindingFlags.FlattenHierarchy))
+            {
+                var value = field.GetValue(null);
+                if (value is QMetaSignalBase signal)
+                    spec.Signals.Add(signal);
+                else if (value is QMetaPropertyBase property)
+                    spec.Properties.Add(property);
+            }
+            return spec.Signals.Count == 0 && spec.Properties.Count == 0 ? null : spec;
+        }
+
+        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
+        static void OnMetaProperty(IntPtr handle, int index, int write, IntPtr value)
+        {
+            MetaObjectSpec spec;
+            lock (metaByHandle)
+            {
+                if (!metaByHandle.TryGetValue(handle, out spec))
+                    return;
+            }
+            if (index < 0 || index >= spec.Properties.Count)
+                return;
+            var target = LookupWrapper(handle);
+            if (target == null)
+                return;
+            if (write != 0)
+                spec.Properties[index].Set(target, value);
+            else
+                spec.Properties[index].Get(target, value);
+        }
+
+        internal static object LookupWrapper(IntPtr handle)
+        {
+            if (wrappers.TryGetValue(handle, out var list))
+                for (int i = list.Count - 1; i >= 0; i--)
+                    if (list[i].Target is object alive)
+                        return alive;
+            return null;
+        }
+
+        /// <summary>
+        /// Activates a signal a C# class declared. The managed values become the native argument
+        /// storage the moc-generated signal function would have had on its stack.
+        /// </summary>
+        public static unsafe bool EmitUser(IntPtr sender, string signature, Type[] types, object[] args)
+        {
+            int count = args.Length;
+            var storage = new IntPtr[count];
+            // A QString comes from NewQString (a heap QString) and the rest from AllocHGlobal, so
+            // the two kinds are released differently.
+            var qstrings = new List<IntPtr>();
+            var blocks = new List<IntPtr>();
+            IntPtr argv = IntPtr.Zero;
+            try
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    if (types[i] == typeof(string))
+                    {
+                        var text = NewQString((string)args[i]);
+                        storage[i] = text;
+                        qstrings.Add(text);
+                    }
+                    else if (typeof(IQtHandle).IsAssignableFrom(types[i]))
+                    {
+                        // A pointer argument: argv[i] points at a pointer variable.
+                        var slot = Marshal.AllocHGlobal(IntPtr.Size);
+                        Marshal.WriteIntPtr(slot, args[i] == null ? IntPtr.Zero : ((IQtHandle)args[i]).Handle);
+                        storage[i] = slot;
+                        blocks.Add(slot);
+                    }
+                    else
+                    {
+                        var slot = Marshal.AllocHGlobal(8);
+                        Marshal.WriteInt64(slot, 0);
+                        MetaType.Write(MetaType.QtName(types[i]), slot, args[i]);
+                        storage[i] = slot;
+                        blocks.Add(slot);
+                    }
+                }
+                argv = Marshal.AllocHGlobal(Math.Max(count, 1) * IntPtr.Size);
+                for (int i = 0; i < count; i++)
+                    Marshal.WriteIntPtr(argv, i * IntPtr.Size, storage[i]);
+                return Emit(sender, signature, argv, count);
+            }
+            finally
+            {
+                if (argv != IntPtr.Zero)
+                    Marshal.FreeHGlobal(argv);
+                foreach (var text in qstrings)
+                    FreeQString(text);
+                foreach (var block in blocks)
+                    Marshal.FreeHGlobal(block);
+            }
+        }
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_attach_metaobject", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int AttachNative(IntPtr obj, [MarshalAs(UnmanagedType.LPStr)] string className,
+            [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] signals, int signalCount,
+            [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] propertyNames,
+            [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] propertyTypes,
+            int propertyCount);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_set_meta_property_callback", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void SetMetaPropertyCallback(IntPtr callback);
+
         public static void StartApplication() => AppCreate();
 
         public static int Exec() => AppExec();
@@ -253,21 +809,35 @@ namespace QtSharp.Api
             => qstring == IntPtr.Zero ? null
                : Marshal.PtrToStringUni(StringUtf16(qstring), (int)StringSize(qstring));
 
-        public static bool Connect(IntPtr sender, string signature, Action<object[]> handler)
+        // The native forwarder hands over moc's raw argument array; the generated binding reads
+        // each slot with the type it knows, so nothing has to be guessed from a meta-type id.
+        // The callback has to stay alive for as long as Qt holds the connection.
+        public delegate void SignalSlot(IntPtr argv, IntPtr typeIds);
+
+        public static bool Connect(IntPtr sender, string signature, SignalSlot handler)
         {
-            SignalCallback callback = (userData, argc, argv, typeIds) =>
-            {
-                var args = new object[argc];
-                for (int i = 0; i < argc; i++)
-                {
-                    IntPtr value = Marshal.ReadIntPtr(argv, i * IntPtr.Size);
-                    int typeId = Marshal.ReadInt32(typeIds, i * sizeof(int));
-                    args[i] = Decode(value, typeId);
-                }
-                handler(args);
-            };
+            SignalCallback callback = (userData, argc, argv, typeIds) => handler(argv, typeIds);
             keepAlive.Add(callback);
             return ConnectNative(sender, signature, callback, IntPtr.Zero, 0) != 0;
+        }
+
+        /// <summary>
+        /// Activates a signal. <paramref name="args"/> points at one slot per argument, each
+        /// holding the address of the argument storage - exactly the argv a moc-generated signal
+        /// function would pass.
+        /// </summary>
+        public static bool Emit(IntPtr sender, string signature, IntPtr args, int argc)
+            => EmitNative(sender, signature, args, argc) != 0;
+
+        // A native QString built from a managed string, for the duration of an emit. The caller
+        // frees it (the generated emit closure does so in a finally).
+        public static IntPtr NewQString(string value)
+            => QStringFromUtf16(value ?? string.Empty);
+
+        public static void FreeQString(IntPtr value)
+        {
+            if (value != IntPtr.Zero)
+                StringFree(value);
         }
 
         public static void WriteResult(IntPtr destination, bool value)
@@ -292,21 +862,6 @@ namespace QtSharp.Api
 
         public static int ProbeEventFilter(IntPtr self, IntPtr watched, IntPtr eventPtr)
             => ProbeEventFilterNative(self, watched, eventPtr);
-
-        // QMetaType::Type ids (Qt6).
-        static object Decode(IntPtr value, int typeId) => typeId switch
-        {
-            1 => Marshal.ReadByte(value) != 0,                              // Bool
-            2 => Marshal.ReadInt32(value),                                  // Int
-            3 => (uint)Marshal.ReadInt32(value),                            // UInt
-            4 => Marshal.ReadInt64(value),                                  // LongLong
-            5 => (ulong)Marshal.ReadInt64(value),                           // ULongLong
-            6 => BitConverter.Int64BitsToDouble(Marshal.ReadInt64(value)),  // Double
-            7 => (char)Marshal.ReadInt16(value),                            // QChar
-            10 => CopyString(value),                                        // QString (owned by caller)
-            11 => CopyStringList(value),                                    // QStringList
-            _ => value,                                                     // unknown -> raw pointer
-        };
 
         static string CopyString(IntPtr qstring)
             => Marshal.PtrToStringUni(StringUtf16(qstring), (int)StringSize(qstring));
@@ -445,6 +1000,13 @@ namespace QtSharp.Api
         private static extern int ConnectNative(IntPtr sender, [MarshalAs(UnmanagedType.LPUTF8Str)] string signature,
             SignalCallback callback, IntPtr userData, int connectionType);
 
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_emit", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int EmitNative(IntPtr sender, [MarshalAs(UnmanagedType.LPUTF8Str)] string signature,
+            IntPtr args, int argc);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_qstring_from_utf16", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr QStringFromUtf16([MarshalAs(UnmanagedType.LPWStr)] string text);
+
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_probe_event_filter", CallingConvention = CallingConvention.Cdecl)]
         private static extern int ProbeEventFilterNative(IntPtr self, IntPtr watched, IntPtr eventPtr);
 
@@ -482,3 +1044,4 @@ namespace QtSharp.Api
         private static extern void AppQuit();
     }
 }
+

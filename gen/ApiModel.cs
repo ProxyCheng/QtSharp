@@ -1350,12 +1350,27 @@ public static partial class ApiModel
         {
             var s = classSignals[i];
             sb.Append("        { \"name\": ").Append(Json(s.SignalName)).Append(", \"parameters\": [");
-            sb.Append(string.Join(", ", s.Params.Where(p => !p.Private).Select(p =>
-                "{ \"name\": " + Json(CleanName(p.Name)) + ", \"type\": " + Json(Program.MapSignalType(p.CppType, out var cs, out _, out _, out _, out _) ? SignalModelType(cs) : CleanName(p.CppType)) + " }")));
+            sb.Append(string.Join(", ", s.Params.Where(p => !p.Private).Select(SignalParamJson)));
             sb.Append("] }");
             sb.Append(i + 1 < classSignals.Count ? ",\n" : "\n");
         }
         sb.Append("      ]\n");
+    }
+
+    // One signal parameter. The clang extractor publishes the model type and the C++ spelling it
+    // read out of the AST - that is what makes a bound class pointer, a boxed value (QModelIndex),
+    // an enum or a container expressible in a signal. Without them (the legacy extractor) the old
+    // scalar-only mapping is used so that path still produces a model.
+    static string SignalParamJson(Program.SignalParamInfo p)
+    {
+        if (p.ModelType == null)
+            return "{ \"name\": " + Json(CleanName(p.Name)) + ", \"type\": "
+                 + Json(Program.MapSignalType(p.CppType, out var cs, out _, out _, out _, out _)
+                       ? SignalModelType(cs) : CleanName(p.CppType)) + " }";
+        // Qt's meta-object stores the *normalized* type (QString, QWidget*, Qt::Orientation) and
+        // indexOfSignal matches that literally - "const QString &" would not be found. The model
+        // type is already that spelling, which is why a signal needs no separate "cpp" field.
+        return "{ \"name\": " + Json(CleanName(p.Name)) + ", \"type\": " + Json(p.ModelType) + " }";
     }
 
     static void WriteEnum(StringBuilder sb, EnumEntry entry, bool comma)

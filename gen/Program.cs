@@ -711,6 +711,11 @@ class Program
         // QPrivateSignal marker: part of the real C++ signature (needed to disambiguate the
         // member pointer) but carries no data and is not exposed to managed code.
         public bool Private;
+        // The model type of the parameter (QWidget*, QModelIndex, QString, int), which the
+        // meta-object signature is spelled from too. Set by the clang extractor, which reads the
+        // signal out of the AST; the legacy extractor leaves it null and WriteSignals falls back
+        // to the old scalar-only mapping.
+        public string ModelType;
     }
 
     public class SignalInfo

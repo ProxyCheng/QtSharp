@@ -1001,10 +1001,14 @@ public static class ApiCodeGen
             declared.Add(baseName);
         if (owned)
             declared.Add("IDisposable");
-        // Only the root class implements it; every descendant inherits the interface and the
-        // invalidation flag with it.
+        // Only the root class implements them; every descendant inherits the interface and the
+        // invalidation flag with it. IQtHandle is what lets a C#-declared signal/property carry a
+        // bound class without the runtime knowing the type at compile time.
         if (baseName == null)
+        {
             declared.Add("IQtObjectView");
+            declared.Add("IQtHandle");
+        }
         string ifaces = declared.Count > 0 ? " : " + string.Join(", ", declared) : "";
 
         sb.AppendLine($"    public unsafe partial class {name}{ifaces}");
@@ -1074,7 +1078,12 @@ public static class ApiCodeGen
             // still be destroyed by Qt later (it gets reparented), so it is watched as well.
             string register = "            ApiRuntime.Register(Handle, this);\n            __ownsNative = true;";
             if (DerivesFromQObject(name))
+            {
                 register += "\n            ApiRuntime.Watch(Handle);";
+                // The signals and properties the *C#* class declared (QMetaSignal/QMetaProperty):
+                // the object's meta-object gets them before any connection can be made.
+                register += "\n            ApiRuntime.AttachMetaObject(this);";
+            }
             EmitGuarded(sb, "            ", create + "\n" + register, marshal.Cleanup);
             sb.AppendLine("        }");
             sb.AppendLine();
@@ -1153,6 +1162,7 @@ public static class ApiCodeGen
             sb.AppendLine($"            Handle = ApiNative.Ctor_{name}(GCHandle.ToIntPtr(__context), {dispatch});");
             sb.AppendLine("            ApiRuntime.Register(Handle, this);");
             sb.AppendLine("            __ownsNative = true;");
+            sb.AppendLine("            ApiRuntime.AttachMetaObject(this);");
             sb.AppendLine("        }");
             sb.AppendLine();
         }
@@ -1322,18 +1332,40 @@ public static class ApiCodeGen
         }
 
         // signals
+        var signalOverloads = new Dictionary<string, int>(StringComparer.Ordinal);
         foreach (var s in signals)
         {
             string sname = Name(s);
             var ps = Params(s);
             var csTypes = ps.Select(p => ManagedType(PType(p))).ToList();
-            string argType = csTypes.Count == 0 ? "Action" : "Action<" + string.Join(", ", csTypes) + ">";
-            string mocSig = sname + "(" + string.Join(",", ps.Select(PType)) + ")";
-            string adapter = csTypes.Count == 0
-                ? "args => h()"
-                : "args => h(" + string.Join(", ", csTypes.Select((t, i) => $"({t})args[{i}]")) + ")";
-            sb.AppendLine($"        public QSignal<{argType}> {Pascal(sname)}Signal =>");
-            sb.AppendLine($"            new QSignal<{argType}>(h => ApiRuntime.Connect(Handle, \"{mocSig}\", {adapter}));");
+            // The arity classes stop somewhere, and a Qt signal with more than a handful of
+            // parameters is not worth growing them for.
+            if (csTypes.Count > MaxSignalArity)
+                continue;
+            // C# has no overloaded properties, so a signal Qt declares twice (QCompleter has both
+            // activated(QString) and activated(QModelIndex)) gets the same 2,3,... suffix the
+            // method overloads use.
+            signalOverloads.TryGetValue(sname, out int sseen);
+            signalOverloads[sname] = sseen + 1;
+            string sSuffix = sseen == 0 ? "" : (sseen + 1).ToString();
+            string signalType = csTypes.Count == 0
+                ? "QSignal"
+                : "QSignal<" + string.Join(", ", csTypes) + ">";
+            string mocSig = sname + "(" + string.Join(",", ps.Select(SignalMocType)) + ")";
+            // Connect: the runtime hands the raw argv over and each parameter is read with the
+            // same per-type rules the virtual dispatch uses (a bound class pointer is a pointer
+            // *slot*, a boxed value is the value itself, a container is Qt's and copied out).
+            // The native forwarder already skipped the return slot (moc's argv[0]), so the
+            // signal's first argument is argv[0] here - unlike the virtual-dispatch convention,
+            // where the generated wrapper builds the whole array.
+            string handler = csTypes.Count == 0
+                ? "h()"
+                : "h(" + string.Join(", ", ps.Select((p, i) => SignalRead(PType(p), i))) + ")";
+            sb.AppendLine($"        public {signalType} {Pascal(sname)}{sSuffix}Signal =>");
+            sb.AppendLine($"            new {signalType}(h => ApiRuntime.Connect(Handle, \"{mocSig}\", (argv, _) => {handler}),");
+            foreach (string line in EmitLambda(ps, mocSig))
+                sb.AppendLine("                " + line);
+            sb.AppendLine("                );");
             sb.AppendLine();
         }
 
@@ -1705,6 +1737,169 @@ public static class ApiCodeGen
             return $"{t}.FromOwnedHandle(ApiNative.Clone_{ListStem(t)}({slot}))";
         if (IsBoxed(t)) return $"{t}.FromHandle({slot})";
         return slot;
+    }
+
+    // ------------------------------------------------------------------ signals
+    // The arity classes the runtime publishes. Beyond this a signal is not worth growing them
+    // for (no Qt signal in the bound modules comes close).
+    const int MaxSignalArity = 8;
+
+    // The type the meta-object signature has to spell. Qt stores the *normalized* type
+    // (QString, QWidget*, QList<int>, Qt::Orientation) and indexOfSignal matches it literally -
+    // "const QString &" would not be found. The model type is already that spelling, which is
+    // what makes a signal's parameters readable from the model.
+    static string SignalMocType(JsonElement p) => PType(p);
+
+    // Reading one signal argument out of the argv array moc builds. Unlike a virtual's argv (which
+    // carries the argument itself), a signal's argv[i] is the *address* of the argument storage:
+    // moc hands the signal function's own parameters over by address. So a pointer parameter has
+    // to be dereferenced, while a boxed value is already the address of the value.
+    static string SignalRead(string t, int index)
+    {
+        string slot = $"Marshal.ReadIntPtr(argv, {index} * IntPtr.Size)";
+        if (t == "char*") return $"ApiRuntime.FromUtf8(Marshal.ReadIntPtr({slot}))";
+        if (IsPtr(t))
+            return IsClassPtr(t)
+                ? $"{t.Substring(0, t.Length - 1)}.FromTransientHandle(Marshal.ReadIntPtr({slot}))"
+                : $"(IntPtr)Marshal.ReadIntPtr({slot})";
+        if (t == "bool") return $"Marshal.ReadByte({slot}) != 0";
+        if (t == "int") return $"Marshal.ReadInt32({slot})";
+        if (t == "double") return $"BitConverter.Int64BitsToDouble(Marshal.ReadInt64({slot}))";
+        if (t == "float") return $"BitConverter.Int32BitsToSingle(Marshal.ReadInt32({slot}))";
+        if (IsStringT(t)) return $"ApiRuntime.ToManagedTransient({slot})";
+        if (t == "long long") return $"Marshal.ReadInt64({slot})";
+        if (t == "unsigned long long") return $"(ulong)Marshal.ReadInt64({slot})";
+        if (t == "unsigned int" || t == "unsigned long") return $"(uint)Marshal.ReadInt32({slot})";
+        if (t == "short") return $"Marshal.ReadInt16({slot})";
+        if (t == "unsigned short" || t == "char16_t") return $"({CSharpScalar(t)})Marshal.ReadInt16({slot})";
+        if (t == "long") return $"Marshal.ReadInt32({slot})";
+        if (t == "unsigned char") return $"Marshal.ReadByte({slot})";
+        if (t == "char") return $"(sbyte)Marshal.ReadByte({slot})";
+        if (IsEnum(t)) return $"({CsEnum(t)})Marshal.ReadInt32({slot})";
+        if (t == "TimeSpan") return $"TimeSpan.FromTicks(Marshal.ReadInt64({slot}) / 100)";
+        if (IsStringListT(t)) return $"ApiRuntime.ToManagedStringListTransient({slot})";
+        // A container Qt hands over belongs to Qt: copy it out without freeing it.
+        if (IsListT(t)) return $"{ListHelper(ListElem(t))}.ReadTransient({slot})";
+        if (IsAssocT(t)) return $"{AssocHelper(t)}.ReadTransient({slot})";
+        if (IsBoxed(t)) return $"{t}.FromTransientHandle({slot})";
+        return slot;
+    }
+
+    // The native argument storage a signal's emit needs, in the shape the moc-generated signal
+    // function would have built on its own stack: scalars/enums/durations by value, a pointer as
+    // a pointer variable (whose address goes into argv), a boxed value as the object itself, and
+    // a string/container as a native object built for the call.
+    static (List<string> Prelude, List<string> Pointers, List<string> Cleanup) EmitParams(List<JsonElement> ps)
+    {
+        var prelude = new List<string>();
+        var pointers = new List<string>();
+        var cleanup = new List<string>();
+        for (int i = 0; i < ps.Count; i++)
+        {
+            string t = PType(ps[i]), name = "a" + (i + 1), local = "__e" + i;
+            if (t == "char*" || IsStringT(t))
+            {
+                prelude.Add($"var {local} = ApiRuntime.NewQString({name});");
+                cleanup.Add($"ApiRuntime.FreeQString({local});");
+                pointers.Add($"(void*){local}");
+            }
+            else if (IsStringListT(t))
+            {
+                prelude.Add($"var {local} = ApiRuntime.NewStringList({name});");
+                cleanup.Add($"ApiRuntime.FreeStringList({local});");
+                pointers.Add($"(void*){local}");
+            }
+            else if (IsListT(t))
+            {
+                string helper = ListHelper(ListElem(t));
+                prelude.Add($"var {local} = {helper}.New({name});");
+                cleanup.Add($"{helper}.Free({local});");
+                pointers.Add($"(void*){local}");
+            }
+            else if (IsAssocT(t))
+            {
+                string helper = AssocHelper(t);
+                prelude.Add($"var {local} = {helper}.New({name});");
+                cleanup.Add($"{helper}.Free({local});");
+                pointers.Add($"(void*){local}");
+            }
+            else if (t == "QByteArrayView")
+            {
+                prelude.Add($"var {local} = ApiRuntime.NewByteArray({name});");
+                cleanup.Add($"ApiRuntime.FreeByteArray({local});");
+                pointers.Add($"(void*){local}");
+            }
+            else if (t == "TimeSpan")
+            {
+                prelude.Add($"long {local} = (long)({name}.Ticks * 100);");
+                pointers.Add($"&{local}");
+            }
+            else if (IsEnum(t))
+            {
+                prelude.Add($"int {local} = (int){name};");
+                pointers.Add($"&{local}");
+            }
+            else if (IsBoxed(t))
+            {
+                // By value: the wrapper's handle is the native object, and the signal function
+                // reads it while the activate call is running.
+                prelude.Add($"var {local} = {name}?.Handle ?? IntPtr.Zero;");
+                pointers.Add($"(void*){local}");
+            }
+            else if (IsPtr(t))
+            {
+                // argv[i] has to point at a pointer variable, so the parameter itself becomes one.
+                prelude.Add(IsClassPtr(t)
+                    ? $"var {local} = (void*)({name}?.Handle ?? IntPtr.Zero);"
+                    : $"var {local} = (void*){name};");
+                pointers.Add($"&{local}");
+            }
+            else
+            {
+                prelude.Add($"{ManagedType(t)} {local} = {name};");
+                pointers.Add($"&{local}");
+            }
+        }
+        return (prelude, pointers, cleanup);
+    }
+
+    // The emit half of a signal property: an arity `Action<...>` that turns the managed values
+    // into native argument storage and activates the signal.
+    static List<string> EmitLambda(List<JsonElement> ps, string mocSig)
+    {
+        var (prelude, pointers, cleanup) = EmitParams(ps);
+        var lines = new List<string>();
+        lines.Add("(" + string.Join(", ", Enumerable.Range(1, ps.Count).Select(i => "a" + i)) + ") =>");
+        lines.Add("{");
+        foreach (string line in prelude)
+            lines.Add("    " + line);
+        if (cleanup.Count > 0)
+            lines.Add("    try");
+        if (cleanup.Count > 0)
+            lines.Add("    {");
+        string ind = cleanup.Count > 0 ? "        " : "    ";
+        lines.Add(ind + "unsafe");
+        lines.Add(ind + "{");
+        if (ps.Count > 0)
+        {
+            lines.Add($"{ind}    void** __argv = stackalloc void*[{ps.Count}];");
+            for (int i = 0; i < ps.Count; i++)
+                lines.Add($"{ind}    __argv[{i}] = {pointers[i]};");
+        }
+        string args = ps.Count == 0 ? "IntPtr.Zero, 0" : $"(IntPtr)__argv, {ps.Count}";
+        lines.Add($"{ind}    ApiRuntime.Emit(Handle, \"{mocSig}\", {args});");
+        lines.Add(ind + "}");
+        if (cleanup.Count > 0)
+        {
+            lines.Add("    }");
+            lines.Add("    finally");
+            lines.Add("    {");
+            foreach (string line in cleanup)
+                lines.Add("        " + line);
+            lines.Add("    }");
+        }
+        lines.Add("}");
+        return lines;
     }
 
     // ------------------------------------------------------------------ type maps
