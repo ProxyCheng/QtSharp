@@ -33,6 +33,9 @@ static class Program
                 case "api-gallery": return WidgetsGalleryApi.Run();
                 case "api-systray": return SystemTrayApi.Run();
                 case "api-docviewer": return DocumentViewerApi.Run();
+                case "api-basicdrawing": return ApiBasicDrawingDemo.Run();
+                case "api-gradients": return ApiGradientsDemo.Run();
+                case "api-painterpaths": return ApiPainterPathsDemo.Run();
 
                 // WindowFlagsApi.cs exists but is deliberately not wired in: it dies about
                 // three runs in ten while Qt tears the process down (see its header).
@@ -42,7 +45,8 @@ static class Program
             Console.WriteLine("        api-core | api-events | api-ownership | api-custommodel | api-calculator |");
             Console.WriteLine("        api-spinboxes | api-shortcut | api-metaobject | api-shapedclock | api-sliders |");
             Console.WriteLine("        api-calendarwidget | api-menus | api-basiclayouts | api-scribble | api-gallery |");
-            Console.WriteLine("        api-systray | api-docviewer");
+            Console.WriteLine("        api-systray | api-docviewer | api-basicdrawing | api-gradients |");
+            Console.WriteLine("        api-painterpaths");
             return 0;
         }
         catch (Exception ex)
