@@ -55,6 +55,31 @@ static class Program
                 return ApiShortcutDemo.Run();
             }
 
+            if (args.Length > 0 && args[0] == "api-shapedclock")
+            {
+                return ShapedClockApi.Run();
+            }
+
+            if (args.Length > 0 && args[0] == "api-sliders")
+            {
+                return ApiSlidersDemo.Run();
+            }
+
+            if (args.Length > 0 && args[0] == "api-calendarwidget")
+            {
+                return CalendarWidgetApi.Run();
+            }
+
+            if (args.Length > 0 && args[0] == "api-menus")
+            {
+                return MenusApi.Run();
+            }
+
+            if (args.Length > 0 && args[0] == "api-basiclayouts")
+            {
+                return BasicLayoutsApi.Run();
+            }
+
 
             if (args.Length > 0 && args[0] == "api-custommodel") { return ApiCustomModelDemo.Run(); }
             if (args.Length > 0 && args[0] == "api-metaobject") { return ApiMetaObjectDemo.Run(); }
@@ -91,23 +116,16 @@ static class Program
             string which = args.Length > 0 ? args[0].ToLowerInvariant() : "all";
             QWidget window = which switch
             {
-                "sliders" => new SlidersWindow(),
-                "spinboxes" => new SpinBoxesWindow(),
+                // The legacy demos the new pipeline has fully replaced are gone: lineedits,
+                // calculator, spinboxes and shortcut are `api-lineedits` / `api-calculator` /
+                // `api-spinboxes` / `api-shortcut`, and calendarwidget, menus and basiclayouts
+                // are `api-calendarwidget` / `api-menus` / `api-basiclayouts`.
                 "windowflags" => new WindowFlagsWindow(),
-                "lineedits" => new LineEditsWindow(),
-                "shapedclock" => new ShapedClock(),
-                "calendar" => new CalendarWindow(),
                 "systray" => new SystemTrayWindow(),
                 "scribble" => new ScribbleWindow(),
-                // The Shortcut Editor used to be the legacy "shortcut" demo. It crashed when a
-                // tree node was opened - the legacy model/delegate binding frees something Qt
-                // still holds - so it now lives on the new pipeline only: `api-shortcut`.
                 "analogclock" => new AnalogClock(),
-                "calculator" => new Calculator(),
                 "gallery" => new WidgetGalleryWindow(),
                 "docviewer" => new DocumentViewerWindow(),
-                "menus" => new MenusWindow(),
-                "basiclayouts" => new BasicLayoutsDialog(),
                 _ => null,
             };
 
