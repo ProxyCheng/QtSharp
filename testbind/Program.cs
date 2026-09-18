@@ -95,6 +95,11 @@ static class Program
                 return SystemTrayApi.Run();
             }
 
+            if (args.Length > 0 && args[0] == "api-docviewer")
+            {
+                return DocumentViewerApi.Run();
+            }
+
 
             if (args.Length > 0 && args[0] == "api-custommodel") { return ApiCustomModelDemo.Run(); }
             if (args.Length > 0 && args[0] == "api-metaobject") { return ApiMetaObjectDemo.Run(); }
@@ -128,25 +133,28 @@ static class Program
                 return OwnershipTest.Run();
             }
 
-            string which = args.Length > 0 ? args[0].ToLowerInvariant() : "all";
+            string which = args.Length > 0 ? args[0].ToLowerInvariant() : "";
             QWidget window = which switch
             {
-                // The legacy demos the new pipeline has fully replaced are gone: lineedits,
-                // calculator, spinboxes and shortcut are `api-lineedits` / `api-calculator` /
-                // `api-spinboxes` / `api-shortcut`, and calendarwidget, menus and basiclayouts
-                // are `api-calendarwidget` / `api-menus` / `api-basiclayouts`.
+                // One legacy demo is left: its new-pipeline port exists (WindowFlagsApi.cs) but is
+                // parked, because it dies about 3 runs in 10 while Qt tears the process down (see
+                // its header). Every other Qt example is now the new pipeline's `api-*`, and the
+                // tiled "all" mode went with them.
                 "windowflags" => new WindowFlagsWindow(),
-                "analogclock" => new AnalogClock(),
-                "docviewer" => new DocumentViewerWindow(),
                 _ => null,
             };
 
             if (window == null)
             {
-                var demos = AllDemos.CreateAll();
-                AllDemos.ShowTiled(demos);
-                Console.WriteLine($"[OK] {demos.Count} demos shown side by side; close them to exit...");
-                return QApplication.Exec();
+                Console.WriteLine("[usage] new pipeline: api | api-analogclock | api-lineedits | api-widgets |");
+                Console.WriteLine("                    api-graphics | api-core | api-events | api-ownership |");
+                Console.WriteLine("                    api-custommodel | api-calculator | api-spinboxes | api-shortcut |");
+                Console.WriteLine("                    api-metaobject | api-shapedclock | api-sliders | api-calendarwidget |");
+                Console.WriteLine("                    api-menus | api-basiclayouts | api-scribble | api-gallery |");
+                Console.WriteLine("                    api-systray | api-docviewer");
+                Console.WriteLine("        legacy PoCs : metasig | vdispatch | own");
+                Console.WriteLine("        legacy demo : windowflags");
+                return 0;
             }
 
             window.Show();
