@@ -63,6 +63,14 @@ static class Program
                 return ApiOwnershipDemo.Run();
             }
 
+            // These two build their own QApplication through ApiRuntime as well: they used to sit
+            // below, next to the PoCs, and that made the process hold *two* applications - the
+            // legacy one here and the managed one - of which the legacy `using` disposed first.
+            if (args.Length > 0 && args[0] == "api")
+            {
+                return ApiSmokeTest.Run();
+            }
+
             using var app = new QApplication(new[] { "qtsharp-examples" });
 
             if (args.Length > 0 && args[0] == "metasig")
@@ -78,11 +86,6 @@ static class Program
             if (args.Length > 0 && args[0] == "own")
             {
                 return OwnershipTest.Run();
-            }
-
-            if (args.Length > 0 && args[0] == "api")
-            {
-                return ApiSmokeTest.Run();
             }
 
             string which = args.Length > 0 ? args[0].ToLowerInvariant() : "all";
