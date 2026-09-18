@@ -8,35 +8,14 @@
 .vs/
 
 # Vendored third-party (re-vendor as needed, see notes below)
-#   lib/       - vendored CppSharp DLLs (incl. rebuilt CppSharp.AST.dll) + clang builtin headers
-#   Qt/        - Qt 6.11 headers/libs/runtime DLLs
+#   lib/lib/clang/ - clang builtin headers, used as libClangSharp's resource dir.
+#                    Do NOT delete: ApiModel2.ResourceDir() needs it and gen.csproj copies it.
+#   Qt/            - Qt 6.11 headers/libs/runtime DLLs
 lib/
 Qt/
-
-# CppSharp source (tracked because we patch it); ignore generated bindings + artifacts
-CppSharp/bin/
-CppSharp/build/
-CppSharp/tests/
-CppSharp/Backup/
-CppSharp/.github/
-CppSharp/docs/
-CppSharp/examples/
-CppSharp/include/
-CppSharp/Sample.Cpp/
-CppSharp/Sample.Gen/
-CppSharp/src/CppParser/
 
 # Generated output
 out/
 
-# Generated binding sources (regenerate via gen/)
-testbind/QtSharp.cs
-testbind/QtSharp.Core.cs
-testbind/QtSharp.Gui.cs
-testbind/QtSharp.Widgets.cs
+# Generated binding source (regenerate via tools/regen-api.ps1)
 testbind/QtSharp.Api.cs
-testbind/Std.cs
-testbind/GeneratedSignals.cs
-
-# Generated signal glue (regenerate via gen/)
-native/QtSharp_signals.cpp
