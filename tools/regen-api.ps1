@@ -129,6 +129,28 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-metaobject
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+# The window-shape example: a frameless translucent clock with a round mask and mouse dragging.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-shapedclock
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The sliders example: sliders/scroll bar/dial groups whose layout direction follows the resize.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-sliders
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The calendar widget example: preview/general options/dates/text formats, with the real
+# dateChanged signals the legacy binding could not use.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-calendarwidget
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The menus example: menu bar, exclusive alignment actions, status tips and a context menu.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-menus
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The basic layouts example: menu bar in a layout, horizontal/grid/form groups, a scroll area
+# and a button box.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-basiclayouts
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 # The sample a user starts from: a project outside this repository's test app that only imports
 # QtSharp.Api.props. Covered here so the "write your own UI" path cannot rot.
 Write-Host "=== [6] Build + run the standalone sample ==="
