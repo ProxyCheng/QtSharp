@@ -435,6 +435,20 @@ namespace QtSharp.Api
             }
             AppDomain.CurrentDomain.ProcessExit += (_, _) =>
             {
+                // Qt is torn down first, and deliberately while managed code is still callable:
+                // destroying the application destroys the widgets Qt still owns, which runs their
+                // vtable hooks and signal connections back into C#. Doing it later - from a native
+                // static destructor - happens after the CLR is gone, which either trips
+                // "Attempt to execute managed code after the .NET runtime thread state has been
+                // destroyed" or runs Qt's teardown with its platform integration already gone.
+                try
+                {
+                    AppDestroy();
+                }
+                catch
+                {
+                    // Nothing useful can be reported while the process is exiting.
+                }
                 shuttingDown = true;
                 SetDestroyedCallback(IntPtr.Zero);
             };
@@ -784,6 +798,19 @@ namespace QtSharp.Api
 
         public static void StartApplication() => AppCreate();
 
+        /// <summary>
+        /// Builds the process's one Qt application object from a command line, and returns its
+        /// handle. <paramref name="kind"/> selects QCoreApplication (0), QGuiApplication (1) or
+        /// QApplication (2). A second call returns the application that already exists rather than
+        /// making another one - Qt aborts on a second QApplication. The strings are copied into
+        /// native storage that lives as long as the process, because Qt keeps the argv pointers.
+        /// </summary>
+        public static IntPtr CreateApplication(string[] args, int flags = 0, int kind = 2)
+        {
+            var argv = args ?? Array.Empty<string>();
+            return AppCreateArgs(argv, argv.Length, flags, kind);
+        }
+
         public static int Exec() => AppExec();
 
         public static void Quit() => AppQuit();
@@ -1037,11 +1064,21 @@ namespace QtSharp.Api
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_app_create", CallingConvention = CallingConvention.Cdecl)]
         private static extern int AppCreate();
 
+        // The marshaller builds a char*[] for the duration of the call; the native side copies
+        // every string into process-lifetime storage before returning.
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_app_create_args", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr AppCreateArgs(
+            [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] argv,
+            int argc, int flags, int kind);
+
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_app_exec", CallingConvention = CallingConvention.Cdecl)]
         private static extern int AppExec();
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_app_quit", CallingConvention = CallingConvention.Cdecl)]
         private static extern void AppQuit();
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_app_destroy", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void AppDestroy();
     }
 }
 

@@ -11,11 +11,13 @@
 #include <qbytearray.h>
 #include <qstring.h>
 #include <qcoreapplication.h>
+#include <qguiapplication.h>
 #include <qapplication.h>
 #include <private/qobject_p.h>
 #include <private/qmetaobject_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include <cstring>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -466,16 +468,126 @@ extern "C" __declspec(dllexport) int qs_api_probe_key_press(void* widget, int ke
 }
 
 // ------------------------------------------------------------------ application bootstrap
-// QApplication's constructor takes int&/char**, which the model deliberately does not
-// describe (it cannot be marshalled meaningfully), so starting the event loop is a runtime
-// concern rather than a generated one.
+// QApplication's constructor is QApplication(int &argc, char **argv, int flags): an int Qt
+// rewrites and an array of pointers it keeps for the whole process. Neither can come from a
+// per-call marshalling layer (the model has no vocabulary for char** at all, and a temporary
+// argv would dangle the moment the call returns), so the command line is a runtime concern -
+// the same hand-written conversion sip/shiboken make for this one signature. The strings are
+// copied into process-lifetime storage, and the application object is built exactly once: a
+// second call returns the one that exists, which is what Qt itself enforces.
+namespace {
+// The command line, copied out of the managed strings. This is initialized before the application
+// object is built, so it is torn down *after* it - the argv pointers stay valid for as long as
+// anything can read them.
+struct QsApiArguments
+{
+    int argc = 0;
+    std::vector<QByteArray> strings;
+    std::vector<char*> argv;
+};
+
+QsApiArguments& Arguments()
+{
+    static QsApiArguments storage;
+    return storage;
+}
+
+// Plain pointers with trivial destructors, so nothing is registered with the CRT's exit sequence:
+// Qt has to be torn down while the .NET runtime can still answer (see qs_api_app_destroy), and a
+// static destructor would run after the CLR is gone.
+QCoreApplication*& Instance()
+{
+    static QCoreApplication* instance = nullptr;
+    return instance;
+}
+
+// Whether the application is ours to destroy. A host can already have built one - the legacy
+// pipeline in the same process, or a C++ program embedding the runtime - and Qt allows only one.
+bool& OwnsInstance()
+{
+    static bool owns = false;
+    return owns;
+}
+
+QCoreApplication* BuildApplication(const char* const* args, int count, int flags, int kind)
+{
+    // Qt insists on at least the program name being present.
+    static const char* fallback[] = { "qtsharp" };
+    if (count <= 0)
+    {
+        args = fallback;
+        count = 1;
+    }
+
+    auto& storage = Arguments();
+    storage.argc = count;
+    storage.strings.reserve(size_t(count));
+    for (int i = 0; i < count; ++i)
+        storage.strings.emplace_back(args[i] ? args[i] : "");
+    storage.argv.reserve(size_t(count) + 1);
+    for (QByteArray& argument : storage.strings)
+        storage.argv.push_back(argument.data());
+    storage.argv.push_back(nullptr);
+
+    switch (kind)
+    {
+    case 0:
+        return new QCoreApplication(storage.argc, storage.argv.data(), flags);
+    case 1:
+        return new QGuiApplication(storage.argc, storage.argv.data(), flags);
+    default:
+        // The flags parameter is a plain int in Qt's declaration (defaulting to
+        // Qt::ApplicationFlags), so it passes straight through.
+        return new QApplication(storage.argc, storage.argv.data(), flags);
+    }
+}
+
+QCoreApplication* Application(const char* const* args, int count, int flags, int kind)
+{
+    if (Instance())
+        return Instance();
+    // Adopt an application the host already built instead of constructing a second one: Qt has
+    // exactly one, and the second constructor silently takes over QCoreApplication::instance()
+    // while the first object stays alive - which then tears the process down twice.
+    if (QCoreApplication* existing = QCoreApplication::instance())
+    {
+        Instance() = existing;
+        return existing;
+    }
+    Instance() = BuildApplication(args, count, flags, kind);
+    OwnsInstance() = true;
+    return Instance();
+}
+} // namespace
+
+// kind: 0 = QCoreApplication, 1 = QGuiApplication, 2 = QApplication (the default).
+extern "C" __declspec(dllexport) void* qs_api_app_create_args(
+    const char* const* args, int count, int flags, int kind)
+{
+    return Application(args, count, flags, kind);
+}
+
+// Tears the application down, and with it every widget Qt still owns. The managed runtime calls
+// this from its ProcessExit handler, i.e. while managed code can still be entered: Qt's own
+// teardown destroys objects whose vtable hooks and signal connections point back into managed
+// code, and doing that from a DLL static destructor (after the CLR is gone) trips
+// "Attempt to execute managed code after the .NET runtime thread state has been destroyed" - or,
+// if that step is skipped entirely, leaves Qt's later static destructors running with a half
+// destroyed platform integration. This is the explicit equivalent of Qt's own `QApplication app;`
+// local in main, which is likewise destroyed before static teardown.
+extern "C" __declspec(dllexport) void qs_api_app_destroy()
+{
+    // Only an application this runtime built, and only while Qt still considers it *the*
+    // application: a host that built its own has already replaced (or will destroy) it.
+    if (Instance() && OwnsInstance() && QCoreApplication::instance() == Instance())
+        delete Instance();
+    Instance() = nullptr;
+    OwnsInstance() = false;
+}
+
 extern "C" __declspec(dllexport) int qs_api_app_create()
 {
-    static int argc = 1;
-    static char arg0[] = "qtsharp";
-    static char* argv[] = { arg0, nullptr };
-    static QApplication app(argc, argv);
-    Q_UNUSED(app);
+    qs_api_app_create_args(nullptr, 0, 0, 2);
     return 0;
 }
 
@@ -488,3 +600,5 @@ extern "C" __declspec(dllexport) void qs_api_app_quit()
 {
     QCoreApplication::quit();
 }
+
+
