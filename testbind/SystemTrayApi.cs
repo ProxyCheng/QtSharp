@@ -551,6 +551,14 @@ public static class SystemTrayApi
         window.MinimizeAction.Trigger();
         Check(!window.IsVisible(), "triggering the minimize action hides the window (its handler ran)");
 
+        // Leave the shell nothing to talk to. A live QSystemTrayIcon (with a balloon message the
+        // shell still owns) makes the process teardown unreliable: the runtime destroys the
+        // application at process exit, and Windows can then dispatch a message to a window whose
+        // Qt-side data is already gone, which shows up as 0xC000041D. Hiding the icon and the
+        // window first keeps the shutdown path the plain one every other demo takes.
+        tray.Visible = false;
+        window.Hide();
+
         Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
         return failures == 0 ? 0 : 1;
     }

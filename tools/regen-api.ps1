@@ -163,6 +163,12 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-systray
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+# The document viewer demo: menus/tool bar/splitter skeleton, QSettings-backed working directory
+# and recent files, and the text/JSON/image viewers (no PDF or printing - those modules are not
+# shipped, and the official native viewer plugins cannot be loaded from managed code).
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-docviewer
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 # The sample a user starts from: a project outside this repository's test app that only imports
 # QtSharp.Api.props. Covered here so the "write your own UI" path cannot rot.
 Write-Host "=== [6] Build + run the standalone sample ==="
