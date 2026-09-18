@@ -1,10 +1,7 @@
 param(
     [switch]$SkipExtract,
-    [switch]$Adopt,
-    # The CppSharp extractor is kept only as a cross-check while its replacement settles in.
-    [switch]$Extractor1
+    [switch]$Adopt
 )
-$extractor = if ($Extractor1) { "extract" } else { "extract2" }
 $ErrorActionPreference = "Continue"
 $root = "D:\QtSharp"
 $genBin = "$root\gen\bin\Release\net10.0\win-x64"
@@ -14,9 +11,9 @@ dotnet build "$root\gen\gen.csproj" -c Release --nologo | Out-Host
 if ($LASTEXITCODE -ne 0) { Write-Host "gen build failed"; exit 1 }
 
 if (-not $SkipExtract) {
-    Write-Host "=== [2] Extract model (${extractor}: parse-only, one translation unit) ==="
+    Write-Host "=== [2] Extract model (extract2: parse-only, one translation unit) ==="
     Push-Location $genBin
-    & "$genBin\qtgen.exe" $extractor "$root\out\qtsharp.api.json.new" *> "$root\out\extract.log"
+    & "$genBin\qtgen.exe" extract2 "$root\out\qtsharp.api.json.new" *> "$root\out\extract.log"
     $rc = $LASTEXITCODE
     Pop-Location
     if ($rc -ne 0) { Write-Host "extract failed (exit=$rc)"; Get-Content "$root\out\extract.log" | Select-String "EXCEPTION|FAIL" | Select-Object -First 3; exit 1 }

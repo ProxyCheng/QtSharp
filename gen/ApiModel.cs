@@ -127,16 +127,16 @@ public static class ApiTypes
 
 // Step 1 of the product pipeline: a small, *checked-in*, normalized API model.
 //
-//   extract : root headers -> clang AST  ->  model/qtsharp.api.json   (parse-only, deterministic)
-//   codegen : qtsharp.api.json           ->  C# bindings + C++ wrapper (pure function)
+//   extract2 : root headers -> clang AST ->  model/qtsharp.api.json   (parse-only, deterministic)
+//   codegen  : qtsharp.api.json          ->  C# bindings + C++ wrapper (pure function)
 //
 // The point of the model is that codegen no longer reads raw Qt headers itself, so it is
 // a pure function of a versioned artifact: the same model always produces byte-identical
 // output, and CI can enforce "regenerate -> diff must be empty".
-// The class is split in two files: ApiModel.cs reads the AST through CppSharp, ApiModel2.cs
-// through libclang/ClangSharp. Everything downstream of "the AST has been read" - the model
-// shape, the ordering rules, the serializer - is shared, so the two can be diffed byte for
-// byte while the CppSharp side is being retired.
+// The class is split in two files: ApiModel.cs holds the model shape, the roots table, the
+// vocabulary, the header scanners and the serializer; ApiModel2.cs reads the AST through
+// libclang/ClangSharp (the `extract2` command). Everything downstream of "the AST has been
+// read" is shared.
 public static partial class ApiModel
 {
     public const int FormatVersion = 2;
@@ -733,11 +733,11 @@ public static partial class ApiModel
 
     // Names that only ever occur as a pointer and are deliberately left opaque (IntPtr).
     //
-    // This list is the *legacy* extractor's: QInputEvent, QKeyEvent and QWheelEvent are here
-    // because adding them to a CppSharp parse made its AST conversion irreproducible (verified by
-    // bisection - a chunk containing QInputEvent never produced the same model twice). The clang
-    // front end (extract2) does not use this list at all and binds the whole event family as
-    // ordinary roots, which is why a managed keyPressEvent can read a key code now.
+    // The extractor does not consult this list to decide what to bind; the roots do that (the whole
+    // input-event family is bound as ordinary roots, which is why a managed keyPressEvent can read a
+    // key code). What keeps this list alive is BuildVocabulary: a spelling that appears here is
+    // still a supported type, so a pointer to one of these can sit in an otherwise-bound signature
+    // (QTimerEvent*, QChildEvent*, ...) instead of disqualifying the declaration.
     static readonly string[] OpaquePointers =
     {
         "QTimerEvent", "QChildEvent", "QEnterEvent", "QInputEvent", "QKeyEvent", "QWheelEvent",
@@ -873,9 +873,6 @@ public static partial class ApiModel
         }
     }
 
-    // Diagnostic: print exactly what configuration CppSharp hands to clang. A replacement
-    // front end has to reproduce this, so the list is worth being able to ask for
-    // (`qtgen dumpopts`) instead of reverse engineering it from the CppSharp sources.
     static void WriteSignals(StringBuilder sb, List<Program.SignalInfo> classSignals)
     {
         sb.Append("      \"signals\": [\n");
@@ -890,10 +887,6 @@ public static partial class ApiModel
         sb.Append("      ]\n");
     }
 
-    // One signal parameter. The clang extractor publishes the model type and the C++ spelling it
-    // read out of the AST - that is what makes a bound class pointer, a boxed value (QModelIndex),
-    // an enum or a container expressible in a signal. Without them (the legacy extractor) the old
-    // scalar-only mapping is used so that path still produces a model.
     // One signal parameter, as the model spells it. The clang front end reads it out of the AST,
     // and that same spelling is what Qt stores in its meta-object (QString, QWidget*,
     // Qt::Orientation) - which is why a signal needs no separate "cpp" field.
