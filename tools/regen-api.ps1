@@ -151,6 +151,18 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-basiclayouts
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+# The scribble example: an off-screen QImage paint area with File/Options/Help menus and Save As.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-scribble
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The widget gallery: the whole widget surface behind a tree of groups, tabs and item views.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-gallery
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The system tray example: tray icon/menu/actions, balloon messages and the close-to-tray logic.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-systray
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 # The sample a user starts from: a project outside this repository's test app that only imports
 # QtSharp.Api.props. Covered here so the "write your own UI" path cannot rot.
 Write-Host "=== [6] Build + run the standalone sample ==="
