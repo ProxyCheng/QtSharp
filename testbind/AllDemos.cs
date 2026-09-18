@@ -13,9 +13,6 @@ public static class AllDemos
         {
             new AnalogClock(),
             new DocumentViewerWindow(),
-            new ScribbleWindow(),
-            new SystemTrayWindow(),
-            new WidgetGalleryWindow(),
             new WindowFlagsWindow(),
         };
     }
