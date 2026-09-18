@@ -25,6 +25,8 @@
 
   <ItemGroup>
     <Compile Include="$(QtSharpRoot)runtime\ApiRuntime.cs" />
+    <!-- The hand-written command-line constructors of QCoreApplication/QGuiApplication/QApplication. -->
+    <Compile Include="$(QtSharpRoot)runtime\ApiApplication.cs" />
     <Compile Include="$(QtSharpApiDir)\QtSharp.Api.cs" />
   </ItemGroup>
 
