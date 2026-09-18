@@ -166,6 +166,21 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-docviewer
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+# The basic drawing example: thirteen shapes drawn through QPainter with pen/brush/antialiasing/
+# transformation settings, asserted on the pixels they leave behind.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-basicdrawing
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The gradients example: QLinearGradient/QRadialGradient/QConicalGradient, their stops, the three
+# spread modes and the QGradient::Preset table.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-gradients
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The painter paths example: nine hand-built QPainterPath objects (arcs, cubics, text outlines, a
+# pentagram), the fill rules and the gradient fill of the official RenderArea.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-painterpaths
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 # The sample a user starts from: a project outside this repository's test app that only imports
 # QtSharp.Api.props. Covered here so the "write your own UI" path cannot rot.
 Write-Host "=== [6] Build + run the standalone sample ==="
