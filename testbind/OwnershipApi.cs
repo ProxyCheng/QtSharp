@@ -172,7 +172,7 @@ public static class ApiOwnershipDemo
         // answered "no release path" for exactly the classes a program creates and should release.
         var timer = new QTimer();
         bool timerDestroyed = false;
-        ApiRuntime.Connect(timer.Handle, "destroyed()", _ => timerDestroyed = true);
+        ApiRuntime.Connect(timer.Handle, "destroyed()", (_, _) => timerDestroyed = true);
         Check(timer.Parent() == null, "a QTimer we create has no parent");
         timer.Dispose();
         Check(timerDestroyed && ThrowsOnUse(() => timer.Interval.ToString()),
@@ -182,7 +182,7 @@ public static class ApiOwnershipDemo
         var owner = new QObject();
         var ownedTimer = new QTimer(owner);
         bool ownedDestroyed = false;
-        ApiRuntime.Connect(ownedTimer.Handle, "destroyed()", _ => ownedDestroyed = true);
+        ApiRuntime.Connect(ownedTimer.Handle, "destroyed()", (_, _) => ownedDestroyed = true);
         int childrenBeforeDispose = owner.Children().Length;
         ownedTimer.Dispose();
         Check(!ownedDestroyed && owner.Children().Length == childrenBeforeDispose,

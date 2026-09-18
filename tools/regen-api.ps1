@@ -123,6 +123,12 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-shortcut
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+# Signals and properties declared in C# itself (the pyqtSignal/Property equivalent): the runtime
+# builds a meta-object for the managed subclass, so indexOfSignal finds it, connect() works and
+# QObject::property reaches the C# accessors.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-metaobject
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 # The sample a user starts from: a project outside this repository's test app that only imports
 # QtSharp.Api.props. Covered here so the "write your own UI" path cannot rot.
 Write-Host "=== [6] Build + run the standalone sample ==="

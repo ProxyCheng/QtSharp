@@ -57,6 +57,7 @@ static class Program
 
 
             if (args.Length > 0 && args[0] == "api-custommodel") { return ApiCustomModelDemo.Run(); }
+            if (args.Length > 0 && args[0] == "api-metaobject") { return ApiMetaObjectDemo.Run(); }
             if (args.Length > 0 && args[0] == "api-ownership")
             {
                 return ApiOwnershipDemo.Run();
