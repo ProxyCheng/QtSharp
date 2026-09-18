@@ -1,2 +1,0 @@
-SetupExternalManagedProject("CppSharp.Runtime")
-
