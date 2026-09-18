@@ -26,7 +26,7 @@
 | 产品化第 1 步:model(入库)+ codegen | ✅ model **逐字节可复现**、codegen 纯函数(两次一致) |
 | **前端迁移(已决策)** | ✅ **已完成**:`qtgen extract2`(ClangSharp)取代 CppSharp 成为默认前端,~2.5 秒产出**逐字节一致**的 model;原 44 类 model 复刻 **1472/1472** 条事实(见"路线 A 可行性验证"一节) |
 | **两/新旧 demo 都在跑** | ✅ 新链路 **12 个 demo** 全进门禁,共 **347 项断言**(`api` 6 / `api-analogclock` 10 / `api-lineedits` 9 / `api-widgets` 85 / `api-graphics` 9 / `api-core` 108 / `api-events` 22 / `api-ownership` 24 / `api-custommodel` 19 / `api-calculator` 12 / `api-spinboxes` 25 / `api-shortcut` 18),外加 **`samples/hello`**(独立工程,只 `Import` 一个 props 文件)也被门禁 build+run;旧链路现在是 **14 个** demo(`shortcut` 已删,见"㉑") |
-| **覆盖面** | 🚧 **445 类 / 9523 方法 / 858 虚函数 / 444 枚举 / 801 `Q_PROPERTY` 属性 / 266 信号**(QtWidgets 184 / QtGui 136 / QtCore 125)。**输入事件整族已绑**(`QKeyEvent`/`QWheelEvent`/`QDrag*`/`QDropEvent`/`QTabletEvent`/`QTouchEvent`…,见"⑲"):托管 `keyPressEvent` 现在**读得到按键码**。**QtCore batch 3**(事件循环 / `QBuffer` / `QMetaProperty`/`QMetaEnum` / 哈希 / 正则匹配 / `QUrlQuery` / 排序 / mime / 文件监视 / 共享内存 / 平台表)**与富文本整族**(`QTextFormat` 及其派生 / `QAbstractTextDocumentLayout` / `QTextLine` …)已入。**托管子类能写自定义 `QAbstractTableModel`/`QStyledItemDelegate`**(见"⑮")。**Qt 删除对象后访问包装器抛 `ObjectDisposedException`**(见"⑰")。**类型类别**:`const char*`、`QList<T>`、`QStringList`、`QMap`/`QHash`→`Dictionary`、`QBindable<T>`、`QByteArrayView`/`const uchar*`→`byte[]`、`void*`→`IntPtr`、`QStringView`/`QAnyStringView`、`std::chrono`→`TimeSpan`、out 参数、非 const `QString&`→`ref string`。剩 `QList<std::pair<...>>`(6)、`QFont::Tag`(8)、`QLatin1String`(15)等低收益项(见"⑨/⑩/⑲") |
+| **覆盖面** | 🚧 **445 类 / 9523 方法 / 858 虚函数 / 448 枚举 / 801 `Q_PROPERTY` 属性 / 428 信号**(QtWidgets 184 / QtGui 136 / QtCore 125)。**信号全类型可连、可 `Emit`,且托管类能在 C# 里声明自己的信号/属性**(`QMetaSignal`/`QMetaProperty` + 运行期 meta-object,见"㉒")。**输入事件整族已绑**(`QKeyEvent`/`QWheelEvent`/`QDrag*`/`QDropEvent`/`QTabletEvent`/`QTouchEvent`…,见"⑲"):托管 `keyPressEvent` 现在**读得到按键码**。**QtCore batch 3**(事件循环 / `QBuffer` / `QMetaProperty`/`QMetaEnum` / 哈希 / 正则匹配 / `QUrlQuery` / 排序 / mime / 文件监视 / 共享内存 / 平台表)**与富文本整族**(`QTextFormat` 及其派生 / `QAbstractTextDocumentLayout` / `QTextLine` …)已入。**托管子类能写自定义 `QAbstractTableModel`/`QStyledItemDelegate`**(见"⑮")。**Qt 删除对象后访问包装器抛 `ObjectDisposedException`**(见"⑰")。**类型类别**:`const char*`、`QList<T>`、`QStringList`、`QMap`/`QHash`→`Dictionary`、`QBindable<T>`、`QByteArrayView`/`const uchar*`→`byte[]`、`void*`→`IntPtr`、`QStringView`/`QAnyStringView`、`std::chrono`→`TimeSpan`、out 参数、非 const `QString&`→`ref string`。剩 `QList<std::pair<...>>`(6)、`QFont::Tag`(8)、`QLatin1String`(15)等低收益项(见"⑨/⑩/⑲") |
 
 ## 关键背景
 - 仓库:`D:\QtSharp`(QtSharp + vendored CppSharp)
@@ -354,7 +354,33 @@ clangprobe --dump CXCursor CXType clang
 - **`ApiRuntime.SendMousePress` 现在在 `Exec()` 之前发**(`api-analogclock`):往一个已经 `quit()` 的应用里投递鼠标事件的返回不可靠(Qt 自己的 dispatch 会看应用状态),表现为偶发失败 —— 和绑定无关。
 - **环境相关的 SKIP**:`QClipboard` 是单所有者资源,别的进程占着时 `setText` 静默失败、读回空串(PowerShell 自己的 `Set-Clipboard` 同时也会报错);`QClipboard::error()` 在 **Qt 6.11 已经不存在**,没法查错误码。`api-core` 因此把剪贴板往返改成**读回非空才断言、否则打 `[SKIP]`**(实测用户机器上就遇到了这个状态)。
 - 验收:model 逐字节一致、codegen 两次一致、**12 个 demo + sample + 3 个 PoC 全 PASS**(347 项断言);旧链路 14 个 demo 各存活 9 秒 + all-mode 12 秒无崩溃。
-- **下一步(㉑ 暴露出的最大缺口)**:**信号是"只能 connect、不能 emit"**。两层要补:①**抽取器**还在用 legacy 的 `Program.MapSignalType` 过滤信号(它只认 bool/int/qint64/QString/QStringList…),于是参数带非标量的信号被**整个丢掉**,而且**同名方法也一起被 `allSignalNames` 排除**(`QAbstractItemDelegate::commitData(QWidget*)`/`closeEditor`/`sizeHintChanged`、`QTreeView::expanded(QModelIndex)` 这类全没了 —— 换成"参数在 model 词汇表里就收",并按 `RawType` 写回带 `*` 的类型);②**运行时 + codegen 提供 emit**(`QMetaMethod::invoke`),托管委托才能像官方那样在 `editingFinished` 里 `commitData(editor); closeEditor(editor);`(`QSignal<T>` 目前只有 `Connect`)。
+- **下一步(㉑ 暴露出的最大缺口)**:已由 ㉒ 完成。
+
+**㉒ 本轮完成:信号的"收"与"发" + **C# 自己声明 Signal/Property**(PyQt/PySide 的 `pyqtSignal`/`Property` 对等物)**
+一句话:信号从"只能连标量"变成**全类型可连、可发**,并且**托管类可以在 C# 里声明自己的信号和属性**,运行期用 `QMetaObjectBuilder` 生成 meta-object 装到对象上。
+- **① 信号采集换成"头文件扫描定位 + AST 取参数"**(`gen/ApiModel2.cs` 的 `SignalFactsOf`):`Q_SIGNALS` 在 clang 里只展开成 `public`,没有可识别的痕迹,所以**哪些声明是信号**仍由头文件扫描决定;但**参数类型改从 AST 的 `FnFact`/`ParamFact` 拿** —— 于是类指针(`commitData(QWidget*)`)、boxed 值(`sizeHintChanged(QModelIndex)`)、枚举(`closeEditor(..., EndEditHint)`)、容器(`dataChanged(..., QList<int>)`)**全都能进信号**,而旧规则只有 bool/int/qint64/QString/QStringList。
+  - **moc 签名 = model 类型**,**不是** clang 拼写!实测 `indexOfSignal("objectNameChanged(const QString &)")` = **-1**,而 `"objectNameChanged(QString)"` = 2;`"destroyed(QObject *)"` = -1,`"destroyed(QObject*)"` = 0。`QMetaObject::normalizedSignature` 在 Qt 6.11 **不会**去掉 `const`/`&`/空格,而 moc 存的就是规范化后的名字(`Qt::Orientation`/`QAbstractItemDelegate::EndEditHint` 是**限定名**)。所以 model 的 `type` 直接当签名用,信号参数**不需要** `cpp` 字段。
+  - 结果:**266 → 428 个信号**(+164),只"少"了 2 条(`QIODevice::bytesWritten` 的 `qint64` 从旧映射的 `long` 变成正确的 `long long`)。枚举表 444 → 448(信号带进来的枚举第一次入库)。
+  - 同名重载信号(QCompleter 的 `activated(QString)` / `activated(QModelIndex)`)按方法的 2,3,… 后缀规则发成 `ActivatedSignal` / `Activated2Signal`。
+- **② `Emit`**:native `qs_api_emit(sender, signature, args, argc)`。**关键坑**:`indexOfSignal` 给的是**绝对方法索引**,而 `activate` 要的是**信号序号**;两者不同(slot 与 signal 共用方法表),`index - methodOffset()` 会**静默激活错误的信号**。正解是 `QMetaObject::metatype` 那套:`QMetaObjectPrivate::signalIndex(method) - QMetaObjectPrivate::signalOffset(metaobject)`,再 `QMetaObject::activate(object, metaObject, local, argv)`。argv 约定是 moc 自己的(`argv[0]` = 返回槽,总是 nullptr;`argv[i]` 指向第 i 个参数的**存储**)。
+- **③ 信号从 `QSignal<Action<...>>` 改成**按参数个数**的 `QSignal` / `QSignal<T1>` / … / `QSignal<T1..T8>`**:`Connect(Action<T1,T2>)` 与 **`Emit(T1,T2)`** 都是强类型。codegen 为每个信号发两个闭包:connect 侧用 `SignalRead(t, i)` 按类型解码 argv(**注意信号 argv 已经跳过返回槽,索引从 0 开始** —— 与虚函数的 argv 约定差一位,第一版写成 `i+1` 表现为"字符串信号拿到空串"),emit 侧用 `EmitParams`/`EmitLambda` 造出 moc 信号函数栈上那样的实参存储(`stackalloc void*[n]` + `&local`,字符串/容器走已有的 New/Free)。`ApiSmoke` 新增 3 项:emit 触发 handler、字符串参数、**类指针 + 枚举**两个参数各按自己的 ABI 走。
+  - `ApiRuntime.Connect` 的签名从 `Action<object[]>` 换成 `SignalSlot(IntPtr argv, IntPtr typeIds)`,旧的手写调用点(`OwnershipApi` 两处)改成 `(_, _) =>`。
+- **④ C# 自己声明信号/属性(本轮的重头)**:
+  ```csharp
+  public class Counter : QObject
+  {
+      public static readonly QMetaSignal<int> ValueChanged = new("valueChanged");
+      public static readonly QMetaProperty<int> Value = new("value", o => ((Counter)o)._value, (o, v) => ((Counter)o)._value = v);
+      public void Bump() { _value++; ValueChanged.Emit(this, _value); }
+  }
+  ```
+  - native `qs_api_attach_metaobject`:用 **`QMetaObjectBuilder`**(私有但随 Qt 发布)+ `QAbstractDynamicMetaObject` 建一张 meta-object 并装到对象上(`QObjectPrivate::get(obj)->metaObject = ...`);`toMetaObject()` 的 `QMetaObject` 用 `memcpy` 拷进动态对象的 `QMetaObject` 基类(它自己的字符串数据要**保活**,按"成员清单"缓存,进程内共享)。属性读写由 `metaCall` 里 `id >= base->propertyCount()` 的分支转给托管的 `[UnmanagedCallersOnly]` 回调(值就在 `args[0]`,和 moc 的 `void *_v = _a[0]` 一致)。
+  - **两个坑**:①`signals`/`slots` 是 Qt 的宏(`public`),参数名不能叫这个(C2143);②**不要用 `QMetaObjectBuilder(base)` 拷贝原型** —— 它把基类自己的方法/属性抄一份、`superClass` 设成基类的基类,结果 `indexOfSignal` 把新信号认成 **slot**(实测:1 个新信号是 slot、3 个里前两个是 signal)。正解是**空 builder + `setClassName` + `setSuperClass(base)` + 只加自己的成员**(`methodOffset` 由 `superClass()->methodCount()` 推出,正好和 moc 一致)。
+  - 托管侧 `ApiRuntime.AttachMetaObject(this)` 由**每个生成的 QObject 构造函数**调用(只对 `DerivesFromQObject` 的类发):反射 `GetType()` 的静态字段(`QMetaSignalBase`/`QMetaPropertyBase`,含继承),按类型缓存 spec,没有声明的类只是一次字典查询。生成的 root 类新增 `IQtHandle`(让运行期能把绑定类当指针 marshalling,靠反射 `FromHandle`/`FromTransientHandle`)。
+  - 支持的成员类型:标量、`string`(`QString`)、枚举(`Qt::ItemDataRole` 这种限定名)、绑定类指针;`MetaType.QtName` 负责 C# 类型 → Qt 类型名(嵌套枚举用 `DeclaringType.Name + "::" + Name`)。已知限制:**boxed 值类型(如 `QModelIndex`)按指针处理**(`QMetaProperty<QModelIndex>` 会得到 `QModelIndex*`);`QMetaSignal` 的声明必须是 **static 字段**(实例字段在基类构造函数跑 `AttachMetaObject` 时还没赋值),所以用法是 `Counter.ValueChanged.Emit(this, 1)` 而不是 `this.ValueChanged.Emit(1)`。
+- **新 demo `testapp api-metaobject`**(`testbind/MetaObjectApi.cs`,14 项断言,已进门禁):meta-object 的 `className` 是托管类名、声明的信号/属性在表里、Qt 继承来的信号还在;0/1/2 参数与类指针信号的 Connect+Emit;`setProperty` 打到 C# setter、`property()` 读回;C# 子类继承声明;未声明成员的生成类完全不受影响。
+- 验收:model **逐字节可复现且与入库一致**(`A1CFC453…`,445 类 / 448 枚举 / **428 信号**)、codegen 两次一致、native+C# 编译、**13 个 demo + sample + 3 个 PoC 全 PASS**(比上轮多 14 项断言)。
+- **已知遗留**:`QMetaSignalBase`/`QMetaProperty` 只有 0–4 个参数的 arity(超过 4 个参数的用户信号暂不支持);动态 meta-object 的 `QMetaObject*` 进程内不释放(每个"成员清单"一个,可接受);属性回调不支持 `QVariant`/容器/boxed 值类型。
 
 ### 解析配置清单(CppSharp 实际传给 clang 的东西 —— 已 dump,`qtgen dumpopts`)
 来源:`gen/ApiModel.cs` 的 `ModelLibrary.Setup` + `QtLibrary.QtIncludeRoot` + `CppSharp.Parser.ParserOptions.SetupMSVC`。
@@ -380,7 +406,7 @@ BuiltinsDir = <assemblies>\lib\clang\19\include
 - **方法**:public、非 virtual、非 operator、非析构、非构造;`static` 标志;参数列表
 - **虚函数**:在 `VirtualAllow` 白名单里的虚函数(只要**本类声明的**;链由 codegen 合并)
 - **枚举**:限定名(`Qt::X` / `QColor::Spec`)、项+值、`QFlags` typedef(要用 typedef 名,并带底层枚举的 items)
-- **信号**:仍然是**正则扫头文件**(`Program.ScanSignals`),与 clang 无关,原样保留
+- **信号**:**哪些声明是信号**由正则扫头文件决定(`Program.ScanSignals`;`Q_SIGNALS` 在 clang 里只剩 `public`,没有可识别痕迹),**参数类型从 AST 取**(`ApiModel2.SignalFactsOf`,复用 `FnFact`/`ParamFact`),见"㉒"
 - **类型词汇表/规范化**:保持现在 `Normalize`/`Supported` 的语义(标量、`QString`、`int*` 只收 const、`Foo*`、按值 `Foo` → boxed、`X::Y` 枚举、`QFlags` typedef);新前端的优势是可以**直接用 clang 的类型拼写字符串**,不用再玩 `Desugar()`/身份比较
 
 ### 新前端**不该**继承的东西(这些正是脆弱源)
@@ -399,7 +425,7 @@ CppSharp 替我们解决了一个不小的坑:**Qt 头的 MSVC 兼容解析**(`-
 ## 下一 agent 的第一件事:四条轴的落地路线(2026-09-17,勘察已完成)
 > 用户已决定**四条轴全做**。已经用 4 个并行子 agent 做完**只读勘察**,下面是可以直接照做的方案摘要;完整数字见各自的勘察结论(本节的数字都是实测)。
 > **进度:四条轴(A1/A2/B/C/D)+ QtCore batch 1/2/3 + 输入事件整族 + 富文本整族 + 托管树模型(见"⑬…㉑")。剩下的低收益项:`QDebug`(入口全是自由函数/`operator<<`)、`QLatin1String`(9,需要 Latin-1 转换)、`QFont::Tag`(8,嵌套类)、`QList<std::pair<...>>`(6,pair 元素类别)、`QMetaObject::invokeMethod`(`QGenericArgument`,11)与 `QMetaObject::Connection`(5)。**
-> **按收益排序的下一步(㉑ 之后的建议)**:①**信号的"收与发"**(见 ㉑ 末尾:抽取器改用 model 词汇表收信号 + 运行时/codegen 提供 `Emit`,否则托管委托没法像官方那样 `commitData/closeEditor`);②**继续批量入库**剩余 QtCore/QtGui 类(`QAbstractAnimation` 家族/`QTimeLine`、`QPageSize`/`QPageLayout`/`QPdfWriter`(真 PDF 输出!)、`QIconEngine`/`QPaintEngine`、`QSessionManager`、`QAccessible*`、`QOffscreenSurface`/`QOpenGLContext`);③**剩余 demo 搬迁**(Menus / Basic Layouts / Sliders / WindowFlags / Scribble / Calendar / SystemTray —— 依赖已基本齐);④`QDrag` + 拖放 demo(`QMimeData`/`QDropEvent` 已绑)。
+> **按收益排序的下一步(㉒ 之后的建议)**:①~~信号的"收与发"~~ **✅ 已完成(见"㉒",信号 266→428、可 `Emit`、C# 可自声明 Signal/Property)**;②**继续批量入库**剩余 QtCore/QtGui 类(`QAbstractAnimation` 家族/`QTimeLine`、`QPageSize`/`QPageLayout`/`QPdfWriter`(真 PDF 输出!)、`QIconEngine`/`QPaintEngine`、`QSessionManager`、`QAccessible*`、`QOffscreenSurface`/`QOpenGLContext`);③**剩余 demo 搬迁**(Menus / Basic Layouts / Sliders / WindowFlags / Scribble / Calendar / SystemTray —— 依赖已基本齐);④`QDrag` + 拖放 demo(`QMimeData`/`QDropEvent` 已绑)。
 > **注意:剩下的 2/3/4 都要改 `gen/ApiCodeGen.cs`,必须串行落地,不要并发改同一批文件。**
 
 **A. 所有权 —— ✅ A1+A2 全部完成(见"⑭/⑰")。下面是勘察记录:**
