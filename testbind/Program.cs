@@ -80,6 +80,21 @@ static class Program
                 return BasicLayoutsApi.Run();
             }
 
+            if (args.Length > 0 && args[0] == "api-scribble")
+            {
+                return ScribbleApi.Run();
+            }
+
+            if (args.Length > 0 && args[0] == "api-gallery")
+            {
+                return WidgetsGalleryApi.Run();
+            }
+
+            if (args.Length > 0 && args[0] == "api-systray")
+            {
+                return SystemTrayApi.Run();
+            }
+
 
             if (args.Length > 0 && args[0] == "api-custommodel") { return ApiCustomModelDemo.Run(); }
             if (args.Length > 0 && args[0] == "api-metaobject") { return ApiMetaObjectDemo.Run(); }
@@ -121,10 +136,7 @@ static class Program
                 // `api-spinboxes` / `api-shortcut`, and calendarwidget, menus and basiclayouts
                 // are `api-calendarwidget` / `api-menus` / `api-basiclayouts`.
                 "windowflags" => new WindowFlagsWindow(),
-                "systray" => new SystemTrayWindow(),
-                "scribble" => new ScribbleWindow(),
                 "analogclock" => new AnalogClock(),
-                "gallery" => new WidgetGalleryWindow(),
                 "docviewer" => new DocumentViewerWindow(),
                 _ => null,
             };
