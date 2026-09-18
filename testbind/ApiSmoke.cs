@@ -38,6 +38,35 @@ public static class ApiSmokeTest
         obj.SetObjectName("world");
         Check(seen == "world", $"generated signal delivered (got '{seen}')");
 
+        // Emit: a signal can be activated from managed code as well. The value travels through
+        // the same moc machinery a native emit uses, so a handler connected over the generated
+        // signal sees it - and so would any C++ connection.
+        var button = new QPushButton();
+        int clicks = 0;
+        button.ClickedSignal.Connect(_ => clicks++);
+        button.ClickedSignal.Emit(false);
+        Check(clicks == 1, $"a managed emit reaches a connected handler (clicks={clicks})");
+
+        var edit = new QLineEdit();
+        string typed = null;
+        edit.TextChangedSignal.Connect(v => typed = v);
+        edit.TextChangedSignal.Emit("hello");
+        Check(typed == "hello", $"a managed emit carries a string argument (got '{typed}')");
+
+        // The two shapes that need real marshalling: a bound-class pointer (argv points at a
+        // pointer) and an enum (argv points at an int).
+        var itemDelegate = new QStyledItemDelegate();
+        QWidget seenEditor = null;
+        QAbstractItemDelegate.EndEditHint seenHint = QAbstractItemDelegate.EndEditHint.SubmitModelCache;
+        itemDelegate.CloseEditorSignal.Connect((e, h) =>
+        {
+            seenEditor = e;
+            seenHint = h;
+        });
+        itemDelegate.CloseEditorSignal.Emit(new QLineEdit(), QAbstractItemDelegate.EndEditHint.NoHint);
+        Check(seenEditor != null && seenHint == QAbstractItemDelegate.EndEditHint.NoHint,
+            $"a managed emit marshals a class pointer and an enum (editor={seenEditor != null}, hint={seenHint})");
+
         var parent = new QObject();
         parent.SetObjectName("parent");
         Check(obj.Parent() == null, "generated parent accessor returns null for an unparented object");
