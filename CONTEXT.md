@@ -9,7 +9,7 @@
 > **想直接体验新框架**:`powershell -File D:\QtSharp\tools\regen-api.ps1`(生成 model/C#/native 并跑门禁)→ 打开 `QtSharp.slnx`(gen + testbind + samples/hello + tools/clangprobe)→ 启动 `testbind`,参数给一个 demo 名(`api` / `api-widgets` / `api-core` / `api-events` / `api-calculator` …)。`testapp.exe` 不带参数 = 旧链路 14 个窗口平铺。
 > **想自己写界面**:照抄 `samples/hello/` —— 一个 `net10.0` 控制台工程,里面只有 `Program.cs` + `<Import Project="..\..\QtSharp.Api.props" />`(props 负责:编译生成的 `out/api/QtSharp.Api.cs` + `runtime/ApiRuntime.cs`,并把 `QtSharp.Api.dll`、Qt 运行时 DLL、`platforms\qwindows.dll` 拷到输出目录);`tools/regen-api.ps1` 会 build+run 它,所以这条路不会烂。
 > **API 的几条命名约定**(不知道叫什么名字时按这几条猜):
-> - `Main` 要 `[STAThread]`;开头 `ApiRuntime.StartApplication()`,结尾 `ApiRuntime.Exec()`(退出用 `ApiRuntime.Quit()`)。
+> - `Main` 要 `[STAThread]`;开头建应用对象 —— **PyQt 那种写法 `var app = new QApplication(args);` 已可用**(见"㉓"),或者不关心命令行时用 `ApiRuntime.StartApplication()`;结尾 `ApiRuntime.Exec()`(退出用 `ApiRuntime.Quit()`)。
 > - **`Q_PROPERTY` 变成 PascalCase 属性,访问器退回 C++ 原名**:`edit.Text`(属性)/`edit.text()`/`edit.SetText(...)`;`widget.Width`/`widget.width()`;`timer.Interval`/`timer.interval()`;`QMimeType.Name`。编译报 `CS1955 "X 不是函数"`/`CS1501 没有采用 N 个参数的重载` 就是这个信号 —— 去掉括号或改用属性名。
 > - **信号**是 `XxxSignal` 属性(`button.ClickedSignal`、`edit.TextChangedSignal`),`Connect(handler)` 即可;`QSignal<T>` 的 `T` 就是信号的参数类型(无参数是 `bool`,所以写 `_ => ...`)。
 > - **托管子类**直接 `override`,`sizeHint`/`paintEvent`/`keyPressEvent`/`mousePressEvent`/`closeEvent`/模型与委托的虚函数都在白名单里;native 侧由生成的 C++ 子类转发。
@@ -381,6 +381,19 @@ clangprobe --dump CXCursor CXType clang
 - **新 demo `testapp api-metaobject`**(`testbind/MetaObjectApi.cs`,14 项断言,已进门禁):meta-object 的 `className` 是托管类名、声明的信号/属性在表里、Qt 继承来的信号还在;0/1/2 参数与类指针信号的 Connect+Emit;`setProperty` 打到 C# setter、`property()` 读回;C# 子类继承声明;未声明成员的生成类完全不受影响。
 - 验收:model **逐字节可复现且与入库一致**(`A1CFC453…`,445 类 / 448 枚举 / **428 信号**)、codegen 两次一致、native+C# 编译、**13 个 demo + sample + 3 个 PoC 全 PASS**(比上轮多 14 项断言)。
 - **已知遗留**:`QMetaSignalBase`/`QMetaProperty` 只有 0–4 个参数的 arity(超过 4 个参数的用户信号暂不支持);动态 meta-object 的 `QMetaObject*` 进程内不释放(每个"成员清单"一个,可接受);属性回调不支持 `QVariant`/容器/boxed 值类型。
+
+**㉓ 本轮完成:C# 里也能 `new QApplication(args)`(PyQt/PySide 那个写法)**
+一句话:应用对象可以像 PyQt 一样在 C# 里造,`ApiRuntime.StartApplication()` 仍保留为不关心命令行的捷径。
+- **为什么要手写**:`QApplication(int &argc, char **argv, int flags)` 里 `char**` 不在 model 词汇表里、`int&` 又撞上"构造函数不允许 by-ref 参数"的规则,所以生成的类**没有构造函数**(`QApplication`/`QGuiApplication`/`QCoreApplication` 三个都是 `ctors 0`)。等价能力放在**随绑定发布的运行时**里,和 sip/shiboken 为这一条签名手写转换是同一个选择(旧链路其实也一样:`QtSharp.Widgets.cs` 生成的是 `QApplication(ref int argc, sbyte** argv)`,而 `Program.cs` 用的 `new QApplication(string[])` 是手写在 `testbind/QApplication.cs` 的 partial class,里面 `AllocHGlobal` 之后故意不释放)。
+  - **新增 `runtime/ApiApplication.cs`**(已加进 `QtSharp.Api.props`):`QCoreApplication`/`QGuiApplication`/`QApplication` 各一个 partial 构造函数 `(string[] args, int flags = 0)`,走 `ApiRuntime.CreateApplication(args, flags, kind)`。因为 `Handle` 的 setter 是 protected,三份 `BindApplication` 只能各写一遍(类注释里写明了原因)。
+  - **native `qs_api_app_create_args(argv, argc, flags, kind)`**(kind: 0 Core / 1 Gui / 2 Widgets):把命令行**拷进进程生命期的静态存储**(Qt 会一直持有 argv 指针,而且会改写 argc),`qs_api_app_create()` 保留为无参包装。
+  - **单例**:第二次构造返回已存在的那个对象;如果宿主自己已经建了一个(同进程的旧链路、或嵌入我们的 C++ 程序),则**接管它而不是再建第二个** —— Qt 只允许一个,而第二个构造函数会静默把 `QCoreApplication::instance()` 抢过去、第一个对象却还活着(见下面的 0xC0000005)。
+  - **没有 `Dispose`**:`QApplication` 在 model 里 `ctors 0` ⇒ 不生成 `Destroy_`/`Dispose`,所以 GC 永远不会删掉应用对象(这正是我们要的)。
+- **★ 关掉时的两颗雷(都实测过)**:
+  1. 从 **DLL 静态析构**里删应用对象会在 CRT 退出序列的中段跑 Qt 的拆解,此时 `QGuiApplication` 自己的全局已经没了(实测 `~QGuiApplication+0x38` 里 `mov rax,[rcx]`、`rcx=qApp=0`)。修法:新增 `qs_api_app_destroy()`,由托管在 **`ProcessExit` 里、CLR 还活着的时候**调用 —— 这就是 Qt 自己"`QApplication app;` 是 main 里的局部变量、静态析构之前就销毁"的那套顺序。`Instance()`/`OwnsInstance()` 都只是**指针/布尔**的静态,平凡析构 ⇒ 不注册任何 atexit。
+  2. **旧链路的 `QApplication` 和新链路的撞在一起**:`api` 这个命令原来在 `Program.cs` 里排在 `using var app = new QApplication(...)`(旧链路)之后,于是进程里**两个 QApplication**;`Main` 结束时旧的那个 `using` 先 `Dispose` → `qApp` 被清空 → 我们再删自己那个就崩。修法是两处:`Program.cs` 把 `api` 移到旧链路 app 之前(文档里那条"新链路命令必须在旧链路 QApplication 之前分发"的规则,`api` 当初漏掉了),**并且** native 侧加了"qApp 不是我们就别删 + 宿主有就接管"的守卫。
+- **用法**:`var app = new QApplication(args);`(sample `samples/hello` 已改成这个写法,门禁照跑);`QCoreApplication`/`QGuiApplication` 同理。`api` 冒烟新增 2 项:`new QApplication(args)` 拿到的句柄非空,且与 `QCoreApplication.Instance().Handle` 相同。
+- 验收:model 逐字节一致、codegen 两次一致、**13 个 demo + sample + 3 个 PoC 全 PASS**,且 13 个 demo 的**退出码全部为 0**(本轮之前 `api` 是 `0xC0000005`)。
 
 ### 解析配置清单(CppSharp 实际传给 clang 的东西 —— 已 dump,`qtgen dumpopts`)
 来源:`gen/ApiModel.cs` 的 `ModelLibrary.Setup` + `QtLibrary.QtIncludeRoot` + `CppSharp.Parser.ParserOptions.SetupMSVC`。
