@@ -568,6 +568,9 @@ public static partial class ApiModel
         R("QCommandLineOption",    "qcommandlineoption.h", "QtCore"),
         R("QCommandLineParser",    "qcommandlineparser.h", "QtCore"),
         R("QProcessEnvironment",   "qprocess.h", "QtCore"),
+        // A QObject-derived value-ish class the document viewer needs for its settings; its keys
+        // are QAnyStringView, which the vocabulary already carries as string.
+        R("QSettings",             "qsettings.h", "QtCore"),
         // QtGui value types that other QtGui classes keep asking for.
         R("QSurfaceFormat",        "qsurfaceformat.h", "QtGui"),
         R("QGlyphRun",             "qglyphrun.h", "QtGui"),
