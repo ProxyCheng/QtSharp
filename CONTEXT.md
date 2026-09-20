@@ -3,7 +3,7 @@
 ## 总体目标(已明确)
 **做一套长期可用的 Qt for .NET 绑定**;"把 Qt 官方示例改写成 C# 并跑通"只是 **conformance suite / 验证手段**。
 产品骨架已经全部就位(PoC×3 + model/codegen/runtime + 前端换成 clang),现在是**扩覆盖面 + 把旧 demo 搬过来**的阶段。
-**旧链路(CppSharp)已整块删除**(见"㉔/㉕/㉖/㉗/㉘"):14 个旧 demo 全部搬成新链路的 `api-*`,3 个架构 PoC、CppSharp 源码、legacy native dll、`QtSharp.def`、`build_glue.bat` 都不在了(唯一保留的第三方是 `lib/lib/clang/19` 的 builtin headers)。新链路自测命令:`api` / `api-analogclock` / `api-lineedits` / `api-widgets` / `api-graphics` / `api-core` / `api-events` / `api-ownership` / `api-custommodel` / `api-calculator` / `api-spinboxes` / `api-shortcut` / `api-metaobject` / `api-shapedclock` / `api-sliders` / `api-calendarwidget` / `api-menus` / `api-basiclayouts` / `api-scribble` / `api-gallery` / `api-systray` / `api-docviewer` / `api-basicdrawing` / `api-gradients` / `api-painterpaths` / `api-completer` / `api-customsortfilter` / `api-stardelegate`。
+**旧链路(CppSharp)已整块删除**(见"㉔/㉕/㉖/㉗/㉘"):14 个旧 demo 全部搬成新链路的 `api-*`,3 个架构 PoC、CppSharp 源码、legacy native dll、`QtSharp.def`、`build_glue.bat` 都不在了(唯一保留的第三方是 `lib/lib/clang/19` 的 builtin headers)。新链路自测命令:`api` / `api-analogclock` / `api-lineedits` / `api-widgets` / `api-graphics` / `api-core` / `api-events` / `api-ownership` / `api-custommodel` / `api-calculator` / `api-spinboxes` / `api-shortcut` / `api-metaobject` / `api-shapedclock` / `api-sliders` / `api-calendarwidget` / `api-menus` / `api-basiclayouts` / `api-scribble` / `api-gallery` / `api-systray` / `api-docviewer` / `api-basicdrawing` / `api-gradients` / `api-painterpaths` / `api-completer` / `api-customsortfilter` / `api-stardelegate` / `api-composition`。
 
 ## 当前状态速览(给新 session)
 > **想直接体验新框架**:`powershell -File D:\QtSharp\tools\regen-api.ps1`(生成 model/C#/native 并跑门禁)→ 打开 `QtSharp.slnx`(gen + testbind + samples/hello + tools/clangprobe)→ 启动 `testapp`,参数给一个 demo 名(`api` / `api-widgets` / `api-core` / `api-events` / `api-calculator` …)。`testapp` 不带参数**只打印用法**(旧的"平铺全部 demo"模式已随旧链路删除,见"㉗")。
@@ -25,7 +25,7 @@
 | 架构 PoC #3 所有权(Qt-owned 弱引用 + SafeHandle + destroyed 失效) | ✅ 已验证(源码已删,机制进了产品:`ApiRuntime` 的 destroyed 注册表,见"⑰") |
 | 产品化第 1 步:model(入库)+ codegen | ✅ model **逐字节可复现**、codegen 纯函数(两次一致) |
 | **前端迁移(已决策)** | ✅ **已完成**:`qtgen extract2`(ClangSharp)取代 CppSharp 成为默认前端,~2.5 秒产出**逐字节一致**的 model;原 44 类 model 复刻 **1472/1472** 条事实(见"路线 A 可行性验证"一节) |
-| **demo 都在跑** | ✅ **28 个 demo** 全进门禁,共 **1058 项断言**(`api` 8 / `api-analogclock` 27 / `api-lineedits` 9 / `api-widgets` 85 / `api-graphics` 9 / `api-core` 108 / `api-events` 22 / `api-ownership` 24 / `api-custommodel` 19 / `api-calculator` 12 / `api-spinboxes` 25 / `api-shortcut` 18 / `api-metaobject` 14 / `api-shapedclock` 13 / `api-sliders` 40 / `api-calendarwidget` 59 / `api-menus` 55 / `api-basiclayouts` 55 / `api-scribble` 66 / `api-gallery` 78 / `api-systray` 63 / `api-docviewer` 100 / **`api-basicdrawing` 34 / `api-gradients` 18 / `api-painterpaths` 32**(见"㉚")/ **`api-completer` 29 / `api-customsortfilter` 19**(见"㉛")/ **`api-stardelegate` 17**(见"㉜")),外加 **`samples/hello`**(独立工程,只 `Import` 一个 props 文件)也被门禁 build+run;另有一个**停牌**的 `WindowFlagsApi`(115 项断言全过但退出时 3/10 崩,见"㉔/㉗")。**旧链路(CppSharp)已整块删除** —— 14 个 legacy demo 全部搬成 `api-*`,3 个 PoC、CppSharp 源码、legacy native、`QtSharp.def`、`build_glue.bat` 都不在了;`testapp` 不带参数只打印用法(见"㉔/㉕/㉖/㉗/㉘") |
+| **demo 都在跑** | ✅ **29 个 demo** 全进门禁,共 **1074 项断言**(`api` 8 / `api-analogclock` 27 / `api-lineedits` 9 / `api-widgets` 85 / `api-graphics` 9 / `api-core` 108 / `api-events` 22 / `api-ownership` 24 / `api-custommodel` 19 / `api-calculator` 12 / `api-spinboxes` 25 / `api-shortcut` 18 / `api-metaobject` 14 / `api-shapedclock` 13 / `api-sliders` 40 / `api-calendarwidget` 59 / `api-menus` 55 / `api-basiclayouts` 55 / `api-scribble` 66 / `api-gallery` 78 / `api-systray` 63 / `api-docviewer` 100 / **`api-basicdrawing` 34 / `api-gradients` 18 / `api-painterpaths` 32**(见"㉚")/ **`api-completer` 29 / `api-customsortfilter` 19**(见"㉛")/ **`api-stardelegate` 17**(见"㉜")/ **`api-composition` 16**(见"㉝")),外加 **`samples/hello`**(独立工程,只 `Import` 一个 props 文件)也被门禁 build+run;另有一个**停牌**的 `WindowFlagsApi`(115 项断言全过但退出时 3/10 崩,见"㉔/㉗")。**旧链路(CppSharp)已整块删除** —— 14 个 legacy demo 全部搬成 `api-*`,3 个 PoC、CppSharp 源码、legacy native、`QtSharp.def`、`build_glue.bat` 都不在了;`testapp` 不带参数只打印用法(见"㉔/㉕/㉖/㉗/㉘") |
 | **覆盖面** | 🚧 **445 类 / 9523 方法 / 858 虚函数 / 448 枚举 / 801 `Q_PROPERTY` 属性 / 428 信号**(QtWidgets 184 / QtGui 136 / QtCore 125)。**信号全类型可连、可 `Emit`,且托管类能在 C# 里声明自己的信号/属性**(`QMetaSignal`/`QMetaProperty` + 运行期 meta-object,见"㉒")。**输入事件整族已绑**(`QKeyEvent`/`QWheelEvent`/`QDrag*`/`QDropEvent`/`QTabletEvent`/`QTouchEvent`…,见"⑲"):托管 `keyPressEvent` 现在**读得到按键码**。**QtCore batch 3**(事件循环 / `QBuffer` / `QMetaProperty`/`QMetaEnum` / 哈希 / 正则匹配 / `QUrlQuery` / 排序 / mime / 文件监视 / 共享内存 / 平台表)**与富文本整族**(`QTextFormat` 及其派生 / `QAbstractTextDocumentLayout` / `QTextLine` …)已入。**托管子类能写自定义 `QAbstractTableModel`/`QStyledItemDelegate`**(见"⑮")。**Qt 删除对象后访问包装器抛 `ObjectDisposedException`**(见"⑰")。**类型类别**:`const char*`、`QList<T>`、`QStringList`、`QMap`/`QHash`→`Dictionary`、`QBindable<T>`、`QByteArrayView`/`const uchar*`→`byte[]`、`void*`→`IntPtr`、`QStringView`/`QAnyStringView`、`std::chrono`→`TimeSpan`、out 参数、非 const `QString&`→`ref string`。剩 `QList<std::pair<...>>`(6)、`QFont::Tag`(8)、`QLatin1String`(15)等低收益项(见"⑨/⑩/⑲") |
 
 ## 关键背景
@@ -479,8 +479,29 @@ clangprobe --dump CXCursor CXType clang
   - **机械差异**:官方把 C++ `StarRating` 塞进 `QVariant`(`fromValue<StarRating>`),绑定表达不了 ⇒ 评分以 `int` 存在 item 的 display data 里,委托再解析回来。`QMouseEvent` 没有可构造的构造函数 ⇒ 释放走 `ReleaseEditing()` 接缝(与 `ShapedClockApi` 的 `DragTo` 同一手法)。
 - **★ 顺带确认的能力缺口(值得接下来修)**:`view.Model()` 在 **QTableWidget / QTreeWidget / QListWidget / QComboBox** 这类"内部模型是 Qt 私有 C++ 类"的控件上**够不着模型** —— `QAbstractItemModel::index/data/setData/rowCount` 都是 **pure virtual**,而生成的 C# 基方法对 pure virtual 一律 `return default`(null / false),于是 `table.Model().Index(0,0)` 返回 **null**、`RowCount()` 返回 0、`SetData()` 返回 false。**表现是"静默不生效"**(本 demo 编辑回合会写不回去),不是崩溃。
   - 现状:`api-stardelegate` 因此改用 **`QTableView` + `QStandardItemModel`**(已绑的模型类,`Index/Data/SetData` 都走 `__base` 到 C++ 实现),整条委托生命周期是真的;文件头写明了与官方的差异。**已有 demo 没有依赖这个行为**(它们都用已绑模型类),所以门禁不受影响。
-  - **推荐的修法**(未实施):给生成的 root 类加一个 `__managedSubclass` 标志(只有**安装 dispatch 的构造函数**置 true;`FromHandle`/`FromTransientHandle` 造出来的包装器保持 false,`Wrap` 命中已注册对象时天然是 true),然后 pure virtual 的 C# 基方法写成"`__managedSubclass` ⇒ `return default`(现状,避免 native override 回派到同一个方法导致无限递归);否则调用 native 转发器(`self->index(...)`,走真实 C++ virtual)"。代价:pure virtual 也要生成一份自由转发器(现在它只进 `virtuals`、不进 `methods`)。**必须用 `api-stardelegate` 的 QTableWidget 版本回归**(把本 demo 换回 QTableWidget 即可验证:编辑应能写回)。
+  - **推荐的修法**:给生成的 root 类加一个 `__managedSubclass` 标志,不是我们造的对象走 vtable。**已在"㉝"实施**,而且范围比这里写的大(不只 pure virtual —— `setData` 那种"基类实现是个 stub"的非 pure 虚函数同样中招);回归就是**把本 demo 换回 `QTableWidget`**(㉝ 已换回,编辑能写回)。
 - 门禁:model 逐字节一致、codegen 两次一致、**28 个 demo + sample 全 PASS**(1058 项断言)。
+
+**㉝ 本轮完成:`__managedSubclass`(修掉"采纳的 C++ 对象够不着自己的 override")+ `composition`**
+- **★ 兑现 ㉜ 记下的那条缺口,并且发现它比 ㉜ 描述的更广**。原判断是"pure virtual 的 C# 基方法一律 `return default`,所以 `view.Model()` 够不着私有模型"。真动手才发现两件事:
+  1. **不只是 pure virtual**:`QAbstractItemModel::setData` **不是** pure(基类实现就是 `return false;`),而生成的 stub 走的是 `__base`(**限定的非虚调用**)——所以对一个**采纳来的**对象调 `view.Model().SetData(...)` 永远走基类那份"返回 false",写不进去。只要"对象的实际实现比声明它的类更靠下",限定的基类调用就是错的。**正确规则是:不是我们造的包装器,一律走 vtable(`self->method(...)`);只有我们自己造的(装了 dispatch 钩子)才需要 `__base` 链或 `return default`** ——否则 native override 会回派到同一个方法。
+  2. **`__managedSubclass` 必须在两条构造路径都置位**:普通 ctor 和**抽象类的 `subclassCtor`**。漏掉后者 ⇒ 托管子类(`QAbstractTableModel` 等)被当成"采纳对象" ⇒ `Index()` 走 `_vt` → native override → dispatch → `Index()` … **栈溢出**(`api-custommodel` 当场 0xC00000FD;`api-widgets`/`api-ownership` 也是同一个根因,表现为 0xC000041D / 0xC0000374)。
+- **落地(`gen/ApiCodeGen.cs`)**:
+  - 生成的 root 类新增 `internal bool __managedSubclass;`,**两条构造路径**都置 true(`FromHandle`/`FromTransientHandle`/`FromOwnedHandle` 造出来的包装器保持 false)。
+  - 每个已发布的非私有虚函数,C# stub 变成:
+    ```csharp
+    public virtual X M(...) {
+        if (!__managedSubclass) { /* 走 vtable:ApiNative.X_M_vt(...) */ }
+        else { /* pure → return default;否则 __base 链 */ }
+    }
+    ```
+    两半各自在 `{ }` 里,避免容器的 marshal 临时变量重名(踩到过 CS0136)。
+  - 新增 `qs_api_X_M_vt` 转发器(**连 pure 一起**,不再只给 pure;返回/参数走与 `__base` 相同的扁平 C ABI 转换)。
+  - **protected/private 的虚函数没法从自由函数调**(`QAbstractButton::paintEvent`、`QGraphicsLayoutItem::sizeHint`):生成一个**无 override 的小派生类** `QsApiAccess_X : X`,里面 `static Call_M(X* self, ...)` 用 `static_cast<QsApiAccess_X*>(self)->M(...)`(**虚调用**,落到对象真正的实现上);`_vt` 导出只是转发它。这与 `CallBase_*` 依赖的"声明基类在偏移 0、转换是恒等"是同一个既有前提。
+  - 于是 `_vt`/`__base` 两份 DllImport 都发,且都**只在该类可子类化时发**(否则 `QsApiAccess_X` 不存在);不可子类化的类退回 `return default`。
+- **验证**:`api-stardelegate` **改回官方的 `QTableWidget`**(㉜ 里为了绕过缺口才改成 QTableView),新增断言 `table.Model().Index(2,3)` 有效、`RowCount()==4`、`[2,3]=='3'`,并且**编辑回合真的写回**(`setModelData()` 后 row 1 的 rating 从 4 变 2)。
+- **新 demo `api-composition`(16 项)**:官方 `painting/composition` —— 24 种 `QPainter::CompositionMode`、基缓冲 + 源圆的两次 blit(`memcpy` 改成 `Copy()`),**从带 alpha 的缓冲里读像素**:`Clear` 让圆的像素变透明、`Destination` 忽略源(与基缓冲逐字节相同)、8 种模式给出 8 个不同签名、alpha=0 与基缓冲相同、hue 改变圆的颜色;窗口侧 24 项 combo + hue/alpha 两个 slider 联动。官方的 `flower.jpg` 资源不存在 ⇒ 程序化生成一张彩色"照片"(写在文件头)。
+- 门禁:model 逐字节一致、codegen 两次一致、**29 个 demo + sample 全 PASS**(1074 项断言)。
 
 ### 解析配置清单(历史上 CppSharp 传给 clang 的东西 —— 迁移时的等价基准;`qtgen dumpopts` 已随旧链路删除)
 来源曾是 `gen/ApiModel.cs` 的 `ModelLibrary.Setup` + `QtLibrary.QtIncludeRoot` + `CppSharp.Parser.ParserOptions.SetupMSVC`;`ApiModel2.cs` 复刻的就是这套配置。
@@ -717,7 +738,7 @@ sliders / spinboxes / windowflags / lineedits / shapedclock / calendar / systray
   - `build_api.bat`(→ `out/api/QtSharp.Api.dll`)、`tools/regen-api.ps1`(两道门禁 + 12 个 demo + 独立 sample;`-Adopt` 才采纳新 model)
   - **`QtSharp.Api.props`(用户侧唯一入口:一个 `<Import>` 就拿到生成的绑定 + 运行时 + native/Qt DLL 拷贝)**,配套 `samples/hello/`(一个真界面工程,门禁会 build+run)
   - `runtime/ApiRuntime.cs`(C# 侧运行时,随绑定发布,不在 testbind 里:`QSignal<T>`/`Wrap`(按 handle 存多视图)/信号解包/`SendUserEvent`/`SendMousePress`/`SendWheel`/`SendKeyPress`/**`IQtObjectView` + `destroyed` 注册表 + `Forget`/`Watch`/`AssociateOwner`**)
-  - 28 个 demo(都在 `tools/regen-api.ps1` 门禁里,共 1058 项断言):`testbind/ApiSmoke.cs`(`testapp api`)、`AnalogClockApi.cs`(`api-analogclock`)、`LineEditsApi.cs`(`api-lineedits`)、`WidgetsApi.cs`(`api-widgets`)、`GraphicsApi.cs`(`api-graphics`)、`CoreApi.cs`(`api-core`)、`EventsApi.cs`(`api-events`)、`OwnershipApi.cs`(`api-ownership`)、`CustomModelApi.cs`(`api-custommodel`)、`CalculatorApi.cs`(`api-calculator`)、`SpinBoxesApi.cs`(`api-spinboxes`)、`ShortcutEditorApi.cs`(`api-shortcut`)、`MetaObjectApi.cs`(`api-metaobject`)、`ShapedClockApi.cs`(`api-shapedclock`)、`SlidersApi.cs`(`api-sliders`)、`CalendarWidgetApi.cs`(`api-calendarwidget`)、`MenusApi.cs`(`api-menus`)、`BasicLayoutsApi.cs`(`api-basiclayouts`)、`ScribbleApi.cs`(`api-scribble`)、`WidgetsGalleryApi.cs`(`api-gallery`)、`SystemTrayApi.cs`(`api-systray`)、`DocumentViewerApi.cs`(`api-docviewer`)、**`BasicDrawingApi.cs`(`api-basicdrawing`)/`GradientsApi.cs`(`api-gradients`)/`PainterPathsApi.cs`(`api-painterpaths`)**、**`CompleterApi.cs`(`api-completer`)/`CustomSortFilterApi.cs`(`api-customsortfilter`)**、**`StarDelegateApi.cs`(`api-stardelegate`)**;`WindowFlagsApi.cs` 存在但**停牌**(见"㉔/㉗")。
+  - 29 个 demo(都在 `tools/regen-api.ps1` 门禁里,共 1074 项断言):`testbind/ApiSmoke.cs`(`testapp api`)、`AnalogClockApi.cs`(`api-analogclock`)、`LineEditsApi.cs`(`api-lineedits`)、`WidgetsApi.cs`(`api-widgets`)、`GraphicsApi.cs`(`api-graphics`)、`CoreApi.cs`(`api-core`)、`EventsApi.cs`(`api-events`)、`OwnershipApi.cs`(`api-ownership`)、`CustomModelApi.cs`(`api-custommodel`)、`CalculatorApi.cs`(`api-calculator`)、`SpinBoxesApi.cs`(`api-spinboxes`)、`ShortcutEditorApi.cs`(`api-shortcut`)、`MetaObjectApi.cs`(`api-metaobject`)、`ShapedClockApi.cs`(`api-shapedclock`)、`SlidersApi.cs`(`api-sliders`)、`CalendarWidgetApi.cs`(`api-calendarwidget`)、`MenusApi.cs`(`api-menus`)、`BasicLayoutsApi.cs`(`api-basiclayouts`)、`ScribbleApi.cs`(`api-scribble`)、`WidgetsGalleryApi.cs`(`api-gallery`)、`SystemTrayApi.cs`(`api-systray`)、`DocumentViewerApi.cs`(`api-docviewer`)、**`BasicDrawingApi.cs`(`api-basicdrawing`)/`GradientsApi.cs`(`api-gradients`)/`PainterPathsApi.cs`(`api-painterpaths`)**、**`CompleterApi.cs`(`api-completer`)/`CustomSortFilterApi.cs`(`api-customsortfilter`)**、**`StarDelegateApi.cs`(`api-stardelegate`)**、**`CompositionApi.cs`(`api-composition`)**;`WindowFlagsApi.cs` 存在但**停牌**(见"㉔/㉗")。
   - **三个 PoC(源码已删)**:`native/QtSharp_meta.cpp`/`QtSharp_vdispatch.cpp`/`QtSharp_ownership.cpp` 与对应的 `testbind/MetaSignal*.cs`/`VirtualDispatch.cs`/`Ownership.cs` 不在了;机制分别进了 `native/QtSharpApiRuntime.cpp`、`ApiCodeGen`、`ApiRuntime`。
 
 ## 提交状态
@@ -767,18 +788,20 @@ sliders / spinboxes / windowflags / lineedits / shapedclock / calendar / systray
 
 **㉚**:painting 组第一批 —— **不需要改 `gen/`,纯 `testbind/` 新增 3 个 demo + 门禁**。`BasicDrawingApi.cs`(34 项)/`GradientsApi.cs`(18 项)/`PainterPathsApi.cs`(32 项),`Program.cs` 与 `tools/regen-api.ps1` 各加 3 行;若干 API 缺口记在"㉚"的取舍清单里(最有价值的一条:`QPainterPath` 没有拷贝构造函数)。
 
-**㉜(本轮)**:`stardelegate` —— 纯 `testbind/` 新增 1 个 demo + 门禁(`StarDelegateApi.cs`,17 项);顺带确认"未绑定模型(`QTableWidget` 私有模型)够不着"这个能力缺口(见"㉜",含修法)。
+**㉜**:`stardelegate` —— 纯 `testbind/` 新增 1 个 demo + 门禁(`StarDelegateApi.cs`,17 项);顺带确认"未绑定模型(`QTableWidget` 私有模型)够不着"这个能力缺口(见"㉜",含修法)。
+
+**㉝(本轮)**:`gen/ApiCodeGen.cs` 的 **`__managedSubclass` + `_vt` 路由**(㉜ 那条缺口的修法,范围扩到**所有已发布虚函数**;踩到 `subclassCtor` 漏置位导致栈溢出)+ `QsApiAccess_X` 访问类;`StarDelegateApi.cs` 回归改回 `QTableWidget`(`+1` 项断言);新增 `CompositionApi.cs`(`api-composition`,16 项)+ `Program.cs`/`tools/regen-api.ps1` 各加 1 行。
 
 **㉛(上一批)**:completer + custom sort/filter。`gen/` 两处改动 —— `VirtualExtensionClasses` 加 `QSortFilterProxyModel`(开扩展点),以及 `ApiCodeGen` 的 `VirtualSlot.Blocked`(**修掉"私有虚函数被 override 成 `return default`"** ⇒ `QStringListModel` 的索引/`data()` 恢复正常);`model/qtsharp.api.json` 随重抽更新(5 条 `noBase` 恢复 + `QSortFilterProxyModel` 的 virtuals);`testbind/CompleterApi.cs`(29 项)+ `CustomSortFilterApi.cs`(19 项)+ `Program.cs`/`tools/regen-api.ps1` 各加 2 行。
 
 ## 扩展示例覆盖(进行中)
 目标:把 Qt 官方 **所有** examples/widgets 都改写成 C# 并跑通(不止 examples-widgets.html 那 16 个)。
 
-### 已完成的官方示例(全部在新链路上,共 28 个 `api-*`)
-widgets/lineedits、analogclock、calculator、spinboxes、sliders、shapedclock、calendarwidget、menus、basiclayouts、scribble、widgetsgallery(Widgets Gallery)、systray、shortcut editor、widgets(tour)、graphics view、documentviewer、**painting/basicdrawing、painting/gradients、painting/painterpaths**(㉚)、**tools/completer、itemviews/customsortfiltermodel**(㉛)、**itemviews/stardelegate**(㉜)。另有 5 个不是示例的 demo(`api` 冒烟 / `api-core` QtCore 巡礼 / `api-events` / `api-ownership` / `api-metaobject`)。
+### 已完成的官方示例(全部在新链路上,共 29 个 `api-*`)
+widgets/lineedits、analogclock、calculator、spinboxes、sliders、shapedclock、calendarwidget、menus、basiclayouts、scribble、widgetsgallery(Widgets Gallery)、systray、shortcut editor、widgets(tour)、graphics view、documentviewer、**painting/basicdrawing、painting/gradients、painting/painterpaths**(㉚)、**tools/completer、itemviews/customsortfiltermodel**(㉛)、**itemviews/stardelegate**(㉜)、**painting/composition**(㉝)。另有 5 个不是示例的 demo(`api` 冒烟 / `api-core` QtCore 巡礼 / `api-events` / `api-ownership` / `api-metaobject`)。
 
-### painting 组剩余(㉚ 已证明 **不需要新的绑定**)
-`affine` / `composition` / `deform` / `imagecomposition` / `pathstroke` / `transformations`:`QPainter`(含 `setCompositionMode`/`setOpacity`)、`QPainterPathStroker`、`QTransform`(含 `QuadToQuad`/`Map`)、三种渐变都已绑。**唯一障碍是资源**:`affine`/`deform`/`imagecomposition` 依赖 `:/res/...jpg`(仓库里没有 qrc),`affine` 还依赖 `ArthurFrame`/`HoverPoints`/`ArthurStyle` 三个示例私有类(可移植,但要几百行);`composition`/`pathstroke`/`transformations` 是自包含的,随时可加。
+### painting 组剩余(㉚/㉝ 已证明 **不需要新的绑定**)
+`affine` / `deform` / `imagecomposition` / `pathstroke` / `transformations`:所需 API 全在(`QPainter` 含 `setCompositionMode`/`setOpacity`、`QPainterPathStroker`、`QTransform` 含 `QuadToQuad`/`Map`、三种渐变)。**唯一障碍是资源与示例私有类**:`affine`/`deform`/`imagecomposition` 依赖 `:/res/...jpg`(仓库里没有 qrc;`composition` 见㉝,已用程序化贴图绕开),`affine` 还依赖 `ArthurFrame`/`HoverPoints`/`ArthurStyle`;`pathstroke`/`transformations` 也用 `ArthurFrame`(照㉝ 的做法写一个 `ApiArthurFrame` 等价物即可,不需要新绑定)。
 
 ### 其它尚可移植的组(依赖已基本齐)
 - **itemviews**(addressbook / simpletreemodel / editabletreemodel / spreadsheet):`QSortFilterProxyModel`(㉛ 起可子类化)/`QStandardItem`/`QStyledItemDelegate` 已绑。(`customsortfiltermodel` 见㉛、`stardelegate` 见㉜,均已搬完。)
@@ -960,7 +983,7 @@ widgets/lineedits、analogclock、calculator、spinboxes、sliders、shapedclock
 4. **容器类型** ✅(`QStringList`/`QList<T>`/`QMap`/`QHash`/`QBindable` 都已入,见"⑧/⑩/⑪");剩 `QList<std::pair<...>>`(6)、`QFont::Tag`(8)、`QLatin1String`。
 5. 复现/验证任何 native 崩溃:用 `native/CrashTracer.cpp`(VEH+StackWalk64)+ `tools/disasm.py`(capstone)。
 6. 已知不可行:RHI×2(需 QRhi + `.qsb` shader blob)、Window Embedding、QtStateMachine(模块未安装)、QtSvg/PrintSupport(运行时不带 DLL)、QtPdf。
-7. **继续搬示例**:painting 组还剩 `composition` / `pathstroke` / `transformations`(三个都用示例私有的 `ArthurFrame` + 资源,要写一个 `ApiArthurFrame` 等价物;`composition`/`pathstroke` 是几何/合成,不需要图片),之后是 itemviews(addressbook / simpletreemodel / editabletreemodel / spreadsheet / stardelegate)、richtext、tools(regexp / settingseditor)、animation 各组。
+7. **继续搬示例**:painting 组还剩 `pathstroke` / `transformations` / `affine` / `deform` / `imagecomposition`(都要写一个 `ApiArthurFrame` 等价物;`affine`/`deform`/`imagecomposition` 还要程序化贴图),之后是 itemviews(addressbook / simpletreemodel / editabletreemodel / spreadsheet)、richtext、tools(regexp / settingseditor)、animation 各组。
 8. **㉗ 那个偶发 `0xC000041D` 退出崩溃**(`api-windowflags` 3/10、`api-systray` 约 1/22)仍未查清,两条待验证假设见"㉗";要几十次重复运行,需与用户确认机器空闲时再跑。
 
 ## 给新 session 的提醒(踩坑清单)
@@ -978,6 +1001,7 @@ widgets/lineedits、analogclock、calculator、spinboxes、sliders、shapedclock
 - **PowerShell 5.1 的字符串比较是大小写不敏感的**:`$a -ne $b` 对只有大小写差异的字符串返回"相等" → 用 `-cne`;写"改大小写"的批量脚本时曾因此静默失败两次。
 - 生成的类型必须在**同一个程序集**里能找到:`IQtObjectView` 放在 `runtime/ApiRuntime.cs` 的**命名空间级**(不能嵌在 `ApiRuntime` 里),生成代码是按裸名实现它的。
 - 虚函数白名单是**名字闭包 + 继承子树**(`VirtualExtensionClasses` 里的类自己声明的虚函数名,只在它们的子树里发布):想开一个新扩展点(如 `QRunnable::run`、`QSortFilterProxyModel::filterAcceptsRow`),把它加进那张表即可;但**别用"全局名字闭包"**——`QPicture::setData(const char*, uint)` 这种同名无关方法会一起被打开(实测编译失败)。**副作用要有预期**:加一个类 = 它**自己重声明**的那些虚函数名也一起打开(`QSortFilterProxyModel` 一带进来,`mapToSource`/`setSourceModel` 也变成可重写点)。
+- **`__managedSubclass` 决定虚函数的调用方式**(`ApiCodeGen`,㉝):**我们自己造**的对象(装了 native dispatch 钩子)⇒ pure virtual 返回 `default`、非 pure 链 `__base`;**采纳来的**对象(任何 `FromHandle`/`FromTransientHandle`/`FromOwnedHandle` 造出来的包装器)⇒ 一律走 `_vt`(`self->method(...)`,**虚调用**)。忘了给某条构造路径置位 ⇒ 托管子类被当成采纳对象 ⇒ native override ↔ C# stub 互相回派 ⇒ **栈溢出**(`api-custommodel` 踩过:`subclassCtor` 漏置位)。改动这里之后**必须**跑 `api-custommodel` / `api-widgets` / `api-ownership` / `api-stardelegate`。
 - **私有虚函数(`private:`)会被 model 记录但绝不 override**(`ApiCodeGen` 的 `VirtualSlot.Blocked`):Qt 用它们做 NVI(`QAbstractListModel::columnCount`/`hasChildren`/`parent`),顶掉它们(哪怕只是 `return default`)会让 Qt 自己的逻辑出错 —— 曾经让 **每个 `QStringListModel` 的索引都无效**。槽必须留在链里(否则合并会往上挑中 `QAbstractItemModel` 的 public pure 声明),但**不生成 C# virtual / native override / dispatch case**。
 - 字段/属性重名时:字段优先拿属性名(重名则退化成 `GetX()/SetX()`),`Q_PROPERTY` 撞嵌套枚举/虚函数/字段时**跳过属性保留方法**(`echoMode`/`sizeHint` 是例子)。
 - 自定义的 `QRunnable` 子类交 `QThreadPool::start` 前要 `SetAutoDelete(false)`(pool 默认会 `delete` 它,而托管侧也 owns 它 → double free)。

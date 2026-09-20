@@ -196,6 +196,11 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-stardelegate
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+# The composition example: the QPainter composition modes over a base buffer plus a source circle,
+# read back out of the blended buffer (alpha included).
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-composition
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 # The sample a user starts from: a project outside this repository's test app that only imports
 # QtSharp.Api.props. Covered here so the "write your own UI" path cannot rot.
 Write-Host "=== [6] Build + run the standalone sample ==="
