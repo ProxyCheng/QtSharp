@@ -932,6 +932,14 @@ public static class ApiCodeGen
         public JsonElement Virtual;
         public string Declaring;
         public bool DeclaredHere;
+        // A slot whose nearest C++ implementation is private. Qt hides the three QAbstractListModel
+        // hooks (columnCount, hasChildren, parent) that way, so a subclass can neither call them nor
+        // should it replace them: the slot stays in the chain - it has to shadow the public pure
+        // QAbstractItemModel declaration further up - but nothing is emitted for it. Overriding one
+        // with `return default` made QAbstractListModel::columnCount answer 0 instead of 1, and
+        // since QAbstractItemModel::index() goes through hasIndex() -> columnCount(), every
+        // QModelIndex of a QStringListModel came back invalid (the completer example found this).
+        public bool Blocked;
     }
 
     static readonly Dictionary<string, List<VirtualSlot>> virtualChains = new(StringComparer.Ordinal);
@@ -955,6 +963,7 @@ public static class ApiCodeGen
                         Virtual = inherited.Virtual,
                         Declaring = inherited.Declaring,
                         DeclaredHere = false,
+                        Blocked = inherited.Blocked,
                     });
 
             // A class C++ will not let us derive from (private destructor) has no native subclass
@@ -966,7 +975,10 @@ public static class ApiCodeGen
                 {
                     var key = VirtualKey(v);
                     var index = slots.FindIndex(s => VirtualKey(s.Virtual) == key);
-                    var slot = new VirtualSlot { Virtual = v, Declaring = className, DeclaredHere = true };
+                    var slot = new VirtualSlot
+                    {
+                        Virtual = v, Declaring = className, DeclaredHere = true, Blocked = IsNoBase(v),
+                    };
                     if (index >= 0)
                         slots[index] = slot;
                     else
@@ -1294,6 +1306,10 @@ public static class ApiCodeGen
             virtualOverloads.TryGetValue(vname, out int vseen);
             virtualOverloads[vname] = vseen + 1;
             string vSuffix = vseen == 0 ? "" : (vseen + 1).ToString();
+            // A blocked slot gets no C# virtual at all (the suffix counter is advanced above so
+            // that it stays aligned with the other three emitters).
+            if (slot.Blocked)
+                continue;
 
             var ps = Params(v);
             string sig = string.Join(", ", ps.Select(ParamSig));
@@ -1381,6 +1397,10 @@ public static class ApiCodeGen
             sb.AppendLine("            {");
             for (int i = 0; i < virtuals.Count; i++)
             {
+                // A blocked slot has no native hook, so there is nothing to dispatch. The slot id
+                // below stays the position in the chain, which keeps the numbering aligned.
+                if (virtuals[i].Blocked)
+                    continue;
                 var v = virtuals[i].Virtual;
                 var ps = Params(v);
                 // The slot id is the position in the whole chain, and an inherited slot is
@@ -2210,6 +2230,11 @@ public static class ApiCodeGen
         sb.AppendLine("protected:");
         for (int i = 0; i < virtuals.Count; i++)
         {
+            // A blocked slot is not installed: Qt's own (private) implementation is the only
+            // correct one, and overriding it is what broke QStringListModel's indices. The slot id
+            // stays the position in the chain, so the numbering still matches the dispatch switch.
+            if (virtuals[i].Blocked)
+                continue;
             var v = virtuals[i].Virtual;
             var ps = Params(v);
             string sig = string.Join(", ", ps.Select(p => $"{CppVirtualParamType(p)} {NativeName(PName(p))}"));
