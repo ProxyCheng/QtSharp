@@ -39,6 +39,7 @@ static class Program
                 case "api-completer": return ApiCompleterDemo.Run();
                 case "api-customsortfilter": return ApiCustomSortFilterDemo.Run();
                 case "api-stardelegate": return ApiStarDelegateDemo.Run();
+                case "api-composition": return ApiCompositionDemo.Run();
 
                 // WindowFlagsApi.cs exists but is deliberately not wired in: it dies about
                 // three runs in ten while Qt tears the process down (see its header).
@@ -50,7 +51,7 @@ static class Program
             Console.WriteLine("        api-calendarwidget | api-menus | api-basiclayouts | api-scribble | api-gallery |");
             Console.WriteLine("        api-systray | api-docviewer | api-basicdrawing | api-gradients |");
             Console.WriteLine("        api-painterpaths | api-completer | api-customsortfilter |");
-            Console.WriteLine("        api-stardelegate");
+            Console.WriteLine("        api-stardelegate | api-composition");
             return 0;
         }
         catch (Exception ex)
