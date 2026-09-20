@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using QtSharp.Api;
 
@@ -267,14 +267,13 @@ public sealed class ApiStarDelegate : QStyledItemDelegate
     }
 }
 
-// The official example puts the delegate on a QTableWidget. This port uses a QTableView over a
-// QStandardItemModel instead, and the reason is a real limitation of the binding: QTableWidget's own
-// model is a private C++ class that is not part of the model, so the QAbstractItemModel wrapper
-// around it cannot reach it - `index`, `data` and `setData` are pure virtuals, and the generated
-// base methods answer `default` (null / false). Painting and sizeHint would work (the view hands the
-// delegate real indexes), but the editor could never write its value back. A bound model makes the
-// whole delegate lifecycle real. See CONTEXT.md.
-public sealed class ApiStarTable : QTableView
+// The official example exactly: a QTableWidget with the delegate on it. That is also the
+// regression test for the "model of a view" gap: QTableWidget's own model is a private C++ class
+// that is not part of the model, so `table.Model()` wraps it as a plain QAbstractItemModel - and
+// index/data/setData/rowCount are pure virtuals there. The generated stubs call the real C++
+// virtual for an object we did not subclass (see __managedSubclass in ApiCodeGen), which is what
+// makes the index reachable and the editor's commit land in the table.
+public sealed class ApiStarTable : QTableWidget
 {
     public static readonly (string Title, string Genre, string Artist, int Rating)[] Songs =
     {
@@ -284,24 +283,21 @@ public sealed class ApiStarTable : QTableView
         ("Barbie Girl", "Pop", "Aqua", 5),
     };
 
-    public readonly QStandardItemModel TableModel;
     public readonly ApiStarDelegate StarDelegate;
 
-    public ApiStarTable(QWidget parent = null) : base(parent)
+    public ApiStarTable(QWidget parent = null) : base(Songs.Length, 4, parent)
     {
-        TableModel = new QStandardItemModel(Songs.Length, 4, this);
         for (int row = 0; row < Songs.Length; row++)
         {
-            TableModel.SetItem(row, 0, new QStandardItem(Songs[row].Title));
-            TableModel.SetItem(row, 1, new QStandardItem(Songs[row].Genre));
-            TableModel.SetItem(row, 2, new QStandardItem(Songs[row].Artist));
-            var rating = new QStandardItem();
+            SetItem(row, 0, new QTableWidgetItem(Songs[row].Title));
+            SetItem(row, 1, new QTableWidgetItem(Songs[row].Genre));
+            SetItem(row, 2, new QTableWidgetItem(Songs[row].Artist));
+            var rating = new QTableWidgetItem();
             using (var value = new QVariant(Songs[row].Rating))
-                rating.SetData(value, 0);
-            TableModel.SetItem(row, 3, rating);
+                rating.SetData(0, value);
+            SetItem(row, 3, rating);
         }
-        TableModel.SetHorizontalHeaderLabels(new[] { "Title", "Genre", "Artist", "Rating" });
-        SetModel(TableModel);
+        SetHorizontalHeaderLabels(new[] { "Title", "Genre", "Artist", "Rating" });
 
         StarDelegate = new ApiStarDelegate(this);
         SetItemDelegate(StarDelegate);
@@ -315,7 +311,7 @@ public sealed class ApiStarTable : QTableView
 
     public int RatingAt(int row)
     {
-        var item = TableModel.Item(row, 3);
+        var item = Item(row, 3);
         using var value = item.Data(0);
         return int.TryParse(value.ToString(), out int rating) ? rating : 0;
     }
@@ -338,14 +334,24 @@ public static class ApiStarDelegateDemo
         using var table = new ApiStarTable();
         table.Show();
 
-        Check(table.TableModel.RowCount() == 4 && table.TableModel.ColumnCount() == 4,
-            $"the model has four songs and four columns "
-            + $"({table.TableModel.RowCount()}x{table.TableModel.ColumnCount()})");
-        using (var titleHeader = table.TableModel.HeaderData(0, Qt.Orientation.Horizontal))
-        using (var ratingHeader = table.TableModel.HeaderData(3, Qt.Orientation.Horizontal))
-            Check(titleHeader.ToString() == "Title" && ratingHeader.ToString() == "Rating",
+        Check(table.RowCount == 4 && table.ColumnCount == 4,
+            $"the table has four songs and four columns ({table.RowCount}x{table.ColumnCount})");
+        {
+            var titleHeader = table.HorizontalHeaderItem(0);
+            var ratingHeader = table.HorizontalHeaderItem(3);
+            Check(titleHeader.Text() == "Title" && ratingHeader.Text() == "Rating",
                 $"the header carries the official labels "
-                + $"('{titleHeader}', '{ratingHeader}')");
+                + $"('{titleHeader.Text()}', '{ratingHeader.Text()}')");
+        }
+
+        // The regression: QTableWidget's model is a private C++ class, so `table.Model()` hands back
+        // a plain QAbstractItemModel wrapper. Its pure virtuals have to reach the real object.
+        using (var model = table.Model())
+        using (var index = model.Index(2, 3))
+        using (var value = model.Data(index))
+            Check(index.IsValid() && model.RowCount() == 4 && value.ToString() == "3",
+                $"table.Model() reaches the real model "
+                + $"(valid={index.IsValid()}, rows={model.RowCount()}, [2,3]='{value}')");
         // The lowercase accessors, because `table.EditTriggers` is ambiguous: QTableWidget inherits
         // the nested enum of that name from QAbstractItemView, and the type wins over the property.
         var triggers = table.editTriggers();
@@ -378,7 +384,7 @@ public static class ApiStarDelegateDemo
         // the generated base methods answer `default` (see the note in CONTEXT.md). The delegate
         // never has this problem: the indexes Qt hands it are the real ones.
         using (var option = new QStyleOptionViewItem())
-        using (var index = table.TableModel.Index(0, 3))
+        using (var index = table.Model().Index(0, 3))
         using (var hint = table.StarDelegate.SizeHint(option, index))
             Check(index.IsValid() && hint.Width() == ApiStarRating.PaintingScaleFactor * ApiStarDelegate.MaxStarCount
                   && hint.Height() == ApiStarRating.PaintingScaleFactor,
@@ -386,14 +392,14 @@ public static class ApiStarDelegateDemo
                 + $"{ApiStarRating.PaintingScaleFactor} (got {hint.Width()}x{hint.Height()})");
 
         using (var option = new QStyleOptionViewItem())
-        using (var index = table.TableModel.Index(0, 0))
+        using (var index = table.Model().Index(0, 0))
         using (var hint = table.StarDelegate.SizeHint(option, index))
             Check(hint.Width() > 0 && hint.Height() > 0,
                 $"a text cell falls through to QStyledItemDelegate::sizeHint ({hint.Width()}x{hint.Height()})");
 
         // The editor: created by the delegate, filled from the model, committed back into it.
         using (var option = new QStyleOptionViewItem())
-        using (var index = table.TableModel.Index(1, 3))
+        using (var index = table.Model().Index(1, 3))
         {
             using var editor = table.StarDelegate.CreateEditor(table, option, index);
             Check(table.StarDelegate.CreateEditorCalls == 1 && editor is ApiStarEditor,
@@ -445,7 +451,7 @@ public static class ApiStarDelegateDemo
 
             // Committing: the editor's rating goes back into the model through setModelData().
             starEditor.SetStarRating(new ApiStarRating(2, ApiStarDelegate.MaxStarCount));
-            table.StarDelegate.SetModelData(editor, table.TableModel, index);
+            table.StarDelegate.SetModelData(editor, table.Model(), index);
             Check(table.StarDelegate.SetModelDataCalls == 1 && table.RatingAt(1) == 2,
                 $"setModelData() wrote the editor's rating back into the model (row 1 now {table.RatingAt(1)})");
         }
@@ -467,3 +473,4 @@ public static class ApiStarDelegateDemo
         return failures == 0 ? 0 : 1;
     }
 }
+

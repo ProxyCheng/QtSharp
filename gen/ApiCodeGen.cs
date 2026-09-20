@@ -1054,6 +1054,15 @@ public static class ApiCodeGen
             // points at.
             sb.AppendLine("        internal bool __ownsNative;");
             sb.AppendLine();
+            // Whether the native object is one of the generated subclasses that install the vtable
+            // hooks - i.e. whether this wrapper was *made* rather than adopted. Only a constructor
+            // sets it. A pure virtual's C# stub answers `default` for a managed subclass (nothing
+            // to chain to), but calls the real C++ virtual for an adopted object: Qt's own models
+            // (QTableWidget's, QComboBox's, ...) are private C++ classes that are not part of this
+            // model, so without this their index()/data()/setData()/rowCount() would answer
+            // null/0/false and the model would be silently unreachable (see CONTEXT.md).
+            sb.AppendLine("        internal bool __managedSubclass;");
+            sb.AppendLine();
         }
 
         // wrapping constructor (never allocates: it adopts an object someone else owns)
@@ -1088,7 +1097,7 @@ public static class ApiCodeGen
             string create = $"Handle = ApiNative.Ctor_{name}{CtorSuffix(ctorIndex++)}(GCHandle.ToIntPtr(__context), {dispatch}{(args.Length > 0 ? ", " + args : "")});";
             // This wrapper made the object, so it is the one that may release it. A QObject can
             // still be destroyed by Qt later (it gets reparented), so it is watched as well.
-            string register = "            ApiRuntime.Register(Handle, this);\n            __ownsNative = true;";
+            string register = "            ApiRuntime.Register(Handle, this);\n            __ownsNative = true;\n            __managedSubclass = true;";
             if (DerivesFromQObject(name))
             {
                 register += "\n            ApiRuntime.Watch(Handle);";
@@ -1174,6 +1183,7 @@ public static class ApiCodeGen
             sb.AppendLine($"            Handle = ApiNative.Ctor_{name}(GCHandle.ToIntPtr(__context), {dispatch});");
             sb.AppendLine("            ApiRuntime.Register(Handle, this);");
             sb.AppendLine("            __ownsNative = true;");
+            sb.AppendLine("            __managedSubclass = true;");
             sb.AppendLine("            ApiRuntime.AttachMetaObject(this);");
             sb.AppendLine("        }");
             sb.AppendLine();
@@ -1323,14 +1333,44 @@ public static class ApiCodeGen
             sb.AppendLine($"        /// <summary>Virtual from {name}; override in a managed subclass.</summary>");
             sb.AppendLine($"        public {(overridesBase ? "override" : "virtual")} {ManagedType(ret)} {CSharpMemberName(vname)}({sig})");
             sb.AppendLine("        {");
-            if (HasNoBase(v))
+            // A wrapper of a *C++* object has to reach the object's own override, not the
+            // declaring class's implementation: `view.model()` for a QTableWidget hands back a
+            // private C++ model class that is not part of this model, so its C# type is exactly
+            // this one and this stub is what runs - and `self->QAbstractItemModel::setData(...)`
+            // would answer the base's "return false" instead of the table's own store, while
+            // `index`/`data`/`rowCount` (pure there) would answer default and leave the model
+            // silently unreachable. For an object we made, the native hooks are what call this
+            // method, so it must NOT call the virtual back (that would recurse): a pure virtual
+            // then answers default - which is what makes an abstract class subclassable - and a
+            // non-pure one chains to the base implementation as before. `__managedSubclass` is
+            // what tells the two apart (only the constructors that install the hooks set it).
+            if (Subclassable(cls))
             {
-                // Nothing to chain to: either Qt declared it pure (no implementation at all) or
-                // private (an implementation we are not allowed to call). A managed subclass that
-                // does not override this simply does nothing.
-                sb.AppendLine("            // no base implementation to chain to");
+                var forward = MarshalParams(ps, "Handle");
+                sb.AppendLine("            if (!__managedSubclass)");
+                sb.AppendLine("            {");
+                foreach (string line in forward.Prelude)
+                    sb.AppendLine("                " + line);
+                string virtualCall = $"ApiNative.{name}_{vname}{vSuffix}_vt({string.Join(", ", forward.Args)})";
+                string virtualBody = ret == "void"
+                    ? $"{virtualCall}; return;"
+                    : $"return {RetToManaged(ret, virtualCall)};";
+                EmitGuarded(sb, "                ", virtualBody, forward.Cleanup);
+                sb.AppendLine("            }");
+                sb.AppendLine("            else");
+                sb.AppendLine("            {");
+            }
+            // The two halves are inside their own blocks, so the marshalling temporaries a
+            // container parameter needs cannot collide with each other.
+            string inner = Subclassable(cls) ? "                " : "            ";
+            if (HasNoBase(v) || !Subclassable(cls))
+            {
+                // Nothing to chain to: Qt declared it pure or private, or the class has no
+                // generated subclass to reach the vtable through. A managed subclass that does not
+                // override this simply does nothing.
+                sb.AppendLine(inner + "// no base implementation to chain to");
                 if (ret != "void")
-                    sb.AppendLine("            return default;");
+                    sb.AppendLine(inner + "return default;");
             }
             else
             {
@@ -1338,11 +1378,13 @@ public static class ApiCodeGen
                 // parameter has to become a native container first.
                 var baseMarshal = MarshalParams(ps, "Handle");
                 foreach (string line in baseMarshal.Prelude)
-                    sb.AppendLine("            " + line);
+                    sb.AppendLine(inner + line);
                 string baseCall = $"ApiNative.{name}_{vname}__base{vSuffix}({string.Join(", ", baseMarshal.Args)})";
                 string body = ret == "void" ? $"{baseCall};" : $"return {RetToManaged(ret, baseCall)};";
-                EmitGuarded(sb, "            ", body, baseMarshal.Cleanup);
+                EmitGuarded(sb, inner, body, baseMarshal.Cleanup);
             }
+            if (Subclassable(cls))
+                sb.AppendLine("            }");
             sb.AppendLine("        }");
             sb.AppendLine();
         }
@@ -1623,18 +1665,35 @@ public static class ApiCodeGen
             virtualOverloads.TryGetValue(vname, out int vseen);
             virtualOverloads[vname] = vseen + 1;
             string vSuffix = vseen == 0 ? "" : (vseen + 1).ToString();
-            // Nothing to chain to, so no forwarder to declare (the suffix counter is still
-            // advanced above, to stay aligned with the other three emitters).
-            if (HasNoBase(v))
+            // A private virtual has nothing to chain to *and* nothing to call, so no forwarder is
+            // declared for it (the suffix counter is still advanced above, to stay aligned with the
+            // other three emitters). A pure one has no base implementation either, but the C++
+            // object still implements the virtual, so the stub calls it through the vtable.
+            // A private virtual has no forwarder at all, and neither has any virtual of a class
+            // that gets no generated subclass (there is no access class to reach the vtable
+            // through - see WriteNativeClass).
+            if (IsNoBase(v) || !Subclassable(cls))
                 continue;
             var ps = Params(v);
             string sig = string.Join(", ", new[] { "IntPtr self" }.Concat(ps.SelectMany(NativeParamsFor)));
             string ret = ReturnType(v);
+            // The vtable call: what a wrapper of a *C++* object uses, so the object's own override
+            // runs instead of the declaring class's implementation.
             sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_{vname}__base{vSuffix}\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_{vname}{vSuffix}_vt\", CallingConvention = CallingConvention.Cdecl)]");
             if (ret == "bool")
                 sb.AppendLine($"        [return: MarshalAs(UnmanagedType.I1)]");
-            sb.AppendLine($"        internal static extern {NativeRetType(ret)} {name}_{vname}__base{vSuffix}({sig});");
+            sb.AppendLine($"        internal static extern {NativeRetType(ret)} {name}_{vname}{vSuffix}_vt({sig});");
+            // The declaring class's implementation: what a managed subclass chains to when it does
+            // not override a non-pure virtual.
+            if (!HasNoBase(v))
+            {
+                sb.AppendLine();
+                sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_{vname}__base{vSuffix}\", CallingConvention = CallingConvention.Cdecl)]");
+                if (ret == "bool")
+                    sb.AppendLine($"        [return: MarshalAs(UnmanagedType.I1)]");
+                sb.AppendLine($"        internal static extern {NativeRetType(ret)} {name}_{vname}__base{vSuffix}({sig});");
+            }
         }
 
         for (int i = 0; i < ctors.Count; i++)
@@ -2382,6 +2441,73 @@ public static class ApiCodeGen
         // managed override can chain to it (and so the default override does not disable Qt's
         // own handling). The qualification also keeps this from dispatching back into the
         // override, which would recurse forever.
+        // The C ABI forwarder a pure virtual's C# stub calls when the object is *not* one of ours.
+        // It needs no dispatch hooks - it is an ordinary virtual call on the real object - but Qt
+        // declares some of those virtuals protected (QAbstractButton::paintEvent,
+        // QGraphicsLayoutItem::sizeHint), and neither a free function nor a plain cast may call
+        // one. A derived class with no overrides of its own can: the call below is virtual, so it
+        // lands on whatever the object really implements, and the cast is the same identity cast
+        // the chaining forwarders already rely on.
+        bool anyForwardable = declaredVirtuals.Any(s => !IsNoBase(s.Virtual));
+        if (anyForwardable && subclassable)
+        {
+            sb.AppendLine($"class QsApiAccess_{name} : public {name}");
+            sb.AppendLine("{");
+            sb.AppendLine("public:");
+            var accessOverloads = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (var slot in declaredVirtuals)
+            {
+                var v = slot.Virtual;
+                string vname = Name(v);
+                accessOverloads.TryGetValue(vname, out int aseen);
+                accessOverloads[vname] = aseen + 1;
+                string aSuffix = aseen == 0 ? "" : (aseen + 1).ToString();
+                if (IsNoBase(v))
+                    continue;
+                var ps = Params(v);
+                // The helper takes and returns the same flat C ABI types the export does, so the
+                // conversions (a boxed value arrives as a pointer, a QString as char16_t*) happen
+                // in exactly one place.
+                string sig = string.Join(", ", ps.SelectMany(CppParamsFor));
+                string args = string.Join(", ", ps.SelectMany(CppArgsFor));
+                string ret = ReturnType(v);
+                string call = $"static_cast<QsApiAccess_{name}*>(self)->{vname}({args})";
+                sb.AppendLine($"    static {NativeRetCpp(ret)} Call_{vname}{aSuffix}({name}* self{(sig.Length > 0 ? ", " + sig : "")})");
+                sb.AppendLine("    {");
+                sb.AppendLine("        " + NativeRetExpr(ret, call));
+                sb.AppendLine("    }");
+            }
+            sb.AppendLine("};");
+            sb.AppendLine();
+        }
+
+        // The suffix counter runs over every declared slot, exactly like the DllImport emitter, so
+        // the two sides agree on the name even when a class declares several overloads.
+        var pureOverloads = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var slot in declaredVirtuals)
+        {
+            var v = slot.Virtual;
+            string vname = Name(v);
+            pureOverloads.TryGetValue(vname, out int pseen);
+            pureOverloads[vname] = pseen + 1;
+            string pSuffix = pseen == 0 ? "" : (pseen + 1).ToString();
+            if (IsNoBase(v) || !subclassable)
+                continue;
+
+            var pureParams = Params(v);
+            string pureSig = string.Join(", ", new[] { "void* self" }.Concat(pureParams.SelectMany(CppParamsFor)));
+            string pureArgs = string.Join(", ", new[] { $"static_cast<{name}*>(self)" }
+                .Concat(pureParams.Select(p => NativeName(PName(p)))));
+            string pureRet = ReturnType(v);
+            // The access helper already returns the C ABI value, so this only forwards it.
+            string forwarded = $"QsApiAccess_{name}::Call_{vname}{pSuffix}({pureArgs})";
+            sb.AppendLine($"extern \"C\" __declspec(dllexport) {NativeRetCpp(pureRet)} qs_api_{name}_{vname}{pSuffix}_vt({pureSig})");
+            sb.AppendLine("{");
+            sb.AppendLine("    " + (pureRet == "void" ? forwarded + ";" : "return " + forwarded + ";"));
+            sb.AppendLine("}");
+            sb.AppendLine();
+        }
+
         var virtualOverloads = new Dictionary<string, int>(StringComparer.Ordinal);
         for (int i = 0; i < declaredVirtuals.Count && subclassable; i++)
         {
