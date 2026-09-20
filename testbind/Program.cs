@@ -36,6 +36,8 @@ static class Program
                 case "api-basicdrawing": return ApiBasicDrawingDemo.Run();
                 case "api-gradients": return ApiGradientsDemo.Run();
                 case "api-painterpaths": return ApiPainterPathsDemo.Run();
+                case "api-completer": return ApiCompleterDemo.Run();
+                case "api-customsortfilter": return ApiCustomSortFilterDemo.Run();
 
                 // WindowFlagsApi.cs exists but is deliberately not wired in: it dies about
                 // three runs in ten while Qt tears the process down (see its header).
@@ -46,7 +48,7 @@ static class Program
             Console.WriteLine("        api-spinboxes | api-shortcut | api-metaobject | api-shapedclock | api-sliders |");
             Console.WriteLine("        api-calendarwidget | api-menus | api-basiclayouts | api-scribble | api-gallery |");
             Console.WriteLine("        api-systray | api-docviewer | api-basicdrawing | api-gradients |");
-            Console.WriteLine("        api-painterpaths");
+            Console.WriteLine("        api-painterpaths | api-completer | api-customsortfilter");
             return 0;
         }
         catch (Exception ex)
