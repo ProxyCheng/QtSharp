@@ -181,6 +181,16 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-painterpaths
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+# The completer example: four models behind one line edit (a plain and a managed QFileSystemModel,
+# a two-column country model, a word list), the completion modes, case sensitivity, the popup view.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-completer
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The custom sort/filter proxy model: a managed QSortFilterProxyModel subclass whose
+# filterAcceptsRow()/lessThan() Qt itself calls, over a pattern, a syntax and a date range.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-customsortfilter
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 # The sample a user starts from: a project outside this repository's test app that only imports
 # QtSharp.Api.props. Covered here so the "write your own UI" path cannot rot.
 Write-Host "=== [6] Build + run the standalone sample ==="

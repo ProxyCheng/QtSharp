@@ -724,6 +724,9 @@ public static partial class ApiModel
         // A document object drawn by the application: QTextDocument asks the layout handler for
         // its intrinsic size and to paint itself, which is the textobject example.
         "QTextObjectInterface",
+        // Custom filtering and sorting: QSortFilterProxyModel is how a real application narrows a
+        // model down, and filterAcceptsRow/filterAcceptsColumn/lessThan are the hooks it overrides.
+        "QSortFilterProxyModel",
     };
 
     // Collect the virtual names those classes declare, by walking their own members.
@@ -970,6 +973,17 @@ public static partial class ApiModel
 
         // Only the virtuals this class declares, and only the names a managed override may
         // install. The dispatch chain is merged from the model by the code generator.
+        //
+        // A *private* virtual is recorded (with `noBase`) but the code generator must not override
+        // it: Qt declares the three hooks QAbstractListModel hides (columnCount, hasChildren,
+        // parent) as private precisely so that subclasses do not replace them, and a subclass
+        // cannot chain to them either, since the generated native wrapper is not a friend.
+        // Overriding one with `return default` made QAbstractListModel::columnCount answer 0
+        // instead of 1 - and since QAbstractItemModel::index() goes through hasIndex() ->
+        // columnCount(), every QModelIndex of a QStringListModel came back invalid (found by the
+        // completer example: `model.index(0, 0).isValid()` was false and data() was empty).
+        // It has to stay in the list, though, or the chain merge would walk past it and pick up
+        // the public pure QAbstractItemModel::columnCount instead.
         var virtuals = callable
             .Where(m => m.IsVirtual && !m.IsCtor)
             .Where(m => PublishAsVirtual(m.Name, className))
@@ -1897,8 +1911,9 @@ public static partial class ApiModel
             // override anything (QWidget::sizeHint() const).
             if (v.IsConst)
                 sb.Append(", \"const\": true");
-            // A private virtual has no accessible base implementation, so a managed override
-            // cannot chain to it (and Qt's own behaviour is only reachable by overriding).
+            // A private virtual has no accessible base implementation. The code generator must
+            // leave the slot alone (Qt's own implementation is the only correct one) - overriding
+            // it with a do-nothing default is what broke QStringListModel's indices.
             if (v.Private)
                 sb.Append(", \"noBase\": true");
             sb.Append(", \"returnType\": ").Append(Json(v.ReturnType));
