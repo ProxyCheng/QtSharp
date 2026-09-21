@@ -612,7 +612,7 @@ testapp api             # QObject 冒烟(方法/信号/虚函数)
 testapp api-analogclock # 完整 AnalogClock demo(真实事件循环 + 渲染 + 事件回调)
 testapp api-lineedits   # 完整 LineEdits demo(布局 + 控件 + 校验器 + 信号)
 testapp api-widgets     # QtWidgets 巡礼(菜单/工具栏/标签页/分割器/三个 item view/model-view-proxy/mapper/日历/undo)
-testapp api-docviewer   # 22 个 demo 见 testbind/Program.cs 的 switch 与 tools/regen-api.ps1
+testapp api-docviewer   # 29 个 demo 见 testbind/Program.cs 的 switch 与 tools/regen-api.ps1
 ```
 `testapp` 不带参数只打印用法;`QTSHARP_DEMO_MS=8000` 可让 `api-analogclock` 在屏幕上多留一会儿(默认 1.5 秒)。
 
@@ -791,6 +791,17 @@ sliders / spinboxes / windowflags / lineedits / shapedclock / calendar / systray
 **㉜**:`stardelegate` —— 纯 `testbind/` 新增 1 个 demo + 门禁(`StarDelegateApi.cs`,17 项);顺带确认"未绑定模型(`QTableWidget` 私有模型)够不着"这个能力缺口(见"㉜",含修法)。
 
 **㉝(本轮)**:`gen/ApiCodeGen.cs` 的 **`__managedSubclass` + `_vt` 路由**(㉜ 那条缺口的修法,范围扩到**所有已发布虚函数**;踩到 `subclassCtor` 漏置位导致栈溢出)+ `QsApiAccess_X` 访问类;`StarDelegateApi.cs` 回归改回 `QTableWidget`(`+1` 项断言);新增 `CompositionApi.cs`(`api-composition`,16 项)+ `Program.cs`/`tools/regen-api.ps1` 各加 1 行。
+
+### ✅ 最近 5 个 commit(旧链路删除 + 搬示例这一批)
+| commit | 内容 |
+|---|---|
+| `fda5614` | `Delete the rest of the legacy pipeline` —— testbind/native/CppSharp/rebuild-generator/lib 全部清掉(`lib/lib/clang/19` 保留) |
+| `8f31aca` | `Port the first painting examples` —— `api-basicdrawing`(34)/`api-gradients`(18)/`api-painterpaths`(32),全部读像素断言 |
+| `aa64435` | `Port the completer and custom-sort/filter examples...` —— `api-completer`(29)/`api-customsortfilter`(19);`QSortFilterProxyModel` 进扩展类表;修"私有虚函数被 override 成 `return default`"(`VirtualSlot.Blocked`) |
+| `b7ee921` | `Port the star delegate example, and pin down a real gap it exposed` —— `api-stardelegate`(17);记下"`view.Model()` 够不着私有 C++ 模型"的缺口 |
+| `3cb8a53` | `Let an adopted C++ object reach its own override, and port the composition example` —— `__managedSubclass` + `_vt` + `QsApiAccess_X`;`api-stardelegate` 换回 `QTableWidget`;`api-composition`(16) |
+
+**当前门禁**:**29 个 demo + sample、1074 项断言全 PASS**;model 逐字节一致(446 类 / 451 枚举)、codegen 两次一致。工作区干净。
 
 **㉛(上一批)**:completer + custom sort/filter。`gen/` 两处改动 —— `VirtualExtensionClasses` 加 `QSortFilterProxyModel`(开扩展点),以及 `ApiCodeGen` 的 `VirtualSlot.Blocked`(**修掉"私有虚函数被 override 成 `return default`"** ⇒ `QStringListModel` 的索引/`data()` 恢复正常);`model/qtsharp.api.json` 随重抽更新(5 条 `noBase` 恢复 + `QSortFilterProxyModel` 的 virtuals);`testbind/CompleterApi.cs`(29 项)+ `CustomSortFilterApi.cs`(19 项)+ `Program.cs`/`tools/regen-api.ps1` 各加 2 行。
 
@@ -995,7 +1006,7 @@ widgets/lineedits、analogclock、calculator、spinboxes、sliders、shapedclock
 - ~~旧链路生成很不稳定必须 retry~~(已随旧链路删除);现在 `extract2` 一条 TU **一次解析即确定**,model 门禁直接对哈希。
 - `QPainter::setPen(QPen)`/`setBrush(QBrush)` 实际是 **`QPainter.Pen`/`QPainter.Brush` 属性**;`QModelIndex` 没有 `internalPointer` 导出(用 `InternalId`)。
 - `QSettings(string,string)` ctor 时有时无;用 `QSettings(Scope, org, app)` 更稳。
-- **`extract2` 只有 ~2.5 秒**,`tools/regen-api.ps1` 全程(含 native 编译与 22 个 demo + sample)约 5–7 分钟;**别并发跑**(会争 `testbind/bin/testapp.exe`,报 `MSB3021 文件被另一个进程占用`)。`QTSHARP_ROOTS` 可以只跑子集排查。
+- **`extract2` 只有 ~2.5 秒**,`tools/regen-api.ps1` 全程(含 native 编译与 29 个 demo + sample)约 5–7 分钟;**别并发跑**(会争 `testbind/bin/testapp.exe`,报 `MSB3021 文件被另一个进程占用`)。`QTSHARP_ROOTS` 可以只跑子集排查。
 - **僵尸 `testapp` 会锁住 exe**:跑 demo 中断/超时后会留进程,下次构建直接 `MSB3021`。`Get-Process testapp | Stop-Process -Force` 清掉即可。
 - **改生成代码的调用点时注意 `Q_PROPERTY` 改名**:属性占 Pascal 名后访问器退回 C++ 原名(`window.Children()`→`children()`、`QTimer.Interval()`→`interval()`、`QWidget.Width()`→`width()`);编译错误 `CS1955/CS1501`("X 不是函数" / "该方法没有采用 N 个参数的重载")就是这个信号,按报错行把 `.Prop(` 改成 `.prop(` 即可(`CS1501` 的报文里没有类名前缀)。
 - **PowerShell 5.1 的字符串比较是大小写不敏感的**:`$a -ne $b` 对只有大小写差异的字符串返回"相等" → 用 `-cne`;写"改大小写"的批量脚本时曾因此静默失败两次。
