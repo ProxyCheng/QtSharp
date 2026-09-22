@@ -3,8 +3,22 @@ param(
     [switch]$Adopt
 )
 $ErrorActionPreference = "Continue"
-$root = "D:\QtSharp"
+# The repository root is this script's parent, so a clone can live anywhere; everything below runs
+# relative to it whatever the caller's working directory was.
+$root = Split-Path -Parent $PSScriptRoot
+Set-Location -LiteralPath $root
 $genBin = "$root\gen\bin\Release\net10.0\win-x64"
+
+Write-Host "=== [0] Prerequisites ==="
+$clangHeaders = Get-ChildItem "$root\lib\lib\clang" -Directory -ErrorAction SilentlyContinue |
+    Where-Object { Test-Path (Join-Path $_.FullName "include\stddef.h") } | Select-Object -First 1
+if (-not $clangHeaders) {
+    Write-Host "clang's builtin headers are missing."
+    Write-Host "Put a clang resource folder at lib\lib\clang\<version>\include (any clang version),"
+    Write-Host "or set QTSHARP_CLANG_RESOURCE_DIR - see README.md, section Prerequisites."
+    exit 1
+}
+Write-Host "clang builtin headers: $($clangHeaders.FullName)"
 
 Write-Host "=== [1] Build gen ==="
 dotnet build "$root\gen\gen.csproj" -c Release --nologo | Out-Host
@@ -70,156 +84,28 @@ if ($LASTEXITCODE -ne 0) {
 dotnet build "$root\testbind\testbind.csproj" -c Release --nologo *> "$root\out\api_testbuild.log"
 if ($LASTEXITCODE -ne 0) { Write-Host "testbind build failed"; Select-String -Path "$root\out\api_testbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }; exit 1 }
 
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The AnalogClock demo on the new pipeline: a real Qt event loop, a real widget and a real
-# paintEvent override, all reached through generated code.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-analogclock
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The LineEdits demo: layouts, group boxes, combo boxes, validators and signals.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-lineedits
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The QtWidgets tour: menus, tool bars, tabs, splitters, item views, model/view/proxy, a data
-# widget mapper, a calendar and an undo stack - the whole widget surface the model now covers.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-widgets
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The graphics view family: scene, view, three item kinds and an off-screen render.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-graphics
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The QtCore value classes: files and directories, JSON, ids, random numbers, timers and the
-# command line - the batch that took QtCore from 42 bound classes to 64.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-core
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# Ownership: only the wrapper that created an object may release it, and Qt is asked first
-# (a reparented QObject belongs to its parent, not to the GC).
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-ownership
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The input events and the rich text types: a wheel turn and a key press are delivered by Qt and
-# read through the generated event classes, and a QTextCharFormat is used through its QTextFormat
-# base (the model's base lists, not just the layout side).
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-events
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The extension points: a table model and an item delegate written in C#, with Qt itself driving
-# them (the view asks for rowCount/data, the delegate is asked to paint).
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-custommodel
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The Calculator example, rewritten on the new pipeline: a managed QToolButton subclass whose
-# sizeHint Qt lays out with, and a keyPressEvent override that reads the key code out of a bound
-# QKeyEvent - the demo that used to be impossible without binding the input events.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-calculator
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The Spin Boxes example: the whole spin box property surface (range, step, prefix, suffix,
-# special value text, integer base, group separator) plus the date and time edits.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-spinboxes
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The Shortcut Editor example: a *hierarchical* model written in C#, which needs the protected
-# createIndex/beginInsertRows/... the model publishes, plus a delegate that edits the shortcut
-# column. This is the demo the legacy pipeline crashed on when a tree node was opened.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-shortcut
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# Signals and properties declared in C# itself (the pyqtSignal/Property equivalent): the runtime
-# builds a meta-object for the managed subclass, so indexOfSignal finds it, connect() works and
-# QObject::property reaches the C# accessors.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-metaobject
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The window-shape example: a frameless translucent clock with a round mask and mouse dragging.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-shapedclock
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The sliders example: sliders/scroll bar/dial groups whose layout direction follows the resize.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-sliders
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The calendar widget example: preview/general options/dates/text formats, with the real
-# dateChanged signals the legacy binding could not use.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-calendarwidget
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The menus example: menu bar, exclusive alignment actions, status tips and a context menu.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-menus
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The basic layouts example: menu bar in a layout, horizontal/grid/form groups, a scroll area
-# and a button box.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-basiclayouts
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The scribble example: an off-screen QImage paint area with File/Options/Help menus and Save As.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-scribble
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The widget gallery: the whole widget surface behind a tree of groups, tabs and item views.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-gallery
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The system tray example: tray icon/menu/actions, balloon messages and the close-to-tray logic.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-systray
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The document viewer demo: menus/tool bar/splitter skeleton, QSettings-backed working directory
-# and recent files, and the text/JSON/image viewers (no PDF or printing - those modules are not
-# shipped, and the official native viewer plugins cannot be loaded from managed code).
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-docviewer
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The basic drawing example: thirteen shapes drawn through QPainter with pen/brush/antialiasing/
-# transformation settings, asserted on the pixels they leave behind.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-basicdrawing
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The gradients example: QLinearGradient/QRadialGradient/QConicalGradient, their stops, the three
-# spread modes and the QGradient::Preset table.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-gradients
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The painter paths example: nine hand-built QPainterPath objects (arcs, cubics, text outlines, a
-# pentagram), the fill rules and the gradient fill of the official RenderArea.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-painterpaths
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The completer example: four models behind one line edit (a plain and a managed QFileSystemModel,
-# a two-column country model, a word list), the completion modes, case sensitivity, the popup view.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-completer
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The custom sort/filter proxy model: a managed QSortFilterProxyModel subclass whose
-# filterAcceptsRow()/lessThan() Qt itself calls, over a pattern, a syntax and a date range.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-customsortfilter
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The star delegate: a managed QStyledItemDelegate that paints a rating and edits it through a
-# managed QWidget editor (createEditor/setEditorData/setModelData/updateEditorGeometry).
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-stardelegate
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The composition example: the QPainter composition modes over a base buffer plus a source circle,
-# read back out of the blended buffer (alpha included).
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-composition
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The transformations example: four render areas drawing the same path, three of them with the
-# transformations their combo box selects - cumulative, like the official operationChanged().
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-transform
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The path stroking example: seven animated control points joined into a QPainterPath, stroked with
-# a pen or (for the custom style) with a QPainterPathStroker, inside the tiled ArthurFrame.
-& "$root\testbind\bin\Release\net10.0\testapp.exe" api-pathstroke
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
+# What is covered, in the order the library lists it: the QObject smoke test; the AnalogClock; the
+# LineEdits, Calculator, SpinBoxes, Sliders, ShapedClock, Shortcut Editor and Calendar widget
+# examples; the whole QtWidgets tour; the graphics view family; the QtCore tour (files, JSON, ids,
+# timers, threads, IPC); the input events; ownership; the managed model/delegate/proxy/completer/
+# star-delegate examples; the document viewer; the system tray; the painting examples (basic
+# drawing, gradients, painter paths, composition, transformations, path stroking); the meta-object
+# example. Each one drives the generated API, checks what it sees and ends in [SELFTEST OK];
+# CONTEXT.md has the details and the assertion count per demo.
+#
+# The list comes from the library itself (ApiDemos.Names), so a new example is covered by the gate
+# as soon as it is registered - and the demo name is echoed here, which is what makes a crash
+# attributable to one of these 31 GUI processes.
+$demos = & "$root\testbind\bin\Release\net10.0\testapp.exe" --list
+if ($LASTEXITCODE -ne 0 -or -not $demos) { Write-Host "could not list the demos"; exit 1 }
+foreach ($demo in $demos) {
+    Write-Host "  --- $demo"
+    & "$root\testbind\bin\Release\net10.0\testapp.exe" $demo
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ("[FAIL] {0} exited with 0x{1:X8}" -f $demo, $LASTEXITCODE)
+        exit $LASTEXITCODE
+    }
+}
 # The sample a user starts from: a project outside this repository's test app that imports only
 # QtSharp.Api.props and references the demo library. Covered here so the "write your own UI" path
 # cannot rot, together with the second entry point into the demos ("hello <demo>").
