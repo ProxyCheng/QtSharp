@@ -57,7 +57,16 @@ Write-Host "=== [4] Build native bindings ==="
 & cmd /c "`"$root\build_api.bat`"" *> "$root\out\api_native.log"
 if ($LASTEXITCODE -ne 0) { Write-Host "native build failed"; Get-Content "$root\out\api_native.log" | Select-String "error" | Select-Object -First 6; exit 1 }
 
-Write-Host "=== [5] Build + run the smoke tests ==="
+Write-Host "=== [5] Build the demo library, then build + run the smoke tests ==="
+# The ported examples themselves: the generated binding, the managed runtime and every `api-*`
+# window in one assembly. testbind (and samples/hello) only reference it.
+dotnet build "$root\demos\QtSharp.Demos.csproj" -c Release --nologo *> "$root\out\api_demosbuild.log"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "demos build failed"
+    Select-String -Path "$root\out\api_demosbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }
+    exit 1
+}
+
 dotnet build "$root\testbind\testbind.csproj" -c Release --nologo *> "$root\out\api_testbuild.log"
 if ($LASTEXITCODE -ne 0) { Write-Host "testbind build failed"; Select-String -Path "$root\out\api_testbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }; exit 1 }
 
@@ -201,8 +210,19 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & "$root\testbind\bin\Release\net10.0\testapp.exe" api-composition
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-# The sample a user starts from: a project outside this repository's test app that only imports
-# QtSharp.Api.props. Covered here so the "write your own UI" path cannot rot.
+# The transformations example: four render areas drawing the same path, three of them with the
+# transformations their combo box selects - cumulative, like the official operationChanged().
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-transform
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The path stroking example: seven animated control points joined into a QPainterPath, stroked with
+# a pen or (for the custom style) with a QPainterPathStroker, inside the tiled ArthurFrame.
+& "$root\testbind\bin\Release\net10.0\testapp.exe" api-pathstroke
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The sample a user starts from: a project outside this repository's test app that imports only
+# QtSharp.Api.props and references the demo library. Covered here so the "write your own UI" path
+# cannot rot, together with the second entry point into the demos ("hello <demo>").
 Write-Host "=== [6] Build + run the standalone sample ==="
 dotnet build "$root\samples\hello\Hello.csproj" -c Release --nologo *> "$root\out\api_samplebuild.log"
 if ($LASTEXITCODE -ne 0) {
@@ -210,8 +230,25 @@ if ($LASTEXITCODE -ne 0) {
     Select-String -Path "$root\out\api_samplebuild.log" -Pattern "error CS" | Select-Object -First 6 | ForEach-Object { Write-Host $_.Line.Trim() }
     exit 1
 }
+
+# The sample's own window.
 $env:HELLO_AUTOCLOSE_MS = "1500"
 & "$root\samples\hello\bin\Release\net10.0\hello.exe"
 $sampleExit = $LASTEXITCODE
 Remove-Item Env:\HELLO_AUTOCLOSE_MS -ErrorAction SilentlyContinue
-exit $sampleExit
+if ($sampleExit -ne 0) { exit $sampleExit }
+
+# The sample's own C#-declared signal and properties (the pyqtSignal / pyqtProperty equivalent,
+# samples/hello/HelloCounter.cs) - a windowless run that checks itself.
+& "$root\samples\hello\bin\Release\net10.0\hello.exe" selftest
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# The same sample running a ported example, which is what makes it a usable trial entry.
+& "$root\samples\hello\bin\Release\net10.0\hello.exe" api-transform
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# And its list of them.
+$names = (& "$root\samples\hello\bin\Release\net10.0\hello.exe" help) -join "`n"
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+if ($names -notmatch 'api-pathstroke') { Write-Host "hello help did not list the demos"; exit 1 }
+exit 0

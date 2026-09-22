@@ -16,6 +16,3 @@ Qt/
 
 # Generated output
 out/
-
-# Generated binding source (regenerate via tools/regen-api.ps1)
-testbind/QtSharp.Api.cs

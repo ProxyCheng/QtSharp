@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="gen/gen.csproj" />
+  <Project Path="demos/QtSharp.Demos.csproj" />
   <Project Path="testbind/testbind.csproj" />
   <Project Path="samples/hello/Hello.csproj" />
   <Project Path="tools/clangprobe/ClangProbe.csproj" />

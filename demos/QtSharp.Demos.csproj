@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The Qt examples this repository has ported to C#, as a library.
+
+       It compiles, into one assembly:
+         * the generated binding  - out/api/QtSharp.Api.cs
+         * the managed runtime    - runtime/ApiRuntime.cs + runtime/ApiApplication.cs
+         * every `api-*` demo     - ApiDemos.Run("api-calculator") and friends
+       so an entry point is nothing but a reference:
+
+           <ProjectReference Include="..\demos\QtSharp.Demos.csproj" />
+
+       A project that references this library must set QtSharpCompileBinding=false *before*
+       importing QtSharp.Api.props. Otherwise it compiles the generated binding a second time and
+       every QtSharp.Api type exists in two assemblies (CS0433).
+
+       This is also the assembly to reference if you just want the binding plus a dispatcher for
+       trying the ported examples out - see samples/hello. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>QtSharp.Demos</AssemblyName>
+  </PropertyGroup>
+
+  <!-- The binding, the runtime, the native QtSharp.Api.dll and the Qt DLLs. -->
+  <Import Project="..\QtSharp.Api.props" />
+
+</Project>

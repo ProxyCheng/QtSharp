@@ -8,10 +8,16 @@
     <PlatformTarget>x64</PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>testapp</AssemblyName>
+    <!-- The binding is compiled inside QtSharp.Demos; this app only dispatches to it. -->
+    <QtSharpCompileBinding>false</QtSharpCompileBinding>
   </PropertyGroup>
 
-  <!-- The generated binding (out/api/QtSharp.Api.cs + runtime/ApiRuntime.cs + the native
-       DLLs and the Qt runtime). This is all this project needs now. -->
+  <!-- The native QtSharp.Api.dll, the Qt runtime DLLs and the platform plugin. -->
   <Import Project="..\QtSharp.Api.props" />
+
+  <!-- Every ported example (and the QtSharp.Api binding + runtime they are built on). -->
+  <ItemGroup>
+    <ProjectReference Include="..\demos\QtSharp.Demos.csproj" />
+  </ItemGroup>
 
 </Project>

@@ -13,17 +13,32 @@
         <Import Project="..\..\QtSharp.Api.props" />
 
     Override QtSharpRoot / QtSharpApiDir / QtRuntimeDir if the pieces live elsewhere.
+
+    A project that *references* an assembly which already compiles the binding (the demos library,
+    QtSharp.Demos.dll) must set QtSharpCompileBinding=false first - compiling it twice defines every
+    QtSharp.Api type in two assemblies, which is CS0433 everywhere. The import still brings the
+    native DLLs and the Qt runtime, so such a project needs no further setup:
+
+        <PropertyGroup>
+          <QtSharpCompileBinding>false</QtSharpCompileBinding>
+        </PropertyGroup>
+        <Import Project="..\..\QtSharp.Api.props" />
+        <ItemGroup>
+          <ProjectReference Include="..\..\demos\QtSharp.Demos.csproj" />
+        </ItemGroup>
   -->
   <PropertyGroup>
     <QtSharpRoot Condition="'$(QtSharpRoot)' == ''">$(MSBuildThisFileDirectory)</QtSharpRoot>
     <QtSharpApiDir Condition="'$(QtSharpApiDir)' == ''">$(QtSharpRoot)out\api</QtSharpApiDir>
     <QtRuntimeDir Condition="'$(QtRuntimeDir)' == ''">$(QtSharpRoot)Qt\6.11.0\runtime</QtRuntimeDir>
+    <!-- true (the default) compiles the generated binding into this project. -->
+    <QtSharpCompileBinding Condition="'$(QtSharpCompileBinding)' == ''">true</QtSharpCompileBinding>
     <!-- The generated binding keeps the C ABI in pointers and blittable structures. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(QtSharpCompileBinding)' == 'true'">
     <Compile Include="$(QtSharpRoot)runtime\ApiRuntime.cs" />
     <!-- The hand-written command-line constructors of QCoreApplication/QGuiApplication/QApplication. -->
     <Compile Include="$(QtSharpRoot)runtime\ApiApplication.cs" />
