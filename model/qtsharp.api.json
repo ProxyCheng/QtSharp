@@ -1349,7 +1349,6 @@
         { "name": "closeAllWindows", "static": true, "returnType": "void", "parameters": [] },
         { "name": "cursorFlashTime", "static": true, "returnType": "int", "parameters": [] },
         { "name": "doubleClickInterval", "static": true, "returnType": "int", "parameters": [] },
-        { "name": "exec", "static": true, "returnType": "int", "parameters": [] },
         { "name": "focusWidget", "static": true, "returnType": "QWidget*", "parameters": [] },
         { "name": "font", "static": true, "returnType": "QFont", "parameters": [] },
         { "name": "font", "static": true, "returnType": "QFont", "parameters": [{ "name": "arg0", "type": "QWidget*" }] },
@@ -2437,6 +2436,28 @@
     }
 ,
     {
+      "name": "QChildEvent",
+      "header": "QtCore/qcoreevent.h",
+      "bases": ["QEvent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "added", "returnType": "bool", "parameters": [] },
+        { "name": "child", "returnType": "QObject*", "parameters": [] },
+        { "name": "clone", "returnType": "QChildEvent*", "parameters": [] },
+        { "name": "polished", "returnType": "bool", "parameters": [] },
+        { "name": "removed", "returnType": "bool", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
       "name": "QChildWindowEvent",
       "header": "QtGui/qevent.h",
       "bases": ["QEvent"],
@@ -3253,8 +3274,8 @@
         { "name": "applicationVersion", "static": true, "returnType": "QString", "parameters": [] },
         { "name": "arguments", "static": true, "returnType": "QStringList", "parameters": [] },
         { "name": "closingDown", "static": true, "returnType": "bool", "parameters": [] },
-        { "name": "exec", "static": true, "returnType": "int", "parameters": [] },
-        { "name": "exit", "static": true, "returnType": "void", "parameters": [{ "name": "retcode", "type": "int", "optional": true, "default": "0" }] },
+        { "name": "exec", "returnType": "int", "parameters": [] },
+        { "name": "exit", "returnType": "void", "parameters": [{ "name": "retcode", "type": "int", "optional": true, "default": "0" }] },
         { "name": "installTranslator", "static": true, "returnType": "bool", "parameters": [{ "name": "messageFile", "type": "QTranslator*" }] },
         { "name": "instance", "static": true, "returnType": "QCoreApplication*", "parameters": [] },
         { "name": "instanceExists", "static": true, "returnType": "bool", "parameters": [] },
@@ -3269,7 +3290,7 @@
         { "name": "processEvents", "static": true, "returnType": "void", "parameters": [{ "name": "flags", "type": "QEventLoop::ProcessEventsFlags", "optional": true, "default": "QEventLoop.ProcessEventsFlags.AllEvents" }] },
         { "name": "processEvents", "static": true, "returnType": "void", "parameters": [{ "name": "flags", "type": "QEventLoop::ProcessEventsFlags" }, { "name": "deadline", "type": "QDeadlineTimer" }] },
         { "name": "processEvents", "static": true, "returnType": "void", "parameters": [{ "name": "flags", "type": "QEventLoop::ProcessEventsFlags" }, { "name": "maxtime", "type": "int" }] },
-        { "name": "quit", "static": true, "returnType": "void", "parameters": [] },
+        { "name": "quit", "returnType": "void", "parameters": [] },
         { "name": "removeLibraryPath", "static": true, "returnType": "void", "parameters": [{ "name": "arg0", "type": "QString" }] },
         { "name": "removePostedEvents", "static": true, "returnType": "void", "parameters": [{ "name": "receiver", "type": "QObject*" }, { "name": "eventType", "type": "int", "optional": true, "default": "0" }] },
         { "name": "removeTranslator", "static": true, "returnType": "bool", "parameters": [{ "name": "messageFile", "type": "QTranslator*" }] },
@@ -7565,7 +7586,6 @@
         { "name": "desktopFileName", "static": true, "returnType": "QString", "parameters": [] },
         { "name": "desktopSettingsAware", "static": true, "returnType": "bool", "parameters": [] },
         { "name": "devicePixelRatio", "returnType": "double", "parameters": [] },
-        { "name": "exec", "static": true, "returnType": "int", "parameters": [] },
         { "name": "focusObject", "static": true, "returnType": "QObject*", "parameters": [] },
         { "name": "focusWindow", "static": true, "returnType": "QWindow*", "parameters": [] },
         { "name": "font", "static": true, "returnType": "QFont", "parameters": [] },
@@ -18583,6 +18603,27 @@
       ],
       "signals": [
         { "name": "timeout", "parameters": [] }
+      ]
+    }
+,
+    {
+      "name": "QTimerEvent",
+      "header": "QtCore/qcoreevent.h",
+      "bases": ["QEvent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "clone", "returnType": "QTimerEvent*", "parameters": [] },
+        { "name": "id", "returnType": "Qt::TimerId", "parameters": [] },
+        { "name": "matches", "returnType": "bool", "parameters": [{ "name": "timer", "type": "QBasicTimer" }] },
+        { "name": "timerId", "returnType": "int", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
       ]
     }
 ,

@@ -921,6 +921,24 @@ public static partial class ApiModel
 
         var callable = Children(record).Select(Member).Where(m => m != null).ToList();
 
+        // The application object is a singleton, and PyQt spells its run loop and its exits on the
+        // instance (`app.exec()`), which is what a C# user reaches for too - but C# refuses to call
+        // a *static* member through an instance reference (CS0176), so a static exec/quit/exit is
+        // unusable in the one spelling that reads naturally. They are published as instance
+        // members instead; the native side still calls the real static (self->exec() resolves to
+        // the same function - a static member function ignores the object expression).
+        foreach (var m in callable)
+        {
+            if (IsApplicationSingletonMember(className, m.Name))
+                m.IsStatic = false;
+        }
+
+        // Qt also re-declares exec() in QGuiApplication and QApplication. Those declarations are
+        // dropped: keeping them would only hide the QCoreApplication one (CS0108 in the generated
+        // binding) and bind a second, identical forwarder.
+        callable.RemoveAll(m => IsRedundantApplicationExec(className, m.Name));
+
+
         // An abstract class cannot be instantiated: its C++ pure virtuals are not implemented by
         // the generated subclass, so offering constructors would only produce a wrapper that
         // fails at link time (or worse, at run time).
@@ -1195,6 +1213,21 @@ public static partial class ApiModel
     // `if (object->parent()) return;` - and the wrapper only ever releases what it created
     // (__ownsNative).
     static bool OwnedOf(Root root) => root.Owned;
+
+    // The application classes. Their exec()/quit()/exit() act on the process's one application
+    // object, so the binding publishes them as *instance* members: C# cannot call a static member
+    // through an instance reference, and `app.Exec()` is the spelling PyQt (and every reader) uses.
+    static bool IsApplicationClassName(string className) =>
+        className is "QCoreApplication" or "QGuiApplication" or "QApplication";
+
+    static bool IsApplicationSingletonMember(string className, string name) =>
+        IsApplicationClassName(className) && name is "exec" or "quit" or "exit";
+
+    // QGuiApplication::exec and QApplication::exec are re-declarations of QCoreApplication::exec.
+    // The model keeps the one that can be inherited.
+    static bool IsRedundantApplicationExec(string className, string name) =>
+        className is "QGuiApplication" or "QApplication" && name == "exec";
+
 
     // One class-body child that is a function: methods, constructors, operators and templates.
     static unsafe FnFact Member(CXCursor cursor)
