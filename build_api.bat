@@ -9,7 +9,7 @@ rem D:\QtSharp:
 rem   QT_DIR       a Qt kit's dev files (include\ and lib\)   default: this repo's Qt\6.11.0\msvc2022_64
 rem   VCVARS       vcvarsall.bat of a Visual Studio with C++  default: the one used here
 rem   VCVARS_VER   the toolset version for -vcvars_ver         default: 14.44
-if "%QT_DIR%"=="" set QT_DIR=D:\QtSharp\Qt\6.11.0\msvc2022_64
+if "%QT_DIR%"=="" set QT_DIR=%~dp0Qt\6.11.0\msvc2022_64
 if "%VCVARS%"=="" set VCVARS=D:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvarsall.bat
 if "%VCVARS_VER%"=="" set VCVARS_VER=14.44
 
