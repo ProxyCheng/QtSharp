@@ -632,8 +632,7 @@ public static class ScribbleApi
         Check(area.PaintCount > 0,
             $"paintEvent reached C# {area.PaintCount} time(s) through the generated dispatch");
         using (var rendered = area.Grab())
-            Check(rendered != null && !rendered.IsNull()
-                  && rendered.Width() == area.Width && rendered.Height() == area.Height,
+            Check(ApiDemos.GrabCovers(rendered, area.Width, area.Height),
                 $"grab() rendered the area off-screen (got {rendered?.Width()}x{rendered?.Height()})");
 
         // ------------------------------------------------------------------ resizeEvent grows the image

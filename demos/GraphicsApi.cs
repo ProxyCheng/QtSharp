@@ -47,7 +47,7 @@ public static class ApiGraphicsDemo
 
         // An off-screen render proves the scene actually painted through Qt.
         var shot = view.Grab();
-        Check(shot.Width() == 240 && shot.Height() == 120,
+        Check(ApiDemos.GrabCovers(shot, 240, 120),
             $"the view rendered off-screen (got {shot.Width()}x{shot.Height()})");
 
         Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
