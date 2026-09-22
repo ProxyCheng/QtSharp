@@ -13,6 +13,15 @@ static class Program
     {
         try
         {
+            // --list prints the demo names one per line, which is what the repository's gate runs
+            // through: the list lives in the library, so it cannot drift from the dispatcher.
+            if (args.Length == 1 && args[0] == "--list")
+            {
+                foreach (string name in ApiDemos.Names)
+                    Console.WriteLine(name);
+                return 0;
+            }
+
             if (ApiDemos.TryRun(args, out int exitCode))
                 return exitCode;
 
