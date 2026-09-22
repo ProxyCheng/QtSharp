@@ -83,6 +83,48 @@ public static class ApiCodeGen
         return result;
     }
 
+    // Whether a bound class is a QEvent (directly or through a bound base). An event is the one
+    // object Qt builds on the caller's stack and hands to a handler for the duration of the call,
+    // with the address reused by the next event - which may well be of another type.
+    static readonly Dictionary<string, bool> derivesFromEvent = new(StringComparer.Ordinal);
+
+    static bool DerivesFromEvent(string className)
+    {
+        if (className == "QEvent")
+            return true;
+        if (derivesFromEvent.TryGetValue(className, out bool known))
+            return known;
+        derivesFromEvent[className] = false;        // a cycle would otherwise not terminate
+        bool result = false;
+        if (ByName.TryGetValue(className, out var cls))
+        {
+            foreach (var b in cls.GetProperty("bases").EnumerateArray().Select(x => x.GetString()))
+            {
+                if (DerivesFromEvent(b))
+                {
+                    result = true;
+                    break;
+                }
+            }
+        }
+        derivesFromEvent[className] = result;
+        return result;
+    }
+
+    // Wrapping the handle of a bound class that Qt passes to managed code (a virtual's argument or
+    // a signal's).
+    //
+    // An event must *not* enter the identity cache: it lives on the caller's stack, the next event
+    // reuses the address, and the cache would hand that next event the previous one's wrapper (a
+    // QMouseEvent wrapper for what is now a QPaintEvent). Everything else is an object with a life
+    // of its own, and identity is exactly what the C# side expects of it - the editor a delegate
+    // created has to come back as the very QKeySequenceEdit it built, or the cast to it fails
+    // (that is what a real double-click in the shortcut editor exposed).
+    static string ClassPtrRead(string cls, string expression)
+        => DerivesFromEvent(cls)
+            ? $"{cls}.FromTransientHandle({expression})"
+            : $"{cls}.FromHandle({expression})";
+
     public static void Run(string modelPath, string outDir)
     {
         using var document = JsonDocument.Parse(File.ReadAllText(modelPath));
@@ -1425,6 +1467,33 @@ public static class ApiCodeGen
                 sb.AppendLine("                " + line);
             sb.AppendLine("                );");
             sb.AppendLine();
+
+            // The same signal as a C# *event*, so the Qt spelling has its C# equivalent:
+            //     button.Clicked += handler;    button.Clicked -= handler;
+            // This is what a C# user reaches for, and the remove accessor really disconnects -
+            // the runtime remembers the handler as the key of the connection, so a long-lived
+            // object does not leak. The XxxSignal property stays: Emit lives there, and a shape
+            // that never has to remember the key is often what a test wants.
+            //
+            // A signal whose Pascal name a property, field or nested type already took keeps the
+            // QSignal only, the same way a colliding Q_PROPERTY is skipped (the event name is
+            // checked against the same reserved set).
+            string eventName = Pascal(sname) + sSuffix;
+            if (reservedByClass.TryGetValue(name, out var reservedNames) && !reservedNames.Contains(eventName))
+            {
+                string delegateType = csTypes.Count == 0
+                    ? "Action"
+                    : "Action<" + string.Join(", ", csTypes) + ">";
+                string readArgs = string.Join(", ", ps.Select((p, i) => SignalRead(PType(p), i)));
+                string valueCall = csTypes.Count == 0 ? "value()" : "value(" + readArgs + ")";
+                sb.AppendLine($"        /// <summary>The {sname} signal as a C# event (`+=` handler, `-=` handler disconnects).</summary>");
+                sb.AppendLine($"        public event {delegateType} {eventName}");
+                sb.AppendLine("        {");
+                sb.AppendLine($"            add => ApiRuntime.Connect(Handle, \"{mocSig}\", (argv, _) => {valueCall}, value);");
+                sb.AppendLine($"            remove => ApiRuntime.Disconnect(Handle, \"{mocSig}\", value);");
+                sb.AppendLine("        }");
+                sb.AppendLine();
+            }
         }
 
         // native subclass forwarding the virtuals into Dispatch
@@ -1788,7 +1857,10 @@ public static class ApiCodeGen
         string slot = $"Marshal.ReadIntPtr(argv, {index} * IntPtr.Size)";
         // char* has to be checked before the pointer branch: it is a string, not a handle.
         if (t == "char*") return $"ApiRuntime.FromUtf8({slot})";
-        if (IsPtr(t)) return IsClassPtr(t) ? $"{t.Substring(0, t.Length - 1)}.FromTransientHandle({slot})" : slot;
+        if (IsPtr(t))
+            return IsClassPtr(t)
+                ? ClassPtrRead(t.Substring(0, t.Length - 1), slot)
+                : slot;
         if (t == "bool") return $"Marshal.ReadByte({slot}) != 0";
         if (t == "int") return $"Marshal.ReadInt32({slot})";
         if (t == "double") return $"BitConverter.Int64BitsToDouble(Marshal.ReadInt64({slot}))";
@@ -1839,7 +1911,7 @@ public static class ApiCodeGen
         if (t == "char*") return $"ApiRuntime.FromUtf8(Marshal.ReadIntPtr({slot}))";
         if (IsPtr(t))
             return IsClassPtr(t)
-                ? $"{t.Substring(0, t.Length - 1)}.FromTransientHandle(Marshal.ReadIntPtr({slot}))"
+                ? ClassPtrRead(t.Substring(0, t.Length - 1), $"Marshal.ReadIntPtr({slot})")
                 : $"(IntPtr)Marshal.ReadIntPtr({slot})";
         if (t == "bool") return $"Marshal.ReadByte({slot}) != 0";
         if (t == "int") return $"Marshal.ReadInt32({slot})";
