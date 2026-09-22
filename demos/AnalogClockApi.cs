@@ -281,7 +281,7 @@ public static class ApiAnalogClockDemo
         clock.Repaint();
         using var rendered = clock.Grab();
 
-        Check(rendered != null && !rendered.IsNull() && rendered.Width() == 200 && rendered.Height() == 200,
+        Check(ApiDemos.GrabCovers(rendered, 200, 200),
             $"grab() rendered the clock at the requested 200x200 (got {rendered?.Width()}x{rendered?.Height()})");
         Check(clock.PaintCount > 0,
             $"paintEvent reached C# {clock.PaintCount} time(s) through the generated dispatch");

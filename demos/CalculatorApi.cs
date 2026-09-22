@@ -510,7 +510,7 @@ public static class ApiCalculatorDemo
         // And it really draws: an off-screen render of the whole window.
         using (var rendered = calculator.Grab())
         {
-            Check(!rendered.IsNull() && rendered.Width() == calculator.Width,
+            Check(ApiDemos.GrabCovers(rendered, calculator.Width, calculator.Height),
                 $"the calculator rendered off-screen (got {rendered.Width()}x{rendered.Height()})");
         }
 

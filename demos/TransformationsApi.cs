@@ -335,11 +335,19 @@ public static class ApiTransformationsDemo
                 if (y > maxY) maxY = y;
             }
         }
-        return (count, minX, minY, maxX, maxY);
+        // RenderToImage() grabs, and grab() works in device pixels, so the bounds are reported in
+        // the logical coordinates the assertions and the painting code talk about. The counts stay
+        // in device pixels, which is harmless: they only ever feed lower-bound / ratio checks.
+        double dpr = image.DevicePixelRatio();
+        return (count, (int)(minX / dpr), (int)(minY / dpr), (int)(maxX / dpr), (int)(maxY / dpr));
     }
 
     static bool Px(QImage image, int x, int y, Func<int, int, int, bool> match)
     {
+        // The callers pass logical coordinates; the image is in device pixels.
+        double dpr = image.DevicePixelRatio();
+        x = (int)Math.Round(x * dpr);
+        y = (int)Math.Round(y * dpr);
         if (x < 0 || y < 0 || x >= image.Width() || y >= image.Height())
             return false;
         uint p = image.Pixel(x, y);

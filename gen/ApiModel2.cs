@@ -22,6 +22,7 @@ public static partial class ApiModel
     public static int RunExtract2(string modelPath)
     {
         var clock = Stopwatch.StartNew();
+        DropStaleIncludeEntries();
 
         foreach (var root in ActiveRoots)
         {
@@ -164,6 +165,29 @@ public static partial class ApiModel
             + "next to the generator), or set QTSHARP_CLANG_RESOURCE_DIR. See README.md.");
     }
 
+
+    // A stale INCLUDE - the usual leftover of a Visual Studio that was uninstalled or moved - is
+    // taken by clang *instead of* the toolchain it would otherwise detect, and then every
+    // <cstddef>/<type_traits> the Qt headers include goes missing. The damage is silent: with
+    // delayed template parsing and MSVC compatibility, unknown types recover as int, so
+    // std::size_t stops being 8 bytes and qsizetype comes out as int - a model that differs from
+    // the checked-in one in hundreds of places with no error to explain it. Drop the entries that
+    // do not exist, and let clang detect the toolchain when none survive.
+    static void DropStaleIncludeEntries()
+    {
+        var include = Environment.GetEnvironmentVariable("INCLUDE");
+        if (string.IsNullOrEmpty(include))
+            return;
+
+        var entries = include.Split(';').Where(e => e.Length > 0).ToArray();
+        var live = entries.Where(Directory.Exists).ToArray();
+        if (live.Length == entries.Length)
+            return;
+
+        Console.WriteLine($"[model2] INCLUDE: dropped {entries.Length - live.Length} path(s) that do not exist"
+            + (live.Length == 0 ? " - clang will detect the MSVC toolchain itself" : ""));
+        Environment.SetEnvironmentVariable("INCLUDE", live.Length == 0 ? null : string.Join(";", live));
+    }
 
     static string[] ClangArgs(List<string> headers)
     {
