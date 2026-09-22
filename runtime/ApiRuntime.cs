@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -197,7 +197,11 @@ namespace QtSharp.Api
         }
 
         public void Connect(QObject sender, Action handler)
-            => ApiRuntime.Connect(sender.Handle, Signature, (argv, _) => handler());
+            => ApiRuntime.Connect(sender.Handle, Signature, (argv, _) => handler(), handler);
+
+        /// <summary>Drops the connection a previous Connect made for this handler.</summary>
+        public bool Disconnect(QObject sender, Action handler)
+            => ApiRuntime.Disconnect(sender.Handle, Signature, handler);
 
         public void Emit(QObject sender) => ApiRuntime.EmitUser(sender.Handle, Signature, Type.EmptyTypes, Array.Empty<object>());
     }
@@ -211,7 +215,11 @@ namespace QtSharp.Api
         }
 
         public void Connect(QObject sender, Action<T1> handler)
-            => ApiRuntime.Connect(sender.Handle, Signature, (argv, _) => handler(MetaType.Read<T1>(argv, 0)));
+            => ApiRuntime.Connect(sender.Handle, Signature, (argv, _) => handler(MetaType.Read<T1>(argv, 0)), handler);
+
+        /// <summary>Drops the connection a previous Connect made for this handler.</summary>
+        public bool Disconnect(QObject sender, Action<T1> handler)
+            => ApiRuntime.Disconnect(sender.Handle, Signature, handler);
 
         public void Emit(QObject sender, T1 a1) => ApiRuntime.EmitUser(sender.Handle, Signature, new[] { typeof(T1) }, new object[] { a1 });
     }
@@ -226,7 +234,11 @@ namespace QtSharp.Api
 
         public void Connect(QObject sender, Action<T1, T2> handler)
             => ApiRuntime.Connect(sender.Handle, Signature,
-                (argv, _) => handler(MetaType.Read<T1>(argv, 0), MetaType.Read<T2>(argv, 1)));
+                (argv, _) => handler(MetaType.Read<T1>(argv, 0), MetaType.Read<T2>(argv, 1)), handler);
+
+        /// <summary>Drops the connection a previous Connect made for this handler.</summary>
+        public bool Disconnect(QObject sender, Action<T1, T2> handler)
+            => ApiRuntime.Disconnect(sender.Handle, Signature, handler);
 
         public void Emit(QObject sender, T1 a1, T2 a2)
             => ApiRuntime.EmitUser(sender.Handle, Signature, new[] { typeof(T1), typeof(T2) }, new object[] { a1, a2 });
@@ -243,7 +255,13 @@ namespace QtSharp.Api
 
         public void Connect(QObject sender, Action<T1, T2, T3> handler)
             => ApiRuntime.Connect(sender.Handle, Signature,
-                (argv, _) => handler(MetaType.Read<T1>(argv, 0), MetaType.Read<T2>(argv, 1), MetaType.Read<T3>(argv, 2)));
+                (argv, _) => handler(MetaType.Read<T1>(argv, 0), MetaType.Read<T2>(argv, 1), MetaType.Read<T3>(argv, 2)),
+                handler);
+
+        /// <summary>Drops the connection a previous Connect made for this handler.</summary>
+        public bool Disconnect(QObject sender, Action<T1, T2, T3> handler)
+            => ApiRuntime.Disconnect(sender.Handle, Signature, handler);
+
 
         public void Emit(QObject sender, T1 a1, T2 a2, T3 a3)
             => ApiRuntime.EmitUser(sender.Handle, Signature, new[] { typeof(T1), typeof(T2), typeof(T3) }, new object[] { a1, a2, a3 });
@@ -261,7 +279,12 @@ namespace QtSharp.Api
         public void Connect(QObject sender, Action<T1, T2, T3, T4> handler)
             => ApiRuntime.Connect(sender.Handle, Signature, (argv, _) => handler(
                 MetaType.Read<T1>(argv, 0), MetaType.Read<T2>(argv, 1),
-                MetaType.Read<T3>(argv, 2), MetaType.Read<T4>(argv, 3)));
+                MetaType.Read<T3>(argv, 2), MetaType.Read<T4>(argv, 3)), handler);
+
+        /// <summary>Drops the connection a previous Connect made for this handler.</summary>
+        public bool Disconnect(QObject sender, Action<T1, T2, T3, T4> handler)
+            => ApiRuntime.Disconnect(sender.Handle, Signature, handler);
+
 
         public void Emit(QObject sender, T1 a1, T2 a2, T3 a3, T4 a4)
             => ApiRuntime.EmitUser(sender.Handle, Signature, new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4) }, new object[] { a1, a2, a3, a4 });
@@ -411,8 +434,6 @@ namespace QtSharp.Api
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void SignalCallback(IntPtr userData, int argc, IntPtr argv, IntPtr typeIds);
 
-        static readonly List<object> keepAlive = new();
-
         // The destroyed hook is one function pointer for the whole process (never a delegate per
         // object): it points at static code, so nothing has to be kept alive.
         //
@@ -520,6 +541,7 @@ namespace QtSharp.Api
             lock (destroyed)
             {
                 destroyed.Add(handle);
+                ForgetConnections(handle);
                 if (wrappers.TryGetValue(handle, out var list))
                 {
                     foreach (var weak in list)
@@ -529,8 +551,7 @@ namespace QtSharp.Api
                 }
                 // Everything the object owned goes with it.
                 if (ownedItems.TryGetValue(handle, out var items))
-                {
-                    ownedItems.Remove(handle);
+                {                    ownedItems.Remove(handle);
                     foreach (var item in items)
                         MarkItemDestroyed(item);
                 }
@@ -606,6 +627,18 @@ namespace QtSharp.Api
         /// <summary>Delivers a synthetic left mouse press at (x, y) to a widget.</summary>
         public static bool SendMousePress(IntPtr widgetHandle, int x, int y)
             => ProbeMousePress(widgetHandle, x, y) != 0;
+
+        /// <summary>
+        /// Delivers a synthetic mouse move at (x, y) with <paramref name="buttons"/> held (Qt's
+        /// mouse-button mask, LeftButton = 1 by default), so a managed mouseMoveEvent override can
+        /// be driven - press, move, release is what a drag looks like.
+        /// </summary>
+        public static bool SendMouseMove(IntPtr widgetHandle, int x, int y, int buttons = 1)
+            => ProbeMouseMove(widgetHandle, x, y, buttons) != 0;
+
+        /// <summary>Delivers a synthetic left mouse release at (x, y) to a widget.</summary>
+        public static bool SendMouseRelease(IntPtr widgetHandle, int x, int y)
+            => ProbeMouseRelease(widgetHandle, x, y) != 0;
 
         /// <summary>
         /// Delivers a synthetic wheel turn to a widget, <paramref name="degrees"/> being how far
@@ -796,14 +829,16 @@ namespace QtSharp.Api
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_set_meta_property_callback", CallingConvention = CallingConvention.Cdecl)]
         private static extern void SetMetaPropertyCallback(IntPtr callback);
 
-        public static void StartApplication() => AppCreate();
-
         /// <summary>
         /// Builds the process's one Qt application object from a command line, and returns its
         /// handle. <paramref name="kind"/> selects QCoreApplication (0), QGuiApplication (1) or
         /// QApplication (2). A second call returns the application that already exists rather than
         /// making another one - Qt aborts on a second QApplication. The strings are copied into
         /// native storage that lives as long as the process, because Qt keeps the argv pointers.
+        ///
+        /// This is what the generated QCoreApplication/QGuiApplication/QApplication constructors
+        /// call; a program uses those (`var app = new QApplication(args);`) and then the run loop
+        /// and the exit on the instance (`app.Exec()`, `app.Quit()`), the way a PyQt program does.
         /// </summary>
         public static IntPtr CreateApplication(string[] args, int flags = 0, int kind = 2)
         {
@@ -811,9 +846,6 @@ namespace QtSharp.Api
             return AppCreateArgs(argv, argv.Length, flags, kind);
         }
 
-        public static int Exec() => AppExec();
-
-        public static void Quit() => AppQuit();
 
         // Copies a QString returned by the generated accessors and frees it.
         public static string ToManaged(IntPtr qstring)
@@ -841,12 +873,83 @@ namespace QtSharp.Api
         // The callback has to stay alive for as long as Qt holds the connection.
         public delegate void SignalSlot(IntPtr argv, IntPtr typeIds);
 
+        /// <summary>
+        /// Connects a managed handler to a signal, without a key - the shape a QSignal's Connect
+        /// uses. The connection stays until the sender dies; Disconnect cannot find it.
+        /// </summary>
         public static bool Connect(IntPtr sender, string signature, SignalSlot handler)
+            => Connect(sender, signature, handler, null);
+
+        /// <summary>
+        /// Connects a managed handler to a signal, remembering <paramref name="key"/> so that
+        /// Disconnect can drop exactly this connection again. That is what the `-=` of a signal
+        /// exposed as a C# event needs: `key` is the user's own handler, and comparison is
+        /// delegate equality - the same rule C# events use for remove.
+        /// </summary>
+        public static bool Connect(IntPtr sender, string signature, SignalSlot handler, Delegate key)
         {
             SignalCallback callback = (userData, argc, argv, typeIds) => handler(argv, typeIds);
-            keepAlive.Add(callback);
-            return ConnectNative(sender, signature, callback, IntPtr.Zero, 0) != 0;
+            var connection = ConnectNative(sender, signature, callback, IntPtr.Zero, 0);
+            if (connection == IntPtr.Zero)
+                return false;
+
+            // The record holds the callback: the native slot object points at the thunk the
+            // marshaller built for it, which must stay alive for as long as Qt holds the slot.
+            lock (connections)
+                connections.Add(new SignalConnection
+                {
+                    Sender = sender, Signature = signature, Key = key,
+                    Callback = callback, Native = connection,
+                });
+            return true;
         }
+
+        /// <summary>
+        /// Drops the most recent connection made with this key, and reports whether there was one.
+        /// This is the `-=` of a signal event; a key that never connected is a no-op, like C#.
+        /// </summary>
+        public static bool Disconnect(IntPtr sender, string signature, Delegate key)
+        {
+            lock (connections)
+            {
+                for (int i = connections.Count - 1; i >= 0; i--)
+                {
+                    var candidate = connections[i];
+                    if (candidate.Sender == sender && candidate.Signature == signature
+                        && Equals(candidate.Key, key))
+                    {
+                        connections.RemoveAt(i);
+                        return DisconnectNative(candidate.Native) != 0;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// A live signal connection. <see cref="Callback"/> is what keeps the native thunk alive,
+        /// <see cref="Key"/> is the handler a C# event removes by, and <see cref="Native"/> is the
+        /// QMetaObject::Connection the runtime disconnects.
+        /// </summary>
+        sealed class SignalConnection
+        {
+            public IntPtr Sender;
+            public string Signature;
+            public Delegate Key;
+            public SignalCallback Callback;
+            public IntPtr Native;
+        }
+
+        static readonly List<SignalConnection> connections = new();
+
+        // The connections of a sender that Qt has destroyed are gone with it; dropping the records
+        // releases the managed callbacks (and the native connection handles Qt already broke).
+        static void ForgetConnections(IntPtr sender)
+        {
+            lock (connections)
+                connections.RemoveAll(c => c.Sender == sender);
+        }
+
 
         /// <summary>
         /// Activates a signal. <paramref name="args"/> points at one slot per argument, each
@@ -1024,8 +1127,12 @@ namespace QtSharp.Api
         private static extern IntPtr StringListAt(IntPtr list, int index);
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_connect", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int ConnectNative(IntPtr sender, [MarshalAs(UnmanagedType.LPUTF8Str)] string signature,
+        private static extern IntPtr ConnectNative(IntPtr sender, [MarshalAs(UnmanagedType.LPUTF8Str)] string signature,
             SignalCallback callback, IntPtr userData, int connectionType);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_disconnect", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int DisconnectNative(IntPtr connection);
+
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_emit", CallingConvention = CallingConvention.Cdecl)]
         private static extern int EmitNative(IntPtr sender, [MarshalAs(UnmanagedType.LPUTF8Str)] string signature,
@@ -1055,14 +1162,17 @@ namespace QtSharp.Api
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_probe_mouse_press", CallingConvention = CallingConvention.Cdecl)]
         private static extern int ProbeMousePress(IntPtr widgetHandle, int x, int y);
 
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_probe_mouse_move", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ProbeMouseMove(IntPtr widgetHandle, int x, int y, int buttons);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_probe_mouse_release", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ProbeMouseRelease(IntPtr widgetHandle, int x, int y);
+
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_probe_wheel", CallingConvention = CallingConvention.Cdecl)]
         private static extern int ProbeWheel(IntPtr widgetHandle, int x, int y, int degrees, int modifiers);
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_probe_key_press", CallingConvention = CallingConvention.Cdecl)]
         private static extern int ProbeKeyPress(IntPtr widgetHandle, int key, int modifiers);
-
-        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_app_create", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int AppCreate();
 
         // The marshaller builds a char*[] for the duration of the call; the native side copies
         // every string into process-lifetime storage before returning.
@@ -1070,12 +1180,6 @@ namespace QtSharp.Api
         private static extern IntPtr AppCreateArgs(
             [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] argv,
             int argc, int flags, int kind);
-
-        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_app_exec", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int AppExec();
-
-        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_app_quit", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void AppQuit();
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_app_destroy", CallingConvention = CallingConvention.Cdecl)]
         private static extern void AppDestroy();

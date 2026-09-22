@@ -13,10 +13,17 @@ using System.Runtime.InteropServices;
 // Three consequences follow from Qt's own rules, and they are all deliberate here:
 //   * the application object belongs to the *process*, not to the GC - it has no Dispose, so it
 //     can never be deleted;
-//   * a second construction returns the instance that already exists (Qt aborts otherwise), so
-//     mixing this with ApiRuntime.StartApplication() is safe;
+//   * a second construction returns the instance that already exists (Qt aborts otherwise);
 //   * ApiRuntime.CreateApplication copies the strings into native storage, so the managed array
 //     may be collected straight afterwards.
+//
+// The run loop and the exits are instance members of the generated classes (exec/quit/exit are
+// published as instance methods, see the extractor's IsApplicationSingletonMember), so a program
+// reads like the PyQt one it is modelled on:
+//
+//     var app = new QApplication(args);
+//     window.Show();
+//     return app.Exec();          // app.Quit() ends it
 namespace QtSharp.Api
 {
     // The three classes cannot share this body through a base: Handle's setter is protected on the
