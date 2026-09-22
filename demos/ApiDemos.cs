@@ -27,6 +27,7 @@ namespace QtSharp.Api
             ["api-events"] = ApiEventsDemo.Run,
             ["api-custommodel"] = ApiCustomModelDemo.Run,
             ["api-ownership"] = ApiOwnershipDemo.Run,
+            ["api-exceptions"] = ApiExceptionsDemo.Run,
             ["api-metaobject"] = ApiMetaObjectDemo.Run,
             ["api-calculator"] = ApiCalculatorDemo.Run,
             ["api-spinboxes"] = ApiSpinBoxesDemo.Run,
@@ -55,7 +56,7 @@ namespace QtSharp.Api
         public static readonly string[] Names = new[]
         {
             "api", "api-analogclock", "api-lineedits", "api-widgets", "api-graphics",
-            "api-core", "api-events", "api-ownership", "api-custommodel", "api-calculator",
+            "api-core", "api-events", "api-ownership", "api-exceptions", "api-custommodel", "api-calculator",
             "api-spinboxes", "api-shortcut", "api-metaobject", "api-shapedclock", "api-sliders",
             "api-calendarwidget", "api-menus", "api-basiclayouts", "api-scribble", "api-gallery",
             "api-systray", "api-docviewer", "api-basicdrawing", "api-gradients",
@@ -77,6 +78,18 @@ namespace QtSharp.Api
             }
             return text.ToString();
         }
+
+        /// <summary>
+        /// Whether an off-screen render covers the widget's logical area. QWidget::grab() hands back
+        /// a pixmap in *device* pixels, so a widget that is 200 logical pixels across comes back
+        /// 200 * devicePixelRatio() pixels wide on a scaled display; comparing against the logical
+        /// number only holds on a 100% display. A fractional ratio also rounds the product (297
+        /// logical at 1.5 is 445.5 device), hence the one-pixel allowance.
+        /// </summary>
+        internal static bool GrabCovers(QPixmap pixmap, int logicalWidth, int logicalHeight)
+            => pixmap != null && !pixmap.IsNull()
+               && Math.Abs(pixmap.Width() - logicalWidth * pixmap.DevicePixelRatio()) < 1.0
+               && Math.Abs(pixmap.Height() - logicalHeight * pixmap.DevicePixelRatio()) < 1.0;
 
     /// <summary>
     /// Runs the demo called <paramref name="args"/>[0] (case-insensitively) and reports its exit

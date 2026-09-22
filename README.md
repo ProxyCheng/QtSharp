@@ -64,6 +64,13 @@ them can be pointed elsewhere instead:
   copy it to `<repo>\Qt\6.11.0\msvc2022_64`, or set `QT_DIR`/`QTSHARP_QT_INCLUDE` to it. The kit
   must contain the **private** headers (`include\QtCore\6.11.0\QtCore\private\...`) — the official
   binaries ship them.
+
+  `aqt install-qt` cannot fetch 6.11.0 at the moment: Qt's repository no longer serves the top-level
+  `desktop/Updates.xml` that aqt reads the archive folder name out of, so it looks for
+  `qt6_6110/qt6_6110/` instead of the real `qt6_6110/qt6_6110_msvc2022_64/`. Downloading
+  `qtbase-…-X86_64.7z` (plus `d3dcompiler_47-x64.7z`) from
+  `…/desktop/qt6_6110/qt6_6110_msvc2022_64/qt.qt6.6110.win64_msvc2022_64/` and unpacking it at the
+  kit root gives the same result, and `qtbase` alone is enough for QtCore/QtGui/QtWidgets.
 * **Qt runtime DLLs**: `<repo>\Qt\6.11.0\runtime` needs `Qt6Core.dll`, `Qt6Gui.dll`,
   `Qt6Widgets.dll`, the MSVC runtime DLLs (`msvcp140*.dll`, `vcruntime140*.dll`) and
   `platforms\qwindows.dll`. The easy way is to build any Qt widget app and run `windeployqt` on it.
@@ -219,6 +226,16 @@ static class Program
   handed it to Qt (a parent, a layout, a scene, a view), in which case the generated destructor asks
   `parent()` first and leaves it alone. Objects Qt owns are never deleted by the GC, and once Qt has
   destroyed one, touching its wrapper throws `ObjectDisposedException` instead of crashing.
+* **A destroyed object reads as null.** A wrapper whose Qt object is gone compares equal to null the
+  way a destroyed `UnityEngine.Object` does, so `if (w != null) w.Use();` is the guard to write, and
+  `w.IsAlive` asks the same question by name (PyQt's `sip.isValid`). Only the operator is
+  liveness-aware — `w?.Use()`, `w ?? fallback` and `w is null` test the reference itself, exactly as
+  they do in Unity.
+* **An exception in a handler is reported, not fatal.** A signal handler or a virtual override runs
+  inside Qt's C++ frames, where an exception has nowhere to land — PyQt answers that by printing the
+  traceback and calling `qFatal()`, PySide by printing and carrying on. The runtime catches it at the
+  boundary, writes it to stderr and raises `ApiRuntime.UnhandledCallbackException`; subscribe to that
+  to fail loudly instead of quietly.
 * **Events** that Qt hands to a handler are read-only wrappers (`e.Position()`, `e.Key()`,
   `e.Buttons()`, `e.TimerId()`); they are transient — do not keep them.
 * **The example classes are `sealed`** on purpose (they are meant to be read, not inherited); the one
