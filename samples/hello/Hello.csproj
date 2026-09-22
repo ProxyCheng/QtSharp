@@ -6,9 +6,18 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <AssemblyName>hello</AssemblyName>
+    <!-- The binding is compiled inside QtSharp.Demos; this app only uses it (and can run the
+         ported examples), so it must not compile it a second time. -->
+    <QtSharpCompileBinding>false</QtSharpCompileBinding>
   </PropertyGroup>
 
-  <!-- The generated binding, the managed runtime and the native DLLs, in one import. -->
+  <!-- The native QtSharp.Api.dll, the Qt runtime DLLs and the platform plugin, in one import. -->
   <Import Project="..\..\QtSharp.Api.props" />
+
+  <!-- The binding, the runtime and every official example this repository has ported, so the same
+       project is both "the smallest app you can copy" and "the place to try the demos out". -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\demos\QtSharp.Demos.csproj" />
+  </ItemGroup>
 
 </Project>
