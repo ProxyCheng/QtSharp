@@ -9,7 +9,38 @@ using System.Text;
 // (see ApiModel2.cs) had reproduced the model byte for byte; CONTEXT.md records the migration.
 static class QtLibrary
 {
-    internal const string QtIncludeRoot = @"D:\QtSharp\Qt\6.11.0\msvc2022_64\include";
+    /// <summary>
+    /// The Qt kit the model is extracted from: <c>&lt;repo&gt;\Qt\6.11.0\msvc2022_64\include</c> by
+    /// default, so a clone laid out like this repository just works wherever it lives. A different
+    /// installation (or version) is pointed at with QTSHARP_QT_INCLUDE - and ApiModel.QtVersion has
+    /// to match the kit, since the version is what the model records.
+    /// </summary>
+    internal static string QtIncludeRoot
+        => Environment.GetEnvironmentVariable("QTSHARP_QT_INCLUDE")
+           ?? Path.Combine(RepoRoot, "Qt", ApiModel.QtVersion, "msvc2022_64", "include");
+
+    /// <summary>
+    /// The repository root, found by walking up from the generator's own folder to the solution
+    /// file. The generator runs from gen\bin\Release\net10.0\win-x64, so the source tree (and the
+    /// Qt kit and clang headers inside it) is a handful of levels up - and a published or copied
+    /// generator still finds the tree it was built from.
+    /// </summary>
+    internal static string RepoRoot
+    {
+        get
+        {
+            if (repoRoot == null)
+            {
+                var dir = new DirectoryInfo(AppContext.BaseDirectory);
+                while (dir != null && !File.Exists(Path.Combine(dir.FullName, "QtSharp.slnx")))
+                    dir = dir.Parent;
+                repoRoot = dir?.FullName;
+            }
+            return repoRoot;
+        }
+    }
+
+    static string repoRoot;
 }
 
 class Program

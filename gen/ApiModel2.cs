@@ -135,13 +135,35 @@ public static partial class ApiModel
 
     static string HeaderOf(Root r) => Path.Combine(QtLibrary.QtIncludeRoot, r.Module, r.Header);
 
-    // libClangSharp ships no builtin headers of its own; the build copies CppSharp's clang-19
-    // resource folder next to the executable, and clang finds the MSVC STL by itself.
+    // libClangSharp ships no builtin headers of its own (they are what <stddef.h> and friends come
+    // from), so gen.csproj copies a clang resource folder next to the executable - the glob under
+    // lib\lib\clang - and clang is pointed at it; the MSVC STL and the Windows SDK it finds by
+    // itself. Any clang version works, the highest one wins if several are present, and
+    // QTSHARP_CLANG_RESOURCE_DIR overrides the search for a tree kept somewhere else.
     static string ResourceDir()
     {
-        var local = Path.Combine(AppContext.BaseDirectory, "lib", "clang", "19");
-        return Directory.Exists(Path.Combine(local, "include")) ? local : @"D:\QtSharp\lib\lib\clang\19";
+        var configured = Environment.GetEnvironmentVariable("QTSHARP_CLANG_RESOURCE_DIR");
+        if (!string.IsNullOrEmpty(configured))
+            return configured;
+
+        foreach (var root in new[] { AppContext.BaseDirectory, QtLibrary.RepoRoot })
+        {
+            if (string.IsNullOrEmpty(root))
+                continue;
+            var libClang = Path.Combine(root, "lib", "clang");
+            if (!Directory.Exists(libClang))
+                continue;
+            foreach (var version in Directory.GetDirectories(libClang).OrderByDescending(d => d, StringComparer.Ordinal))
+                if (File.Exists(Path.Combine(version, "include", "stddef.h")))
+                    return version;
+        }
+
+        throw new InvalidOperationException(
+            "clang's builtin headers are missing: put a clang resource folder at "
+            + Path.Combine("lib", "lib", "clang", "<version>", "include") + " (gen.csproj copies it "
+            + "next to the generator), or set QTSHARP_CLANG_RESOURCE_DIR. See README.md.");
     }
+
 
     static string[] ClangArgs(List<string> headers)
     {
