@@ -195,6 +195,12 @@ public static partial class ApiModel
         // Events: bound so that a handler can actually read what happened. QEvent and the
         // point events are bound as a chain, because Qt6 declares the interesting accessors
         // on the bases (QSinglePointEvent::position, QEvent::type).
+        //
+        // QTimerEvent and QChildEvent live in QtCore/qcoreevent.h rather than QtGui/qevent.h,
+        // but they belong to the same family: a timerEvent()/childEvent() handler could already
+        // be reached, it just could not read the timer id or the child.
+        R("QTimerEvent",        "qcoreevent.h", "QtCore", bindCtors: false, owned: false),
+        R("QChildEvent",        "qcoreevent.h", "QtCore", bindCtors: false, owned: false),
         R("QEvent",             "qevent.h", "QtGui", bindCtors: false, owned: false),
         R("QPointerEvent",      "qevent.h", "QtGui", bindCtors: false, owned: false),
         R("QSinglePointEvent",  "qevent.h", "QtGui", bindCtors: false, owned: false),
@@ -737,10 +743,14 @@ public static partial class ApiModel
     // input-event family is bound as ordinary roots, which is why a managed keyPressEvent can read a
     // key code). What keeps this list alive is BuildVocabulary: a spelling that appears here is
     // still a supported type, so a pointer to one of these can sit in an otherwise-bound signature
-    // (QTimerEvent*, QChildEvent*, ...) instead of disqualifying the declaration.
+    // (QEnterEvent*, QKeyEvent*, ...) instead of disqualifying the declaration.
+    //
+    // QTimerEvent and QChildEvent used to be here as well; they are roots now, so a timerEvent()/
+    // childEvent() handler can actually read the event (the root loop in BuildVocabulary covers the
+    // pointer spelling too).
     static readonly string[] OpaquePointers =
     {
-        "QTimerEvent", "QChildEvent", "QEnterEvent", "QInputEvent", "QKeyEvent", "QWheelEvent",
+        "QEnterEvent", "QInputEvent", "QKeyEvent", "QWheelEvent",
         "QDragEnterEvent", "QDragMoveEvent", "QDragLeaveEvent", "QDropEvent",
         "QHelpEvent", "QActionEvent", "QInputMethodEvent", "QDynamicPropertyChangeEvent",
     };
