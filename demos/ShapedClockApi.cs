@@ -245,7 +245,7 @@ public static class ShapedClockApi
         // event loop runs; grab() then renders the same widget off-screen.
         clock.Repaint();
         using (var rendered = clock.Grab())
-            Check(rendered != null && !rendered.IsNull() && rendered.Width() == 200 && rendered.Height() == 200,
+            Check(ApiDemos.GrabCovers(rendered, 200, 200),
                 $"grab() rendered the shaped clock off-screen (got {rendered?.Width()}x{rendered?.Height()})");
 
         Check(clock.PaintCount > 0,

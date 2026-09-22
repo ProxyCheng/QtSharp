@@ -172,7 +172,7 @@ public static class ApiCustomModelDemo
         var shot = view.Grab();
         Check(itemDelegate.PaintCalls > 0,
             $"Qt asked the managed delegate to paint ({itemDelegate.PaintCalls} time(s))");
-        Check(shot.Width() == 320 && shot.Height() == 200,
+        Check(ApiDemos.GrabCovers(shot, 320, 200),
             $"the view rendered off-screen (got {shot.Width()}x{shot.Height()})");
 
         // Asking the view to size its rows is what makes it consult the delegate's sizeHint().
@@ -196,7 +196,8 @@ public static class ApiCustomModelDemo
         }
         Check(view.Model().RowCount() == 3 && throughQt.Data(throughQt.Index(2, 0)).ToString() == "gamma",
             "the managed model still works after a full GC");
-        Check(view.Grab().Width() == 320, "and the view still renders");
+        using (var again = view.Grab())
+            Check(ApiDemos.GrabCovers(again, 320, 200), "and the view still renders");
 
         Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
         return failures == 0 ? 0 : 1;

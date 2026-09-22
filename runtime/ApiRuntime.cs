@@ -749,9 +749,15 @@ namespace QtSharp.Api
             if (target == null)
                 return;
             if (write != 0)
-                spec.Properties[index].Set(target, value);
+            {
+                try { spec.Properties[index].Set(target, value); }
+                catch (Exception exception) { ReportCallbackException("a declared property setter", exception); }
+            }
             else
-                spec.Properties[index].Get(target, value);
+            {
+                try { spec.Properties[index].Get(target, value); }
+                catch (Exception exception) { ReportCallbackException("a declared property getter", exception); }
+            }
         }
 
         internal static object LookupWrapper(IntPtr handle)
@@ -868,6 +874,29 @@ namespace QtSharp.Api
             => qstring == IntPtr.Zero ? null
                : Marshal.PtrToStringUni(StringUtf16(qstring), (int)StringSize(qstring));
 
+        /// <summary>
+        /// An exception a user handler threw, caught where native code called into managed code.
+        ///
+        /// Qt's event loop and its signal machinery are C++ frames: an exception that unwinds into
+        /// them has nowhere to land and takes the whole process down - in a GUI app, usually as an
+        /// access violation with nothing on the console to say why. PyQt answers this by reporting
+        /// the traceback and calling qFatal(); PySide by reporting and carrying on. This reports and
+        /// keeps the process alive, and hands the exception to whoever subscribed here (a logger, a
+        /// test, a crash reporter). Subscribe to fail loudly instead of quietly.
+        /// </summary>
+        public static event Action<string, Exception> UnhandledCallbackException;
+
+        internal static void ReportCallbackException(string what, Exception exception)
+        {
+            var hook = UnhandledCallbackException;
+            if (hook != null)
+            {
+                try { hook(what, exception); }
+                catch { }   // a broken hook must not become the crash it was meant to report
+            }
+            Console.Error.WriteLine($"[qtsharp] unhandled exception in {what}: {exception}");
+        }
+
         // The native forwarder hands over moc's raw argument array; the generated binding reads
         // each slot with the type it knows, so nothing has to be guessed from a meta-type id.
         // The callback has to stay alive for as long as Qt holds the connection.
@@ -888,7 +917,12 @@ namespace QtSharp.Api
         /// </summary>
         public static bool Connect(IntPtr sender, string signature, SignalSlot handler, Delegate key)
         {
-            SignalCallback callback = (userData, argc, argv, typeIds) => handler(argv, typeIds);
+            SignalCallback callback = (userData, argc, argv, typeIds) =>
+            {
+                // Qt called this from inside its C++ frames; see ReportCallbackException.
+                try { handler(argv, typeIds); }
+                catch (Exception exception) { ReportCallbackException("a signal handler", exception); }
+            };
             var connection = ConnectNative(sender, signature, callback, IntPtr.Zero, 0);
             if (connection == IntPtr.Zero)
                 return false;

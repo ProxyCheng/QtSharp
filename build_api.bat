@@ -7,11 +7,27 @@ rem
 rem Everything it needs can be pointed at from the environment, so a clone does not have to live in
 rem D:\QtSharp:
 rem   QT_DIR       a Qt kit's dev files (include\ and lib\)   default: this repo's Qt\6.11.0\msvc2022_64
-rem   VCVARS       vcvarsall.bat of a Visual Studio with C++  default: the one used here
-rem   VCVARS_VER   the toolset version for -vcvars_ver         default: 14.44
+rem   VCVARS       vcvarsall.bat of a Visual Studio with C++  default: found automatically
+rem   VCVARS_VER   the toolset version for -vcvars_ver         default: whatever vcvarsall picks
 if "%QT_DIR%"=="" set QT_DIR=%~dp0Qt\6.11.0\msvc2022_64
-if "%VCVARS%"=="" set VCVARS=D:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvarsall.bat
-if "%VCVARS_VER%"=="" set VCVARS_VER=14.44
+
+rem A Visual Studio with the C++ tools: VCVARS overrides, otherwise probe the usual install roots
+rem for any edition of the 2022 / 2019 / 18.x lines and take the first vcvarsall.bat found, so a
+rem clone only needs a Qt kit and the clang headers to build.
+if "%VCVARS%"=="" (
+    for %%R in ("%ProgramFiles%" "%ProgramFiles(x86)%" "D:\Program Files" "E:\Program Files") do (
+        for %%V in (2022 2019 18) do (
+            for %%E in (Community Professional Enterprise BuildTools Insiders Preview) do (
+                if not defined VCVARS if exist "%%~R\Microsoft Visual Studio\%%V\%%E\VC\Auxiliary\Build\vcvarsall.bat" set "VCVARS=%%~R\Microsoft Visual Studio\%%V\%%E\VC\Auxiliary\Build\vcvarsall.bat"
+            )
+        )
+    )
+)
+
+rem Only pin the toolset when VCVARS_VER says so; otherwise take the one vcvarsall picks by default
+rem (the newest installed) - pinning a version a machine does not have would fail the build.
+set VCVARS_TOOLSET=
+if not "%VCVARS_VER%"=="" set VCVARS_TOOLSET=-vcvars_ver=%VCVARS_VER%
 
 rem Run in this script's directory (the repository root), whatever the caller's working directory is.
 cd /d "%~dp0"
@@ -39,7 +55,7 @@ if "%QT_VER%"=="" (
     exit /b 1
 )
 
-call "%VCVARS%" x64 -vcvars_ver=%VCVARS_VER%
+call "%VCVARS%" x64 %VCVARS_TOOLSET%
 if errorlevel 1 exit /b 1
 
 if not exist "out\api" mkdir "out\api"

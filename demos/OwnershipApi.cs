@@ -136,9 +136,18 @@ public static class ApiOwnershipDemo
         var doomed = new QPushButton("doomed");
         doomed.SetParent(destroyer);
         Check(doomed.Parent() == destroyer, "the child was reparented");
+        Check(doomed != null && doomed.IsAlive, "a live child is != null and IsAlive");
+        var sameDoomed = QPushButton.FromHandle(doomed.Handle);
+        Check(sameDoomed == doomed, "the identity cache keeps two wrappers of one object == equal");
         destroyer.Dispose();            // Qt deletes the child with its parent
         Check(ThrowsOnUse(() => doomed.text()), "a child Qt destroyed throws on use");
         Check(ThrowsOnUse(() => destroyer.text()), "and a disposed wrapper does too");
+
+        // The liveness guard, so the throw above never has to happen: a wrapper whose Qt object is
+        // gone reads as null, the way a destroyed UnityEngine.Object does. `== null` is what the
+        // operator answers; IsAlive is the same question spelled out (sip.isValid in PyQt).
+        Check(doomed == null && !doomed.IsAlive, "the Qt-destroyed child reads as == null");
+        Check(destroyer == null && !destroyer.IsAlive, "and the disposed wrapper does too");
 
         // Items are the harder case: a QGraphicsItem is not a QObject and has no destroyed signal,
         // so the scene that owns it is the only lifetime signal there is. The scene is owned by a
@@ -161,6 +170,8 @@ public static class ApiOwnershipDemo
         sceneOwner.Dispose();           // -> the scene -> its items
         Check(ThrowsOnUse(() => sceneItem.Rect()), "an item whose scene died throws on use");
         Check(ThrowsOnUse(() => scene.Items()), "and so does the scene it belonged to");
+        Check(sceneItem == null && !sceneItem.IsAlive, "the dead item reads as == null too");
+        Check(scene == null, "and so does the scene that owned it");
 
         // ---------------------------------------------------------------- the release path
         // "Does Qt own this object?" is a question about the object, not about the class: the

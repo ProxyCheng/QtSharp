@@ -357,6 +357,12 @@ public static class ApiCodeGen
         sb.AppendLine("using System.Runtime.CompilerServices;");
         sb.AppendLine("using System.Runtime.InteropServices;");
         sb.AppendLine("using System.Security;");
+        // A wrapper's == is a liveness guard - a Qt object Qt has destroyed reads as null, the way a
+        // destroyed UnityEngine.Object does - so it is deliberately not an equality relation.
+        // Equals/GetHashCode keep their reference semantics (a wrapper must not change its hash when
+        // its object dies), and the compiler's "you defined == without Equals" warnings are off for
+        // this file. See IsAlive and operator == on each root class.
+        sb.AppendLine("#pragma warning disable 660, 661");
         sb.AppendLine();
         sb.AppendLine($"namespace {ns}");
         sb.AppendLine("{");
@@ -1082,13 +1088,35 @@ public static class ApiCodeGen
             sb.AppendLine("            get");
             sb.AppendLine("            {");
             sb.AppendLine("                if (__invalidated)");
-            sb.AppendLine("                    throw new ObjectDisposedException(GetType().Name);");
+            sb.AppendLine("                    throw new ObjectDisposedException(GetType().Name,");
+            sb.AppendLine("                        \"The Qt object behind this wrapper has been destroyed, or the wrapper was disposed.\");");
             sb.AppendLine("                return __handle;");
             sb.AppendLine("            }");
             sb.AppendLine("            protected set => __handle = value;");
             sb.AppendLine("        }");
             sb.AppendLine();
             sb.AppendLine("        void IQtObjectView.MarkDestroyed() => __invalidated = true;");
+            sb.AppendLine();
+            // Whether the Qt object still exists. Qt destroys what it owns (a parent, a layout, a
+            // scene, a view) at any moment, and a disposed wrapper is spent, so this is the
+            // sip.isValid() of the binding - and the question `== null` answers below.
+            sb.AppendLine("        /// <summary>Whether the Qt object behind this wrapper still exists.</summary>");
+            sb.AppendLine("        public bool IsAlive => __handle != IntPtr.Zero && !__invalidated;");
+            sb.AppendLine();
+            // A destroyed object reads as null, the way a destroyed UnityEngine.Object does, so
+            // `if (w != null) w.Use();` is the guard that keeps it from throwing. Only the operator
+            // is liveness-aware: `w?.Use()`, `w ?? fallback` and `w is null` test the reference
+            // itself, exactly as they do in Unity.
+            sb.AppendLine("        /// <summary>True when both sides are null or destroyed; reference equality otherwise.</summary>");
+            sb.AppendLine($"        public static bool operator ==({name} left, {name} right)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            bool leftGone = left is null || left.__invalidated;");
+            sb.AppendLine("            bool rightGone = right is null || right.__invalidated;");
+            sb.AppendLine("            return leftGone || rightGone ? leftGone && rightGone : ReferenceEquals(left, right);");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine($"        public static bool operator !=({name} left, {name} right) => !(left == right);");
+            sb.AppendLine();
             // Whether this wrapper is the one that has to release the native object. Only a
             // constructor we published, or a boxed copy Qt handed over, sets it: a wrapper that
             // merely adopts an object (FromHandle/FromTransientHandle - the objects a view or a
@@ -1499,9 +1527,24 @@ public static class ApiCodeGen
         // native subclass forwarding the virtuals into Dispatch
         if (virtuals.Count > 0)
         {
+            // Native calls this through a function pointer, so an exception that escapes it would
+            // unwind into Qt's C++ frames and kill the process (see ReportCallbackException). Catch
+            // it here and report it; the dispatch switch itself stays untouched, in DispatchCore.
             sb.AppendLine("        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]");
             string modifier = baseName != null ? "new " : "";
             sb.AppendLine($"        internal {modifier}static void Dispatch(IntPtr userData, int methodId, IntPtr argv)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            try");
+            sb.AppendLine("            {");
+            sb.AppendLine("                DispatchCore(userData, methodId, argv);");
+            sb.AppendLine("            }");
+            sb.AppendLine("            catch (Exception __exception)");
+            sb.AppendLine("            {");
+            sb.AppendLine("                ApiRuntime.ReportCallbackException(\"a virtual override\", __exception);");
+            sb.AppendLine("            }");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine($"        static void DispatchCore(IntPtr userData, int methodId, IntPtr argv)");
             sb.AppendLine("        {");
             sb.AppendLine($"            var target = ({name})GCHandle.FromIntPtr(userData).Target;");
             sb.AppendLine("            switch (methodId)");
