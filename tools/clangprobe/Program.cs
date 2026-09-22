@@ -16,9 +16,25 @@ using ClangSharp.Interop;
 // diffed directly.
 static class Program
 {
-    const string QtRoot = @"D:\QtSharp\Qt\6.11.0\msvc2022_64\include";
-    // libClangSharp ships no builtin headers; CppSharp's clang-19 resource folder is on disk.
-    const string ResourceDir = @"D:\QtSharp\lib\lib\clang\19";
+    // The same two locations the generator uses: this repository's Qt kit and clang resource folder
+    // by default (found relative to the repository root, so a clone can live anywhere), overridable
+    // with QTSHARP_QT_INCLUDE / QTSHARP_CLANG_RESOURCE_DIR.
+    static readonly string RepoRoot = FindRepoRoot();
+    static readonly string QtRoot = Environment.GetEnvironmentVariable("QTSHARP_QT_INCLUDE")
+        ?? Path.Combine(RepoRoot, "Qt", "6.11.0", "msvc2022_64", "include");
+    static readonly string ResourceDir = Environment.GetEnvironmentVariable("QTSHARP_CLANG_RESOURCE_DIR")
+        ?? (Directory.GetDirectories(Path.Combine(RepoRoot, "lib", "lib", "clang"))
+                .OrderByDescending(d => d, StringComparer.Ordinal)
+                .FirstOrDefault(d => File.Exists(Path.Combine(d, "include", "stddef.h")))
+            ?? throw new InvalidOperationException("clang's builtin headers are missing - see README.md"));
+
+    static string FindRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "QtSharp.slnx")))
+            dir = dir.Parent;
+        return dir?.FullName ?? AppContext.BaseDirectory;
+    }
 
     // Depth-first walk over a cursor tree through the raw visitor.
     sealed class Walker
@@ -122,7 +138,7 @@ static class Program
         var all = false;
         var tree = false;
         var indexMode = false;
-        var rootsSource = @"D:\QtSharp\gen\ApiModel.cs";
+        var rootsSource = Path.Combine(RepoRoot, "gen", "ApiModel.cs");
 
         for (int i = 0; i < args.Length; i++)
         {
