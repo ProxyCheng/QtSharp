@@ -584,6 +584,17 @@ clangprobe --dump CXCursor CXType clang
 - **验证(+6 项)**:`api` 冒烟 4 项(`+=` 连上后 emit 触发、`-=` 之后再 emit 不触发、`-=` 一个没连过的 key 返回 false、两个 handler 只移除其一);`hello selftest` 2 项(C# 声明信号的 `+=`/`-=`、Qt 信号的事件拼写)。`api` 11 → **15**,`hello selftest` 9 → **11**。
 - 门禁:model 逐字节一致、codegen 两次一致、**31 个 demo + sample 全 PASS**(**1165** 项 demo 断言 + 11 项 sample)。
 
+**㊴ 本轮完成:新克隆能跑起来(`README.md` + 去掉写死的 `D:\QtSharp` + 门禁自己报是哪个 demo 挂了)**
+起因:"加上README,让新克隆的人能跟着跑起来"。
+- **`README.md`(新)**:管线图 + 前置条件表(Qt 6.11.0 msvc2022_64 的 dev 文件与 runtime DLL、clang builtin headers、C++ 工具链、.NET 10)+ **每样东西放哪/怎么用环境变量改**+ 门禁各步在干什么 + 两个入口怎么跑 + **API 一页速查**(属性/信号=事件/应用对象/覆写虚函数/自己声明 Signal-Property/所有权)+ 仓库布局 + 已知限制(Windows x64 与 Qt 6.11 专属、只有 QtCore/Gui/Widgets、RHI/WindowEmbedding/Printing-PDF-SVG 不可行、`api-windowflags` 停牌、`QPixmap::fill(QColor)` 缺失)+ 那句"偶发 teardown flake 怎么认、怎么办"。
+- **写死的路径全部改掉(这才是"能跑起来"的关键)**:
+  - `gen`:新增 `QtLibrary.RepoRoot`(从生成器自己的目录往上找到 `QtSharp.slnx`)与 `QtLibrary.QtIncludeRoot`(默认 `<repo>\Qt\<QtVersion>\msvc2022_64\include`,`QTSHARP_QT_INCLUDE` 覆盖);`ApiModel2.ResourceDir()` 改成"exe 旁边的 `lib\clang\<version>` → 源码树里的 `lib\lib\clang\<version>`"(版本取最高、认 `include\stddef.h`),`QTSHARP_CLANG_RESOURCE_DIR` 覆盖,**找不到就抛一条指向 README 的错误**(以前会静默退回本机路径)。
+  - `build_api.bat` / `build_crashtracer.bat`:**先 `cd /d "%~dp0"`**(任何工作目录都能跑)、`QT_DIR`/`VCVARS`/`VCVARS_VER` 从环境取、**`for /d` 找 `include\QtCore\6.*` 的版本目录**(不再写死 6.11.0)、Qt 或 vcvarsall 不在预期位置就打印一条能照着做的错误。
+  - `tools/clangprobe`:同一套默认值 + 同一套环境变量。
+  - 验证:改完 **extract 仍然逐字节一致**(model 没变),`build_api.bat` 在**别的目录**下跑也成功。
+- **门禁变成"自描述 + 自动覆盖"**:demo 段原来是 31 条手写调用(每条约会重复名字表、加新 demo 要改两处、这 31 个 GUI 进程里挂一个时输出里**看不到是哪个**)。现在 `testapp --list` 打印 `ApiDemos.Names`(一行一个),脚本按它循环、**每个 demo 先打印名字**,失败时打印 `demo + 退出码(十六进制)`;`regen-api.ps1` 的 `$root` 改成从 `$PSScriptRoot` 推出来(任何目录都能跑),并新增 `=== [0] Prerequisites ===` 检查 clang headers 在不在(不在就立刻带 README 指引退出)。**加新 demo 现在只需要动 `demos/`**,门禁自动带上。
+  - 顺带说明:上一轮那次门禁失败(`0xC000041D`)就是 ㉗ 记的那个偶发 teardown flake —— 重跑即绿,**加上 demo 名回显之后这种事一眼可归因**;README 里也写了怎么认。
+
 
 ### 解析配置清单(历史上 CppSharp 传给 clang 的东西 —— 迁移时的等价基准;`qtgen dumpopts` 已随旧链路删除)
 来源曾是 `gen/ApiModel.cs` 的 `ModelLibrary.Setup` + `QtLibrary.QtIncludeRoot` + `CppSharp.Parser.ParserOptions.SetupMSVC`;`ApiModel2.cs` 复刻的就是这套配置。
@@ -675,11 +686,13 @@ CppSharp 替我们解决了一个不小的坑:**Qt 头的 MSVC 兼容解析**(`-
 
 ## 构建/重新生成命令序列
 ### A. 唯一的一条链路(旧链路已删除)
-一条命令跑完全部(含两道门禁与全部 demo + sample):
+一条命令跑完全部(含两道门禁与全部 demo + sample);**从任何目录都能跑**(`$root` 由 `$PSScriptRoot` 推出):
 ```
 powershell -File D:\QtSharp\tools\regen-api.ps1
 ```
-内部顺序:`dotnet build gen` → `qtgen extract2 out\qtsharp.api.json.new`(**一条 TU,~2.5 秒**)→ 与 `model\qtsharp.api.json` 比对(**model diff 门禁**,不一致要显式 `-Adopt` 才采纳)→ `qtgen codegen <model> out\api`(跑两次,**两次一致门禁**)→ `build_api.bat`(→ `out\api\QtSharp.Api.dll`)→ `dotnet build demos\QtSharp.Demos.csproj` → `dotnet build testbind` → 31 个 demo → `dotnet build samples\hello` → `hello`(自己的窗口)+ `hello api-transform` + `hello help`。
+内部顺序:`≣[0]` 查 clang builtin headers → `dotnet build gen` → `qtgen extract2 out\qtsharp.api.json.new`(**一条 TU,~3 秒**)→ 与 `model\qtsharp.api.json` 比对(**model diff 门禁**,不一致要显式 `-Adopt` 才采纳)→ `qtgen codegen <model> out\api`(跑两次,**两次一致门禁**)→ `build_api.bat`(→ `out\api\QtSharp.Api.dll`)→ `dotnet build demos\QtSharp.Demos.csproj` → `dotnet build testbind` → `testapp --list` 拿名字表并逐个跑(每个先回显名字)→ `dotnet build samples\hello` → `hello`(自己的窗口)+ `hello selftest` + `hello api-transform` + `hello help`。
+
+**外置件的位置都可以用环境变量挪**(默认值 = 本仓库的布局,详见 README):`QT_DIR`(build_api.bat 的 Qt kit)、`QTSHARP_QT_INCLUDE`(生成器看的头文件)、`QtRuntimeDir`(props 拷的 Qt DLL)、`QTSHARP_CLANG_RESOURCE_DIR`(clang builtin headers)、`VCVARS`/`VCVARS_VER`(MSVC)。
 手动分段:
 ```
 D:\QtSharp\gen\bin\Release\net10.0\win-x64\qtgen.exe extract2 D:\QtSharp\model\qtsharp.api.json
@@ -693,11 +706,12 @@ dotnet build D:\QtSharp\testbind\testbind.csproj -c Release
 ### C. 自测命令
 ```
 testapp                      # 不带参数:打印 ApiDemos.Usage(31 个名字)
+testapp --list               # 一行一个名字(门禁按它循环,见"㊴")
 testapp api                  # QObject 冒烟(方法/信号/虚函数)
 testapp api-analogclock      # 完整 AnalogClock demo(真实事件循环 + 渲染 + 事件回调)
 testapp api-lineedits        # 完整 LineEdits demo(布局 + 控件 + 校验器 + 信号)
 testapp api-widgets          # QtWidgets 巡礼(菜单/工具栏/标签页/分割器/三个 item view/model-view-proxy/mapper/日历/undo)
-testapp api-docviewer        # 名字表就是 demos/ApiDemos.cs 的 Runners 与 tools/regen-api.ps1
+testapp api-docviewer        # 名字表就是 demos/ApiDemos.cs 的 Runners
 
 hello                        # samples/hello 自己的窗口(用户入口)
 hello help                   # 同一个名字表
@@ -814,6 +828,7 @@ sliders / spinboxes / windowflags / lineedits / shapedclock / calendar / systray
 - 3 个示例不可移植:Cube RHI / Simple RHI(需 QRhi)、Window Embedding(需非 Qt 窗口嵌入);Document Viewer 的 PDF 需 QtPdf。
 
 ## 相关文件
+- **`README.md`(新,见"㊴")**:面向新克隆的入口 —— 管线图、前置条件(每样东西放哪 / 怎么用环境变量改)、门禁各步、两个入口的跑法、API 一页速查、仓库布局、已知限制。
 - **(已删除)** `CppSharp/` 里的 fork(`src/AST/FunctionExtensions.cs` 的 `realAbiOrder`、`src/AST/Type.cs` 的 USR 比较、`src/Generator/Passes/DelegatesPass.cs` 的 sret 返回 `void*`、`src/Generator/Generators/CSharp/CSharpSources.cs` 的 vtable hook + `return @return`、`SymbolsCodeGenerator.cs`、`GenerateSymbolsPass.cs`、`src/AST/CppSharp.AST.csproj`)与 `tools/rebuild-generator/` 已随旧链路删除;那些 ABI 修复现在由生成的 native wrapper 从根上规避(见"架构 PoC #2")。
 - `gen/Program.cs`(`QtIncludeRoot` + 头文件扫描器 `ScanSignals`/`ScanProperties` + `extract2`/`codegen` 两个命令)
 - `tools/clangprobe/`(**路线 A 的可行性验证工具**,不入产品链路):`ClangProbe.csproj`(ClangSharp 21.1.8.2 + libClangSharp.runtime.win-x64 21.1.8.2)、`Program.cs`(取事实的完整实现:`--class`/`--all`/`--raw`/`--tree`/`--dump`/`--index`)。**`extract2` 的逻辑从这里搬**。
@@ -1120,6 +1135,9 @@ widgets/lineedits、analogclock、calculator、spinboxes、sliders、shapedclock
 9. **`QPixmap::fill(QColor)`(以及同类"可选 boxed 参数默认值是 `QColor`/`QVariant` 等")** —— ⑧ 的"整条尾部截断"规则把这类参数整个丢了,`QPixmap` 只剩零参 `fill()`(见"㉞")。修法:model 保留该参数、C# 发成 `QColor x = null`、native 用 `p ? *p : QColor(Qt::white)`(⑧.4 的 `QsApiDefaultValue` 已是半个机制)。`QWidget::grab(QRect)`、`QComboBox::addItem(QString,QVariant)` 也在这条线上,影响面比 `pixmap.fill` 更大。
 
 ## 给新 session 的提醒(踩坑清单)
+- **外置件的位置都能用环境变量挪**(㊴):`QT_DIR`(build_api.bat 的 Qt kit)、`QTSHARP_QT_INCLUDE`(生成器读的头文件)、`QtRuntimeDir`(props 拷的 Qt DLL)、`QTSHARP_CLANG_RESOURCE_DIR`(clang builtin headers)、`VCVARS`/`VCVARS_VER`(MSVC)。**默认值是"仓库内"的布局**(`Qt\6.11.0\msvc2022_64`、`Qt\6.11.0\runtime`、`lib\lib\clang\<version>`),仓库因此可以放在任何地方;`build_api.bat`/`build_crashtracer.bat`/`regen-api.ps1` 都会先 `cd` 到仓库根,从任何目录都能跑。
+- **门禁的 demo 名字表来自库**(㊴):`testapp --list` 打印 `ApiDemos.Names`,脚本按它循环并**逐个回显名字**(挂一个时一眼看出是哪个)。所以加新 demo 只动 `demos/`(文件 + `ApiDemos` 两行),不用改脚本 —— 而 `WindowFlagsApi` 那种"不接进表"的仍然是停牌的。
+- **`README.md` 是给新克隆的人看的**(㊴):改前置条件/路径/跑法时记得同步它;`CONTEXT.md`(本文件)是内部设计日志,别指望新人读完。
 - **手写 UI 从 `samples/hello/` 抄**:一个 `<Import Project="..\..\QtSharp.Api.props" />` 就够(生成绑定 + 运行时 + native/Qt DLL 拷贝)。门禁会 build+run 它,所以这条路不会烂。
 - **demo 在库里,不在 `testbind/`**(㉟):31 个 `api-*` + 绑定 + 运行时都在 `demos/QtSharp.Demos.csproj`(`demos/*.cs`),`demos/ApiDemos.cs` 是唯一的"名字 → demo"表。**加新 demo = 往 `demos/` 放文件 + 在 `ApiDemos.Runners`/`Names` 各加一行**,`testbind/Program.cs` 与 `samples/hello/Program.cs` **都不用动**。**引用 demo 库的工程必须 `QtSharpCompileBinding=false`**(在 `Import props` 之前),否则绑定被编两遍(CS0433);反之自己编译绑定的工程**不要**引 demo 库。
 - **`exec`/`quit`/`exit` 是实例方法**(㊱):`app.Exec()` / `app.Quit()` / `app.Exit(code)`;`QCoreApplication.Exec()` 那种**静态写法已经不存在了**(`ApiRuntime.Exec/Quit` 也没了)。手边没有 app 引用时(菜单动作、窗体类内部)用 `QCoreApplication.Instance().Quit()` —— PyQt 的 `QApplication.instance().quit()`。`instance`/`processEvents`/`sendEvent` 仍然是静态。demo 的入口签名是 `Run(QApplication app)`,应用对象由 `ApiDemos` 按真正的命令行建一次。
