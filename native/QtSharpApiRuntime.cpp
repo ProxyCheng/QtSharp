@@ -155,18 +155,21 @@ private:
     std::vector<int> m_typeIds;
 };
 
-extern "C" __declspec(dllexport) int qs_api_connect(void* sender, const char* signature,
+// Connects a managed callback to a signal. The returned handle is the QMetaObject::Connection kept
+// on the heap: the C# side needs it back to disconnect (the `-=` of a signal exposed as a C# event),
+// and QObject::disconnect(connection) is the public way to drop exactly that one connection.
+extern "C" __declspec(dllexport) void* qs_api_connect(void* sender, const char* signature,
     QsApiSignalCallback callback, void* userData, int connectionType)
 {
     if (!sender || !signature || !callback)
-        return 0;
+        return nullptr;
 
     auto* object = static_cast<QObject*>(sender);
     const QMetaObject* metaObject = object->metaObject();
     const QByteArray normalized = QMetaObject::normalizedSignature(signature);
     const int index = metaObject->indexOfSignal(normalized.constData());
     if (index < 0)
-        return 0;
+        return nullptr;
 
     const QMetaMethod signal = metaObject->method(index);
     std::vector<int> typeIds;
@@ -181,10 +184,23 @@ extern "C" __declspec(dllexport) int qs_api_connect(void* sender, const char* si
     if (!connection)
     {
         slot->destroyIfLastRef();
-        return 0;
+        return nullptr;
     }
-    return 1;
+    return new QMetaObject::Connection(connection);
 }
+
+// Drops one connection and the handle with it. Safe on an already-broken connection (the sender may
+// have died first), which is why the handle is deleted either way.
+extern "C" __declspec(dllexport) int qs_api_disconnect(void* connection)
+{
+    if (!connection)
+        return 0;
+    auto* stored = static_cast<QMetaObject::Connection*>(connection);
+    const bool disconnected = QObject::disconnect(*stored);
+    delete stored;
+    return disconnected ? 1 : 0;
+}
+
 
 // Activates a signal from managed code. The argv convention is moc's own: args[0] is the return
 // slot (always null for a signal) and args[i] holds the address of the i-th argument's storage.
@@ -446,6 +462,26 @@ extern "C" __declspec(dllexport) int qs_api_probe_mouse_press(void* widget, int 
     return QCoreApplication::sendEvent(static_cast<QObject*>(widget), &event) ? 1 : 0;
 }
 
+// Delivers a synthetic mouse move with the given button mask held, so a managed mouseMoveEvent
+// override can be exercised (a press/move/release sequence is what a drag looks like, and a
+// managed widget cannot construct a QMouseEvent itself).
+extern "C" __declspec(dllexport) int qs_api_probe_mouse_move(void* widget, int x, int y, int buttons)
+{
+    const QPointF pos(x, y);
+    QMouseEvent event(QEvent::MouseMove, pos, pos,
+                      Qt::NoButton, Qt::MouseButton(buttons), Qt::NoModifier);
+    return QCoreApplication::sendEvent(static_cast<QObject*>(widget), &event) ? 1 : 0;
+}
+
+// Delivers a synthetic left mouse release, the other end of the drag above.
+extern "C" __declspec(dllexport) int qs_api_probe_mouse_release(void* widget, int x, int y)
+{
+    const QPointF pos(x, y);
+    QMouseEvent event(QEvent::MouseButtonRelease, pos, pos,
+                      Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+    return QCoreApplication::sendEvent(static_cast<QObject*>(widget), &event) ? 1 : 0;
+}
+
 // Delivers a synthetic wheel turn (the delta in eighths of a degree, as Qt's own events carry
 // it, with the vertical component set - a wheel turn is a vertical scroll) so a managed
 // wheelEvent override has a real QWheelEvent to read.
@@ -585,20 +621,5 @@ extern "C" __declspec(dllexport) void qs_api_app_destroy()
     OwnsInstance() = false;
 }
 
-extern "C" __declspec(dllexport) int qs_api_app_create()
-{
-    qs_api_app_create_args(nullptr, 0, 0, 2);
-    return 0;
-}
-
-extern "C" __declspec(dllexport) int qs_api_app_exec()
-{
-    return QApplication::exec();
-}
-
-extern "C" __declspec(dllexport) void qs_api_app_quit()
-{
-    QCoreApplication::quit();
-}
 
 
