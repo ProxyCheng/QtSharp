@@ -56,7 +56,7 @@ them can be pointed elsewhere instead:
 | Qt dev files (headers + lib) | `<repo>\Qt\6.11.0\msvc2022_64` | `QT_DIR` (build_api.bat), `QTSHARP_QT_INCLUDE` (generator) |
 | Qt runtime DLLs + `platforms\qwindows.dll` | `<repo>\Qt\6.11.0\runtime` | `QtRuntimeDir` in `QtSharp.Api.props` |
 | clang builtin headers | `<repo>\lib\lib\clang\<version>\include` | `QTSHARP_CLANG_RESOURCE_DIR` |
-| Visual Studio | the `vcvarsall.bat` path in `build_api.bat` | `VCVARS`, `VCVARS_VER` |
+| Visual Studio | found among the 2022 / 2019 / 18.x installs | `VCVARS` (a `vcvarsall.bat`), `VCVARS_VER` (pin a toolset) |
 
 ### Getting the pieces
 
