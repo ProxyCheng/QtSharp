@@ -1430,7 +1430,7 @@ public static class ApiCodeGen
             // to chain to), but calls the real C++ virtual for an adopted object: Qt's own models
             // (QTableWidget's, QComboBox's, ...) are private C++ classes that are not part of this
             // model, so without this their index()/data()/setData()/rowCount() would answer
-            // null/0/false and the model would be silently unreachable (see CONTEXT.md).
+            // null/0/false and the model would be silently unreachable.
             if (SubtreeHasCtor(name))
             {
                 sb.AppendLine("        internal bool __managedSubclass;");
