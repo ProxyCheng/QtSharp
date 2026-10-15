@@ -50,6 +50,8 @@ namespace QtSharp.Api
             ["api-composition"] = ApiCompositionDemo.Run,
             ["api-transform"] = ApiTransformationsDemo.Run,
             ["api-pathstroke"] = ApiPathStrokeDemo.Run,
+            ["api-network"] = ApiNetworkDemo.Run,
+            ["api-docformats"] = ApiDocFormatsDemo.Run,
         };
 
         /// <summary>The demo names, in the order Usage lists them.</summary>
@@ -62,6 +64,8 @@ namespace QtSharp.Api
             "api-systray", "api-docviewer", "api-basicdrawing", "api-gradients",
             "api-painterpaths", "api-completer", "api-customsortfilter",
             "api-stardelegate", "api-composition", "api-transform", "api-pathstroke",
+            "api-network",
+            "api-docformats",
         };
 
         /// <summary>The text both entry points print when they are given nothing to run.</summary>

@@ -887,6 +887,88 @@ sliders / spinboxes / windowflags / lineedits / shapedclock / calendar / systray
 - **验收**:`tools\regen-api.ps1` **exit=0** —— model 逐字节一致、codegen 两次一致、native+C# 编译、**32 个 demo + sample 全 PASS(1219 条 `[PASS]` 行** = 之前 1202 + `api-ownership` +6 + `api-exceptions` +11)。
 - **一个环境插曲(值得记)**:门禁中途在 `[4] Build native bindings` 失败,报 `'cl' is not recognized` —— 查下来是 **VS 18 Insiders 正在被更新**(`CodeSetup`/`setup` 进程在跑,`VC\Tools\MSVC\14.51.36231\bin\Hostx64\x64` 只剩 18 个文件、`cl.exe`/`link.exe`/`c1xx.dll` 暂时不见,头文件/lib 还在)。**不是仓库的问题**,等安装器跑完 `cl.exe` 就回来了,重跑即绿。**下次遇到"cl 找不到"先看 `VC\Tools\MSVC\<ver>\bin\Hostx64\x64` 的文件数**,别急着改 `build_api.bat`。
 
+**㊷ 本轮完成:生成的绑定不再产生任何编译警告(3154 → 0)** —— 起因是 `PolyMount.QtUI` 这类**引用绑定的下游工程**每次编译都刷 `out/api/QtSharp.Api.cs` 里的一千多条警告(不是 PolyMount 的问题,是 QtSharp 生成的代码的问题)。改动全在 `gen/ApiCodeGen.cs`,model 未动(仍逐字节一致),纯"让生成器自己把 `new` / 条件字段写对"。
+- **3154 条警告分两类**:`CS0108`(3102,成员隐藏了继承的同名成员,编译器要求写 `new`)+ `CS0649`(52,`__ownsNative`/`__managedSubclass` 声明了却从不赋值)。
+- **CS0108 的准确规则(实测定下来的,不是拍脑袋)**:C# 里**方法按签名隐藏**(同签名才隐藏,不同签名只是重载、不警告),**其它成员(属性/字段/事件/嵌套类型)按名字隐藏**,且**跨种类也算**(方法 `Foo()` 会隐藏基类的属性 `Foo`,反之亦然;实例方法会隐藏基类静态方法)。嵌套 enum 写 `new` 合法(`QSpinBox.StepType` 就是)。于是新增 `Members`/`DeclaredMembers(className)`/`InheritedMembers(className)`(按主基类链 memo 合并 `AllNames`/`NonMethodNames`/`MethodKeys` 三个集合)与 `NewMethod`/`NewName` 两个判定,凡会被隐藏的成员前面补 `new`:`FromHandle`/`FromTransientHandle`/`FromOwnedHandle`/`Dispose`/`Dispatch`/`AsX`、普通方法、虚函数(`override` 与 `new` 互斥,`public new virtual` 合法)、`Q_PROPERTY` 属性、数据成员属性与 `Get/Set` 访问器、信号事件与 `XxxSignal`、嵌套枚举。**关键是 `InheritedMembers` 必须含基类自己声明的成员**(第一版只并了祖先 → 直接继承 `QObject` 的类全漏判,162 个命中 286 个未命中)。
+- **CS0649 的正解**:这两个字段只有**能构造出对象**的类才赋值,所以只在"根类及其子树里**存在**构造函数或 `subclassCtor`"时声明 `__ownsNative`;`__managedSubclass` 额外对"子树里有虚函数 stub 会**读**它"的层级保留,且这种"只读不写"的情况显式写 `= false`(否则仍是 CS0649;`QGestureRecognizer`/`QItemEditorCreatorBase` 就是这种)。**不能只按"读"就保留**——只读不写照样警告。
+- **验证**:`dotnet build demos` **0 警告**;`tools\regen-api.ps1` **exit=0** —— model 逐字节一致、codegen 两次一致、native+C# 编译、**32 个 demo + sample 全 PASS(1219 条)**。`new` 只影响声明(IL 不变),砍掉的是真正死掉的字段,所以行为零变化。
+
+**㊸ 本轮完成:资源系统接进绑定(`QResource` + `uchar*`→`byte[]`)——为"PyQt 同等能力"补齐资源这一轴**
+起因:下游工程要统一到 `.qrc/.rcc` 走 Qt 官方资源系统,却发现 QtSharp 没有暴露 `QResource registerResource`,只能用程序集嵌入顶着。**用户的目标是"做一个 C# 版的 PyQt",PyQt 有的都要有**,所以按 PyQt6 的 `QResource` 面补齐。
+- **`QResource` 入 `Roots`**(`R("QResource", "qresource.h", "QtCore")`,`gen/ApiModel.cs`):模型 **448→449 类 / 451→452 枚举**,纯新增。`QLocale`/`QByteArray`/`QDateTime` 早已在 `Roots` 里,所以 `locale`/`setLocale`/`uncompressedData`/`lastModified` 都直接落地。
+- **`uchar*` 参数现在真的映射成 `byte[]`**(此前落成 `IntPtr`)。根因:`ApiCodeGen.ManagedType` 对 `uchar*` 先被 `IsPtr` 拦下,而 `CSharpScalar` 少了 `"uchar"`(只有 `"unsigned char"`),于是 `IsArray` 判否 → 走不透明指针。**加一行 `"uchar" => "byte"` 即可**让 `uchar*` 复用既有的 `int[]` 数组路径(P/Invoke `byte[]` 是 blittable,自动 pin;native 侧 `unsigned char*` 早已特判)。**注意:C# 侧 `uchar*` 参数统一按"Qt 只读的字节缓冲"处理,与 PyQt 一致。**
+  - 影响面共 **12 个入口**,全部是"从字节造对象"的路径,改完就是 PyQt 的拼写:`QImage(byte[], int, int, Format)`、`QBitmap.FromData(QSize, byte[], ...)`、`QImage.FromData/LoadFromData(byte[], ...)`、`QPixmap.LoadFromData(byte[], ...)`、`QTranslator.Load(byte[], int, string)`(**正好是翻译那条线**)、`QCborValue.FromCbor(byte[], long)`、`QCborStreamReader(byte[], long)`、`QFileDevice.Unmap(byte[])`、`QTextBoundaryFinder(..., byte[] buffer, long)`、以及新的 `QResource.RegisterResource/UnregisterResource(byte[], string)`。
+- **资源面现在齐了**(对齐 PyQt6 `QResource`):静态 `RegisterResource(string rccFilename, string resourceRoot)`(外部 `.rcc`)**和** `RegisterResource(byte[] rccData, string resourceRoot)`(嵌入的 rcc 二进制,= PyQt 的 `registerResourceData`)+ 对应的 `UnregisterResource` 两个重载;实例面 `SetFileName`/`FileName`/`AbsoluteFilePath`/`IsValid`/`Size`/`UncompressedSize`/`UncompressedData`(`QByteArray`)/`LastModified`/`Locale`/`SetLocale`/`CompressionAlgorithm` + 嵌套枚举 `QResource.Compression`。**Qt6 的 `registerResource(const uchar*, ...)` 重载让整块 rcc 可以直接注册,所以不依赖 3 参数的 `qRegisterResourceData` 自由函数**,也不需要 native shim、更没有绕私有接口。
+- **资源面仍差的 PyQt 项(如实记)**:①`data() → bytes` 没有(返回位 `const uchar*` 无长度,抽取器按规则拒;需要"长度成对返回"的机制);②`isDir()`/`isFile()`/`children()` 在 Qt 里是 **protected**,PyQt 会暴露,而我们的 protected 发布只限扩展树;③`QResource(QString, QLocale)` 的第二个参数因默认值 `QLocale()` 不可表达被尾部截断(只剩 `QResource(string)`);④**QtCore 自由函数**(`qRegisterResourceData`/`qCompress`/`qUncompress`/`qVersion` …)整个轴还没有 —— 模型只收类/枚举。**这一轴是"PyQt 同等能力"里下一块要啃的**(自由函数数量很大,但资源这条路已被上面的 `byte[]` 重载覆盖)。
+- **验证**:`tools\regen-api.ps1` **exit=0** —— model 逐字节一致(449 类 / 452 枚举)、codegen 两次一致、native+C# 编译 **0 警告**、**32 个 demo + sample 全 PASS(1219 条)**。
+
+**㊹ 本轮完成:自由函数整轴(`qtgen` 现在收"命名空间级函数")——目标 "C# 版 PyQt" 补上模块函数**
+起因:用户明确核心目标是"做一个 C# 版本的 PyQt",而 PyQt 的 `QtCore`/`QtGui`/`QtWidgets` 除了类之外还有**模块级自由函数**(`qCompress`/`qUncompress`/`qVersion`/`qRegisterMetaType`/`qChecksum`/`qFuzzyCompare`/`qDrawShadePanel` …),我们的模型**只收类 + 枚举**,这一层整个没有。
+- **模型新增 `functions` 数组**(`gen/ApiModel.cs` 的 `ModelPart.Functions` + `Serialize`,插在 `enums` 与 `classes` 之间);形状与"方法"一致(`name`/`header`/`returnType`/`parameters`),于是 codegen 用同一套 `Params`/`ParamTypeKey`/`MarshalParams` 读它。
+- **抽取器(`gen/ApiModel2.cs`)**:`ClangIndex.Functions` 收 **TU 级**(或 `extern "C"` 的 `LinkageSpec` 下)的 `CXCursor_FunctionDecl`;过滤条件 = 名字非空、非 `operator`/`qt_*`、非 inline(`Cursor_isFunctionInlined`)、非变参、`CXLinkage_External`、`CX_SC_None`(有导出符号)、**声明文件落在 QtCore/QtGui/QtWidgets 的 include 目录里**、且整条签名在词汇表内(`Accept`)。**去重按托管签名**(`DedupeKey`,和类方法一致)避免 CS0111。`FreeFunction` 与类成员**共用参数读取逻辑**(从 `Member` 抽出的那段)。名字闭包:`DeniedFunctions` 排掉"导出了但属内部"的(`comparesEqual`/`qbswap`/`qMallocAligned`/`qReallocAligned`/`qFreeAligned`/`qmemrchr`/`qFlagLocation`/`qHashBits`/`qHasPixmapTexture`/`q{Are,Disable,Enable}NtfsPermissionChecks`)。
+  - **`extern "C"` 的坑**:`qVersion` 声明在 `qtversion.h` 的 `extern "C"` 块里,它的 `getCursorSemanticParent` 是 **`LinkageSpec`** 而不是 TU(第一版只认 TU → `qVersion` 整个丢掉,9298 个候选里一个没进)。
+  - 结果:**69 个自由函数**入库(`qCompress`/`qUncompress`/`qVersion`/`qQNaN`/`qSNaN`/`qInf`/`qIsNaN`×2/`qIsInf`×2/`qIsFinite`×2/`qFpClassify`×2/`qFloatDistance`×2/`qChecksum`/`qHash`×28/`qRegisterMetaType`/`qFuzzyCompare`×4/`qEnvironmentVariable`×2/`qgetenv`/`qputenv`/`qunsetenv`/`qstrcmp`/`qstricmp`/`qstrnicmp`×2/`qSetMessagePattern`/`qGlobalQHashSeed`/`qSetGlobalQHashSeed`/`qSharedBuild`/`qtTrId`/`qAppName`/…)。**顺序保持 model 顺序**(codegen 三个 emitter 都用同一个 per-name 计数 → 后缀一致)。**`qCompress`/`qUncompress` 的 `QByteArray` 重载是 `inline`(被正确排除),真正的符号是 `(byte[], long, int)` / `(byte[], long)` 那个。`qRegisterResourceData` 在 Qt6 已不存在**(资源注册走 `QResource::registerResource(const uchar*)`,㊸ 已绑)。
+- **codegen(`gen/ApiCodeGen.cs`)**:`WriteFreeFunctions` 把函数发成**同一个 `Qt` 静态类**(和命名空间枚举共用 `public static partial class Qt`,C# 面即 `Qt.QCompress(...)`);名字用 `Pascal`(`qCompress`→`QCompress`,`qQNaN`→`QQNaN`);`WriteFreeFunctionNativeDeclarations`(P/Invoke `fn_<name><suffix>`)与 `WriteFreeFunctionNative`(`extern "C" ... qs_api_fn_<name><suffix>`)各一份;**native 侧的 `#include` 现在把函数的 `header` 也并进去**(否则 `qVersion` 的 `qtversion.h` 看不到)。
+- **★ 修掉一个真 bug(用户在 PolyMount 里撞到的)**:`qChecksum(QByteArrayView, Qt::ChecksumType)` 的枚举没被收进 model → P/Invoke 里**原样写出 C++ 拼写 `Qt::ChecksumType`**(CS0432/CS0426/CS0117,而且 `Qt.ChecksumType` 根本不存在)。**修法:自由函数也要调 `CollectEnums2(fn.ReturnClangType, fn.Visible, index, part.Enums)`**(类方法早就这么做)。修完 `Qt.ChecksumType` 正常生成,P/Invoke 用 `int`。**绝不能在 PolyMount 里补一个替代类型掩盖它。**
+- **顺带:native 构建的 `C4819` 也清了**(`build_api.bat` 的 `cl` 加 **`/utf-8`**)。这是**改动前就有**的 5 条(Qt 头在 GBK 代码页机器上被当成非 UTF-8: `qtypeinfo.h`/`qproperty.h`/`quuid.h`),门禁把 `build_api.bat` 输出重定向到 `out\api_native.log` 所以一直没露出来;加了 `/utf-8` 后 native 编译 **0 警告**。
+- **验证**:`tools\regen-api.ps1` **exit=0** —— model 逐字节一致(**449 类 / 453 枚举 / 69 函数**)、codegen 两次一致、native+C# 编译 **0 警告**、**32 个 demo + sample 全 PASS(1224 条,`api-core` +5)**。新增断言走真 native glue:`Qt.QVersion()` = `6.11.2`、`Qt.QIsNaN/QIsInf/QIsFinite`、`Qt.QInf/Qt.QQNaN/Qt.QSNaN`、`Qt.QCompress` 出 36 字节且 `Qt.QChecksum` 稳定、`QResource` 对未注册路径报 invalid。
+- **仍差 PyQt 的自由函数轴**:①`qMin/qMax/qAbs/qRound/qSwap` 这类**模板**(不是 `FunctionDecl`,拿不到实参)天然收不了,和 PyQt 不同(sip 对模板有特判);②只扫了**已绑定类头文件传递包含到**的函数 + 三个模块目录,`qDrawUtil` 那批(`qdrawutil.h`)在本次跑里没进(需要确认是否被 TU 包含);③QtTest 的 `qWaitForWindowExposed` 等不在模块内。
+
+**㊺ 本轮完成:接入 QtNetwork 模块(单实例 IPC + TCP/UDP + HTTP)——第一个"QtCore/Gui/Widgets 之外"的模块**
+起因:用户要做**单实例**(第二次启动向已有实例发"唤起 Dashboard/打开对象"消息)。QtSharp 已有 `QLockFile`(判断"是不是第一个"),但**没有 `QLocalServer`/`QLocalSocket`** —— 而这两个类在 **QtNetwork** 模块,不在我们绑的三个模块里。
+- **把 QtNetwork 接进管线**(这是本轮的实质工作,不是加两行 `Roots`):
+  - `gen/ApiModel2.cs` 的 `ClangArgs` 加 `-DQT_NETWORK_LIB` + `-I <include>\QtNetwork`;`CollectFreeFunctions` 的模块表加 `QtNetwork`;
+  - `build_api.bat` 加 `-I"%QT_INC%\QtNetwork"` 并链接 **`Qt6Network.lib`**;
+  - **运行时**:`Qt\6.11.0\runtime` 需要 **`Qt6Network.dll`**(props 会拷)。本机原来只有 Core/Gui/Widgets 三个 DLL;kit 是 dev-only(`bin` 里只有 `moc.exe`),所以从 PyQt6 wheel 里取了**版本号完全一致(6.11.2.0)**的那份(用 everything 全盘搜 `Qt6Network.dll` 并按 `FileVersion` 匹配;不同 minor 的 Qt 不能混,会 ABI 崩)。
+  - README 的前置条件/已知限制都同步(要在 `runtime` 放 `Qt6Network.dll`,且必须与其他 Qt DLL 同版本)。
+- **本轮入库的类(15 个,464 类 / 478 枚举)**:`QLocalServer`/`QLocalSocket`(单实例交接),`QHostAddress`/`QHostInfo`/`QNetworkInterface`/`QNetworkAddressEntry`/`QNetworkDatagram`(寻址),`QAbstractSocket`/`QTcpSocket`/`QTcpServer`/`QUdpSocket`(TCP/UDP),`QNetworkProxy`/`QNetworkRequest`/`QNetworkReply`/`QNetworkAccessManager`(HTTP)。**没绑的类型(如 `QSslError`、cookie)只让"点名它们的方法"被丢**,其余照旧落地(提取器的既有规则)。
+- **新增 demo `api-network`(19 项断言,进门禁)**:(a) `QHostAddress` 字符串往返 + `QNetworkInterface.AllInterfaces()`;(b) **单实例交接**:`QLocalServer.Listen(name)` → `QLocalSocket.ConnectToServer(name)` → `waitForConnected` → `NextPendingConnection()` → 双向 19 字节消息往返 → `DisconnectFromServer()` 后状态回到 `UnconnectedState`;(c) **TCP 回环**:`QTcpServer.Listen()`(临时端口)+ `ServerPort()`,客户端 `ConnectToHost(QHostAddress.LocalHost, port)`,服务端回 "pong"。**两端在同一线程**,所以用 `QCoreApplication.ProcessEvents` 泵事件而不是阻塞 `waitFor*`(否则自己把自己卡死)。
+- **顺带确认的一个真缺口(写进 README 已知限制)**:`QTcpServer::listen(const QHostAddress& = QHostAddress::Any, quint16 port = 0)` 的**可选 boxed 参数默认值不可表达 → 尾部截断**,于是只剩 `Listen()`(绑定 Any + 随机端口),**没法指定固定端口**。这与 `QPixmap::fill(QColor)`/`QWidget::grab(QRect)`/`QComboBox::addItem(QString,QVariant)` 是同一个根因("可选 boxed 参数默认值"),正解是让这类参数保留成 `null` 并在 native 用 C++ 默认表达式(⑧.4 的 `QsApiDefaultValue` 是半个机制)。**这是下一步最值得做的一条**(影响面比单实例大:任何"给地址/端口/颜色/矩形"的可选参数)。
+- **仍缺的接口普查(本轮顺手核对)**:QtCore/QtGui/QtWidgets 的**常用类已基本齐**(`QTextStream`/`QCursor`/`QFontDatabase`/`QImageReader`/`QImageWriter`/`QTextLayout`/`QTabBar`/`QFileIconProvider`/`QColorSpace` … 逐条查过都在 `Roots` 里);**缺的主要是别的模块**(QtSql/QtMultimedia/QtQml/QtPrintSupport/QtSvg/QtPdf)和**类型词汇表里那批低收益项**(`QLatin1String` 15、`QFont::Tag` 9、`QList<std::pair<…>>` 9、`QGenericArgument` 6=`QMetaObject::invokeMethod`、`QMetaObject::Connection` 5、`QPaintEngine*` 6;迭代器/`QSpan`/`DataPtr` 是**故意不收**,PySide 也不收)。
+- **验证**:`tools\regen-api.ps1` **exit=0** —— model 逐字节一致(**464 类 / 478 枚举 / 70 函数**)、codegen 两次一致、native+C# 编译 **0 警告**、**33 个 demo + sample 全 PASS(1243 条,`api-network` +19)**。
+
+**㊻ 本轮完成:可选 boxed 参数默认值(解锁固定端口/`fill(QColor)`/`grab(QRect)`/`addItem(QString,QVariant)`)+ 再接四个模块(QtSvg / QtSvgWidgets / QtPrintSupport / QtXml)+ QtOpenGL/QtOpenGLWidgets**
+两件事,都过门禁。
+- **★ 可选 boxed 参数默认值(本轮最重要的机制修复)**。此前"可选 boxed 参数默认值表达不出来 → 整条尾部截断"(⑧.5),导致 `QTcpServer::listen(QHostAddress=Any, quint16 port=0)` 只剩 `Listen()`(**没法指定固定端口**)、`QPixmap::fill(QColor)`、`QWidget::grab(QRect)`、`QComboBox::addItem(QString, QVariant)` 全没了。现在:
+  - 抽取器把**原始 C++ 默认表达式**存进参数(`"defaultCpp"`,`CppDefaultExpression`),不再截断这类参数;
+  - C# 侧默认值就是 `null`(`CSharpDefault` 对 boxed 本来给 `null`);
+  - native 侧 `CppArg(t, name, defaultCpp)`:`(name ? *static_cast<T*>(name) : T(<defaultCpp>))`,即 `QColor(Qt::white)`、`QHostAddress(QHostAddress::Any)`;`= {}` 这种值初始化特判成 `T()`(否则 `T({})` 编译不过 —— `QUuid({})`/`QDeadlineTimer({})` 就是这么炸的)。
+  - **枚举**的不可表达默认值**仍然截断**(`QNativeIpcKey::DefaultTypeForOs`):C# `default`=0 是 Qt 保留的非法值。
+  - 验证:`QPixmap.Fill()`(白 255,255,255)+ `Fill(new QColor(10,20,30))`、`QTcpServer.Listen(address, port)`、`api-core`/`api-network` 新断言。
+- **★ 顺带修掉一个真 bug(2-D 数组参数被当成默认参数)**。`QOpenGLShaderProgram::setUniformValue(const char* name, const GLfloat value[2][2])` 被生成成 `setUniformValue(char*)`(1 参)——`FirstExpr` 把**数组声明的 bounds** 当成了默认参数表达式,于是那个(不支持的)第二参被当成"可选的、可丢的",方法带着 1 个参数留下 → native 里 `setUniformValue(name)` 编译不过(C2661)。修法:探测默认参数前先排除**数组声明**(`IsArrayDeclarator`:参数类型拼写含 `[`)。**注意不能靠"声明文本里有 `=`"判断** —— `QObject::tr` 是宏展开的,拼写范围跨文件,`SourceText` 返回 null,第一版这么写把 190 处 `tr` 的 `optional` 全弄丢了(已回退)。修完 model 相对上一版**只少那 2 条**(0 增 2 删)。
+- **新增模块(4 个 + 2 个)**:
+  - **QtSvg / QtSvgWidgets**:`QSvgRenderer`、`QSvgGenerator`、`QSvgWidget`(矢量图标 + 画到 SVG)。
+  - **QtPrintSupport**:`QPagedPaintDevice`(QtGui,基类)、`QAbstractPrintDialog`(基类)、`QPrinter`、`QPrintDialog`、`QPageSetupDialog`、`QPrinterInfo`、`QPrintPreviewDialog`、`QPrintPreviewWidget` —— **打印/打印预览/PDF 输出**(`QPrinter` + `OutputFormat.PdfFormat`)。
+  - **QtXml**:`QDomNode`/`QDomDocument`/`QDomElement`/`QDomAttr`/`QDomText`/`QDomNodeList`/`QDomNamedNodeMap` 等 DOM 家族。
+  - **QtOpenGL / QtOpenGLWidgets**:`QOpenGLWidget`(虚拟函数 `initializeGL`/`resizeGL`/`paintGL` 已进 `VirtualAllow`,可从 C# 重写)、`QOpenGLContext`(QtGui)、`QOpenGLShaderProgram`、`QOpenGLBuffer`、`QOpenGLVertexArrayObject`、`QOpenGLFramebufferObject`。
+  - 配套:`ClangArgs` 加 6 个 `-DQT_*_LIB` + 6 个 `-I`;`CollectFreeFunctions` 的模块表加 6 个模块;`build_api.bat` 加 6 个 `-I` 并链接 **`Qt6Svg.lib`/`Qt6SvgWidgets.lib`/`Qt6PrintSupport.lib`/`Qt6Xml.lib`/`Qt6OpenGL.lib`/`Qt6OpenGLWidgets.lib`**;`Qt\6.11.0\runtime` 放**版本完全一致(6.11.2.0)**的对应 DLL(全套 6.11.2 运行时在 `F:\QmlTest\.venv\...\PyQt6\Qt6\bin`,用 everything 按 `FileVersion` 校准)。
+- **新增 demo `api-docformats`(9 项,进门禁)**:QtXml 建树 → `ToString()` → `SetContent()` 解析回来(标签/属性/子节点);`QSvgRenderer` 把 SVG 渲染到 `QImage` 并读像素;`QSvgGenerator` 画到 SVG 文件(注意:**文件在生成器析构时才关闭**,要 `Dispose()` 再读);`QPrinter` 输出**真 PDF(6744 字节,`%PDF` 头)**;`QPrinterInfo.AvailablePrinterNames()`(本机 11 台)。
+- **没做的(及原因,已写进 README 已知限制)**:QtSql(**kit 里没有 dev 文件**)、QtPdf(同样没有 dev 文件;PDF *读*没绑定,PDF *写*走 `QPrinter`)、QtMultimedia(体积大、要解码器)、QtQml/QtQuick(桌面 widgets 应用用不到);`QLatin1String`(15,要正确的 Latin-1 语义,native 侧要新的编组);`QFont::Tag`/`QTextOption::Tab`(**嵌套类**,模型只收顶层类+枚举,要新增机制);`QMetaObject::Connection`/`invokeMethod`(依赖 `QObject::connect` 这个**模板**,提取不到);迭代器/`QSpan`/`DataPtr` 故意不收(PySide 也不收)。
+- **验证**:`tools\regen-api.ps1` **exit=0** —— model 逐字节一致(**496 类 / 511 枚举 / 70 函数 / 10506 方法 / 885 虚函数**)、codegen 两次一致、native+C# 编译 **0 警告**、**34 个 demo + sample 全 PASS(1255 条)**。
+
+## Qt tools package (2026-10-15)
+
+- Added `tools/QtSharp.Tools`: a development NuGet package with native Qt tools under
+  `tools/win-x64`, plus `buildTransitive` props/targets. `QtResource` items compile to binary
+  RCC files on each build and copy to build/publish outputs. `QtSharpRunTool` provides a
+  captured MSBuild command entry; `QtSharpToolsDir` exposes the executable directory.
+- `tools/pack-qt-tools.ps1` stages rcc/uic/lrelease/lupdate (moc when present), QtCore,
+  QtQml/QtNetwork and CRT dependencies, checks QtCore's version, smoke-checks tool startup,
+  and packs `out/packages/QtSharp.Tools.0.1.0.nupkg`. Current payload: Qt 6.11.2.
+  Local source was PySide6-Essentials 6.11.2 installed in the approved codemaker temp directory.
+  Upstream notices can be supplied in `QtSharp-ThirdPartyNotices` beside the source tools.
+  This package has not been published to nuget.org.
+- IMPORTANT: direct tool version commands caused modal version dialogs on this Windows
+  machine. Use redirected stdout/stderr and CreateNoWindow (the packaging script does this,
+  with a 15-second timeout). Do not run uncaptured version commands again.
+- `samples/resources` restores the local tools package, builds assets/sample.qrc, registers
+  assets/sample.rcc and reads the expected payload through QResource/QFile. Build and publish
+  executions both passed. `QtSharp.Api.props` now copies native dependencies on Publish too.
+- Validation: tools pack succeeded; resource sample build 0 warnings/errors; resource readback
+  passed in both build and publish directories. Full GUI conformance gate was not rerun for
+  this packaging-only work. Native uic generates C++, not C#; Designer/Linguist GUI and
+  deployment tools are not part of this initial payload.
+
 ## 提交状态
 - 已提交(master,按时间顺序):
   1. `Generator: fix sret/vtable ABI, cross-TU type identity, QFlags returns, abstract ctors`

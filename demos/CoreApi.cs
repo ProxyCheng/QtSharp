@@ -500,6 +500,39 @@ public static class ApiCoreDemo
         Check(range.IsValid() && range.Top() == 0 && range.Bottom() == 1 && range.Width() == 3,
             $"QItemSelectionRange ({range.Top()}..{range.Bottom()} x {range.Width()})");
 
+        // The namespace-level functions (PyQt exposes them on the module; here they are static on
+        // the Qt class): qVersion, the float predicates, the NaN/inf constants, qCompress/qChecksum.
+        Check(Qt.QVersion().StartsWith("6."), $"Qt.QVersion (got {Qt.QVersion()})");
+        Check(Qt.QIsNaN(double.NaN) && !Qt.QIsNaN(1.0) && Qt.QIsInf(double.PositiveInfinity) && Qt.QIsFinite(1.0),
+            "Qt.QIsNaN / Qt.QIsInf / Qt.QIsFinite");
+        Check(double.IsPositiveInfinity(Qt.QInf()) && double.IsNaN(Qt.QQNaN()) && double.IsNaN(Qt.QSNaN()),
+            "Qt.QInf / Qt.QQNaN / Qt.QSNaN");
+        var payload = System.Text.Encoding.ASCII.GetBytes("qtsharp resource payload");
+        var packed = Qt.QCompress(payload, payload.Length, -1);
+        Check(packed.Size() > 0
+              && Qt.QChecksum(payload, Qt.ChecksumType.ChecksumIso3309)
+                 == Qt.QChecksum(payload, Qt.ChecksumType.ChecksumIso3309),
+            $"Qt.QCompress ({packed.Size()} byte(s)) and a stable Qt.QChecksum");
+
+        // The resource system itself: QResource is what turns a .rcc (external file or embedded
+        // bytes) into ":/..." paths that QFile/QIcon/QPixmap read. An instance over a path that is
+        // not registered is invalid rather than throwing.
+        var missing = new QResource(":/qtsharp/does-not-exist.txt");
+        Check(!missing.IsValid() && !QResource.RegisterResource(":/qtsharp/no-such-file.rcc", "/"),
+            "QResource reports an unregistered resource and path as invalid");
+
+        // An optional *boxed* parameter now keeps its parameter: QPixmap::fill() with no argument
+        // still uses the declaration's default (Qt::white), and the colour can finally be given.
+        var filled = new QPixmap(4, 4);
+        filled.Fill();
+        var whitePixel = filled.ToImage().PixelColor(1, 1);
+        filled.Fill(new QColor(10, 20, 30));
+        var filledPixel = filled.ToImage().PixelColor(1, 1);
+        Check(whitePixel.Red() == 255 && whitePixel.Green() == 255 && whitePixel.Blue() == 255,
+            $"QPixmap::fill() takes the declared default (Qt::white, got {whitePixel.Red()},{whitePixel.Green()},{whitePixel.Blue()})");
+        Check(filledPixel.Red() == 10 && filledPixel.Green() == 20 && filledPixel.Blue() == 30,
+            $"QPixmap::fill(color) takes an explicit colour ({filledPixel.Red()},{filledPixel.Green()},{filledPixel.Blue()})");
+
         Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
         return failures == 0 ? 0 : 1;
     }
