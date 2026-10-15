@@ -400,8 +400,11 @@ public static class ApiTransformationsDemo
 
             using (var bounds = text.BoundingRect())
             using (var center = bounds.Center())
+                // The tolerance is a font one rather than a geometry one: the outlines are centred by
+                // construction, but which font "Qt" resolves to - and so the exact ink bounds -
+                // differs between machines (CI's differs by a couple of pixels).
                 Check(bounds.Width() > 20 && bounds.Height() > 20
-                      && Math.Abs(center.X()) <= 5 && Math.Abs(center.Y()) <= 5,
+                      && Math.Abs(center.X()) <= 8 && Math.Abs(center.Y()) <= 8,
                     $"the text path holds \"Qt\" outlines centred on the origin "
                     + $"(got {bounds.Width():F1}x{bounds.Height():F1} at {center.X():F1},{center.Y():F1})");
         }
