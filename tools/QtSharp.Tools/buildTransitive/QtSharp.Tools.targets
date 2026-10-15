@@ -1,0 +1,29 @@
+<Project>
+  <!-- Run on every build: rcc resolves nested resource paths, so a qrc timestamp alone is
+       insufficient to detect changed or removed payload files. -->
+  <Target Name="QtSharpCompileResources" BeforeTargets="GetCopyToOutputDirectoryItems;CoreCompile"
+          Condition="'@(QtResource)' != ''">
+    <Error Condition="!Exists('$(QtSharpRcc)')" Text="Qt rcc not found at $(QtSharpRcc). Install QtSharp.Tools or set QtSharpToolsDir." />
+    <ItemGroup>
+      <_QtSharpResource Include="@(QtResource)">
+        <RccOutput>$(IntermediateOutputPath)qt-resources\%(RelativeDir)%(Filename).rcc</RccOutput>
+        <RccTarget>%(RelativeDir)%(Filename).rcc</RccTarget>
+      </_QtSharpResource>
+    </ItemGroup>
+    <MakeDir Directories="@(_QtSharpResource->'$(IntermediateOutputPath)qt-resources\%(RelativeDir)')" />
+    <Exec Command="&quot;$(QtSharpRcc)&quot; --binary &quot;%(_QtSharpResource.FullPath)&quot; -o &quot;%(_QtSharpResource.RccOutput)&quot;" />
+    <ItemGroup>
+      <ContentWithTargetPath Include="@(_QtSharpResource->'%(RccOutput)')">
+        <TargetPath>%(_QtSharpResource.RccTarget)</TargetPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ContentWithTargetPath>
+      <FileWrites Include="@(_QtSharpResource->'%(RccOutput)')" />
+    </ItemGroup>
+  </Target>
+  <Target Name="QtSharpRunTool">
+    <Error Condition="'$(QtSharpTool)' == ''" Text="Set QtSharpTool (for example rcc) and QtSharpToolArguments." />
+    <Error Condition="!Exists('$(QtSharpToolsDir)\$(QtSharpTool).exe')" Text="Qt tool $(QtSharpTool) is not included in this tools payload." />
+    <Exec Command="&quot;$(QtSharpToolsDir)\$(QtSharpTool).exe&quot; $(QtSharpToolArguments)" />
+  </Target>
+</Project>

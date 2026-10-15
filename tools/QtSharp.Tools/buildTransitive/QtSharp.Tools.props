@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <QtSharpToolsDir Condition="'$(QtSharpToolsDir)' == ''">$(MSBuildThisFileDirectory)..\tools\win-x64</QtSharpToolsDir>
+    <QtSharpRcc Condition="'$(QtSharpRcc)' == ''">$(QtSharpToolsDir)\rcc.exe</QtSharpRcc>
+  </PropertyGroup>
+</Project>

@@ -508,6 +508,7 @@ public static partial class ApiModel
         R("QModelIndex",           "qabstractitemmodel.h", "QtCore"),
         R("QPersistentModelIndex", "qabstractitemmodel.h", "QtCore"),
         R("QProxyStyle",           "qproxystyle.h", "QtWidgets"),
+        R("QResource",             "qresource.h", "QtCore"),
         R("QSizeF",                "qsize.h", "QtCore"),
         R("QSortFilterProxyModel", "qsortfilterproxymodel.h", "QtCore"),
         R("QSpacerItem",           "qlayoutitem.h", "QtWidgets", owned: false),
@@ -693,6 +694,69 @@ public static partial class ApiModel
         // would be two inheritance steps away and silently disappear.
         R("QOperatingSystemVersionUnexported", "qoperatingsystemversion.h", "QtCore"),
         R("QOperatingSystemVersion",     "qoperatingsystemversion.h", "QtCore"),
+        // QtNetwork: the local IPC pair a single-instance app uses to hand a second launch over to
+        // the running one ("wake the dashboard", "open this object"). The module is a separate
+        // library, so the native build links Qt6Network and the runtime folder carries
+        // Qt6Network.dll (see build_api.bat / README.md).
+        R("QLocalServer",          "qlocalserver.h", "QtNetwork"),
+        R("QLocalSocket",          "qlocalsocket.h", "QtNetwork"),
+        // The rest of the QtNetwork surface a desktop app uses: addressing, the TCP/UDP transport
+        // and the HTTP client. Types they reference but that are not bound (QSslError, cookies)
+        // only cost the methods that name them - the extractor drops those and keeps the rest.
+        R("QHostAddress",          "qhostaddress.h", "QtNetwork"),
+        R("QHostInfo",             "qhostinfo.h", "QtNetwork"),
+        R("QNetworkInterface",     "qnetworkinterface.h", "QtNetwork"),
+        R("QNetworkAddressEntry",  "qnetworkinterface.h", "QtNetwork"),
+        R("QAbstractSocket",       "qabstractsocket.h", "QtNetwork"),
+        R("QTcpSocket",            "qtcpsocket.h", "QtNetwork"),
+        R("QTcpServer",            "qtcpserver.h", "QtNetwork"),
+        R("QUdpSocket",            "qudpsocket.h", "QtNetwork"),
+        R("QNetworkDatagram",      "qnetworkdatagram.h", "QtNetwork"),
+        R("QNetworkProxy",         "qnetworkproxy.h", "QtNetwork"),
+        R("QNetworkRequest",       "qnetworkrequest.h", "QtNetwork"),
+        R("QNetworkReply",         "qnetworkreply.h", "QtNetwork"),
+        R("QNetworkAccessManager", "qnetworkaccessmanager.h", "QtNetwork"),
+        // QtSvg / QtSvgWidgets: vector graphics - an SVG the tray or dashboard draws at any size,
+        // and SVG as a paint device (QPainter output to a file). Each is its own module + DLL.
+        R("QSvgRenderer",          "qsvgrenderer.h", "QtSvg"),
+        R("QSvgGenerator",         "qsvggenerator.h", "QtSvg"),
+        R("QSvgWidget",            "qsvgwidget.h", "QtSvgWidgets"),
+        // QtPrintSupport: printing, print preview and (through QPrinter) PDF output. QPrinter's
+        // base is the QtGui QPagedPaintDevice, and the dialogs' base is QAbstractPrintDialog, so
+        // those two have to be roots first or the chain stops.
+        R("QPagedPaintDevice",     "qpagedpaintdevice.h", "QtGui", bindCtors: false),
+        R("QAbstractPrintDialog",  "qabstractprintdialog.h", "QtPrintSupport", bindCtors: false),
+        R("QPrinter",              "qprinter.h", "QtPrintSupport"),
+        R("QPrintDialog",          "qprintdialog.h", "QtPrintSupport"),
+        R("QPageSetupDialog",      "qpagesetupdialog.h", "QtPrintSupport"),
+        R("QPrinterInfo",          "qprinterinfo.h", "QtPrintSupport"),
+        R("QPrintPreviewDialog",   "qprintpreviewdialog.h", "QtPrintSupport"),
+        R("QPrintPreviewWidget",   "qprintpreviewwidget.h", "QtPrintSupport"),
+        // QtXml: the DOM (QXmlStreamReader/Writer are already bound). Implicitly-shared value
+        // classes that point into the document they came from.
+        R("QDomNode",              "qdom.h", "QtXml"),
+        R("QDomDocument",          "qdom.h", "QtXml"),
+        R("QDomDocumentType",      "qdom.h", "QtXml"),
+        R("QDomDocumentFragment",  "qdom.h", "QtXml"),
+        R("QDomElement",           "qdom.h", "QtXml"),
+        R("QDomAttr",              "qdom.h", "QtXml"),
+        R("QDomCharacterData",     "qdom.h", "QtXml"),
+        R("QDomText",              "qdom.h", "QtXml"),
+        R("QDomComment",           "qdom.h", "QtXml"),
+        R("QDomCDATASection",      "qdom.h", "QtXml"),
+        R("QDomProcessingInstruction", "qdom.h", "QtXml"),
+        R("QDomImplementation",    "qdom.h", "QtXml"),
+        R("QDomNodeList",          "qdom.h", "QtXml"),
+        R("QDomNamedNodeMap",      "qdom.h", "QtXml"),
+        // QtOpenGLWidgets / QtOpenGL: rendering with OpenGL, including from C# (QOpenGLWidget's
+        // initializeGL/resizeGL/paintGL are overridable). QOpenGLContext is the QtGui half.
+        R("QPaintEngine",          "qpaintengine.h", "QtGui", bindCtors: false),
+        R("QOpenGLContext",        "qopenglcontext.h", "QtGui"),
+        R("QOpenGLWidget",         "qopenglwidget.h", "QtOpenGLWidgets"),
+        R("QOpenGLShaderProgram",  "qopenglshaderprogram.h", "QtOpenGL"),
+        R("QOpenGLBuffer",         "qopenglbuffer.h", "QtOpenGL"),
+        R("QOpenGLVertexArrayObject", "qopenglvertexarrayobject.h", "QtOpenGL"),
+        R("QOpenGLFramebufferObject", "qopenglframebufferobject.h", "QtOpenGL"),
         R("QTextBoundaryFinder",   "qtextboundaryfinder.h", "QtCore"),
         R("QSignalMapper",         "qsignalmapper.h", "QtCore"),
         R("QRandomGenerator64",    "qrandom.h", "QtCore"),
@@ -836,6 +900,8 @@ public static partial class ApiModel
         // The layout side of a custom widget: without these a managed widget cannot say how big
         // it wants to be (the Calculator example's CalcButton overrides sizeHint).
         "sizeHint", "minimumSizeHint", "heightForWidth", "hasHeightForWidth",
+        // QOpenGLWidget: a widget that renders through OpenGL, subclassed from C#.
+        "initializeGL", "resizeGL", "paintGL",
     };
 
     // The parse-only side of the pipeline only needs the headers of the roots it is given:
@@ -845,6 +911,10 @@ public static partial class ApiModel
     {
         public readonly Dictionary<string, string> Classes = new(StringComparer.Ordinal);
         public readonly Dictionary<string, EnumEntry> Enums = new(StringComparer.Ordinal);
+        // Namespace-level (free) functions: the QtCore/QtGui/QtWidgets module functions PyQt
+        // publishes next to the classes (qCompress, qVersion, qRegisterResourceData, qDrawShadePanel).
+        // Each entry is a pre-rendered JSON object with the same shape as a method.
+        public readonly List<string> Functions = new();
 
         public void Merge(ModelPart other)
         {
@@ -852,6 +922,7 @@ public static partial class ApiModel
                 Classes[kv.Key] = kv.Value;
             foreach (var kv in other.Enums)
                 Enums[kv.Key] = kv.Value;
+            Functions.AddRange(other.Functions);
         }
 
         // A canonical rendering, used both as the final model and to compare two parses.
@@ -869,6 +940,13 @@ public static partial class ApiModel
                 .ToList();
             for (int i = 0; i < enumList.Count; i++)
                 WriteEnum(sb, enumList[i], i + 1 < enumList.Count);
+            sb.Append("  ],\n");
+            sb.Append("  \"functions\": [\n");
+            for (int i = 0; i < Functions.Count; i++)
+            {
+                sb.Append("    ").Append(Functions[i]);
+                sb.Append(i + 1 < Functions.Count ? ",\n" : "\n");
+            }
             sb.Append("  ],\n");
             sb.Append("  \"classes\": [\n");
             var names = Classes.Keys.OrderBy(n => n, StringComparer.Ordinal).ToList();

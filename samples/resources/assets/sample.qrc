@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/qtsharp">
+    <file alias="message.txt">message.txt</file>
+  </qresource>
+</RCC>

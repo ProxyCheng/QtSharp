@@ -21,6 +21,9 @@ public static class ApiCodeGen
 {
     static List<JsonElement> Classes;
     static List<JsonElement> Enums;
+    // Namespace-level functions (qCompress, qVersion, ...) - the QtCore/QtGui/QtWidgets module
+    // functions, published as a static Qt class.
+    static List<JsonElement> Functions = new();
     static Dictionary<string, JsonElement> ByName;
     static HashSet<string> ClassNames;
     static HashSet<string> EnumNames;
@@ -132,6 +135,9 @@ public static class ApiCodeGen
         string ns = root.GetProperty("namespace").GetString();
         Classes = root.GetProperty("classes").EnumerateArray().ToList();
         Enums = root.GetProperty("enums").EnumerateArray().ToList();
+        Functions = root.TryGetProperty("functions", out var fns) && fns.ValueKind == JsonValueKind.Array
+            ? fns.EnumerateArray().ToList()
+            : new List<JsonElement>();
         ByName = Classes.ToDictionary(c => c.GetProperty("name").GetString(), c => c, StringComparer.Ordinal);
         ClassNames = new HashSet<string>(Classes.Select(c => c.GetProperty("name").GetString()), StringComparer.Ordinal);
         EnumNames = new HashSet<string>(Enums.Select(e => e.GetProperty("qualified").GetString()), StringComparer.Ordinal);
@@ -369,6 +375,7 @@ public static class ApiCodeGen
 
         WriteEnums(sb, "", 1);
         WriteEnums(sb, "Qt", 1);
+        WriteFreeFunctions(sb);
 
         if (BindableElements().Count > 0)
             WriteBindableClass(sb);
@@ -380,6 +387,7 @@ public static class ApiCodeGen
         sb.AppendLine("    {");
         foreach (var cls in Classes)
             WriteNativeDeclarations(sb, cls);
+        WriteFreeFunctionNativeDeclarations(sb);
         foreach (var elem in ListElements())
             WriteListNativeDeclarations(sb, elem);
         foreach (var assoc in AssocElements())
@@ -861,7 +869,7 @@ public static class ApiCodeGen
         return IsOwned(elem) ? $"{elem}.FromOwnedHandle({call})" : $"{elem}.FromTransientHandle({call})";
     }
 
-    static void WriteEnums(StringBuilder sb, string scope, int indent)
+    static void WriteEnums(StringBuilder sb, string scope, int indent, Members inherited = null)
     {
         // Enums live either in the Qt namespace or nested inside the class that declares
         // them, mirroring how they are written in C++.
@@ -871,9 +879,10 @@ public static class ApiCodeGen
         var pad = new string(' ', indent * 4);
         if (scope != "Qt")
         {
-            // Namespace level, or nested inside the class that declares them.
+            // Namespace level, or nested inside the class that declares them. A nested enum that
+            // shares a name with an inherited member has to say `new` (CS0108).
             foreach (var e in scoped)
-                WriteEnum(sb, e, indent);
+                WriteEnum(sb, e, indent, inherited != null && NewName(inherited, Name(e)) != "");
             return;
         }
         sb.AppendLine($"{pad}public static partial class Qt");
@@ -891,7 +900,7 @@ public static class ApiCodeGen
         return i < 0 ? string.Empty : qualified.Substring(0, i);
     }
 
-    static void WriteEnum(StringBuilder sb, JsonElement e, int indent)
+    static void WriteEnum(StringBuilder sb, JsonElement e, int indent, bool hide = false)
     {
         var pad = new string(' ', indent * 4);
         var items = e.GetProperty("items").EnumerateArray().ToList();
@@ -899,7 +908,7 @@ public static class ApiCodeGen
         var underlying = values.Any(v => v < int.MinValue || v > int.MaxValue) ? "long" : "int";
         if (IsFlags(e.GetProperty("qualified").GetString()))
             sb.AppendLine($"{pad}[Flags]");
-        sb.AppendLine($"{pad}public enum {Name(e)} : {underlying}");
+        sb.AppendLine($"{pad}public {(hide ? "new " : "")}enum {Name(e)} : {underlying}");
         sb.AppendLine($"{pad}{{");
         foreach (var item in items)
             sb.AppendLine($"{pad}    {SafeName(Name(item))} = {item.GetProperty("value").GetInt64()},");
@@ -907,11 +916,95 @@ public static class ApiCodeGen
         sb.AppendLine();
     }
 
-    // A member cannot share a name with a nested type, so something has to give when Qt
-    // declares both (QColor::Spec enum and QColor::spec()). Qt's owning type wins and the
-    // accessor keeps its C++ name, which is also what the legacy pipeline does.
-    //
-    // The mapping is computed per class and looked up through the *declaring* class, because a
+    // Qt's namespace-level functions (qCompress, qVersion, qRegisterMetaType, qFuzzyCompare, the
+    // qDraw* helpers) live next to the classes in the module; PyQt publishes them the same way.
+    // They become static methods on the same `Qt` class the namespace enums use, so the C# surface
+    // is `Qt.QCompress(...)`.
+    static void WriteFreeFunctions(StringBuilder sb)
+    {
+        if (Functions.Count == 0)
+            return;
+        sb.AppendLine("    /// <summary>Qt's namespace-level functions.</summary>");
+        sb.AppendLine("    public static partial class Qt");
+        sb.AppendLine("    {");
+        var overloads = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var fn in Functions)
+        {
+            string fname = Name(fn);
+            overloads.TryGetValue(fname, out int seen);
+            overloads[fname] = seen + 1;
+            string entry = $"fn_{fname}{(seen == 0 ? "" : (seen + 1).ToString())}";
+            var ps = Params(fn);
+            string sig = string.Join(", ", ps.Select(ParamSig));
+            string ret = ReturnType(fn);
+            sb.AppendLine($"        /// <summary>Calls <c>{fname}</c>.</summary>");
+            sb.AppendLine($"        public static {ManagedType(ret)} {Pascal(fname)}({sig})");
+            sb.AppendLine("        {");
+            var marshal = MarshalParams(ps, null);
+            foreach (string line in marshal.Prelude)
+                sb.AppendLine("            " + line);
+            string call = $"ApiNative.{entry}({string.Join(", ", marshal.Args)})";
+            string body;
+            if (marshal.Postlude.Count == 0)
+                body = ret == "void" ? $"{call};" : $"return {RetToManaged(ret, call)};";
+            else
+            {
+                string writeBack = string.Join("\n", marshal.Postlude);
+                body = ret == "void"
+                    ? $"{call};\n{writeBack}"
+                    : $"var __result = {RetToManaged(ret, call)};\n{writeBack}\nreturn __result;";
+            }
+            EmitGuarded(sb, "            ", body, marshal.Cleanup);
+            sb.AppendLine("        }");
+            sb.AppendLine();
+        }
+        sb.AppendLine("    }");
+        sb.AppendLine();
+    }
+
+    static void WriteFreeFunctionNativeDeclarations(StringBuilder sb)
+    {
+        var overloads = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var fn in Functions)
+        {
+            string fname = Name(fn);
+            overloads.TryGetValue(fname, out int seen);
+            overloads[fname] = seen + 1;
+            string entry = $"fn_{fname}{(seen == 0 ? "" : (seen + 1).ToString())}";
+            var ps = Params(fn);
+            string sig = string.Join(", ", ps.SelectMany(NativeParamsFor));
+            string ret = ReturnType(fn);
+            sb.AppendLine();
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{entry}\", CallingConvention = CallingConvention.Cdecl)]");
+            if (ret == "bool")
+                sb.AppendLine("        [return: MarshalAs(UnmanagedType.I1)]");
+            sb.AppendLine($"        internal static extern {NativeRetType(ret)} {entry}({sig});");
+        }
+    }
+
+    static void WriteFreeFunctionNative(StringBuilder sb)
+    {
+        var overloads = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var fn in Functions)
+        {
+            string fname = Name(fn);
+            overloads.TryGetValue(fname, out int seen);
+            overloads[fname] = seen + 1;
+            string entry = $"fn_{fname}{(seen == 0 ? "" : (seen + 1).ToString())}";
+            var ps = Params(fn);
+            string sig = string.Join(", ", ps.SelectMany(CppParamsFor));
+            string ret = ReturnType(fn);
+            string args = string.Join(", ", ps.SelectMany(CppArgsFor));
+            sb.AppendLine($"extern \"C\" __declspec(dllexport) {NativeRetCpp(ret)} qs_api_{entry}({sig})");
+            sb.AppendLine("{");
+            foreach (string line in NativeBody(fn, $"{fname}({args})"))
+                sb.AppendLine("    " + line);
+            sb.AppendLine("}");
+            sb.AppendLine();
+        }
+    }
+
+
     // derived class dispatches into an inherited virtual whose name the base already chose.
     static Dictionary<string, HashSet<string>> reservedByClass;
 
@@ -972,6 +1065,201 @@ public static class ApiCodeGen
         => reservedByClass.TryGetValue(className, out var reserved) && reserved.Contains(Pascal(member))
             ? member
             : Pascal(member);
+
+    // The C# members a class declares, so that a derived class can tell which of its own members
+    // would otherwise hide an inherited one (CS0108) and mark it `new`. Three sets, because C#
+    // hides by *signature* for methods (an overload of a different signature does not hide) but
+    // by *name* for everything else - and a method named like a base property hides it too, so a
+    // method has to be checked against the base's non-methods as well.
+    class Members
+    {
+        public readonly HashSet<string> AllNames = new(StringComparer.Ordinal);
+        public readonly HashSet<string> NonMethodNames = new(StringComparer.Ordinal);
+        public readonly HashSet<string> MethodKeys = new(StringComparer.Ordinal);
+    }
+
+    static readonly Dictionary<string, Members> declaredMembers = new(StringComparer.Ordinal);
+    static readonly Dictionary<string, Members> inheritedMembers = new(StringComparer.Ordinal);
+
+    // The parameter spelling that makes up a method's signature (without the name or the default).
+    static string ParamTypeKey(JsonElement p)
+        => IsByRef(p) ? (IsOut(p) ? "out " : "ref ") + ParamManagedType(p) : ManagedType(PType(p));
+
+    static string MethodKey(string name, IEnumerable<JsonElement> ps)
+        => name + "(" + string.Join(",", ps.Select(ParamTypeKey)) + ")";
+
+    static void MergeInto(Members target, Members source)
+    {
+        target.AllNames.UnionWith(source.AllNames);
+        target.NonMethodNames.UnionWith(source.NonMethodNames);
+        target.MethodKeys.UnionWith(source.MethodKeys);
+    }
+
+    // The members visible to a class that inherits from `className`: everything `className`
+    // declares, plus everything it inherits. This is what WriteClass unions over a class's base.
+    static Members InheritedMembers(string className)
+    {
+        if (inheritedMembers.TryGetValue(className, out var cached))
+            return cached;
+        var members = new Members();
+        inheritedMembers[className] = members;      // a cycle must not recurse forever
+        if (ByName.TryGetValue(className, out var cls))
+        {
+            MergeInto(members, DeclaredMembers(className));
+            string baseName = cls.GetProperty("bases").EnumerateArray()
+                .Select(b => b.GetString()).FirstOrDefault();
+            if (baseName != null)
+                MergeInto(members, InheritedMembers(baseName));
+        }
+        return members;
+    }
+
+    static Members DeclaredMembers(string className)
+    {
+        if (declaredMembers.TryGetValue(className, out var cached))
+            return cached;
+        var members = new Members();
+        declaredMembers[className] = members;
+        if (!ByName.TryGetValue(className, out var cls))
+            return members;
+
+        var bases = cls.GetProperty("bases").EnumerateArray().Select(b => b.GetString()).ToList();
+        string baseName = bases.Count > 0 ? bases[0] : null;
+        bool boxed = cls.GetProperty("owned").GetBoolean();
+        var ctors = cls.GetProperty("constructors").EnumerateArray().ToList();
+        bool owned = boxed && (ctors.Count > 0 || SubclassCtor(cls));
+
+        void Property(string n)
+        {
+            members.AllNames.Add(n);
+            members.NonMethodNames.Add(n);
+        }
+        void Method(string key)
+        {
+            int paren = key.IndexOf('(');
+            members.AllNames.Add(paren < 0 ? key : key.Substring(0, paren));
+            members.MethodKeys.Add(key);
+        }
+
+        // The handle and liveness members are declared by the root only; every class declares its
+        // own factories (FromHandle/FromTransientHandle, and the release pair when it is owned).
+        if (baseName == null)
+        {
+            Property("Handle");
+            Property("IsAlive");
+        }
+        Method("FromHandle(IntPtr)");
+        Method("FromTransientHandle(IntPtr)");
+        if (owned)
+        {
+            Method("FromOwnedHandle(IntPtr)");
+            Method("Dispose()");
+        }
+        // The vtable dispatcher (already emitted with `new` when the class has a base).
+        if (ChainOf(className).Count > 0)
+            Method("Dispatch(IntPtr,int,IntPtr)");
+        foreach (var b in bases.Skip(1))
+            Method("As" + b + "()");
+        foreach (var e in Enums.Where(e => ScopeOf(e) == className))
+            Property(Name(e));
+
+        // A Q_PROPERTY that collides with a nested type, a data member or a virtual is skipped.
+        var virtualNames = new HashSet<string>(
+            ChainOf(className).Select(s => Pascal(Name(s.Virtual))), StringComparer.Ordinal);
+        foreach (var property in PropertyList(cls))
+        {
+            string propName = Pascal(Name(property));
+            if (hardReservedByClass[className].Contains(propName)
+                || fieldNamesByClass[className].Contains(propName)
+                || virtualNames.Contains(propName))
+                continue;
+            Property(propName);
+        }
+
+        // Data members: a property, or Get/Set accessors when the name is reserved.
+        foreach (var field in FieldList(cls))
+        {
+            string prop = SafeName(Pascal(Name(field)));
+            if (hardReservedByClass[className].Contains(prop))
+            {
+                Method("Get" + prop + "()");
+                Method("Set" + prop + "(" + ManagedType(field.GetProperty("type").GetString()) + ")");
+            }
+            else
+            {
+                Property(prop);
+            }
+        }
+
+        foreach (var m in cls.GetProperty("methods").EnumerateArray())
+            Method(MethodKey(MemberName(className, Name(m)), Params(m)));
+        foreach (var slot in ChainOf(className).Where(s => s.DeclaredHere && !s.Blocked))
+            Method(MethodKey(MemberName(className, Name(slot.Virtual)), Params(slot.Virtual)));
+
+        var signalOverloads = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var s in cls.GetProperty("signals").EnumerateArray())
+        {
+            string sname = Name(s);
+            if (Params(s).Count > MaxSignalArity)
+                continue;
+            signalOverloads.TryGetValue(sname, out int seen);
+            signalOverloads[sname] = seen + 1;
+            string suffix = seen == 0 ? "" : (seen + 1).ToString();
+            Property(Pascal(sname) + suffix + "Signal");
+            string eventName = Pascal(sname) + suffix;
+            if (reservedByClass.TryGetValue(className, out var reserved) && !reserved.Contains(eventName))
+                Property(eventName);
+        }
+
+        return members;
+    }
+
+    // The `new` a member needs: a method hides an inherited method of the same signature, or an
+    // inherited property/field/type/nested type of the same name.
+    static string NewMethod(Members inherited, string name, string paramKeys)
+        => inherited.NonMethodNames.Contains(name)
+           || inherited.MethodKeys.Contains(name + "(" + paramKeys + ")")
+            ? "new "
+            : "";
+    static string NewMethod(Members inherited, string name, IEnumerable<JsonElement> ps)
+        => NewMethod(inherited, name, string.Join(",", ps.Select(ParamTypeKey)));
+    static string NewName(Members inherited, string name)
+        => inherited.AllNames.Contains(name) ? "new " : "";
+
+    // Whether any class in this hierarchy (the root or one of its descendants, following the
+    // primary base) can be constructed - the only place the release flags are ever assigned.
+    static readonly Dictionary<string, bool> subtreeCtorCache = new(StringComparer.Ordinal);
+    static bool SubtreeHasCtor(string className)
+    {
+        if (subtreeCtorCache.TryGetValue(className, out var cached))
+            return cached;
+        subtreeCtorCache[className] = false;        // a cycle must not recurse forever
+        bool result = false;
+        if (ByName.TryGetValue(className, out var cls))
+            result = cls.GetProperty("constructors").GetArrayLength() > 0 || SubclassCtor(cls);
+        if (!result)
+            result = Children(className).Any(c => SubtreeHasCtor(Name(c)));
+        subtreeCtorCache[className] = result;
+        return result;
+    }
+
+    // The classes that inherit from className through their primary base.
+    static IEnumerable<JsonElement> Children(string className)
+        => Classes.Where(c => c.GetProperty("bases").EnumerateArray()
+            .Select(b => b.GetString()).FirstOrDefault() == className);
+
+    // Whether any class here declares a virtual whose stub reads `__managedSubclass`.
+    static readonly Dictionary<string, bool> subtreeVirtualCache = new(StringComparer.Ordinal);
+    static bool SubtreeDeclaresVirtual(string className)
+    {
+        if (subtreeVirtualCache.TryGetValue(className, out var cached))
+            return cached;
+        subtreeVirtualCache[className] = false;     // a cycle must not recurse forever
+        bool result = ChainOf(className).Any(s => s.DeclaredHere && !s.Blocked)
+                      || Children(className).Any(c => SubtreeDeclaresVirtual(Name(c)));
+        subtreeVirtualCache[className] = result;
+        return result;
+    }
 
     // One vtable slot a generated native subclass has to install: the method to forward, and
     // the class whose declaration of it we chain to.
@@ -1052,6 +1340,9 @@ public static class ApiCodeGen
         var methods = cls.GetProperty("methods").EnumerateArray().ToList();
         var virtuals = ChainOf(Name(cls));
         var signals = cls.GetProperty("signals").EnumerateArray().ToList();
+        // The members the base chain already publishes: a member of this class that collides has
+        // to say `new`, or the compiler warns that it hides the inherited one (CS0108).
+        var inherited = baseName != null ? InheritedMembers(baseName) : new Members();
 
         // A class we allocate ourselves needs a release path; Qt-owned objects must not get
         // one, or the GC would free an object the parent still owns (ownership PoC rule 1).
@@ -1122,8 +1413,14 @@ public static class ApiCodeGen
             // merely adopts an object (FromHandle/FromTransientHandle - the objects a view or a
             // scene owns) must never delete it at finalization, or the GC frees what Qt still
             // points at.
-            sb.AppendLine("        internal bool __ownsNative;");
-            sb.AppendLine();
+            //
+            // Declared only for a hierarchy that can build something: a root class with no
+            // constructor anywhere below it never assigns the field, which is a CS0649 warning.
+            if (SubtreeHasCtor(name))
+            {
+                sb.AppendLine("        internal bool __ownsNative;");
+                sb.AppendLine();
+            }
             // Whether the native object is one of the generated subclasses that install the vtable
             // hooks - i.e. whether this wrapper was *made* rather than adopted. Only a constructor
             // sets it. A pure virtual's C# stub answers `default` for a managed subclass (nothing
@@ -1131,7 +1428,16 @@ public static class ApiCodeGen
             // (QTableWidget's, QComboBox's, ...) are private C++ classes that are not part of this
             // model, so without this their index()/data()/setData()/rowCount() would answer
             // null/0/false and the model would be silently unreachable (see CONTEXT.md).
-            sb.AppendLine("        internal bool __managedSubclass;");
+            if (SubtreeHasCtor(name))
+            {
+                sb.AppendLine("        internal bool __managedSubclass;");
+            }
+            else if (SubtreeDeclaresVirtual(name))
+            {
+                // Nothing here can be built, so the flag is never set - but the virtual stubs
+                // still read it, so it has to exist. The explicit initializer says why.
+                sb.AppendLine("        internal bool __managedSubclass = false;");
+            }
             sb.AppendLine();
         }
 
@@ -1195,7 +1501,7 @@ public static class ApiCodeGen
             string getter = property.GetProperty("getter").GetString();
             string setter = property.TryGetProperty("setter", out var s) ? s.GetString() : null;
             sb.AppendLine($"        /// <summary>The {Name(property)} property (Q_PROPERTY).</summary>");
-            sb.AppendLine($"        public {ManagedType(propType)} {propName}");
+            sb.AppendLine($"        public {NewName(inherited, propName)}{ManagedType(propType)} {propName}");
             sb.AppendLine("        {");
             sb.AppendLine($"            get => {CSharpMemberName(getter)}();");
             if (setter != null)
@@ -1223,13 +1529,13 @@ public static class ApiCodeGen
                 // A field whose name is taken by a nested type (QStyleOptionHeader::selectedPosition
                 // next to the SelectedPosition enum) stays reachable through accessors instead.
                 sb.AppendLine($"        /// <summary>Data member {name}::{fieldName}.</summary>");
-                sb.AppendLine($"        public {managed} Get{prop}() => {read};");
-                sb.AppendLine($"        public void Set{prop}({managed} value) => {write};");
+                sb.AppendLine($"        public {NewMethod(inherited, "Get" + prop, "")}{managed} Get{prop}() => {read};");
+                sb.AppendLine($"        public {NewMethod(inherited, "Set" + prop, managed)}void Set{prop}({managed} value) => {write};");
                 sb.AppendLine();
                 continue;
             }
             sb.AppendLine($"        /// <summary>Data member {name}::{fieldName}.</summary>");
-            sb.AppendLine($"        public {managed} {prop}");
+            sb.AppendLine($"        public {NewName(inherited, prop)}{managed} {prop}");
             sb.AppendLine("        {");
             sb.AppendLine($"            get => {read};");
             sb.AppendLine($"            set => {write};");
@@ -1259,19 +1565,19 @@ public static class ApiCodeGen
             sb.AppendLine();
         }
 
-        sb.AppendLine($"        public static {name} FromHandle(IntPtr handle)");
+        sb.AppendLine($"        public {NewMethod(inherited, "FromHandle", "IntPtr")}static {name} FromHandle(IntPtr handle)");
         sb.AppendLine($"            => handle == IntPtr.Zero ? null : ApiRuntime.Wrap(handle, h => new {name}(h));");
         // Arguments handed to a virtual come from an object with a very short life (an event
         // lives on the caller's stack), so they must not enter the identity cache: the next
         // event would reuse the same address and get the previous wrapper back.
         sb.AppendLine();
-        sb.AppendLine($"        internal static {name} FromTransientHandle(IntPtr handle)");
+        sb.AppendLine($"        internal {NewMethod(inherited, "FromTransientHandle", "IntPtr")}static {name} FromTransientHandle(IntPtr handle)");
         sb.AppendLine($"            => handle == IntPtr.Zero ? null : new {name}(handle);");
         if (owned)
         {
             sb.AppendLine();
             // Qt handed over a copy it allocated for us, so this wrapper owns it.
-            sb.AppendLine($"        internal static {name} FromOwnedHandle(IntPtr handle)");
+            sb.AppendLine($"        internal {NewMethod(inherited, "FromOwnedHandle", "IntPtr")}static {name} FromOwnedHandle(IntPtr handle)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (handle == IntPtr.Zero)");
             sb.AppendLine("                return null;");
@@ -1280,7 +1586,7 @@ public static class ApiCodeGen
             sb.AppendLine("            return wrapper;");
             sb.AppendLine("        }");
             sb.AppendLine();
-            sb.AppendLine($"        public void Dispose()");
+            sb.AppendLine($"        public {NewMethod(inherited, "Dispose", "")}void Dispose()");
             sb.AppendLine("        {");
             // The backing field, not the property: a wrapper whose object Qt already destroyed is
             // invalid, and the finalizer still has to run through here without throwing.
@@ -1316,7 +1622,7 @@ public static class ApiCodeGen
         foreach (var b in extraBases)
         {
             sb.AppendLine($"        /// <summary>View of this object as its {b} base (a separate subobject).</summary>");
-            sb.AppendLine($"        public {b} As{b}() => {b}.FromHandle(ApiNative.{name}__as_{b}(Handle));");
+            sb.AppendLine($"        public {NewMethod(inherited, "As" + b, "")}{b} As{b}() => {b}.FromHandle(ApiNative.{name}__as_{b}(Handle));");
             sb.AppendLine();
         }
 
@@ -1340,7 +1646,10 @@ public static class ApiCodeGen
             string overrideMod = !IsStatic(m) && mname == "toString" && ps.Count == 0 && ret == "QString"
                 ? "override "
                 : "";
-            sb.AppendLine($"        public {overrideMod}{staticMod}{ManagedType(ret)} {CSharpMemberName(mname)}({sig})");
+            // A method that shadows an inherited member of the same signature (or an inherited
+            // property/field/type) needs `new`; an override must not say both.
+            string methodNew = overrideMod == "" ? NewMethod(inherited, CSharpMemberName(mname), ps) : "";
+            sb.AppendLine($"        public {overrideMod}{methodNew}{staticMod}{ManagedType(ret)} {CSharpMemberName(mname)}({sig})");
             sb.AppendLine("        {");
             var marshal = MarshalParams(ps, IsStatic(m) ? null : "Handle");
             foreach (string line in marshal.Prelude)
@@ -1400,8 +1709,11 @@ public static class ApiCodeGen
             // implementation instead (for QAbstractItemModel's pure virtuals, "no data at all").
             bool overridesBase = baseName != null && ChainOf(baseName).Any(s =>
                 VirtualKey(s.Virtual) == VirtualKey(v) && ManagedType(ReturnType(s.Virtual)) == ManagedType(ret));
+            // A `virtual` that is not an override can still shadow an inherited member (`override`
+            // never warns); mark it `new` in that case.
+            string virtualNew = overridesBase ? "" : NewMethod(inherited, CSharpMemberName(vname), ps);
             sb.AppendLine($"        /// <summary>Virtual from {name}; override in a managed subclass.</summary>");
-            sb.AppendLine($"        public {(overridesBase ? "override" : "virtual")} {ManagedType(ret)} {CSharpMemberName(vname)}({sig})");
+            sb.AppendLine($"        public {virtualNew}{(overridesBase ? "override" : "virtual")} {ManagedType(ret)} {CSharpMemberName(vname)}({sig})");
             sb.AppendLine("        {");
             // A wrapper of a *C++* object has to reach the object's own override, not the
             // declaring class's implementation: `view.model()` for a QTableWidget hands back a
@@ -1489,7 +1801,7 @@ public static class ApiCodeGen
             string handler = csTypes.Count == 0
                 ? "h()"
                 : "h(" + string.Join(", ", ps.Select((p, i) => SignalRead(PType(p), i))) + ")";
-            sb.AppendLine($"        public {signalType} {Pascal(sname)}{sSuffix}Signal =>");
+            sb.AppendLine($"        public {NewName(inherited, Pascal(sname) + sSuffix + "Signal")}{signalType} {Pascal(sname)}{sSuffix}Signal =>");
             sb.AppendLine($"            new {signalType}(h => ApiRuntime.Connect(Handle, \"{mocSig}\", (argv, _) => {handler}),");
             foreach (string line in EmitLambda(ps, mocSig))
                 sb.AppendLine("                " + line);
@@ -1515,7 +1827,7 @@ public static class ApiCodeGen
                 string readArgs = string.Join(", ", ps.Select((p, i) => SignalRead(PType(p), i)));
                 string valueCall = csTypes.Count == 0 ? "value()" : "value(" + readArgs + ")";
                 sb.AppendLine($"        /// <summary>The {sname} signal as a C# event (`+=` handler, `-=` handler disconnects).</summary>");
-                sb.AppendLine($"        public event {delegateType} {eventName}");
+                sb.AppendLine($"        public {NewName(inherited, eventName)}event {delegateType} {eventName}");
                 sb.AppendLine("        {");
                 sb.AppendLine($"            add => ApiRuntime.Connect(Handle, \"{mocSig}\", (argv, _) => {valueCall}, value);");
                 sb.AppendLine($"            remove => ApiRuntime.Disconnect(Handle, \"{mocSig}\", value);");
@@ -1531,7 +1843,7 @@ public static class ApiCodeGen
             // unwind into Qt's C++ frames and kill the process (see ReportCallbackException). Catch
             // it here and report it; the dispatch switch itself stays untouched, in DispatchCore.
             sb.AppendLine("        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]");
-            string modifier = baseName != null ? "new " : "";
+            string modifier = NewMethod(inherited, "Dispatch", "IntPtr,int,IntPtr");
             sb.AppendLine($"        internal {modifier}static void Dispatch(IntPtr userData, int methodId, IntPtr argv)");
             sb.AppendLine("        {");
             sb.AppendLine("            try");
@@ -1579,7 +1891,7 @@ public static class ApiCodeGen
             sb.AppendLine();
         }
 
-        WriteEnums(sb, name, 2);
+        WriteEnums(sb, name, 2, inherited);
 
         sb.AppendLine("    }");
         sb.AppendLine();
@@ -2210,6 +2522,7 @@ public static class ApiCodeGen
         "long" => "int",            // 32-bit on the MSVC target we bind
         "unsigned long" => "uint",
         "char" => "sbyte",
+        "uchar" => "byte",
         "unsigned char" => "byte",
         "char16_t" => "char",
         _ => null,
@@ -2249,7 +2562,9 @@ public static class ApiCodeGen
     {
         var sb = new StringBuilder();
         sb.AppendLine("// <auto-generated> generated from model/qtsharp.api.json - do not edit");
-        foreach (var header in Classes.Select(c => c.GetProperty("header").GetString()).Distinct().OrderBy(h => h, StringComparer.Ordinal))
+        foreach (var header in Classes.Select(c => c.GetProperty("header").GetString())
+                     .Concat(Functions.Select(f => f.GetProperty("header").GetString()))
+                     .Distinct().OrderBy(h => h, StringComparer.Ordinal))
             sb.AppendLine($"#include <{header}>");
         // The property-binding templates: the class headers only forward-declare QBindable<T>,
         // and the generated wrapper instantiates it.
@@ -2265,6 +2580,8 @@ public static class ApiCodeGen
 
         foreach (var cls in Classes)
             WriteNativeClass(sb, cls);
+
+        WriteFreeFunctionNative(sb);
 
         foreach (var elem in ListElements())
             WriteListNativeCpp(sb, elem);
@@ -2672,8 +2989,13 @@ public static class ApiCodeGen
             return $"std::chrono::duration_cast<{p.GetProperty("cpp").GetString()}>(std::chrono::nanoseconds({NativeName(PName(p))}))";
         if (IsRef(p))
             return "*" + NativeName(PName(p));
-        return CppArg(PType(p), NativeName(PName(p)));
+        return CppArg(PType(p), NativeName(PName(p)), DefaultCpp(p));
     }
+
+    // The C++ default expression a boxed parameter carries when its default is not expressible as a
+    // C# default (QColor(Qt::white), QHostAddress(QHostAddress::Any)); null when there is none.
+    static string DefaultCpp(JsonElement p)
+        => p.TryGetProperty("defaultCpp", out var d) && d.ValueKind == JsonValueKind.String ? d.GetString() : null;
 
     // The generated subclass's constructor takes the *real* C++ parameter types, so it is called
     // with the C ABI argument converted straight to that type - which for everything but a
@@ -2718,7 +3040,7 @@ public static class ApiCodeGen
         return t;
     }
 
-    static string CppArg(string t, string name)
+    static string CppArg(string t, string name, string defaultCpp = null)
     {
         // A null managed string must not reach QString::fromUtf16 as a null pointer.
         if (IsStringT(t)) return $"{name} ? QString::fromUtf16({name}) : QString()";
@@ -2730,12 +3052,21 @@ public static class ApiCodeGen
         // QFlags has no cast from int; the named constructor is the documented way back.
         if (IsFlags(t)) return $"{t}::fromInt({name})";
         if (IsEnum(t)) return $"static_cast<{t}>({name})";
-        // A managed null would otherwise be dereferenced; a default-constructed value is the
-        // closest thing to "the parameter was not given".
+        // A managed null means "the parameter was not given". When the declaration's own default is
+        // available as a C++ expression, that is what Qt would have used (QColor(Qt::white),
+        // QHostAddress(QHostAddress::Any)); otherwise a default-constructed value is the closest.
         if (IsBoxed(t))
+        {
+            if (defaultCpp != null)
+            {
+                // `= {}` is value-initialisation, i.e. `T()`, not `T({})`.
+                string expr = defaultCpp.Replace(" ", "") == "{}" ? $"{t}()" : $"{t}({defaultCpp})";
+                return $"({name} ? *static_cast<{t}*>({name}) : {expr})";
+            }
             return HasDefaultCtor(t)
                 ? $"({name} ? *static_cast<{t}*>({name}) : QsApiDefaultValue<{t}>())"
                 : $"*static_cast<{t}*>({name})";
+        }
         return name;
     }
 

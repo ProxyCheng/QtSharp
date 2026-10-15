@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>QtSharp.Tools</PackageId>
+    <Version>0.1.0</Version>
+    <Description>Qt development tools and MSBuild resource compilation for QtSharp (Windows x64).</Description>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <QtSharpToolsPayload Condition="'$(QtSharpToolsPayload)' == ''">$(MSBuildThisFileDirectory)..\..\out\qt-tools</QtSharpToolsPayload>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="$(QtSharpToolsPayload)\**\*" Exclude="$(QtSharpToolsPayload)\**\*.log" Pack="true" PackagePath="tools/win-x64/%(RecursiveDir)" />
+  </ItemGroup>
+  <Target Name="CheckToolsPayload" BeforeTargets="GenerateNuspec">
+    <Error Condition="!Exists('$(QtSharpToolsPayload)\rcc.exe')" Text="Stage Qt tools first using tools/pack-qt-tools.ps1." />
+    <Error Condition="!Exists('$(QtSharpToolsPayload)\Qt6Core.dll')" Text="The Qt tools payload must include Qt6Core.dll." />
+  </Target>
+</Project>

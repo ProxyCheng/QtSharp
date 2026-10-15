@@ -37,7 +37,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
-
   <ItemGroup Condition="'$(QtSharpCompileBinding)' == 'true'">
     <Compile Include="$(QtSharpRoot)runtime\ApiRuntime.cs" />
     <!-- The hand-written command-line constructors of QCoreApplication/QGuiApplication/QApplication. -->
@@ -54,6 +53,14 @@
     <Copy SourceFiles="@(QtSharpApiNative)" DestinationFolder="$(OutDir)" />
     <Copy SourceFiles="@(QtRuntimeDll)" DestinationFolder="$(OutDir)" />
     <Copy SourceFiles="@(QtPlatformPlugin)" DestinationFolder="$(OutDir)platforms\" />
+  </Target>
+
+  <Target Name="PublishQtSharpNativeDeps" AfterTargets="Publish">
+    <ItemGroup>
+      <_QtSharpPublishNative Include="$(QtSharpApiDir)\QtSharp.Api.dll;$(QtRuntimeDir)\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpPublishNative)" DestinationFolder="$(PublishDir)" />
+    <Copy SourceFiles="$(QtRuntimeDir)\platforms\qwindows.dll" DestinationFolder="$(PublishDir)platforms\" />
   </Target>
 
   <!-- A stale binding is the one thing that fails confusingly (a missing method rather than a
