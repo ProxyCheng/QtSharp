@@ -1,5 +1,9 @@
 # QtSharp
 
+[![CI](https://github.com/ProxyCheng/QtSharp/actions/workflows/ci.yml/badge.svg)](https://github.com/ProxyCheng/QtSharp/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Target: Windows x64](https://img.shields.io/badge/target-Windows%20x64-0078D4.svg)](#prerequisites)
+
 Qt for .NET, **generated from Qt's own headers** — no hand-written bindings, no runtime reflection
 over Qt.
 
@@ -34,6 +38,16 @@ Current coverage: **496 classes / 10506 methods / 885 virtuals / 511 enums / 816
 properties / 463 signals / 70 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg,
 QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets). The gate runs all 34 demos
 (**1165 assertions**) plus `samples/hello`.
+
+## Project status
+
+QtSharp is an active pre-1.0 project. The supported target is Windows x64 with Qt 6.11.x and
+.NET 10. The generated model, native wrapper, and runtime are under active development, so binary
+and source compatibility can change between releases. Contributions, reproducible bug reports, and
+new conformance demos are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+The repository's own generated binding is the primary validation surface. It is not yet a stable
+drop-in replacement for every Qt module or every desktop deployment scenario.
 
 ---
 
@@ -345,3 +359,9 @@ Replace the local source path with your checkout's `out/packages` directory.
   bound either — the model publishes top-level classes and enums only.
 * Hand-written code inside a bound class is not preserved by a regeneration: the binding lives in
   `out/api` (gitignored), and everything hand-written lives in `runtime/`.
+
+## License and third-party notices
+
+QtSharp's original source code is available under the [MIT License](LICENSE). Qt, ClangSharp,
+the Qt command-line tools, and other bundled or restored dependencies remain under their own
+licenses. See [NOTICE.md](NOTICE.md) before redistributing binaries or the `QtSharp.Tools` package.
