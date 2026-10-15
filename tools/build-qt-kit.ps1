@@ -33,6 +33,17 @@ function Get-SevenZip {
     throw '7-Zip was not found. Install it, or pass -KitDir pointing at an existing Qt kit.'
 }
 
+function Get-RemoteFile([string]$Url, [string]$OutFile) {
+    # curl first (it reports progress for the large archives); Invoke-WebRequest as a fallback for
+    # environments where curl's schannel setup cannot validate the certificate chain.
+    & curl.exe -fsSL --ssl-no-revoke --retry 3 --retry-delay 5 -o $OutFile $Url 2>$null
+    if ($LASTEXITCODE -eq 0) { return }
+    $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 300
+    $content = $response.Content
+    if ($content -is [byte[]]) { [System.IO.File]::WriteAllBytes($OutFile, $content) }
+    else { [System.IO.File]::WriteAllText($OutFile, [string]$content) }
+}
+
 function Find-One([string]$Base, [string]$Relative) {
     $hit = Get-ChildItem -Path $Base -Recurse -Filter (Split-Path -Leaf $Relative) -File -ErrorAction SilentlyContinue |
         Where-Object { $_.FullName.Replace('\', '/') -like "*/$($Relative.Replace('\', '/'))" } |
@@ -51,23 +62,29 @@ if ($KitDir) {
     $repoBase = "https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_$short/qt6_${short}_msvc2022_64"
     $packageDir = "$repoBase/qt.qt6.$short.win64_msvc2022_64"
 
+    New-Item -ItemType Directory -Path $cache -Force | Out-Null
+
+    # Fetch the listing with curl and read it as text: Invoke-WebRequest's .Content is not always a
+    # string, which silently turned the archive pattern match into a null reference on CI.
     Write-Host "listing $packageDir"
-    $listing = (Invoke-WebRequest -Uri "$packageDir/" -Headers @{ 'User-Agent' = 'qtsharp-build' } -TimeoutSec 120).Content
+    $listingFile = Join-Path $cache 'listing.html'
+    Get-RemoteFile "$packageDir/" $listingFile
+    $listing = Get-Content -LiteralPath $listingFile -Raw
     $archives = @()
     foreach ($pkg in @('qtbase', 'qtsvg')) {
-        $match = [regex]::Matches($listing, "href=`"([^`"]*$pkg-[^`"]*-X86_64\.7z)`"") | Select-Object -First 1
-        if (-not $match) { throw "No $pkg archive is published for Qt $QtVersion under $packageDir." }
+        $match = [regex]::Match($listing, "href=`"([^`"]*$pkg-[^`"]*-X86_64\.7z)`"")
+        if (-not $match.Success) {
+            throw "No $pkg archive is published for Qt $QtVersion under $packageDir (the listing was $($listing.Length) characters)."
+        }
         $archives += $match.Groups[1].Value
     }
 
-    New-Item -ItemType Directory -Path $cache -Force | Out-Null
     New-Item -ItemType Directory -Path $kitOut -Force | Out-Null
     foreach ($archive in $archives) {
         $file = Join-Path $cache $archive
         if ($Force -or -not (Test-Path -LiteralPath $file)) {
             Write-Host "downloading $archive"
-            & curl.exe -fSL --retry 3 --retry-delay 5 -o $file "$packageDir/$archive"
-            if ($LASTEXITCODE -ne 0) { throw "Download failed: $archive" }
+            Get-RemoteFile "$packageDir/$archive" $file
         }
         Write-Host "extracting $archive"
         & $sevenZip x $file "-o$kitOut" -y -bso0 -bsp0
