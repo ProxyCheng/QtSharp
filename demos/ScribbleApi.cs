@@ -628,12 +628,16 @@ public static class ScribbleApi
             "a move after the release no longer draws (the buttons() guard)");
 
         // ------------------------------------------------------------------ paint / render
-        area.Repaint();
-        Check(area.PaintCount > 0,
-            $"paintEvent reached C# {area.PaintCount} time(s) through the generated dispatch");
+        // Grab before asserting the paint count: grab() renders the widget, which is what delivers
+        // the QPaintEvent this checks, while a bare Repaint() is ignored on a widget the window
+        // system never exposed (a machine with no display - CI found it).
         using (var rendered = area.Grab())
+        {
+            Check(area.PaintCount > 0,
+                $"paintEvent reached C# {area.PaintCount} time(s) through the generated dispatch");
             Check(ApiDemos.GrabCovers(rendered, area.Width, area.Height),
                 $"grab() rendered the area off-screen (got {rendered?.Width()}x{rendered?.Height()})");
+        }
 
         // ------------------------------------------------------------------ resizeEvent grows the image
         int beforeResize = area.ImageWidth();
