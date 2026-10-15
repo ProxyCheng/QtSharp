@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  repository:
+    name: Repository checks
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Validate required project files
+        shell: pwsh
+        run: |
+          $required = @('LICENSE', 'NOTICE.md', 'CONTRIBUTING.md', 'CODE_OF_CONDUCT.md', 'SECURITY.md', 'CHANGELOG.md', 'QtSharp.slnx')
+          foreach ($path in $required) {
+            if (-not (Test-Path $path)) { throw "Missing required file: $path" }
+          }
+      - name: Parse PowerShell tooling
+        shell: pwsh
+        run: |
+          $errors = $null
+          $tokens = $null
+          foreach ($path in @('tools/regen-api.ps1', 'tools/pack-qt-tools.ps1')) {
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $path), [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) { $errors | Format-List | Out-Host; throw "PowerShell parse failed: $path" }
+          }
+      - name: Build tools project
+        run: dotnet build tools/QtSharp.Tools/QtSharp.Tools.csproj -c Release --nologo
+      - name: Check whitespace
+        shell: pwsh
+        run: git diff --check
