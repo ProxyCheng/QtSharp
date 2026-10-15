@@ -6,7 +6,7 @@ using System.Text;
 
 // Where Qt's headers live. The CppSharp driver that used to sit here - and the
 // `extract` / `dumpopts` commands that drove it - were removed once the libclang front end
-// (see ApiModel2.cs) had reproduced the model byte for byte; CONTEXT.md records the migration.
+// (see ApiModel2.cs) had reproduced the model byte for byte.
 static class QtLibrary
 {
     /// <summary>

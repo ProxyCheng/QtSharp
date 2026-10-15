@@ -5,7 +5,7 @@ uses Qt 6.11.x and .NET 10, and treats the checked-in API model as a reproducibl
 
 ## Before opening an issue
 
-Search existing issues and read the relevant section of `README.md` and `CONTEXT.md`. Include the
+Search existing issues and read the relevant section of `README.md`. Include the
 Qt version, .NET SDK version, Visual Studio toolset, architecture, command used, and the complete
 error or crash signature. For native crashes, include the smallest reproducible demo and the
 generated/native log when possible. Never attach secrets, proprietary Qt files, or customer data.
@@ -26,7 +26,7 @@ roots, or the handwritten runtime, followed by a fresh gate run.
 
 - Keep each pull request focused and explain the user-visible or binding-level effect.
 - Add or update a conformance demo when a change adds or fixes supported Qt behavior.
-- Update `README.md`, `NOTICE.md`, or `CONTEXT.md` when setup, licensing, or architecture changes.
+- Update `README.md` or `NOTICE.md` when setup, licensing, or architecture changes.
 - Run the narrowest meaningful check locally, and report checks that could not run because the
   required Qt kit or toolchain was unavailable.
 - Do not commit `Qt/`, `lib/`, `out/`, `bin/`, `obj/`, generated native binaries, or secrets.
