@@ -30,7 +30,7 @@ jobs:
         run: |
           $errors = $null
           $tokens = $null
-          foreach ($path in @('tools/regen-api.ps1', 'tools/pack-qt-tools.ps1')) {
+          foreach ($path in @('tools/regen-api.ps1', 'tools/pack-qt-tools.ps1', 'tools/pack-qt-binding.ps1', 'tools/build-qt-kit.ps1')) {
             [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $path), [ref]$tokens, [ref]$errors) | Out-Null
             if ($errors.Count -gt 0) { $errors | Format-List | Out-Host; throw "PowerShell parse failed: $path" }
           }
@@ -39,3 +39,62 @@ jobs:
       - name: Check whitespace
         shell: pwsh
         run: git diff --check
+
+  # Proves the binding still builds from the checked-in model on a machine that has nothing Qt
+  # installed: the generator runs from model/qtsharp.api.json (no clang needed), the Qt dev files
+  # are fetched from Qt's own repository, and the native wrapper is compiled with the MSVC tools
+  # that ship with the runner. The result is the QtSharp.Api package a consumer installs.
+  binding:
+    name: Build the binding package
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build the generator
+        run: dotnet build gen/gen.csproj -c Release --nologo
+
+      - name: Generate the binding from the checked-in model
+        shell: pwsh
+        run: |
+          $genBin = "gen/bin/Release/net10.0/win-x64"
+          Push-Location $genBin
+          try { & "./qtgen.exe" codegen "model/qtsharp.api.json" "out/api" } finally { Pop-Location }
+          if ($LASTEXITCODE -ne 0) { throw "codegen failed" }
+
+      - name: Cache the Qt archives
+        uses: actions/cache@v4
+        with:
+          path: out/qt-cache
+          key: qt-6.11.0-msvc2022_64-v1
+
+      - name: Fetch the Qt kit
+        shell: pwsh
+        run: |
+          $output = ./tools/build-qt-kit.ps1
+          $output | Out-Host
+          $kit = ($output | Select-String '^QT_DIR=').ToString().Substring('QT_DIR='.Length)
+          $runtime = ($output | Select-String '^QT_RUNTIME_DIR=').ToString().Substring('QT_RUNTIME_DIR='.Length)
+          "QT_DIR=$kit" >> $env:GITHUB_ENV
+          "QT_RUNTIME_DIR=$runtime" >> $env:GITHUB_ENV
+
+      - name: Compile the native wrapper
+        shell: pwsh
+        run: |
+          cmd /c build_api.bat
+          if ($LASTEXITCODE -ne 0) { throw "build_api.bat failed" }
+
+      - name: Pack QtSharp.Api
+        shell: pwsh
+        run: |
+          ./tools/pack-qt-binding.ps1 -PackageVersion "0.0.0-ci" -QtRuntimeDir "$env:QT_RUNTIME_DIR"
+
+      - name: Upload the binding package
+        uses: actions/upload-artifact@v4
+        with:
+          name: QtSharp.Api-ci
+          path: out/packages/QtSharp.Api.0.0.0-ci.nupkg
+          if-no-files-found: error

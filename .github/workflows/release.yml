@@ -15,16 +15,15 @@ permissions:
   contents: write
 
 jobs:
-  package:
-    name: Package QtSharp.Tools
+  version:
+    name: Resolve the version
     runs-on: windows-latest
-    timeout-minutes: 20
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+      tag: ${{ steps.resolve.outputs.tag }}
     steps:
-      - name: Check out source
-        uses: actions/checkout@v4
-
-      - name: Set release version
-        id: version
+      - name: Resolve the version
+        id: resolve
         shell: pwsh
         run: |
           if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
@@ -38,56 +37,121 @@ jobs:
           "version=$version" >> $env:GITHUB_OUTPUT
           "tag=$tag" >> $env:GITHUB_OUTPUT
 
-      - name: Install Python
-        uses: actions/setup-python@v5
+  tools:
+    name: Package QtSharp.Tools
+    needs: version
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
       - name: Install matching Qt tools
         shell: pwsh
         run: |
           python -m pip install --disable-pip-version-check --no-deps `
             --target "$env:RUNNER_TEMP\qt-tools" PySide6-Essentials==6.11.2
-
-      - name: Build NuGet package
+      - name: Build the tools package
         shell: pwsh
         run: |
           powershell -NoProfile -File tools\pack-qt-tools.ps1 `
             -QtToolsSource "$env:RUNNER_TEMP\qt-tools\PySide6" `
             -QtVersion 6.11.2 `
-            -PackageVersion "${{ steps.version.outputs.version }}"
+            -PackageVersion "${{ needs.version.outputs.version }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-tools
+          path: out/packages/QtSharp.Tools.*.nupkg
+          if-no-files-found: error
 
+  binding:
+    name: Package QtSharp.Api
+    needs: version
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build the generator
+        run: dotnet build gen/gen.csproj -c Release --nologo
+      - name: Generate the binding from the checked-in model
+        shell: pwsh
+        run: |
+          $genBin = "gen/bin/Release/net10.0/win-x64"
+          Push-Location $genBin
+          try { & "./qtgen.exe" codegen "model/qtsharp.api.json" "out/api" } finally { Pop-Location }
+          if ($LASTEXITCODE -ne 0) { throw "codegen failed" }
+      - name: Cache the Qt archives
+        uses: actions/cache@v4
+        with:
+          path: out/qt-cache
+          key: qt-6.11.0-msvc2022_64-v1
+      - name: Fetch the Qt kit
+        shell: pwsh
+        run: |
+          $output = ./tools/build-qt-kit.ps1
+          $output | Out-Host
+          $kit = ($output | Select-String '^QT_DIR=').ToString().Substring('QT_DIR='.Length)
+          $runtime = ($output | Select-String '^QT_RUNTIME_DIR=').ToString().Substring('QT_RUNTIME_DIR='.Length)
+          "QT_DIR=$kit" >> $env:GITHUB_ENV
+          "QT_RUNTIME_DIR=$runtime" >> $env:GITHUB_ENV
+      - name: Compile the native wrapper
+        shell: pwsh
+        run: |
+          cmd /c build_api.bat
+          if ($LASTEXITCODE -ne 0) { throw "build_api.bat failed" }
+      - name: Pack QtSharp.Api
+        shell: pwsh
+        run: |
+          ./tools/pack-qt-binding.ps1 -PackageVersion "${{ needs.version.outputs.version }}" -QtRuntimeDir "$env:QT_RUNTIME_DIR"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-binding
+          path: out/packages/QtSharp.Api.*.nupkg
+          if-no-files-found: error
+
+  publish:
+    name: Publish the release
+    needs: [version, tools, binding]
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: packages
+          merge-multiple: true
       - name: Create checksums
         shell: pwsh
         run: |
-          $package = Get-ChildItem out\packages\*.nupkg | Select-Object -First 1
-          $hash = (Get-FileHash $package.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$hash  $($package.Name)" | Set-Content out\packages\SHA256SUMS.txt -Encoding ascii
-
-      - name: Upload package artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: QtSharp.Tools-${{ steps.version.outputs.version }}
-          path: |
-            out/packages/*.nupkg
-            out/packages/SHA256SUMS.txt
-          if-no-files-found: error
-
+          $lines = Get-ChildItem packages\*.nupkg | Sort-Object Name | ForEach-Object {
+            "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant())  $($_.Name)"
+          }
+          $lines | Set-Content packages\SHA256SUMS.txt -Encoding ascii
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          $tag = '${{ steps.version.outputs.tag }}'
-          $title = "QtSharp $tag"
+          $tag = '${{ needs.version.outputs.tag }}'
+          $version = '${{ needs.version.outputs.version }}'
           $notes = @"
-          ## QtSharp.Tools ${{ steps.version.outputs.version }}
+          ## QtSharp $version
 
-          This release contains the Windows x64 `QtSharp.Tools` NuGet package with Qt 6.11.2
-          command-line tools and MSBuild `QtResource` support.
+          Two packages, both Windows x64:
 
-          See [CHANGELOG.md](https://github.com/ProxyCheng/QtSharp/blob/$tag/CHANGELOG.md) and
-          [the package documentation](https://github.com/ProxyCheng/QtSharp/blob/$tag/tools/QtSharp.Tools/README.md).
+          * **QtSharp.Api** - the binding: reference it and write Qt applications in C#. It carries
+            the native wrapper and the Qt runtime, so no Qt SDK or C++ toolchain is needed.
+          * **QtSharp.Tools** - the Qt command-line tools (``rcc``, ``uic``, ``lrelease``,
+            ``lupdate``) plus MSBuild ``QtResource`` support for compiling ``.qrc`` files.
+
+          See [CHANGELOG.md](https://github.com/ProxyCheng/QtSharp/blob/$tag/CHANGELOG.md),
+          [the binding readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/nuget/QtSharp.Api/README.md)
+          and [the tools readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/tools/QtSharp.Tools/README.md).
           "@
-          $package = Get-ChildItem out\packages\*.nupkg | Select-Object -First 1
-          gh release create $tag $package.FullName out\packages\SHA256SUMS.txt --title $title --notes $notes
+          $assets = @(Get-ChildItem packages\*.nupkg | ForEach-Object { $_.FullName })
+          $assets += (Resolve-Path packages\SHA256SUMS.txt).Path
+          gh release create $tag @assets --title "QtSharp $tag" --notes $notes
