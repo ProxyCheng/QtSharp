@@ -353,12 +353,15 @@ public static class ApiCompositionDemo
             + $"({window.CircleColorSlider.minimum()}..{window.CircleColorSlider.maximum()}, alpha ..{window.CircleAlphaSlider.maximum()})");
 
         window.Renderer.SetCirclePos(-1000, -1000); // park the circle away from the sampled pixels
-        window.Renderer.Repaint();
-        Check(window.Renderer.PaintCount > 0, $"paintEvent reached C# ({window.Renderer.PaintCount} times)");
-
+        // Grab before asserting the paint count (same reason as the renderer's ForcePaint): grab()
+        // renders the widget, while a bare Repaint() is ignored on a widget the window system never
+        // exposed - a machine with no display, which is what CI is.
         using (var rendered = window.Renderer.Grab())
+        {
+            Check(window.Renderer.PaintCount > 0, $"paintEvent reached C# ({window.Renderer.PaintCount} times)");
             Check(rendered != null && !rendered.IsNull() && rendered.Width() > 0 && rendered.Height() > 0,
                 $"the renderer grabs off-screen ({rendered?.Width()}x{rendered?.Height()})");
+        }
 
         // The base: the hue ramp on the right half and the generated photo over the whole widget.
         using (var buffer = window.Renderer.BufferImage())
