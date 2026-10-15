@@ -1,0 +1,36 @@
+name: Bug report
+description: Report a reproducible problem in the binding, generator, runtime, or tools.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Include only public, non-sensitive information. Do not upload Qt SDK files or secrets.
+  - type: input
+    id: version
+    attributes:
+      label: Commit or package version
+      placeholder: 8795408 or 0.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Windows version, architecture, Qt version, .NET SDK, and Visual Studio toolset.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Exact commands and the smallest code or demo that reproduces the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and expected behavior
+      render: text
+    validations:
+      required: true
