@@ -153,4 +153,12 @@ jobs:
           "@
           $assets = @(Get-ChildItem packages\*.nupkg | ForEach-Object { $_.FullName })
           $assets += (Resolve-Path packages\SHA256SUMS.txt).Path
-          gh release create $tag @assets --title "QtSharp $tag" --notes $notes
+          # Re-running a release is normal - a tag moved, a job retried - so updating an existing
+          # release has to work as well as creating a new one.
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag @assets --clobber
+            gh release edit $tag --title "QtSharp $tag" --notes $notes
+          } else {
+            gh release create $tag @assets --title "QtSharp $tag" --notes $notes
+          }
