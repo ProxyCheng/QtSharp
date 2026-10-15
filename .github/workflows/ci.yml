@@ -97,3 +97,96 @@ jobs:
           name: QtSharp.Api-ci
           path: out/packages/QtSharp.Api.0.0.0-ci.nupkg
           if-no-files-found: error
+
+      # Hand the generated binding to the smoke job so it does not have to build it again.
+      - name: Upload the generated binding
+        uses: actions/upload-artifact@v4
+        with:
+          name: binding-api
+          path: |
+            out/api/QtSharp.Api.cs
+            out/api/QtSharp.Api.dll
+          if-no-files-found: error
+
+  # The conformance suite: every official example this repository has ported, driving the binding
+  # on a real event loop. Offscreen is not an option - several examples assert on rendered pixels
+  # and one of them crashes without a real platform plugin - so the runner's normal Qt platform
+  # is used.
+  smoke:
+    name: Smoke tests
+    needs: binding
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Take the generated binding from the build job
+        uses: actions/download-artifact@v4
+        with:
+          name: binding-api
+          path: out/api
+
+      - name: Cache the Qt archives
+        uses: actions/cache@v4
+        with:
+          path: out/qt-cache
+          key: qt-6.11.0-msvc2022_64-v1
+
+      - name: Fetch the Qt kit
+        shell: pwsh
+        run: ./tools/build-qt-kit.ps1
+
+      - name: Build the examples and the sample
+        shell: pwsh
+        run: |
+          # The examples load the Qt runtime, so point them at the kit the build job assembled.
+          dotnet build demos/QtSharp.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "demos build failed" }
+          dotnet build testbind/testbind.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "testbind build failed" }
+          dotnet build samples/hello/Hello.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "sample build failed" }
+
+      - name: Run every example
+        shell: pwsh
+        run: |
+          # The list comes from the demo library itself, so a new example is covered as soon as it
+          # is registered. Each demo is echoed, which is what makes a crash attributable.
+          $app = "testbind/bin/Release/net10.0/testapp.exe"
+          $names = & $app --list
+          if ($LASTEXITCODE -ne 0 -or -not $names) { throw "could not list the demos" }
+          $failed = @()
+          foreach ($demo in $names) {
+            Write-Host "  --- $demo"
+            & $app $demo
+            if ($LASTEXITCODE -ne 0) {
+              # Qt tears a process down by itself once in a while (a native message pump reaching a
+              # destroyed window); the assertion output has already been printed by then, so one
+              # retry separates that from a real failure.
+              Write-Host ("  retrying {0} after exit 0x{1:X8}" -f $demo, $LASTEXITCODE)
+              & $app $demo
+            }
+            if ($LASTEXITCODE -ne 0) { $failed += ("{0} (0x{1:X8})" -f $demo, $LASTEXITCODE) }
+          }
+          if ($failed.Count -gt 0) { throw "these demos failed: $($failed -join ', ')" }
+          Write-Host "all $($names.Count) demos passed"
+
+      - name: Run the sample
+        shell: pwsh
+        run: |
+          $hello = "samples/hello/bin/Release/net10.0/hello.exe"
+          # The sample's own C#-declared signal and property, without opening a window.
+          & $hello selftest
+          if ($LASTEXITCODE -ne 0) { throw "hello selftest failed" }
+          # The sample's window, run through the same entry point the demos use.
+          & $hello api-transform
+          if ($LASTEXITCODE -ne 0) { throw "hello api-transform failed" }
+          $env:HELLO_AUTOCLOSE_MS = "1500"
+          & $hello
+          $code = $LASTEXITCODE
+          Remove-Item Env:\HELLO_AUTOCLOSE_MS -ErrorAction SilentlyContinue
+          if ($code -ne 0) { throw "hello failed with 0x$('{0:X8}' -f $code)" }
+          Write-Host "the sample passed"
