@@ -80,9 +80,13 @@ jobs:
       - name: Generate the binding from the checked-in model
         shell: pwsh
         run: |
-          $genBin = "gen/bin/Release/net10.0/win-x64"
+          # qtgen resolves its arguments against the working directory, so anchor them at the
+          # repository root rather than at the generator's own output folder.
+          $genBin = Join-Path $env:GITHUB_WORKSPACE 'gen/bin/Release/net10.0/win-x64'
+          $model = Join-Path $env:GITHUB_WORKSPACE 'model/qtsharp.api.json'
+          $outDir = Join-Path $env:GITHUB_WORKSPACE 'out/api'
           Push-Location $genBin
-          try { & "./qtgen.exe" codegen "model/qtsharp.api.json" "out/api" } finally { Pop-Location }
+          try { & "./qtgen.exe" codegen $model $outDir } finally { Pop-Location }
           if ($LASTEXITCODE -ne 0) { throw "codegen failed" }
       - name: Cache the Qt archives
         uses: actions/cache@v4
