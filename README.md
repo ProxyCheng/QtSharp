@@ -189,6 +189,13 @@ die while Qt tears the process down — a `0xC000041D` exit *after* its own `[SE
 is a known flake (it is in `CONTEXT.md`), not a failed assertion; the gate echoes each demo name
 before running it so it is obvious where it happened, and simply running it again is the answer.
 
+The same suite runs in CI on every push — the `Smoke tests` job in `.github/workflows/ci.yml`. It
+takes the binding the `binding` job built from the checked-in model, fetches Qt, builds the examples
+and the sample, then runs all of them. It retries a demo once, since the teardown flake above is
+timing rather than logic. Note that the examples need a real Qt platform: `QT_QPA_PLATFORM=offscreen`
+is *not* an option, because several of them assert on rendered pixels and one crashes without
+`qwindows`.
+
 Once that has succeeded, the ordinary `dotnet build` of any project works too:
 
 ```
