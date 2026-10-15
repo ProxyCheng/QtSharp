@@ -3,6 +3,12 @@
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>QtSharp.Tools</PackageId>
     <Version>0.1.0</Version>
+    <Authors>ProxyCheng</Authors>
+    <PackageTags>Qt;QtSharp;CSharp;MSBuild;rcc;uic;resources</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ProxyCheng/QtSharp.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
     <Description>Qt development tools and MSBuild resource compilation for QtSharp (Windows x64).</Description>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
