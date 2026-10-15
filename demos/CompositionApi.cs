@@ -77,20 +77,31 @@ public sealed class ApiCompositionRenderer : QWidget
     public void SetCirclePos(double x, double y) { circleX = x; circleY = y; Update(); }
 
     /// <summary>
+    /// Paints now. Repaint() is only honoured on a widget the window system has exposed, and a
+    /// machine with no display never exposes one - there the buffer was left untouched and every
+    /// pixel assertion downstream failed (CI found that). grab() renders through render(), which
+    /// delivers the QPaintEvent either way.
+    /// </summary>
+    void ForcePaint()
+    {
+        using var rendered = Grab();
+    }
+
+    /// <summary>
     /// The blended buffer, alpha included - what the widget blits and what the tests read. The
-    /// repaint comes first because every setter only *schedules* one (Update), and the buffer is
+    /// render comes first because every setter only *schedules* one (Update), and the buffer is
     /// only rewritten while painting.
     /// </summary>
     public QImage BufferImage()
     {
-        Repaint();
+        ForcePaint();
         return buffer == null ? null : buffer.Copy();
     }
 
     /// <summary>The base buffer alone, for comparisons.</summary>
     public QImage BaseImage()
     {
-        Repaint();
+        ForcePaint();
         return baseBuffer == null ? null : baseBuffer.Copy();
     }
 
