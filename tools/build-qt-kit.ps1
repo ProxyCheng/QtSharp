@@ -106,7 +106,20 @@ if (-not (Test-Path -LiteralPath (Join-Path $binDir 'Qt6Core.dll'))) {
     throw "No Qt6Core.dll under $binDir. Point -KitDir at a kit that ships the runtime DLLs, or add them to <Dest>\runtime by hand."
 }
 New-Item -ItemType Directory -Path $runtimeOut -Force | Out-Null
-Copy-Item -Path (Join-Path $binDir 'Qt6*.dll') -Destination $runtimeOut -Force
+# Only the modules the native glue links (build_api.bat): copying the kit's whole bin would add
+# tens of megabytes of Qt modules the binding never touches. Keep this list in step with the
+# Qt6*.lib entries in build_api.bat.
+$modules = @(
+    'Qt6Core', 'Qt6Gui', 'Qt6Widgets', 'Qt6Network', 'Qt6Svg',
+    'Qt6SvgWidgets', 'Qt6PrintSupport', 'Qt6Xml', 'Qt6OpenGL', 'Qt6OpenGLWidgets'
+)
+foreach ($module in $modules) {
+    $dll = Join-Path $binDir "$module.dll"
+    if (-not (Test-Path -LiteralPath $dll)) {
+        throw "$module.dll is missing from $binDir - the kit does not provide a module the binding links."
+    }
+    Copy-Item -LiteralPath $dll -Destination $runtimeOut -Force
+}
 foreach ($crt in @('msvcp140*.dll', 'vcruntime140*.dll', 'concrt140.dll')) {
     Get-ChildItem -Path (Join-Path $binDir $crt) -File -ErrorAction SilentlyContinue | Copy-Item -Destination $runtimeOut -Force
 }
