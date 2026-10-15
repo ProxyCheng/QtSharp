@@ -365,16 +365,20 @@ extern "C" __declspec(dllexport) int qs_api_attach_metaobject(
 //
 // There is deliberately no per-object delegate or GCHandle here: the slot's userData *is* the
 // object address, and Qt frees the slot when it frees the object's connections.
-typedef void (*QsApiDestroyedCallback)(void* object);
+typedef void (*QsApiDestroyedCallback)(void* object, long long generation);
 static QsApiDestroyedCallback g_destroyedCallback = nullptr;
-static std::unordered_set<void*> g_watchedObjects;
+// Address -> the generation that was watched there. A native address is not a stable identity (the
+// allocator hands a freed block to the next object), so the generation is what says whether an
+// entry still describes the object being watched.
+static std::unordered_map<void*, long long> g_watchedObjects;
 
 class QsApiDestroyedSlot : public QtPrivate::QSlotObjectBase
 {
 public:
-    explicit QsApiDestroyedSlot(void* object)
+    QsApiDestroyedSlot(void* object, long long generation)
         : QSlotObjectBase(&QsApiDestroyedSlot::impl)
         , m_object(object)
+        , m_generation(generation)
     {
     }
 
@@ -386,10 +390,13 @@ private:
         auto* self = static_cast<QsApiDestroyedSlot*>(self_);
         if (which == Call)
         {
-            // The object is being destroyed: unregister before handing the news over.
-            g_watchedObjects.erase(self->m_object);
+            // The object is being destroyed: unregister before handing the news over - but only if
+            // this watch is still the current one for that address.
+            const auto entry = g_watchedObjects.find(self->m_object);
+            if (entry != g_watchedObjects.end() && entry->second == self->m_generation)
+                g_watchedObjects.erase(entry);
             if (g_destroyedCallback)
-                g_destroyedCallback(self->m_object);
+                g_destroyedCallback(self->m_object, self->m_generation);
         }
         else if (which == Destroy)
         {
@@ -403,6 +410,7 @@ private:
     }
 
     void* m_object;
+    long long m_generation;
 };
 
 extern "C" __declspec(dllexport) void qs_api_set_destroyed_callback(QsApiDestroyedCallback callback)
@@ -410,20 +418,23 @@ extern "C" __declspec(dllexport) void qs_api_set_destroyed_callback(QsApiDestroy
     g_destroyedCallback = callback;
 }
 
-// Watching is idempotent and cheap: one slot per object, and nothing for an object that was
-// already watched.
-extern "C" __declspec(dllexport) void qs_api_watch_destroyed(void* object)
+// Watching is idempotent and cheap: one slot per object generation, and nothing for an object that
+// was already watched. The generation is passed in by the managed side and comes back with the
+// notification, so a notification that arrives after the address has been reused is recognisable.
+extern "C" __declspec(dllexport) void qs_api_watch_destroyed(void* object, long long generation)
 {
     if (!object || !g_destroyedCallback)
         return;
-    if (!g_watchedObjects.insert(object).second)
+    const auto existing = g_watchedObjects.find(object);
+    if (existing != g_watchedObjects.end() && existing->second == generation)
         return;
+    g_watchedObjects[object] = generation;
 
     auto* sender = static_cast<QObject*>(object);
     const int index = sender->metaObject()->indexOfSignal("destroyed(QObject*)");
     if (index < 0)
         return;
-    auto* slot = new QsApiDestroyedSlot(object);
+    auto* slot = new QsApiDestroyedSlot(object, generation);
     const QMetaObject::Connection connection =
         QObjectPrivate::connect(sender, index, slot, Qt::DirectConnection);
     if (!connection)

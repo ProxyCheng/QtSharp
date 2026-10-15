@@ -1387,6 +1387,9 @@ public static class ApiCodeGen
             sb.AppendLine("        }");
             sb.AppendLine();
             sb.AppendLine("        void IQtObjectView.MarkDestroyed() => __invalidated = true;");
+            // The identity cache asks this before handing a cached wrapper back: one Qt already
+            // invalidated no longer stands for anything, even while it is still reachable.
+            sb.AppendLine("        bool IQtObjectView.IsInvalidated => __invalidated;");
             sb.AppendLine();
             // Whether the Qt object still exists. Qt destroys what it owns (a parent, a layout, a
             // scene, a view) at any moment, and a disposed wrapper is spent, so this is the
