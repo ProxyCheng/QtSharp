@@ -215,6 +215,48 @@ public static class ApiOwnershipDemo
         Check(!mime.GetType().GetInterfaces().Any(i => i.Name == "IDisposable"),
             "QMimeData is deliberately not disposable (the clipboard owns it once it is set)");
 
+        // ------------------------------------------------------------------ lifetime generations
+        // A native address is not an identity: the allocator hands a freed block to the next object
+        // of the same size. Qt's destroy notification is therefore tagged with the generation it was
+        // delivered for, so a *late* one - a deleteLater, a parent's teardown, an item scrolled out
+        // of a view - cannot kill whatever occupies the address by the time it arrives. Without this
+        // the new object's wrappers were invalidated and `Handle` threw ObjectDisposedException.
+        var survivor = new QWidget();
+        long generation = ApiRuntime.GenerationOf(survivor.Handle);
+
+        ApiRuntime.ProbeDestroyed(survivor.Handle, generation - 1);
+        Check(survivor.IsAlive && survivor.Handle != IntPtr.Zero && generation > 0,
+            "a destroy notification for a previous occupant leaves the current one alone");
+
+        ApiRuntime.ProbeDestroyed(survivor.Handle, generation);
+        Check(!survivor.IsAlive, "a destroy notification for the current occupant invalidates it");
+
+        // ... and the dead marking must not stick to the address: the next object to land there has
+        // to be alive and watched again. Otherwise it would silently point at freed memory the day
+        // Qt destroys it, because Watch() would believe the address was already gone.
+        var later = new QWidget();
+        long laterGeneration = ApiRuntime.GenerationOf(later.Handle);
+        Check(later.IsAlive && laterGeneration > generation,
+            $"a wrapper created later starts a new generation ({generation} -> {laterGeneration})");
+
+        // The reported shape: allocation churn between an item being handed to its owner and the
+        // item being used. The addresses freed by the churn are reused, and none of those lifetimes
+        // may be inherited by the item.
+        var churnScene = new QGraphicsScene();
+        var churn = new List<QWidget>();
+        for (int i = 0; i < 64; i++)
+            churn.Add(new QWidget());
+        var item = churnScene.AddRect(new QRectF(0, 0, 10, 10));
+        foreach (var widget in churn)
+            widget.Dispose();
+        for (int i = 0; i < 64; i++)
+            churn[i] = new QWidget();
+        item.SetRect(new QRectF(0, 0, 20, 20));
+        Check(item.Rect().Width() == 20 && item.IsAlive,
+            "an item handed to its owner survives allocation churn (address reuse)");
+        foreach (var widget in churn)
+            widget.Dispose();
+
         Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
         return failures == 0 ? 0 : 1;
     }

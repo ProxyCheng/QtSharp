@@ -158,6 +158,9 @@ namespace QtSharp.Api
     internal interface IQtObjectView
     {
         void MarkDestroyed();
+
+        /// <summary>Whether this wrapper is already known to be dead (Qt destroyed it, or it was disposed).</summary>
+        bool IsInvalidated { get; }
     }
 
     // The generated root class implements this, which is what lets a *user-declared* signal or
@@ -452,7 +455,7 @@ namespace QtSharp.Api
         {
             unsafe
             {
-                SetDestroyedCallback((IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, void>)&OnDestroyed);
+                  SetDestroyedCallback((IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, long, void>)&OnDestroyed);
             }
             AppDomain.CurrentDomain.ProcessExit += (_, _) =>
             {
@@ -479,17 +482,59 @@ namespace QtSharp.Api
         private static extern void SetDestroyedCallback(IntPtr callback);
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_watch_destroyed", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void WatchDestroyed(IntPtr handle);
+        private static extern void WatchDestroyed(IntPtr handle, long generation);
 
         // A native object is reachable through several managed views (a QWidget is also a
         // QPaintDevice, and a managed subclass is itself a view of its base), so each handle
         // keeps a list of live wrappers and a lookup takes the newest assignable one.
         static readonly Dictionary<IntPtr, List<WeakReference>> wrappers = new();
 
+        // Everything keyed by a native address is guarded by this: Qt's destroy notification
+        // arrives on whatever thread destroyed the object, while wrappers are registered from the
+        // thread that created them.
+        static readonly object gate = new();
+
+        /// <summary>
+        /// The lifetime of whatever occupies an address. A native address is *not* a stable
+        /// identity - the allocator hands a freed block to the next object of the same size - so
+        /// "the object at 0x... is dead" cannot be remembered by address alone. Each address
+        /// carries a generation that is bumped when a new object takes it over, and a destroy
+        /// notification carries the generation it was delivered for. A notification that arrives
+        /// after the address has been reused therefore cannot touch the new occupant's wrappers.
+        /// </summary>
+        sealed class Lifetime
+        {
+            public long Generation;
+            public bool Alive;
+        }
+
+        static readonly Dictionary<IntPtr, Lifetime> lifetimes = new();
+        static long nextGeneration;
+
         public static void Register(IntPtr handle, object wrapper)
         {
             if (handle == IntPtr.Zero)
                 return;
+            lock (gate)
+            {
+                // A live registration is evidence that an object occupies this address now. If the
+                // address belonged to an object Qt destroyed, this is the allocator reusing the
+                // block: the address starts a new generation and is alive again. Without this the
+                // dead marking would stick to the address forever, and the new object would never
+                // be watched - silently pointing at freed memory once Qt destroys it.
+                if (!lifetimes.TryGetValue(handle, out var lifetime))
+                    lifetimes[handle] = lifetime = new Lifetime { Generation = ++nextGeneration, Alive = true };
+                else if (!lifetime.Alive)
+                {
+                    lifetime.Generation = ++nextGeneration;
+                    lifetime.Alive = true;
+                }
+                AddWrapper(handle, wrapper);
+            }
+        }
+
+        static void AddWrapper(IntPtr handle, object wrapper)
+        {
             if (!wrappers.TryGetValue(handle, out var list))
                 wrappers[handle] = list = new List<WeakReference>();
             list.RemoveAll(w => !w.IsAlive);
@@ -503,92 +548,163 @@ namespace QtSharp.Api
         /// </summary>
         public static void Forget(IntPtr handle, object wrapper)
         {
-            if (handle == IntPtr.Zero || !wrappers.TryGetValue(handle, out var list))
+            if (handle == IntPtr.Zero)
                 return;
-            list.RemoveAll(w => !w.IsAlive || ReferenceEquals(w.Target, wrapper));
-            if (list.Count == 0)
-                wrappers.Remove(handle);
+            lock (gate)
+            {
+                if (!wrappers.TryGetValue(handle, out var list))
+                    return;
+                list.RemoveAll(w => !w.IsAlive || ReferenceEquals(w.Target, wrapper));
+                if (list.Count == 0)
+                    wrappers.Remove(handle);
+            }
         }
 
         public static T Wrap<T>(IntPtr handle, Func<IntPtr, T> factory) where T : class
         {
             if (handle == IntPtr.Zero)
                 return null;
-            if (wrappers.TryGetValue(handle, out var list))
+            lock (gate)
             {
-                // Newest first: an address that was freed and reused belongs to the newer object,
-                // and only the newer wrapper owns it.
-                for (int i = list.Count - 1; i >= 0; i--)
-                    if (list[i].Target is T alive)
-                        return alive;
-            }
-            var created = factory(handle);
-            Register(handle, created);
-            return created;
-        }
-
-        // ------------------------------------------------------------------ destruction
-        // Which objects Qt has destroyed, and which items belong to which owner. An item is not a
-        // QObject (a QGraphicsRectItem has no destroyed signal), so its owner's destruction is the
-        // only lifetime signal there is.
-        static readonly HashSet<IntPtr> destroyed = new();
-        static readonly Dictionary<IntPtr, List<IntPtr>> ownedItems = new();
-
-        [System.Runtime.InteropServices.UnmanagedCallersOnly(CallConvs = new[] { typeof(System.Runtime.CompilerServices.CallConvCdecl) })]
-        static void OnDestroyed(IntPtr handle)
-        {
-            // Called from Qt, on whatever thread destroyed the object.
-            lock (destroyed)
-            {
-                destroyed.Add(handle);
-                ForgetConnections(handle);
                 if (wrappers.TryGetValue(handle, out var list))
                 {
-                    foreach (var weak in list)
-                        if (weak.Target is IQtObjectView view)
-                            view.MarkDestroyed();
-                    wrappers.Remove(handle);
+                    // Newest first: an address that was freed and reused belongs to the newer object,
+                    // and only the newer wrapper owns it. A wrapper Qt already invalidated is skipped
+                    // even while it is still reachable - it no longer stands for anything.
+                    for (int i = list.Count - 1; i >= 0; i--)
+                        if (list[i].Target is T alive && IsUsable(alive))
+                            return alive;
                 }
-                // Everything the object owned goes with it.
-                if (ownedItems.TryGetValue(handle, out var items))
-                {                    ownedItems.Remove(handle);
-                    foreach (var item in items)
-                        MarkItemDestroyed(item);
-                }
-                // A C#-declared member table is only meaningful while its object is alive.
-                metaByHandle.Remove(handle);
+                var created = factory(handle);
+                // Register, not AddWrapper: a wrapping constructor does not register itself (only
+                // the constructors that make an object do), and the lifetime entry has to exist
+                // before anything can be watched or owned at this address.
+                Register(handle, created);
+                return created;
             }
         }
 
-        static void MarkItemDestroyed(IntPtr item)
+        static bool IsUsable(object wrapper)
+            => wrapper is not IQtObjectView view || !view.IsInvalidated;
+
+        // ------------------------------------------------------------------ destruction
+        // Which items belong to which owner. An item is not a QObject (a QGraphicsRectItem has no
+        // destroyed signal), so its owner's destruction is the only lifetime signal there is. Each
+        // item is remembered with the generation it was recorded in: an address that has been handed
+        // to a different object since must not be invalidated along with the owner.
+        static readonly Dictionary<IntPtr, List<(IntPtr Item, long Generation)>> ownedItems = new();
+
+        [System.Runtime.InteropServices.UnmanagedCallersOnly(CallConvs = new[] { typeof(System.Runtime.CompilerServices.CallConvCdecl) })]
+        static void OnDestroyed(IntPtr handle, long generation)
         {
-            if (wrappers.TryGetValue(item, out var list))
+            // Called from Qt, on whatever thread destroyed the object.
+            lock (gate)
+                HandleDestroyed(handle, generation);
+        }
+
+        static void HandleDestroyed(IntPtr handle, long generation)
+        {
+            if (!lifetimes.TryGetValue(handle, out var lifetime))
+                lifetimes[handle] = lifetime = new Lifetime { Generation = generation };
+            // A notification for an object that no longer occupies this address - the allocator has
+            // already handed the block to a new one - must not touch the new object's wrappers. This
+            // is the late DeleteLater / parent-teardown / scroll-removal notification, and it is why
+            // the generation travels with the notification.
+            if (lifetime.Generation != generation)
+                return;
+            lifetime.Alive = false;
+            ForgetConnections(handle);
+            MarkWrappersDestroyed(handle);
+            // Everything the object owned goes with it, but only the items that are still the ones
+            // recorded there.
+            if (ownedItems.TryGetValue(handle, out var items))
             {
-                foreach (var weak in list)
-                    if (weak.Target is IQtObjectView view)
-                        view.MarkDestroyed();
-                wrappers.Remove(item);
+                ownedItems.Remove(handle);
+                foreach (var (item, recorded) in items)
+                    MarkItemDestroyed(item, recorded);
             }
-            destroyed.Add(item);
+            // A C#-declared member table is only meaningful while its object is alive.
+            metaByHandle.Remove(handle);
+        }
+
+        static void MarkWrappersDestroyed(IntPtr handle)
+        {
+            if (!wrappers.TryGetValue(handle, out var list))
+                return;
+            foreach (var weak in list)
+                if (weak.Target is IQtObjectView view)
+                    view.MarkDestroyed();
+            wrappers.Remove(handle);
+        }
+
+        /// <summary>
+        /// Invalidates the wrappers at <paramref name="item"/>. When the caller knows the generation
+        /// the item was recorded in, the address must still be that object's - otherwise it has been
+        /// reused and whatever lives there now is someone else's.
+        /// </summary>
+        static void MarkItemDestroyed(IntPtr item, long? recordedGeneration = null)
+        {
+            if (recordedGeneration.HasValue)
+            {
+                if (!lifetimes.TryGetValue(item, out var recorded) || recorded.Generation != recordedGeneration.Value)
+                    return;
+                recorded.Alive = false;
+            }
+            else if (lifetimes.TryGetValue(item, out var lifetime))
+                lifetime.Alive = false;
+            else
+                lifetimes[item] = new Lifetime { Generation = ++nextGeneration, Alive = false };
+            MarkWrappersDestroyed(item);
         }
 
         /// <summary>Whether Qt has already destroyed this object.</summary>
         internal static bool IsDestroyed(IntPtr handle)
         {
-            lock (destroyed)
-                return destroyed.Contains(handle);
+            lock (gate)
+                return lifetimes.TryGetValue(handle, out var lifetime) && !lifetime.Alive;
+        }
+
+        /// <summary>
+        /// The generation the runtime currently has for an address. Exposed so a test can tell a
+        /// notification for the current occupant from one for a previous one.
+        /// </summary>
+        internal static long GenerationOf(IntPtr handle)
+        {
+            lock (gate)
+                return lifetimes.TryGetValue(handle, out var lifetime) ? lifetime.Generation : 0;
+        }
+
+        /// <summary>
+        /// Delivers a destroy notification exactly as the native side does. Exposed so a test can
+        /// reproduce a *late* notification - one for an object that has already been replaced at
+        /// that address - which cannot be provoked reliably through Qt itself.
+        /// </summary>
+        internal static void ProbeDestroyed(IntPtr handle, long generation)
+        {
+            lock (gate)
+                HandleDestroyed(handle, generation);
         }
 
         /// <summary>
         /// Starts watching a QObject: one native slot per object, and the managed hook tells every
         /// wrapper of it that Qt destroyed it. Idempotent, and a no-op for an object that is
-        /// already gone.
+        /// already gone. The address's current generation goes along, so the notification can be
+        /// recognised as this occupant's rather than a later one's.
         /// </summary>
         public static void Watch(IntPtr handle)
         {
-            if (handle == IntPtr.Zero || IsDestroyed(handle))
+            if (handle == IntPtr.Zero)
                 return;
-            WatchDestroyed(handle);
+            long generation;
+            lock (gate)
+            {
+                if (!lifetimes.TryGetValue(handle, out var lifetime))
+                    lifetimes[handle] = lifetime = new Lifetime { Generation = ++nextGeneration, Alive = true };
+                else if (!lifetime.Alive)
+                    return;              // Qt already destroyed this object
+                generation = lifetime.Generation;
+            }
+            WatchDestroyed(handle, generation);
         }
 
         /// <summary>
@@ -600,16 +716,18 @@ namespace QtSharp.Api
         {
             if (owner == IntPtr.Zero || item == IntPtr.Zero)
                 return;
-            lock (destroyed)
+            lock (gate)
             {
-                if (destroyed.Contains(owner))
+                if (!lifetimes.TryGetValue(item, out var itemLifetime))
+                    lifetimes[item] = itemLifetime = new Lifetime { Generation = ++nextGeneration, Alive = true };
+                if (lifetimes.TryGetValue(owner, out var ownerLifetime) && !ownerLifetime.Alive)
                 {
-                    MarkItemDestroyed(item);
+                    MarkItemDestroyed(item, itemLifetime.Generation);
                     return;
                 }
                 if (!ownedItems.TryGetValue(owner, out var items))
-                    ownedItems[owner] = items = new List<IntPtr>();
-                items.Add(item);
+                    ownedItems[owner] = items = new List<(IntPtr Item, long Generation)>();
+                items.Add((item, itemLifetime.Generation));
             }
         }
 
