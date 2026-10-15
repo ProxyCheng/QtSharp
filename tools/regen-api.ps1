@@ -90,8 +90,7 @@ if ($LASTEXITCODE -ne 0) { Write-Host "testbind build failed"; Select-String -Pa
 # timers, threads, IPC); the input events; ownership; the managed model/delegate/proxy/completer/
 # star-delegate examples; the document viewer; the system tray; the painting examples (basic
 # drawing, gradients, painter paths, composition, transformations, path stroking); the meta-object
-# example. Each one drives the generated API, checks what it sees and ends in [SELFTEST OK];
-# CONTEXT.md has the details and the assertion count per demo.
+# example. Each one drives the generated API, checks what it sees and ends in [SELFTEST OK].
 #
 # The list comes from the library itself (ApiDemos.Names), so a new example is covered by the gate
 # as soon as it is registered - and the demo name is echoed here, which is what makes a crash

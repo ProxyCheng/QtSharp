@@ -186,7 +186,7 @@ re-run with `-Adopt` to accept it; `-SkipExtract` skips step 2 and 3.
 Step 5 is 34 GUI processes back to back, and each demo leaves its window up for about a second so it
 can be looked at. On a machine that is being used at the same time, one of them can very occasionally
 die while Qt tears the process down — a `0xC000041D` exit *after* its own `[SELFTEST OK]` line. That
-is a known flake (it is in `CONTEXT.md`), not a failed assertion; the gate echoes each demo name
+is a known flake, not a failed assertion; the gate echoes each demo name
 before running it so it is obvious where it happened, and simply running it again is the answer.
 
 The same suite runs in CI on every push — the `Smoke tests` job in `.github/workflows/ci.yml`. It
@@ -394,7 +394,6 @@ Replace the local source path with your checkout's `out/packages` directory.
 | `tools/clangprobe/` | the probe used to validate the libclang front end (not part of the build) |
 | `tools/disasm.py` | capstone-based RVA disassembly helper |
 | `QtSharp.Api.props` | the one import a consumer project needs |
-| `CONTEXT.md` | the design log: every round of work, what was measured, what was learned — long, but that is where the reasoning is |
 
 ---
 

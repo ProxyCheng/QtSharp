@@ -2,7 +2,7 @@
 setlocal
 rem Builds the crash tracer (native\CrashTracer.cpp) into the folder the test app runs from. It is a
 rem debugging aid, not part of the build: call it when something crashes, and run the app with the
-rem tracer installed (see CONTEXT.md, "CrashTracer").
+rem tracer installed.
 rem
 rem   VCVARS / VCVARS_VER  the Visual Studio environment to use (see build_api.bat).
 if "%VCVARS%"=="" set VCVARS=D:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvarsall.bat

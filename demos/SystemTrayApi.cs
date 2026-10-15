@@ -31,7 +31,7 @@ using QtSharp.Api;
 //     *configuration* (icons, tooltip, visibility flag, menu contents, message arguments, signal
 //     wiring, close logic) rather than OS behaviour. It never invokes the modal actions.
 //
-// Naming notes for the new binding (see CONTEXT.md): the Q_PROPERTY getters/setters keep their
+// Naming notes for the generated binding: the Q_PROPERTY getters/setters keep their
 // C++ names (titleEdit.Text, durationSpinBox.Value, trayIcon.ToolTip, ...), signals are XxxSignal
 // properties, and the enums are nested (QSystemTrayIcon.MessageIcon.Information,
 // QStyle.StandardPixmap.SP_MessageBoxInformation, Qt.ItemDataRole.UserRole).

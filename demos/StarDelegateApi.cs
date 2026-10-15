@@ -379,7 +379,7 @@ public static class ApiStarDelegateDemo
         // The index comes from QTableWidget::indexFromItem, not from model().index(): the table's
         // own model is a private C++ class that is not in the model, so the QAbstractItemModel
         // wrapper around it cannot reach it - `index`/`rowCount`/`data` are pure virtuals there and
-        // the generated base methods answer `default` (see the note in CONTEXT.md). The delegate
+        // the generated base methods answer `default`. The delegate
         // never has this problem: the indexes Qt hands it are the real ones.
         using (var option = new QStyleOptionViewItem())
         using (var index = table.Model().Index(0, 3))

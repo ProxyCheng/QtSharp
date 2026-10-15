@@ -6,7 +6,7 @@ using QtSharp.Api;
 // group box (a QSlider, a QScrollBar and a QDial wired value -> value -> value) plus a Controls
 // group box driving minimum/maximum/value and the inverted appearance/key-binding switches.
 //
-// Naming notes for the new binding (see CONTEXT.md):
+// Naming notes for the generated binding:
 //   * Q_PROPERTY becomes a PascalCase property while the C++ accessor keeps its name, so we write
 //     slider.Value / slider.InvertedAppearance but slider.tickPosition() / SetTickPosition(...);
 //   * QSlider::TickPosition is a nested enum, so the tickPosition property was skipped (its name

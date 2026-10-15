@@ -20,7 +20,7 @@ using QtSharp.Api;
 //   * a small preview label under the calendar is updated from selectionChanged() so the signal
 //     can be observed as text (the Sliders port does the same for its valueChanged echo).
 //
-// Naming notes for the new binding (see CONTEXT.md):
+// Naming notes for the generated binding:
 //   * Q_PROPERTY becomes a PascalCase property while the C++ accessor keeps its name, so we write
 //     calendar.GridVisible / calendar.SelectedDate / calendar.FirstDayOfWeek, but
 //     calendar.selectionMode() / SetSelectionMode(...) (the selectionMode property was skipped
