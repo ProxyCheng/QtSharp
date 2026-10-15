@@ -1,6 +1,7 @@
 # QtSharp
 
 [![CI](https://github.com/ProxyCheng/QtSharp/actions/workflows/ci.yml/badge.svg)](https://github.com/ProxyCheng/QtSharp/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/ProxyCheng/QtSharp?display_name=tag)](https://github.com/ProxyCheng/QtSharp/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Target: Windows x64](https://img.shields.io/badge/target-Windows%20x64-0078D4.svg)](#prerequisites)
 
@@ -48,6 +49,16 @@ new conformance demos are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 The repository's own generated binding is the primary validation surface. It is not yet a stable
 drop-in replacement for every Qt module or every desktop deployment scenario.
+
+## Releases
+
+Pushing a semantic-version tag such as `v0.1.0` starts the release workflow. It builds the
+Windows x64 `QtSharp.Tools` package from the matching Qt 6.11.2 tool distribution, publishes the
+`.nupkg` and a `SHA256SUMS.txt` file to a GitHub Release, and keeps the package available as a
+downloadable Actions artifact. The workflow can also be started manually with a version input.
+
+The package is currently distributed through GitHub Releases. Publishing to nuget.org is kept as a
+separate future step so a public NuGet API key is never required for ordinary repository builds.
 
 ---
 

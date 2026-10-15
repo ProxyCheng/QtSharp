@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Package and release version, for example 0.1.0
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Package QtSharp.Tools
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set release version
+        id: version
+        shell: pwsh
+        run: |
+          if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            $version = '${{ inputs.version }}'
+            $tag = "v$version"
+          } else {
+            $tag = '${{ github.ref_name }}'
+            $version = $tag.Substring(1)
+          }
+          if ($version -notmatch '^\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?$') { throw "Invalid release version: $version" }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install matching Qt tools
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check --no-deps `
+            --target "$env:RUNNER_TEMP\qt-tools" PySide6-Essentials==6.11.2
+
+      - name: Build NuGet package
+        shell: pwsh
+        run: |
+          powershell -NoProfile -File tools\pack-qt-tools.ps1 `
+            -QtToolsSource "$env:RUNNER_TEMP\qt-tools\PySide6" `
+            -QtVersion 6.11.2 `
+            -PackageVersion "${{ steps.version.outputs.version }}"
+
+      - name: Create checksums
+        shell: pwsh
+        run: |
+          $package = Get-ChildItem out\packages\*.nupkg | Select-Object -First 1
+          $hash = (Get-FileHash $package.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $($package.Name)" | Set-Content out\packages\SHA256SUMS.txt -Encoding ascii
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: QtSharp.Tools-${{ steps.version.outputs.version }}
+          path: |
+            out/packages/*.nupkg
+            out/packages/SHA256SUMS.txt
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $tag = '${{ steps.version.outputs.tag }}'
+          $title = "QtSharp $tag"
+          $notes = @"
+          ## QtSharp.Tools ${{ steps.version.outputs.version }}
+
+          This release contains the Windows x64 `QtSharp.Tools` NuGet package with Qt 6.11.2
+          command-line tools and MSBuild `QtResource` support.
+
+          See [CHANGELOG.md](https://github.com/ProxyCheng/QtSharp/blob/$tag/CHANGELOG.md) and
+          [the package documentation](https://github.com/ProxyCheng/QtSharp/blob/$tag/tools/QtSharp.Tools/README.md).
+          "@
+          $package = Get-ChildItem out\packages\*.nupkg | Select-Object -First 1
+          gh release create $tag $package.FullName out\packages\SHA256SUMS.txt --title $title --notes $notes
