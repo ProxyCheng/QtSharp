@@ -1,0 +1,24 @@
+<Project>
+
+  <!-- The native glue and the Qt runtime DLLs have to sit next to the consumer's executable,
+       with the platform plugin under platforms\. Copying on Build and on Publish means a
+       referenced project can be built and run without any further setup. -->
+  <Target Name="QtSharpApiCopyNativeDeps" AfterTargets="Build">
+    <ItemGroup>
+      <_QtSharpApiNative Include="$(QtSharpNativeDir)*.dll" />
+      <_QtSharpApiPlatform Include="$(QtSharpNativeDir)platforms\qwindows.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpApiNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpApiPlatform)" DestinationFolder="$(OutDir)platforms\" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="QtSharpApiCopyNativeDepsPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <_QtSharpApiNativePublish Include="$(QtSharpNativeDir)*.dll" />
+      <_QtSharpApiPlatformPublish Include="$(QtSharpNativeDir)platforms\qwindows.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpApiNativePublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpApiPlatformPublish)" DestinationFolder="$(PublishDir)platforms\" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

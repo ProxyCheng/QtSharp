@@ -40,6 +40,46 @@ properties / 463 signals / 70 namespace functions** (QtCore, QtGui, QtWidgets, Q
 QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets). The gate runs all 34 demos
 (**1165 assertions**) plus `samples/hello`.
 
+## Install the binding
+
+If you just want to write Qt applications in C#, install the release package — there is nothing
+else to set up. No Qt SDK, no Visual Studio C++ workload, no clone:
+
+```xml
+<ItemGroup>
+  <PackageReference Include="QtSharp.Api" Version="0.1.0" />
+</ItemGroup>
+```
+
+```csharp
+using QtSharp.Api;
+
+static class Program
+{
+    [STAThread]
+    static int Main(string[] args)
+    {
+        var app = new QApplication(args);
+        var window = new QWidget();
+        window.SetWindowTitle("Hello from C#");
+        window.Resize(320, 120);
+        window.Show();
+        return app.Exec();
+    }
+}
+```
+
+The package carries the binding, the native wrapper and the Qt runtime, and copies them next to
+your executable on build and publish. Download the `.nupkg` from a release and add its folder as a
+package source:
+
+```powershell
+dotnet add package QtSharp.Api --source .\downloads
+```
+
+The package is named `QtSharp.Api` deliberately: `QtSharp` on nuget.org is an unrelated,
+long-abandoned project.
+
 ## Project status
 
 QtSharp is an active pre-1.0 project. The supported target is Windows x64 with Qt 6.11.x and
@@ -52,13 +92,21 @@ drop-in replacement for every Qt module or every desktop deployment scenario.
 
 ## Releases
 
-Pushing a semantic-version tag such as `v0.1.0` starts the release workflow. It builds the
-Windows x64 `QtSharp.Tools` package from the matching Qt 6.11.2 tool distribution, publishes the
-`.nupkg` and a `SHA256SUMS.txt` file to a GitHub Release, and keeps the package available as a
-downloadable Actions artifact. The workflow can also be started manually with a version input.
+Pushing a semantic-version tag such as `v0.1.0` starts the release workflow. It builds two Windows
+x64 packages and attaches them, with a `SHA256SUMS.txt`, to a GitHub Release:
 
-The package is currently distributed through GitHub Releases. Publishing to nuget.org is kept as a
-separate future step so a public NuGet API key is never required for ordinary repository builds.
+| package | what it is |
+|---|---|
+| `QtSharp.Api` | the binding — add it and write Qt applications in C# |
+| `QtSharp.Tools` | Qt command-line tools (`rcc`, `uic`, `lrelease`, `lupdate`) + MSBuild `.qrc` support |
+
+`QtSharp.Api` is built on the runner from the checked-in model: the generator runs without clang,
+the Qt dev files are fetched from Qt's own repository, and the native wrapper is compiled with the
+MSVC tools that ship on the runner. CI runs the same steps on every push, so the consumer path is
+verified continuously; the `binding` job uploads the package as an artifact even outside a release.
+
+The packages are distributed through GitHub Releases. Publishing to nuget.org is kept as a separate
+future step so a public NuGet API key is never required for ordinary repository builds.
 
 ---
 
