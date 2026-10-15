@@ -6,8 +6,8 @@ over Qt.
 One libclang parse of the Qt headers produces a normalized API model (checked in, byte for byte
 reproducible). A pure-function code generator turns that model into C# plus a C++ wrapper, and a
 small runtime makes signals, virtual overrides and object ownership behave the way a C# program
-expects. On top of that, 31 of Qt's official examples have been rewritten in C# and run by the
-repository's own gate.
+expects. On top of that, 34 runnable demos — Qt's official examples plus tours of QtCore, QtNetwork
+and the document modules — have been rewritten in C# and run by the repository's own gate.
 
 ```
 Qt 6.11.0 headers (MSVC kit)
@@ -16,7 +16,7 @@ Qt 6.11.0 headers (MSVC kit)
 model/qtsharp.api.json                 ← checked in; the gate compares the fresh extraction to it
         │  qtgen codegen (a pure function of the model)
         ▼
-out/api/QtSharp.Api.cs                 ← the binding: 448 classes, C# properties, signals as events
+out/api/QtSharp.Api.cs                 ← the binding: 496 classes, C# properties, signals as events
 out/api/QtSharp.Api.native.cpp         ← one C++ subclass per bound class: virtual hooks, C ABI
         │  build_api.bat (cl.exe)
         ▼
@@ -25,13 +25,14 @@ out/api/QtSharp.Api.dll                ← the native glue
 runtime/ApiRuntime.cs                  ← QSignal/meta-object bookkeeping, ownership, event probes
         │
         ▼
-demos/QtSharp.Demos.csproj             ← the binding + runtime + 31 ported examples, one assembly
+demos/QtSharp.Demos.csproj             ← the binding + runtime + 34 demos, one assembly
         ▲                    ▲
    testbind/testapp     samples/hello  ← two thin entry points, one name → demo table
 ```
 
-Current coverage: **448 classes / 9585 methods / 877 virtuals / 451 enums / 801 Q_PROPERTY
-properties / 428 signals** (QtCore, QtGui, QtWidgets). The gate runs the 31 ported examples
+Current coverage: **496 classes / 10506 methods / 885 virtuals / 511 enums / 816 Q_PROPERTY
+properties / 463 signals / 70 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg,
+QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets). The gate runs all 34 demos
 (**1165 assertions**) plus `samples/hello`.
 
 ---
@@ -70,10 +71,15 @@ them can be pointed elsewhere instead:
   `qt6_6110/qt6_6110/` instead of the real `qt6_6110/qt6_6110_msvc2022_64/`. Downloading
   `qtbase-…-X86_64.7z` (plus `d3dcompiler_47-x64.7z`) from
   `…/desktop/qt6_6110/qt6_6110_msvc2022_64/qt.qt6.6110.win64_msvc2022_64/` and unpacking it at the
-  kit root gives the same result, and `qtbase` alone is enough for QtCore/QtGui/QtWidgets.
-* **Qt runtime DLLs**: `<repo>\Qt\6.11.0\runtime` needs `Qt6Core.dll`, `Qt6Gui.dll`,
-  `Qt6Widgets.dll`, the MSVC runtime DLLs (`msvcp140*.dll`, `vcruntime140*.dll`) and
+  kit root gives the same result. `qtbase` covers QtCore/QtGui/QtWidgets/QtNetwork/QtPrintSupport/
+  QtXml/QtOpenGL; QtSvg and QtSvgWidgets come from the separate `qtsvg` module (add its
+  `include`/`lib` the same way).
+* **Qt runtime DLLs**: `<repo>\Qt\6.11.0\runtime` needs the modules the binding links —
+  `Qt6Core.dll`, `Qt6Gui.dll`, `Qt6Widgets.dll`, `Qt6Network.dll`, `Qt6Svg.dll`,
+  `Qt6SvgWidgets.dll`, `Qt6PrintSupport.dll`, `Qt6Xml.dll`, `Qt6OpenGL.dll`,
+  `Qt6OpenGLWidgets.dll` — plus the MSVC runtime DLLs (`msvcp140*.dll`, `vcruntime140*.dll`) and
   `platforms\qwindows.dll`. The easy way is to build any Qt widget app and run `windeployqt` on it.
+  All of them must be the *same* Qt version (6.11.x) — they share `Qt6Core`.
 * **clang builtin headers**: `<repo>\lib\lib\clang\<version>\include` (with `stddef.h` in it) — copy
   them out of an LLVM installation (`C:\Program Files\LLVM\lib\clang\19\include`) or from the
   `libclang.runtime.win-x64` NuGet package. Any version works; a different version from clang 19 may
@@ -88,7 +94,7 @@ powershell -File tools\regen-api.ps1
 ```
 
 That is the whole thing (a clone's first run takes a few minutes — the native glue is a big
-translation unit, and 31 examples are built and run at the end). It runs, in order:
+translation unit, and 34 demos are built and run at the end). It runs, in order:
 
 | step | what it does |
 |---|---|
@@ -96,7 +102,7 @@ translation unit, and 31 examples are built and run at the end). It runs, in ord
 | `[2]` | extracts the model from the Qt headers into `out\qtsharp.api.json.new` (**~3 s**) and compares it to the checked-in `model\qtsharp.api.json` — byte for byte |
 | `[3]` | runs the code generator **twice** and compares the two outputs |
 | `[4]` | compiles the generated C++ wrapper + the runtime into `out\api\QtSharp.Api.dll` |
-| `[5]` | builds `demos` (binding + runtime + 31 examples) and runs every example with `testapp` |
+| `[5]` | builds `demos` (binding + runtime + 34 demos) and runs every demo with `testapp` |
 | `[6]` | builds and runs `samples\hello` (its window, `hello selftest`, `hello api-transform`, `hello help`) |
 
 Two gates live in the middle of that: **the model must come out identical** (it is deterministic by
@@ -104,7 +110,7 @@ construction, so a difference means the Qt version, the clang headers or the `Ro
 and **the generator must be reproducible**. If the model legitimately changes, review the diff and
 re-run with `-Adopt` to accept it; `-SkipExtract` skips step 2 and 3.
 
-Step 5 is 31 GUI processes back to back, and each demo leaves its window up for about a second so it
+Step 5 is 34 GUI processes back to back, and each demo leaves its window up for about a second so it
 can be looked at. On a machine that is being used at the same time, one of them can very occasionally
 die while Qt tears the process down — a `0xC000041D` exit *after* its own `[SELFTEST OK]` line. That
 is a known flake (it is in `CONTEXT.md`), not a failed assertion; the gate echoes each demo name
@@ -123,7 +129,7 @@ dotnet build samples\hello\Hello.csproj -c Release
 ## Run the examples
 
 ```
-testapp                       # the list of examples (31 names)
+testapp                       # the list of demos (34 names)
 testapp api-calculator        # run one
 testapp api-analogclock       # QTSHARP_DEMO_MS=8000 keeps it on screen longer
 
@@ -243,6 +249,56 @@ static class Program
 
 ---
 
+## Qt development tools
+
+`QtSharp.Tools` is a separate development NuGet package containing native Qt tools and their
+DLL dependencies (Windows x64). The initial Qt 6.11.2 payload includes `rcc`, `uic`, `lrelease`
+and `lupdate`; `moc` is also copied when supplied by the source distribution. Consumers do not
+need a Qt SDK or Python installed. It is currently built locally, not published to nuget.org.
+
+To produce the package, point the staging script at a directory containing these executables
+and matching DLLs (normally a Qt kit's `bin`):
+
+```powershell
+powershell -File tools\pack-qt-tools.ps1 -QtToolsSource C:\Qt\6.11.2\msvc2022_64\bin
+```
+
+The result is `out/packages/QtSharp.Tools.0.1.0.nupkg`. `-QtVersion` and `-PackageVersion`
+override the defaults. Put the upstream license texts/notices in a `QtSharp-ThirdPartyNotices`
+subdirectory beside the source tools to include them in the payload. Tools are staged under
+`out/qt-tools`; the script checks QtCore's version and runs captured, time-limited startup checks.
+
+In a consumer project:
+
+```xml
+<ItemGroup>
+  <PackageReference Include="QtSharp.Tools" Version="0.1.0" PrivateAssets="all" />
+  <QtResource Include="assets\sample.qrc" />
+</ItemGroup>
+```
+
+Building automatically compiles to `assets/sample.rcc` in the output/publish directory.
+Register it with `QResource.RegisterResource(path)` to use its `:/` paths. The compiler runs
+on each build to pick up changes to referenced assets as well as the `.qrc` file itself.
+
+The executable directory is exposed as `$(QtSharpToolsDir)`. A captured command-line entry:
+
+```text
+dotnet msbuild MyApp.csproj -t:QtSharpRunTool -p:QtSharpTool=rcc -p:QtSharpToolArguments=--help
+```
+
+`uic` generates native C++, not C#; a C# `.ui` compiler is not implemented yet. Designer,
+Linguist GUI and deployment tools are not included in this first payload.
+
+The resource integration sample checks the complete package-to-resource-read path:
+
+```powershell
+dotnet restore samples\resources\Resources.csproj --source D:\QtSharp\out\packages
+dotnet run --project samples\resources\Resources.csproj -c Release --no-restore
+```
+
+Replace the local source path with your checkout's `out/packages` directory.
+
 ## Repository layout
 
 | path | what |
@@ -251,7 +307,7 @@ static class Program
 | `gen/` | the generator: `ApiModel.cs` (model shape, `Roots` table, vocabulary), `ApiModel2.cs` (the libclang front end), `ApiCodeGen.cs` (model → C# + C++) |
 | `native/` | the hand-written runtime (`QtSharpApiRuntime.cpp`: moc signal forwarder, probes) and the crash tracer |
 | `runtime/` | the managed runtime published with the binding (`ApiRuntime.cs`, `ApiApplication.cs`) |
-| `demos/` | `QtSharp.Demos.csproj` — the binding, the runtime and the 31 ported examples; `ApiDemos.cs` is the name → window table |
+| `demos/` | `QtSharp.Demos.csproj` — the binding, the runtime and the 34 demos; `ApiDemos.cs` is the name → window table |
 | `testbind/` | `testapp`, the test entry point (13 lines: hand the argument to `ApiDemos`) |
 | `samples/hello/` | the sample / trial entry point |
 | `tools/regen-api.ps1` | the build and the gate |
@@ -266,16 +322,26 @@ static class Program
 
 * **Windows x64 and Qt 6.11.0 only** — the model is extracted from that kit, and the wrapper is
   MSVC-compiled.
-* **QtCore / QtGui / QtWidgets only**; QtNetwork, QtSql, QtMultimedia, QtQml and friends are not
-  bound.
-* **Not ported**: the RHI examples (they need `QRhi` and prebuilt shaders), Window Embedding, and
-  anything needing `Qt6PrintSupport`/`Qt6Pdf`/`Qt6Svg` (the runtime folder does not ship those
-  DLLs, so printing and PDF viewing are out).
+* **The bound modules** are QtCore, QtGui, QtWidgets, QtNetwork (host addressing, local sockets
+  `QLocalServer`/`QLocalSocket`, TCP/UDP, the HTTP client), QtSvg/QtSvgWidgets, QtPrintSupport
+  (`QPrinter`, print dialogs/preview), QtXml (the `QDom*` DOM; `QXmlStreamReader/Writer` are in
+  QtCore) and QtOpenGL/QtOpenGLWidgets (`QOpenGLWidget`, `QOpenGLContext`, shader/buffer classes).
+  **Not bound**: QtSql (no dev files in the kit), QtMultimedia, QtQml/QtQuick, QtPdf, QtWebEngine.
+* **Not ported**: the RHI examples (they need `QRhi` and prebuilt shaders) and Window Embedding.
+  PDF *output* works through `QPrinter` (see `api-docformats`); PDF *reading* needs the QtPdf
+  module, which is not bound.
 * `api-windowflags` is written and passes all 115 assertions, but it dies about three runs in ten
   while Qt tears the process down (a native message pump reaching a destroyed window), so it is
   deliberately not wired into the dispatcher.
-* `QPixmap::fill(QColor)` is missing from the model (its default argument is a `QColor`, which C#
-  cannot express as a default), so filling a pixmap goes through a `QPainter`. The same applies to
-  `QWidget::grab(QRect)` and `QComboBox::addItem(QString, QVariant)`.
+* An optional parameter whose C++ default is a *bare enumerator that is not an enumerator of the
+  parameter's type* still truncates the overload (the C# default would be 0, which Qt often
+  reserves for "invalid"). A boxed-value default is fine now: the parameter defaults to `null` and
+  the native glue substitutes the declared expression, which is what unlocked
+  `QPixmap.fill(QColor)`, `QWidget.grab(QRect)`, `QComboBox.addItem(QString, QVariant)` and
+  `QTcpServer.listen(address, port)`.
+* A `const uchar *` *return* is dropped (there is no length to go with it), so `QResource.data()`
+  and `QImage.bits()` are absent; `QResource.uncompressedData()`, `QByteArray` and the `byte[]`
+  parameters cover the same ground. Nested classes (`QFont::Tag`, `QTextOption::Tab`) are not
+  bound either — the model publishes top-level classes and enums only.
 * Hand-written code inside a bound class is not preserved by a regeneration: the binding lives in
   `out/api` (gitignored), and everything hand-written lives in `runtime/`.

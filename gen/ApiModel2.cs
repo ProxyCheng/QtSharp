@@ -127,6 +127,9 @@ public static partial class ApiModel
         // Enums that are part of the published vocabulary but never appear in a signature.
         CollectExtraEnums(index2, part.Enums);
 
+        // The module functions that live outside any class (qCompress, qRegisterResourceData, ...).
+        CollectFreeFunctions(index2, part);
+
         var text = part.Serialize();
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(modelPath)));
         File.WriteAllText(modelPath, text);
@@ -207,11 +210,25 @@ public static partial class ApiModel
             "-DQT_CORE_LIB",
             "-DQT_GUI_LIB",
             "-DQT_WIDGETS_LIB",
+            "-DQT_NETWORK_LIB",
+            "-DQT_SVG_LIB",
+            "-DQT_SVGWIDGETS_LIB",
+            "-DQT_PRINTSUPPORT_LIB",
+            "-DQT_XML_LIB",
+            "-DQT_OPENGLWIDGETS_LIB",
+            "-DQT_OPENGL_LIB",
             "-Wno-everything",
             "-I" + QtLibrary.QtIncludeRoot,
             "-I" + Path.Combine(QtLibrary.QtIncludeRoot, "QtCore"),
             "-I" + Path.Combine(QtLibrary.QtIncludeRoot, "QtGui"),
             "-I" + Path.Combine(QtLibrary.QtIncludeRoot, "QtWidgets"),
+            "-I" + Path.Combine(QtLibrary.QtIncludeRoot, "QtNetwork"),
+            "-I" + Path.Combine(QtLibrary.QtIncludeRoot, "QtSvg"),
+            "-I" + Path.Combine(QtLibrary.QtIncludeRoot, "QtSvgWidgets"),
+            "-I" + Path.Combine(QtLibrary.QtIncludeRoot, "QtPrintSupport"),
+            "-I" + Path.Combine(QtLibrary.QtIncludeRoot, "QtXml"),
+            "-I" + Path.Combine(QtLibrary.QtIncludeRoot, "QtOpenGLWidgets"),
+            "-I" + Path.Combine(QtLibrary.QtIncludeRoot, "QtOpenGL"),
             "-resource-dir", ResourceDir(),
         };
         foreach (var header in headers.Skip(1))
@@ -239,6 +256,9 @@ public static partial class ApiModel
         public Dictionary<string, CXCursor> Classes = new(StringComparer.Ordinal);
         // Enum declarations by qualified name (Qt::AlignmentFlag, QLineEdit::EchoMode, ...).
         public Dictionary<string, CXCursor> Enums = new(StringComparer.Ordinal);
+        // Namespace-scope functions (qCompress, qRegisterResourceData, qDrawShadePanel, ...). The
+        // sources are filtered later: most are templates/inline helpers that have no symbol.
+        public List<CXCursor> Functions = new();
     }
 
     // The translation unit currently being walked; one extraction at a time.
@@ -325,6 +345,18 @@ public static partial class ApiModel
                         if (clang.getCursorSpelling(cursor).ToString().Length == 0)
                             break;      // anonymous: not addressable from managed code
                         index.Enums[EnumTypeName(cursor)] = cursor;
+                        break;
+                    }
+                    case CXCursorKind.CXCursor_FunctionDecl:
+                    {
+                        // Namespace scope only: a class member comes back as CXXMethod/Constructor
+                        // and is reached through the class. `extern "C"` functions (qVersion) sit
+                        // inside a link-specification cursor rather than directly under the TU, so
+                        // that counts as namespace scope too. Templates are not FunctionDecls.
+                        var parent = clang.getCursorKind(clang.getCursorSemanticParent(cursor));
+                        if (parent == CXCursorKind.CXCursor_TranslationUnit ||
+                            parent == CXCursorKind.CXCursor_LinkageSpec)
+                            index.Functions.Add(cursor);
                         break;
                     }
                 }
@@ -929,6 +961,10 @@ public static partial class ApiModel
         public ParamMode Mode;      // input, out (non-const scalar pointer) or ref
         public bool Optional;       // the C++ declaration has a default here
         public string Default;      // a literal the code generator can emit, or null
+        // The C++ default expression verbatim, when it is not expressible as a C# default (a
+        // boxed value: QColor(Qt::white), QHostAddress(QHostAddress::Any)). The managed parameter
+        // then defaults to null and the native glue substitutes this expression.
+        public string DefaultCpp;
     }
 
     class FnFact
@@ -1376,16 +1412,20 @@ public static partial class ApiModel
                     CppType = Spelling(type),
                 };
                 // libclang has no "has default argument" query: the default argument shows up as
-                // the expression child of the ParmDecl cursor.
+                // the expression child of the ParmDecl cursor. An array declarator also has
+                // expression children (the bounds of `GLfloat value[2][2]`), so the declaration's
+                // own text has to show an initialiser before the child is taken for a default.
                 var probe = new FirstExpr();
                 arg.VisitChildren(probe.Visit, default);
-                if (probe.HasRange)
+                if (probe.HasRange && !IsArrayDeclarator(arg))
                 {
                     fact.Optional = true;
                     var text = SourceText(probe.Range);
                     fact.Default = DefaultLiteral2(text, fact.Type);
+                    if (fact.Default == null)
+                        fact.DefaultCpp = CppDefaultExpression(text);
                     if (Environment.GetEnvironmentVariable("QTSHARP_MODEL_DEBUG") == "1")
-                        Console.WriteLine($"[model2-debug] {fn.Name}({fact.Name}) default: '{text}' kind={clang.getCursorKind(probe.Cursor).ToString().Replace("CXCursor_", "")} type={fact.Type} literal={fact.Default}");
+                        Console.WriteLine($"[model2-debug] {fn.Name}({fact.Name}) default: '{text}' kind={clang.getCursorKind(probe.Cursor).ToString().Replace("CXCursor_", "")} type={fact.Type} literal={fact.Default} cpp={fact.DefaultCpp}");
                 }
                 fn.Params.Add(fact);
             }
@@ -1395,6 +1435,133 @@ public static partial class ApiModel
             p.Mode = ParamModeOf(p.ClangType);
         fn.Visible = VisibleParamsOf(fn);
         return fn;
+    }
+
+    // A namespace-scope function (qCompress, qRegisterResourceData, qDrawShadePanel, ...). It is
+    // the same shape as a static method, minus the class: no self, no virtuals, no access.
+    static unsafe FnFact FreeFunction(CXCursor cursor)
+    {
+        var spelling = clang.getCursorSpelling(cursor).ToString();
+        if (spelling.Length == 0)
+            return null;
+        var returnClang = clang.getCursorResultType(cursor);
+        if (ModelName(returnClang) == "uchar*")
+            return null;        // a byte buffer only makes sense as an argument
+        if (!IsCopyableResult(returnClang))
+            return null;
+
+        var fn = new FnFact
+        {
+            Cursor = cursor,
+            Name = spelling,
+            ReturnType = ModelName(returnClang),
+            ReturnClangType = returnClang,
+        };
+
+        int count = clang.Cursor_getNumArguments(cursor);
+        if (count < 0)
+            return null;        // a template / unprototyped function: no explicit parameters
+        for (uint i = 0; i < count; i++)
+        {
+            var arg = clang.Cursor_getArgument(cursor, i);
+            var spelled = clang.getCursorSpelling(arg).ToString();
+            var type = clang.getCursorType(arg);
+            var fact = new ParamFact
+            {
+                Name = spelled.Length > 0 ? spelled : "arg" + i,
+                Type = ModelName(type),
+                ClangType = type,
+                CppType = Spelling(type),
+            };
+            var probe = new FirstExpr();
+            arg.VisitChildren(probe.Visit, default);
+            if (probe.HasRange && !IsArrayDeclarator(arg))
+            {
+                fact.Optional = true;
+                fact.Default = DefaultLiteral2(SourceText(probe.Range), fact.Type);
+                if (fact.Default == null)
+                    fact.DefaultCpp = CppDefaultExpression(SourceText(probe.Range));
+            }
+            fn.Params.Add(fact);
+        }
+
+        foreach (var p in fn.Params)
+            p.Mode = ParamModeOf(p.ClangType);
+        fn.Visible = VisibleParamsOf(fn);
+        return fn;
+    }
+
+    // The Qt modules whose public free functions we publish, and the same one-pass filter the
+    // classes get: an exported, non-inline, non-variadic, non-template function whose whole
+    // signature is inside the vocabulary.
+    static unsafe void CollectFreeFunctions(ClangIndex index, ModelPart part)
+    {
+        var modules = new[] { "QtCore", "QtGui", "QtWidgets", "QtNetwork", "QtSvg", "QtSvgWidgets", "QtPrintSupport", "QtXml", "QtOpenGLWidgets", "QtOpenGL" }
+            .Select(m => (Name: m, Dir: Path.GetFullPath(Path.Combine(QtLibrary.QtIncludeRoot, m)) + Path.DirectorySeparatorChar))
+            .ToArray();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var cursor in index.Functions)
+        {
+            var name = clang.getCursorSpelling(cursor).ToString();
+            // Operators have no C# spelling, and these are internal helpers that happen to be
+            // exported (the equality-comparison macro's comparesEqual, the aligned allocators, the
+            // qHash plumbing) - not part of the API PyQt publishes.
+            if (name.Length == 0 || name.StartsWith("operator", StringComparison.Ordinal)
+                || name.StartsWith("qt_", StringComparison.Ordinal) || DeniedFunctions.Contains(name))
+                continue;
+            if (clang.Cursor_isFunctionInlined(cursor) != 0)
+                continue;
+            if (clang.Cursor_isVariadic(cursor) != 0)
+                continue;
+            if (clang.getCursorLinkage(cursor) != CXLinkageKind.CXLinkage_External)
+                continue;
+            if (clang.Cursor_getStorageClass(cursor) != CX_StorageClass.CX_SC_None)
+                continue;
+            var location = clang.getCursorLocation(cursor);
+            location.GetSpellingLocation(out var file, out _, out _, out _);
+            if (file.Handle == IntPtr.Zero)
+                continue;
+            var path = Path.GetFullPath(clang.getFileName(file).ToString());
+            var module = modules.FirstOrDefault(m => path.StartsWith(m.Dir, StringComparison.OrdinalIgnoreCase));
+            if (module.Name == null)
+                continue;
+
+            var fn = FreeFunction(cursor);
+            if (fn == null || !Accept(fn, string.Empty))
+                continue;
+            // An enum in the signature (Qt::ChecksumType) is only published if it is collected
+            // here, exactly as a class's methods collect theirs.
+            CollectEnums2(fn.ReturnClangType, fn.Visible, index, part.Enums);
+            // Fold overloads that collapse to one managed signature, the same way class methods
+            // do, or the generated C# would be two methods with identical parameters (CS0111).
+            if (!seen.Add(DedupeKey(fn)))
+                continue;
+            part.Functions.Add(FunctionJson(fn, module.Name + "/" + Path.GetFileName(path)));
+        }
+        Console.WriteLine($"[model2] {part.Functions.Count} free function(s) published");
+    }
+
+    // Exported but internal: not the API PyQt publishes, and several take raw void* buffers.
+    static readonly HashSet<string> DeniedFunctions = new(StringComparer.Ordinal)
+    {
+        "comparesEqual", "qbswap", "qMallocAligned", "qReallocAligned", "qFreeAligned",
+        "qmemrchr", "qFlagLocation", "qHashBits", "qHasPixmapTexture",
+        "qAreNtfsPermissionChecksEnabled", "qDisableNtfsPermissionChecks", "qEnableNtfsPermissionChecks",
+    };
+
+    // One namespace function, in the same shape a method has (so the code generator reads it with
+    // the same queries). The name is the C++ spelling; the class-free C# side is a static class.
+    // The header is what the generated C++ glue has to include to see the declaration.
+    static string FunctionJson(FnFact fn, string header)
+    {
+        var sb = new StringBuilder();
+        sb.Append("{ \"name\": ").Append(Json(fn.Name));
+        sb.Append(", \"header\": ").Append(Json(header));
+        sb.Append(", \"returnType\": ").Append(Json(fn.ReturnType));
+        sb.Append(", \"parameters\": [");
+        sb.Append(string.Join(", ", fn.Visible.Select(p => ParamJson2(p))));
+        sb.Append("] }");
+        return sb.ToString();
     }
 
     static CX_CXXAccessSpecifier Access(CXCursor cursor) => clang.getCXXAccessSpecifier(cursor);
@@ -1637,14 +1804,23 @@ public static partial class ApiModel
                 if (p.Mode != ParamMode.In && p.Optional)
                     break;
                 // A boxed value parameter whose optional default we cannot express (QRect(),
-                // QVariant(), QSize(-1, -1)) would reach the generated glue as a null handle and
-                // be dereferenced. Leaving it out makes the C++ default apply, which is what the
-                // declaration meant. The same goes for an enum whose default is not an enumerator
-                // (QNativeIpcKey::DefaultTypeForOs): the C# default would be 0, and 0 is the one
-                // value Qt reserved for "invalid".
-                if (p.Optional && p.Default == null
-                    && (RootClasses.Contains(p.Type) || p.Type.Contains("::")))
-                    break;
+                // QVariant(), QSize(-1, -1)) used to end the signature here. It does not have to:
+                // the managed parameter defaults to null and the native glue substitutes the C++
+                // default expression (QColor(Qt::white), QHostAddress(QHostAddress::Any)) - so
+                // QPixmap::fill(QColor), QWidget::grab(QRect) and QTcpServer::listen(address,
+                // port) keep their parameters. The same goes for an enum whose default is not an
+                // enumerator (QNativeIpcKey::DefaultTypeForOs): that one still truncates, because
+                // the C# default would be 0 and 0 is the one value Qt reserved for "invalid".
+                if (p.Optional && p.Default == null)
+                {
+                    if (RootClasses.Contains(p.Type) && p.DefaultCpp != null)
+                    {
+                        result.Add(p);
+                        continue;
+                    }
+                    if (RootClasses.Contains(p.Type) || p.Type.Contains("::"))
+                        break;
+                }
                 result.Add(p);
                 continue;
             }
@@ -1714,9 +1890,31 @@ public static partial class ApiModel
     // type default. Enumerators matter here: `default` is the zero member, which is not the same
     // as the declared default (Qt::BrushStyle's zero is NoBrush, while QBrush::QBrush declares
     // SolidPattern), so a named enumerator is carried over as the matching C# enum member.
-    static string DefaultLiteral2(string text, string type)
+    // Whether the parameter's type is an array (including a pointer-to-array, which is what
+    // `const GLfloat value[2][2]` decays to: `const GLfloat (*)[2]`). Such a parameter has
+    // expression children of its own - the bounds - and they are not a default argument, so they
+    // must not be mistaken for one. (A macro-expanded declaration like QObject::tr cannot be
+    // checked by its source text: the spelling range spans the expansion.)
+    static bool IsArrayDeclarator(CXCursor arg)
+        => clang.getTypeSpelling(clang.getCursorType(arg)).ToString().Contains("[");
+
+    // The C++ default expression as written, for a parameter whose default cannot be a C# default
+    // (a boxed value type). The code generator wraps it in the type name, so a bare enumerator
+    // (Qt::white) becomes QColor(Qt::white) and a full expression (QHostAddress::Any) becomes
+    // QHostAddress(QHostAddress::Any).
+    static string CppDefaultExpression(string text)
     {
         text = text?.Trim();
+        if (string.IsNullOrEmpty(text))
+            return null;
+        // The slice starts at the `=` of the assignment.
+        if (text.StartsWith("=", StringComparison.Ordinal))
+            text = text.Substring(1).Trim();
+        return text.Length == 0 ? null : text;
+    }
+
+    static string DefaultLiteral2(string text, string type)
+    {        text = text?.Trim();
         if (string.IsNullOrEmpty(text))
             return null;
         // The slice starts at the `=` of the assignment (clang reports the range from there), so
@@ -2042,6 +2240,8 @@ public static partial class ApiModel
             sb.Append(", \"optional\": true");
             if (p.Default != null)
                 sb.Append(", \"default\": ").Append(Json(p.Default));
+            else if (p.DefaultCpp != null)
+                sb.Append(", \"defaultCpp\": ").Append(Json(p.DefaultCpp));
         }
         sb.Append(" }");
         return sb.ToString();
