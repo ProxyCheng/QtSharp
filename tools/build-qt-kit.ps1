@@ -124,3 +124,11 @@ $core = (Get-Item (Join-Path $runtimeOut 'Qt6Core.dll')).VersionInfo.FileVersion
 Write-Host "QT_DIR=$kitRoot"
 Write-Host "QT_RUNTIME_DIR=$runtimeOut"
 Write-Host "Qt runtime version: $core"
+
+# Under GitHub Actions, hand the two paths to the following steps through the environment. Exporting
+# them here is deliberate: Write-Host writes to the host stream, so a caller cannot capture it by
+# assigning the script's output.
+if ($env:GITHUB_ENV) {
+    "QT_DIR=$kitRoot" >> $env:GITHUB_ENV
+    "QT_RUNTIME_DIR=$runtimeOut" >> $env:GITHUB_ENV
+}
