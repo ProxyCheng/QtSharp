@@ -128,6 +128,14 @@ public static class ApiCodeGen
             ? $"{cls}.FromTransientHandle({expression})"
             : $"{cls}.FromHandle({expression})";
 
+    /// <summary>
+    /// The native library the generated P/Invokes call. The core binding points at QtSharp.Api; an
+    /// extension module (QtSharp.Charts and whatever follows it) points at its own DLL. That is what
+    /// lets a module be packaged on its own, against the core binding, without recompiling the core
+    /// - the module's generated file carries the name it needs instead of borrowing the runtime's.
+    /// </summary>
+    internal static string NativeLibraryName = "QtSharp.Api";
+
     public static void Run(string modelPath, string outDir)
     {
         using var document = JsonDocument.Parse(File.ReadAllText(modelPath));
@@ -385,6 +393,9 @@ public static class ApiCodeGen
 
         sb.AppendLine("    internal static partial class ApiNative");
         sb.AppendLine("    {");
+        sb.AppendLine("        // Where every P/Invoke below goes. The core binding calls the core glue; an extension");
+        sb.AppendLine("        // module calls its own DLL, which is how it stays a separate package.");
+        sb.AppendLine($"        internal const string Library = \"{NativeLibraryName}\";");
         foreach (var cls in Classes)
             WriteNativeDeclarations(sb, cls);
         WriteFreeFunctionNativeDeclarations(sb);
@@ -398,14 +409,14 @@ public static class ApiCodeGen
         {
             string stem = ListStem(boxed);
             sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_assign_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_assign_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
             sb.AppendLine($"        internal static extern void Assign_{stem}(IntPtr destination, IntPtr source);");
         }
         foreach (var boxed in VirtualBoxedParams())
         {
             string stem = ListStem(boxed);
             sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_clone_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_clone_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
             sb.AppendLine($"        internal static extern IntPtr Clone_{stem}(IntPtr source);");
         }
         sb.AppendLine("    }");
@@ -604,13 +615,13 @@ public static class ApiCodeGen
     {
         string stem = ListStem(elem);
         sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_bindable_{stem}_value\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_bindable_{stem}_value\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern {ElemAbiCsRet(elem)} Bindable_{stem}_value(IntPtr bindable);");
         sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_bindable_{stem}_setValue\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_bindable_{stem}_setValue\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern void Bindable_{stem}_setValue(IntPtr bindable, {ElemAbiCsParam(elem)} value);");
         sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_bindable_{stem}_free\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_bindable_{stem}_free\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern void Bindable_{stem}_free(IntPtr bindable);");
     }
 
@@ -707,25 +718,25 @@ public static class ApiCodeGen
         string retKey = ElemAbiCsRet(key);
         string retValue = ElemAbiCsRet(value);
         sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_new\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_new\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern IntPtr {prefix}_{stem}_new();");
         sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_insert\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_insert\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern void {prefix}_{stem}_insert(IntPtr map, {abiKey} key, {abiValue} value);");
         sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_count\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_count\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern int {prefix}_{stem}_count(IntPtr map);");
         sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_key\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_key\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern {retKey} {prefix}_{stem}_key(IntPtr map, int index);");
         sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_value\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_value\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern {retValue} {prefix}_{stem}_value(IntPtr map, int index);");
         sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_free\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_free\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern void {prefix}_{stem}_free(IntPtr map);");
         sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_assign_{AssocTag(t)}_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_assign_{AssocTag(t)}_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern void Assign_{prefix}_{stem}(IntPtr destination, IntPtr source);");
     }
 
@@ -788,22 +799,22 @@ public static class ApiCodeGen
         string stem = ListStem(elem);
         string abi = IsScalarElem(elem) ? ManagedType(elem) : "IntPtr";
         sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_list_{stem}_new\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_list_{stem}_new\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern IntPtr List_{stem}_new();");
         sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_list_{stem}_append\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_list_{stem}_append\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern void List_{stem}_append(IntPtr list, {abi} item);");
         sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_list_{stem}_count\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_list_{stem}_count\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern int List_{stem}_count(IntPtr list);");
         sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_list_{stem}_at\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_list_{stem}_at\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern {abi} List_{stem}_at(IntPtr list, int index);");
         sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_list_{stem}_free\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_list_{stem}_free\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern void List_{stem}_free(IntPtr list);");
         sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_assign_list_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
+        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_assign_list_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern void Assign_List_{stem}(IntPtr destination, IntPtr source);");
     }
 
@@ -975,7 +986,7 @@ public static class ApiCodeGen
             string sig = string.Join(", ", ps.SelectMany(NativeParamsFor));
             string ret = ReturnType(fn);
             sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{entry}\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{entry}\", CallingConvention = CallingConvention.Cdecl)]");
             if (ret == "bool")
                 sb.AppendLine("        [return: MarshalAs(UnmanagedType.I1)]");
             sb.AppendLine($"        internal static extern {NativeRetType(ret)} {entry}({sig});");
@@ -1371,8 +1382,11 @@ public static class ApiCodeGen
             // contract PySide has, where a deleted C++ object raises RuntimeError.
             // internal, not private: a derived class's Dispose works on them (a private field is
             // inherited but not reachable).
-            sb.AppendLine("        internal IntPtr __handle;");
-            sb.AppendLine("        internal bool __invalidated;");
+            // protected internal, not internal: a class generated into a *separate* extension
+            // assembly (QtSharp.Charts) derives from this one and needs both fields. Widening is
+            // enough - the meaning and the behaviour are unchanged.
+            sb.AppendLine("        protected internal IntPtr __handle;");
+            sb.AppendLine("        protected internal bool __invalidated;");
             sb.AppendLine();
             sb.AppendLine("        public IntPtr Handle");
             sb.AppendLine("        {");
@@ -1421,7 +1435,7 @@ public static class ApiCodeGen
             // constructor anywhere below it never assigns the field, which is a CS0649 warning.
             if (SubtreeHasCtor(name))
             {
-                sb.AppendLine("        internal bool __ownsNative;");
+                sb.AppendLine("        protected internal bool __ownsNative;");
                 sb.AppendLine();
             }
             // Whether the native object is one of the generated subclasses that install the vtable
@@ -1433,13 +1447,13 @@ public static class ApiCodeGen
             // null/0/false and the model would be silently unreachable.
             if (SubtreeHasCtor(name))
             {
-                sb.AppendLine("        internal bool __managedSubclass;");
+                sb.AppendLine("        protected internal bool __managedSubclass;");
             }
             else if (SubtreeDeclaresVirtual(name))
             {
                 // Nothing here can be built, so the flag is never set - but the virtual stubs
                 // still read it, so it has to exist. The explicit initializer says why.
-                sb.AppendLine("        internal bool __managedSubclass = false;");
+                sb.AppendLine("        protected internal bool __managedSubclass = false;");
             }
             sb.AppendLine();
         }
@@ -1574,13 +1588,13 @@ public static class ApiCodeGen
         // lives on the caller's stack), so they must not enter the identity cache: the next
         // event would reuse the same address and get the previous wrapper back.
         sb.AppendLine();
-        sb.AppendLine($"        internal {NewMethod(inherited, "FromTransientHandle", "IntPtr")}static {name} FromTransientHandle(IntPtr handle)");
+            sb.AppendLine($"        public {NewMethod(inherited, "FromTransientHandle", "IntPtr")}static {name} FromTransientHandle(IntPtr handle)");
         sb.AppendLine($"            => handle == IntPtr.Zero ? null : new {name}(handle);");
         if (owned)
         {
             sb.AppendLine();
             // Qt handed over a copy it allocated for us, so this wrapper owns it.
-            sb.AppendLine($"        internal {NewMethod(inherited, "FromOwnedHandle", "IntPtr")}static {name} FromOwnedHandle(IntPtr handle)");
+            sb.AppendLine($"        public {NewMethod(inherited, "FromOwnedHandle", "IntPtr")}static {name} FromOwnedHandle(IntPtr handle)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (handle == IntPtr.Zero)");
             sb.AppendLine("                return null;");
@@ -2107,7 +2121,7 @@ public static class ApiCodeGen
             // The vtable call: what a wrapper of a *C++* object uses, so the object's own override
             // runs instead of the declaring class's implementation.
             sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_{vname}{vSuffix}_vt\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}_{vname}{vSuffix}_vt\", CallingConvention = CallingConvention.Cdecl)]");
             if (ret == "bool")
                 sb.AppendLine($"        [return: MarshalAs(UnmanagedType.I1)]");
             sb.AppendLine($"        internal static extern {NativeRetType(ret)} {name}_{vname}{vSuffix}_vt({sig});");
@@ -2116,7 +2130,7 @@ public static class ApiCodeGen
             if (!HasNoBase(v))
             {
                 sb.AppendLine();
-                sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_{vname}__base{vSuffix}\", CallingConvention = CallingConvention.Cdecl)]");
+                sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}_{vname}__base{vSuffix}\", CallingConvention = CallingConvention.Cdecl)]");
                 if (ret == "bool")
                     sb.AppendLine($"        [return: MarshalAs(UnmanagedType.I1)]");
                 sb.AppendLine($"        internal static extern {NativeRetType(ret)} {name}_{vname}__base{vSuffix}({sig});");
@@ -2129,14 +2143,14 @@ public static class ApiCodeGen
             string sig = string.Join(", ", new[] { "IntPtr userData", "IntPtr dispatch" }
                 .Concat(ps.SelectMany(NativeParamsFor)));
             sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_ctor{CtorSuffix(i)}\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}_ctor{CtorSuffix(i)}\", CallingConvention = CallingConvention.Cdecl)]");
             sb.AppendLine($"        internal static extern IntPtr Ctor_{name}{CtorSuffix(i)}({sig});");
         }
 
         if (SubclassCtor(cls))
         {
             sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_ctor\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}_ctor\", CallingConvention = CallingConvention.Cdecl)]");
             sb.AppendLine($"        internal static extern IntPtr Ctor_{name}(IntPtr userData, IntPtr dispatch);");
         }
 
@@ -2145,24 +2159,24 @@ public static class ApiCodeGen
             string fieldName = Name(field);
             string fieldType = field.GetProperty("type").GetString();
             sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_get_{fieldName}\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}_get_{fieldName}\", CallingConvention = CallingConvention.Cdecl)]");
             sb.AppendLine($"        internal static extern {ElemAbiCsRet(fieldType)} {name}_get_{fieldName}(IntPtr self);");
             sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_set_{fieldName}\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}_set_{fieldName}\", CallingConvention = CallingConvention.Cdecl)]");
             sb.AppendLine($"        internal static extern void {name}_set_{fieldName}(IntPtr self, {ElemAbiCsParam(fieldType)} value);");
         }
 
         if (cls.GetProperty("owned").GetBoolean() && (ctors.Count > 0 || SubclassCtor(cls)))
         {
             sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_dtor\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}_dtor\", CallingConvention = CallingConvention.Cdecl)]");
             sb.AppendLine($"        internal static extern void Destroy_{name}(IntPtr self);");
         }
 
         foreach (var b in cls.GetProperty("bases").EnumerateArray().Select(x => x.GetString()).Skip(1))
         {
             sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}__as_{b}\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}__as_{b}\", CallingConvention = CallingConvention.Cdecl)]");
             sb.AppendLine($"        internal static extern IntPtr {name}__as_{b}(IntPtr self);");
         }
 
@@ -2182,7 +2196,7 @@ public static class ApiCodeGen
             string sig = string.Join(", ", nativeParams);
             string ret = ReturnType(m);
             sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(ApiRuntime.Library, EntryPoint = \"qs_api_{name}_{mname}{entrySuffix}\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}_{mname}{entrySuffix}\", CallingConvention = CallingConvention.Cdecl)]");
             if (ret == "bool")
                 sb.AppendLine($"        [return: MarshalAs(UnmanagedType.I1)]");
             sb.AppendLine($"        internal static extern {NativeRetType(ret)} {name}_{mname}{entrySuffix}({sig});");
