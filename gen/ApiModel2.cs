@@ -1052,6 +1052,35 @@ public static partial class ApiModel
 
         var callable = Children(record).Select(Member).Where(m => m != null).ToList();
 
+        // A class with a *secondary* bound base is that base as well: a QGraphicsObject is a
+        // QGraphicsItem, a QWidget is a QPaintDevice, a QIODevice is a QIODeviceBase. C++ says so and
+        // PyQt exposes it that way, but the binding models the first base as the C# base and the rest
+        // as views - which left a QLegend with no setVisible() at all, since QLegend derives from
+        // QGraphicsWidget and only QGraphicsItem declares it. The secondary base's public members are
+        // added here, so they arrive by inheritance; they then go through exactly the same pipeline as
+        // the class's own members, which is what keeps the virtual and vocabulary rules in charge.
+        if (bases.Count > 1)
+        {
+            var declared = new HashSet<string>(callable.Select(SignatureKey), StringComparer.Ordinal);
+            foreach (var secondaryName in bases.Skip(1))
+            {
+                if (!RootClasses.Contains(secondaryName)
+                    || !index.Classes.TryGetValue(secondaryName, out var secondaryCursor))
+                    continue;
+                foreach (var fact in Children(secondaryCursor).Select(Member))
+                {
+                    if (fact == null || fact.IsCtor
+                        || fact.Name.StartsWith("qt_", StringComparison.Ordinal))
+                        continue;
+                    if (Access(fact.Cursor) != CX_CXXAccessSpecifier.CX_CXXPublic)
+                        continue;
+                    if (!declared.Add(SignatureKey(fact)))
+                        continue;
+                    callable.Add(fact);
+                }
+            }
+        }
+
         // The application object is a singleton, and PyQt spells its run loop and its exits on the
         // instance (`app.exec()`), which is what a C# user reaches for too - but C# refuses to call
         // a *static* member through an instance reference (CS0176), so a static exec/quit/exit is
