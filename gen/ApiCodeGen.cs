@@ -359,6 +359,11 @@ public static class ApiCodeGen
         string literal = p.TryGetProperty("default", out var d) && d.ValueKind == JsonValueKind.String
             ? d.GetString()
             : null;
+        // An optional value type with the declaration's own default behind it: the managed spelling is
+        // the nullable struct, so "not given" is a state the ABI can carry (`null` is a constant, which
+        // is what a C# default argument has to be - the C++ expression itself could not go there).
+        if (IsOptionalStructDefault(p))
+            return $"{type}? {SafeName(PName(p))} = null";
         // An opaque handle is a value type: IntPtr.Zero is not a compile-time constant, so the
         // only usable default is `default`. A Qt value type is one too, and null is not convertible
         // to it - the model's `nullptr` default for `QPointF *` lands here (QLineF::intersects'
@@ -401,6 +406,42 @@ public static class ApiCodeGen
     // (QLineF::intersects' intersection point), which only a raw address can express.
     static bool IsStructPtr(string t) => t.EndsWith("*") && IsStruct(t.Substring(0, t.Length - 1));
     static bool IsOpaqueStructPtr(JsonElement p) => IsOptional(p) && IsStructPtr(PType(p));
+
+    /// <summary>
+    /// An optional value-type parameter whose declaration default the model kept as C++ (QWidget::grab's
+    /// `QRect rectangle = QRect(QPoint(0, 0), QSize(-1, -1))` - "the whole widget"). A value type has no
+    /// way to say "not given" - that is what a null handle used to carry, and the glue is what put the
+    /// declaration's own default in its place. Spelling the parameter as the *nullable* struct gives
+    /// that state back: the marshaller hands the glue a null pointer and the glue applies the default.
+    /// </summary>
+    /// <summary>
+    /// Whether a C++ default is a plain constructor expression, the only shape that can be pasted
+    /// into the glue's ternary. A braced initialiser, a scope-qualified enumerator or a reference
+    /// would not parse there, so those parameters keep the older `= default` fallback.
+    /// </summary>
+    static bool IsPlainConstructorDefault(string expression)
+        => expression.IndexOf('{') < 0 && expression.IndexOf(':') < 0 && expression.IndexOf('&') < 0;
+
+    static bool IsOptionalStructDefault(JsonElement p)
+        => IsOptional(p) && IsStruct(PType(p)) && !IsByRef(p)
+           && p.TryGetProperty("defaultCpp", out var cpp) && cpp.ValueKind == JsonValueKind.String
+           && IsPlainConstructorDefault(cpp.GetString());
+
+    /// <summary>The C name of the "was it given" flag an optional value type travels with.</summary>
+    static string GivenName(JsonElement p) => "qs_given_" + NativeName(PName(p));
+
+    /// <summary>
+    /// One parameter handed on to another ABI-shaped function (a virtual's `_vt` twin, a protected
+    /// helper) as the arguments that call takes: its name, plus the flag when the type is an
+    /// optional value type.
+    /// </summary>
+    static IEnumerable<string> AbiArgs(JsonElement p)
+        => IsOptionalStructDefault(p)
+            ? new[] { NativeName(PName(p)), GivenName(p) }
+            : new[] { NativeName(PName(p)) };
+
+    static string DefaultCppOf(JsonElement p)
+        => p.GetProperty("defaultCpp").GetString();
 
     // Everything that surfaces as a managed string: QString, the views Qt declares next to it,
     // and the NUL-terminated C string convention.
@@ -2414,7 +2455,16 @@ public static class ApiCodeGen
         foreach (var p in ps)
         {
             string t = PType(p), n = SafeName(PName(p));
-            if (IsStringByRef(p))
+            if (IsOptionalStructDefault(p))
+            {
+                // The managed signature is the nullable struct (`QRect? rectangle = null`); the call
+                // passes the value and whether it was given, which is how the ABI carries "not given"
+                // for a type that has no such state of its own (see NativeParamsFor and the glue's
+                // ternary over the declaration's own default).
+                args.Add($"{n} ?? default");
+                args.Add($"{n}.HasValue");
+            }
+            else if (IsStringByRef(p))
             {
                 // The value goes in as a string and comes back through the out slot.
                 args.Add(n);
@@ -2863,6 +2913,10 @@ public static class ApiCodeGen
     {
         if (IsOpaqueStructPtr(p))
             return "IntPtr";
+        // The nullable struct stays in the *managed* signature; over the ABI the value and a "was it
+        // given" flag travel instead (see NativeParamsFor), because a Nullable<T> cannot be marshalled.
+        if (IsOptionalStructDefault(p))
+            return PType(p);
         if (!IsByRef(p))
             return NativeParamType(PType(p));
         string keyword = IsOut(p) ? "out " : "ref ";
@@ -2875,6 +2929,14 @@ public static class ApiCodeGen
     // parameter - the struct's layout is the C++ one, so it crosses as itself.
     static List<string> NativeParamsFor(JsonElement p)
     {
+        // A value the caller may leave out travels with the flag saying whether it was given: the
+        // managed side spells it as the nullable struct, and this is that state over the ABI.
+        if (IsOptionalStructDefault(p))
+            return new List<string>
+            {
+                $"{NativeParamTypeFor(p)} {SafeName(PName(p))}",
+                $"[MarshalAs(UnmanagedType.I1)] bool {SafeName(PName(p))}Given",
+            };
         if (!IsStringByRef(p))
             return new List<string> { $"{NativeParamTypeFor(p)} {SafeName(PName(p))}" };
         return new List<string>
@@ -2889,6 +2951,15 @@ public static class ApiCodeGen
         // The address of the caller's struct, cast back to Qt's type where the call is made.
         if (IsOpaqueStructPtr(p))
             return new List<string> { $"void* {NativeName(PName(p))}" };
+        // A value type the caller may leave out travels as the value plus a flag saying whether it
+        // was given: a value type has no "not given" of its own, and the glue is what puts the
+        // declaration's own default in its place - the job a null handle used to do here.
+        if (IsOptionalStructDefault(p))
+            return new List<string>
+            {
+                $"{StructPod(PType(p))} {NativeName(PName(p))}",
+                $"bool {GivenName(p)}",
+            };
         if (IsStruct(PType(p)))
             return new List<string> { $"{StructPod(PType(p))} {NativeName(PName(p))}" };
         if (!IsStringByRef(p))
@@ -2906,6 +2977,13 @@ public static class ApiCodeGen
     {
         if (IsOpaqueStructPtr(p))
             return new List<string> { $"static_cast<{RefValueType(PType(p))}*>({NativeName(PName(p))})" };
+        // Given: Qt's own type rebuilt from the POD. Not given: the declaration's default, which the
+        // model kept as C++ and which is exactly what Qt would have used.
+        if (IsOptionalStructDefault(p))
+            return new List<string>
+            {
+                $"({GivenName(p)} ? {StructFromPod(PType(p), NativeName(PName(p)))} : {DefaultCppOf(p)})",
+            };
         if (IsStruct(PType(p)))
             return new List<string> { StructFromPod(PType(p), NativeName(PName(p))) };
         return new() { IsStringByRef(p) ? StringInLocal(NativeName(PName(p))) : CppArgFor(p) };
@@ -3341,7 +3419,7 @@ public static class ApiCodeGen
             string args = string.Join(", ", ps.SelectMany(CppArgsFor));
             // The protected helper takes the flat C ABI parameters and converts them itself, so it
             // is handed the raw values rather than the already-converted arguments.
-            string rawArgs = string.Join(", ", ps.Select(p => NativeName(PName(p))));
+            string rawArgs = string.Join(", ", ps.SelectMany(AbiArgs));
             string call;
             if (IsStatic(m))
                 call = $"{name}::{mname}({args})";
@@ -3418,7 +3496,7 @@ public static class ApiCodeGen
             var pureParams = Params(v);
             string pureSig = string.Join(", ", new[] { "void* self" }.Concat(pureParams.SelectMany(CppParamsFor)));
             string pureArgs = string.Join(", ", new[] { $"static_cast<{name}*>(self)" }
-                .Concat(pureParams.Select(p => NativeName(PName(p)))));
+                .Concat(pureParams.SelectMany(AbiArgs)));
             string pureRet = ReturnType(v);
             // The access helper already returns the C ABI value, so this only forwards it.
             string forwarded = $"QsApiAccess_{name}::Call_{vname}{pSuffix}({pureArgs})";
