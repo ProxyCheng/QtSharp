@@ -405,7 +405,18 @@ Replace the local source path with your checkout's `out/packages` directory.
   `QLocalServer`/`QLocalSocket`, TCP/UDP, the HTTP client), QtSvg/QtSvgWidgets, QtPrintSupport
   (`QPrinter`, print dialogs/preview), QtXml (the `QDom*` DOM; `QXmlStreamReader/Writer` are in
   QtCore) and QtOpenGL/QtOpenGLWidgets (`QOpenGLWidget`, `QOpenGLContext`, shader/buffer classes).
-  **Not bound**: QtSql (no dev files in the kit), QtMultimedia, QtQml/QtQuick, QtPdf, QtWebEngine.
+    **Not bound**: QtSql (no dev files in the kit), QtMultimedia, QtQml/QtQuick, QtPdf, QtWebEngine.
+* **QtCharts is left out on purpose, and it would come back as its own package.** It is a module
+  outside `qtbase`/`qtsvg` (the kit has no `include\QtCharts` and no `Qt6Charts.lib`, and the
+  `QtSharp.Api` payload carries the ten modules listed above), and, unlike qtbase, it is licensed
+  under **GPLv3 or a commercial Qt license rather than the LGPL**. PySide6 and PyQt6 draw the same
+  line for the same reason: `PySide6-Essentials` ships only a `QtCharts.pyi` type stub (the binding
+  itself and `Qt6Charts.dll` live in `PySide6-Addons`), and PyQt6 keeps it in a separate
+  `PyQt6-Charts` wheel. QtSharp follows that shape: if Charts is ever needed it becomes an optional
+  package (for example `QtSharp.Charts`) built the way QtSvg and QtXml were, rather than part of
+  `QtSharp.Api`, so nobody inherits a GPLv3 dependency they did not ask for. A smooth line does not
+  need it: `QPainterPath.CubicTo`/`QuadTo` are bound, so any interpolation scheme can be expressed
+  directly.
 * **Not ported**: the RHI examples (they need `QRhi` and prebuilt shaders) and Window Embedding.
   PDF *output* works through `QPrinter` (see `api-docformats`); PDF *reading* needs the QtPdf
   module, which is not bound.
