@@ -1851,16 +1851,24 @@ public static class ApiCodeGen
             string sig = string.Join(", ", ps.Select(ParamSig));
             sb.AppendLine($"        public {name}({sig}){(baseName != null ? " : base(IntPtr.Zero)" : "")}");
             sb.AppendLine("        {");
-            // Deliberately not "context": Qt has parameters with that name (QShortcut).
-            sb.AppendLine("            var __context = GCHandle.Alloc(this);");
-            var marshal = MarshalParams(ps, null);
-            foreach (string line in marshal.Prelude)
-                sb.AppendLine("            " + line);
             string dispatch = virtuals.Count > 0
                 ? "(IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, int, IntPtr, void>)&Dispatch"
                 : "IntPtr.Zero";
+            // A class with no virtuals at all needs no context: the native side reads this pointer
+            // for one thing only - dispatching a virtual into the managed object - and this one has
+            // none, so it would never be read. Passing one anyway costs the object its life: a
+            // GCHandle is a strong root, so the wrapper stays reachable, the finalizer that would
+            // dispose it never runs, and the native object behind it is never destroyed either.
+            // (A class C# *can* derive from, and whose object is derived, still needs it - that is
+            // what the subclass constructor below is for.)
+            if (dispatch != "IntPtr.Zero")
+                sb.AppendLine("            var __context = GCHandle.Alloc(this);");
+            var marshal = MarshalParams(ps, null);
+            foreach (string line in marshal.Prelude)
+                sb.AppendLine("            " + line);
+            string context = dispatch == "IntPtr.Zero" ? "IntPtr.Zero" : "GCHandle.ToIntPtr(__context)";
             string args = string.Join(", ", marshal.Args);
-            string create = $"Handle = ApiNative.Ctor_{name}{CtorSuffix(ctorIndex++)}(GCHandle.ToIntPtr(__context), {dispatch}{(args.Length > 0 ? ", " + args : "")});";
+            string create = $"Handle = ApiNative.Ctor_{name}{CtorSuffix(ctorIndex++)}({context}, {dispatch}{(args.Length > 0 ? ", " + args : "")});";
             // This wrapper made the object, so it is the one that may release it. A QObject can
             // still be destroyed by Qt later (it gets reparented), so it is watched as well.
             string register = "            ApiRuntime.Register(Handle, this);\n            __ownsNative = true;\n            __managedSubclass = true;";
