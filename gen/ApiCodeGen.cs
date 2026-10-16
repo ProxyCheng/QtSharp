@@ -1609,6 +1609,46 @@ public static class ApiCodeGen
         return ctors;
     }
 
+    /// <summary>
+    /// The comparison operators the model declares for a value type. C++ declares them as functions
+    /// too, so they arrive here with names like `operator==`, and C# spells them as operators.
+    /// </summary>
+    static List<JsonElement> StructComparisons(string name)
+    {
+        var ops = new List<JsonElement>();
+        if (!ModelClassNames.Contains(name))
+            return ops;
+        var cls = KnownClasses.FirstOrDefault(c => Name(c) == name);
+        if (cls.ValueKind != JsonValueKind.Object || !cls.TryGetProperty("methods", out var ms))
+            return ops;
+        foreach (var m in ms.EnumerateArray())
+            if (ComparisonSymbol(Name(m)) != null && Params(m).Count == 2)
+                ops.Add(m);
+        return ops;
+    }
+
+    /// <summary>The C# spelling of a comparison the model spells the C++ way, or null.</summary>
+    static string ComparisonSymbol(string modelName) => modelName switch
+    {
+        "operator<" => "<",
+        "operator<=" => "<=",
+        "operator>" => ">",
+        "operator>=" => ">=",
+        _ => null,
+    };
+
+    /// <summary>A C identifier for one of them, used in the export and P/Invoke names.</summary>
+    static string ComparisonEntry(JsonElement op) => Name(op) switch
+    {
+        "operator==" => "eq",
+        "operator!=" => "ne",
+        "operator<" => "lt",
+        "operator<=" => "le",
+        "operator>" => "gt",
+        "operator>=" => "ge",
+        _ => "cmp",
+    };
+
     static List<(JsonElement Method, string Entry, string Cs)> StructMembers(string name)
     {
         var members = new List<(JsonElement, string, string)>();
@@ -1684,15 +1724,54 @@ public static class ApiCodeGen
     {
         var members = StructMembers(name);
         var ctors = StructCtors(name);
-        bool handWrittenCtor = HandWrittenMembers(name).Contains(name);
+        var written = HandWrittenMembers(name);
+        bool handWrittenCtor = written.Contains(name);
         // A type whose whole surface is hand-written still gets its constructors generated (the last
         // ones not to be), so the early return has to account for them.
         if (members.Count == 0 && (handWrittenCtor || ctors.Count == 0))
             return;
+        var row = ApiTypes.RuntimeStructOf(name).Value;
         sb.AppendLine();
-        sb.AppendLine($"    /// <summary>The members Qt declares for {name}, forwarded through the value itself.</summary>");
-        sb.AppendLine($"    public partial struct {name}");
+        sb.AppendLine($"    /// <summary>{name}: {row.Scalar} fields, Qt's own members forwarded through them.</summary>");
+        sb.AppendLine($"    public partial struct {name} : IEquatable<{name}>");
         sb.AppendLine("    {");
+        // The storage. The field names are the model's, and their order is the POD's, which is Qt's
+        // memory order - that is the whole of the C# side of a value type.
+        foreach (string field in row.Fields)
+            sb.AppendLine($"        {row.Scalar} _{field};");
+        sb.AppendLine();
+        // Equality and hashing are written over the fields, which for a trivially copyable type *is*
+        // the value: Qt's own operator== compares exactly these (QRect's two corners, QPointF's two
+        // doubles). ToString is C#'s, and Qt has no spelling for it at all.
+        if (!written.Contains("Equals"))
+        {
+            string same = string.Join(" && ", row.Fields.Select(f => $"_{f} == other._{f}"));
+            string hash = row.Fields.Length == 1
+                ? $"_{row.Fields[0]}.GetHashCode()"
+                : $"HashCode.Combine({string.Join(", ", row.Fields.Select(f => "_" + f))})";
+            string show = string.Join(", ", row.Fields.Select(f => $"_{f}"));
+            // `==` and `!=` are what Qt declares with Q_DECLARE_EQUALITY_COMPARABLE_LITERAL_TYPE, a
+            // macro the extractor cannot see - and for a trivially copyable type the fields *are* the
+            // value, so comparing them is Qt's answer. They also have to exist for `x == null` to be
+            // the lifted comparison C# allows.
+            string equal = string.Join(" && ", row.Fields.Select(f => $"a._{f} == b._{f}"));
+            sb.AppendLine($"        public static bool operator ==({name} a, {name} b) => {equal};");
+            sb.AppendLine($"        public static bool operator !=({name} a, {name} b) => !(a == b);");
+            sb.AppendLine($"        public bool Equals({name} other) => {same};");
+            sb.AppendLine($"        public override bool Equals(object obj) => obj is {name} other && Equals(other);");
+            sb.AppendLine($"        public override int GetHashCode() => {hash};");
+            sb.AppendLine($"        public override string ToString() => FormattableString.Invariant($\"{name}({show})\");");
+            sb.AppendLine();
+        }
+        // The comparisons Qt declares (`operator==` and the ordering operators are functions in the
+        // model): forwarded, so the answer is Qt's.
+        foreach (var op in StructComparisons(name))
+        {
+            string symbol = ComparisonSymbol(Name(op));
+            sb.AppendLine($"        public static bool operator {symbol}({name} a, {name} b) => ApiNative.{name}_{ComparisonEntry(op)}(a, b);");
+        }
+        if (StructComparisons(name).Count > 0)
+            sb.AppendLine();
         // The nested types Qt declares on it (QLineF::IntersectionType): the class that would have
         // carried them is not generated, so the struct does.
         WriteEnums(sb, name, 2);
@@ -1745,6 +1824,13 @@ public static class ApiCodeGen
                 n++;
             }
         }
+        foreach (var op in StructComparisons(name))
+        {
+            string cmp = ComparisonEntry(op);
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}_cmp_{cmp}\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine("        [return: MarshalAs(UnmanagedType.I1)]");
+            sb.AppendLine($"        internal static extern bool {name}_cmp_{cmp}({name} a, {name} b);");
+        }
         foreach (var (m, entry, cs) in members)
         {
             var ps = Params(m);
@@ -1789,6 +1875,15 @@ public static class ApiCodeGen
                 sb.AppendLine();
                 n++;
             }
+        }
+        foreach (var op in StructComparisons(name))
+        {
+            string cmp = ComparisonEntry(op);
+            sb.AppendLine($"extern \"C\" __declspec(dllexport) bool qs_api_{name}_cmp_{cmp}({StructPod(name)} a, {StructPod(name)} b)");
+            sb.AppendLine("{");
+            sb.AppendLine($"    return {StructFromPod(name, "a")} {ComparisonSymbol(Name(op))} {StructFromPod(name, "b")};");
+            sb.AppendLine("}");
+            sb.AppendLine();
         }
         foreach (var (m, entry, cs) in StructMembers(name))
         {
