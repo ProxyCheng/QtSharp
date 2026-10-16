@@ -277,27 +277,73 @@ class Program
         return info;
     }
 
-    static int Main(string[] args)
-    {
-        try
+        const string Usage =
+            "usage: qtgen extract2 <model.json> [--module <name>]\n" +
+            "       qtgen codegen  <model.json> <outDir> [--module <name>]\n" +
+            "       qtgen module   <name>            (descriptor, for the build scripts)\n" +
+            "\n" +
+            "  --module <name>  bind an extension module instead of the core binding: its classes\n" +
+            "                   only, in its own namespace and against its own native library, with\n" +
+            "                   the core binding available for the classes it derives from. The module\n" +
+            "                   table lives in ApiModel.ExtensionModules (charts today).";
+
+        static int Main(string[] args)
         {
-            if (args.Length > 0 && args[0] == "codegen")
+            try
             {
-                ApiCodeGen.Run(args[1], args[2]);
-                return 0;
+                // --module may appear anywhere after the command.
+                string moduleName = null;
+                var positional = new List<string>();
+                for (int i = 0; i < args.Length; i++)
+                {
+                    if (args[i] == "--module")
+                    {
+                        if (i + 1 >= args.Length)
+                        {
+                            Console.WriteLine("--module needs a module name\n\n" + Usage);
+                            return 1;
+                        }
+                        moduleName = args[++i];
+                    }
+                    else
+                    {
+                        positional.Add(args[i]);
+                    }
+                }
+                var module = moduleName == null ? null : ApiModel.FindExtensionModule(moduleName);
+
+                if (positional.Count >= 3 && positional[0] == "codegen")
+                {
+                    ApiCodeGen.Run(positional[1], positional[2], module);
+                    return 0;
+                }
+
+                // The module descriptor as plain text, so a build script does not have to repeat
+                // what the generator already knows (tools/build-native-module.ps1 reads this).
+                if (positional.Count >= 2 && positional[0] == "module")
+                {
+                    var m = ApiModel.FindExtensionModule(positional[1]);
+                    Console.WriteLine("name=" + m.Name);
+                    Console.WriteLine("namespace=" + m.Namespace);
+                    Console.WriteLine("nativeLibrary=" + m.NativeLibrary);
+                    Console.WriteLine("qtModule=" + m.QtModule);
+                    Console.WriteLine("qtDefine=" + m.QtDefine);
+                    Console.WriteLine("qtLibs=" + string.Join(",", m.QtLibs));
+                    Console.WriteLine("classes=" + m.Roots.Length);
+                    return 0;
+                }
+
+                // The model, read out of libclang (ClangSharp). This is the only front end.
+                if (positional.Count >= 2 && positional[0] == "extract2")
+                    return ApiModel.RunExtract2(positional[1], module);
+
+                Console.WriteLine(Usage);
+                return 1;
             }
-
-            // The model, read out of libclang (ClangSharp). This is the only front end.
-            if (args.Length > 0 && args[0] == "extract2")
-                return ApiModel.RunExtract2(args[1]);
-
-            Console.WriteLine("usage: qtgen extract2 <model.json> | codegen <model.json> <outDir>");
-            return 1;
+            catch (Exception ex)
+            {
+                Console.WriteLine("[EXCEPTION] " + ex);
+                return 1;
+            }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine("[EXCEPTION] " + ex);
-            return 1;
-        }
-    }
 }

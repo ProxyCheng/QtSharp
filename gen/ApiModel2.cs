@@ -19,9 +19,12 @@ using ClangSharp.Interop;
 public static partial class ApiModel
 {
     // ------------------------------------------------------------------ extract2 entry
-    public static int RunExtract2(string modelPath)
+    public static int RunExtract2(string modelPath, ExtensionModule module = null)
     {
         var clock = Stopwatch.StartNew();
+        CurrentModule = module;
+        if (module != null)
+            Console.WriteLine($"[model2] extracting the '{module.Name}' extension module ({module.Roots.Length} class(es))");
         DropStaleIncludeEntries();
 
         foreach (var root in ActiveRoots)
@@ -130,6 +133,19 @@ public static partial class ApiModel
         // The module functions that live outside any class (qCompress, qRegisterResourceData, ...).
         CollectFreeFunctions(index2, part);
 
+        // An extension module contributes only what it declares itself. The core's enums
+        // (Qt::Alignment, ...) and its free functions (qVersion, qCompress, ...) are published by the
+        // core package already: repeating them here would duplicate the types, and the generated
+        // file would carry its own `Qt` class, which would then shadow the core's for every
+        // signature that mentions a core enum.
+        if (CurrentModule != null)
+        {
+            var own = new HashSet<string>(CurrentModule.Roots.Select(r => r.Class), StringComparer.Ordinal);
+            foreach (var key in part.Enums.Keys.Where(k => !own.Contains(ScopeOfQualified(k))).ToList())
+                part.Enums.Remove(key);
+            part.Functions.Clear();
+        }
+
         var text = part.Serialize();
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(modelPath)));
         File.WriteAllText(modelPath, text);
@@ -231,6 +247,13 @@ public static partial class ApiModel
             "-I" + Path.Combine(QtLibrary.QtIncludeRoot, "QtOpenGL"),
             "-resource-dir", ResourceDir(),
         };
+        if (CurrentModule != null)
+        {
+            // The extension module's own define and header directory. Everything above stays: its
+            // headers include QtWidgets/QtGui/QtCore, and the classes it derives from are bound there.
+            args.Add("-D" + CurrentModule.QtDefine);
+            args.Add("-I" + Path.Combine(QtLibrary.QtIncludeRoot, CurrentModule.QtModule));
+        }
         foreach (var header in headers.Skip(1))
         {
             args.Add("-include");
@@ -888,6 +911,13 @@ public static partial class ApiModel
         => name is "copyDataTo" or "getParameterTypes";
 
     // The class/enum vocabulary the model is allowed to express.
+    static bool IsContainerSpelling(string name)
+        => name != null
+           && (name.StartsWith("QList<", StringComparison.Ordinal)
+               || name.StartsWith("QMap<", StringComparison.Ordinal)
+               || name.StartsWith("QHash<", StringComparison.Ordinal)
+               || name.StartsWith("QSet<", StringComparison.Ordinal));
+
     static bool SupportedType(CXType type, bool isParameter = false, bool isReturn = false)
     {
         if (isParameter && ParamModeOf(type) == ParamMode.Invalid)
@@ -912,7 +942,14 @@ public static partial class ApiModel
         // scope).
         if (TryUnwrapAssoc(type, "QMap", out var mapKeyType, out var mapValueType)
             || TryUnwrapAssoc(type, "QHash", out mapKeyType, out mapValueType))
-            return SupportedType(mapKeyType) && SupportedType(mapValueType);
+        {
+            // A container of containers (QHash<int, QHash<T, QVariant>>) is not modelled: the element
+            // codec handles scalars, strings, enums, boxed values and class pointers, not another
+            // container, and the generated identifier for one is not a C# identifier either.
+            return SupportedType(mapKeyType) && SupportedType(mapValueType)
+                   && !IsContainerSpelling(ModelName(mapKeyType))
+                   && !IsContainerSpelling(ModelName(mapValueType));
+        }
         // A QBindable<T> only ever comes *out* of Qt (the bindableFoo() accessors). Handing one
         // back in would need a native QBindable object, which the managed side has no way to
         // make, so a bindable parameter is not bindable.
