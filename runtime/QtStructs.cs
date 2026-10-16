@@ -16,6 +16,13 @@ using System.Globalization;
 // The mirror of each type is the POD in native/QtSharpApiRuntime.h, and the generator's table in
 // gen/ApiModel.cs (ApiTypes.RuntimeStructs) says how the two correspond. Adding a type means adding
 // all three: the struct here, the POD there, and the row in that table.
+//
+// The *members* are not hand-written: the generator emits a partial struct holding everything Qt
+// declares (its accessors, predicates, transforms and conversions), forwarded through the POD the
+// way PyQt's SIP-generated forwarders and shiboken's go through the C++ object. What this file keeps
+// is what a value wants spelled out - the fields, the accessors that should stay a field read rather
+// than a P/Invoke, and the operators, equality and ToString C# needs and Python gets from its type
+// system. The generator reads this file and leaves those members alone.
 namespace QtSharp.Api
 {
     /// <summary>
@@ -36,7 +43,7 @@ namespace QtSharp.Api
     /// The member names are Qt's own (x, y, rx, ry, setX, setY, isNull, manhattanLength, transposed,
     /// toPoint, dotProduct), so code written against the C++ API or against PyQt reads the same here.
     /// </summary>
-    public struct QPointF : IEquatable<QPointF>
+    public partial struct QPointF : IEquatable<QPointF>
     {
         double _x;
         double _y;
@@ -88,7 +95,7 @@ namespace QtSharp.Api
     }
 
     /// <summary>The integer twin of QPointF; see the note there.</summary>
-    public struct QPoint : IEquatable<QPoint>
+    public partial struct QPoint : IEquatable<QPoint>
     {
         int _x;
         int _y;
@@ -130,7 +137,7 @@ namespace QtSharp.Api
     }
 
     /// <summary>The integer size twin of QSizeF; see the note on QPointF above.</summary>
-    public struct QSize : IEquatable<QSize>
+    public partial struct QSize : IEquatable<QSize>
     {
         int _width, _height;
 
@@ -204,7 +211,7 @@ namespace QtSharp.Api
     }
 
     /// <summary>The real-numbered size; see the note on QPointF above.</summary>
-    public struct QSizeF : IEquatable<QSizeF>
+    public partial struct QSizeF : IEquatable<QSizeF>
     {
         double _width, _height;
 
@@ -261,7 +268,7 @@ namespace QtSharp.Api
     }
 
     /// <summary>The integer margins; see the note on QPointF above.</summary>
-    public struct QMargins : IEquatable<QMargins>
+    public partial struct QMargins : IEquatable<QMargins>
     {
         int _left, _top, _right, _bottom;
 
@@ -317,7 +324,7 @@ namespace QtSharp.Api
     }
 
     /// <summary>The real-numbered margins; see the note on QPointF above.</summary>
-    public struct QMarginsF : IEquatable<QMarginsF>
+    public partial struct QMarginsF : IEquatable<QMarginsF>
     {
         double _left, _top, _right, _bottom;
 
@@ -375,7 +382,7 @@ namespace QtSharp.Api
     /// The integer line; see the note on QPointF above. Qt stores it as two points, so the fields are
     /// x1,y1,x2,y2 in memory order - which is what the POD mirror of it keeps.
     /// </summary>
-    public struct QLine : IEquatable<QLine>
+    public partial struct QLine : IEquatable<QLine>
     {
         int _x1, _y1, _x2, _y2;
 
@@ -459,7 +466,7 @@ namespace QtSharp.Api
     }
 
     /// <summary>The real-numbered line; see the note on QPointF above.</summary>
-    public struct QLineF : IEquatable<QLineF>
+    public partial struct QLineF : IEquatable<QLineF>
     {
         double _x1, _y1, _x2, _y2;
 
@@ -545,7 +552,7 @@ namespace QtSharp.Api
     /// crossing can hand Qt the same bytes; the code generator rebuilds Qt's type from the corners
     /// rather than from the accessors for exactly that reason.
     /// </summary>
-    public struct QRect : IEquatable<QRect>
+    public partial struct QRect : IEquatable<QRect>
     {
         int _x1, _y1, _x2, _y2;
 
@@ -798,7 +805,7 @@ namespace QtSharp.Api
     /// x,y,width,height, and right()/bottom() are exclusive here (x + width) - unlike the integer
     /// QRect, whose corners are inclusive.
     /// </summary>
-    public struct QRectF : IEquatable<QRectF>
+    public partial struct QRectF : IEquatable<QRectF>
     {
         double _x, _y, _width, _height;
 
