@@ -136,29 +136,80 @@ public static class ApiCodeGen
     /// </summary>
     internal static string NativeLibraryName = "QtSharp.Api";
 
-    public static void Run(string modelPath, string outDir)
+    /// <summary>The model file this run generated from, for the banner comment.</summary>
+    internal static string ModelFileName = "model/qtsharp.api.json";
+
+    /// <summary>
+    /// Every class this run knows - the ones it emits, plus (for an extension module) the core's.
+    /// Used where a *reference* to a class matters rather than its declaration: the native side has
+    /// to include the header of every type it mentions, and a module's signatures mention core types
+    /// (QDateTime, QEasingCurve, QColor) whose headers only the core's classes bring in.
+    /// </summary>
+    internal static List<JsonElement> KnownClasses = new();
+
+    /// <summary>
+    /// Generates a binding from a model. With <paramref name="module"/> null that is the core
+    /// binding; with one it is that extension module's binding, which is a separate assembly and a
+    /// separate package - it references the core one rather than containing it.
+    /// </summary>
+    public static void Run(string modelPath, string outDir, ApiModel.ExtensionModule module = null)
     {
         using var document = JsonDocument.Parse(File.ReadAllText(modelPath));
+        // An extension also reads the core model, for everything it does not define itself: the base
+        // classes its classes derive from, and the enums those bases and its own signatures use.
+        using var coreDocument = module == null
+            ? null
+            : JsonDocument.Parse(File.ReadAllText(Path.Combine(
+                  Path.GetDirectoryName(Path.GetFullPath(modelPath)), "qtsharp.api.json")));
+
         var root = document.RootElement;
         string ns = root.GetProperty("namespace").GetString();
+        ModelFileName = Path.GetFileName(modelPath);
+        NativeLibraryName = module?.NativeLibrary ?? "QtSharp.Api";
+        // The vocabulary and the base-class resolution are shared with the extractor, so it has to
+        // know which module this run is about as well.
+        ApiModel.CurrentModule = module;
+
+        // What this run *emits*.
         Classes = root.GetProperty("classes").EnumerateArray().ToList();
         Enums = root.GetProperty("enums").EnumerateArray().ToList();
         Functions = root.TryGetProperty("functions", out var fns) && fns.ValueKind == JsonValueKind.Array
             ? fns.EnumerateArray().ToList()
             : new List<JsonElement>();
-        ByName = Classes.ToDictionary(c => c.GetProperty("name").GetString(), c => c, StringComparer.Ordinal);
-        ClassNames = new HashSet<string>(Classes.Select(c => c.GetProperty("name").GetString()), StringComparer.Ordinal);
-        EnumNames = new HashSet<string>(Enums.Select(e => e.GetProperty("qualified").GetString()), StringComparer.Ordinal);
+
+        // What this run *knows*. For the core that is the model itself. For an extension it is the
+        // core's classes and enums as well, so `QChart : QGraphicsWidget` resolves, inherited members
+        // are spotted, and the core's enums are recognised as already-existing types.
+        var knownClasses = Classes;
+        var knownEnums = Enums;
+        if (coreDocument != null)
+        {
+            var coreRoot = coreDocument.RootElement;
+            var coreEnums = coreRoot.GetProperty("enums").EnumerateArray().ToList();
+            var coreEnumNames = new HashSet<string>(
+                coreEnums.Select(e => e.GetProperty("qualified").GetString()), StringComparer.Ordinal);
+            // ... and the core's enums are *not* emitted again: one type per name, or the two
+            // assemblies would each carry their own Qt.Alignment and neither would accept the other.
+            Enums = Enums.Where(e => !coreEnumNames.Contains(e.GetProperty("qualified").GetString())).ToList();
+            knownClasses = coreRoot.GetProperty("classes").EnumerateArray().Concat(Classes).ToList();
+            knownEnums = coreEnums.Concat(Enums).ToList();
+        }
+
+        KnownClasses = knownClasses;
+        ByName = knownClasses.ToDictionary(c => c.GetProperty("name").GetString(), c => c, StringComparer.Ordinal);
+        ClassNames = new HashSet<string>(knownClasses.Select(c => c.GetProperty("name").GetString()), StringComparer.Ordinal);
+        EnumNames = new HashSet<string>(knownEnums.Select(e => e.GetProperty("qualified").GetString()), StringComparer.Ordinal);
         FlagsEnums = new HashSet<string>(
-            Enums.Where(e => e.TryGetProperty("flags", out var f) && f.ValueKind == JsonValueKind.True)
-                 .Select(e => e.GetProperty("qualified").GetString()), StringComparer.Ordinal);
+            knownEnums.Where(e => e.TryGetProperty("flags", out var f) && f.ValueKind == JsonValueKind.True)
+                      .Select(e => e.GetProperty("qualified").GetString()), StringComparer.Ordinal);
         PrepareNames();
         derivesFromQObject.Clear();
 
+        string assemblyName = module?.Namespace ?? ApiModel.CoreNamespace;
         Directory.CreateDirectory(outDir);
-        File.WriteAllText(Path.Combine(outDir, "QtSharp.Api.cs"), GenerateCSharp(ns));
-        File.WriteAllText(Path.Combine(outDir, "QtSharp.Api.native.cpp"), GenerateNative());
-        Console.WriteLine($"[codegen] wrote {outDir}/QtSharp.Api.cs + QtSharp.Api.native.cpp");
+        File.WriteAllText(Path.Combine(outDir, assemblyName + ".cs"), GenerateCSharp(ns));
+        File.WriteAllText(Path.Combine(outDir, assemblyName + ".native.cpp"), GenerateNative());
+        Console.WriteLine($"[codegen] wrote {outDir}/{assemblyName}.cs + {assemblyName}.native.cpp");
     }
 
     // ------------------------------------------------------------------ model queries
@@ -339,7 +390,16 @@ public static class ApiCodeGen
     // A C identifier for one element type: used for the native exports, the generated helper
     // class and the DllImport method names.
     static string ListStem(string elem)
-        => elem.Replace("*", "Ptr").Replace(" ", "").Replace("::", "_").Replace("unsigned", "u");
+    {
+        var stem = elem.Replace("*", "Ptr").Replace(" ", "").Replace("::", "_").Replace("unsigned", "u");
+        // A nested container keeps its inner spelling, and `QHash<int, QHash<T, QVariant>>` would
+        // otherwise become a C# identifier with angle brackets in it. These stems are used as
+        // identifiers and as native export names, so nothing outside [A-Za-z0-9_] may survive.
+        var sb = new StringBuilder(stem.Length);
+        foreach (char c in stem)
+            sb.Append(char.IsLetterOrDigit(c) || c == '_' ? c : '_');
+        return sb.ToString();
+    }
     static string ListHelper(string elem) => "QsApiList_" + ListStem(elem);
     static string MapStem(string key, string value) => ListStem(key) + "_" + ListStem(value);
     static string AssocStem(string t)
@@ -365,8 +425,10 @@ public static class ApiCodeGen
     static string GenerateCSharp(string ns)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("// <auto-generated> generated from model/qtsharp.api.json - do not edit");
+        sb.AppendLine($"// <auto-generated> generated from {ModelFileName} - do not edit");
         sb.AppendLine("using System;");
+        if (ns != ApiModel.CoreNamespace)
+            sb.AppendLine($"using {ApiModel.CoreNamespace};   // the base classes this module's classes derive from");
         sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using System.Runtime.CompilerServices;");
         sb.AppendLine("using System.Runtime.InteropServices;");
@@ -1032,7 +1094,10 @@ public static class ApiCodeGen
         reservedByClass = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
         hardReservedByClass.Clear();
         fieldNamesByClass.Clear();
-        foreach (var cls in Classes)
+        // Every class this run *knows*, not just the ones it emits: an extension module's classes
+        // derive from core ones, and the inherited-member analysis asks about those too (a missing
+        // QObject entry is a KeyNotFoundException the moment a QChart is written).
+        foreach (var cls in ByName.Values)
         {
             var hard = new HashSet<string>(StringComparer.Ordinal)
             {
@@ -1073,8 +1138,11 @@ public static class ApiCodeGen
     }
 
     static string MemberName(string className, string member)
+        // The fallback keeps the C++ name, and some of those *are* C# keywords: QLogValueAxis::base()
+        // is a real accessor (its Q_PROPERTY took the `Base` name), and `public double base()` does
+        // not compile. Escaping it is what SafeName is for.
         => reservedByClass.TryGetValue(className, out var reserved) && reserved.Contains(Pascal(member))
-            ? member
+            ? SafeName(member)
             : Pascal(member);
 
     // The C# members a class declares, so that a derived class can tell which of its own members
@@ -1949,12 +2017,16 @@ public static class ApiCodeGen
     // The boxed types a virtual may take *by value*: the override receives a copy, because the
     // address Qt passes points at a temporary that the next call reuses (and, worse, is an object
     // Qt owns - a wrapper over it would delete it at finalization).
+    // Both walk the *chain*, not just the class's own virtuals: the native wrapper overrides every
+    // slot the chain declares, so a class whose ancestor returns a QSizeF needs the helper for it
+    // even though it declares no such virtual itself. (An extension module is all ancestors - its
+    // classes declare almost nothing and inherit the rest from the core binding.)
     static List<string> VirtualBoxedParams()
     {
         var types = new SortedSet<string>(StringComparer.Ordinal);
         foreach (var cls in Classes)
-            foreach (var v in cls.GetProperty("virtuals").EnumerateArray())
-                foreach (var p in v.GetProperty("parameters").EnumerateArray())
+            foreach (var slot in ChainOf(Name(cls)))
+                foreach (var p in slot.Virtual.GetProperty("parameters").EnumerateArray())
                 {
                     var t = PType(p);
                     if (IsBoxed(t))
@@ -1968,9 +2040,9 @@ public static class ApiCodeGen
     {
         var types = new SortedSet<string>(StringComparer.Ordinal);
         foreach (var cls in Classes)
-            foreach (var v in cls.GetProperty("virtuals").EnumerateArray())
+            foreach (var slot in ChainOf(Name(cls)))
             {
-                var ret = ReturnType(v);
+                var ret = ReturnType(slot.Virtual);
                 if (IsBoxed(ret))
                     types.Add(ret);
             }
@@ -2578,9 +2650,9 @@ public static class ApiCodeGen
     static string GenerateNative()
     {
         var sb = new StringBuilder();
-        sb.AppendLine("// <auto-generated> generated from model/qtsharp.api.json - do not edit");
-        foreach (var header in Classes.Select(c => c.GetProperty("header").GetString())
-                     .Concat(Functions.Select(f => f.GetProperty("header").GetString()))
+        sb.AppendLine($"// <auto-generated> generated from {ModelFileName} - do not edit");
+        foreach (var header in (KnownClasses.Count > 0 ? KnownClasses : Classes).Select(c => c.GetProperty("header").GetString())
+            .Concat(Functions.Select(f => f.GetProperty("header").GetString()))
                      .Distinct().OrderBy(h => h, StringComparer.Ordinal))
             sb.AppendLine($"#include <{header}>");
         // The property-binding templates: the class headers only forward-declare QBindable<T>,

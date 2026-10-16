@@ -141,7 +141,21 @@ public static partial class ApiModel
 {
     public const int FormatVersion = 2;
     public const string QtVersion = "6.11.0";
-    public const string Namespace = "QtSharp.Api";
+
+    /// <summary>
+    /// The managed namespace the binding being produced lives in: QtSharp.Api for the core binding,
+    /// and a module's own for an extension (QtSharp.Charts), because an extension is a separate
+    /// assembly and a separate package.
+    /// </summary>
+    public static string Namespace => CurrentModule?.Namespace ?? CoreNamespace;
+
+    public const string CoreNamespace = "QtSharp.Api";
+
+    /// <summary>
+    /// The extension module being extracted or generated, or null for the core binding. It is set
+    /// once at the start of a run; everything else about the model is shaped identically for both.
+    /// </summary>
+    internal static ExtensionModule CurrentModule;
 
     // Classes the model exposes, each with the header that declares it and the Qt module it
     // belongs to. Extraction parses exactly these headers instead of the whole Qt header
@@ -151,7 +165,7 @@ public static partial class ApiModel
     // through a pointer, so there is no point in exposing a way to build them.
     // One entry of the model's class table. Parsing is scoped to these headers, so this table
     // is the model's single input description.
-    class Root
+    public class Root
     {
         public string Class;
         public string Header;
@@ -169,6 +183,94 @@ public static partial class ApiModel
         {
             Class = cls, Header = header, Module = module, BindCtors = bindCtors, Owned = owned,
         };
+
+    /// <summary>
+    /// A module bound as its own package against the core binding - QtSharp.Charts today, and
+    /// whatever follows it - mirroring how PyQt6-Charts and PySide6-Addons are split away from
+    /// PyQt6 and PySide6.
+    ///
+    /// The Qt module must be one outside qtbase/qtsvg, and separately licensed: keeping it out of
+    /// QtSharp.Api is exactly what stops everyone who uses the core from inheriting that license
+    /// (Qt Charts, for one, is GPLv3-or-commercial rather than LGPL). The classes here may derive
+    /// from core classes - the generator knows both models, so `QChart : QGraphicsWidget` works
+    /// even though QGraphicsWidget is only bound in the core assembly.
+    ///
+    /// Adding a module is a row here, a row in the module list of tools/build-qt-kit.ps1, and a
+    /// repository of its own; docs/extension-modules.md has the checklist.
+    /// </summary>
+    public sealed class ExtensionModule
+    {
+        /// <summary>The value passed to --module.</summary>
+        public string Name;
+        /// <summary>The managed namespace - and so the assembly name - of the module's binding.</summary>
+        public string Namespace;
+        /// <summary>The native library the module's generated P/Invokes call.</summary>
+        public string NativeLibrary;
+        /// <summary>The Qt module: <c>include\&lt;QtModule&gt;</c> is where its headers live.</summary>
+        public string QtModule;
+        /// <summary>The define its headers expect, e.g. <c>QT_CHARTS_LIB</c>.</summary>
+        public string QtDefine;
+        /// <summary>The Qt libraries the module's native glue links.</summary>
+        public string[] QtLibs;
+        /// <summary>The classes to bind. Their bases may be classes of the core binding.</summary>
+        public Root[] Roots;
+    }
+
+    /// <summary>The extension modules this generator can bind.</summary>
+    internal static readonly ExtensionModule[] ExtensionModules =
+    {
+        new ExtensionModule
+        {
+            Name = "charts",
+            Namespace = "QtSharp.Charts",
+            NativeLibrary = "QtSharp.Charts",
+            QtModule = "QtCharts",
+            QtDefine = "QT_CHARTS_LIB",
+            QtLibs = new[] { "Qt6Charts" },
+            Roots = new[]
+            {
+                // The widget pair the module exists for, and the polar variant.
+                R("QChart",                        "qchart.h",                       "QtCharts"),
+                R("QChartView",                    "qchartview.h",                   "QtCharts"),
+                R("QPolarChart",                   "qpolarchart.h",                  "QtCharts"),
+                // Series: the value families, the bar families and the pie family.
+                R("QAbstractSeries",               "qabstractseries.h",              "QtCharts", bindCtors: false),
+                R("QXYSeries",                     "qxyseries.h",                    "QtCharts", bindCtors: false),
+                R("QLineSeries",                   "qlineseries.h",                  "QtCharts"),
+                R("QSplineSeries",                 "qsplineseries.h",                "QtCharts"),
+                R("QScatterSeries",                "qscatterseries.h",               "QtCharts"),
+                R("QAreaSeries",                   "qareaseries.h",                  "QtCharts"),
+                R("QAbstractBarSeries",            "qabstractbarseries.h",           "QtCharts", bindCtors: false),
+                R("QBarSeries",                    "qbarseries.h",                   "QtCharts"),
+                R("QStackedBarSeries",             "qstackedbarseries.h",            "QtCharts"),
+                R("QBarSet",                       "qbarset.h",                      "QtCharts"),
+                R("QPieSeries",                    "qpieseries.h",                   "QtCharts"),
+                R("QPieSlice",                     "qpieslice.h",                    "QtCharts"),
+                // Axes.
+                R("QAbstractAxis",                 "qabstractaxis.h",                "QtCharts", bindCtors: false),
+                R("QValueAxis",                    "qvalueaxis.h",                   "QtCharts"),
+                R("QCategoryAxis",                 "qcategoryaxis.h",                "QtCharts"),
+                R("QBarCategoryAxis",              "qbarcategoryaxis.h",             "QtCharts"),
+                R("QDateTimeAxis",                 "qdatetimeaxis.h",                "QtCharts"),
+                R("QLogValueAxis",                 "qlogvalueaxis.h",                "QtCharts"),
+                // The legend and its markers. Nothing here is QObject-owned except through the chart,
+                // so the release rule stays with the core's: parented objects are not ours to delete.
+                R("QLegend",                       "qlegend.h",                      "QtCharts", bindCtors: false, owned: false),
+                R("QLegendMarker",                 "qlegendmarker.h",                "QtCharts", bindCtors: false, owned: false),
+            },
+        },
+    };
+
+    internal static ExtensionModule FindExtensionModule(string name)
+    {
+        var module = ExtensionModules.FirstOrDefault(m => m.Name == name);
+        if (module == null)
+        {
+            throw new InvalidOperationException(
+                $"Unknown extension module '{name}'. Known modules: {string.Join(", ", ExtensionModules.Select(m => m.Name))}");
+        }
+        return module;
+    }
 
     static readonly Root[] Roots =
     {
@@ -821,7 +923,12 @@ public static partial class ApiModel
 
     // The whole type vocabulary of the model: anything outside it is skipped rather than
     // guessed, and that is what keeps the model bounded and deterministic.
-    static readonly HashSet<string> SupportedTypes = BuildVocabulary();
+    // Built on first use rather than in a field initializer. The vocabulary depends on which module
+    // is being bound, and assigning to a static field runs the type's initializers *first* - so a
+    // field initializer here would always see CurrentModule as null and hand a module run the core
+    // vocabulary, which shows up as every one of the module's own classes being "unsupported".
+    static HashSet<string> supportedTypes;
+    static HashSet<string> SupportedTypes => supportedTypes ??= BuildVocabulary();
 
     static HashSet<string> BuildVocabulary()
     {
@@ -860,6 +967,18 @@ public static partial class ApiModel
             types.Add(root.Class);
             types.Add(root.Class + "*");
         }
+        // An extension module's vocabulary has to include the core's classes as well: a
+        // QChart::setBackgroundBrush takes a QBrush and QAbstractSeries::hovered carries a QPointF,
+        // and both are bound - as boxed value types, in the core assembly. Without them every such
+        // signature would be dropped as unsupported.
+        if (CurrentModule != null)
+        {
+            foreach (var root in Roots)
+            {
+                types.Add(root.Class);
+                types.Add(root.Class + "*");
+            }
+        }
         foreach (var opaque in OpaquePointers)
             types.Add(opaque + "*");
         return types;
@@ -867,20 +986,32 @@ public static partial class ApiModel
 
     // Roots is the model's input description. QTSHARP_ROOTS=<comma separated class names>
     // narrows it, which is how the parser was debugged while the front end was being replaced.
-    static Root[] ActiveRoots
-    {
-        get
+        static Root[] ActiveRoots
         {
-            var filter = Environment.GetEnvironmentVariable("QTSHARP_ROOTS");
-            if (string.IsNullOrEmpty(filter))
-                return Roots;
-            var wanted = new HashSet<string>(filter.Split(','), StringComparer.Ordinal);
-            return Roots.Where(r => wanted.Contains(r.Class)).ToArray();
+            get
+            {
+                // An extension module binds its own classes; everything else about the run - the
+                // vocabulary, the base resolution, the virtual chains - is shared with the core.
+                var roots = CurrentModule?.Roots ?? Roots;
+                var filter = Environment.GetEnvironmentVariable("QTSHARP_ROOTS");
+                if (string.IsNullOrEmpty(filter))
+                    return roots;
+                var wanted = new HashSet<string>(filter.Split(','), StringComparer.Ordinal);
+                return roots.Where(r => wanted.Contains(r.Class)).ToArray();
+            }
         }
-    }
 
-    static IEnumerable<string> RootClasses => ActiveRoots.Select(r => r.Class);
-    static bool BindsCtors(string className) => ActiveRoots.First(r => r.Class == className).BindCtors;
+        // Which classes count as *bound* while reading types. For the core that is its own roots.
+        // For an extension it is the module's classes *and* the core's: QGraphicsWidget is not one
+        // of the module's roots, but a QChart derives from it, and the generated code has to treat
+        // its pointers as the core binding's types rather than as unknown ones.
+        static IEnumerable<string> RootClasses => CurrentModule == null
+            ? ActiveRoots.Select(r => r.Class)
+            : Roots.Select(r => r.Class).Concat(CurrentModule.Roots.Select(r => r.Class)).Distinct(StringComparer.Ordinal);
+
+        // Only ever asked about a class that is being extracted, so the module's own table is the
+        // one to look in.
+        static bool BindsCtors(string className) => ActiveRoots.First(r => r.Class == className).BindCtors;
 
     // The override points a managed subclass may install. Everything here lowers to a plain
     // pointer or a supported scalar, so adding a name is all it takes to make an event
