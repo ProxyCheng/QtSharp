@@ -43,7 +43,6 @@
     <Compile Include="$(QtSharpRoot)runtime\ApiApplication.cs" />
     <!-- The Qt types the binding gives as structs rather than wrappers: QPointF and QPoint cross the
          boundary as their coordinates, so no wrapper is created per point. -->
-    <Compile Include="$(QtSharpRoot)runtime\QtStructs.cs" />
     <Compile Include="$(QtSharpApiDir)\QtSharp.Api.cs" />
   </ItemGroup>
 
