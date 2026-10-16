@@ -115,8 +115,50 @@ public static class ApiSmokeTest
         Check(nativeResult == 1 && derived.FilterCalls == 1,
             $"native call into the generated virtual reached C# (result={nativeResult}, calls={derived.FilterCalls})");
 
+        // The value types are structs: a point, a size or a rectangle costs no heap object, no entry
+        // in the runtime's tables and no finalizer, which is what makes a point per sample
+        // affordable. The generated members go through the POD; the hand-written ones are a field
+        // read; neither allocates.
+        long beforeAlloc = GC.GetAllocatedBytesForCurrentThread();
+        int sink = 0;
+        for (int i = 0; i < 100000; i++)
+        {
+            var size = new QSize(i, i + 1);
+            var moved = size.Transposed();
+            var scaled = size.Scaled(new QSize(2, 2), Qt.AspectRatioMode.IgnoreAspectRatio);
+            var rect = new QRect(new QPoint(i, i), new QSize(3, 4));
+            var line = new QLineF(0, 0, rect.Width(), rect.Height());
+            sink += moved.Height() + scaled.Width() + (int)line.Length() + rect.Center().X();
+        }
+        long allocated = GC.GetAllocatedBytesForCurrentThread() - beforeAlloc;
+        Check(allocated < 64 * 1024,
+            $"100k value-type operations allocate nothing on the heap (got {allocated} bytes, sink={sink})");
+
+        // And a wrapper nothing refers to goes away even when it was never disposed. A class with no
+        // virtuals hands the native side no context, so nothing roots the wrapper: it is collected,
+        // its finalizer destroys the native object, and a page that builds QColor/QPen/QFont per
+        // sample does not grow without bound. (A class C# can derive from still passes a context -
+        // that is what dispatches virtuals back into the managed object - so those keep needing
+        // Dispose, which is what `using` is for.)
+        var weak = UnreferencedWrapper();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+        Check(!weak.IsAlive, "an undisposed wrapper of a class with no virtuals is collected");
+
         Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
         return failures == 0 ? 0 : 1;
+    }
+
+    /// <summary>
+    /// A wrapper of a class with no virtuals, with nothing left referring to it. NoInlining keeps the
+    /// local out of the caller's frame, so the collector can see that it is unreachable.
+    /// </summary>
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    static WeakReference UnreferencedWrapper()
+    {
+        var color = new QColor(1, 2, 3);
+        return new WeakReference(color);
     }
 }
 
