@@ -155,7 +155,9 @@ namespace QtSharp.Api
     // so the wrapper cannot free it - but it has to stop working the moment Qt destroys it,
     // instead of calling into native memory that is gone. Every generated class implements this
     // through its root class.
-    internal interface IQtObjectView
+    // Public, not internal: a separately packaged extension module (QtSharp.Charts and the ones
+    // after it) is a different assembly whose generated classes implement this too.
+    public interface IQtObjectView
     {
         void MarkDestroyed();
 
@@ -1004,7 +1006,8 @@ namespace QtSharp.Api
         /// </summary>
         public static event Action<string, Exception> UnhandledCallbackException;
 
-        internal static void ReportCallbackException(string what, Exception exception)
+        // Public for the same reason as IQtObjectView: the generated virtual stubs call it.
+        public static void ReportCallbackException(string what, Exception exception)
         {
             var hook = UnhandledCallbackException;
             if (hook != null)
