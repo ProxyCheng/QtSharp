@@ -214,8 +214,51 @@ class Program
         }
     }
 
+    /// <summary>
+    /// Strips the annotations Qt puts *before* the return type of a signal, as in
+    /// <code>
+    ///     Q_REVISION(6, 2) void attachedToChartChanged(bool attachedToChart);
+    /// </code>
+    /// Without this the signal does not look like a declaration at all, and the AST side then picks
+    /// it up as an ordinary method: it can be called, but it can neither be connected nor emitted.
+    /// Only all-caps macros are stripped, so a declaration that happens to start with something
+    /// call-like is left alone.
+    /// </summary>
+    static string StripLeadingAnnotations(string line)
+    {
+        var text = line.TrimStart();
+        while (true)
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(text, @"^[A-Za-z_][A-Za-z0-9_]*\s*\(");
+            if (!m.Success)
+                return text;
+            var name = m.Value.TrimEnd('(', ' ', '\t');
+            if (name != name.ToUpperInvariant())
+                return text;
+            int depth = 0, i = m.Length - 1;
+            for (; i < text.Length; i++)
+            {
+                if (text[i] == '(')
+                    depth++;
+                else if (text[i] == ')')
+                {
+                    depth--;
+                    if (depth == 0)
+                    {
+                        i++;
+                        break;
+                    }
+                }
+            }
+            if (depth != 0)
+                return text;
+            text = text.Substring(i).TrimStart();
+        }
+    }
+
     static SignalInfo TryParseSignal(string line, string className)
     {
+        line = StripLeadingAnnotations(line);
         if (className == null || !line.StartsWith("void "))
             return null;
         var m = System.Text.RegularExpressions.Regex.Match(line, @"^void\s+(\w+)\s*\(([^)]*)\)");

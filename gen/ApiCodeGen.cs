@@ -148,6 +148,43 @@ public static class ApiCodeGen
     internal static List<JsonElement> KnownClasses = new();
 
     /// <summary>
+    /// The core model an extension module builds against. It is *not* assumed to live beside the
+    /// module's own model: an extension has its own repository, whose model/ directory holds only
+    /// its own file, and the core it builds against is the published one. Looked up as
+    /// QTSHARP_CORE_MODEL, then a sibling of the module model (how the core repository seeds a new
+    /// module), then the checkout the generator itself was built from.
+    /// </summary>
+    static string CoreModelPath(string modelPath)
+    {
+        string found = null;
+        var configured = Environment.GetEnvironmentVariable("QTSHARP_CORE_MODEL");
+        if (!string.IsNullOrEmpty(configured))
+        {
+            if (!File.Exists(configured))
+                throw new FileNotFoundException($"QTSHARP_CORE_MODEL points at '{configured}', which does not exist.");
+            found = configured;
+        }
+        if (found == null)
+        {
+            var sibling = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(modelPath)), "qtsharp.api.json");
+            if (File.Exists(sibling))
+                found = sibling;
+        }
+        if (found == null && QtLibrary.RepoRoot != null)
+        {
+            var inRepo = Path.Combine(QtLibrary.RepoRoot, "model", "qtsharp.api.json");
+            if (File.Exists(inRepo))
+                found = inRepo;
+        }
+        if (found == null)
+            throw new FileNotFoundException(
+                "An extension module needs the core model (qtsharp.api.json), which is not next to '" +
+                modelPath + "'. Set QTSHARP_CORE_MODEL to its path, or point QTSHARP_CORE_REPO at a " +
+                "QtSharp checkout that has one.");
+        return found;
+    }
+
+    /// <summary>
     /// Generates a binding from a model. With <paramref name="module"/> null that is the core
     /// binding; with one it is that extension module's binding, which is a separate assembly and a
     /// separate package - it references the core one rather than containing it.
@@ -159,8 +196,7 @@ public static class ApiCodeGen
         // classes its classes derive from, and the enums those bases and its own signatures use.
         using var coreDocument = module == null
             ? null
-            : JsonDocument.Parse(File.ReadAllText(Path.Combine(
-                  Path.GetDirectoryName(Path.GetFullPath(modelPath)), "qtsharp.api.json")));
+            : JsonDocument.Parse(File.ReadAllText(CoreModelPath(modelPath)));
 
         var root = document.RootElement;
         string ns = root.GetProperty("namespace").GetString();
