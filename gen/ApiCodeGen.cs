@@ -1591,6 +1591,24 @@ public static class ApiCodeGen
     // operators, equality and ToString that C# needs and Python gets from its type system. The
     // generator reads that file, so a member written by hand wins over the generated one and the two
     // never collide.
+    /// <summary>
+    /// The constructors the model declares for a value type, without the parameterless one: C#'s
+    /// `default` already produces the same zero value Qt's own default constructor does.
+    /// </summary>
+    static List<JsonElement> StructCtors(string name)
+    {
+        var ctors = new List<JsonElement>();
+        if (!ModelClassNames.Contains(name))
+            return ctors;
+        var cls = KnownClasses.FirstOrDefault(c => Name(c) == name);
+        if (cls.ValueKind != JsonValueKind.Object || !cls.TryGetProperty("constructors", out var cs))
+            return ctors;
+        foreach (var c in cs.EnumerateArray())
+            if (Params(c).Count > 0)
+                ctors.Add(c);
+        return ctors;
+    }
+
     static List<(JsonElement Method, string Entry, string Cs)> StructMembers(string name)
     {
         var members = new List<(JsonElement, string, string)>();
@@ -1665,7 +1683,11 @@ public static class ApiCodeGen
     static void WriteStructMembers(StringBuilder sb, string name)
     {
         var members = StructMembers(name);
-        if (members.Count == 0)
+        var ctors = StructCtors(name);
+        bool handWrittenCtor = HandWrittenMembers(name).Contains(name);
+        // A type whose whole surface is hand-written still gets its constructors generated (the last
+        // ones not to be), so the early return has to account for them.
+        if (members.Count == 0 && (handWrittenCtor || ctors.Count == 0))
             return;
         sb.AppendLine();
         sb.AppendLine($"    /// <summary>The members Qt declares for {name}, forwarded through the value itself.</summary>");
@@ -1674,6 +1696,20 @@ public static class ApiCodeGen
         // The nested types Qt declares on it (QLineF::IntersectionType): the class that would have
         // carried them is not generated, so the struct does.
         WriteEnums(sb, name, 2);
+        // Constructors, forwarded like every other member: the glue builds Qt's own value from the
+        // arguments and hands back its bytes, so no formula is translated by hand - QRect's
+        // (x, y, width, height) becoming two corners is Qt's rule, not a copy of it.
+        if (!handWrittenCtor)
+        {
+            int n = 0;
+            foreach (var ctor in ctors)
+            {
+                var cps = Params(ctor);
+                sb.AppendLine($"        public {name}({string.Join(", ", cps.Select(ParamSig))})");
+                sb.AppendLine($"            => this = ApiNative.{name}_ctor{n++}({string.Join(", ", cps.Select(p => SafeName(PName(p))))});");
+                sb.AppendLine();
+            }
+        }
         foreach (var (m, entry, cs) in members)
         {
             var ps = Params(m);
@@ -1698,6 +1734,17 @@ public static class ApiCodeGen
         sb.AppendLine();
         sb.AppendLine($"    internal static partial class ApiNative");
         sb.AppendLine("    {");
+        {
+            int n = 0;
+            foreach (var ctor in ctors)
+            {
+                if (handWrittenCtor)
+                    break;
+                sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}_ctor{n}\", CallingConvention = CallingConvention.Cdecl)]");
+                sb.AppendLine($"        internal static extern {name} {name}_ctor{n}({string.Join(", ", Params(ctor).SelectMany(NativeParamsFor))});");
+                n++;
+            }
+        }
         foreach (var (m, entry, cs) in members)
         {
             var ps = Params(m);
@@ -1728,6 +1775,21 @@ public static class ApiCodeGen
 
     static void WriteStructNative(StringBuilder sb, string name)
     {
+        if (!HandWrittenMembers(name).Contains(name))
+        {
+            int n = 0;
+            foreach (var ctor in StructCtors(name))
+            {
+                var cps = Params(ctor);
+                sb.AppendLine($"extern \"C\" __declspec(dllexport) {StructPod(name)} qs_api_{name}_ctor{n}({string.Join(", ", cps.SelectMany(CppParamsFor))})");
+                sb.AppendLine("{");
+                sb.AppendLine($"    {name} qs_new({string.Join(", ", cps.SelectMany(CppArgsFor))});");
+                sb.AppendLine($"    return {StructToPod(name, "qs_new")};");
+                sb.AppendLine("}");
+                sb.AppendLine();
+                n++;
+            }
+        }
         foreach (var (m, entry, cs) in StructMembers(name))
         {
             var ps = Params(m);
