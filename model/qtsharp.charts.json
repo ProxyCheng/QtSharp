@@ -49,7 +49,6 @@
         { "name": "labelsEditable", "returnType": "bool", "parameters": [] },
         { "name": "labelsFont", "returnType": "QFont", "parameters": [] },
         { "name": "labelsTruncated", "returnType": "bool", "parameters": [] },
-        { "name": "labelsTruncatedChanged", "returnType": "void", "parameters": [{ "name": "labelsTruncated", "type": "bool" }] },
         { "name": "labelsVisible", "returnType": "bool", "parameters": [] },
         { "name": "linePen", "returnType": "QPen", "parameters": [] },
         { "name": "linePenColor", "returnType": "QColor", "parameters": [] },
@@ -98,7 +97,6 @@
         { "name": "titleText", "returnType": "QString", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "truncateLabels", "returnType": "bool", "parameters": [] },
-        { "name": "truncateLabelsChanged", "returnType": "void", "parameters": [{ "name": "truncateLabels", "type": "bool" }] },
         { "name": "type", "returnType": "QAbstractAxis::AxisType", "parameters": [] }
       ],
       "virtuals": [
@@ -144,6 +142,7 @@
         { "name": "labelsColorChanged", "parameters": [{ "name": "color", "type": "QColor" }] },
         { "name": "labelsEditableChanged", "parameters": [{ "name": "editable", "type": "bool" }] },
         { "name": "labelsFontChanged", "parameters": [{ "name": "pen", "type": "QFont" }] },
+        { "name": "labelsTruncatedChanged", "parameters": [{ "name": "labelsTruncated", "type": "bool" }] },
         { "name": "labelsVisibleChanged", "parameters": [{ "name": "visible", "type": "bool" }] },
         { "name": "linePenChanged", "parameters": [{ "name": "pen", "type": "QPen" }] },
         { "name": "lineVisibleChanged", "parameters": [{ "name": "visible", "type": "bool" }] },
@@ -160,6 +159,7 @@
         { "name": "titleFontChanged", "parameters": [{ "name": "font", "type": "QFont" }] },
         { "name": "titleTextChanged", "parameters": [{ "name": "title", "type": "QString" }] },
         { "name": "titleVisibleChanged", "parameters": [{ "name": "visible", "type": "bool" }] },
+        { "name": "truncateLabelsChanged", "parameters": [{ "name": "truncateLabels", "type": "bool" }] },
         { "name": "visibleChanged", "parameters": [{ "name": "visible", "type": "bool" }] }
       ]
     }
@@ -443,9 +443,7 @@
         { "name": "selectBar", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "selectBars", "returnType": "void", "parameters": [{ "name": "indexes", "type": "QList<int>" }] },
         { "name": "selectedBars", "returnType": "QList<int>", "parameters": [] },
-        { "name": "selectedBarsChanged", "returnType": "void", "parameters": [{ "name": "indexes", "type": "QList<int>" }] },
         { "name": "selectedColor", "returnType": "QColor", "parameters": [] },
-        { "name": "selectedColorChanged", "returnType": "void", "parameters": [{ "name": "color", "type": "QColor" }] },
         { "name": "setBarSelected", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "selected", "type": "bool" }] },
         { "name": "setBorderColor", "returnType": "void", "parameters": [{ "name": "color", "type": "QColor" }] },
         { "name": "setBrush", "returnType": "void", "parameters": [{ "name": "brush", "type": "QBrush" }] },
@@ -486,6 +484,8 @@
         { "name": "penChanged", "parameters": [] },
         { "name": "pressed", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "released", "parameters": [{ "name": "index", "type": "int" }] },
+        { "name": "selectedBarsChanged", "parameters": [{ "name": "indexes", "type": "QList<int>" }] },
+        { "name": "selectedColorChanged", "parameters": [{ "name": "color", "type": "QColor" }] },
         { "name": "valueChanged", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "valuesAdded", "parameters": [{ "name": "index", "type": "int" }, { "name": "count", "type": "int" }] },
         { "name": "valuesRemoved", "parameters": [{ "name": "index", "type": "int" }, { "name": "count", "type": "int" }] }
@@ -644,6 +644,7 @@
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "rubberBand", "returnType": "QChartView::RubberBands", "parameters": [] },
         { "name": "setChart", "returnType": "void", "parameters": [{ "name": "chart", "type": "QChart*" }] },
+        { "name": "setRubberBand", "returnType": "void", "parameters": [{ "name": "rubberBands", "type": "QChartView::RubberBands" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
@@ -709,7 +710,6 @@
       "methods": [
         { "name": "alignment", "returnType": "Qt::Alignment", "parameters": [] },
         { "name": "attachToChart", "returnType": "void", "parameters": [] },
-        { "name": "attachedToChartChanged", "returnType": "void", "parameters": [{ "name": "attachedToChart", "type": "bool" }] },
         { "name": "borderColor", "returnType": "QColor", "parameters": [] },
         { "name": "brush", "returnType": "QBrush", "parameters": [] },
         { "name": "color", "returnType": "QColor", "parameters": [] },
@@ -758,6 +758,7 @@
         { "name": "showToolTips", "type": "bool", "getter": "showToolTips", "setter": "setShowToolTips" }
       ],
       "signals": [
+        { "name": "attachedToChartChanged", "parameters": [{ "name": "attachedToChart", "type": "bool" }] },
         { "name": "backgroundVisibleChanged", "parameters": [{ "name": "visible", "type": "bool" }] },
         { "name": "borderColorChanged", "parameters": [{ "name": "color", "type": "QColor" }] },
         { "name": "colorChanged", "parameters": [{ "name": "color", "type": "QColor" }] },
@@ -1186,12 +1187,9 @@
         { "name": "setTickInterval", "returnType": "void", "parameters": [{ "name": "insterval", "type": "double" }] },
         { "name": "setTickType", "returnType": "void", "parameters": [{ "name": "type", "type": "QValueAxis::TickType" }] },
         { "name": "tickAnchor", "returnType": "double", "parameters": [] },
-        { "name": "tickAnchorChanged", "returnType": "void", "parameters": [{ "name": "anchor", "type": "double" }] },
         { "name": "tickCount", "returnType": "int", "parameters": [] },
         { "name": "tickInterval", "returnType": "double", "parameters": [] },
-        { "name": "tickIntervalChanged", "returnType": "void", "parameters": [{ "name": "interval", "type": "double" }] },
         { "name": "tickType", "returnType": "QValueAxis::TickType", "parameters": [] },
-        { "name": "tickTypeChanged", "returnType": "void", "parameters": [{ "name": "type", "type": "QValueAxis::TickType" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "type", "returnType": "QAbstractAxis::AxisType", "parameters": [] }
       ],
@@ -1213,7 +1211,10 @@
         { "name": "minChanged", "parameters": [{ "name": "min", "type": "double" }] },
         { "name": "minorTickCountChanged", "parameters": [{ "name": "tickCount", "type": "int" }] },
         { "name": "rangeChanged", "parameters": [{ "name": "min", "type": "double" }, { "name": "max", "type": "double" }] },
-        { "name": "tickCountChanged", "parameters": [{ "name": "tickCount", "type": "int" }] }
+        { "name": "tickAnchorChanged", "parameters": [{ "name": "anchor", "type": "double" }] },
+        { "name": "tickCountChanged", "parameters": [{ "name": "tickCount", "type": "int" }] },
+        { "name": "tickIntervalChanged", "parameters": [{ "name": "interval", "type": "double" }] },
+        { "name": "tickTypeChanged", "parameters": [{ "name": "type", "type": "QValueAxis::TickType" }] }
       ]
     }
 ,
@@ -1232,10 +1233,7 @@
         { "name": "append", "returnType": "void", "parameters": [{ "name": "x", "type": "double" }, { "name": "y", "type": "double" }] },
         { "name": "at", "returnType": "QPointF", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "bestFitLineColor", "returnType": "QColor", "parameters": [] },
-        { "name": "bestFitLineColorChanged", "returnType": "void", "parameters": [{ "name": "color", "type": "QColor" }] },
         { "name": "bestFitLinePen", "returnType": "QPen", "parameters": [] },
-        { "name": "bestFitLinePenChanged", "returnType": "void", "parameters": [{ "name": "pen", "type": "QPen" }] },
-        { "name": "bestFitLineVisibilityChanged", "returnType": "void", "parameters": [{ "name": "visible", "type": "bool" }] },
         { "name": "bestFitLineVisible", "returnType": "bool", "parameters": [] },
         { "name": "brush", "returnType": "QBrush", "parameters": [] },
         { "name": "clear", "returnType": "void", "parameters": [] },
@@ -1252,7 +1250,6 @@
         { "name": "insert", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "point", "type": "QPointF" }] },
         { "name": "isPointSelected", "returnType": "bool", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "lightMarker", "returnType": "QImage", "parameters": [] },
-        { "name": "lightMarkerChanged", "returnType": "void", "parameters": [{ "name": "lightMarker", "type": "QImage" }] },
         { "name": "markerSize", "returnType": "double", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "pen", "returnType": "QPen", "parameters": [] },
@@ -1278,9 +1275,7 @@
         { "name": "selectPoint", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "selectPoints", "returnType": "void", "parameters": [{ "name": "indexes", "type": "QList<int>" }] },
         { "name": "selectedColor", "returnType": "QColor", "parameters": [] },
-        { "name": "selectedColorChanged", "returnType": "void", "parameters": [{ "name": "color", "type": "QColor" }] },
         { "name": "selectedLightMarker", "returnType": "QImage", "parameters": [] },
-        { "name": "selectedLightMarkerChanged", "returnType": "void", "parameters": [{ "name": "selectedLightMarker", "type": "QImage" }] },
         { "name": "selectedPoints", "returnType": "QList<int>", "parameters": [] },
         { "name": "setBestFitLineColor", "returnType": "void", "parameters": [{ "name": "color", "type": "QColor" }] },
         { "name": "setBestFitLinePen", "returnType": "void", "parameters": [{ "name": "pen", "type": "QPen" }] },
@@ -1320,10 +1315,14 @@
         { "name": "selectedColor", "type": "QColor", "getter": "color", "setter": "setSelectedColor" }
       ],
       "signals": [
+        { "name": "bestFitLineColorChanged", "parameters": [{ "name": "color", "type": "QColor" }] },
+        { "name": "bestFitLinePenChanged", "parameters": [{ "name": "pen", "type": "QPen" }] },
+        { "name": "bestFitLineVisibilityChanged", "parameters": [{ "name": "visible", "type": "bool" }] },
         { "name": "clicked", "parameters": [{ "name": "point", "type": "QPointF" }] },
         { "name": "colorChanged", "parameters": [{ "name": "color", "type": "QColor" }] },
         { "name": "doubleClicked", "parameters": [{ "name": "point", "type": "QPointF" }] },
         { "name": "hovered", "parameters": [{ "name": "point", "type": "QPointF" }, { "name": "state", "type": "bool" }] },
+        { "name": "lightMarkerChanged", "parameters": [{ "name": "lightMarker", "type": "QImage" }] },
         { "name": "markerSizeChanged", "parameters": [{ "name": "size", "type": "double" }] },
         { "name": "penChanged", "parameters": [{ "name": "pen", "type": "QPen" }] },
         { "name": "pointAdded", "parameters": [{ "name": "index", "type": "int" }] },
@@ -1338,6 +1337,8 @@
         { "name": "pointsReplaced", "parameters": [] },
         { "name": "pressed", "parameters": [{ "name": "point", "type": "QPointF" }] },
         { "name": "released", "parameters": [{ "name": "point", "type": "QPointF" }] },
+        { "name": "selectedColorChanged", "parameters": [{ "name": "color", "type": "QColor" }] },
+        { "name": "selectedLightMarkerChanged", "parameters": [{ "name": "selectedLightMarker", "type": "QImage" }] },
         { "name": "selectedPointsChanged", "parameters": [] }
       ]
     }

@@ -640,9 +640,21 @@ public static partial class ApiModel
         _ => null,
     };
 
+    // Drops the reference, so a caller may hand in `const Qt::Alignment &` as readily as
+    // `Qt::Alignment`. ModelName does this itself, but the vocabulary checks in SupportedType see
+    // the raw parameter type, and a reference type has no Declaration to resolve to.
+    static CXType NoRef(CXType type)
+    {
+        type = Unwrap(type);
+        return type.kind == CXTypeKind.CXType_LValueReference || type.kind == CXTypeKind.CXType_RValueReference
+            ? type.PointeeType
+            : type;
+    }
+
     // A QFlags<E> typedef publishes its own name (Qt::Alignment), not the template.
     static string FlagsName(CXType type)
     {
+        type = NoRef(type);
         var enumName = FlagsEnumName(type);
         return enumName == null ? null : QualifiedName(type.Declaration);
     }
@@ -963,7 +975,7 @@ public static partial class ApiModel
         if (SupportedTypes.Contains(name))
             return true;
 
-        var declaration = type.CanonicalType.Declaration;
+        var declaration = NoRef(type).CanonicalType.Declaration;
         if (clang.getCursorKind(declaration) != CXCursorKind.CXCursor_EnumDecl)
             return false;
         return ScopeIsPublishable(ScopeOfQualified(EnumTypeName(declaration)));

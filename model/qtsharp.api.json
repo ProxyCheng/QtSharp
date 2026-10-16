@@ -8234,7 +8234,6 @@
         { "name": "focusObject", "static": true, "returnType": "QObject*", "parameters": [] },
         { "name": "focusWindow", "static": true, "returnType": "QWindow*", "parameters": [] },
         { "name": "font", "static": true, "returnType": "QFont", "parameters": [] },
-        { "name": "fontChanged", "returnType": "void", "parameters": [{ "name": "font", "type": "QFont" }] },
         { "name": "highDpiScaleFactorRoundingPolicy", "static": true, "returnType": "Qt::HighDpiScaleFactorRoundingPolicy", "parameters": [] },
         { "name": "isLeftToRight", "static": true, "returnType": "bool", "parameters": [] },
         { "name": "isRightToLeft", "static": true, "returnType": "bool", "parameters": [] },
@@ -8248,7 +8247,6 @@
         { "name": "notify", "returnType": "bool", "parameters": [{ "name": "arg0", "type": "QObject*" }, { "name": "arg1", "type": "QEvent*" }] },
         { "name": "overrideCursor", "static": true, "returnType": "QCursor*", "parameters": [] },
         { "name": "palette", "static": true, "returnType": "QPalette", "parameters": [] },
-        { "name": "paletteChanged", "returnType": "void", "parameters": [{ "name": "pal", "type": "QPalette" }] },
         { "name": "platformName", "static": true, "returnType": "QString", "parameters": [] },
         { "name": "primaryScreen", "static": true, "returnType": "QScreen*", "parameters": [] },
         { "name": "queryKeyboardModifiers", "static": true, "returnType": "Qt::KeyboardModifiers", "parameters": [] },
@@ -8293,9 +8291,11 @@
         { "name": "applicationStateChanged", "parameters": [{ "name": "state", "type": "Qt::ApplicationState" }] },
         { "name": "focusObjectChanged", "parameters": [{ "name": "focusObject", "type": "QObject*" }] },
         { "name": "focusWindowChanged", "parameters": [{ "name": "focusWindow", "type": "QWindow*" }] },
+        { "name": "fontChanged", "parameters": [{ "name": "font", "type": "QFont" }] },
         { "name": "fontDatabaseChanged", "parameters": [] },
         { "name": "lastWindowClosed", "parameters": [] },
         { "name": "layoutDirectionChanged", "parameters": [{ "name": "direction", "type": "Qt::LayoutDirection" }] },
+        { "name": "paletteChanged", "parameters": [{ "name": "pal", "type": "QPalette" }] },
         { "name": "primaryScreenChanged", "parameters": [{ "name": "screen", "type": "QScreen*" }] },
         { "name": "screenAdded", "parameters": [{ "name": "screen", "type": "QScreen*" }] },
         { "name": "screenRemoved", "parameters": [{ "name": "screen", "type": "QScreen*" }] }
@@ -9034,7 +9034,6 @@
       "methods": [
         { "name": "availableVirtualGeometry", "returnType": "QRect", "parameters": [] },
         { "name": "capabilities", "returnType": "QInputDevice::Capabilities", "parameters": [] },
-        { "name": "capabilitiesChanged", "returnType": "void", "parameters": [{ "name": "capabilities", "type": "QInputDevice::Capabilities" }] },
         { "name": "devices", "static": true, "returnType": "QList<QInputDevice*>", "parameters": [] },
         { "name": "hasCapability", "returnType": "bool", "parameters": [{ "name": "cap", "type": "QInputDevice::Capability" }] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
@@ -9057,7 +9056,8 @@
         { "name": "type", "type": "QInputDevice::DeviceType", "getter": "type" }
       ],
       "signals": [
-        { "name": "availableVirtualGeometryChanged", "parameters": [{ "name": "area", "type": "QRect" }] }
+        { "name": "availableVirtualGeometryChanged", "parameters": [{ "name": "area", "type": "QRect" }] },
+        { "name": "capabilitiesChanged", "parameters": [{ "name": "capabilities", "type": "QInputDevice::Capabilities" }] }
       ]
     }
 ,
@@ -22442,7 +22442,6 @@
         { "parameters": [{ "name": "parent", "type": "QWindow*" }] }
       ],
       "methods": [
-        { "name": "activeChanged", "returnType": "void", "parameters": [] },
         { "name": "alert", "returnType": "void", "parameters": [{ "name": "msec", "type": "int" }] },
         { "name": "baseSize", "returnType": "QSize", "parameters": [] },
         { "name": "close", "returnType": "bool", "parameters": [] },
@@ -22453,7 +22452,6 @@
         { "name": "devicePixelRatio", "returnType": "double", "parameters": [] },
         { "name": "filePath", "returnType": "QString", "parameters": [] },
         { "name": "flags", "returnType": "Qt::WindowFlags", "parameters": [] },
-        { "name": "flagsChanged", "returnType": "void", "parameters": [{ "name": "flags", "type": "Qt::WindowFlags" }] },
         { "name": "focusObject", "returnType": "QObject*", "parameters": [] },
         { "name": "format", "returnType": "QSurfaceFormat", "parameters": [] },
         { "name": "frameGeometry", "returnType": "QRect", "parameters": [] },
@@ -22485,7 +22483,6 @@
         { "name": "minimumWidth", "returnType": "int", "parameters": [] },
         { "name": "modality", "returnType": "Qt::WindowModality", "parameters": [] },
         { "name": "opacity", "returnType": "double", "parameters": [] },
-        { "name": "opacityChanged", "returnType": "void", "parameters": [{ "name": "opacity", "type": "double" }] },
         { "name": "parent", "returnType": "QWindow*", "parameters": [{ "name": "mode", "type": "QWindow::AncestorMode", "optional": true, "default": "QWindow.AncestorMode.ExcludeTransients" }] },
         { "name": "position", "returnType": "QPoint", "parameters": [] },
         { "name": "raise", "returnType": "void", "parameters": [] },
@@ -22496,7 +22493,6 @@
         { "name": "resize", "returnType": "void", "parameters": [{ "name": "newSize", "type": "QSize" }] },
         { "name": "resize", "returnType": "void", "parameters": [{ "name": "w", "type": "int" }, { "name": "h", "type": "int" }] },
         { "name": "safeAreaMargins", "returnType": "QMargins", "parameters": [] },
-        { "name": "safeAreaMarginsChanged", "returnType": "void", "parameters": [{ "name": "arg", "type": "QMargins" }] },
         { "name": "screen", "returnType": "QScreen*", "parameters": [] },
         { "name": "setBaseSize", "returnType": "void", "parameters": [{ "name": "size", "type": "QSize" }] },
         { "name": "setCursor", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QCursor" }] },
@@ -22546,16 +22542,13 @@
         { "name": "title", "returnType": "QString", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "transientParent", "returnType": "QWindow*", "parameters": [] },
-        { "name": "transientParentChanged", "returnType": "void", "parameters": [{ "name": "transientParent", "type": "QWindow*" }] },
         { "name": "type", "returnType": "Qt::WindowType", "parameters": [] },
         { "name": "unsetCursor", "returnType": "void", "parameters": [] },
         { "name": "visibility", "returnType": "QWindow::Visibility", "parameters": [] },
-        { "name": "visibilityChanged", "returnType": "void", "parameters": [{ "name": "visibility", "type": "QWindow::Visibility" }] },
         { "name": "width", "returnType": "int", "parameters": [] },
         { "name": "winId", "returnType": "unsigned long long", "parameters": [] },
         { "name": "windowState", "returnType": "Qt::WindowState", "parameters": [] },
         { "name": "windowStates", "returnType": "Qt::WindowStates", "parameters": [] },
-        { "name": "windowTitleChanged", "returnType": "void", "parameters": [{ "name": "title", "type": "QString" }] },
         { "name": "x", "returnType": "int", "parameters": [] },
         { "name": "y", "returnType": "int", "parameters": [] }
       ],
@@ -22598,7 +22591,9 @@
         { "name": "y", "type": "int", "getter": "y", "setter": "setY" }
       ],
       "signals": [
+        { "name": "activeChanged", "parameters": [] },
         { "name": "contentOrientationChanged", "parameters": [{ "name": "orientation", "type": "Qt::ScreenOrientation" }] },
+        { "name": "flagsChanged", "parameters": [{ "name": "flags", "type": "Qt::WindowFlags" }] },
         { "name": "focusObjectChanged", "parameters": [{ "name": "object", "type": "QObject*" }] },
         { "name": "heightChanged", "parameters": [{ "name": "arg", "type": "int" }] },
         { "name": "maximumHeightChanged", "parameters": [{ "name": "arg", "type": "int" }] },
@@ -22606,10 +22601,15 @@
         { "name": "minimumHeightChanged", "parameters": [{ "name": "arg", "type": "int" }] },
         { "name": "minimumWidthChanged", "parameters": [{ "name": "arg", "type": "int" }] },
         { "name": "modalityChanged", "parameters": [{ "name": "modality", "type": "Qt::WindowModality" }] },
+        { "name": "opacityChanged", "parameters": [{ "name": "opacity", "type": "double" }] },
+        { "name": "safeAreaMarginsChanged", "parameters": [{ "name": "arg", "type": "QMargins" }] },
         { "name": "screenChanged", "parameters": [{ "name": "screen", "type": "QScreen*" }] },
+        { "name": "transientParentChanged", "parameters": [{ "name": "transientParent", "type": "QWindow*" }] },
+        { "name": "visibilityChanged", "parameters": [{ "name": "visibility", "type": "QWindow::Visibility" }] },
         { "name": "visibleChanged", "parameters": [{ "name": "arg", "type": "bool" }] },
         { "name": "widthChanged", "parameters": [{ "name": "arg", "type": "int" }] },
         { "name": "windowStateChanged", "parameters": [{ "name": "windowState", "type": "Qt::WindowState" }] },
+        { "name": "windowTitleChanged", "parameters": [{ "name": "title", "type": "QString" }] },
         { "name": "xChanged", "parameters": [{ "name": "arg", "type": "int" }] },
         { "name": "yChanged", "parameters": [{ "name": "arg", "type": "int" }] }
       ]
