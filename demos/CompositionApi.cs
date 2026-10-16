@@ -49,7 +49,7 @@ public sealed class ApiCompositionRenderer : QWidget
                 Stop(gradient, 0.5, 220, 180, 40);
                 Stop(gradient, 1.0, 40, 140, 60);
                 using var brush = new QBrush(gradient);
-                using var full = new QRect(0, 0, 120, 90);
+                var full = new QRect(0, 0, 120, 90);
                 painter.FillRect(full, brush);
             }
             using (var pen = new QPen(Qt.PenStyle.NoPen))
@@ -178,7 +178,7 @@ public sealed class ApiCompositionRenderer : QWidget
         p.SetCompositionMode(QPainter.CompositionMode.CompositionMode_DestinationOver);
         p.SetPen(Qt.PenStyle.NoPen);
         p.SetRenderHint(QPainter.RenderHint.SmoothPixmapTransform);
-        using var full = new QRect(0, 0, width(), height());
+        var full = new QRect(0, 0, width(), height());
         p.DrawImage(full, image);
     }
 
@@ -188,7 +188,7 @@ public sealed class ApiCompositionRenderer : QWidget
         p.SetRenderHint(QPainter.RenderHint.Antialiasing);
         p.SetCompositionMode(Mode);
 
-        using var circleRect = RectangleAround(circleX, circleY);
+        var circleRect = RectangleAround(circleX, circleY);
         using var color = QColor.FromHsvF(CircleHue / 360.0f, 1.0f, 1.0f, CircleAlpha / 255.0f);
         using (var gradient = new QLinearGradient(new QPointF(circleRect.Left(), circleRect.Top()),
                                                  new QPointF(circleRect.Right(), circleRect.Bottom())))

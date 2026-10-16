@@ -42,9 +42,9 @@ public class ApiArthurFrame : QWidget
         {
             using var white = new QColor(Qt.GlobalColor.white);
             using var gray = new QColor(230, 230, 230);
-            using var whole = new QRect(0, 0, 128, 128);
-            using var topLeft = new QRect(0, 0, 64, 64);
-            using var bottomRight = new QRect(64, 64, 64, 64);
+            var whole = new QRect(0, 0, 128, 128);
+            var topLeft = new QRect(0, 0, 64, 64);
+            var bottomRight = new QRect(64, 64, 64, 64);
             painter.FillRect(whole, white);
             painter.FillRect(topLeft, gray);
             painter.FillRect(bottomRight, gray);
@@ -84,13 +84,13 @@ public class ApiArthurFrame : QWidget
             painter.Begin(AsQPaintDevice());
         }
 
-        using (var dirty = e.Rect())
+        var dirty = e.Rect();
             painter.SetClipRect(dirty);
         painter.SetRenderHint(QPainter.RenderHint.Antialiasing);
 
         // The rounded-corner clip path of the official ArthurFrame.
         using var clipPath = new QPainterPath();
-        using (var full = rect())
+        var full = rect();
         {
             double left = full.X() + 1;
             double top = full.Y() + 1;
@@ -108,8 +108,8 @@ public class ApiArthurFrame : QWidget
 
         painter.Save();
         painter.SetClipPath(clipPath, Qt.ClipOperation.IntersectClip);
-        using (var full = rect())
-            painter.DrawTiledPixmap(full, Tile);
+        var fullRect = rect();
+            painter.DrawTiledPixmap(fullRect, Tile);
 
         Paint(painter);
 
@@ -127,8 +127,8 @@ public class ApiArthurFrame : QWidget
         {
             painter.End();
             painter.Begin(AsQPaintDevice());
-            using (var dirty = e.Rect())
-                painter.DrawImage(dirty, offscreen, dirty);
+            var dirtyRect = e.Rect();
+                painter.DrawImage(dirtyRect, offscreen, dirtyRect);
         }
     }
 }
@@ -270,7 +270,7 @@ public sealed class ApiPathStrokeRenderer : ApiArthurFrame
             painter.SetBrush(handleBrush);
         foreach (var point in points)
         {
-            using var ellipse = new QRectF(point.X() - PointSize, point.Y() - PointSize,
+            var ellipse = new QRectF(point.X() - PointSize, point.Y() - PointSize,
                                            PointSize * 2.0, PointSize * 2.0);
             painter.DrawEllipse(ellipse);
         }
@@ -301,13 +301,13 @@ public sealed class ApiPathStrokeRenderer : ApiArthurFrame
 
         for (int i = 0; i < count; i++)
         {
-            using (var baseVector = new QPointF(0.1, 0.25))
-            using (var byM = m.Map(baseVector))
-            using (var vector = vm.Map(byM))
+            var baseVector = new QPointF(0.1, 0.25);
+            var byM = m.Map(baseVector);
+            var vector = vm.Map(byM);
                 vectors.Add(new QPointF(vector.X(), vector.Y()));
 
-            using (var basePoint = new QPointF(0.0, 100.0))
-            using (var mapped = m.Map(basePoint))
+            var basePoint = new QPointF(0.0, 100.0);
+            var mapped = m.Map(basePoint);
                 points.Add(new QPointF(mapped.X() + centerX, mapped.Y() + centerY));
 
             using (m.Rotate(rotation)) { }
@@ -346,8 +346,6 @@ public sealed class ApiPathStrokeRenderer : ApiArthurFrame
 
             points[i] = new QPointF(x, y);
             vectors[i] = new QPointF(vx, vy);
-            position.Dispose();
-            vector.Dispose();
         }
 
         Update();
@@ -366,11 +364,11 @@ public sealed class ApiPathStrokeRenderer : ApiArthurFrame
 
         ActivePoint = -1;
         double distance = -1;
-        using (var position = e.Position())
+        var position = e.Position();
         {
             for (int i = 0; i < points.Count; i++)
             {
-                using var line = new QLineF(position, points[i]);
+                var line = new QLineF(position, points[i]);
                 double d = line.Length();
                 if ((distance < 0 && d < 8 * PointSize) || d < distance)
                 {
@@ -389,7 +387,7 @@ public sealed class ApiPathStrokeRenderer : ApiArthurFrame
                 MouseMoveEvent(e);
             }
 
-            using (var press = position.ToPoint())
+            var press = position.ToPoint();
             {
                 mousePressX = press.X();
                 mousePressY = press.Y();
@@ -405,8 +403,8 @@ public sealed class ApiPathStrokeRenderer : ApiArthurFrame
         if (fingerPointMapping.Count > 0)
             return;
 
-        using var position = e.Position();
-        using var current = position.ToPoint();
+        var position = e.Position();
+        var current = position.ToPoint();
 
         // More than 25 pixels away means the user is dragging (QPoint's Manhattan length).
         if (!MouseDrag
@@ -415,7 +413,6 @@ public sealed class ApiPathStrokeRenderer : ApiArthurFrame
 
         if (MouseDrag && ActivePoint >= 0 && ActivePoint < points.Count)
         {
-            points[ActivePoint].Dispose();
             points[ActivePoint] = new QPointF(position.X(), position.Y());
             Update();
         }
@@ -451,7 +448,7 @@ public sealed class ApiPathStrokeRenderer : ApiArthurFrame
             {
                 for (int i = 0; i < touchPoints.Length; i++)
                 {
-                    using var position = touchPoints[i].position();
+                    var position = touchPoints[i].position();
                     mapped[i] = new TouchPoint(touchPoints[i].id(), touchPoints[i].state(),
                                                position.X(), position.Y());
                 }
@@ -521,7 +518,7 @@ public sealed class ApiPathStrokeRenderer : ApiArthurFrame
                     {
                         if (taken.Contains(i))
                             continue;
-                        using var line = new QLineF(point.X, point.Y, points[i].X(), points[i].Y());
+                        var line = new QLineF(point.X, point.Y, points[i].X(), points[i].Y());
                         double d = line.Length();
                         if ((distance < 0 && d < 12 * PointSize) || d < distance)
                         {
@@ -532,7 +529,6 @@ public sealed class ApiPathStrokeRenderer : ApiArthurFrame
                     if (activePoint != -1)
                     {
                         fingerPointMapping[id] = activePoint;
-                        points[activePoint].Dispose();
                         points[activePoint] = new QPointF(point.X, point.Y);
                     }
                     break;
@@ -541,7 +537,6 @@ public sealed class ApiPathStrokeRenderer : ApiArthurFrame
                 case QEventPoint.State.Released:
                     if (fingerPointMapping.TryGetValue(id, out int released))
                     {
-                        points[released].Dispose();
                         points[released] = new QPointF(point.X, point.Y);
                         fingerPointMapping.Remove(id);
                     }
@@ -550,7 +545,6 @@ public sealed class ApiPathStrokeRenderer : ApiArthurFrame
                 case QEventPoint.State.Updated:
                     if (fingerPointMapping.TryGetValue(id, out int updated))
                     {
-                        points[updated].Dispose();
                         points[updated] = new QPointF(point.X, point.Y);
                     }
                     break;
@@ -716,8 +710,10 @@ public sealed class ApiPathStrokeControls : QWidget
         {
             painter.SetRenderHint(QPainter.RenderHint.Antialiasing);
             using (var transparent = new QColor(0, 0, 0, 0))
-            using (var area = new QRect(0, 0, size.Width(), size.Height()))
+            {
+                var area = new QRect(0, 0, size.Width(), size.Height());
                 painter.FillRect(area, transparent);
+            }
             using var currentPalette = palette();
             using var color = currentPalette.Color(QPalette.ColorRole.WindowText);
             using var brush = new QBrush(color);
@@ -837,7 +833,6 @@ public static class ApiPathStrokeDemo
             + $"({updatesBefore} -> {renderer.UpdatePointsCalls} calls)");
         Check(Math.Abs(renderer.Points[0].X() - first.X()) + Math.Abs(renderer.Points[0].Y() - first.Y()) > 0.001,
             "the animated point moved");
-        first.Dispose();
 
         // The bouncing keeps every point inside the padded widget.
         double pad = 10;
@@ -1014,8 +1009,6 @@ public static class ApiPathStrokeDemo
                   && Math.Abs(area.Points[5].Y() - untouched.Y()) < 0.01,
                 "a move without an active point leaves the points alone");
 
-            target.Dispose();
-            untouched.Dispose();
         }
 
         // --- the touch half of event() --------------------------------------------------------
@@ -1121,6 +1114,16 @@ public static class ApiPathStrokeDemo
                 $"the layout sized the renderer and the controls "
                 + $"({widget.Renderer.width()}x{widget.Renderer.height()} and "
                 + $"{controls.PenWidthSlider.width()}px slider)");
+        }
+
+        // The window is left on screen for a moment if asked, but nothing needs the event loop.
+        if (int.TryParse(Environment.GetEnvironmentVariable("QTSHARP_DEMO_MS"), out var ms) && ms > 0)
+        {
+            var stop = new QTimer();
+            stop.SetSingleShot(true);
+            stop.TimeoutSignal.Connect(() => app.Quit());
+            stop.Start(ms);
+            app.Exec();
         }
 
         Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");

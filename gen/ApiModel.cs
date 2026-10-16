@@ -9,6 +9,57 @@ using System.Text;
 // generator uses it to emit that signature.
 public static class ApiTypes
 {
+    /// <summary>
+    /// The Qt types the binding provides as C# *structs* rather than generating a class for them: the
+    /// name, the scalar fields in declaration order, what they are, and - for the ones whose memory
+    /// layout is not the order of their accessors - the two C++ expressions that convert between the
+    /// POD and Qt's own type (@pod is the POD value, @qt the Qt one; null means the default spelling,
+    /// a constructor call and a field-wise read). The code generator skips their classes and crosses
+    /// the boundary with those bytes; the C# side is hand-written in runtime/QtStructs.cs and the POD
+    /// in native/QtSharpApiRuntime.h.
+    ///
+    /// Qt spells these `class`, but they are trivially copyable: a QPointF is two qreals, every member
+    /// is arithmetic, and it is a POD in the C ABI. That is the whole admission test - a copy of one
+    /// owns nothing. QColor, QPen, QString and the rest of Qt's implicitly shared classes cross by
+    /// value too, but they carry a pointer with a reference count, so a bitwise copy would
+    /// double-free; those keep their handle.
+    ///
+    /// C++ passes them by value, and PyQt and PySide both model them as value types (SIP inlines
+    /// them in the Python object, shiboken's typesystem marks them one). A class with a handle costs
+    /// a native allocation, a registration and a finalizer per value, which is what makes
+    /// `series.replace(points)` leak a wrapper per sample.
+    /// </summary>
+    public static readonly (string Name, string[] Fields, string Scalar, string FromPod, string ToPod)[] RuntimeStructs =
+    {
+        ("QPointF", new[] { "x", "y" }, "double", null, null),
+        ("QPoint", new[] { "x", "y" }, "int", null, null),
+        ("QSize", new[] { "width", "height" }, "int", null, null),
+        ("QSizeF", new[] { "width", "height" }, "double", null, null),
+        ("QMargins", new[] { "left", "top", "right", "bottom" }, "int", null, null),
+        ("QMarginsF", new[] { "left", "top", "right", "bottom" }, "double", null, null),
+        ("QLine", new[] { "x1", "y1", "x2", "y2" }, "int", null, null),
+        ("QLineF", new[] { "x1", "y1", "x2", "y2" }, "double", null, null),
+        ("QRectF", new[] { "x", "y", "width", "height" }, "double", null, null),
+        // QRect keeps its two corners (x1,y1) and (x2,y2), while its accessors spell x,y,width,height
+        // and right()/bottom() are inclusive - so the POD has to follow the corners, and the two
+        // conversions have to go through them rather than through the accessors.
+        ("QRect", new[] { "x1", "y1", "x2", "y2" }, "int",
+            "QRect(QPoint(@pod.x1, @pod.y1), QPoint(@pod.x2, @pod.y2))",
+            "QsApiRect{ @qt.left(), @qt.top(), @qt.bottomRight().x(), @qt.bottomRight().y() }"),
+    };
+
+    public static (string Name, string[] Fields, string Scalar, string FromPod, string ToPod)? RuntimeStructOf(string name)
+    {
+        if (name == null)
+            return null;
+        foreach (var candidate in RuntimeStructs)
+            if (candidate.Name == name)
+                return candidate;
+        return null;
+    }
+
+    public static bool IsStruct(string name) => RuntimeStructOf(name) != null;
+
     // The class set is what distinguishes a real handle ("QPaintDevice*" -> QPaintDevice)
     // from a deliberately opaque pointer ("QEvent*" -> IntPtr).
     public static string Managed(string modelType, ICollection<string> classes = null)
@@ -80,6 +131,12 @@ public static class ApiTypes
             // A pointer to a scalar is an array of that scalar (QPolygon's int*, and the out
             // parameters QColor::getRgb writes back).
             if (IsScalar(pointee))
+                return Managed(pointee, classes) + "[]";
+            // A pointer to a runtime struct is an array of it too: Qt's drawPoints-style entry points
+            // take `const QPointF *points, int pointCount`, and a pinned managed array of the struct
+            // is the very memory Qt reads - and writes, for the ones that fill a buffer in
+            // (QRawFont::advancesForGlyphIndexes).
+            if (IsStruct(pointee))
                 return Managed(pointee, classes) + "[]";
             return classes != null && classes.Contains(pointee) ? pointee : "IntPtr";
         }

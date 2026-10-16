@@ -26,7 +26,6 @@ public sealed class CalcButtonApi : QToolButton
         var size = base.SizeHint();
         int height = size.Height() + 20;
         int width = Math.Max(size.Width(), height);
-        size.Dispose();
         return new QSize(width, height);
     }
 }
@@ -497,8 +496,8 @@ public static class ApiCalculatorDemo
         // plain QToolButton gives a shorter button.
         var plain = new QToolButton();
         plain.SetText("7");
-        using (var managed = calculator.Button("7").SizeHint())
-        using (var widget = plain.SizeHint())
+        var managed = calculator.Button("7").SizeHint();
+        var widget = plain.SizeHint();
         {
             Check(managed.Height() == widget.Height() + 20 && managed.Width() >= managed.Height(),
                 $"the managed sizeHint reached the layout (managed {managed.Width()}x{managed.Height()}, "

@@ -107,9 +107,9 @@ public sealed class ApiScribbleArea : QWidget
         if (!loadedImage.Load(fileName))
             return false;
 
-        using (var loadedSize = loadedImage.Size())
-        using (var areaSize = Size)
-        using (var newSize = loadedSize.ExpandedTo(areaSize))
+        var loadedSize = loadedImage.Size();
+        var areaSize = Size;
+        var newSize = loadedSize.ExpandedTo(areaSize);
         {
             image = ResizeImage(loadedImage, newSize);
         }
@@ -125,7 +125,7 @@ public sealed class ApiScribbleArea : QWidget
             return false;
 
         QImage visibleImage;
-        using (var areaSize = Size)
+        var areaSize = Size;
             visibleImage = ResizeImage(image, areaSize);
 
         if (visibleImage.Save(fileName, fileFormat))
@@ -140,7 +140,7 @@ public sealed class ApiScribbleArea : QWidget
     {
         if (image == null)
         {
-            using (var size = new QSize(Math.Max(Width + 128, 128), Math.Max(Height + 128, 128)))
+            var size = new QSize(Math.Max(Width + 128, 128), Math.Max(Height + 128, 128));
                 image = ResizeImage(null, size);
         }
 
@@ -166,7 +166,7 @@ public sealed class ApiScribbleArea : QWidget
 
         if (e.Button() == Qt.MouseButton.LeftButton)
         {
-            using (var position = e.Position())
+            var position = e.Position();
             {
                 lastX = (int)position.X();
                 lastY = (int)position.Y();
@@ -181,13 +181,13 @@ public sealed class ApiScribbleArea : QWidget
     {
         // The real check the legacy port could not express: buttons() is the held-button bitmask.
         bool leftHeld = (e.Buttons() & Qt.MouseButtons.LeftButton) != 0;
-        using (var position = e.Position())
+        var position = e.Position();
             MouseMoveBody((int)position.X(), (int)position.Y(), leftHeld);
     }
 
     public override void MouseReleaseEvent(QMouseEvent e)
     {
-        using (var position = e.Position())
+        var position = e.Position();
             MouseReleaseBody((int)position.X(), (int)position.Y(),
                              e.Button() == Qt.MouseButton.LeftButton);
     }
@@ -200,8 +200,10 @@ public sealed class ApiScribbleArea : QWidget
 
         // QPaintDevice is a view of the widget, not an owned object, so it is not disposable.
         using (var painter = new QPainter(AsQPaintDevice()))
-        using (var dirtyRect = e.Rect())
+        {
+            var dirtyRect = e.Rect();
             painter.DrawImage(dirtyRect, image, dirtyRect);
+        }
     }
 
     public override void ResizeEvent(QResizeEvent e)
@@ -242,7 +244,7 @@ public sealed class ApiScribbleArea : QWidget
         {
             int newWidth = Math.Max(Width + 128, image?.Width() ?? 0);
             int newHeight = Math.Max(Height + 128, image?.Height() ?? 0);
-            using (var size = new QSize(newWidth, newHeight))
+            var size = new QSize(newWidth, newHeight);
                 image = ResizeImage(image, size);
             Update();
         }
@@ -252,7 +254,7 @@ public sealed class ApiScribbleArea : QWidget
     {
         if (image == null)
         {
-            using (var size = new QSize(Math.Max(Width + 128, 128), Math.Max(Height + 128, 128)))
+            var size = new QSize(Math.Max(Width + 128, 128), Math.Max(Height + 128, 128));
                 image = ResizeImage(null, size);
         }
 
@@ -263,9 +265,7 @@ public sealed class ApiScribbleArea : QWidget
         using (var pen = CreatePen())
         {
             painter.SetPen(pen);
-            using (var from = new QPoint(oldX, oldY))
-            using (var to = new QPoint(x, y))
-                painter.DrawLine(from, to);
+            painter.DrawLine(new QPoint(oldX, oldY), new QPoint(x, y));
         }
 
         modified = true;
@@ -275,11 +275,11 @@ public sealed class ApiScribbleArea : QWidget
         lastY = y;
 
         int radius = (myPenWidth / 2) + 2;
-        using (var from = new QPoint(oldX, oldY))
-        using (var to = new QPoint(x, y))
-        using (var raw = new QRect(from, to))
-        using (var normalized = raw.Normalized())
-        using (var dirty = normalized.Adjusted(-radius, -radius, +radius, +radius))
+        var from = new QPoint(oldX, oldY);
+        var to = new QPoint(x, y);
+        var raw = new QRect(from, to);
+        var normalized = raw.Normalized();
+        var dirty = normalized.Adjusted(-radius, -radius, +radius, +radius);
             Update(dirty);
     }
 
@@ -287,7 +287,7 @@ public sealed class ApiScribbleArea : QWidget
     {
         if (img != null)
         {
-            using (var current = img.Size())
+            var current = img.Size();
             {
                 if (current.Width() == newSize.Width() && current.Height() == newSize.Height())
                     return img;
@@ -301,8 +301,10 @@ public sealed class ApiScribbleArea : QWidget
         if (img != null)
         {
             using (var painter = new QPainter(newImage))
-            using (var origin = new QPoint(0, 0))
+            {
+                var origin = new QPoint(0, 0);
                 painter.DrawImage(origin, img);
+            }
         }
         return newImage;
     }

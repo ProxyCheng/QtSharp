@@ -71,7 +71,7 @@ public sealed class ApiGradientWidget : QWidget
         using var painter = new QPainter(AsQPaintDevice());
         painter.SetRenderHint(QPainter.RenderHint.Antialiasing);
 
-        using var full = new QRect(0, 0, width(), height());
+        var full = new QRect(0, 0, width(), height());
 
         switch (Mode)
         {
@@ -171,14 +171,14 @@ public static class ApiGradientsDemo
             $"the three gradients report their type "
             + $"({widget.Linear.type()}, {widget.Radial.type()}, {widget.Conical.type()})");
 
-        using (var start = widget.Linear.Start())
-        using (var stop = widget.Linear.FinalStop())
+        var start = widget.Linear.Start();
+        var stop = widget.Linear.FinalStop();
             Check(Math.Abs(start.X() - 0.0) < 1e-6 && Math.Abs(start.Y() - 0.0) < 1e-6
                   && Math.Abs(stop.X() - 1.0) < 1e-6 && Math.Abs(stop.Y() - 1.0) < 1e-6,
                 $"QLinearGradient::start()/finalStop() round-trip "
                 + $"(({start.X()},{start.Y()}) -> ({stop.X()},{stop.Y()}))");
 
-        using (var center = widget.Radial.Center())
+        var center = widget.Radial.Center();
             Check(Math.Abs(center.X() - 0.5) < 1e-6 && Math.Abs(center.Y() - 0.5) < 1e-6
                   && Math.Abs(widget.Radial.Radius() - 0.25) < 1e-6,
                 $"QRadialGradient::center()/radius() round-trip "
@@ -189,12 +189,15 @@ public static class ApiGradientsDemo
 
         // A focal point that is not the centre really reaches the object.
         using (var focal = new QRadialGradient(0.5, 0.5, 0.5, 0.25, 0.25))
-        using (var center = focal.Center())
-        using (var focalPoint = focal.FocalPoint())
+        {
+            // A QPointF is a struct now, so the point comes back by value and owns nothing.
+            var focalCenter = focal.Center();
+            var focalPoint = focal.FocalPoint();
             Check(Math.Abs(focalPoint.X() - 0.25) < 1e-6 && Math.Abs(focalPoint.Y() - 0.25) < 1e-6
-                  && focalPoint.X() != center.X(),
+                  && focalPoint.X() != focalCenter.X(),
                 $"a QRadialGradient with a focal point keeps it "
-                + $"(centre {center.X()},{center.Y()} vs focal {focalPoint.X()},{focalPoint.Y()})");
+                + $"(centre {focalCenter.X()},{focalCenter.Y()} vs focal {focalPoint.X()},{focalPoint.Y()})");
+        }
 
         // The linear gradient runs along the diagonal: red at the top-left, blue at the bottom-right.
         widget.SetMode(ApiGradientWidget.GradientMode.Default1);
