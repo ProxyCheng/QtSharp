@@ -47,20 +47,6 @@ namespace QtSharp.Api
     {
         double _x;
         double _y;
-
-        public QPointF(double xpos, double ypos)
-        {
-            _x = xpos;
-            _y = ypos;
-        }
-
-        /// <summary>The conversion Qt declares from QPoint.</summary>
-        public QPointF(QPoint p)
-        {
-            _x = p.X();
-            _y = p.Y();
-        }
-
         public double X() => _x;
         public double Y() => _y;
 
@@ -99,13 +85,6 @@ namespace QtSharp.Api
     {
         int _x;
         int _y;
-
-        public QPoint(int xpos, int ypos)
-        {
-            _x = xpos;
-            _y = ypos;
-        }
-
         public int X() => _x;
         public int Y() => _y;
 
@@ -140,13 +119,6 @@ namespace QtSharp.Api
     public partial struct QSize : IEquatable<QSize>
     {
         int _width, _height;
-
-        public QSize(int width, int height)
-        {
-            _width = width;
-            _height = height;
-        }
-
         public int Width() => _width;
         public int Height() => _height;
         public int Rwidth() => _width;
@@ -214,13 +186,6 @@ namespace QtSharp.Api
     public partial struct QSizeF : IEquatable<QSizeF>
     {
         double _width, _height;
-
-        public QSizeF(double width, double height)
-        {
-            _width = width;
-            _height = height;
-        }
-
         public double Width() => _width;
         public double Height() => _height;
         public double Rwidth() => _width;
@@ -271,15 +236,6 @@ namespace QtSharp.Api
     public partial struct QMargins : IEquatable<QMargins>
     {
         int _left, _top, _right, _bottom;
-
-        public QMargins(int left, int top, int right, int bottom)
-        {
-            _left = left;
-            _top = top;
-            _right = right;
-            _bottom = bottom;
-        }
-
         public int Left() => _left;
         public int Top() => _top;
         public int Right() => _right;
@@ -327,15 +283,6 @@ namespace QtSharp.Api
     public partial struct QMarginsF : IEquatable<QMarginsF>
     {
         double _left, _top, _right, _bottom;
-
-        public QMarginsF(double left, double top, double right, double bottom)
-        {
-            _left = left;
-            _top = top;
-            _right = right;
-            _bottom = bottom;
-        }
-
         public double Left() => _left;
         public double Top() => _top;
         public double Right() => _right;
@@ -385,23 +332,6 @@ namespace QtSharp.Api
     public partial struct QLine : IEquatable<QLine>
     {
         int _x1, _y1, _x2, _y2;
-
-        public QLine(int x1, int y1, int x2, int y2)
-        {
-            _x1 = x1;
-            _y1 = y1;
-            _x2 = x2;
-            _y2 = y2;
-        }
-
-        public QLine(QPoint p1, QPoint p2)
-        {
-            _x1 = p1.X();
-            _y1 = p1.Y();
-            _x2 = p2.X();
-            _y2 = p2.Y();
-        }
-
         public int X1() => _x1;
         public int Y1() => _y1;
         public int X2() => _x2;
@@ -469,23 +399,6 @@ namespace QtSharp.Api
     public partial struct QLineF : IEquatable<QLineF>
     {
         double _x1, _y1, _x2, _y2;
-
-        public QLineF(double x1, double y1, double x2, double y2)
-        {
-            _x1 = x1;
-            _y1 = y1;
-            _x2 = x2;
-            _y2 = y2;
-        }
-
-        public QLineF(QPointF p1, QPointF p2)
-        {
-            _x1 = p1.X();
-            _y1 = p1.Y();
-            _x2 = p2.X();
-            _y2 = p2.Y();
-        }
-
         public double X1() => _x1;
         public double Y1() => _y1;
         public double X2() => _x2;
@@ -555,32 +468,6 @@ namespace QtSharp.Api
     public partial struct QRect : IEquatable<QRect>
     {
         int _x1, _y1, _x2, _y2;
-
-        public QRect(int x, int y, int width, int height)
-        {
-            _x1 = x;
-            _y1 = y;
-            _x2 = x + width - 1;
-            _y2 = y + height - 1;
-        }
-
-        /// <summary>Qt's (topLeft, bottomRight) constructor: the corners are both inclusive.</summary>
-        public QRect(QPoint topLeft, QPoint bottomRight)
-        {
-            _x1 = topLeft.X();
-            _y1 = topLeft.Y();
-            _x2 = bottomRight.X();
-            _y2 = bottomRight.Y();
-        }
-
-        public QRect(QPoint topLeft, QSize size)
-        {
-            _x1 = topLeft.X();
-            _y1 = topLeft.Y();
-            _x2 = _x1 + size.Width() - 1;
-            _y2 = _y1 + size.Height() - 1;
-        }
-
         public int X() => _x1;
         public int Y() => _y1;
         public int Left() => _x1;
@@ -808,31 +695,6 @@ namespace QtSharp.Api
     public partial struct QRectF : IEquatable<QRectF>
     {
         double _x, _y, _width, _height;
-
-        public QRectF(double x, double y, double width, double height)
-        {
-            _x = x;
-            _y = y;
-            _width = width;
-            _height = height;
-        }
-
-        public QRectF(QPointF topLeft, QSizeF size)
-        {
-            _x = topLeft.X();
-            _y = topLeft.Y();
-            _width = size.Width();
-            _height = size.Height();
-        }
-
-        public QRectF(QPointF topLeft, QPointF bottomRight)
-        {
-            _x = topLeft.X();
-            _y = topLeft.Y();
-            _width = bottomRight.X() - _x;
-            _height = bottomRight.Y() - _y;
-        }
-
         public double X() => _x;
         public double Y() => _y;
         public double Left() => _x;
