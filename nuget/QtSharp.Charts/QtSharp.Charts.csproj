@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- An *extension module*: QtCharts, bound as its own assembly and its own package against the
+       core binding, the way PyQt6-Charts sits beside PyQt6 and PySide6-Addons beside PySide6.
+
+       Nothing of the core is repeated here - not the runtime, not the core's classes, not the core's
+       enums. This assembly references the core one and only carries QtCharts: `QChart` derives from
+       the core's `QGraphicsWidget`, `QChartView` from the core's `QGraphicsView`, and its generated
+       P/Invokes call QtSharp.Charts.dll (the core's call QtSharp.Api.dll).
+
+       The generated source is produced by running `qtgen codegen` on model/qtsharp.charts.json
+       with the charts module selected; see docs/extension-modules.md. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>QtSharp.Charts</AssemblyName>
+    <RootNamespace>QtSharp.Charts</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\out\charts\QtSharp.Charts.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- A ProjectReference while both live in this repository; a consumer, and the standalone
+         QtSharp.Charts repository, uses a PackageReference to QtSharp.Api instead. -->
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\QtSharp.Api.csproj" />
+  </ItemGroup>
+
+</Project>
