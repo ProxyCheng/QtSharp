@@ -246,9 +246,28 @@ public static partial class ApiModel
                 R("QAbstractBarSeries",            "qabstractbarseries.h",           "QtCharts", bindCtors: false),
                 R("QBarSeries",                    "qbarseries.h",                   "QtCharts"),
                 R("QStackedBarSeries",             "qstackedbarseries.h",            "QtCharts"),
+                R("QPercentBarSeries",             "qpercentbarseries.h",            "QtCharts"),
+                R("QHorizontalBarSeries",          "qhorizontalbarseries.h",         "QtCharts"),
+                R("QHorizontalStackedBarSeries",   "qhorizontalstackedbarseries.h",  "QtCharts"),
+                R("QHorizontalPercentBarSeries",   "qhorizontalpercentbarseries.h",  "QtCharts"),
                 R("QBarSet",                       "qbarset.h",                      "QtCharts"),
+                // The box-and-whisker and candlestick families: a series of their own set type, the
+                // way the bar series pair with QBarSet.
+                R("QBoxPlotSeries",                "qboxplotseries.h",               "QtCharts"),
+                R("QBoxSet",                       "qboxset.h",                      "QtCharts"),
+                R("QCandlestickSeries",            "qcandlestickseries.h",           "QtCharts"),
+                R("QCandlestickSet",               "qcandlestickset.h",              "QtCharts"),
                 R("QPieSeries",                    "qpieseries.h",                   "QtCharts"),
                 R("QPieSlice",                     "qpieslice.h",                    "QtCharts"),
+                // The model mappers: they drive a series from a QAbstractItemModel, which a managed
+                // caller supplies (the examples write their own table model in C#). The two bases
+                // have to be published or the setters would vanish with them.
+                R("QBarModelMapper",               "qbarmodelmapper.h",              "QtCharts"),
+                R("QVBarModelMapper",              "qvbarmodelmapper.h",             "QtCharts"),
+                R("QHBarModelMapper",              "qhbarmodelmapper.h",             "QtCharts"),
+                R("QXYModelMapper",                "qxymodelmapper.h",               "QtCharts"),
+                R("QVXYModelMapper",               "qvxymodelmapper.h",              "QtCharts"),
+                R("QHXYModelMapper",               "qhxymodelmapper.h",              "QtCharts"),
                 // Axes.
                 R("QAbstractAxis",                 "qabstractaxis.h",                "QtCharts", bindCtors: false),
                 R("QValueAxis",                    "qvalueaxis.h",                   "QtCharts"),
