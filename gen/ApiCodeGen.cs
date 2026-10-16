@@ -1210,6 +1210,39 @@ public static class ApiCodeGen
         target.MethodKeys.UnionWith(source.MethodKeys);
     }
 
+    // Whether this run emits the class, i.e. whether it lands in the same assembly as the classes
+    // being written. An extension module emits only its own classes; everything else it knows comes
+    // from the core assembly.
+    static bool Emits(string className)
+        => Classes.Any(c => Name(c) == className);
+
+    /// <summary>
+    /// The members a generated class declares that are <c>internal</c>, so they only exist within
+    /// their own assembly. <c>Dispatch</c> is the one: every class declares its own vtable
+    /// dispatcher as <c>internal static</c>, which means a class in *another* assembly cannot hide
+    /// it - writing <c>new</c> across that boundary is exactly what CS0109 complains about.
+    /// </summary>
+    static readonly string[] AssemblyLocalNames = { "Dispatch" };
+
+    static Members WithoutAssemblyLocal(Members source)
+    {
+        var copy = new Members();
+        foreach (var name in source.AllNames)
+            if (Array.IndexOf(AssemblyLocalNames, name) < 0)
+                copy.AllNames.Add(name);
+        foreach (var name in source.NonMethodNames)
+            if (Array.IndexOf(AssemblyLocalNames, name) < 0)
+                copy.NonMethodNames.Add(name);
+        foreach (var key in source.MethodKeys)
+        {
+            int paren = key.IndexOf('(');
+            var name = paren < 0 ? key : key.Substring(0, paren);
+            if (Array.IndexOf(AssemblyLocalNames, name) < 0)
+                copy.MethodKeys.Add(key);
+        }
+        return copy;
+    }
+
     // The members visible to a class that inherits from `className`: everything `className`
     // declares, plus everything it inherits. This is what WriteClass unions over a class's base.
     static Members InheritedMembers(string className)
@@ -1220,7 +1253,7 @@ public static class ApiCodeGen
         inheritedMembers[className] = members;      // a cycle must not recurse forever
         if (ByName.TryGetValue(className, out var cls))
         {
-            MergeInto(members, DeclaredMembers(className));
+            MergeInto(members, Emits(className) ? DeclaredMembers(className) : WithoutAssemblyLocal(DeclaredMembers(className)));
             string baseName = cls.GetProperty("bases").EnumerateArray()
                 .Select(b => b.GetString()).FirstOrDefault();
             if (baseName != null)
