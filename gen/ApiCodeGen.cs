@@ -206,8 +206,12 @@ public static class ApiCodeGen
         // know which module this run is about as well.
         ApiModel.CurrentModule = module;
 
-        // What this run *emits*.
-        Classes = root.GetProperty("classes").EnumerateArray().ToList();
+        // What this run *emits*. The runtime's value types are not among them: QPointF and QPoint
+        // are structs the binding ships (runtime/QtStructs.cs), so no class is generated for
+        // them. They stay *known* further down, which is what keeps their names resolving and an
+        // array of them marshalling as the struct array it already is.
+        var modelClasses = root.GetProperty("classes").EnumerateArray().ToList();
+        Classes = modelClasses.Where(c => !ApiTypes.IsStruct(Name(c))).ToList();
         Enums = root.GetProperty("enums").EnumerateArray().ToList();
         Functions = root.TryGetProperty("functions", out var fns) && fns.ValueKind == JsonValueKind.Array
             ? fns.EnumerateArray().ToList()
@@ -216,7 +220,7 @@ public static class ApiCodeGen
         // What this run *knows*. For the core that is the model itself. For an extension it is the
         // core's classes and enums as well, so `QChart : QGraphicsWidget` resolves, inherited members
         // are spotted, and the core's enums are recognised as already-existing types.
-        var knownClasses = Classes;
+        var knownClasses = modelClasses;
         var knownEnums = Enums;
         if (coreDocument != null)
         {
@@ -330,21 +334,28 @@ public static class ApiCodeGen
         // type with the C# keyword in front.
         if (IsByRef(p))
             return $"{(IsOut(p) ? "out" : "ref")} {ParamManagedType(p)} {SafeName(PName(p))}";
-        string sig = $"{ManagedType(type)} {SafeName(PName(p))}";
+        // The slot Qt writes one value through is the caller's own struct, addressed by hand.
+        string managed = IsOpaqueStructPtr(p) ? "IntPtr" : ManagedType(type);
+        string sig = $"{managed} {SafeName(PName(p))}";
         if (!IsOptional(p))
             return sig;
         string literal = p.TryGetProperty("default", out var d) && d.ValueKind == JsonValueKind.String
             ? d.GetString()
             : null;
         // An opaque handle is a value type: IntPtr.Zero is not a compile-time constant, so the
-        // only usable default is `default`.
-        if (literal == "null" && ManagedType(type) == "IntPtr")
+        // only usable default is `default`. A Qt value type is one too, and null is not convertible
+        // to it - the model's `nullptr` default for `QPointF *` lands here (QLineF::intersects'
+        // intersection point, which Qt writes back through; see the note in CONTEXT).
+        if (literal == "null" && (ManagedType(type) == "IntPtr" || IsStruct(RefValueType(type))))
             literal = "default";
         return sig + " = " + (literal ?? CSharpDefault(type));
     }
 
     static string CSharpDefault(string type)
     {
+        // A value type's default is `default` (QPointF() is (0, 0)); null is not convertible to it.
+        if (IsStruct(RefValueType(type)))
+            return "default";
         if (ManagedType(type) == "IntPtr")
             return "default";       // a value type: IntPtr.Zero is not a constant
         if (IsArray(type) || IsPtr(type) || IsBoxed(type) || IsStringT(type) || type == "char*"
@@ -358,8 +369,21 @@ public static class ApiCodeGen
     // (a raw handle) have their own meaning and are not arrays.
     static bool IsScalarBase(string t)
         => t != "void" && (CSharpScalar(t) != null || t is "int" or "float" or "double" or "bool");
+    // A pointer to a scalar is an array on the managed side (QPolygon's const int* argument and the
+    // out parameters Qt writes back through), and so is a pointer to a runtime struct
+    // (QPainter::drawPoints' `const QPointF *points, int pointCount`, and the advances
+    // QRawFont::advancesForGlyphIndexes fills in): the managed array of the struct *is* the memory
+    // Qt reads, and writes for the entry points that fill a buffer in. char* (a string) and void*
+    // (a raw handle) have their own meaning and are not arrays.
     static bool IsArray(string t)
-        => t.EndsWith("*") && t != "char*" && IsScalarBase(t.Substring(0, t.Length - 1));
+        => t.EndsWith("*") && t != "char*"
+           && (IsScalarBase(t.Substring(0, t.Length - 1)) || IsStruct(t.Substring(0, t.Length - 1)));
+
+    // A pointer to one of the runtime structs. It crosses as an array of the struct, except where
+    // the model marks the parameter omittable - then it is the single slot Qt writes through
+    // (QLineF::intersects' intersection point), which only a raw address can express.
+    static bool IsStructPtr(string t) => t.EndsWith("*") && IsStruct(t.Substring(0, t.Length - 1));
+    static bool IsOpaqueStructPtr(JsonElement p) => IsOptional(p) && IsStructPtr(PType(p));
 
     // Everything that surfaces as a managed string: QString, the views Qt declares next to it,
     // and the NUL-terminated C string convention.
@@ -395,31 +419,36 @@ public static class ApiCodeGen
     // container handing an element *back* returns a heap copy, so its ABI type is void*.
     // An enum crosses the C ABI as the int it is.
     static bool IsEnumElem(string e) => IsEnum(e);
-    static string ElemAbiCppParam(string e) => IsScalarElem(e) ? e : IsEnumElem(e) ? "int" : IsStringT(e) ? "const char16_t*" : "void*";
-    static string ElemAbiCppRet(string e) => IsScalarElem(e) ? e : IsEnumElem(e) ? "int" : "void*";
+    static string ElemAbiCppParam(string e) => IsScalarElem(e) ? e : IsEnumElem(e) ? "int" : IsStringT(e) ? "const char16_t*" : IsStruct(e) ? StructPod(e) : "void*";
+    static string ElemAbiCppRet(string e) => IsScalarElem(e) ? e : IsEnumElem(e) ? "int" : IsStruct(e) ? StructPod(e) : "void*";
     static string ElemAbiCsParam(string e) => IsScalarElem(e) ? ManagedType(e) : IsEnumElem(e) ? "int"
-        : IsStringT(e) ? "[MarshalAs(UnmanagedType.LPWStr)] string" : "IntPtr";
-    static string ElemAbiCsRet(string e) => IsScalarElem(e) ? ManagedType(e) : IsEnumElem(e) ? "int" : "IntPtr";
-    // ABI -> real value (building the native container from managed data).
+        : IsStringT(e) ? "[MarshalAs(UnmanagedType.LPWStr)] string" : IsStruct(e) ? ManagedType(e) : "IntPtr";
+    static string ElemAbiCsRet(string e) => IsScalarElem(e) ? ManagedType(e) : IsEnumElem(e) ? "int" : IsStruct(e) ? ManagedType(e) : "IntPtr";
+    // ABI -> real value (building the native container from managed data). A struct is rebuilt from
+    // the POD, whose layout is Qt's own.
     static string ElemToCpp(string e, string expr) => IsScalarElem(e) ? expr
         : IsEnumElem(e) ? $"static_cast<{e}>({expr})"
         : IsStringT(e) ? $"({expr} ? QString::fromUtf16({expr}) : QString())"
+        : IsStruct(e) ? StructFromPod(e, expr)
         : IsPointerElem(e) ? $"static_cast<{e.Substring(0, e.Length - 1)}*>({expr})"
         : $"*static_cast<{e}*>({expr})";
     // Real value -> ABI (handing one element back to managed code; a QString has to be a copy).
     static string ElemFromCpp(string e, string expr) => IsScalarElem(e) ? expr
         : IsEnumElem(e) ? $"static_cast<int>({expr})"
         : IsStringT(e) ? $"new QString({expr})"
+        : IsStruct(e) ? StructToPod(e, expr)
         : IsPointerElem(e) ? $"static_cast<void*>({expr})"
         : $"new {e}({expr})";
-    // ABI -> managed value.
+    // ABI -> managed value. A struct *is* the ABI value: the POD comes back by value and the managed
+    // struct has the same layout, so nothing is built and nothing is wrapped.
     static string ElemRead(string e, string expr) => IsScalarElem(e) ? expr
         : IsEnumElem(e) ? $"({CsEnum(e)}){expr}"
         : IsStringT(e) ? $"ApiRuntime.ToManaged({expr})"
+        : IsStruct(e) ? expr
         : IsPointerElem(e) ? $"{e.Substring(0, e.Length - 1)}.FromTransientHandle({expr})"
         : IsOwned(e) ? $"{e}.FromOwnedHandle({expr})" : $"{e}.FromTransientHandle({expr})";
     // Managed value -> ABI.
-    static string ElemArg(string e, string expr) => IsScalarElem(e) || IsStringT(e) ? expr
+    static string ElemArg(string e, string expr) => IsScalarElem(e) || IsStringT(e) || IsStruct(e) ? expr
         : IsEnumElem(e) ? $"(int){expr}"
         : $"{expr}?.Handle ?? IntPtr.Zero";
 
@@ -556,9 +585,9 @@ public static class ApiCodeGen
         string helper = ListHelper(elem);
         string stem = ListStem(elem);
         string managed = ApiTypes.Managed(elem, ClassNames);
-        // The element is the loop variable of the generated New(): a scalar crosses as itself,
-        // a handle (class pointer or boxed value) as the raw pointer it wraps.
-        string argConv = IsScalarElem(elem) ? "item" : "item?.Handle ?? IntPtr.Zero";
+        // The element is the loop variable of the generated New(): a scalar and a runtime struct both
+        // cross as themselves, a handle (class pointer or boxed value) as the raw pointer it wraps.
+        string argConv = IsScalarElem(elem) || IsStruct(elem) ? "item" : "item?.Handle ?? IntPtr.Zero";
 
         sb.AppendLine();
         sb.AppendLine($"    internal static class {helper}");
@@ -895,7 +924,8 @@ public static class ApiCodeGen
     static void WriteListNativeDeclarations(StringBuilder sb, string elem)
     {
         string stem = ListStem(elem);
-        string abi = IsScalarElem(elem) ? ManagedType(elem) : "IntPtr";
+        // A struct element crosses as itself here too: the entry point takes it by value.
+        string abi = IsScalarElem(elem) || IsStruct(elem) ? ManagedType(elem) : "IntPtr";
         sb.AppendLine();
         sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_list_{stem}_new\", CallingConvention = CallingConvention.Cdecl)]");
         sb.AppendLine($"        internal static extern IntPtr List_{stem}_new();");
@@ -922,16 +952,23 @@ public static class ApiCodeGen
     {
         string stem = ListStem(elem);
         string list = $"QList<{elem}>";
-        string abi = IsScalarElem(elem) ? elem : "void*";
+        // A struct element crosses as the POD by value, the same way the managed declaration passes it.
+        string abi = IsScalarElem(elem) ? elem : IsStruct(elem) ? StructPod(elem) : "void*";
 
         string appendConv = IsScalarElem(elem) ? "item"
+            : IsStruct(elem) ? StructFromPod(elem, "item")
             : IsPointerElem(elem) ? $"static_cast<{elem.Substring(0, elem.Length - 1)}*>(item)"
             : $"*static_cast<{elem}*>(item)";
+        // A struct element is handed back as the POD whose layout Qt's type has, the same way the
+        // managed declaration reads it.
+        string atValue = $"static_cast<const {list}*>(list)->at(index)";
         string atConv = IsScalarElem(elem)
-            ? $"return static_cast<const {list}*>(list)->at(index);"
-            : IsPointerElem(elem)
-                ? $"return static_cast<void*>(static_cast<const {list}*>(list)->at(index));"
-                : $"return new {elem}(static_cast<const {list}*>(list)->at(index));";
+            ? $"return {atValue};"
+            : IsStruct(elem)
+                ? $"return {StructToPod(elem, atValue)};"
+                : IsPointerElem(elem)
+                    ? $"return static_cast<void*>({atValue});"
+                    : $"return new {elem}({atValue});";
 
         sb.AppendLine();
         sb.AppendLine($"// QList<{elem}>: element-by-element conversion for the managed side.");
@@ -970,7 +1007,7 @@ public static class ApiCodeGen
     {
         string stem = ListStem(elem);
         string call = $"ApiNative.List_{stem}_at(list, i)";
-        if (IsScalarElem(elem))
+        if (IsScalarElem(elem) || IsStruct(elem))
             return call;
         if (IsPointerElem(elem))
             return $"{elem.Substring(0, elem.Length - 1)}.FromTransientHandle({call})";
@@ -1047,7 +1084,7 @@ public static class ApiCodeGen
             string sig = string.Join(", ", ps.Select(ParamSig));
             string ret = ReturnType(fn);
             sb.AppendLine($"        /// <summary>Calls <c>{fname}</c>.</summary>");
-            sb.AppendLine($"        public static {ManagedType(ret)} {Pascal(fname)}({sig})");
+            sb.AppendLine($"        public static {ManagedRetType(ret)} {Pascal(fname)}({sig})");
             sb.AppendLine("        {");
             var marshal = MarshalParams(ps, null);
             foreach (string line in marshal.Prelude)
@@ -1803,7 +1840,7 @@ public static class ApiCodeGen
             // A method that shadows an inherited member of the same signature (or an inherited
             // property/field/type) needs `new`; an override must not say both.
             string methodNew = overrideMod == "" ? NewMethod(inherited, CSharpMemberName(mname), ps) : "";
-            sb.AppendLine($"        public {overrideMod}{methodNew}{staticMod}{ManagedType(ret)} {CSharpMemberName(mname)}({sig})");
+            sb.AppendLine($"        public {overrideMod}{methodNew}{staticMod}{ManagedRetType(ret)} {CSharpMemberName(mname)}({sig})");
             sb.AppendLine("        {");
             var marshal = MarshalParams(ps, IsStatic(m) ? null : "Handle");
             foreach (string line in marshal.Prelude)
@@ -1867,7 +1904,7 @@ public static class ApiCodeGen
             // never warns); mark it `new` in that case.
             string virtualNew = overridesBase ? "" : NewMethod(inherited, CSharpMemberName(vname), ps);
             sb.AppendLine($"        /// <summary>Virtual from {name}; override in a managed subclass.</summary>");
-            sb.AppendLine($"        public {virtualNew}{(overridesBase ? "override" : "virtual")} {ManagedType(ret)} {CSharpMemberName(vname)}({sig})");
+            sb.AppendLine($"        public {virtualNew}{(overridesBase ? "override" : "virtual")} {ManagedRetType(ret)} {CSharpMemberName(vname)}({sig})");
             sb.AppendLine("        {");
             // A wrapper of a *C++* object has to reach the object's own override, not the
             // declaring class's implementation: `view.model()` for a QTableWidget hands back a
@@ -2065,6 +2102,10 @@ public static class ApiCodeGen
             return $"ApiRuntime.WriteResult({dest}, (int){value});";
         if (t == "TimeSpan")
             return $"ApiRuntime.WriteResult({dest}, (long)({value}.Ticks * 100));";
+        // A value return lands in the caller's slot as the struct's own bytes: the managed layout is
+        // Qt's, so writing it is a copy and no native helper is involved.
+        if (IsStruct(t))
+            return $"Marshal.StructureToPtr({value}, {dest}, false);";
         if (IsBoxed(t))
             return $"ApiNative.Assign_{ListStem(t)}({dest}, {value}?.Handle ?? IntPtr.Zero);";
         // A bound-class pointer has a wrapper; an opaque one is already an IntPtr.
@@ -2395,6 +2436,8 @@ public static class ApiCodeGen
         // A container Qt hands to an override is Qt's: copy it out without freeing it.
         if (IsListT(t)) return $"{ListHelper(ListElem(t))}.ReadTransient({slot})";
         if (IsAssocT(t)) return $"{AssocHelper(t)}.ReadTransient({slot})";
+        // A value arrives by value: the slot points at the storage that holds it.
+        if (IsStruct(t)) return $"*({t}*)Marshal.ReadIntPtr(argv, {index} * IntPtr.Size)";
         // A boxed value is a *copy*: the slot points at the argument (or at a temporary Qt
         // allocated), and the wrapper must own its own object.
         if (IsBoxed(t) && VirtualBoxedParams().Contains(t))
@@ -2445,6 +2488,8 @@ public static class ApiCodeGen
         // A container Qt hands over belongs to Qt: copy it out without freeing it.
         if (IsListT(t)) return $"{ListHelper(ListElem(t))}.ReadTransient({slot})";
         if (IsAssocT(t)) return $"{AssocHelper(t)}.ReadTransient({slot})";
+        // A runtime struct is passed by value, so the storage the slot points at *is* the struct.
+        if (IsStruct(t)) return $"*({t}*){slot}";
         if (IsBoxed(t)) return $"{t}.FromTransientHandle({slot})";
         return slot;
     }
@@ -2501,6 +2546,13 @@ public static class ApiCodeGen
             else if (IsEnum(t))
             {
                 prelude.Add($"int {local} = (int){name};");
+                pointers.Add($"&{local}");
+            }
+            else if (IsStruct(t))
+            {
+                // By value, the way the moc-generated signal function builds it: the struct lives in
+                // a local and argv carries that local's address. No allocation, nothing to free.
+                prelude.Add($"var {local} = {name};");
                 pointers.Add($"&{local}");
             }
             else if (IsBoxed(t))
@@ -2577,11 +2629,19 @@ public static class ApiCodeGen
         return ApiTypes.Managed(t, ClassNames);
     }
 
+    // The managed type of a *return* value: a pointer to a runtime struct comes back as the address
+    // it is (a view into a container - QRegion's iterator), which is the one place a struct pointer
+    // does not read as an array.
+    static string ManagedRetType(string t) => IsStructPtr(t) ? "IntPtr" : ManagedType(t);
+
     static string NativeParamType(string t)
     {
         if (IsArray(t)) return ManagedType(t);
         if (t == "char*") return "[MarshalAs(UnmanagedType.LPUTF8Str)] string";
         if (t == "TimeSpan") return "long";
+        // A value crosses as a struct whose layout is the C++ one: two doubles, two ints. No handle,
+        // no allocation, no entry in the runtime's tables - and nothing for the caller to release.
+        if (IsStruct(t)) return t;
         if (IsStringListT(t) || IsListT(t) || IsAssocT(t) || t == "QByteArrayView") return "IntPtr";
         if (IsPtr(t) || IsBoxed(t)) return "IntPtr";
         if (IsEnum(t)) return "int";
@@ -2594,6 +2654,8 @@ public static class ApiCodeGen
     // default Win32 marshalling, hence the explicit I1.
     static string NativeParamTypeFor(JsonElement p)
     {
+        if (IsOpaqueStructPtr(p))
+            return "IntPtr";
         if (!IsByRef(p))
             return NativeParamType(PType(p));
         string keyword = IsOut(p) ? "out " : "ref ";
@@ -2602,7 +2664,8 @@ public static class ApiCodeGen
     }
 
     // One model parameter is not always one native parameter: an in-out string contributes the
-    // string it goes in as, plus the out slot the updated copy comes back through.
+    // string it goes in as, plus the out slot the updated copy comes back through. A value stays one
+    // parameter - the struct's layout is the C++ one, so it crosses as itself.
     static List<string> NativeParamsFor(JsonElement p)
     {
         if (!IsStringByRef(p))
@@ -2616,6 +2679,11 @@ public static class ApiCodeGen
 
     static List<string> CppParamsFor(JsonElement p)
     {
+        // The address of the caller's struct, cast back to Qt's type where the call is made.
+        if (IsOpaqueStructPtr(p))
+            return new List<string> { $"void* {NativeName(PName(p))}" };
+        if (IsStruct(PType(p)))
+            return new List<string> { $"{StructPod(PType(p))} {NativeName(PName(p))}" };
         if (!IsStringByRef(p))
             return new List<string> { $"{CppParamTypeFor(p)} {NativeName(PName(p))}" };
         return new List<string>
@@ -2625,9 +2693,48 @@ public static class ApiCodeGen
         };
     }
 
-    // The call takes the local QString; the out pointer is filled after the call returns.
+    // The call takes the local QString; the out pointer is filled after the call returns, and a
+    // value hands over Qt's own type rebuilt from the POD.
     static List<string> CppArgsFor(JsonElement p)
-        => new() { IsStringByRef(p) ? StringInLocal(NativeName(PName(p))) : CppArgFor(p) };
+    {
+        if (IsOpaqueStructPtr(p))
+            return new List<string> { $"static_cast<{RefValueType(PType(p))}*>({NativeName(PName(p))})" };
+        if (IsStruct(PType(p)))
+            return new List<string> { StructFromPod(PType(p), NativeName(PName(p))) };
+        return new() { IsStringByRef(p) ? StringInLocal(NativeName(PName(p))) : CppArgFor(p) };
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Qt's value types (QPointF, QPoint). C++ passes them by value, every member is arithmetic, and
+    // PyQt and PySide both model them as value types - so no wrapper exists per point, and
+    // `series.replace(points)` costs one temporary list rather than one heap object plus one
+    // finalizer each. The managed side is a struct (runtime/QtStructs.cs) laid out exactly like
+    // the C++ one (two doubles, two ints), so it crosses the boundary as a plain POD: the glue
+    // declares the matching type from QtSharpApiRuntime.h and rebuilds Qt's value from it.
+    static bool IsStruct(string t) => ApiTypes.IsStruct(t);
+
+    /// <summary>The POD the glue declares for a value type (QPointF -> QsApiPointF).</summary>
+    static string StructPod(string t)
+        => "QsApi" + (t.StartsWith("Q", StringComparison.Ordinal) ? t.Substring(1) : t);
+
+    /// <summary>Qt's value rebuilt from the POD, for a call: QPointF(p.x, p.y).</summary>
+    static string StructFromPod(string t, string name)
+    {
+        var entry = ApiTypes.RuntimeStructOf(t).Value;
+        // A type whose memory layout is not its accessor order carries its own conversion (QRect).
+        if (entry.FromPod != null)
+            return entry.FromPod.Replace("@pod", name);
+        return $"{t}({string.Join(", ", entry.Fields.Select(f => $"{name}.{f}"))})";
+    }
+
+    /// <summary>The POD the glue returns, built from Qt's value.</summary>
+    static string StructToPod(string t, string value)
+    {
+        var entry = ApiTypes.RuntimeStructOf(t).Value;
+        if (entry.ToPod != null)
+            return entry.ToPod.Replace("@qt", value);
+        return $"{StructPod(t)}{{ {string.Join(", ", entry.Fields.Select(f => $"{value}.{f}()"))} }}";
+    }
 
 
 
@@ -2659,6 +2766,12 @@ public static class ApiCodeGen
 
     static string NativeRetType(string t)
     {
+        // A value comes back as the POD that matches its layout.
+        if (IsStruct(t)) return t;
+        // A *pointer* to one comes back as the address it is. There is no array behind it: what Qt
+        // returns a struct pointer from is a view into a container (QRegion's iterator, QRect*), and
+        // the caller reads through it deliberately.
+        if (IsStructPtr(t)) return "IntPtr";
         if (t == "void" || t == "bool" || t == "int" || t == "float" || t == "double")
             return t;
         var scalar = CSharpScalar(t);
@@ -2688,6 +2801,9 @@ public static class ApiCodeGen
 
     static string ArgToNative(string t, string name)
     {
+        // A value goes over as its coordinates.
+        // A value crosses as itself: the struct's layout is the C++ one, so nothing is built.
+        if (IsStruct(t)) return name;
         if (IsArray(t) || IsStringT(t) || t == "char*") return name;
         if (t == "TimeSpan") return $"(long)({name}.Ticks * 100)";
         if (IsStringListT(t) || IsListT(t) || IsAssocT(t) || t == "QByteArrayView") return $"{name}Handle";
@@ -2699,6 +2815,11 @@ public static class ApiCodeGen
 
     static string RetToManaged(string t, string call)
     {
+        // A value came back through MarshalParams' out locals, not through the return slot.
+        // A value comes back as the struct itself, straight out of the return slot.
+        if (IsStruct(t)) return call;
+        // A struct pointer *is* the address; the managed side reads it through its own accessors.
+        if (IsStructPtr(t)) return call;
         // The native side hands back a newly allocated QString for both string conventions.
         if (IsStringT(t) || t == "char*") return $"ApiRuntime.ToManaged({call})";
         if (t == "TimeSpan") return $"TimeSpan.FromTicks({call} / 100)";
@@ -3163,6 +3284,9 @@ public static class ApiCodeGen
 
     static string CppParamType(string t)
     {
+        // A value arrives as the POD with the same layout, and so does an array of them.
+        if (IsStruct(t)) return StructPod(t);
+        if (IsStructPtr(t)) return StructArrayAbiType(t);
         if (IsStringT(t)) return "const char16_t*";
         if (t == "char*") return "const char*";
         // A duration crosses the C ABI as nanoseconds and is converted to the unit Qt declared
@@ -3182,9 +3306,17 @@ public static class ApiCodeGen
         return t;
     }
 
+    // An array of the runtime structs crosses as the POD array: the layouts are Qt's own, so the
+    // glue only has to restate the type (and the call casts it back - see CppArg). The pointer is
+    // mutable because the model does not record const and Qt declares both directions: a buffer Qt
+    // only reads (QPainter::drawPoints) and one it fills in (QRawFont::advancesForGlyphIndexes).
+    // A mutable pointer converts to const implicitly, which is what makes one spelling do for both.
+    static string StructArrayAbiType(string t) => StructPod(RefValueType(t)) + "*";
+
     // The real C++ types, used where the generated code has to speak to Qt directly.
     static string CppCtorParamType(string t)
     {
+        if (IsStructPtr(t)) return StructArrayAbiType(t);
         if (IsStringT(t)) return "QString";
         if (t == "char*") return "const char*";
         if (t == "uchar*") return "unsigned char*";
@@ -3200,6 +3332,9 @@ public static class ApiCodeGen
 
     static string CppArg(string t, string name, string defaultCpp = null)
     {
+        // An array of runtime structs is the POD array whose layout Qt's own type has: the ABI
+        // carries the POD, and the call restates it as the type Qt declared.
+        if (IsStructPtr(t)) return $"reinterpret_cast<{RefValueType(t)}*>({name})";
         // A null managed string must not reach QString::fromUtf16 as a null pointer.
         if (IsStringT(t)) return $"{name} ? QString::fromUtf16({name}) : QString()";
         if (IsStringListT(t)) return $"*static_cast<QStringList*>({name})";
@@ -3230,6 +3365,11 @@ public static class ApiCodeGen
 
     static string NativeRetCpp(string t)
     {
+        // A value goes back as the POD the managed struct is: a plain aggregate of the coordinates,
+        // which both compilers pass the same way.
+        if (IsStruct(t)) return StructPod(t);
+        // A pointer to one goes back as the address Qt gave us.
+        if (IsStructPtr(t)) return "void*";
         // The scalar types the C ABI can return directly; everything else comes back as a
         // pointer to something the managed side converts.
         if (t == "void" || t == "bool" || t == "int" || t == "float" || t == "double")
@@ -3243,6 +3383,11 @@ public static class ApiCodeGen
     static string NativeRetExpr(string t, string call)
     {
         if (t == "void") return call + ";";
+        // A value is handed back as the POD the caller reads it from (the local is declared by
+        // whoever built the call).
+        if (IsStruct(t)) return $"return {StructToPod(t, call)};";
+        // A struct pointer is a view Qt declares const; the C ABI hands out a plain address.
+        if (IsStructPtr(t)) return $"return static_cast<void*>(const_cast<{RefValueType(t)}*>({call}));";
         // A QString copies, but the views next to it have to be converted explicitly: QString has
         // no constructor from QStringView.
         if (IsStringT(t)) return t == "QString" ? $"return new QString({call});" : $"return new QString({call}.toString());";

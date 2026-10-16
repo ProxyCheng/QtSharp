@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\ApiRuntime.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\ApiApplication.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\QtStructs.cs" />
     <Compile Include="$(QtSharpApiDir)\QtSharp.Api.cs" />
   </ItemGroup>
 

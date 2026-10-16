@@ -83,7 +83,7 @@ public sealed class ApiAnalogClock : QWidget
     public override void MousePressEvent(QMouseEvent e)
     {
         PressCount++;
-        using (var pos = e.Position())
+        var pos = e.Position();
         {
             LastPressX = pos.X();
             LastPressY = pos.Y();
@@ -389,11 +389,11 @@ public static class ApiAnalogClockDemo
         // Geometry value types are boxed handles too, so a round-trip exercises construction,
         // by-const-reference parameters, by-value returns and ownership at once.
         probe.Resize(123, 45);
-        using (var rect = probe.rect())
+        var rect = probe.rect();
             Check(rect.Width() == 123 && rect.Height() == 45,
                 $"QRect return + accessors (got {rect.Width()}x{rect.Height()})");
         probe.Move(new QPoint(7, 9));
-        using (var pos = probe.pos())
+        var pos = probe.pos();
             Check(pos.X() == 7 && pos.Y() == 9,
                 $"QPoint round-trip through move() (got {pos.X()},{pos.Y()})");
 
