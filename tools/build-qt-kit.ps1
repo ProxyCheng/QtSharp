@@ -60,41 +60,67 @@ if ($KitDir) {
     $sevenZip = Get-SevenZip
     $short = $QtVersion.Replace('.', '')
     $repoBase = "https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_$short/qt6_${short}_msvc2022_64"
-    $packageDir = "$repoBase/qt.qt6.$short.win64_msvc2022_64"
-
     New-Item -ItemType Directory -Path $cache -Force | Out-Null
 
-    # Fetch the listing with curl and read it as text: Invoke-WebRequest's .Content is not always a
+    # qtbase and qtsvg live in the kit's own package directory; QtCharts is an *addon* and is
+    # published under its own sibling package (qt.qt6.<ver>.addons.qtcharts....). Both are the same
+    # build of the same kit, which is what keeps the module's DLL compatible with the core runtime.
+    $sources = @(
+        @{ Dir = "$repoBase/qt.qt6.$short.win64_msvc2022_64"; Prefixes = @('qtbase', 'qtsvg') },
+        @{ Dir = "$repoBase/qt.qt6.$short.addons.qtcharts.win64_msvc2022_64"; Prefixes = @('qtcharts') }
+    )
+
+    # Fetch each listing with curl and read it as text: Invoke-WebRequest's .Content is not always a
     # string, which silently turned the archive pattern match into a null reference on CI.
-    Write-Host "listing $packageDir"
-    $listingFile = Join-Path $cache 'listing.html'
-    Get-RemoteFile "$packageDir/" $listingFile
-    $listing = Get-Content -LiteralPath $listingFile -Raw
     $archives = @()
-    foreach ($pkg in @('qtbase', 'qtsvg')) {
-        $match = [regex]::Match($listing, "href=`"([^`"]*$pkg-[^`"]*-X86_64\.7z)`"")
-        if (-not $match.Success) {
-            throw "No $pkg archive is published for Qt $QtVersion under $packageDir (the listing was $($listing.Length) characters)."
+    foreach ($source in $sources) {
+        Write-Host "listing $($source.Dir)"
+        $listingFile = Join-Path $cache ("listing-" + ($source.Dir -replace '[^A-Za-z0-9]', '_') + '.html')
+        Get-RemoteFile "$($source.Dir)/" $listingFile
+        $listing = Get-Content -LiteralPath $listingFile -Raw
+        foreach ($pkg in $source.Prefixes) {
+            $match = [regex]::Match($listing, "href=`"([^`"]*$pkg-[^`"]*-X86_64\.7z)`"")
+            if (-not $match.Success) {
+                throw "No $pkg archive is published under $($source.Dir) (the listing was $($listing.Length) characters)."
+            }
+            $archives += @{ Url = "$($source.Dir)/$($match.Groups[1].Value)"; Name = $match.Groups[1].Value }
         }
-        $archives += $match.Groups[1].Value
     }
 
     New-Item -ItemType Directory -Path $kitOut -Force | Out-Null
     foreach ($archive in $archives) {
-        $file = Join-Path $cache $archive
+        $file = Join-Path $cache $archive.Name
         if ($Force -or -not (Test-Path -LiteralPath $file)) {
-            Write-Host "downloading $archive"
-            Get-RemoteFile "$packageDir/$archive" $file
+            Write-Host "downloading $($archive.Name)"
+            Get-RemoteFile $archive.Url $file
         }
-        Write-Host "extracting $archive"
+        Write-Host "extracting $($archive.Name)"
         & $sevenZip x $file "-o$kitOut" -y -bso0 -bsp0
-        if ($LASTEXITCODE -ne 0) { throw "Extraction failed: $archive" }
+        if ($LASTEXITCODE -ne 0) { throw "Extraction failed: $($archive.Name)" }
     }
 
     $qobject = Find-One $kitOut 'include\QtCore\qobject.h'
     if (-not $qobject) { throw "The extracted archives do not contain include\QtCore\qobject.h under $kitOut." }
     $kitRoot = $qobject.Directory.Parent.Parent.FullName
     Write-Host "discovered the Qt kit root: $kitRoot"
+
+    # An addon package can extract beside the kit root rather than into it. The extension binding
+    # needs the module's headers, import library and DLL in the kit, so put them there if the
+    # archive layout did not already.
+    if (-not (Test-Path -LiteralPath (Join-Path $kitRoot 'include\QtCharts\qchart.h'))) {
+        $chartsHeader = Find-One $kitOut 'include\QtCharts\qchart.h'
+        if (-not $chartsHeader) { throw "The QtCharts archive did not provide include\QtCharts\qchart.h under $kitOut." }
+        $chartsRoot = $chartsHeader.Directory.Parent.Parent.FullName
+        Write-Host "merging the QtCharts pieces from $chartsRoot into $kitRoot"
+        Copy-Item (Join-Path $chartsRoot 'include\QtCharts') (Join-Path $kitRoot 'include') -Recurse -Force
+        Get-ChildItem (Join-Path $chartsRoot 'lib') -Filter 'Qt6Charts*' -File -ErrorAction SilentlyContinue |
+            ForEach-Object { Copy-Item $_.FullName (Join-Path $kitRoot 'lib') -Force }
+        Get-ChildItem (Join-Path $chartsRoot 'bin') -Filter 'Qt6Charts.dll' -File -ErrorAction SilentlyContinue |
+            ForEach-Object { Copy-Item $_.FullName (Join-Path $kitRoot 'bin') -Force }
+    }
+    if (-not (Test-Path -LiteralPath (Join-Path $kitRoot 'include\QtCharts\qchart.h'))) {
+        throw "QtCharts headers are missing from $kitRoot."
+    }
 }
 
 $privateHeader = Get-ChildItem -Path (Join-Path $kitRoot 'include\QtCore') -Recurse -Filter 'qobject_p.h' -File -ErrorAction SilentlyContinue | Select-Object -First 1
