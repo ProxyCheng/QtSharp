@@ -223,7 +223,10 @@ public static partial class ApiModel
         {
             Name = "charts",
             Namespace = "QtSharp.Charts",
-            NativeLibrary = "QtSharp.Charts",
+            // The managed assembly is QtSharp.Charts (the namespace, and what a consumer references);
+            // the native glue needs a different file name or the two overwrite each other in the
+            // output directory. The core has the same split: QtSharp.dll beside QtSharp.Api.dll.
+            NativeLibrary = "QtSharp.Charts.Native",
             QtModule = "QtCharts",
             QtDefine = "QT_CHARTS_LIB",
             QtLibs = new[] { "Qt6Charts" },
