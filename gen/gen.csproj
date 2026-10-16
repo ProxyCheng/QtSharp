@@ -14,7 +14,7 @@
   <ItemGroup>
     <!-- The replacement front end: libclang through ClangSharp. See ApiModel2.cs. -->
     <PackageReference Include="ClangSharp" Version="21.1.8.2" />
-    <PackageReference Include="libClangSharp.runtime.win-x64" Version="21.1.8.2" />
+    <PackageReference Include="libClangSharp.runtime.win-x64" Version="22.1.8.2" />
   </ItemGroup>
 
   <ItemGroup>
