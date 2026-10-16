@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using QtSharp.Api;
 
@@ -105,7 +105,7 @@ public sealed class ApiStarEditor : QWidget
     public override void PaintEvent(QPaintEvent e)
     {
         using var painter = new QPainter(AsQPaintDevice());
-        using var rect = new QRect(0, 0, width(), height());
+        var rect = new QRect(0, 0, width(), height());
         using var palette = Palette;
         rating.Paint(painter, rect, palette, editable: true);
         painter.End();
@@ -114,7 +114,7 @@ public sealed class ApiStarEditor : QWidget
     public override void MouseMoveEvent(QMouseEvent e)
     {
         MouseMoveCount++;
-        using var position = e.Position();
+        var position = e.Position();
         int star = StarAtPosition((int)Math.Round(position.X()));
         if (star != rating.StarCount && star != -1)
         {
@@ -140,7 +140,7 @@ public sealed class ApiStarEditor : QWidget
     // `(x / (sizeHint().width() / maxStarCount())) + 1`, clamped by the same -1 as the original.
     public int StarAtPosition(int x)
     {
-        using var hint = rating.SizeHint();
+        var hint = rating.SizeHint();
         int star = (x / (hint.Width() / rating.MaxStarCount)) + 1;
         if (star <= 0 || star > rating.MaxStarCount)
             return -1;
@@ -183,7 +183,7 @@ public sealed class ApiStarDelegate : QStyledItemDelegate
         }
 
         var rating = new ApiStarRating(RatingOf(index), MaxStarCount);
-        using var rect = option.Rect;
+        var rect = option.Rect;
         using var palette = option.Palette;
         if ((option.State & QStyle.State.State_Selected) != 0)
             painter.FillRect(rect, palette.Highlight());
@@ -245,7 +245,7 @@ public sealed class ApiStarDelegate : QStyledItemDelegate
     public override void UpdateEditorGeometry(QWidget editor, QStyleOptionViewItem option, QModelIndex index)
     {
         UpdateEditorGeometryCalls++;
-        using var rect = option.Rect;
+        var rect = option.Rect;
         editor.SetGeometry(rect);
     }
 
@@ -383,17 +383,21 @@ public static class ApiStarDelegateDemo
         // never has this problem: the indexes Qt hands it are the real ones.
         using (var option = new QStyleOptionViewItem())
         using (var index = table.Model().Index(0, 3))
-        using (var hint = table.StarDelegate.SizeHint(option, index))
+        {
+            var hint = table.StarDelegate.SizeHint(option, index);
             Check(index.IsValid() && hint.Width() == ApiStarRating.PaintingScaleFactor * ApiStarDelegate.MaxStarCount
                   && hint.Height() == ApiStarRating.PaintingScaleFactor,
                 $"the rating cell asks for {ApiStarRating.PaintingScaleFactor * ApiStarDelegate.MaxStarCount}x"
                 + $"{ApiStarRating.PaintingScaleFactor} (got {hint.Width()}x{hint.Height()})");
+        }
 
         using (var option = new QStyleOptionViewItem())
         using (var index = table.Model().Index(0, 0))
-        using (var hint = table.StarDelegate.SizeHint(option, index))
+        {
+            var hint = table.StarDelegate.SizeHint(option, index);
             Check(hint.Width() > 0 && hint.Height() > 0,
                 $"a text cell falls through to QStyledItemDelegate::sizeHint ({hint.Width()}x{hint.Height()})");
+        }
 
         // The editor: created by the delegate, filled from the model, committed back into it.
         using (var option = new QStyleOptionViewItem())
@@ -436,12 +440,12 @@ public static class ApiStarDelegateDemo
             }
 
             // updateEditorGeometry: the editor takes the cell's rectangle.
-            using (var cellRect = new QRect(10, 20, 100, 20))
+            var cellRect = new QRect(10, 20, 100, 20);
             {
                 option.Rect = cellRect;
                 table.StarDelegate.UpdateEditorGeometry(editor, option, index);
             }
-            using (var geometry = editor.Geometry)
+            var geometry = editor.Geometry;
                 Check(table.StarDelegate.UpdateEditorGeometryCalls == 1
                       && geometry.Width() == 100 && geometry.Height() == 20,
                     $"updateEditorGeometry() gives the editor the cell's rectangle "

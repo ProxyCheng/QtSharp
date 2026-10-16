@@ -369,22 +369,26 @@ public static class ApiPainterPathsDemo
 
         // The paths themselves: bounding rectangles computed by Qt from the geometry.
         using (var rectPath = ApiPainterPathsWindow.BuildPath(0))
-        using (var bounds = rectPath.BoundingRect())
+        {
+            var bounds = rectPath.BoundingRect();
             Check(Math.Abs(bounds.Left() - 20.0) < 0.01 && Math.Abs(bounds.Top() - 30.0) < 0.01
                   && Math.Abs(bounds.Width() - 60.0) < 0.01 && Math.Abs(bounds.Height() - 40.0) < 0.01,
                 $"the rectangle path's bounding rect is (20,30,60,40) (got "
                 + $"({bounds.Left()},{bounds.Top()},{bounds.Width()},{bounds.Height()}))");
+        }
 
         using (var ellipsePath = ApiPainterPathsWindow.BuildPath(2))
-        using (var bounds = ellipsePath.BoundingRect())
+        {
+            var bounds = ellipsePath.BoundingRect();
             Check(Math.Abs(bounds.Left() - 20.0) < 0.01 && Math.Abs(bounds.Top() - 30.0) < 0.01
                   && Math.Abs(bounds.Width() - 60.0) < 0.01 && Math.Abs(bounds.Height() - 40.0) < 0.01,
                 $"the ellipse path's bounding rect is (20,30,60,40) (got "
                 + $"({bounds.Left()},{bounds.Top()},{bounds.Width()},{bounds.Height()}))");
+        }
 
         // The virtual size hints.
-        using (var hint = areas[0].SizeHint())
-        using (var minimum = areas[0].MinimumSizeHint())
+        var hint = areas[0].SizeHint();
+        var minimum = areas[0].MinimumSizeHint();
             Check(hint.Width() == 100 && hint.Height() == 100
                   && minimum.Width() == 50 && minimum.Height() == 50,
                 $"sizeHint()/minimumSizeHint() report the official sizes "
@@ -399,8 +403,8 @@ public static class ApiPainterPathsDemo
 
         // QPainterPath::contains() answers "is this point inside?" under the path's own fill rule,
         // so the pentagram's twice-crossed centre is the direct way to see the rule take effect.
-        using (var centre = new QPointF(50.0, 50.0))
-        using (var outside = new QPointF(3.0, 3.0))
+        var centre = new QPointF(50.0, 50.0);
+        var outside = new QPointF(3.0, 3.0);
         {
             using var oddEvenPath = ApiPainterPathsWindow.BuildPath(8);
             oddEvenPath.SetFillRule(Qt.FillRule.OddEvenFill);

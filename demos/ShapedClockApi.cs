@@ -72,7 +72,7 @@ public sealed class ApiShapedClock : QWidget
     void UpdateMask()
     {
         int side = Math.Min(width(), height());
-        using var rect = new QRect((width() - side) / 2, (height() - side) / 2, side, side);
+        var rect = new QRect((width() - side) / 2, (height() - side) / 2, side, side);
         using var mask = new QRegion(rect, QRegion.RegionType.Ellipse);
         SetMask(mask);
     }
@@ -88,14 +88,14 @@ public sealed class ApiShapedClock : QWidget
             LastButton = e.Button();
             LastButtons = e.Buttons();
 
-            using (var global = e.GlobalPosition())
+            var global = e.GlobalPosition();
             {
                 LastGlobalX = (int)Math.Round(global.X());
                 LastGlobalY = (int)Math.Round(global.Y());
             }
-            using (var frame = FrameGeometry)
-            using (var topLeft = frame.TopLeft())
+            var frame = FrameGeometry;
             {
+                var topLeft = frame.TopLeft();
                 PressFrameX = topLeft.X();
                 PressFrameY = topLeft.Y();
                 DragOffsetX = LastGlobalX - PressFrameX;
@@ -116,7 +116,7 @@ public sealed class ApiShapedClock : QWidget
         // The original: `if (event->buttons() & Qt::LeftButton) { move(event->globalPos() - dragPosition); ... }`.
         if ((e.Buttons() & Qt.MouseButtons.LeftButton) != 0)
         {
-            using (var global = e.GlobalPosition())
+            var global = e.GlobalPosition();
                 ApplyDrag(new QPoint((int)Math.Round(global.X()), (int)Math.Round(global.Y())));
             e.Accept();
             return;
@@ -266,7 +266,7 @@ public static class ShapedClockApi
             int rectCount = maskSet ? mask.RectCount() : 0;
             if (maskSet)
             {
-                using var bounds = mask.BoundingRect();
+                var bounds = mask.BoundingRect();
                 maskWidth = bounds.Width();
                 maskHeight = bounds.Height();
             }
@@ -277,7 +277,7 @@ public static class ShapedClockApi
         }
 
         // The virtual override: the boxed QSize comes back through the generated accessor.
-        using (var hint = clock.SizeHint())
+        var hint = clock.SizeHint();
             Check(hint.Width() == 200 && hint.Height() == 200,
                 $"sizeHint() reports 200x200 (got {hint.Width()}x{hint.Height()})");
 
@@ -320,12 +320,12 @@ public static class ShapedClockApi
         // The drag itself: the press stored `globalPosition - frameGeometry().topLeft`, and a move
         // to `press + delta` has to move the window by exactly that delta. Driven through the
         // shared drag body because there is no synthetic move probe.
-        using (var posBefore = clock.pos())
+        var posBefore = clock.pos();
         {
             int dx = 37;
             int dy = -21;
             clock.DragTo(new QPoint(clock.LastGlobalX + dx, clock.LastGlobalY + dy));
-            using (var posAfter = clock.pos())
+            var posAfter = clock.pos();
                 Check(clock.DragMoveCount == 1
                       && posAfter.X() - posBefore.X() == dx && posAfter.Y() - posBefore.Y() == dy,
                     $"the drag moved the window by ({dx},{dy}) (from {posBefore.X()},{posBefore.Y()} "

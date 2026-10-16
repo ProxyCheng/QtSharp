@@ -77,8 +77,6 @@ public sealed class ApiRenderArea : QWidget
         for (int i = 0; i < points.Length; i++)
             raw[i] = new QPoint(points[i].X, points[i].Y);
         var polygon = new QPolygon(raw);
-        foreach (var p in raw)
-            p.Dispose();
         return polygon;
     }
 
@@ -93,10 +91,10 @@ public sealed class ApiRenderArea : QWidget
             painter.SetRenderHint(QPainter.RenderHint.Antialiasing, true);
 
         // A known background (the difference called out above).
-        using (var full = new QRect(0, 0, width(), height()))
+        var full = new QRect(0, 0, width(), height());
             painter.FillRect(full, Qt.GlobalColor.lightGray);
 
-        using var rect = new QRect(10, 20, 80, 60);
+        var rect = new QRect(10, 20, 80, 60);
 
         if (Transformed)
         {
@@ -111,8 +109,8 @@ public sealed class ApiRenderArea : QWidget
         switch (Shape)
         {
             case ShapeKind.Line:
-                using (var topLeft = rect.TopLeft())
-                using (var bottomRight = rect.BottomRight())
+                var topLeft = rect.TopLeft();
+                var bottomRight = rect.BottomRight();
                     painter.DrawLine(topLeft, bottomRight);
                 break;
 
@@ -422,8 +420,8 @@ public static class ApiBasicDrawingDemo
             $"each setShape() repainted ({area.PaintCount} paintEvent calls reached C#)");
 
         // The virtual overrides, read back through the generated accessors.
-        using (var hint = area.SizeHint())
-        using (var minimum = area.MinimumSizeHint())
+        var hint = area.SizeHint();
+        var minimum = area.MinimumSizeHint();
             Check(hint.Width() == 400 && hint.Height() == 200
                   && minimum.Width() == 100 && minimum.Height() == 100,
                 $"sizeHint()/minimumSizeHint() report the official sizes "
@@ -585,6 +583,16 @@ public static class ApiBasicDrawingDemo
         window.TransformationsCheckBox.SetChecked(true);
         Check(window.RenderArea.Transformed,
             "the transformations check box drives the render area");
+
+        // The window is left on screen for a moment if asked, but nothing needs the event loop.
+        if (int.TryParse(Environment.GetEnvironmentVariable("QTSHARP_DEMO_MS"), out var ms) && ms > 0)
+        {
+            var stop = new QTimer();
+            stop.SetSingleShot(true);
+            stop.TimeoutSignal.Connect(() => app.Quit());
+            stop.Start(ms);
+            app.Exec();
+        }
 
         Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
         return failures == 0 ? 0 : 1;

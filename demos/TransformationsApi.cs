@@ -85,8 +85,8 @@ public static class ApiTransformationShapes
         using var font = new QFont();
         font.SetPixelSize(50);
         using var metrics = new QFontMetrics(font);
-        using var bounds = metrics.BoundingRect("Qt");
-        using var center = bounds.Center();
+        var bounds = metrics.BoundingRect("Qt");
+        var center = bounds.Center();
         text.AddText(new QPointF(-center.X(), -center.Y()), font, "Qt");
         return text;
     }
@@ -367,8 +367,8 @@ public static class ApiTransformationsDemo
         // The render area's hints and the font metrics it uses to place the axis labels.
         using (var probe = new ApiTransformRenderArea())
         {
-            using var hint = probe.SizeHint();
-            using var minimum = probe.MinimumSizeHint();
+            var hint = probe.SizeHint();
+            var minimum = probe.MinimumSizeHint();
             Check(hint.Width() == 232 && hint.Height() == 232,
                 $"the render area asks for 232x232 (got {hint.Width()}x{hint.Height()})");
             Check(minimum.Width() == 182 && minimum.Height() == 182,
@@ -386,27 +386,29 @@ public static class ApiTransformationsDemo
         using (var text = ApiTransformationShapes.Text())
         using (var truck = ApiTransformationShapes.Truck())
         {
-            using (var bounds = clock.BoundingRect())
+            var bounds = clock.BoundingRect();
                 Check(Math.Abs(bounds.Width() - 100) <= 1 && Math.Abs(bounds.Height() - 100) <= 1,
                     $"the clock path spans 100x100 (got {bounds.Width()}x{bounds.Height()})");
 
-            using (var bounds = house.BoundingRect())
-                Check(Math.Abs(bounds.Width() - 90) <= 1 && Math.Abs(bounds.Height() - 90) <= 1,
-                    $"the house path spans 90x90 (got {bounds.Width()}x{bounds.Height()})");
+            var houseBounds = house.BoundingRect();
+                Check(Math.Abs(houseBounds.Width() - 90) <= 1 && Math.Abs(houseBounds.Height() - 90) <= 1,
+                    $"the house path spans 90x90 (got {houseBounds.Width()}x{houseBounds.Height()})");
 
-            using (var bounds = truck.BoundingRect())
-                Check(Math.Abs(bounds.Width() - 100) <= 1 && Math.Abs(bounds.Height() - 65) <= 1,
-                    $"the truck path spans 100x65 (got {bounds.Width()}x{bounds.Height()})");
+            var truckBounds = truck.BoundingRect();
+                Check(Math.Abs(truckBounds.Width() - 100) <= 1 && Math.Abs(truckBounds.Height() - 65) <= 1,
+                    $"the truck path spans 100x65 (got {truckBounds.Width()}x{truckBounds.Height()})");
 
-            using (var bounds = text.BoundingRect())
-            using (var center = bounds.Center())
+            var textBounds = text.BoundingRect();
+            {
+                var center = textBounds.Center();
                 // The tolerance is a font one rather than a geometry one: the outlines are centred by
                 // construction, but which font "Qt" resolves to - and so the exact ink bounds -
                 // differs between machines (CI's differs by a couple of pixels).
-                Check(bounds.Width() > 20 && bounds.Height() > 20
+                Check(textBounds.Width() > 20 && textBounds.Height() > 20
                       && Math.Abs(center.X()) <= 8 && Math.Abs(center.Y()) <= 8,
                     $"the text path holds \"Qt\" outlines centred on the origin "
-                    + $"(got {bounds.Width():F1}x{bounds.Height():F1} at {center.X():F1},{center.Y():F1})");
+                    + $"(got {textBounds.Width():F1}x{textBounds.Height():F1} at {center.X():F1},{center.Y():F1})");
+            }
         }
 
         // Rendering the clock: a ring, because the default OddEvenFill leaves the inner disc empty.
