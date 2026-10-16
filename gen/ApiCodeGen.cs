@@ -3136,6 +3136,13 @@ public static class ApiCodeGen
             sb.AppendLine("#include <qproperty.h>");
         sb.AppendLine("#include \"QtSharpApiRuntime.h\"");
         sb.AppendLine();
+        // The mirrors of Qt's value types. Generated, not written into the shared runtime header: the
+        // table in ApiModel.cs is their single source of truth, so a binding - the core or a module -
+        // carries exactly the ones its model has, and growing the table cannot leave a module
+        // compiling against a copy of the header that predates it.
+        foreach (var s in ApiTypes.RuntimeStructs)
+            sb.AppendLine($"typedef struct {{ {s.Scalar} {string.Join(", ", s.Fields)}; }} {StructPod(s.Name)};");
+        sb.AppendLine();
         // A managed null for a boxed parameter means "nothing was passed". Most parameters can
         // take a default-constructed value, but a reference parameter needs an lvalue, so it
         // gets a process-wide instance instead.
