@@ -20,6 +20,14 @@ using System.Text.Json;
 public static class ApiCodeGen
 {
     static List<JsonElement> Classes;
+
+    /// <summary>
+    /// The classes this run's own model declares, before the runtime structs are filtered out of
+    /// <see cref="Classes"/>. The structs' members are emitted from the model as well, but only when
+    /// the model is the one that declares them - an extension module inherits them from the core
+    /// binding's assembly instead of generating a second copy.
+    /// </summary>
+    internal static HashSet<string> ModelClassNames = new(StringComparer.Ordinal);
     static List<JsonElement> Enums;
     // Namespace-level functions (qCompress, qVersion, ...) - the QtCore/QtGui/QtWidgets module
     // functions, published as a static Qt class.
@@ -140,6 +148,13 @@ public static class ApiCodeGen
     internal static string ModelFileName = "model/qtsharp.api.json";
 
     /// <summary>
+    /// The model file as it was passed in. The hand-written parts of the binding (runtime/QtStructs.cs)
+    /// are found relative to it, so the generator can tell which of a value type's members are already
+    /// spelled out by hand and leave them alone.
+    /// </summary>
+    internal static string ModelPath = "";
+
+    /// <summary>
     /// Every class this run knows - the ones it emits, plus (for an extension module) the core's.
     /// Used where a *reference* to a class matters rather than its declaration: the native side has
     /// to include the header of every type it mentions, and a module's signatures mention core types
@@ -201,6 +216,7 @@ public static class ApiCodeGen
         var root = document.RootElement;
         string ns = root.GetProperty("namespace").GetString();
         ModelFileName = Path.GetFileName(modelPath);
+        ModelPath = Path.GetFullPath(modelPath);
         NativeLibraryName = module?.NativeLibrary ?? "QtSharp.Api";
         // The vocabulary and the base-class resolution are shared with the extractor, so it has to
         // know which module this run is about as well.
@@ -212,6 +228,7 @@ public static class ApiCodeGen
         // array of them marshalling as the struct array it already is.
         var modelClasses = root.GetProperty("classes").EnumerateArray().ToList();
         Classes = modelClasses.Where(c => !ApiTypes.IsStruct(Name(c))).ToList();
+        ModelClassNames = modelClasses.Select(c => Name(c)).ToHashSet(StringComparer.Ordinal);
         Enums = root.GetProperty("enums").EnumerateArray().ToList();
         Functions = root.TryGetProperty("functions", out var fns) && fns.ValueKind == JsonValueKind.Array
             ? fns.EnumerateArray().ToList()
@@ -517,6 +534,11 @@ public static class ApiCodeGen
 
         foreach (var cls in Classes)
             WriteClass(sb, cls);
+
+        // The value types' members come from the same model, into the partial structs the hand-written
+        // core extends (see WriteStructMembers).
+        foreach (var s in ApiTypes.RuntimeStructs)
+            WriteStructMembers(sb, s.Name);
 
         sb.AppendLine("    internal static partial class ApiNative");
         sb.AppendLine("    {");
@@ -1513,6 +1535,183 @@ public static class ApiCodeGen
 
     static string VirtualKey(JsonElement v)
         => Name(v) + "(" + string.Join(",", Params(v).Select(PType)) + ")" + ConstSuffix(v);
+
+    // ------------------------------------------------------------------ the runtime structs
+    //
+    // Qt's geometry value types are structs here rather than classes, but their *members* are still
+    // Qt's - and the model already has them, because the extractor parsed qpoint.h, qsize.h and the
+    // rest. So they are generated the way a class's are, with one difference: the receiver is the
+    // value itself instead of a handle, and the glue rebuilds Qt's own type from the POD for the call
+    // (QSize qs_self(qs_pod.width, qs_pod.height); qs_self.transposed()). That is what PyQt does when
+    // SIP emits the forwarders its .sip file declares, and what shiboken does from the headers.
+    //
+    // What stays hand-written (runtime/QtStructs.cs) is the storage and the members worth spelling
+    // out: the fields, the accessors that want to be a field read rather than a P/Invoke, and the
+    // operators, equality and ToString that C# needs and Python gets from its type system. The
+    // generator reads that file, so a member written by hand wins over the generated one and the two
+    // never collide.
+    static List<(JsonElement Method, string Entry, string Cs)> StructMembers(string name)
+    {
+        var members = new List<(JsonElement, string, string)>();
+        if (!ModelClassNames.Contains(name))
+            return members;
+        var cls = KnownClasses.FirstOrDefault(c => Name(c) == name);
+        if (cls.ValueKind != JsonValueKind.Object || !cls.TryGetProperty("methods", out var ms))
+            return members;
+        var written = HandWrittenMembers(name);
+        var seen = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var m in ms.EnumerateArray())
+        {
+            string n = Name(m);
+            // An operator or the destructor is not a member C# can forward under that name.
+            if (!IsIdentifier(n) || n == name)
+                continue;
+            string cs = MemberName(name, n);
+            if (written.Contains(cs))
+                continue;
+            seen.TryGetValue(n, out int count);
+            seen[n] = count + 1;
+            members.Add((m, n + (count == 0 ? "" : (count + 1).ToString()), cs));
+        }
+        return members;
+    }
+
+    static bool IsIdentifier(string n)
+    {
+        if (string.IsNullOrEmpty(n) || !(char.IsLetter(n[0]) || n[0] == '_'))
+            return false;
+        foreach (char c in n)
+            if (!char.IsLetterOrDigit(c) && c != '_')
+                return false;
+        return true;
+    }
+
+    /// <summary>
+    /// The member names runtime/QtStructs.cs declares for one struct. Its own braces are counted to
+    /// find the struct's end; the file holds no braces inside strings or interpolations (ToString
+    /// concatenates), which is what makes that enough.
+    /// </summary>
+    static HashSet<string> HandWrittenMembers(string name)
+    {
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        string root = Path.GetDirectoryName(Path.GetDirectoryName(ModelPath));
+        string path = Path.Combine(root, "runtime", "QtStructs.cs");
+        if (!File.Exists(path))
+            return names;
+        string text = File.ReadAllText(path);
+        int at = text.IndexOf("struct " + name + "\n", StringComparison.Ordinal);
+        if (at < 0)
+            at = text.IndexOf("struct " + name + " ", StringComparison.Ordinal);
+        if (at < 0)
+            return names;
+        int open = text.IndexOf('{', at);
+        if (open < 0)
+            return names;
+        int depth = 0, end = open;
+        for (; end < text.Length; end++)
+        {
+            if (text[end] == '{') depth++;
+            else if (text[end] == '}' && --depth == 0) break;
+        }
+        string body = text.Substring(open, Math.Min(end, text.Length) - open);
+        foreach (System.Text.RegularExpressions.Match m in
+                 System.Text.RegularExpressions.Regex.Matches(body, @"public\s+[\w<>\[\],\.\? ]+?\s+(\w+)\s*\("))
+            names.Add(m.Groups[1].Value);
+        return names;
+    }
+
+    /// <summary>The struct's members, as a partial the hand-written core extends.</summary>
+    static void WriteStructMembers(StringBuilder sb, string name)
+    {
+        var members = StructMembers(name);
+        if (members.Count == 0)
+            return;
+        sb.AppendLine();
+        sb.AppendLine($"    /// <summary>The members Qt declares for {name}, forwarded through the value itself.</summary>");
+        sb.AppendLine($"    public partial struct {name}");
+        sb.AppendLine("    {");
+        // The nested types Qt declares on it (QLineF::IntersectionType): the class that would have
+        // carried them is not generated, so the struct does.
+        WriteEnums(sb, name, 2);
+        foreach (var (m, entry, cs) in members)
+        {
+            var ps = Params(m);
+            string ret = ReturnType(m);
+            string staticMod = IsStatic(m) ? "static " : "";
+            // A member that mutates in place hands over its own storage by reference: the value
+            // cannot be changed through a copy, and C# lets a struct method pass `ref this`.
+            string self = IsStatic(m) ? null : MutatesInPlace(m, ret) ? "ref this" : "this";
+            sb.AppendLine($"        public {staticMod}{ManagedRetType(ret)} {cs}({string.Join(", ", ps.Select(ParamSig))})");
+            sb.AppendLine("        {");
+            var marshal = MarshalParams(ps, self);
+            foreach (string line in marshal.Prelude)
+                sb.AppendLine("            " + line);
+            string call = $"ApiNative.{name}_{entry}({string.Join(", ", marshal.Args)})";
+            string body = ret == "void" ? call + ";" : "return " + RetToManaged(ret, call) + ";";
+            sb.AppendLine("            " + body);
+            sb.AppendLine("        }");
+            sb.AppendLine();
+        }
+        sb.AppendLine("    }");
+
+        sb.AppendLine();
+        sb.AppendLine($"    internal static partial class ApiNative");
+        sb.AppendLine("    {");
+        foreach (var (m, entry, cs) in members)
+        {
+            var ps = Params(m);
+            var nativeParams = new List<string>();
+            // The value crosses as itself: the managed struct and the POD are the same bytes. A
+            // mutating one crosses by reference, so the write-back reaches the caller's storage.
+            if (!IsStatic(m))
+                nativeParams.Add(MutatesInPlace(m, ReturnType(m)) ? $"ref {name} self" : $"{name} self");
+            nativeParams.AddRange(ps.SelectMany(NativeParamsFor));
+            string ret = ReturnType(m);
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}_{entry}\", CallingConvention = CallingConvention.Cdecl)]");
+            if (ret == "bool")
+                sb.AppendLine("        [return: MarshalAs(UnmanagedType.I1)]");
+            sb.AppendLine($"        internal static extern {NativeRetType(ret)} {name}_{entry}({string.Join(", ", nativeParams)});");
+        }
+        sb.AppendLine("    }");
+    }
+
+    /// <summary>
+    /// Whether a member changes the value it is called on (QSize::transpose, QRect::adjust). Qt
+    /// spells those as a void instance method, and that is the only shape it uses for them.
+    /// </summary>
+    static bool MutatesInPlace(JsonElement m, string ret)
+        => !IsStatic(m) && ret == "void" && !IsConstMethod(m);
+
+    static bool IsConstMethod(JsonElement m)
+        => m.TryGetProperty("const", out var c) && c.ValueKind == JsonValueKind.True;
+
+    static void WriteStructNative(StringBuilder sb, string name)
+    {
+        foreach (var (m, entry, cs) in StructMembers(name))
+        {
+            var ps = Params(m);
+            string ret = ReturnType(m);
+            bool mutates = MutatesInPlace(m, ret);
+            string pod = StructPod(name);
+            var nativeParams = new List<string>();
+            if (!IsStatic(m))
+                nativeParams.Add(mutates ? $"{pod}* qs_pod" : $"{pod} qs_pod");
+            nativeParams.AddRange(ps.SelectMany(CppParamsFor));
+            string args = string.Join(", ", ps.SelectMany(CppArgsFor));
+            string call = IsStatic(m) ? $"{name}::{Name(m)}({args})" : $"qs_self.{Name(m)}({args})";
+            sb.AppendLine($"extern \"C\" __declspec(dllexport) {NativeRetCpp(ret)} qs_api_{name}_{entry}({string.Join(", ", nativeParams)})");
+            sb.AppendLine("{");
+            if (!IsStatic(m))
+                sb.AppendLine($"    {name} qs_self = {StructFromPod(name, mutates ? "(*qs_pod)" : "qs_pod")};");
+            foreach (string line in NativeBody(m, call))
+                sb.AppendLine("    " + line);
+            // A member that changes the value hands it back through the caller's storage.
+            if (mutates)
+                sb.AppendLine($"    *qs_pod = {StructToPod(name, "qs_self")};");
+            sb.AppendLine("}");
+            sb.AppendLine();
+        }
+    }
 
     static void WriteClass(StringBuilder sb, JsonElement cls)
     {
@@ -2859,6 +3058,9 @@ public static class ApiCodeGen
 
         foreach (var cls in Classes)
             WriteNativeClass(sb, cls);
+
+        foreach (var s in ApiTypes.RuntimeStructs)
+            WriteStructNative(sb, s.Name);
 
         WriteFreeFunctionNative(sb);
 
