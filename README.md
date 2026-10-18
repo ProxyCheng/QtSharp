@@ -288,6 +288,18 @@ static class Program
   button.ClickedSignal.Emit(false);   // manual emit; only QSignal has it
   ```
   `Q_SIGNAL`s with more than one overload get the 2,3,… suffix (`Activated2Signal`/`Activated2`).
+* **Qt value types convert to the BCL explicitly.** PyQt's `toPyDateTime()`/`QDateTime(datetime)`
+  idea in C#:
+  ```csharp
+  var qdt = new QDateTime(dateTime);        // Utc -> Qt::UTC, Local/Unspecified -> Qt::LocalTime
+  DateTime back = qdt.ToDateTime();         // qdt.ToDateTimeOffset() keeps the offset
+  var qd = new QDate(dateOnly);             // qdate.ToDateOnly()
+  var qt = new QTime(timeOnly);             // qtime.ToTimeOnly()
+  byte[] data = qba.ToArray();              // new QByteArray(data) is binary-safe
+  ```
+  There are no implicit operators on purpose: `==` on a handle class compares wrapper identity, so
+  an implicit conversion would let `qdt == dateTime` compile and silently be false. Invalid or
+  out-of-range Qt values throw `InvalidOperationException` instead of wrapping.
 * **The application object** is created and run like PyQt does it: `new QApplication(args)`,
   `app.Exec()`, `app.Quit()`, `app.Exit(code)`. From code that has no application reference (a menu
   action), use `QCoreApplication.Instance().Quit()`.

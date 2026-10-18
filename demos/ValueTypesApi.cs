@@ -70,6 +70,8 @@ using QtSharp.Api;
             Check(new QPointF(3.0, 4.0) == new QPointF(3.0, 4.0), "two equal points compare equal");
             Check(new QPointF(3.0, 4.0) != new QPointF(3.0, 5.0), "and two different ones do not");
             Check(new QPointF(3.0, 4.0).Equals(new QPointF(3.0, 4.0)), "Equals agrees with ==");
+            Check(new QPointF(1.5, -2.5).ToString() == "QPointF(1.5, -2.5)",
+                $"struct ToString prints the field values (got '{new QPointF(1.5, -2.5)}')");
 
             // --- 3. a bulk call creates no wrappers for the values
             const int Points = 100000;
@@ -134,6 +136,187 @@ using QtSharp.Api;
                     $"a QObject registers exactly one wrapper (+{ApiRuntime.WrappersRegistered - beforeObject})");
                 Check(ApiRuntime.WatchedObjects >= 1, $"and is watched ({ApiRuntime.WatchedObjects} watched)");
             }
+
+            // --- 6. explicit BCL interop (PyQt's explicit style: ctor in, ToXxx out, no implicit operators)
+            bool Throws<T>(Action action) where T : Exception
+            {
+                try
+                {
+                    action();
+                    return false;
+                }
+                catch (T)
+                {
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Info($"expected {typeof(T).Name}, got {e.GetType().Name}: {e.Message}");
+                    return false;
+                }
+            }
+            bool SameBytes(byte[] x, byte[] y)
+            {
+                if (x == null || y == null || x.Length != y.Length)
+                    return false;
+                for (int i = 0; i < x.Length; i++)
+                    if (x[i] != y[i])
+                        return false;
+                return true;
+            }
+
+            // 6a. the surface: constructors and named conversions exist, and nothing is implicit
+            bool anyImplicit = false;
+            int explicitCount = 0;
+            foreach (var m in typeof(QDateTime).GetMethods())
+            {
+                if (m.Name == "op_Implicit") anyImplicit = true;
+                if (m.Name == "op_Explicit") explicitCount++;
+            }
+            Check(!anyImplicit, "QDateTime has no implicit conversions (a mixed == would compare wrapper identity)");
+            Check(explicitCount == 2, $"the two explicit operators exist ({explicitCount})");
+            Check(typeof(QDateTime).GetConstructor(new[] { typeof(DateTime) }) != null, "new QDateTime(DateTime) exists");
+            Check(typeof(QDateTime).GetConstructor(new[] { typeof(DateTimeOffset) }) != null, "new QDateTime(DateTimeOffset) exists");
+            Check(typeof(QDateTime).GetMethod("ToDateTime", Type.EmptyTypes) != null, "QDateTime.ToDateTime() exists");
+            Check(typeof(QDateTime).GetMethod("ToDateTimeOffset", Type.EmptyTypes) != null, "QDateTime.ToDateTimeOffset() exists");
+            Check(typeof(QDate).GetConstructor(new[] { typeof(DateOnly) }) != null, "new QDate(DateOnly) exists");
+            Check(typeof(QDate).GetMethod("ToDateOnly", Type.EmptyTypes) != null, "QDate.ToDateOnly() exists");
+            Check(typeof(QTime).GetConstructor(new[] { typeof(TimeOnly) }) != null, "new QTime(TimeOnly) exists");
+            Check(typeof(QTime).GetMethod("ToTimeOnly", Type.EmptyTypes) != null, "QTime.ToTimeOnly() exists");
+            Check(typeof(QByteArray).GetMethod("ToArray", Type.EmptyTypes) != null, "QByteArray.ToArray() exists");
+
+            // 6b. UTC round-trip
+            var utcValue = new DateTime(2024, 5, 17, 12, 34, 56, 789, DateTimeKind.Utc);
+            using (var q = new QDateTime(utcValue))
+            {
+                Check(q.IsValid() && q.TimeSpec() == Qt.TimeSpec.UTC, "DateTimeKind.Utc -> Qt::UTC");
+                var back = q.ToDateTime();
+                Check(back == utcValue && back.Kind == DateTimeKind.Utc, $"UTC round-trip (got {back:o})");
+                var dto = q.ToDateTimeOffset();
+                Check(dto == utcValue && dto.Offset == TimeSpan.Zero,
+                    "UTC ToDateTimeOffset has offset zero and the same instant");
+                Check((DateTime)q == utcValue, "the explicit DateTime cast agrees with ToDateTime()");
+            }
+
+            // 6c. local round-trip (noon is never inside a DST gap, so this is stable in any time zone)
+            var localValue = new DateTime(2024, 5, 17, 12, 34, 56, 789, DateTimeKind.Local);
+            using (var q = new QDateTime(localValue))
+            {
+                Check(q.TimeSpec() == Qt.TimeSpec.LocalTime, "DateTimeKind.Local -> Qt::LocalTime");
+                var back = q.ToDateTime();
+                Check(back == localValue && back.Kind == DateTimeKind.Local,
+                    "local round-trip keeps the wall clock and Kind.Local");
+                Check(q.ToDateTimeOffset().Offset == TimeZoneInfo.Local.GetUtcOffset(localValue),
+                    "local ToDateTimeOffset uses the machine's offset");
+            }
+
+            // 6d. Unspecified is interpreted as local time
+            var naive = new DateTime(2024, 5, 17, 12, 34, 56, 789, DateTimeKind.Unspecified);
+            using (var q = new QDateTime(naive))
+            {
+                Check(q.TimeSpec() == Qt.TimeSpec.LocalTime, "DateTimeKind.Unspecified -> Qt::LocalTime");
+                var back = q.ToDateTime();
+                Check(back == naive, "the wall clock survives");
+                Check(back.Kind == DateTimeKind.Local, "but it comes back explicitly Local, not Unspecified");
+            }
+
+            // 6e. DateTimeOffset keeps its offset through Qt::OffsetFromUTC
+            var offsetValue = new DateTimeOffset(2024, 5, 17, 12, 34, 56, 789, TimeSpan.FromHours(5.5));
+            using (var q = new QDateTime(offsetValue))
+            {
+                Check(q.TimeSpec() == Qt.TimeSpec.OffsetFromUTC, "DateTimeOffset -> Qt::OffsetFromUTC");
+                Check(q.OffsetFromUtc() == 19800, $"the offset reaches Qt ({q.OffsetFromUtc()} s)");
+                var dto = q.ToDateTimeOffset();
+                Check(dto == offsetValue && dto.Offset == offsetValue.Offset, "instant and offset both round-trip");
+                var back = q.ToDateTime();
+                Check(back == offsetValue.DateTime && back.Kind == DateTimeKind.Unspecified,
+                    "ToDateTime keeps the wall clock, naive (System.DateTime has no offset)");
+            }
+            var negativeOffset = new DateTimeOffset(2024, 1, 2, 3, 4, 5, 6, TimeSpan.FromHours(-8));
+            using (var q = new QDateTime(negativeOffset))
+                Check(q.ToDateTimeOffset() == negativeOffset && q.ToDateTimeOffset().Offset == negativeOffset.Offset,
+                    "a negative offset round-trips too");
+
+            // 6f. Qt stores milliseconds: sub-millisecond ticks are truncated
+            var ticky = new DateTime(2024, 5, 17, 12, 34, 56, 0, DateTimeKind.Utc).AddTicks(4321);
+            using (var q = new QDateTime(ticky))
+                Check(q.ToDateTime() == new DateTime(2024, 5, 17, 12, 34, 56, 0, DateTimeKind.Utc),
+                    "sub-millisecond ticks are truncated on the way in");
+
+            // 6g. TimeZone spec goes through the same wall-clock/offset path
+            using (var zone = QTimeZone.Utc())
+            using (var q = new QDateTime(new QDate(2024, 5, 17), new QTime(12, 0, 0), zone))
+            {
+                Check(q.TimeSpec() == Qt.TimeSpec.TimeZone, "a QDateTime built from a QTimeZone reports TimeZone");
+                var dto = q.ToDateTimeOffset();
+                Check(dto.Offset == TimeSpan.Zero
+                      && dto.UtcDateTime == new DateTime(2024, 5, 17, 12, 0, 0, DateTimeKind.Utc),
+                    "a zone datetime converts as an instant with its offset");
+                Check(q.ToDateTime().Kind == DateTimeKind.Unspecified,
+                    "ToDateTime keeps the zone wall clock as Unspecified");
+            }
+
+            // 6h. invalid inputs throw rather than returning a default timestamp
+            using (var invalid = new QDateTime())
+            {
+                Check(!invalid.IsValid(), "Qt's default QDateTime is invalid");
+                Check(Throws<InvalidOperationException>(() => invalid.ToDateTime()),
+                    "ToDateTime on invalid throws InvalidOperationException");
+                Check(Throws<InvalidOperationException>(() => invalid.ToDateTimeOffset()),
+                    "ToDateTimeOffset on invalid throws InvalidOperationException");
+            }
+
+            // 6i. QDate <-> DateOnly
+            var leapDay = new DateOnly(2024, 2, 29);
+            var qd = new QDate(leapDay);
+            Check(qd.IsValid() && qd.Year() == 2024 && qd.Month() == 2 && qd.Day() == 29, "DateOnly -> QDate");
+            Check(qd.ToDateOnly() == leapDay, "QDate -> DateOnly round-trip");
+            Check(new QDate(DateOnly.MinValue).ToDateOnly() == DateOnly.MinValue, "DateOnly.MinValue round-trips");
+            Check(new QDate(DateOnly.MaxValue).ToDateOnly() == DateOnly.MaxValue, "DateOnly.MaxValue round-trips");
+
+            var nullDate = QDate.FromString("not a date", Qt.DateFormat.ISODate);
+            Check(!nullDate.IsValid() && nullDate.IsNull(), "an invalid QDate parses as null");
+            Check(Throws<InvalidOperationException>(() => nullDate.ToDateOnly()), "a null QDate throws in ToDateOnly()");
+
+            var bce = QDate.FromJulianDay(0); // jd 0 is inside Qt's range: a valid 4713 BCE date
+            Check(bce.IsValid(), "Julian day 0 is a valid Qt date (4713 BCE)");
+            Check(Throws<InvalidOperationException>(() => bce.ToDateOnly()),
+                "a valid Qt date outside years 1..9999 throws (not silently wrapped)");
+            Info($"default(QDate) is jd 0 (valid Qt date, year {default(QDate).Year()}), not Qt's null QDate");
+
+            // 6j. QTime <-> TimeOnly
+            var lastMs = new TimeOnly(23, 59, 59, 999);
+            var qt = new QTime(lastMs);
+            Check(qt.IsValid() && qt.Hour() == 23 && qt.Minute() == 59 && qt.Second() == 59 && qt.Msec() == 999,
+                "TimeOnly -> QTime keeps hour/minute/second/ms");
+            Check(qt.ToTimeOnly() == lastMs, "QTime -> TimeOnly round-trip");
+            Check(new QTime(new TimeOnly(0, 0, 0, 0)).ToTimeOnly() == new TimeOnly(0, 0, 0, 0), "midnight round-trips");
+            var subMs = new TimeOnly(1, 2, 3, 4).Add(TimeSpan.FromTicks(9999));
+            Check(new QTime(subMs).ToTimeOnly() == new TimeOnly(1, 2, 3, 4),
+                "TimeOnly sub-millisecond ticks are truncated");
+            Check(!QTime.IsValid(24, 0, 0), "Qt has no valid 24:00 (TimeOnly cannot express it either)");
+            // Deliberately no assertion on new QTime(24,0,0): a null QTime crosses the POD as
+            // msecsSinceStartOfDay() == 0, so it currently reads back as valid midnight. ToTimeOnly's
+            // invalid branch is defensive; it is unreachable through the public API today.
+
+            // 6k. QByteArray <-> byte[] (binary-safe; Data() is UTF-8 and truncates at NUL)
+            var payload = new byte[] { 0x00, 0xFF, 0x80, 0x41, 0x00, 0x7F, 0xC3, 0x28 };
+            using (var ba = new QByteArray(payload))
+            {
+                Check(ba.Size() == payload.Length && ba.Length() == payload.Length,
+                    "the byte[] ctor stores the whole buffer");
+                Check(SameBytes(ba.ToArray(), payload), "ToArray round-trips embedded NUL and high bytes");
+                Check(SameBytes(ba.ToArray(), payload) && ba.Size() == payload.Length,
+                    "ToArray copies and does not free the wrapper's handle");
+            }
+            using (var emptyBytes = new QByteArray(Array.Empty<byte>()))
+                Check(emptyBytes.Size() == 0 && emptyBytes.ToArray().Length == 0,
+                    "empty bytes -> empty array (null and empty QByteArrays are indistinguishable here)");
+            var big = new byte[4096];
+            for (int i = 0; i < big.Length; i++)
+                big[i] = (byte)(i * 31 + 7);
+            using (var bigBa = new QByteArray(big))
+                Check(SameBytes(bigBa.ToArray(), big), "a 4 KB binary payload survives the copy");
 
             Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
             return failures == 0 ? 0 : 1;
