@@ -1752,7 +1752,7 @@ public static class ApiCodeGen
             string hash = row.Fields.Length == 1
                 ? $"_{row.Fields[0]}.GetHashCode()"
                 : $"HashCode.Combine({string.Join(", ", row.Fields.Select(f => "_" + f))})";
-            string show = string.Join(", ", row.Fields.Select(f => $"_{f}"));
+            string show = string.Join(", ", row.Fields.Select(f => $"{{_{f}}}"));
             // `==` and `!=` are what Qt declares with Q_DECLARE_EQUALITY_COMPARABLE_LITERAL_TYPE, a
             // macro the extractor cannot see - and for a trivially copyable type the fields *are* the
             // value, so comparing them is Qt's answer. They also have to exist for `x == null` to be
