@@ -418,6 +418,15 @@ extern "C" __declspec(dllexport) void qs_api_set_destroyed_callback(QsApiDestroy
     g_destroyedCallback = callback;
 }
 
+// How many objects the runtime is watching. A Qt object costs one entry; a value type (QPointF,
+// QRect, QSize, ...) costs none, because it is a struct and never reaches this table. Exposed so a
+// test can show that pushing a hundred thousand points through a bulk call adds nothing here - the
+// shape of the leak a sampling chart had.
+extern "C" __declspec(dllexport) int qs_api_watched_count()
+{
+    return static_cast<int>(g_watchedObjects.size());
+}
+
 // Watching is idempotent and cheap: one slot per object generation, and nothing for an object that
 // was already watched. The generation is passed in by the managed side and comes back with the
 // notification, so a notification that arrives after the address has been reused is recognisable.

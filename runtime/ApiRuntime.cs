@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security;
+using System.Threading;
 
 // Hand-written runtime that ships with the generated bindings (not model-derived).
 // It provides the pieces the PoCs proved: a signal wrapper on top of the generic
@@ -486,6 +487,9 @@ namespace QtSharp.Api
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_watch_destroyed", CallingConvention = CallingConvention.Cdecl)]
         private static extern void WatchDestroyed(IntPtr handle, long generation);
 
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_watched_count", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int WatchedCountNative();
+
         // A native object is reachable through several managed views (a QWidget is also a
         // QPaintDevice, and a managed subclass is itself a view of its base), so each handle
         // keeps a list of live wrappers and a lookup takes the newest assignable one.
@@ -512,11 +516,30 @@ namespace QtSharp.Api
 
         static readonly Dictionary<IntPtr, Lifetime> lifetimes = new();
         static long nextGeneration;
+        static long registrations;
+
+        /// <summary>
+        /// How many wrappers have been registered since the process started. A Qt *object* costs one
+        /// of these (and one entry in the native watch table); a Qt **value type** - QPointF, QRect,
+        /// QSize, QLine and the rest of the trivially copyable ones - costs none, because it is a
+        /// struct and never reaches this registry at all. That is the whole point of the struct
+        /// treatment: a chart that samples and replaces a hundred thousand points allocates a
+        /// hundred thousand structs and nothing else, where a wrapper each meant a native
+        /// allocation, an entry here, an entry in g_watchedObjects and a finalizer per point.
+        ///
+        /// Read it around a bulk call in a test: the number must not move. A leak shows up here as a
+        /// count that keeps climbing.
+        /// </summary>
+        public static long WrappersRegistered => Interlocked.Read(ref registrations);
+
+        /// <summary>How many objects the native runtime is watching for destruction.</summary>
+        public static int WatchedObjects => WatchedCountNative();
 
         public static void Register(IntPtr handle, object wrapper)
         {
             if (handle == IntPtr.Zero)
                 return;
+            Interlocked.Increment(ref registrations);
             lock (gate)
             {
                 // A live registration is evidence that an object occupies this address now. If the

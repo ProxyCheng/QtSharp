@@ -1737,8 +1737,11 @@ public static class ApiCodeGen
         sb.AppendLine("    {");
         // The storage. The field names are the model's, and their order is the POD's, which is Qt's
         // memory order - that is the whole of the C# side of a value type.
+        // The field's C# spelling, not the model's: "long long" is `long` over here (QDate's
+        // julian day), while the POD keeps the C++ spelling it needs.
+        string fieldType = CSharpScalar(row.Scalar) ?? row.Scalar;
         foreach (string field in row.Fields)
-            sb.AppendLine($"        {row.Scalar} _{field};");
+            sb.AppendLine($"        {fieldType} _{field};");
         sb.AppendLine();
         // Equality and hashing are written over the fields, which for a trivially copyable type *is*
         // the value: Qt's own operator== compares exactly these (QRect's two corners, QPointF's two
@@ -1784,8 +1787,19 @@ public static class ApiCodeGen
             foreach (var ctor in ctors)
             {
                 var cps = Params(ctor);
+                // The arguments go over the same way every other call's do: an enum as its int, a
+                // bound class as its handle, a nested value type as itself. Passing the managed
+                // spelling straight through compiled only while every argument happened to be a
+                // scalar (QDate's QCalendar overload and QVector's Qt::Initialization did not).
+                var marshal = MarshalParams(cps, null);
                 sb.AppendLine($"        public {name}({string.Join(", ", cps.Select(ParamSig))})");
-                sb.AppendLine($"            => this = ApiNative.{name}_ctor{n++}({string.Join(", ", cps.Select(p => SafeName(PName(p))))});");
+                sb.AppendLine("        {");
+                foreach (var line in marshal.Prelude)
+                    sb.AppendLine("            " + line);
+                sb.AppendLine($"            this = ApiNative.{name}_ctor{n++}({string.Join(", ", marshal.Args)});");
+                foreach (var line in marshal.Cleanup)
+                    sb.AppendLine("            " + line);
+                sb.AppendLine("        }");
                 sb.AppendLine();
             }
         }

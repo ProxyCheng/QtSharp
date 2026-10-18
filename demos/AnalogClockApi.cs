@@ -48,8 +48,9 @@ public sealed class ApiAnalogClock : QWidget
         ClockTimer.TimeoutSignal.Connect(() => TimerTicks++);
         ClockTimer.Start(1000);
 
-        using (var now = QTime.CurrentTime())
-            SetTimeForTest(now);
+        // QTime is a value now: there is nothing to dispose.
+        var now = QTime.CurrentTime();
+        SetTimeForTest(now);
 
         SetWindowTitle("Analog Clock (new pipeline)");
         Resize(200, 200);
@@ -274,8 +275,8 @@ public static class ApiAnalogClockDemo
         }
 
         // ---- 3:00:00: hour hand at 3 o'clock (+x), minute hand at 12 (-y) -------------------
-        using (var fixedTime = new QTime(3, 0, 0))
-            clock.SetTimeForTest(fixedTime);
+        var fixedTime = new QTime(3, 0, 0);
+        clock.SetTimeForTest(fixedTime);
 
         // Drive the repaint ourselves, then grab the same widget off-screen. No event loop.
         clock.Repaint();
@@ -328,8 +329,8 @@ public static class ApiAnalogClockDemo
             "the tick ring ends before r=99 (painted at r=94, empty at r=99)");
 
         // ---- 3:30:00: the hour hand carries the minutes and sits halfway between 3 and 4 -----
-        using (var halfPast = new QTime(3, 30, 0))
-            clock.SetTimeForTest(halfPast);
+        var halfPast = new QTime(3, 30, 0);
+        clock.SetTimeForTest(halfPast);
         using var renderedHalf = clock.Grab();
         using var imageHalf = renderedHalf.ToImage();
 

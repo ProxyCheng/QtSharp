@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -46,6 +46,22 @@ public static class ApiTypes
         ("QRect", new[] { "x1", "y1", "x2", "y2" }, "int",
             "QRect(QPoint(@pod.x1, @pod.y1), QPoint(@pod.x2, @pod.y2))",
             "QsApiRect{ @qt.left(), @qt.top(), @qt.bottomRight().x(), @qt.bottomRight().y() }"),
+        // The rest of the trivially copyable ones: integers and floats, nothing that owns anything.
+        // QDate and QTime are one integer each and their accessors are not field-shaped
+        // (toJulianDay/msecsSinceStartOfDay), so both conversions are spelled out; the vector family
+        // and QMatrix4x4 are floats with a matching constructor and matching accessors, which is the
+        // default spelling.
+        ("QDate", new[] { "jd" }, "long long",
+            "QDate::fromJulianDay(@pod.jd)", "QsApiDate{ @qt.toJulianDay() }"),
+        ("QTime", new[] { "mds" }, "int",
+            "QTime::fromMSecsSinceStartOfDay(@pod.mds)", "QsApiTime{ @qt.msecsSinceStartOfDay() }"),
+        ("QVector2D", new[] { "x", "y" }, "float", null, null),
+        ("QVector3D", new[] { "x", "y", "z" }, "float", null, null),
+        ("QVector4D", new[] { "x", "y", "z", "w" }, "float", null, null),
+        ("QQuaternion", new[] { "scalar", "x", "y", "z" }, "float", null, null),
+        // QMatrix4x4 stays a handle: Qt 6.11 no longer has the m11()..m44() accessors the POD
+        // spelling needs (data() is column-major), and a bulk path through matrices is not a leak
+        // risk the way a point list is.
     };
 
     public static (string Name, string[] Fields, string Scalar, string FromPod, string ToPod)? RuntimeStructOf(string name)

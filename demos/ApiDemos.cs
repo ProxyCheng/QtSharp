@@ -52,6 +52,7 @@ namespace QtSharp.Api
             ["api-pathstroke"] = ApiPathStrokeDemo.Run,
             ["api-network"] = ApiNetworkDemo.Run,
             ["api-docformats"] = ApiDocFormatsDemo.Run,
+            ["api-valuetypes"] = ValueTypesApi.Run,
         };
 
         /// <summary>The demo names, in the order Usage lists them.</summary>
@@ -66,6 +67,7 @@ namespace QtSharp.Api
             "api-stardelegate", "api-composition", "api-transform", "api-pathstroke",
             "api-network",
             "api-docformats",
+            "api-valuetypes",
         };
 
         /// <summary>The text both entry points print when they are given nothing to run.</summary>
