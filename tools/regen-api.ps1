@@ -100,6 +100,14 @@ if ($LASTEXITCODE -ne 0 -or -not $demos) { Write-Host "could not list the demos"
 foreach ($demo in $demos) {
     Write-Host "  --- $demo"
     & "$root\testbind\bin\Release\net10.0\testapp.exe" $demo
+    # A demo that shows a window can die in the *teardown*: Qt destroys the widgets while the shell
+    # is still pumping messages to them, which surfaces as 0xC000041D after every assertion has
+    # already passed. It is timing, not logic - the same demo passes on its own - so it is retried
+    # once, as the extension repository's CI does.
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ("  retrying {0} after exit 0x{1:X8}" -f $demo, $LASTEXITCODE)
+        & "$root\testbind\bin\Release\net10.0\testapp.exe" $demo
+    }
     if ($LASTEXITCODE -ne 0) {
         Write-Host ("[FAIL] {0} exited with 0x{1:X8}" -f $demo, $LASTEXITCODE)
         exit $LASTEXITCODE

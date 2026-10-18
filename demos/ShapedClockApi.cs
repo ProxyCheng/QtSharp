@@ -141,7 +141,8 @@ public sealed class ApiShapedClock : QWidget
 
     void ApplyDrag(QPoint globalPosition)
     {
-        if (!dragging || dragPosition == null)
+        // dragPosition is a QPoint, a value: `dragging` is what says it holds a position.
+        if (!dragging)
             return;
 
         Move(globalPosition.X() - dragPosition.X(), globalPosition.Y() - dragPosition.Y());
@@ -177,7 +178,7 @@ public sealed class ApiShapedClock : QWidget
         painter.DrawEllipse(-98, -98, 196, 196);
         painter.SetOpacity(1.0);
 
-        using (var time = QTime.CurrentTime())
+        var time = QTime.CurrentTime();
         {
             painter.SetBrush(hourColor);
 
