@@ -5,7 +5,8 @@
     repository's test app:
 
       * the binding itself  - out/api/QtSharp.Api.cs (produced by tools/regen-api.ps1)
-      * the hand-written managed runtime - runtime/ApiRuntime.cs
+      * the hand-written managed runtime - runtime/ApiRuntime.cs, ApiApplication.cs,
+        BclInterop.cs
       * the native side     - out/api/QtSharp.Api.dll, plus the Qt DLLs and the platform plugin
 
     Import it and the project is complete:
@@ -41,6 +42,8 @@
     <Compile Include="$(QtSharpRoot)runtime\ApiRuntime.cs" />
     <!-- The hand-written command-line constructors of QCoreApplication/QGuiApplication/QApplication. -->
     <Compile Include="$(QtSharpRoot)runtime\ApiApplication.cs" />
+    <!-- Explicit QDateTime/QDate/QTime/QByteArray conversions to the BCL types. -->
+    <Compile Include="$(QtSharpRoot)runtime\BclInterop.cs" />
     <!-- The Qt types the binding gives as structs rather than wrappers: QPointF and QPoint cross the
          boundary as their coordinates, so no wrapper is created per point. -->
     <Compile Include="$(QtSharpApiDir)\QtSharp.Api.cs" />

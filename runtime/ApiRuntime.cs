@@ -1274,7 +1274,10 @@ namespace QtSharp.Api
                 ByteArrayFree(array);
         }
 
-        public static byte[] ToManagedBytes(IntPtr array)
+        // Copies a *live* native QByteArray the caller still owns: this is what QByteArray.ToArray
+        // uses, so it must not free the wrapper's own object. ToManagedBytes below is for a
+        // QByteArray Qt handed over as a return value, which this side must free.
+        public static byte[] CopyBytes(IntPtr array)
         {
             if (array == IntPtr.Zero)
                 return null;
@@ -1282,8 +1285,21 @@ namespace QtSharp.Api
             var result = new byte[size];
             if (size > 0)
                 Marshal.Copy(ByteArrayData(array), result, 0, size);
-            ByteArrayFree(array);
             return result;
+        }
+
+        public static byte[] ToManagedBytes(IntPtr array)
+        {
+            if (array == IntPtr.Zero)
+                return null;
+            try
+            {
+                return CopyBytes(array);
+            }
+            finally
+            {
+                ByteArrayFree(array);
+            }
         }
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_qbytearray_from_bytes", CallingConvention = CallingConvention.Cdecl)]
