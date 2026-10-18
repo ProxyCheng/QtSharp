@@ -241,8 +241,9 @@ public sealed class ApiCustomSortFilterWindow : QWidget
 
     public void DateFilterChanged()
     {
-        using var from = FromDateEdit.date();
-        using var to = ToDateEdit.date();
+        // QDate is a value now: there is nothing to dispose.
+        var from = FromDateEdit.date();
+        var to = ToDateEdit.date();
         ProxyModel.SetFilterMinimumDate(from);
         ProxyModel.SetFilterMaximumDate(to);
     }
