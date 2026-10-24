@@ -13,7 +13,8 @@ namespace QtSharp.Charts.Tests
     /// windows of their own, and the font dialog is modal), and the responsive layout juggling in
     /// resizeEvent - all presentation, none of it about the chart.
     /// </summary>
-    public static class PercentCalloutCustom
+    [Demo("qtcharts-percentcalloutcustom")]
+public static class PercentCalloutCustom
     {
         /// <summary>The example's PccCustomSlice: a slice that remembers its original brush.</summary>
         sealed class PccCustomSlice : QPieSlice

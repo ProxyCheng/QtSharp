@@ -9,7 +9,8 @@ namespace QtSharp.Charts.Tests
     /// QPieSeries::append(name, value) returns the slice, which is how the example reaches the one it
     /// wants to explode - the same call the binding publishes.
     /// </summary>
-    public static class PieChart
+    [Demo("qtcharts-piechart")]
+public static class PieChart
     {
         public static int Run(QApplication app)
         {

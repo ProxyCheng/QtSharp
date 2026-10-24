@@ -10,7 +10,8 @@ namespace QtSharp.Charts.Tests
     /// The subclass is the interesting half: it is a managed type deriving from this module's
     /// QChartView, and Qt calls its keyPressEvent override.
     /// </summary>
-    public static class PolarChart
+    [Demo("qtcharts-polarchart")]
+public static class PolarChart
     {
         /// <summary>The example's PolarChartView: arrow keys scroll, +/- zoom.</summary>
         sealed class PolarChartView : QChartView

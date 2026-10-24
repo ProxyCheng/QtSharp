@@ -28,18 +28,18 @@
     <None Include="_._" Pack="true" PackagePath="lib/net10.0/" />
     <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
 
-    <None Include="$(Qt3DRuntimeDir)\Qt63DCore.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(Qt3DRuntimeDir)\Qt63DRender.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(Qt3DRuntimeDir)\Qt63DInput.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(Qt3DRuntimeDir)\Qt63DLogic.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(Qt3DRuntimeDir)\Qt63DAnimation.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(Qt3DRuntimeDir)\Qt63DExtras.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(Qt3DRuntimeDir)\Qt6Concurrent.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(Qt3DRuntimeDir)\Qt6ShaderTools.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(Qt3DRuntimeDir)\Qt63DCore.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(Qt3DRuntimeDir)\Qt63DRender.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(Qt3DRuntimeDir)\Qt63DInput.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(Qt3DRuntimeDir)\Qt63DLogic.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(Qt3DRuntimeDir)\Qt63DAnimation.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(Qt3DRuntimeDir)\Qt63DExtras.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(Qt3DRuntimeDir)\Qt6Concurrent.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(Qt3DRuntimeDir)\Qt6ShaderTools.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
 
-    <None Include="$(Qt3DRuntimeDir)\plugins\renderers\*.dll" Pack="true" PackagePath="tools/native/renderers/" />
-    <None Include="$(Qt3DRuntimeDir)\plugins\geometryloaders\*.dll" Pack="true" PackagePath="tools/native/geometryloaders/" />
-    <None Include="$(Qt3DRuntimeDir)\plugins\sceneparsers\*.dll" Pack="true" PackagePath="tools/native/sceneparsers/" />
+    <None Include="$(Qt3DRuntimeDir)\plugins\renderers\*.dll" Pack="true" PackagePath="tools/native/renderers/" Visible="false" />
+    <None Include="$(Qt3DRuntimeDir)\plugins\geometryloaders\*.dll" Pack="true" PackagePath="tools/native/geometryloaders/" Visible="false" />
+    <None Include="$(Qt3DRuntimeDir)\plugins\sceneparsers\*.dll" Pack="true" PackagePath="tools/native/sceneparsers/" Visible="false" />
   </ItemGroup>
 
   <Target Name="QtSharpQt3DQt6PackCheck" BeforeTargets="GenerateNuspec">

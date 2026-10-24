@@ -10,7 +10,8 @@ namespace QtSharp.Charts.Tests
     /// category axis holds the months, the value axis holds its range, and the chart renders - so
     /// they hold on a machine with no display.
     /// </summary>
-    public static class BarChart
+    [Demo("qtcharts-barchart")]
+public static class BarChart
     {
         public static int Run(QApplication app)
         {

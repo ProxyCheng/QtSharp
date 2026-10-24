@@ -12,7 +12,8 @@ namespace QtSharp.Charts.Tests
     /// bound surface (the same secondary-base gap that hides legend->hide() in the spline example).
     /// Everything else is the example's own sequence.
     /// </summary>
-    public static class LegendChart
+    [Demo("qtcharts-legend")]
+public static class LegendChart
     {
         public static int Run(QApplication app)
         {

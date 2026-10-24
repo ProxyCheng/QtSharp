@@ -47,19 +47,19 @@
     <None Include="README.md" Pack="true" PackagePath="/" />
     <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
 
-    <None Include="Modules\QtSharp.Qt3DCore\bin\$(Configuration)\net10.0\QtSharp.Qt3DCore.dll" Pack="true" PackagePath="lib/net10.0/" />
-    <None Include="Modules\QtSharp.Qt3DRender\bin\$(Configuration)\net10.0\QtSharp.Qt3DRender.dll" Pack="true" PackagePath="lib/net10.0/" />
-    <None Include="Modules\QtSharp.Qt3DInput\bin\$(Configuration)\net10.0\QtSharp.Qt3DInput.dll" Pack="true" PackagePath="lib/net10.0/" />
-    <None Include="Modules\QtSharp.Qt3DLogic\bin\$(Configuration)\net10.0\QtSharp.Qt3DLogic.dll" Pack="true" PackagePath="lib/net10.0/" />
-    <None Include="Modules\QtSharp.Qt3DAnimation\bin\$(Configuration)\net10.0\QtSharp.Qt3DAnimation.dll" Pack="true" PackagePath="lib/net10.0/" />
-    <None Include="Modules\QtSharp.Qt3DExtras\bin\$(Configuration)\net10.0\QtSharp.Qt3DExtras.dll" Pack="true" PackagePath="lib/net10.0/" />
+    <None Include="Modules\QtSharp.Qt3DCore\bin\$(Configuration)\net10.0\QtSharp.Qt3DCore.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.Qt3DRender\bin\$(Configuration)\net10.0\QtSharp.Qt3DRender.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.Qt3DInput\bin\$(Configuration)\net10.0\QtSharp.Qt3DInput.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.Qt3DLogic\bin\$(Configuration)\net10.0\QtSharp.Qt3DLogic.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.Qt3DAnimation\bin\$(Configuration)\net10.0\QtSharp.Qt3DAnimation.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.Qt3DExtras\bin\$(Configuration)\net10.0\QtSharp.Qt3DExtras.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
 
-    <None Include="$(QtSharpQt3DNativeDir)\qt3dcore\QtSharp.Qt3DCore.Native.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtSharpQt3DNativeDir)\qt3drender\QtSharp.Qt3DRender.Native.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtSharpQt3DNativeDir)\qt3dinput\QtSharp.Qt3DInput.Native.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtSharpQt3DNativeDir)\qt3dlogic\QtSharp.Qt3DLogic.Native.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtSharpQt3DNativeDir)\qt3danimation\QtSharp.Qt3DAnimation.Native.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtSharpQt3DNativeDir)\qt3dextras\QtSharp.Qt3DExtras.Native.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3dcore\QtSharp.Qt3DCore.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3drender\QtSharp.Qt3DRender.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3dinput\QtSharp.Qt3DInput.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3dlogic\QtSharp.Qt3DLogic.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3danimation\QtSharp.Qt3DAnimation.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3dextras\QtSharp.Qt3DExtras.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
 
   </ItemGroup>
 

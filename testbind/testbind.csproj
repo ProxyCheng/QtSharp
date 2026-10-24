@@ -15,9 +15,10 @@
   <!-- The native QtSharp.Api.dll, the Qt runtime DLLs and the platform plugin. -->
   <Import Project="..\QtSharp.Api.props" />
 
-  <!-- Every ported example (and the QtSharp.Api binding + runtime they are built on). -->
+  <!-- The official demos (and the binding + runtime they are built on) and the binding tests. -->
   <ItemGroup>
     <ProjectReference Include="..\demos\QtSharp.Demos.csproj" />
+    <ProjectReference Include="../tests/QtSharp.BindingTests.csproj" />
   </ItemGroup>
 
 </Project>

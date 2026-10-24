@@ -7,7 +7,8 @@ namespace QtSharp.Charts.Tests
     /// vertical axis of its own, the second one a QCategoryAxis with named bands, and both vertical
     /// axes coloured from their series' pen.
     /// </summary>
-    public static class MultiAxisChart
+    [Demo("qtcharts-multiaxis")]
+public static class MultiAxisChart
     {
         public static int Run(QApplication app)
         {

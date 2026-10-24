@@ -6,7 +6,8 @@ namespace QtSharp.Charts.Tests
     /// Qt's examples/charts BarPercentWidget: the bar chart's data again in a QPercentBarSeries,
     /// where every category is scaled to 100%.
     /// </summary>
-    public static class PercentBarChart
+    [Demo("qtcharts-percentbarchart")]
+public static class PercentBarChart
     {
         public static int Run(QApplication app)
         {

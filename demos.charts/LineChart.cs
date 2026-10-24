@@ -7,7 +7,8 @@ namespace QtSharp.Charts.Tests
     /// Qt's examples/charts/linechart: the same idea as splinechart with a QLineSeries of ten points
     /// and no explicit range - createDefaultAxes() picks one from the data.
     /// </summary>
-    public static class LineChart
+    [Demo("qtcharts-linechart")]
+public static class LineChart
     {
         public static int Run(QApplication app)
         {

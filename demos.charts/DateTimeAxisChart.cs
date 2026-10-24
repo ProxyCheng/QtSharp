@@ -10,7 +10,8 @@ namespace QtSharp.Charts.Tests
     /// QDateTime::toMSecsSinceEpoch(). This port keeps the same three columns as literal data, since
     /// the qrc is not part of this repository, and the rest of the example is untouched.
     /// </summary>
-    public static class DateTimeAxisChart
+    [Demo("qtcharts-datetimeaxis")]
+public static class DateTimeAxisChart
     {
         // A slice of the file Qt ships, same columns: year, month, sunspot count.
         static readonly (int Year, int Month, double Count)[] SunSpots =

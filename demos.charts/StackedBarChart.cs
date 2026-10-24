@@ -6,7 +6,8 @@ namespace QtSharp.Charts.Tests
     /// Qt's examples/charts BarStackedWidget: the bar chart's data again, but in a
     /// QStackedBarSeries, and with only the value axis given a range.
     /// </summary>
-    public static class StackedBarChart
+    [Demo("qtcharts-stackedbarchart")]
+public static class StackedBarChart
     {
         public static int Run(QApplication app)
         {

@@ -5,7 +5,8 @@ namespace QtSharp.Charts.Tests
     /// <summary>
     /// Qt's examples/charts HorizontalStackedBarWidget: the stacked bar chart, laid on its side.
     /// </summary>
-    public static class HorizontalStackedBarChart
+    [Demo("qtcharts-horizontalstackedbarchart")]
+public static class HorizontalStackedBarChart
     {
         public static int Run(QApplication app)
         {

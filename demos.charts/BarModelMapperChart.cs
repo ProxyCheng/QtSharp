@@ -9,7 +9,8 @@ namespace QtSharp.Charts.Tests
     /// This is what a model mapper is for, and it is the only place in the gallery where the series'
     /// data comes from a model rather than from append() calls.
     /// </summary>
-    public static class BarModelMapperChart
+    [Demo("qtcharts-barmodelmapper")]
+public static class BarModelMapperChart
     {
         const int FirstRow = 3;
         const int RowCount = 5;

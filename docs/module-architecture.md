@@ -154,8 +154,8 @@ NuGet dependencies, so a consumer never lists the runtime packages by hand.
 
 `tools/regen-api.ps1` is the full gate: it re-extracts the combined model, checks the split models
 are byte-identical, generates every module twice (determinism), builds the shared and per-addon
-native glues, builds the ten base assemblies and the Charts assembly, runs the official demos
-(including the Qt Charts and Qt3D conformance suites) and the sample. `tools/pack-qt-binding.ps1` packs and
+native glues, builds the ten base assemblies and the Charts assembly, runs the official demos and
+binding tests (including the Qt Charts and Qt3D conformance suites). `tools/pack-qt-binding.ps1` packs and
 inspects all seven packages; a local feed consumer test then proves the dependency graph and the
 `buildTransitive` payload.
 

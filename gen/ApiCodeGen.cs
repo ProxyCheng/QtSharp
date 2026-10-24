@@ -93,6 +93,11 @@ public static class ApiCodeGen
 
     static string SimpleName(string modelType) => ApiTypes.SimpleName(modelType);
 
+    // A C# string literal for a generated attribute. The model's names are identifiers and Qt
+    // types (QList<...>), so only the escapes a compiler would need are handled.
+    static string CsString(string text)
+        => "\"" + text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+
     // The C# spelling of a model type. A type owned by this module is unqualified; one owned by
     // another module (base or addon) is qualified with that module's namespace.
     static string CsTypeName(string t)
@@ -876,10 +881,15 @@ public static class ApiCodeGen
         csharpNamespace = ns;
         csharpFiles = new Dictionary<string, StringBuilder>(StringComparer.Ordinal);
 
-        // Namespace-level enums do not record a header in the model; one file holds them all.
-        var enums = CSharpFile(PlainFileKey(ns + ".Enums"));
-        WriteEnums(enums, "", 1);
-        WriteEnums(enums, "Qt", 1);
+        // Namespace-level enums do not record a header in the model; one file holds them all. A
+        // module whose enums are all class-scoped (Qt3DAnimation) has no such file at all, rather
+        // than an empty namespace in the tree.
+        if (Enums.Any(e => ScopeOf(e).Length == 0 || ScopeOf(e) == "Qt"))
+        {
+            var enums = CSharpFile(PlainFileKey(ns + ".Enums"));
+            WriteEnums(enums, "", 1);
+            WriteEnums(enums, "Qt", 1);
+        }
 
         // Free functions are grouped by the header that declares them; the entry names were
         // computed over the whole list, so two headers cannot collide.
@@ -2492,6 +2502,7 @@ public static class ApiCodeGen
             string qtPropType = System.Security.SecurityElement.Escape(propType);
             string access = setter != null ? "read/write" : "read-only";
             sb.AppendLine($"        /// <summary>The <c>{qtName}</c> property (Q_PROPERTY, <c>{qtPropType}</c>, {access}).</summary>");
+            sb.AppendLine($"        [QtNativeProperty({CsString(Name(property))}, {CsString(propType)}, {(setter != null ? "true" : "false")})]");
             sb.AppendLine($"        public {NewName(inherited, propName)}{ManagedType(propType)} {propName}");
             sb.AppendLine("        {");
             sb.AppendLine($"            get => {CSharpMemberName(getter)}();");
@@ -2797,6 +2808,7 @@ public static class ApiCodeGen
                 ? "h()"
                 : "h(" + string.Join(", ", ps.Select((p, i) => SignalRead(PType(p), i))) + ")";
             sb.AppendLine($"        /// <summary>The <c>{mocSigDoc}</c> signal as a QSignal (`Connect`/`Emit`).</summary>");
+            sb.AppendLine($"        [QtNativeSignal({CsString(mocSig)})]");
             sb.AppendLine($"        public {NewName(inherited, Pascal(sname) + sSuffix + "Signal")}{signalType} {Pascal(sname)}{sSuffix}Signal =>");
             sb.AppendLine($"            new {signalType}(h => ApiRuntime.Connect(Handle, \"{mocSig}\", (argv, _) => {handler}),");
             foreach (string line in EmitLambda(ps, mocSig))
@@ -2823,6 +2835,7 @@ public static class ApiCodeGen
                 string readArgs = string.Join(", ", ps.Select((p, i) => SignalRead(PType(p), i)));
                 string valueCall = csTypes.Count == 0 ? "value()" : "value(" + readArgs + ")";
                 sb.AppendLine($"        /// <summary>The <c>{mocSigDoc}</c> signal as a C# event (`+=` handler, `-=` handler disconnects).</summary>");
+                sb.AppendLine($"        [QtNativeSignal({CsString(mocSig)})]");
                 sb.AppendLine($"        public {NewName(inherited, eventName)}event {delegateType} {eventName}");
                 sb.AppendLine("        {");
                 sb.AppendLine($"            add => ApiRuntime.Connect(Handle, \"{mocSig}\", (argv, _) => {valueCall}, value);");

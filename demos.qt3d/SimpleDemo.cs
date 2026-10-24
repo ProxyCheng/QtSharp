@@ -13,6 +13,7 @@ namespace QtSharp.Qt3D.Demos
     //     QPropertyAnimation; QPropertyAnimation is not bound (it needs the QVariant animation
     //     machinery), so the matrix is computed here with the same QMatrix4x4 operations and the
     //     result is asserted instead of animated.
+    [Demo("qt3d-simple")]
     public static class SimpleDemo
     {
         public static int Run(QApplication app)

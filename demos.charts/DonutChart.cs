@@ -6,7 +6,8 @@ namespace QtSharp.Charts.Tests
     /// Qt's examples/charts DonutWidget: a pie with a hole, the Fat slice exploded, the legend at the
     /// bottom, the Blue Cerulean theme and a small legend font.
     /// </summary>
-    public static class DonutChart
+    [Demo("qtcharts-donutchart")]
+public static class DonutChart
     {
         public static int Run(QApplication app)
         {

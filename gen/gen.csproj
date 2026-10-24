@@ -21,7 +21,7 @@
     <!-- libClangSharp ships no builtin headers, so ClangExtractor.ResourceDir() borrows clang's from
          here and the whole tree is copied next to the executable. Do NOT delete lib\lib\clang. -->
     <ClangHeaders Include="..\lib\lib\clang\**\*" />
-    <Content Include="@(ClangHeaders)" Link="lib\clang\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="@(ClangHeaders)" Link="lib\clang\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>
 
 </Project>

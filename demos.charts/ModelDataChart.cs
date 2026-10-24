@@ -9,7 +9,8 @@ namespace QtSharp.Charts.Tests
     /// The sibling of the bar model mapper example: same model, but an X/Y mapper, which takes a
     /// separate column for each coordinate.
     /// </summary>
-    public static class ModelDataChart
+    [Demo("qtcharts-modeldata")]
+public static class ModelDataChart
     {
         public static int Run(QApplication app)
         {

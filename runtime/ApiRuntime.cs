@@ -306,6 +306,39 @@ namespace QtSharp.Runtime
         public string Name { get; }
     }
 
+    // The *generated* members already exist in moc's meta-object, so they are not declarations and
+    // must not be passed to AttachMetaObject. These attributes are the read side of that: tooling,
+    // documentation and a caller reflecting over a generated wrapper can tell a native Q_PROPERTY
+    // or signal from one a C# subclass declared with [QtProperty]/[QtSignal].
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+    public sealed class QtNativePropertyAttribute : Attribute
+    {
+        public QtNativePropertyAttribute(string name, string type, bool writable)
+        {
+            Name = name;
+            Type = type;
+            Writable = writable;
+        }
+
+        /// <summary>The Q_PROPERTY name as Qt spells it (the C# member is PascalCase).</summary>
+        public string Name { get; }
+
+        /// <summary>The Qt type as the model spells it (QString, Qt::Alignment, QList&lt;...&gt;).</summary>
+        public string Type { get; }
+
+        /// <summary>Whether the generated property has a setter (Q_PROPERTY's WRITE).</summary>
+        public bool Writable { get; }
+    }
+
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Event, AllowMultiple = false, Inherited = false)]
+    public sealed class QtNativeSignalAttribute : Attribute
+    {
+        public QtNativeSignalAttribute(string signature) => Signature = signature;
+
+        /// <summary>The moc signature (clicked(bool), valueChanged(QString)).</summary>
+        public string Signature { get; }
+    }
+
     // An [QtProperty] C# property: the PropertyInfo is the accessor pair, so an auto-property and
     // a hand-written one (get => GetMinValue(), set => SetMinValue(value)) work the same.
     sealed class AttributedProperty : QMetaPropertyBase

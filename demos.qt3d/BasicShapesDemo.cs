@@ -10,6 +10,7 @@ namespace QtSharp.Qt3D.Demos
     // Qt3DWindow in a QWidget and exposes a checkbox per shape; the scene itself (six ready-made
     // meshes, their materials and transforms, the point light and the camera) is what this test
     // builds. The checkbox toggles are reproduced by SetEnabled/IsEnabled assertions.
+    [Demo("qt3d-basicshapes")]
     public static class BasicShapesDemo
     {
         sealed class Shape

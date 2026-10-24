@@ -22,6 +22,12 @@
   <Import Project="..\QtSharp.Api.props" />
 
   <ItemGroup>
+    <!-- The demo registry attribute, source-linked so the Charts runner does not depend on the
+         base demo assembly. -->
+    <Compile Include="..\demos\DemoAttribute.cs" Link="DemoAttribute.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\nuget\QtSharp.Charts\QtSharp.Charts.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Runtime\QtSharp.Runtime.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtCore\QtSharp.QtCore.csproj" />

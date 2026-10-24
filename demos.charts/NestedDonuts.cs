@@ -13,7 +13,8 @@ namespace QtSharp.Charts.Tests
     ///   the assertions are about structure (how many donuts, how the radii nest, that a phase shift
     ///   moves the ring) rather than about specific values.
     /// </summary>
-    public static class NestedDonuts
+    [Demo("qtcharts-nesteddonuts")]
+public static class NestedDonuts
     {
         public static int Run(QApplication app)
         {

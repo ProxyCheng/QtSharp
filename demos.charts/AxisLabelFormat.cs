@@ -16,7 +16,8 @@ namespace QtSharp.Charts.Tests
     /// preStr + locale number + postStr, and preStr/postStr are slices of the *QString* - so a
     /// non-Latin-1 unit survives. That is what the second half of this test pins down.
     /// </summary>
-    public static class AxisLabelFormat
+    [Demo("qtcharts-axislabelformat")]
+public static class AxisLabelFormat
     {
         /// <summary>A chart whose single axis carries the given label format.</summary>
         static (QChart Chart, QChartView View, QValueAxis Axis) Build(string format)

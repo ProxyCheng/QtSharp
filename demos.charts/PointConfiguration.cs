@@ -13,7 +13,8 @@ namespace QtSharp.Charts.Tests
     /// the types QVariant has real constructors for. Size (double), label visibility (bool) and the
     /// label format (QString) all have real ones and are exercised here.
     /// </summary>
-    public static class PointConfiguration
+    [Demo("qtcharts-pointconfiguration")]
+public static class PointConfiguration
     {
         public static int Run(QApplication app)
         {

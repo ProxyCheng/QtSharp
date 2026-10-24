@@ -6,7 +6,8 @@ namespace QtSharp.Charts.Tests
     /// Qt's examples/charts LineAndBarWidget: a QBarSeries and a QLineSeries sharing one category axis
     /// and one value axis, with the line series drawn as a trend over the bars.
     /// </summary>
-    public static class LineAndBarChart
+    [Demo("qtcharts-lineandbar")]
+public static class LineAndBarChart
     {
         public static int Run(QApplication app)
         {

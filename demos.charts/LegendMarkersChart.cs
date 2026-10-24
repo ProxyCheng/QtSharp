@@ -11,7 +11,8 @@ namespace QtSharp.Charts.Tests
     /// This is the example that shows QLegendMarker is a real C# object: the handler gets the marker
     /// back, walks to its series, and writes the label brush, brush and pen through the binding.
     /// </summary>
-    public static class LegendMarkersChart
+    [Demo("qtcharts-legendmarkers")]
+public static class LegendMarkersChart
     {
         public static int Run(QApplication app)
         {

@@ -17,8 +17,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\out\qtcore\generated\**\*.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\runtime\QtCore\*.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\out\qtcore\generated\**\*.cs">
+      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\runtime\QtCore\*.cs">
+      <Link>Runtime\QtCore\%(Filename)%(Extension)</Link>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

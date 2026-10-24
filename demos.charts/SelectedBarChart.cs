@@ -7,7 +7,8 @@ namespace QtSharp.Charts.Tests
     /// selected colour, and a click on a bar toggling its selection while three labels track the
     /// selected, unselected and total sums.
     /// </summary>
-    public static class SelectedBarChart
+    [Demo("qtcharts-selectedbar")]
+public static class SelectedBarChart
     {
         public static int Run(QApplication app)
         {

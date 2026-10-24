@@ -215,7 +215,7 @@ jobs:
         shell: pwsh
         run: ./tools/build-qt-kit.ps1
 
-      - name: Build the examples and the sample
+      - name: Build the examples and the binding tests
         shell: pwsh
         run: |
           # The examples load the Qt runtime, so point them at the kit the build job assembled.
@@ -223,8 +223,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "demos build failed" }
           dotnet build testbind/testbind.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
           if ($LASTEXITCODE -ne 0) { throw "testbind build failed" }
-          dotnet build samples/hello/Hello.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
-          if ($LASTEXITCODE -ne 0) { throw "sample build failed" }
 
       - name: Run every example
         shell: pwsh
@@ -233,20 +231,3 @@ jobs:
           # time, retries a teardown race once and prints a failing window's own output.
           ./tools/run-window-tests.ps1 -Exe "testbind/bin/Release/net10.0/testapp.exe" -Label "demos"
           if ($LASTEXITCODE -ne 0) { throw "some demos failed (see the output above)" }
-
-      - name: Run the sample
-        shell: pwsh
-        run: |
-          $hello = "samples/hello/bin/Release/net10.0/hello.exe"
-          # The sample's own C#-declared signal and property, without opening a window.
-          & $hello selftest
-          if ($LASTEXITCODE -ne 0) { throw "hello selftest failed" }
-          # The sample's window, run through the same entry point the demos use.
-          & $hello api-transform
-          if ($LASTEXITCODE -ne 0) { throw "hello api-transform failed" }
-          $env:HELLO_AUTOCLOSE_MS = "1500"
-          & $hello
-          $code = $LASTEXITCODE
-          Remove-Item Env:\HELLO_AUTOCLOSE_MS -ErrorAction SilentlyContinue
-          if ($code -ne 0) { throw "hello failed with 0x$('{0:X8}' -f $code)" }
-          Write-Host "the sample passed"

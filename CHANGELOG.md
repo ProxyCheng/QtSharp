@@ -11,6 +11,40 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   `demos.charts/` and runs in the gate, CI and release against the separate `QtSharp.Charts`
   assembly. Charts' model, native glue and package had already been built here; the second
   repository is now redundant.
+- **The demos are now only the official Qt examples, grouped and named by module.** `demos/`
+  contains the 23 ported examples under `QtGui/` and `QtWidgets/`, and both the files and the
+  `--list` names say which module they exercise (`qtgui-basicdrawing`, `qtwidgets-analogclock`, …).
+  The Qt Charts examples are `qtcharts-*`; Qt3D keeps `qt3d-*`.
+- **Binding-specific tests moved to `tests/`.** Ownership, the exception boundary, C#-declared
+  signals/properties, value types, the QtCore tour, network transports, document formats, managed
+  models and the graphics-view tour are still run by the gate, but under `test-*` names instead of
+  pretending to be official demos. The redundant API smoke test and the widget tour (covered by the
+  official gallery) were removed.
+- Generated Q_PROPERTY wrappers now carry `[QtNativeProperty(name, type, writable)]` and generated
+  signals (the `QSignal` property and the C# event) carry `[QtNativeSignal(mocSignature)]`. They
+  are the read-side markers for members whose Qt metadata already exists, as opposed to the
+  declaration-side `[QtProperty]`/`[QtSignal]` a C# subclass uses; `test-metaobject` asserts both.
+- **BCL conversions for the Qt value types with a natural C# counterpart**, following PyQt's
+  explicit `toPy...`/constructor model rather than replacing Qt types in signatures: QPoint/
+  QPointF/QSize/QSizeF/QRect/QRectF <-> System.Drawing, QColor <-> System.Drawing.Color,
+  QVector2D/3D/4D <-> System.Numerics.Vector2/3/4, QQuaternion <-> System.Numerics.Quaternion,
+  QUrl <-> System.Uri, QUuid <-> System.Guid, QByteArray <-> byte[], plus `QVariant.ToObject()`
+  and `QVariant.From(object)` (the QVariant.value() equivalent). The existing QDateTime/QDate/QTime
+  conversions are unchanged. A new `test-bclinterop` exercises them in the gate.
+- The IDE view is clean now that the module projects link their generated and runtime sources under
+  `Generated/` and `Runtime/` virtual folders instead of listing every out-of-project path, and the
+  package projects hide their payload DLLs (`Visible=false`, still packed). Generated files that
+  would contain no declarations (a module with no namespace-level enums, for example) are not
+  written at all.
+- The demo/test projects now reference the ten base assemblies instead of compiling the generated
+  binding into QtSharp.Demos. The public API is exercised across the same assembly boundaries the
+  package ships, and the IDE no longer lists the generated `out/**/*.cs` as files of the demo
+  project.
+- Demo registration is attribute-based: `[Demo("qtwidgets-analogclock")]` on a static class with
+  `Run(QApplication)`, discovered by each catalog. The hand-maintained runner/name tables are
+  gone; duplicate or malformed registrations fail at startup.
+- `samples/hello` was removed. `testbind` is the one entry point; consumers start from the package
+  reference in the README, and the Qt3D/resource samples remain.
 - **The whole binding is split the way PyQt6 is.** `QtSharp.Api` now contains ten assemblies, one
   per Qt module and one C# namespace each: `QtSharp.QtCore`, `QtSharp.QtGui`, `QtSharp.QtWidgets`,
   `QtSharp.QtNetwork`, `QtSharp.QtSvg`, `QtSharp.QtSvgWidgets`, `QtSharp.QtPrintSupport`,

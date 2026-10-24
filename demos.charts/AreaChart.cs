@@ -6,7 +6,8 @@ namespace QtSharp.Charts.Tests
     /// Qt's examples/charts AreaWidget: two line series bounding a filled QAreaSeries, a 3px pen and
     /// a green linear gradient in object-bounding coordinates, with both axes given explicit ranges.
     /// </summary>
-    public static class AreaChart
+    [Demo("qtcharts-areachart")]
+public static class AreaChart
     {
         public static int Run(QApplication app)
         {

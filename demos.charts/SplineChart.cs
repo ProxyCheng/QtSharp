@@ -12,7 +12,8 @@ namespace QtSharp.Charts.Tests
     /// createDefaultAxes() built, the range set through QValueAxis, and the ink the chart draws when
     /// it is rendered off-screen.
     /// </summary>
-    public static class SplineChart
+    [Demo("qtcharts-splinechart")]
+public static class SplineChart
     {
         public static int Run(QApplication app)
         {

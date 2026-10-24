@@ -9,7 +9,8 @@ namespace QtSharp.Charts.Tests
     /// interaction examples, and the one that shows remove() and append() moving a point between two
     /// series.
     /// </summary>
-    public static class ScatterInteractions
+    [Demo("qtcharts-scatterinteractions")]
+public static class ScatterInteractions
     {
         /// <summary>The example's handleClickedPoint: move the closest point to the click.</summary>
         internal static void MoveClosest(QScatterSeries from, QScatterSeries to, QPointF clicked)

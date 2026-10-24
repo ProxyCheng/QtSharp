@@ -14,7 +14,8 @@ namespace QtSharp.Charts.Tests
     /// (lowerExtreme, lowerQuartile, median, upperQuartile, upperExtreme, label) - which is the same
     /// thing its box->setValue(QBoxSet::ValuePos, ...) calls do, and the one the binding publishes.
     /// </summary>
-    public static class BoxPlotChart
+    [Demo("qtcharts-boxplotchart")]
+public static class BoxPlotChart
     {
         /// <summary>The example's BoxPlotDataReader, on a line of "label values...".</summary>
         internal static QBoxSet ReadBox(string line)

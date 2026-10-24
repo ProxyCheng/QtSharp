@@ -10,7 +10,8 @@ namespace QtSharp.Charts.Tests
     /// It is the example to read when you want to know how far the styling API alone will take you,
     /// so the assertions are all about the styling having come back out.
     /// </summary>
-    public static class CustomChart
+    [Demo("qtcharts-customchart")]
+public static class CustomChart
     {
         public static int Run(QApplication app)
         {

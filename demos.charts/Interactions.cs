@@ -10,7 +10,8 @@ namespace QtSharp.Charts.Tests
     /// example that proves the module's classes can be overridden from C# and that Qt routes its
     /// mouse events into the overrides.
     /// </summary>
-    public static class Interactions
+    [Demo("qtcharts-interactions")]
+public static class Interactions
     {
         /// <summary>The example's InteractionsChart.</summary>
         sealed class InteractionsChart : QChart

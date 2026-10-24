@@ -7,7 +7,8 @@ namespace QtSharp.Charts.Tests
     /// axis moves to the left and the value axis to the bottom - with applyNiceNumbers() rounding the
     /// value axis off.
     /// </summary>
-    public static class HorizontalBarChart
+    [Demo("qtcharts-horizontalbarchart")]
+public static class HorizontalBarChart
     {
         public static int Run(QApplication app)
         {

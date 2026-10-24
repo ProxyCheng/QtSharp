@@ -17,9 +17,9 @@
     Override QtSharpRoot / QtSharpApiDir / QtSharpOutDir / QtRuntimeDir if the pieces live
     elsewhere.
 
-    A project that *references* an assembly which already compiles the binding (the demos library,
-    QtSharp.Demos.dll) must set QtSharpCompileBinding=false first - compiling it twice defines every
-    QtSharp.QtCore/QtGui/... type in two assemblies, which is CS0433 everywhere. The import still
+    A project that *references* the binding assemblies (the demos library, QtSharp.Demos.dll, or
+    the QtSharp.Api package) must set QtSharpCompileBinding=false first - compiling the binding
+    again defines every QtSharp.QtCore/QtGui/... type twice, which is CS0433 everywhere. The import still
     brings the native DLLs and the Qt runtime, so such a project needs no further setup:
 
         <PropertyGroup>
@@ -43,24 +43,52 @@
   </PropertyGroup>
   <ItemGroup Condition="'$(QtSharpCompileBinding)' == 'true'">
     <!-- The Qt-type-free runtime (handles, QSignal, attributes, marshalling). -->
-    <Compile Include="$(QtSharpRoot)runtime\ApiRuntime.cs" />
+    <Compile Include="$(QtSharpRoot)runtime\ApiRuntime.cs">
+      <Link>Runtime\%(Filename)%(Extension)</Link>
+    </Compile>
     <!-- The pieces that belong to a module and must sit beside its generated classes: the
          QObject signal API (QtCore), the BCL conversions (QtCore), and the command-line
          constructors of QCoreApplication/QGuiApplication/QApplication. -->
-    <Compile Include="$(QtSharpRoot)runtime\QtCore\*.cs" />
-    <Compile Include="$(QtSharpRoot)runtime\QtGui\*.cs" />
-    <Compile Include="$(QtSharpRoot)runtime\QtWidgets\*.cs" />
+    <Compile Include="$(QtSharpRoot)runtime\QtCore\*.cs">
+      <Link>Runtime\QtCore\%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="$(QtSharpRoot)runtime\QtGui\*.cs">
+      <Link>Runtime\QtGui\%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="$(QtSharpRoot)runtime\QtWidgets\*.cs">
+      <Link>Runtime\QtWidgets\%(Filename)%(Extension)</Link>
+    </Compile>
     <!-- One generated tree per Qt module, exactly what QtSharp.Api packs as ten assemblies. -->
-    <Compile Include="$(QtSharpOutDir)\qtcore\generated\**\*.cs" />
-    <Compile Include="$(QtSharpOutDir)\qtgui\generated\**\*.cs" />
-    <Compile Include="$(QtSharpOutDir)\qtwidgets\generated\**\*.cs" />
-    <Compile Include="$(QtSharpOutDir)\qtnetwork\generated\**\*.cs" />
-    <Compile Include="$(QtSharpOutDir)\qtsvg\generated\**\*.cs" />
-    <Compile Include="$(QtSharpOutDir)\qtsvgwidgets\generated\**\*.cs" />
-    <Compile Include="$(QtSharpOutDir)\qtprintsupport\generated\**\*.cs" />
-    <Compile Include="$(QtSharpOutDir)\qtxml\generated\**\*.cs" />
-    <Compile Include="$(QtSharpOutDir)\qtopengl\generated\**\*.cs" />
-    <Compile Include="$(QtSharpOutDir)\qtopenglwidgets\generated\**\*.cs" />
+    <Compile Include="$(QtSharpOutDir)\qtcore\generated\**\*.cs">
+      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="$(QtSharpOutDir)\qtgui\generated\**\*.cs">
+      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="$(QtSharpOutDir)\qtwidgets\generated\**\*.cs">
+      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="$(QtSharpOutDir)\qtnetwork\generated\**\*.cs">
+      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="$(QtSharpOutDir)\qtsvg\generated\**\*.cs">
+      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="$(QtSharpOutDir)\qtsvgwidgets\generated\**\*.cs">
+      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="$(QtSharpOutDir)\qtprintsupport\generated\**\*.cs">
+      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="$(QtSharpOutDir)\qtxml\generated\**\*.cs">
+      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="$(QtSharpOutDir)\qtopengl\generated\**\*.cs">
+      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="$(QtSharpOutDir)\qtopenglwidgets\generated\**\*.cs">
+      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
   </ItemGroup>
 
   <Target Name="CopyQtSharpNativeDeps" AfterTargets="Build">

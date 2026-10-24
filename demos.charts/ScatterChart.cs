@@ -10,7 +10,8 @@ namespace QtSharp.Charts.Tests
     /// The star is painted into a QImage through a QPainter, which is also the first thing in this
     /// suite that exercises the painting classes from the extension's side.
     /// </summary>
-    public static class ScatterChart
+    [Demo("qtcharts-scatterchart")]
+public static class ScatterChart
     {
         public static int Run(QApplication app)
         {

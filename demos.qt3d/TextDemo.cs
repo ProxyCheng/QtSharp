@@ -9,6 +9,7 @@ namespace QtSharp.Qt3D.Demos
     // Qt's examples/qt3d/3d-text, ported onto the binding. The C++ example creates one extruded
     // text entity per installed font family; the test uses the first two families (the QFont and
     // QExtrudedTextMesh paths are the point, not the font count) and asserts the glyph properties.
+    [Demo("qt3d-text")]
     public static class TextDemo
     {
         public static int Run(QApplication app)

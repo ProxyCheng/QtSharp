@@ -35,16 +35,17 @@ runtime/ApiRuntime.cs (QtSharp.Runtime)     ← QSignal, attributes, ownership, 
 runtime/QtCore, QtGui, QtWidgets            ← the QObject/app halves that belong to those modules
         │
         ▼
-demos/QtSharp.Demos.csproj                  ← the binding + runtime + 35 demos, one assembly
-        ▲                    ▲
-   testbind/testapp     samples/hello  ← two thin entry points, one name → demo table
+demos/QtSharp.Demos.csproj                  ← the official demos, referencing the ten base assemblies
+tests/QtSharp.BindingTests.csproj           ← binding-specific tests (test-*)
+        ▲
+   testbind/testapp                         ← the one entry point: demos + tests, one name table
 ```
 
 Current coverage: **496 classes / 10506 methods / 885 virtuals / 511 enums / 816 Q_PROPERTY
 properties / 463 signals / 70 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg,
-QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets). The gate runs all 35 core demos
-(**1319 assertions**), the 38 official Qt Charts examples (**570 assertions**), the three official
-Qt3D examples (**37 assertions**) plus `samples/hello`.
+QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets). The gate runs 23 official Qt
+examples (**867 assertions**), 11 binding-specific tests (**387 assertions**), the 38 official Qt
+Charts examples (**570 assertions**) and the three official Qt3D examples (**37 assertions**).
 
 Extension modules are separate assemblies and packages against the same runtime:
 
@@ -216,16 +217,15 @@ powershell -File tools\regen-api.ps1
 ```
 
 That is the whole thing (a clone's first run takes a few minutes — the native glue is a big
-translation unit, and 35 demos are built and run at the end). It runs, in order:
+translation unit, and every module's demos and tests are built and run at the end). It runs, in order:
 
 | step | what it does |
 |---|---|
 | `[1]` | builds the generator (`gen`) |
 | `[2]` | extracts the model from the Qt headers into `out\qtsharp.api.json.new` (**~3 s**) and compares it to the checked-in `model\qtsharp.api.json` — byte for byte |
-| `[3]` | runs the code generator **twice** and compares the two generated trees (one file per Qt header) |
-| `[4]` | compiles the generated C++ wrapper + the runtime into `out\api\QtSharp.Api.dll` |
-| `[5]` | builds `demos` (binding + runtime + 35 demos) and runs every demo with `testapp`, several windows at a time |
-| `[6]` | builds and runs `samples\hello` (its window, `hello selftest`, `hello api-transform`, `hello help`) |
+| `[3]` | splits the combined model into the ten base models and runs the code generator **twice** for every module, comparing the trees |
+| `[4]` | compiles the generated C++ wrapper and builds the ten base assemblies |
+| `[5]` | builds the official demos and the binding tests, then runs all of them with `testapp`, several windows at a time |
 
 Two gates live in the middle of that: **the model must come out identical** (it is deterministic by
 construction, so a difference means the Qt version, the clang headers or the `Roots` table changed)
@@ -242,7 +242,7 @@ output printed, so the failure stays attributable even though the windows overla
 
 The same suite runs in CI on every push — the `Smoke tests` job in `.github/workflows/ci.yml`. It
 takes the binding the `binding` job built from the checked-in model, fetches Qt, builds the examples
-and the sample, then runs all of them through the same `tools/run-window-tests.ps1` pool, so it gets
+and the binding tests, then runs all of them through the same `tools/run-window-tests.ps1` pool, so it gets
 the same parallelism and the same one retry for the teardown flake above. Note that the examples need a real Qt platform: `QT_QPA_PLATFORM=offscreen`
 is *not* an option, because several of them assert on rendered pixels and one crashes without
 `qwindows`.
@@ -260,15 +260,18 @@ dotnet build samples\hello\Hello.csproj -c Release
 ## Run the examples
 
 ```
-testapp                       # the list of demos (35 names)
-testapp api-calculator        # run one
-testapp api-analogclock       # QTSHARP_DEMO_MS=8000 keeps it on screen longer
-
-hello                         # samples/hello's own window
-hello help                    # the same list
-hello api-pathstroke          # the same examples, from the sample
-hello selftest                # the sample's own signal/property checks, no window
+testapp                          # the list (official demos + binding tests)
+testapp qtwidgets-calculator     # an official example
+testapp qtgui-pathstroke         # QTSHARP_DEMO_MS=8000 keeps it on screen longer
+testapp test-metaobject          # a binding test
 ```
+
+The official demos are named after the module they exercise (`qtgui-*`, `qtwidgets-*`, plus
+`qtcharts-*` and `qt3d-*` from the addon runners); the binding tests use `test-*` and cover
+ownership, exceptions, C#-declared signals/properties, value types, the BCL conversions and the
+modules whose upstream examples are not ported yet. `docs/conformance.md` has the full matrix.
+Registration is discovery, not a list: a class carries `[Demo("qtwidgets-analogclock")]` and each
+catalog finds it in its own assembly.
 
 Every example is also a self-test: it drives the generated API, checks what it sees and prints
 `[PASS]`/`[FAIL]` lines, ending in `[SELFTEST OK]`. That is what the gate reads, so the examples do
@@ -278,7 +281,17 @@ not rot.
 
 ## Write your own UI
 
-`samples/hello` is the template: one `Program.cs`, one props import, no other plumbing.
+A consumer project is a package reference and a program. The in-repository demos reference the
+module projects directly (the same assemblies the package contains).
+
+```xml
+<ItemGroup>
+  <PackageReference Include="QtSharp.Api" Version="0.1.0" />
+</ItemGroup>
+```
+
+A project that does not use the package can compile the binding from source by importing
+`QtSharp.Api.props`:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -318,7 +331,7 @@ static class Program
 
         layout.AddWidget(label);
         layout.AddWidget(button);
-        window.SetWindowTitle("Hello");
+        window.WindowTitle = "Hello";
         window.Show();
 
         return app.Exec();                     // app.Quit() ends it
@@ -347,6 +360,15 @@ static class Program
   var qd = new QDate(dateOnly);             // qdate.ToDateOnly()
   var qt = new QTime(timeOnly);             // qtime.ToTimeOnly()
   byte[] data = qba.ToArray();              // new QByteArray(data) is binary-safe
+
+  Point pt = (Point)qpoint;                 // QPoint/QSize/QRect <-> System.Drawing
+  Color c = (Color)qcolor;                  // QColor <-> System.Drawing.Color
+  Vector3 v = (Vector3)qvector;             // QVector2D/3D/4D <-> System.Numerics
+  Quaternion q = (Quaternion)qquaternion;   // QQuaternion <-> System.Numerics.Quaternion
+  Uri uri = (Uri)qurl;                      // QUrl <-> System.Uri
+  Guid id = (Guid)quuid;                    // QUuid <-> System.Guid
+  object value = qvariant.ToObject();       // PyQt's QVariant.value(): int, string, DateTime, ...
+  var variant = QVariant.From(value);       // and back
   ```
   There are no implicit operators on purpose: `==` on a handle class compares wrapper identity, so
   an implicit conversion would let `qdt == dateTime` compile and silently be false. Invalid or
@@ -380,14 +402,17 @@ static class Program
   method; `Reset<Property>` by convention), `Constant`, `Final`, `Required`, `Designable`,
   `Scriptable`, `Stored`, `User` and `Revision`. `BINDABLE` is not exposed: it needs binding
   support in the native runtime, not just a flag.
-  `samples/hello/HelloCounter.cs` is the same declaration in a runnable sample.
+  `tests/MetaObjectApi.cs` is the same declaration under test.
   The generated Qt classes are deliberately different: their properties and signals already exist
   in moc's meta-object, so they do not carry these attributes. Their types are marked
   `[GeneratedCode("qtgen", …)]`, and the XML docs say what a member is — for example
   `The windowTitle property (Q_PROPERTY, QString, read/write)` and
   `The windowTitleChanged(QString) signal as a C# event`. `[QtProperty]`/`[QtSignal]` are only for
-  members *you* declare on a C# subclass. Only the types the hand-written runtime extends (the
-  application classes, `QObject`, and the date/time/byte-array types) are `partial`; every other
+  members *you* declare on a C# subclass. A generated member instead carries the read-side
+  `[QtNativeProperty(name, type, writable)]` or `[QtNativeSignal(mocSignature)]`, so reflection
+  and tooling can tell the two apart without guessing from the type. Only the types the
+  hand-written runtime extends (the application classes, `QObject`, and the date/time/byte-array
+  types) are `partial`; every other
   wrapper is a whole declaration, and `unsafe` sits on the few constructors that pass a function
   pointer rather than on the class.
 * **Ownership**: an object you `new` is yours — `Dispose()` (or the finalizer) deletes it, unless you
@@ -470,9 +495,9 @@ Replace the local source path with your checkout's `out/packages` directory.
 | `gen/` | the generator: `ApiModel.cs` (model shape, vocabulary), `ApiModel.Modules.cs` (the module registry), `CoreSplit.cs` (combined → per-module models), `ClangExtractor.cs` (the libclang front end), `ApiCodeGen.cs` (model → C# + C++) |
 | `native/` | the hand-written runtime (`QtSharpApiRuntime.cpp`: moc signal forwarder, probes) and the crash tracer |
 | `runtime/` | the managed runtime: `ApiRuntime.cs` (`QtSharp.Runtime`) and the per-module halves under `QtCore/`, `QtGui/`, `QtWidgets/` |
-| `demos/` | `QtSharp.Demos.csproj` — the binding, the runtime and the 35 demos; `ApiDemos.cs` is the name → window table |
-| `testbind/` | `testapp`, the test entry point (13 lines: hand the argument to `ApiDemos`) |
-| `samples/hello/` | the sample / trial entry point |
+| `demos/` | `QtSharp.Demos.csproj` — the binding, the runtime and the official Qt examples, grouped as `QtGui/` and `QtWidgets/`; each class is registered with `[Demo("qtwidgets-...")]` and `DemoCatalog` discovers it |
+| `tests/` | `QtSharp.BindingTests.csproj` — the binding-specific tests (`test-*`), registered the same way and discovered by `BindingTests` |
+| `testbind/` | `testapp`, the one entry point: it dispatches both catalogs |
 | `samples/qt3d/` | a Qt3D sample: windowless self-test by default, `window` opens the scene |
 | `demos.qt3d/` | the official Qt3D C++ examples (`simple-cpp`, `basicshapes-cpp`, `3d-text`) as the extension's conformance tests |
 | `demos.charts/` | the official Qt Charts examples (38 windows) as the Charts module's conformance tests |
@@ -513,9 +538,9 @@ Replace the local source path with your checkout's `out/packages` directory.
   properties, enums and flags are bound normally (including class-scoped enums in signal
   signatures).
 * **Not ported**: the RHI examples (they need `QRhi` and prebuilt shaders) and Window Embedding.
-  PDF *output* works through `QPrinter` (see `api-docformats`); PDF *reading* needs the QtPdf
+  PDF *output* works through `QPrinter` (see `test-docformats`); PDF *reading* needs the QtPdf
   module, which is not bound.
-* `api-windowflags` is written and passes all 115 assertions, but it dies about three runs in ten
+* `tests/WindowFlagsApi.cs` is written and passes all 115 assertions, but it dies about three runs in ten
   while Qt tears the process down (a native message pump reaching a destroyed window), so it is
   deliberately not wired into the dispatcher.
 * An optional parameter whose C++ default is a *bare enumerator that is not an enumerator of the

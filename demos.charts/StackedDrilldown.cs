@@ -17,7 +17,8 @@ namespace QtSharp.Charts.Tests
     /// the handler instead, which is the same information without reaching for the wrapper of the
     /// moment.
     /// </summary>
-    public static class StackedDrilldown
+    [Demo("qtcharts-stackeddrilldown")]
+public static class StackedDrilldown
     {
         /// <summary>The example's StackedDrilldownSeries.</summary>
         sealed class StackedDrilldownSeries : QStackedBarSeries

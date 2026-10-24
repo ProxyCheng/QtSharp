@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QtSharp.Qt3D.Demos
 {
@@ -7,17 +8,13 @@ namespace QtSharp.Qt3D.Demos
     // tools/run-window-tests.ps1 consumes; a demo name runs exactly that example.
     public static class Program
     {
-        static readonly Dictionary<string, Func<QApplication, int>> Runners = new(StringComparer.Ordinal)
-        {
-            ["qt3d-simple"] = SimpleDemo.Run,
-            ["qt3d-basicshapes"] = BasicShapesDemo.Run,
-            ["qt3d-text"] = TextDemo.Run,
-        };
+        // Discovered from [Demo("qt3d-...")] on the classes in this assembly.
+        static readonly IReadOnlyList<(string Name, Func<QApplication, int> Run)> Runners =
+            DemoDiscovery.Find(typeof(Program).Assembly);
+        static readonly Dictionary<string, Func<QApplication, int>> ByName =
+            Runners.ToDictionary(r => r.Name, r => r.Run, StringComparer.Ordinal);
 
-        public static readonly string[] Names = new[]
-        {
-            "qt3d-simple", "qt3d-basicshapes", "qt3d-text",
-        };
+        public static readonly string[] Names = Runners.Select(r => r.Name).ToArray();
 
         [STAThread]
         static int Main(string[] args)
@@ -29,7 +26,7 @@ namespace QtSharp.Qt3D.Demos
                 return 0;
             }
 
-            if (args.Length == 0 || !Runners.TryGetValue(args[0], out var run))
+            if (args.Length == 0 || !ByName.TryGetValue(args[0], out var run))
             {
                 Console.WriteLine("[usage] " + string.Join(" | ", Names));
                 return 0;

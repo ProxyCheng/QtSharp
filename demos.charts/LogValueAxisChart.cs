@@ -6,7 +6,8 @@ namespace QtSharp.Charts.Tests
     /// Qt's examples/charts LogAxisWidget: six points spanning four orders of magnitude against a
     /// QLogValueAxis with base 8, and a QValueAxis whose tick count follows the series' point count.
     /// </summary>
-    public static class LogValueAxisChart
+    [Demo("qtcharts-logvalueaxis")]
+public static class LogValueAxisChart
     {
         public static int Run(QApplication app)
         {

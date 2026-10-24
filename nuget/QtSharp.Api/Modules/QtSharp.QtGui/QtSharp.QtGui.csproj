@@ -17,8 +17,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\out\qtgui\generated\**\*.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\runtime\QtGui\*.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\out\qtgui\generated\**\*.cs">
+      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\runtime\QtGui\*.cs">
+      <Link>Runtime\QtGui\%(Filename)%(Extension)</Link>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

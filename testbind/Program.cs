@@ -1,11 +1,12 @@
 using System;
 using QtSharp.Demos;
+using QtSharp.Tests;
 
-// The test entry point: it does nothing but hand the argument to the demo library.
+// The test entry point: it does nothing but hand the argument to one of the two catalogs.
 //
-// Every window this repository has ported lives in QtSharp.Demos (see demos/), and ApiDemos is the
-// one place that maps a name to it - so this file is a dispatcher and nothing else. samples/hello
-// uses the very same ApiDemos.TryRun, which is what keeps the two entry points from drifting.
+// The official Qt examples live in QtSharp.Demos (demos/, organized and named by module); the
+// binding-specific tests live in QtSharp.BindingTests (tests/). Both catalogs expose --list, so
+// the gate and the name tables cannot drift.
 static class Program
 {
     [STAThread]
@@ -13,20 +14,27 @@ static class Program
     {
         try
         {
-            // --list prints the demo names one per line, which is what the repository's gate runs
-            // through: the list lives in the library, so it cannot drift from the dispatcher.
+            // --list prints every runnable name one per line, which is what the repository's gate
+            // runs through.
             if (args.Length == 1 && args[0] == "--list")
             {
-                foreach (string name in ApiDemos.Names)
+                foreach (string name in DemoCatalog.Names)
+                    Console.WriteLine(name);
+                foreach (string name in BindingTests.Names)
                     Console.WriteLine(name);
                 return 0;
             }
 
-            if (ApiDemos.TryRun(args, out int exitCode))
+            if (DemoCatalog.TryRun(args, out int exitCode))
+                return exitCode;
+            if (BindingTests.TryRun(args, out exitCode))
                 return exitCode;
 
-            Console.WriteLine(ApiDemos.Usage);
-            Console.WriteLine($"        ({ApiDemos.Names.Length} demos, all in QtSharp.Demos.dll)");
+            Console.WriteLine(DemoCatalog.Usage);
+            Console.WriteLine(BindingTests.Usage);
+            Console.WriteLine(
+                $"        ({DemoCatalog.Names.Length} official demos in QtSharp.Demos.dll, " +
+                $"{BindingTests.Names.Length} binding tests in QtSharp.BindingTests.dll)");
             return 0;
         }
         catch (Exception ex)

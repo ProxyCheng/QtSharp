@@ -32,13 +32,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\ApiRuntime.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\ApiRuntime.cs">
+      <Link>Runtime\ApiRuntime.cs</Link>
+    </Compile>
+    <!-- The binding tests probe the liveness generation counters (OwnershipApi); those members
+         are internal to the runtime otherwise. -->
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>QtSharp.BindingTests</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
     <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
-    <None Include="$(QtSharpApiDir)\QtSharp.Api.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(QtSharpApiDir)\QtSharp.Api.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
   </ItemGroup>
 
   <Target Name="QtSharpRuntimePackCheck" BeforeTargets="GenerateNuspec">

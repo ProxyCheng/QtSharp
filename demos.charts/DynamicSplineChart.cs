@@ -10,7 +10,8 @@ namespace QtSharp.Charts.Tests
     /// otherwise take two minutes - but the timer itself is the example's, and the assertions cover
     /// both the arithmetic the handler does and what it does to the chart.
     /// </summary>
-    public static class DynamicSplineChart
+    [Demo("qtcharts-dynamicspline")]
+public static class DynamicSplineChart
     {
         // The example's state.
         static double _x = 0;

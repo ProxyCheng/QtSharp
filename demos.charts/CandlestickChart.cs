@@ -12,7 +12,8 @@ namespace QtSharp.Charts.Tests
     /// The example's CandlestickDataReader does the same splitting this does - timestamp, open, high,
     /// low, close - and hands each line to QCandlestickSet.
     /// </summary>
-    public static class CandlestickChart
+    [Demo("qtcharts-candlestickchart")]
+public static class CandlestickChart
     {
         public static int Run(QApplication app)
         {

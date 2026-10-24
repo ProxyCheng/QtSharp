@@ -11,7 +11,8 @@ namespace QtSharp.Charts.Tests
     /// and relabels itself as its share of the pie changes, and PieDrilldownChart owns swapping the
     /// series over. The random sales figures start from a seeded generator so a run is repeatable.
     /// </summary>
-    public static class PieDrilldown
+    [Demo("qtcharts-piedrilldown")]
+public static class PieDrilldown
     {
         /// <summary>The example's PieDrilldownSlice.</summary>
         sealed class PieDrilldownSlice : QPieSlice

@@ -11,7 +11,8 @@ namespace QtSharp.Charts.Tests
     /// with the same shape (three series of seven points, y values rising as the generator's would),
     /// so the assertions can talk about specific values.
     /// </summary>
-    public static class ChartThemes
+    [Demo("qtcharts-chartthemes")]
+public static class ChartThemes
     {
         const int ListCount = 3;
         const int ValueMax = 10;

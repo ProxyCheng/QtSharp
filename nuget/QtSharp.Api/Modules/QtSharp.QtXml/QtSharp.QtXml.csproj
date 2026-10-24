@@ -17,7 +17,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\out\qtxml\generated\**\*.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\out\qtxml\generated\**\*.cs">
+      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

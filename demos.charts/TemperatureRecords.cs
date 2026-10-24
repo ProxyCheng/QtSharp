@@ -7,7 +7,8 @@ namespace QtSharp.Charts.Tests
     /// in each month, as two stacked bar sets whose value axis spans -52..52 - the same call the
     /// stacked bar example makes, and the one that shows an axis with negative values on it.
     /// </summary>
-    public static class TemperatureRecords
+    [Demo("qtcharts-temperaturerecords")]
+public static class TemperatureRecords
     {
         static readonly string[] Months =
         {

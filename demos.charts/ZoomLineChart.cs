@@ -12,7 +12,8 @@ namespace QtSharp.Charts.Tests
     /// the rubber band and the keyboard are, and the managed ChartView subclass is what proves the
     /// module's classes can be overridden from C#.
     /// </summary>
-    public static class ZoomLineChart
+    [Demo("qtcharts-zoomlinechart")]
+public static class ZoomLineChart
     {
         /// <summary>The example's ChartView: a rubber band and the keyboard controls.</summary>
         sealed class ChartView : QChartView

@@ -192,9 +192,9 @@ if ($LASTEXITCODE -ne 0) {
 & "$root/tools/run-window-tests.ps1" -Exe "$root/demos.charts/bin/Release/net10.0/ChartsDemos.exe" -Label "charts-demos" -Jobs $Jobs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-Write-Host "=== [5] Build the demo library, then build + run the smoke tests ==="
-# The ported examples themselves: the generated binding, the managed runtime and every `api-*`
-# window in one assembly. testbind (and samples/hello) only reference it.
+Write-Host "=== [5] Build the demos and binding tests, then run them ==="
+# The official demos reference the ten base module assemblies (not a source-compiled binding);
+# the binding tests cover the parts of the API that Qt's examples do not. testbind dispatches both.
 dotnet build "$root\demos\QtSharp.Demos.csproj" -c Release --nologo *> "$root\out\api_demosbuild.log"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "demos build failed"
@@ -205,51 +205,17 @@ if ($LASTEXITCODE -ne 0) {
 dotnet build "$root\testbind\testbind.csproj" -c Release --nologo *> "$root\out\api_testbuild.log"
 if ($LASTEXITCODE -ne 0) { Write-Host "testbind build failed"; Select-String -Path "$root\out\api_testbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }; exit 1 }
 
-# What is covered, in the order the library lists it: the QObject smoke test; the AnalogClock; the
-# LineEdits, Calculator, SpinBoxes, Sliders, ShapedClock, Shortcut Editor and Calendar widget
-# examples; the whole QtWidgets tour; the graphics view family; the QtCore tour (files, JSON, ids,
-# timers, threads, IPC); the input events; ownership; the managed model/delegate/proxy/completer/
-# star-delegate examples; the document viewer; the system tray; the painting examples (basic
-# drawing, gradients, painter paths, composition, transformations, path stroking); the meta-object
-# example. Each one drives the generated API, checks what it sees and ends in [SELFTEST OK].
+# What is covered, in the order the libraries list it: the official Qt examples
+# (qtgui-*, qtwidgets-*) and the binding tests under test-* (core, events, exceptions,
+# meta-object, ownership, value types, network, document formats, managed models, graphics view).
+# Each one drives the generated API, checks what it sees and ends in [SELFTEST OK].
 #
-# The list comes from the library itself (ApiDemos.Names), so a new example is covered by the gate
-# as soon as it is registered. The windows are independent processes, so tools\run-window-tests.ps1
-# runs several at a time; each result line names the window, and a failure prints that window's own
-# output, so nothing is lost by running them concurrently.
-& "$root\tools\run-window-tests.ps1" -Exe "$root\testbind\bin\Release\net10.0\testapp.exe" `
+# The list comes from the two catalogs (DemoCatalog.Names and BindingTests.Names), so a new example
+# is covered by the gate as soon as it is registered. The windows are independent processes, so
+# tools/run-window-tests.ps1 runs several at a time; each result line names the window, and a
+# failure prints that window's own output.
+& "$root/tools/run-window-tests.ps1" -Exe "$root/testbind/bin/Release/net10.0/testapp.exe" `
     -Label "demos" -Jobs $Jobs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-# The sample a user starts from: a project outside this repository's test app that imports only
-# QtSharp.Api.props and references the demo library. Covered here so the "write your own UI" path
-# cannot rot, together with the second entry point into the demos ("hello <demo>").
-Write-Host "=== [6] Build + run the standalone sample ==="
-dotnet build "$root\samples\hello\Hello.csproj" -c Release --nologo *> "$root\out\api_samplebuild.log"
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "sample build failed"
-    Select-String -Path "$root\out\api_samplebuild.log" -Pattern "error CS" | Select-Object -First 6 | ForEach-Object { Write-Host $_.Line.Trim() }
-    exit 1
-}
-
-# The sample's own window.
-$env:HELLO_AUTOCLOSE_MS = "1500"
-& "$root\samples\hello\bin\Release\net10.0\hello.exe"
-$sampleExit = $LASTEXITCODE
-Remove-Item Env:\HELLO_AUTOCLOSE_MS -ErrorAction SilentlyContinue
-if ($sampleExit -ne 0) { exit $sampleExit }
-
-# The sample's own C#-declared signal and properties (the pyqtSignal / pyqtProperty equivalent,
-# samples/hello/HelloCounter.cs) - a windowless run that checks itself.
-& "$root\samples\hello\bin\Release\net10.0\hello.exe" selftest
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# The same sample running a ported example, which is what makes it a usable trial entry.
-& "$root\samples\hello\bin\Release\net10.0\hello.exe" api-transform
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# And its list of them.
-$names = (& "$root\samples\hello\bin\Release\net10.0\hello.exe" help) -join "`n"
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-if ($names -notmatch 'api-pathstroke') { Write-Host "hello help did not list the demos"; exit 1 }
 
 exit 0

@@ -49,16 +49,16 @@
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
-    <None Include="Modules\QtSharp.QtCore\bin\$(Configuration)\net10.0\QtSharp.QtCore.dll" Pack="true" PackagePath="lib/net10.0/" />
-    <None Include="Modules\QtSharp.QtGui\bin\$(Configuration)\net10.0\QtSharp.QtGui.dll" Pack="true" PackagePath="lib/net10.0/" />
-    <None Include="Modules\QtSharp.QtWidgets\bin\$(Configuration)\net10.0\QtSharp.QtWidgets.dll" Pack="true" PackagePath="lib/net10.0/" />
-    <None Include="Modules\QtSharp.QtNetwork\bin\$(Configuration)\net10.0\QtSharp.QtNetwork.dll" Pack="true" PackagePath="lib/net10.0/" />
-    <None Include="Modules\QtSharp.QtSvg\bin\$(Configuration)\net10.0\QtSharp.QtSvg.dll" Pack="true" PackagePath="lib/net10.0/" />
-    <None Include="Modules\QtSharp.QtSvgWidgets\bin\$(Configuration)\net10.0\QtSharp.QtSvgWidgets.dll" Pack="true" PackagePath="lib/net10.0/" />
-    <None Include="Modules\QtSharp.QtPrintSupport\bin\$(Configuration)\net10.0\QtSharp.QtPrintSupport.dll" Pack="true" PackagePath="lib/net10.0/" />
-    <None Include="Modules\QtSharp.QtXml\bin\$(Configuration)\net10.0\QtSharp.QtXml.dll" Pack="true" PackagePath="lib/net10.0/" />
-    <None Include="Modules\QtSharp.QtOpenGL\bin\$(Configuration)\net10.0\QtSharp.QtOpenGL.dll" Pack="true" PackagePath="lib/net10.0/" />
-    <None Include="Modules\QtSharp.QtOpenGLWidgets\bin\$(Configuration)\net10.0\QtSharp.QtOpenGLWidgets.dll" Pack="true" PackagePath="lib/net10.0/" />
+    <None Include="Modules\QtSharp.QtCore\bin\$(Configuration)\net10.0\QtSharp.QtCore.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtGui\bin\$(Configuration)\net10.0\QtSharp.QtGui.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtWidgets\bin\$(Configuration)\net10.0\QtSharp.QtWidgets.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtNetwork\bin\$(Configuration)\net10.0\QtSharp.QtNetwork.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtSvg\bin\$(Configuration)\net10.0\QtSharp.QtSvg.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtSvgWidgets\bin\$(Configuration)\net10.0\QtSharp.QtSvgWidgets.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtPrintSupport\bin\$(Configuration)\net10.0\QtSharp.QtPrintSupport.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtXml\bin\$(Configuration)\net10.0\QtSharp.QtXml.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtOpenGL\bin\$(Configuration)\net10.0\QtSharp.QtOpenGL.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtOpenGLWidgets\bin\$(Configuration)\net10.0\QtSharp.QtOpenGLWidgets.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
   </ItemGroup>
 
   <Target Name="QtSharpApiPackCheck" BeforeTargets="GenerateNuspec">

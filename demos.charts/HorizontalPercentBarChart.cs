@@ -5,7 +5,8 @@ namespace QtSharp.Charts.Tests
     /// <summary>
     /// Qt's examples/charts HorizontalPercentBarWidget: the percent bar chart, laid on its side.
     /// </summary>
-    public static class HorizontalPercentBarChart
+    [Demo("qtcharts-horizontalpercentbarchart")]
+public static class HorizontalPercentBarChart
     {
         public static int Run(QApplication app)
         {

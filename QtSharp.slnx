@@ -26,6 +26,5 @@
   <Project Path="demos/QtSharp.Demos.csproj" />
   <Project Path="testbind/testbind.csproj" />
   <Project Path="demos.charts/ChartsDemos.csproj" />
-  <Project Path="samples/hello/Hello.csproj" />
   <Project Path="tools/clangprobe/ClangProbe.csproj" />
 </Solution>

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Drawing;
 using QtSharp.Runtime;
 
 #pragma warning disable 660, 661 // the generated classes' ==/!= are wrapper identity, like the generated file
@@ -196,5 +198,12 @@ namespace QtSharp.QtCore
         /// A null or empty QByteArray both come back as a zero-length array.
         /// </summary>
         public byte[] ToArray() => ApiRuntime.CopyBytes(Handle);
+
+        /// <summary>A owned QByteArray copy of the managed bytes (the constructor already takes byte[]).</summary>
+        public static explicit operator QByteArray(byte[] value) => new QByteArray(value);
+
+        /// <summary>A binary-safe copy of the bytes; same as <see cref="ToArray"/>.</summary>
+        public static explicit operator byte[](QByteArray value)
+            => (value ?? throw new ArgumentNullException(nameof(value))).ToArray();
     }
 }

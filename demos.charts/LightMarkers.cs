@@ -12,7 +12,8 @@ namespace QtSharp.Charts.Tests
     /// ":green_triangle", which are not part of this repository, so they are painted here instead;
     /// and the three combo boxes of the gallery are represented by calling the same three setters.
     /// </summary>
-    public static class LightMarkers
+    [Demo("qtcharts-lightmarkers")]
+public static class LightMarkers
     {
         const double MarkerSize = 20.0;
 
