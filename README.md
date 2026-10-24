@@ -478,6 +478,7 @@ Replace the local source path with your checkout's `out/packages` directory.
 | `demos.charts/` | the official Qt Charts examples (38 windows) as the Charts module's conformance tests |
 | `nuget/QtSharp.Api/`, `nuget/QtSharp.Runtime/`, `nuget/QtSharp.Qt6/` | the base binding and its runtime packages (ten module assemblies inside `QtSharp.Api`) |
 | `nuget/QtSharp.Charts*`, `nuget/QtSharp.Qt3D*` | the two addon packages and their `*.Qt6` runtime companions |
+| `docs/conformance.md` | which Qt examples run against which module, and the remaining coverage gaps |
 | `tools/regen-api.ps1` | the build and the gate |
 | `tools/clangprobe/` | the probe used to validate the libclang front end (not part of the build) |
 | `tools/disasm.py` | capstone-based RVA disassembly helper |
