@@ -108,7 +108,7 @@ jobs:
           cmd /c build_api.bat
           if ($LASTEXITCODE -ne 0) { throw "build_api.bat failed" }
           foreach ($module in @('charts', 'qt3d')) {
-            powershell -NoProfile -File tools\build-native-module.ps1 -Module $module
+            powershell -NoProfile -File tools\build-native-module.ps1 -Module $module -QtDir "$env:QT_DIR"
             if ($LASTEXITCODE -ne 0) { throw "$module native build failed" }
           }
       # The examples are the binding's own test suite, and a release must not ship a binding that
