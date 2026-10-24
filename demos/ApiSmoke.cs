@@ -1,5 +1,4 @@
 ﻿using System;
-using QtSharp.Api;
 
 // Smoke test for the generated bindings (model -> codegen -> build -> run).
 // Exercises all three mechanisms through *generated* code, not hand-written glue.

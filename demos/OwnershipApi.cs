@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QtSharp.Api;
 
 // Ownership on the new pipeline: who is allowed to delete a native object.
 //

@@ -1,5 +1,4 @@
 using System;
-using QtSharp.Api;
 
 // Port of examples/widgets/desktop/systray/{window.h,window.cpp} onto the *new* pipeline.
 // Everything (the dialog, its group boxes, layouts, labels, combo boxes, spin box, line edit,

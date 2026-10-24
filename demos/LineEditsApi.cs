@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using QtSharp.Api;
 
 // The official widgets/lineedits example, ported onto the *new* pipeline: group boxes, grid
 // layouts, labels, combo boxes, line edits and validators all come from

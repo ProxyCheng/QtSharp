@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using QtSharp.Api;
 
 // A QtWidgets tour on the new pipeline: one window that touches most of the widget families the
 // model now covers - menus, tool bars, status bar, tabs, splitters, buttons, numeric input, item

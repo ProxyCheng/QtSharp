@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using QtSharp.Api;
 
 // Port of examples/widgets/painting/pathstroke on the new pipeline.
 //

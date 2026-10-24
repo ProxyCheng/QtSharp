@@ -1,5 +1,5 @@
 using System;
-using QtSharp.Api;
+using QtSharp.Demos;
 
 // A Qt object whose signal and properties are declared *in C#* - the pyqtSignal / pyqtProperty
 // equivalent.

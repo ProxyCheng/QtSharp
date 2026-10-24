@@ -718,10 +718,11 @@ public static partial class ApiModel
     // The extension module that declares a cursor, by the include directory its file lives in;
     // null for a core declaration (QtCore, QtGui, ...). A dependency module's enum is retained in
     // the model for type resolution but is emitted by that module's own package.
+    // The registry row whose include directory holds a declaration. It works for the combined
+    // (base) extraction too: that is how the splitter knows that Qt::BrushStyle is QtGui's even
+    // though its C++ scope is just Qt, while Qt::Alignment is QtCore's.
     static unsafe ExtensionModule ModuleOfDeclaration(CXCursor declaration)
     {
-        if (CurrentModule == null)
-            return null;
         var location = clang.getCursorLocation(declaration);
         location.GetSpellingLocation(out var file, out _, out _, out _);
         if (file.Handle == IntPtr.Zero)

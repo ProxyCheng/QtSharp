@@ -12,13 +12,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- The replacement front end: libclang through ClangSharp. See ApiModel2.cs. -->
+    <!-- The replacement front end: libclang through ClangSharp. See ClangExtractor.cs. -->
     <PackageReference Include="ClangSharp" Version="21.1.8.4" />
     <PackageReference Include="libClangSharp.runtime.win-x64" Version="21.1.8.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- libClangSharp ships no builtin headers, so ApiModel2.ResourceDir() borrows clang's from
+    <!-- libClangSharp ships no builtin headers, so ClangExtractor.ResourceDir() borrows clang's from
          here and the whole tree is copied next to the executable. Do NOT delete lib\lib\clang. -->
     <ClangHeaders Include="..\lib\lib\clang\**\*" />
     <Content Include="@(ClangHeaders)" Link="lib\clang\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

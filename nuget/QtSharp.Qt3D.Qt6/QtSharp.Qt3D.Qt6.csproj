@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The Qt3D runtime payload, the companion package a QtSharp.Qt3D consumer gets
+       automatically (PyQt6-3D depends on PyQt6-Qt6 the same way). The six Qt3D libraries, their
+       RHI/geometry/scene-parsing dependencies and the plugins Qt3DRender loads at runtime. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+
+    <PackageId>QtSharp.Qt3D.Qt6</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>ProxyCheng</Authors>
+    <Description>The Qt 3D runtime (Qt63D*, Qt6Concurrent, Qt6ShaderTools and the renderer/geometry/scene plugins) loaded by QtSharp.Qt3D.</Description>
+    <PackageTags>Qt;Qt6;Qt3D;runtime;native</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ProxyCheng/QtSharp.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <Qt3DRuntimeDir Condition="'$(Qt3DRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.11.0\runtime</Qt3DRuntimeDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="_._" Pack="true" PackagePath="lib/net10.0/" />
+    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
+
+    <None Include="$(Qt3DRuntimeDir)\Qt63DCore.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(Qt3DRuntimeDir)\Qt63DRender.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(Qt3DRuntimeDir)\Qt63DInput.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(Qt3DRuntimeDir)\Qt63DLogic.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(Qt3DRuntimeDir)\Qt63DAnimation.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(Qt3DRuntimeDir)\Qt63DExtras.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(Qt3DRuntimeDir)\Qt6Concurrent.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(Qt3DRuntimeDir)\Qt6ShaderTools.dll" Pack="true" PackagePath="tools/native/" />
+
+    <None Include="$(Qt3DRuntimeDir)\plugins\renderers\*.dll" Pack="true" PackagePath="tools/native/renderers/" />
+    <None Include="$(Qt3DRuntimeDir)\plugins\geometryloaders\*.dll" Pack="true" PackagePath="tools/native/geometryloaders/" />
+    <None Include="$(Qt3DRuntimeDir)\plugins\sceneparsers\*.dll" Pack="true" PackagePath="tools/native/sceneparsers/" />
+  </ItemGroup>
+
+  <Target Name="QtSharpQt3DQt6PackCheck" BeforeTargets="GenerateNuspec">
+    <Error Condition="!Exists('$(Qt3DRuntimeDir)\Qt63DCore.dll')" Text="The Qt3D runtime DLLs are missing under '$(Qt3DRuntimeDir)' - see README.md, section Prerequisites." />
+    <Error Condition="!Exists('$(Qt3DRuntimeDir)\Qt6ShaderTools.dll')" Text="Qt6ShaderTools.dll is missing under '$(Qt3DRuntimeDir)' - the RHI renderer plugin needs it." />
+  </Target>
+
+</Project>

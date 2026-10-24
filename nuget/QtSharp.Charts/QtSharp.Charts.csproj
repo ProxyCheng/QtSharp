@@ -35,7 +35,6 @@
 
     <QtSharpChartsDir Condition="'$(QtSharpChartsDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\charts</QtSharpChartsDir>
     <QtSharpChartsNativeDir Condition="'$(QtSharpChartsNativeDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\api-modules\charts</QtSharpChartsNativeDir>
-    <QtChartsRuntimeDir Condition="'$(QtChartsRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.11.0\runtime</QtChartsRuntimeDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -43,22 +42,28 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- A ProjectReference while both live in this repository; a consumer uses a PackageReference
-         to QtSharp.Api instead. Pack turns this into that dependency. -->
+    <!-- The compiler needs the base assemblies themselves, while the *package* only depends on
+         QtSharp.Api (which contains them). PrivateAssets keeps the module projects out of the
+         dependency list, ReferenceOutputAssembly=false keeps QtSharp.Api itself out of the compile
+         graph (it has no output of its own). -->
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Runtime\QtSharp.Runtime.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\Modules\QtSharp.QtCore\QtSharp.QtCore.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\Modules\QtSharp.QtGui\QtSharp.QtGui.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\Modules\QtSharp.QtWidgets\QtSharp.QtWidgets.csproj" PrivateAssets="all" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\QtSharp.Api.csproj" />
+    <!-- The Qt Charts runtime is its companion package, like PyQt6-Charts-Qt6. -->
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Charts.Qt6\QtSharp.Charts.Qt6.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
     <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
     <None Include="$(QtSharpChartsNativeDir)\QtSharp.Charts.Native.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtChartsRuntimeDir)\Qt6Charts.dll" Pack="true" PackagePath="tools/native/" />
   </ItemGroup>
 
   <Target Name="QtSharpChartsPackCheck" BeforeTargets="GenerateNuspec">
     <Error Condition="!Exists('$(QtSharpChartsDir)\generated')" Text="The QtCharts binding source is missing - run: qtgen codegen model\qtsharp.charts.json out\charts --module charts" />
     <Error Condition="!Exists('$(QtSharpChartsNativeDir)\QtSharp.Charts.Native.dll')" Text="The QtCharts native glue is missing - run: powershell -File tools\build-native-module.ps1 -Module charts" />
-    <Error Condition="!Exists('$(QtChartsRuntimeDir)\Qt6Charts.dll')" Text="Qt6Charts.dll is missing under '$(QtChartsRuntimeDir)' - see README.md, section Prerequisites." />
   </Target>
 
 </Project>

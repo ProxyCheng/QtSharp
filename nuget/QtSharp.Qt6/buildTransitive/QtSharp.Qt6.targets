@@ -1,0 +1,24 @@
+<Project>
+
+  <!-- The Qt base runtime (and the MSVC runtime it needs) next to the consumer's executable and
+       in its publish output. Qt looks for the platform plugin under platforms\, so it is copied
+       there rather than next to the executable. -->
+  <Target Name="QtSharpQt6CopyNativeDeps" AfterTargets="Build">
+    <ItemGroup>
+      <_QtSharpQt6Native Include="$(QtSharpQt6NativeDir)*.dll" />
+      <_QtSharpQt6Platform Include="$(QtSharpQt6NativeDir)platforms\qwindows.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpQt6Native)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpQt6Platform)" DestinationFolder="$(OutDir)platforms\" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="QtSharpQt6CopyNativeDepsPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <_QtSharpQt6NativePublish Include="$(QtSharpQt6NativeDir)*.dll" />
+      <_QtSharpQt6PlatformPublish Include="$(QtSharpQt6NativeDir)platforms\qwindows.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpQt6NativePublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpQt6PlatformPublish)" DestinationFolder="$(PublishDir)platforms\" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

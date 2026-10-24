@@ -222,7 +222,7 @@ public static class ApiTypes
 // a pure function of a versioned artifact: the same model always produces byte-identical
 // output, and CI can enforce "regenerate -> diff must be empty".
 // The class is split in two files: ApiModel.cs holds the model shape, the roots table, the
-// vocabulary, the header scanners and the serializer; ApiModel2.cs reads the AST through
+// vocabulary, the header scanners and the serializer; ClangExtractor.cs reads the AST through
 // libclang/ClangSharp (the `extract2` command). Everything downstream of "the AST has been
 // read" is shared.
 public static partial class ApiModel
@@ -307,6 +307,12 @@ public static partial class ApiModel
         public string Name;
         /// <summary>The managed namespace - and so the assembly name - of the module's binding.</summary>
         public string Namespace;
+        /// <summary>The assembly this module's code is compiled into (normally <see cref="Namespace"/>).</summary>
+        public string Assembly;
+        /// <summary>The NuGet package this assembly is shipped in (QtSharp.Api for a base module).</summary>
+        public string Package;
+        /// <summary>Whether this is a base-binding module rather than an addon.</summary>
+        public bool IsCore;
         /// <summary>The native library the module's generated P/Invokes call.</summary>
         public string NativeLibrary;
         /// <summary>
@@ -317,6 +323,11 @@ public static partial class ApiModel
         public string[] QtModules;
         /// <summary>The define(s) the headers expect, e.g. <c>QT_CHARTS_LIB</c>.</summary>
         public string[] QtDefines;
+        /// <summary>
+        /// The C++ namespaces whose declarations belong to this module. QtCore owns the <c>Qt</c>
+        /// namespace (Qt::Alignment); a Qt3D module owns the namespace with its module name.
+        /// </summary>
+        public string[] CppNamespaces = Array.Empty<string>();
         /// <summary>The Qt libraries the module's native glue links.</summary>
         public string[] QtLibs;
         /// <summary>
@@ -336,19 +347,28 @@ public static partial class ApiModel
     }
 
     /// <summary>The extension modules this generator can bind.</summary>
-    internal static readonly ExtensionModule[] ExtensionModules =
+    static ExtensionModule[] extensionModules;
+    internal static ExtensionModule[] ExtensionModules => extensionModules ??= BuildExtensionModules();
+
+    // Qt Charts: an addon package of its own, because Qt Charts is not part of the LGPL base
+    // runtime - a core consumer must not inherit its license by referencing QtSharp.Api.
+    static ExtensionModule ChartsModule()
     {
-        new ExtensionModule
+        return new ExtensionModule
         {
             Name = "charts",
             Namespace = "QtSharp.Charts",
             // The managed assembly is QtSharp.Charts (the namespace, and what a consumer references);
             // the native glue needs a different file name or the two overwrite each other in the
-            // output directory. The core has the same split: QtSharp.dll beside QtSharp.Api.dll.
+            // output directory. The base binding has the same split: QtSharp.QtCore.dll beside QtSharp.Api.dll.
             NativeLibrary = "QtSharp.Charts.Native",
+            Assembly = "QtSharp.Charts",
+            Package = "QtSharp.Charts",
             QtModules = new[] { "QtCharts" },
             QtDefines = new[] { "QT_CHARTS_LIB" },
             QtLibs = new[] { "Qt6Charts" },
+            DependsOn = new[] { "qtcore", "qtgui", "qtwidgets" },
+            CppNamespaces = Array.Empty<string>(),
             Roots = new[]
             {
                 // The widget pair the module exists for, and the polar variant.
@@ -399,15 +419,32 @@ public static partial class ApiModel
                 R("QLegend",                       "qlegend.h",                      "QtCharts", bindCtors: false, owned: false),
                 R("QLegendMarker",                 "qlegendmarker.h",                "QtCharts", bindCtors: false, owned: false),
             },
-        },
+        };
+    }
+
+    static ExtensionModule[] BuildExtensionModules() => new[]
+    {
+        ChartsModule(),
         // Qt3D is one binding per Qt module (six separate packages), not one package for the
-        // family. Each module declares the ones it builds on; see ApiModel.Qt3D.cs.
+        // family. Each module declares the ones it builds on; see ApiModel.Modules.cs.
         Qt3DCoreModule(),
         Qt3DRenderModule(),
         Qt3DInputModule(),
         Qt3DLogicModule(),
         Qt3DAnimationModule(),
         Qt3DExtrasModule(),
+        // The base binding is the same kind of module family: one assembly per Qt module,
+        // grouped into the QtSharp.Api package. Their roots come from the core Roots table.
+        QtCoreModule(),
+        QtGuiModule(),
+        QtWidgetsModule(),
+        QtNetworkModule(),
+        QtSvgModule(),
+        QtSvgWidgetsModule(),
+        QtPrintSupportModule(),
+        QtXmlModule(),
+        QtOpenGLModule(),
+        QtOpenGLWidgetsModule(),
     };
 
     internal static ExtensionModule FindExtensionModule(string name)
@@ -477,7 +514,10 @@ public static partial class ApiModel
         // be reached, it just could not read the timer id or the child.
         R("QTimerEvent",        "qcoreevent.h", "QtCore", bindCtors: false, owned: false),
         R("QChildEvent",        "qcoreevent.h", "QtCore", bindCtors: false, owned: false),
-        R("QEvent",             "qevent.h", "QtGui", bindCtors: false, owned: false),
+        // QEvent is QtCore's (QtCore/qcoreevent.h); QtGui/qevent.h only includes that header
+        // before declaring the GUI events. The root has to name the defining header, or the
+        // class is split into the wrong module.
+        R("QEvent",             "qcoreevent.h", "QtCore", bindCtors: false, owned: false),
         R("QPointerEvent",      "qevent.h", "QtGui", bindCtors: false, owned: false),
         R("QSinglePointEvent",  "qevent.h", "QtGui", bindCtors: false, owned: false),
         R("QMouseEvent",        "qevent.h", "QtGui", bindCtors: false, owned: false),

@@ -1,5 +1,4 @@
 using System;
-using QtSharp.Api;
 
 // The official examples/widgets/widgets/analogclock example, ported onto the *new* pipeline:
 // every type below (QWidget, QPainter, QTimer, QColor, QTime, QPolygon, the enums) comes from

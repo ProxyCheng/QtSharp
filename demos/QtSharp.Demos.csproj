@@ -4,8 +4,9 @@
 
        It compiles, into one assembly:
          * the generated binding  - out/api/QtSharp.Api.cs
-         * the managed runtime    - runtime/ApiRuntime.cs + runtime/ApiApplication.cs +
-                                   runtime/BclInterop.cs
+         * the managed runtime    - runtime/ApiRuntime.cs (QtSharp.Runtime) and the
+                                   QtCore/QtGui/QtWidgets halves under runtime/QtCore,
+                                   runtime/QtGui, runtime/QtWidgets
          * every `api-*` demo     - ApiDemos.Run("api-calculator") and friends
        so an entry point is nothing but a reference:
 

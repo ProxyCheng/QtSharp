@@ -1,5 +1,4 @@
 using System;
-using QtSharp.Api;
 using QtSharp.Qt3DCore;
 using QtSharp.Qt3DRender;
 using QtSharp.Qt3DExtras;

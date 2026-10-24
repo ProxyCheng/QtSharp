@@ -1,5 +1,4 @@
 using System;
-using QtSharp.Api;
 
 // The official widgets/sliders example, ported onto the *new* pipeline. The structure mirrors
 // examples/widgets/widgets/sliders/{window,slidersgroup}.cpp exactly: a reusable SlidersGroup

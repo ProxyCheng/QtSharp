@@ -1,5 +1,4 @@
 using System;
-using QtSharp.Api;
 
 // The graphics view family on the new pipeline: a scene, a view, three item kinds, the
 // QList<QGraphicsItem*> the scene hands back, and an off-screen render of the whole thing.

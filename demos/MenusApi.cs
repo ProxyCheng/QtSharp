@@ -1,5 +1,4 @@
 using System;
-using QtSharp.Api;
 
 // The official widgets/mainwindows/menus example, ported onto the *new* pipeline. It is a
 // QMainWindow (not a dialog): a menu bar with File / Edit / Help, a Format submenu under Edit

@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using QtSharp.Api;
 
 // Port of examples/widgets/tools/completer on the new pipeline.
 //

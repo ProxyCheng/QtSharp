@@ -1,5 +1,4 @@
 using System;
-using QtSharp.Api;
 
 // Port of examples/widgets/painting/basicdrawing on the new pipeline.
 //

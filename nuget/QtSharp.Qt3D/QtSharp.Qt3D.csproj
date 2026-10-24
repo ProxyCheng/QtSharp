@@ -28,19 +28,19 @@
 
     <QtSharpQt3DModules>qt3dcore;qt3drender;qt3dinput;qt3dlogic;qt3danimation;qt3dextras</QtSharpQt3DModules>
     <QtSharpQt3DNativeDir Condition="'$(QtSharpQt3DNativeDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\api-modules</QtSharpQt3DNativeDir>
-    <Qt3DRuntimeDir Condition="'$(Qt3DRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.11.0\runtime</Qt3DRuntimeDir>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- Build the six module assemblies; they are packed explicitly below. The Api project
          reference turns into the package dependency. -->
-    <ProjectReference Include="Modules\QtSharp.Qt3DCore\QtSharp.Qt3DCore.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="Modules\QtSharp.Qt3DRender\QtSharp.Qt3DRender.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="Modules\QtSharp.Qt3DInput\QtSharp.Qt3DInput.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="Modules\QtSharp.Qt3DLogic\QtSharp.Qt3DLogic.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="Modules\QtSharp.Qt3DAnimation\QtSharp.Qt3DAnimation.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="Modules\QtSharp.Qt3DExtras\QtSharp.Qt3DExtras.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="Modules\QtSharp.Qt3DCore\QtSharp.Qt3DCore.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Include="Modules\QtSharp.Qt3DRender\QtSharp.Qt3DRender.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Include="Modules\QtSharp.Qt3DInput\QtSharp.Qt3DInput.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Include="Modules\QtSharp.Qt3DLogic\QtSharp.Qt3DLogic.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Include="Modules\QtSharp.Qt3DAnimation\QtSharp.Qt3DAnimation.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Include="Modules\QtSharp.Qt3DExtras\QtSharp.Qt3DExtras.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\QtSharp.Api.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Qt3D.Qt6\QtSharp.Qt3D.Qt6.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -61,25 +61,11 @@
     <None Include="$(QtSharpQt3DNativeDir)\qt3danimation\QtSharp.Qt3DAnimation.Native.dll" Pack="true" PackagePath="tools/native/" />
     <None Include="$(QtSharpQt3DNativeDir)\qt3dextras\QtSharp.Qt3DExtras.Native.dll" Pack="true" PackagePath="tools/native/" />
 
-    <None Include="$(Qt3DRuntimeDir)\Qt63DCore.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(Qt3DRuntimeDir)\Qt63DRender.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(Qt3DRuntimeDir)\Qt63DInput.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(Qt3DRuntimeDir)\Qt63DLogic.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(Qt3DRuntimeDir)\Qt63DAnimation.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(Qt3DRuntimeDir)\Qt63DExtras.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(Qt3DRuntimeDir)\Qt6Concurrent.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(Qt3DRuntimeDir)\Qt6ShaderTools.dll" Pack="true" PackagePath="tools/native/" />
-
-    <None Include="$(Qt3DRuntimeDir)\plugins\renderers\*.dll" Pack="true" PackagePath="tools/native/renderers/" />
-    <None Include="$(Qt3DRuntimeDir)\plugins\geometryloaders\*.dll" Pack="true" PackagePath="tools/native/geometryloaders/" />
-    <None Include="$(Qt3DRuntimeDir)\plugins\sceneparsers\*.dll" Pack="true" PackagePath="tools/native/sceneparsers/" />
   </ItemGroup>
 
   <Target Name="QtSharpQt3DPackCheck" BeforeTargets="GenerateNuspec">
     <Error Condition="!Exists('Modules\QtSharp.Qt3DCore\bin\$(Configuration)\net10.0\QtSharp.Qt3DCore.dll')" Text="The Qt3DCore assembly is missing - build the module projects first." />
     <Error Condition="!Exists('$(QtSharpQt3DNativeDir)\qt3dcore\QtSharp.Qt3DCore.Native.dll')" Text="The Qt3DCore native glue is missing - run tools\build-native-module.ps1 -Module qt3dcore." />
-    <Error Condition="!Exists('$(Qt3DRuntimeDir)\Qt63DCore.dll')" Text="The Qt3D runtime DLLs are missing under '$(Qt3DRuntimeDir)' - see README.md, section Prerequisites." />
-    <Error Condition="!Exists('$(Qt3DRuntimeDir)\Qt6ShaderTools.dll')" Text="Qt6ShaderTools.dll is missing under '$(Qt3DRuntimeDir)' - the RHI renderer plugin needs it." />
   </Target>
 
 </Project>

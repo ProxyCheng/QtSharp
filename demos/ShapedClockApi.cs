@@ -1,5 +1,4 @@
 using System;
-using QtSharp.Api;
 
 // The official widgets/shapedclock example, ported onto the *new* pipeline. Every type below
 // comes from model/qtsharp.api.json through the code generator - there is no hand-written glue.

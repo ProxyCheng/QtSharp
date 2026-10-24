@@ -84,15 +84,28 @@ jobs:
           # repository root rather than at the generator's own output folder.
           $root = $env:GITHUB_WORKSPACE
           $genBin = Join-Path $root 'gen/bin/Release/net10.0/win-x64'
+          $base = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
+                    'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets')
+          $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras')
           Push-Location $genBin
           try {
-            & "./qtgen.exe" codegen (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/api')
-            if ($LASTEXITCODE -ne 0) { throw "codegen (core) failed" }
-            foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras')) {
+            & "./qtgen.exe" split-core (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/split-models')
+            if ($LASTEXITCODE -ne 0) { throw "split-core failed" }
+            foreach ($module in $base) {
+              $fresh = Join-Path $root "out/split-models/qtsharp.$module.json"
+              $checked = Join-Path $root "model/qtsharp.$module.json"
+              if ((Get-FileHash $fresh).Hash -ne (Get-FileHash $checked).Hash) {
+                throw "model/qtsharp.$module.json is stale - run tools/regen-api.ps1 -Adopt and commit it"
+              }
+            }
+            & "./qtgen.exe" codegen (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/api') --native-only
+            if ($LASTEXITCODE -ne 0) { throw "codegen (native glue) failed" }
+            foreach ($module in $base + $addons) {
               & "./qtgen.exe" codegen (Join-Path $root "model/qtsharp.$module.json") (Join-Path $root "out/$module") --module $module
               if ($LASTEXITCODE -ne 0) { throw "codegen ($module) failed" }
             }
           } finally { Pop-Location }
+
       - name: Cache the Qt archives
         uses: actions/cache@v4
         with:
@@ -138,28 +151,39 @@ jobs:
           ./tools/run-window-tests.ps1 -Exe "demos.qt3d/bin/Release/net10.0/qt3ddemos.exe" -Label "qt3d-demos"
           if ($LASTEXITCODE -ne 0) { throw "some Qt3D demos failed (see the output above)" }
 
+      # The official Qt Charts examples: the Charts module's conformance suite.
+      - name: Build and run the official Qt Charts examples
+        shell: pwsh
+        run: |
+          dotnet build demos.charts/ChartsDemos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "Charts demos build failed" }
+          ./tools/run-window-tests.ps1 -Exe "demos.charts/bin/Release/net10.0/ChartsDemos.exe" -Label "charts-demos"
+          if ($LASTEXITCODE -ne 0) { throw "some Qt Charts demos failed (see the output above)" }
+
+
       - name: Pack the packages
         shell: pwsh
         run: |
           $version = "${{ needs.version.outputs.version }}"
           ./tools/pack-qt-binding.ps1 -PackageVersion $version -QtRuntimeDir "$env:QT_RUNTIME_DIR"
-          dotnet pack nuget/QtSharp.Charts/QtSharp.Charts.csproj -c Release -o out/packages --nologo `
-            "-p:Version=$version" "-p:QtChartsRuntimeDir=$env:QT_RUNTIME_DIR"
-          if ($LASTEXITCODE -ne 0) { throw "QtSharp.Charts pack failed" }
-          dotnet pack nuget/QtSharp.Qt3D/QtSharp.Qt3D.csproj -c Release -o out/packages --nologo `
-            "-p:Version=$version" "-p:Qt3DRuntimeDir=$env:QT_RUNTIME_DIR"
-          if ($LASTEXITCODE -ne 0) { throw "QtSharp.Qt3D pack failed" }
+          if ($LASTEXITCODE -ne 0) { throw "packaging failed" }
+
+      # Restore and run the packages through the public NuGet path before publishing them.
+      - name: Verify the packages with a consumer
+        shell: pwsh
+        run: |
+          $version = "${{ needs.version.outputs.version }}"
+          ./tools/test-packages.ps1 -PackageVersion $version -PackagesDir out/packages
+          if ($LASTEXITCODE -ne 0) { throw "the package consumer failed" }
+
 
       - uses: actions/upload-artifact@v4
         with:
           name: package-binding
-          path: out/packages/QtSharp.Api.*.nupkg
-          if-no-files-found: error
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: package-extensions
           path: |
+            out/packages/QtSharp.Api.*.nupkg
+            out/packages/QtSharp.Runtime.*.nupkg
+            out/packages/QtSharp.Qt6.*.nupkg
             out/packages/QtSharp.Charts.*.nupkg
             out/packages/QtSharp.Qt3D.*.nupkg
           if-no-files-found: error
@@ -192,15 +216,21 @@ jobs:
           $notes = @"
           ## QtSharp $version
 
-          Four packages, all Windows x64:
+          The packages, all Windows x64, follow PyQt6's split:
 
-          * **QtSharp.Api** - the binding: reference it and write Qt applications in C#. It carries
-            the native wrapper and the Qt runtime, so no Qt SDK or C++ toolchain is needed.
+          * **QtSharp.Api** - the binding as ten module assemblies (QtCore, QtGui, QtWidgets,
+            QtNetwork, QtSvg, QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets).
+            Reference it and write Qt applications in C#; no Qt SDK or C++ toolchain is needed.
+          * **QtSharp.Runtime** - the managed runtime and the shared native glue. Brought in by
+            ``QtSharp.Api``; reference it only if you build a binding module yourself.
+          * **QtSharp.Qt6** - the Qt 6 runtime DLLs and platform plugin. Brought in automatically.
           * **QtSharp.Tools** - the Qt command-line tools (``rcc``, ``uic``, ``lrelease``,
             ``lupdate``) plus MSBuild ``QtResource`` support for compiling ``.qrc`` files.
-          * **QtSharp.Charts** - the optional QtCharts extension, against ``QtSharp.Api``.
+          * **QtSharp.Charts** - the optional QtCharts extension, against ``QtSharp.Api``;
+            **QtSharp.Charts.Qt6** carries Qt6Charts.dll.
           * **QtSharp.Qt3D** - the optional Qt3D extension (Qt3DCore, Qt3DRender, Qt3DInput,
-            Qt3DLogic, Qt3DAnimation, Qt3DExtras), against ``QtSharp.Api``.
+            Qt3DLogic, Qt3DAnimation, Qt3DExtras), against ``QtSharp.Api``;
+            **QtSharp.Qt3D.Qt6** carries the Qt3D runtime and plugins.
 
           See [CHANGELOG.md](https://github.com/ProxyCheng/QtSharp/blob/$tag/CHANGELOG.md),
           [the binding readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/nuget/QtSharp.Api/README.md),

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using QtSharp.Api;
 
 // The QtCore value classes on the new pipeline: the batch that took QtCore from 42 bound classes
 // to 64 (files and directories, JSON, ids, random numbers, timers, the command line).

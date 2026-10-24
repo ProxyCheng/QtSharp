@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Text;
-using QtSharp.Api;
 
 // The document modules: QtXml's DOM, QtSvg (render an SVG, and paint *to* SVG) and QtPrintSupport
 // (QPrinter, which is also how a PDF is produced). Each is its own Qt module with its own runtime

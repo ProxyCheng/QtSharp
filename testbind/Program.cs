@@ -1,5 +1,5 @@
 using System;
-using QtSharp.Api;
+using QtSharp.Demos;
 
 // The test entry point: it does nothing but hand the argument to the demo library.
 //

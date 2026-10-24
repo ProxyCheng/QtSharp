@@ -78,34 +78,84 @@ if (-not $SkipExtract) {
     }
 }
 
-Write-Host "=== [3] Codegen (twice, to prove determinism) ==="
+$baseModules = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets', 'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets')
+$extensionModules = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras')
+
+Write-Host "=== [3] Split the combined base model into one model per Qt module ==="
 Push-Location $genBin
-& "$genBin\qtgen.exe" codegen "$root\model\qtsharp.api.json" "$root\out\api" *> "$root\out\codegen.log"
-if ($LASTEXITCODE -ne 0) { Pop-Location; Write-Host "codegen failed"; Get-Content "$root\out\codegen.log" | Select-Object -Last 10; exit 1 }
-& "$genBin\qtgen.exe" codegen "$root\model\qtsharp.api.json" "$root\out\api2" *> "$root\out\codegen2.log"
+& "$genBin\qtgen.exe" split-core "$root\model\qtsharp.api.json" "$root\out\split-models" *> "$root\out\split-core.log"
+$splitExit = $LASTEXITCODE
 Pop-Location
-$h1 = Get-GeneratedTreeHash "$root\out\api"
-$h2 = Get-GeneratedTreeHash "$root\out\api2"
-if ($h1 -eq $h2) { Write-Host "codegen is deterministic (identical generated tree on two runs)" }
-else { Write-Host "CODEGEN NOT DETERMINISTIC"; exit 1 }
+if ($splitExit -ne 0) {
+    Write-Host "split-core failed"
+    Get-Content "$root\out\split-core.log" | Select-Object -Last 10
+    exit 1
+}
+
+# The split models under model/ are the input the ten assemblies are generated from, so they are
+# checked in. The split is deterministic; a difference means the combined model or the module
+# registry changed, which is reviewed and adopted like the combined model itself.
+$splitChanged = @()
+foreach ($module in $baseModules) {
+    $fresh = "$root\out\split-models\qtsharp.$module.json"
+    $checked = "$root\model\qtsharp.$module.json"
+    if (-not (Test-Path $checked) -or (Get-FileHash $fresh).Hash -ne (Get-FileHash $checked).Hash) {
+        $splitChanged += $module
+    }
+}
+if ($splitChanged.Count -eq 0) {
+    Write-Host "split models are byte-identical (deterministic split)"
+} elseif ($Adopt) {
+    Write-Host "SPLIT MODELS CHANGED - adopting deliberately: $($splitChanged -join ', ')"
+    foreach ($module in $splitChanged) {
+        Copy-Item "$root\out\split-models\qtsharp.$module.json" "$root\model\qtsharp.$module.json" -Force
+    }
+} else {
+    Write-Host "SPLIT MODELS CHANGED - review the diff, then re-run with -Adopt: $($splitChanged -join ', ')"
+    foreach ($module in $splitChanged) {
+        git -C $root diff --no-index -- "$root\model\qtsharp.$module.json" "$root\out\split-models\qtsharp.$module.json" | Select-Object -First 30
+    }
+    exit 1
+}
+
+Write-Host "=== [3b] Codegen (twice, to prove determinism) ==="
+Push-Location $genBin
+# The combined model produces only the shared native glue now: the ten assemblies come from the
+# split models, and the addons from their own models.
+& "$genBin\qtgen.exe" codegen "$root\model\qtsharp.api.json" "$root\out\api" --native-only *> "$root\out\codegen.log"
+if ($LASTEXITCODE -ne 0) { Pop-Location; Write-Host "codegen (native glue) failed"; Get-Content "$root\out\codegen.log" | Select-Object -Last 10; exit 1 }
+$allModules = $baseModules + $extensionModules
+foreach ($module in $allModules) {
+    & "$genBin\qtgen.exe" codegen "$root\model\qtsharp.$module.json" "$root\out\$module" --module $module *> "$root\out\codegen-$module.log"
+    if ($LASTEXITCODE -ne 0) { Pop-Location; Write-Host "codegen ($module) failed"; Get-Content "$root\out\codegen-$module.log" | Select-Object -Last 10; exit 1 }
+    & "$genBin\qtgen.exe" codegen "$root\model\qtsharp.$module.json" "$root\out\.determinism\$module" --module $module *> "$root\out\codegen-$module-check.log"
+    if ($LASTEXITCODE -ne 0) { Pop-Location; Write-Host "codegen ($module, check run) failed"; exit 1 }
+}
+Pop-Location
+foreach ($module in $allModules) {
+    $h1 = Get-GeneratedTreeHash "$root\out\$module"
+    $h2 = Get-GeneratedTreeHash "$root\out\.determinism\$module"
+    if ($h1 -ne $h2) { Write-Host "CODEGEN NOT DETERMINISTIC: $module"; exit 1 }
+}
+Remove-Item "$root\out\.determinism" -Recurse -Force
+Write-Host "codegen is deterministic for all $($allModules.Count) modules (identical trees on two runs)"
 
 Write-Host "=== [4] Build native bindings ==="
 & cmd /c "`"$root\build_api.bat`"" *> "$root\out\api_native.log"
 if ($LASTEXITCODE -ne 0) { Write-Host "native build failed"; Get-Content "$root\out\api_native.log" | Select-String "error" | Select-Object -First 6; exit 1 }
 
-# The extension modules are separate assemblies/packages. They are generated from their own
-# checked-in models and their native glue is built by the same parameterized script; the official
-# Qt3D examples then run as their conformance suite, exactly like the core demos below.
-$extensionModules = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras')
-Write-Host "=== [4b] Extension modules (Charts, Qt3D's six modules) ==="
-Push-Location $genBin
-$extensionCodegen = 0
-foreach ($module in $extensionModules) {
-    & "$genBin\qtgen.exe" codegen "$root\model\qtsharp.$module.json" "$root\out\$module" --module $module *> "$root\out\codegen-$module.log"
-    if ($LASTEXITCODE -ne 0) { $extensionCodegen = 1 }
+Write-Host "=== [4a] Build the ten base assemblies (QtSharp.Api) ==="
+dotnet build "$root/nuget/QtSharp.Api/QtSharp.Api.csproj" -c Release --nologo *> "$root/out/base_modulesbuild.log"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "base module build failed"
+    Select-String -Path "$root/out/base_modulesbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }
+    exit 1
 }
-Pop-Location
-if ($extensionCodegen -ne 0) { Write-Host "extension codegen failed"; exit 1 }
+
+# The extension modules are separate assemblies/packages. Their model and codegen ran in [3b];
+# their native glue is built by the parameterized script, and the official Qt3D examples then run
+# as their conformance suite, exactly like the core demos below.
+Write-Host "=== [4b] Extension modules (Charts, Qt3D's six modules) ==="
 foreach ($module in $extensionModules) {
     & powershell -NoProfile -ExecutionPolicy Bypass -File "$root\tools\build-native-module.ps1" -Module $module *> "$root\out\native-$module.log"
     if ($LASTEXITCODE -ne 0) {
@@ -114,6 +164,14 @@ foreach ($module in $extensionModules) {
         exit 1
     }
 }
+Write-Host "=== [4c] Build the Charts package assembly ==="
+dotnet build "$root/nuget/QtSharp.Charts/QtSharp.Charts.csproj" -c Release --nologo *> "$root/out/chartsbuild.log"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Charts build failed"
+    Select-String -Path "$root/out/chartsbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }
+    exit 1
+}
+
 dotnet build "$root\demos.qt3d\QtSharp.Qt3DDemos.csproj" -c Release --nologo *> "$root\out\qt3d_demosbuild.log"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Qt3D demos build failed"
@@ -121,6 +179,17 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 & "$root\tools\run-window-tests.ps1" -Exe "$root\demos.qt3d\bin\Release\net10.0\qt3ddemos.exe" -Label "qt3d-demos" -Jobs $Jobs
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# Qt's official Qt Charts examples: the Charts module's conformance suite, built against the
+# separate Charts assembly exactly like a consumer would use it.
+dotnet build "$root/demos.charts/ChartsDemos.csproj" -c Release --nologo *> "$root/out/charts_demosbuild.log"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Charts demos build failed"
+    Select-String -Path "$root/out/charts_demosbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }
+    exit 1
+}
+& "$root/tools/run-window-tests.ps1" -Exe "$root/demos.charts/bin/Release/net10.0/ChartsDemos.exe" -Label "charts-demos" -Jobs $Jobs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "=== [5] Build the demo library, then build + run the smoke tests ==="

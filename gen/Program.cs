@@ -6,7 +6,7 @@ using System.Text;
 
 // Where Qt's headers live. The CppSharp driver that used to sit here - and the
 // `extract` / `dumpopts` commands that drove it - were removed once the libclang front end
-// (see ApiModel2.cs) had reproduced the model byte for byte.
+// (see ClangExtractor.cs) had reproduced the model byte for byte.
 static class QtLibrary
 {
     /// <summary>
@@ -348,12 +348,14 @@ class Program
         const string Usage =
             "usage: qtgen extract2 <model.json> [--module <name>]\n" +
             "       qtgen codegen  <model.json> <outDir> [--module <name>]\n" +
+            "       qtgen split-core <model.json> <outDir>   (one base model per Qt module)\n" +
             "       qtgen module   <name>            (descriptor, for the build scripts)\n" +
             "\n" +
-            "  --module <name>  bind an extension module instead of the core binding: its classes\n" +
-            "                   only, in its own namespace and against its own native library, with\n" +
-            "                   the core binding available for the classes it derives from. The module\n" +
-            "                   table lives in ApiModel.ExtensionModules (charts, qt3d).";
+            "  --module <name>  bind one module from the registry (gen/ApiModel.Modules.cs): its\n" +
+            "                   classes only, in its own namespace/assembly and against its native\n" +
+            "                   library, with the modules it depends on available for the types it\n" +
+            "                   derives from. Without --module, codegen emits the combined base model's\n" +
+            "                   native glue (--native-only) or its whole C# tree.";
 
         static int Main(string[] args)
         {
@@ -361,9 +363,17 @@ class Program
             {
                 // --module may appear anywhere after the command.
                 string moduleName = null;
+                bool nativeOnly = false;
                 var positional = new List<string>();
                 for (int i = 0; i < args.Length; i++)
                 {
+                    if (args[i] == "--native-only")
+                    {
+                        // The combined base model only produces the shared native glue; the ten
+                        // base assemblies come from the split models.
+                        nativeOnly = true;
+                        continue;
+                    }
                     if (args[i] == "--module")
                     {
                         if (i + 1 >= args.Length)
@@ -382,7 +392,7 @@ class Program
 
                 if (positional.Count >= 3 && positional[0] == "codegen")
                 {
-                    ApiCodeGen.Run(positional[1], positional[2], module);
+                    ApiCodeGen.Run(positional[1], positional[2], module, nativeOnly);
                     return 0;
                 }
 
@@ -405,6 +415,10 @@ class Program
                 // The model, read out of libclang (ClangSharp). This is the only front end.
                 if (positional.Count >= 2 && positional[0] == "extract2")
                     return ApiModel.RunExtract2(positional[1], module);
+
+                // Split the combined base model into one model per Qt module.
+                if (positional.Count >= 3 && positional[0] == "split-core")
+                    return ApiModel.RunSplitCore(positional[1], positional[2]);
 
                 Console.WriteLine(Usage);
                 return 1;

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using QtSharp.Api;
 
 // The extension points a real application needs: an item model and an item delegate written
 // entirely in C#. Nothing here is driven by the test - the assertions read back what *Qt* did, so

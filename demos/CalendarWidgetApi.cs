@@ -1,5 +1,4 @@
 using System;
-using QtSharp.Api;
 
 // Port of examples/widgets/widgets/calendarwidget/{window.h,window.cpp} onto the *new* pipeline.
 // Everything (group boxes, grid/hbox layouts, labels, combo boxes, date edits, the calendar and

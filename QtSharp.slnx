@@ -1,7 +1,15 @@
 <Solution>
   <Project Path="gen/gen.csproj" />
+  <Project Path="nuget/QtSharp.Runtime/QtSharp.Runtime.csproj" />
+  <Project Path="nuget/QtSharp.Qt6/QtSharp.Qt6.csproj" />
+  <Project Path="nuget/QtSharp.Api/QtSharp.Api.csproj" />
+  <Project Path="nuget/QtSharp.Charts/QtSharp.Charts.csproj" />
+  <Project Path="nuget/QtSharp.Charts.Qt6/QtSharp.Charts.Qt6.csproj" />
+  <Project Path="nuget/QtSharp.Qt3D/QtSharp.Qt3D.csproj" />
+  <Project Path="nuget/QtSharp.Qt3D.Qt6/QtSharp.Qt3D.Qt6.csproj" />
   <Project Path="demos/QtSharp.Demos.csproj" />
   <Project Path="testbind/testbind.csproj" />
+  <Project Path="demos.charts/ChartsDemos.csproj" />
   <Project Path="samples/hello/Hello.csproj" />
   <Project Path="tools/clangprobe/ClangProbe.csproj" />
 </Solution>

@@ -1,4 +1,5 @@
 using System;
+using QtSharp.Runtime;
 
 #pragma warning disable 660, 661 // the generated classes' ==/!= are wrapper identity, like the generated file
 
@@ -33,7 +34,7 @@ using System;
 // InvalidOperationException instead of silently wrapping; an invalid (null) QDateTime does too.
 // A QDateTime in a named zone keeps its wall clock in ToDateTime(); ToDateTimeOffset() is the
 // conversion that keeps the offset as well (the zone rules themselves have no BCL equivalent).
-namespace QtSharp.Api
+namespace QtSharp.QtCore
 {
     public partial class QDateTime
     {

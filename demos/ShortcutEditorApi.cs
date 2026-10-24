@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using QtSharp.Api;
 
 // Port of the official "Shortcut Editor" example
 // (examples/widgets/widgets/shortcuteditor) onto the new pipeline.

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace QtSharp.Api
+namespace QtSharp.Demos
 {
     /// <summary>
     /// The dispatcher for the ported official examples: every window this repository has rewritten

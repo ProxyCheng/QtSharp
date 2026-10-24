@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <QtSharpChartsQt6NativeDir Condition="'$(QtSharpChartsQt6NativeDir)' == ''">$(MSBuildThisFileDirectory)..\tools\native\</QtSharpChartsQt6NativeDir>
+    <PlatformTarget Condition="'$(PlatformTarget)' == ''">x64</PlatformTarget>
+  </PropertyGroup>
+</Project>

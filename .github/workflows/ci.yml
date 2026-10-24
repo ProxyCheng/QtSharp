@@ -30,8 +30,9 @@ jobs:
         run: |
           $errors = $null
           $tokens = $null
-          foreach ($path in @('tools/regen-api.ps1', 'tools/run-window-tests.ps1', 'tools/pack-qt-tools.ps1', 'tools/pack-qt-binding.ps1', 'tools/build-qt-kit.ps1', 'tools/build-native-module.ps1')) {
+          foreach ($path in @('tools/regen-api.ps1', 'tools/run-window-tests.ps1', 'tools/pack-qt-tools.ps1', 'tools/pack-qt-binding.ps1', 'tools/test-packages.ps1', 'tools/build-qt-kit.ps1', 'tools/build-native-module.ps1')) {
             [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $path), [ref]$tokens, [ref]$errors) | Out-Null
+
             if ($errors.Count -gt 0) { $errors | Format-List | Out-Host; throw "PowerShell parse failed: $path" }
           }
       - name: Build tools project
@@ -64,11 +65,25 @@ jobs:
           # repository root rather than at the generator's own output folder.
           $root = $env:GITHUB_WORKSPACE
           $genBin = Join-Path $root 'gen/bin/Release/net10.0/win-x64'
+          $base = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
+                    'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets')
+          $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras')
           Push-Location $genBin
           try {
-            & "./qtgen.exe" codegen (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/api')
-            if ($LASTEXITCODE -ne 0) { throw "codegen (core) failed" }
-            foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras')) {
+            # The combined model is the extraction gate and the shared native glue's input. The ten
+            # base assemblies are generated from the split models, which are checked in.
+            & "./qtgen.exe" split-core (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/split-models')
+            if ($LASTEXITCODE -ne 0) { throw "split-core failed" }
+            foreach ($module in $base) {
+              $fresh = Join-Path $root "out/split-models/qtsharp.$module.json"
+              $checked = Join-Path $root "model/qtsharp.$module.json"
+              if ((Get-FileHash $fresh).Hash -ne (Get-FileHash $checked).Hash) {
+                throw "model/qtsharp.$module.json is stale - run tools/regen-api.ps1 -Adopt and commit it"
+              }
+            }
+            & "./qtgen.exe" codegen (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/api') --native-only
+            if ($LASTEXITCODE -ne 0) { throw "codegen (native glue) failed" }
+            foreach ($module in $base + $addons) {
               & "./qtgen.exe" codegen (Join-Path $root "model/qtsharp.$module.json") (Join-Path $root "out/$module") --module $module
               if ($LASTEXITCODE -ne 0) { throw "codegen ($module) failed" }
             }
@@ -105,20 +120,30 @@ jobs:
           ./tools/run-window-tests.ps1 -Exe "demos.qt3d/bin/Release/net10.0/qt3ddemos.exe" -Label "qt3d-demos"
           if ($LASTEXITCODE -ne 0) { throw "some Qt3D demos failed" }
 
-      - name: Pack QtSharp.Api
+      # The official Qt Charts examples, against the separate Charts assembly.
+      - name: Build and run the official Qt Charts examples
+        shell: pwsh
+        run: |
+          dotnet build demos.charts/ChartsDemos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "Charts demos build failed" }
+          ./tools/run-window-tests.ps1 -Exe "demos.charts/bin/Release/net10.0/ChartsDemos.exe" -Label "charts-demos"
+          if ($LASTEXITCODE -ne 0) { throw "some Qt Charts demos failed" }
+
+
+      - name: Pack all packages
         shell: pwsh
         run: |
           ./tools/pack-qt-binding.ps1 -PackageVersion "0.0.0-ci" -QtRuntimeDir "$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "packaging failed" }
 
-      - name: Pack the extension packages
+      # Restore and run the packages through the public NuGet path: a source build cannot show a
+      # missing package dependency or buildTransitive payload.
+      - name: Verify the packages with a consumer
         shell: pwsh
         run: |
-          dotnet pack nuget/QtSharp.Charts/QtSharp.Charts.csproj -c Release -o out/packages --nologo `
-            "-p:Version=0.0.0-ci" "-p:QtChartsRuntimeDir=$env:QT_RUNTIME_DIR"
-          if ($LASTEXITCODE -ne 0) { throw "QtSharp.Charts pack failed" }
-          dotnet pack nuget/QtSharp.Qt3D/QtSharp.Qt3D.csproj -c Release -o out/packages --nologo `
-            "-p:Version=0.0.0-ci" "-p:Qt3DRuntimeDir=$env:QT_RUNTIME_DIR"
-          if ($LASTEXITCODE -ne 0) { throw "QtSharp.Qt3D pack failed" }
+          ./tools/test-packages.ps1 -PackageVersion "0.0.0-ci" -PackagesDir out/packages
+          if ($LASTEXITCODE -ne 0) { throw "the package consumer failed" }
+
 
       - name: Upload the packages
         uses: actions/upload-artifact@v4
@@ -126,18 +151,35 @@ jobs:
           name: packages-ci
           path: |
             out/packages/QtSharp.Api.0.0.0-ci.nupkg
+            out/packages/QtSharp.Runtime.0.0.0-ci.nupkg
+            out/packages/QtSharp.Qt6.0.0.0-ci.nupkg
             out/packages/QtSharp.Charts.0.0.0-ci.nupkg
+            out/packages/QtSharp.Charts.Qt6.0.0.0-ci.nupkg
             out/packages/QtSharp.Qt3D.0.0.0-ci.nupkg
+            out/packages/QtSharp.Qt3D.Qt6.0.0.0-ci.nupkg
           if-no-files-found: error
 
-      # Hand the generated binding to the smoke job so it does not have to build it again.
+      # Hand the generated source tree and the native glue to the smoke job so it does not have to
+      # regenerate them. The staging directory makes the artifact's layout explicit:
+      # out/binding-artifact/api/QtSharp.Api.dll and out/binding-artifact/<module>/generated, which
+      # the smoke job restores under out/.
+      - name: Stage the generated binding
+        shell: pwsh
+        run: |
+          $stage = "out/binding-artifact"
+          Remove-Item $stage -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path "$stage/api" -Force | Out-Null
+          Copy-Item out/api/QtSharp.Api.dll "$stage/api/"
+          foreach ($module in @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
+                                'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets')) {
+            Copy-Item "out/$module/generated" "$stage/$module/generated" -Recurse
+          }
+
       - name: Upload the generated binding
         uses: actions/upload-artifact@v4
         with:
           name: binding-api
-          path: |
-            out/api/generated
-            out/api/QtSharp.Api.dll
+          path: out/binding-artifact
           if-no-files-found: error
 
   # The conformance suite: every official example this repository has ported, driving the binding
@@ -159,7 +201,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: binding-api
-          path: out/api
+          # The artifact holds api/ and <module>/generated at its root, so downloading into out/
+          # restores the layout QtSharp.Api.props expects.
+          path: out
 
       - name: Cache the Qt archives
         uses: actions/cache@v4

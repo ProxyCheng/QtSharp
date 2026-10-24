@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using QtSharp.Api;
 
 // Port of examples/widgets/painting/transformations on the new pipeline.
 //

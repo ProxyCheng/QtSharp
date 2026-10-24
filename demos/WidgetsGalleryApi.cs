@@ -1,5 +1,4 @@
 using System;
-using QtSharp.Api;
 
 // The official examples/widgets/gallery (Qt Widget Gallery) ported onto the *new* pipeline.
 // The legacy adapter (testbind/WidgetsGallery.cs) is the structural reference: a QDialog with a

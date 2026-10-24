@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.CodeDom.Compiler;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Threading;
@@ -9,7 +10,7 @@ using System.Threading;
 // Hand-written runtime that ships with the generated bindings (not model-derived).
 // It provides the pieces the PoCs proved: a signal wrapper on top of the generic
 // moc-metadata forwarder, the QString bridge and the object wrapper cache.
-namespace QtSharp.Api
+namespace QtSharp.Runtime
 {
     // A Qt signal, with the arity in the type so both halves are typed: `Connect(Action<int,string>)`
     // and `Emit(42, "x")`. The generated binding supplies the two closures (which marshal each
@@ -173,6 +174,13 @@ namespace QtSharp.Api
     public interface IQtHandle
     {
         IntPtr Handle { get; }
+    }
+
+    // Implemented by QObject and its subclasses (the generated root adds it), not by a plain
+    // wrapper such as QGraphicsItem: only the former has a meta-object to extend. It lives in the
+    // runtime so the runtime can recognize a QObject without referencing the QtCore binding.
+    public interface IQtObject : IQtHandle
+    {
     }
 
     // ------------------------------------------------------------------ user-declared members
@@ -415,99 +423,6 @@ namespace QtSharp.Api
             handlers.DynamicInvoke(args);
         }
     }
-
-    /// <summary>
-    /// Emits a signal declared by <see cref="QtSignalAttribute"/> on an event. Pass the event
-    /// itself: the compiler supplies its name to the runtime, which takes the signature and the
-    /// argument types from the declaration.
-    ///
-    ///     this.EmitSignal(ValueChanged, value);
-    ///
-    /// Calling the event directly (`ValueChanged?.Invoke(value)`) is legal inside the declaring
-    /// class, but it only runs the C# handlers: it never reaches QMetaObject::activate, so QML and
-    /// native connections would not see the emission. This method is the emit that crosses into Qt.
-    /// </summary>
-    public static class QtSignals
-    {
-        public static void EmitSignal(this QObject sender, string eventName)
-            => ApiRuntime.EmitDeclared(sender, eventName, Array.Empty<object>());
-
-        public static void EmitSignal<T1>(this QObject sender, string eventName, T1 a1)
-            => ApiRuntime.EmitDeclared(sender, eventName, new object[] { a1 });
-
-        public static void EmitSignal<T1, T2>(this QObject sender, string eventName, T1 a1, T2 a2)
-            => ApiRuntime.EmitDeclared(sender, eventName, new object[] { a1, a2 });
-
-        public static void EmitSignal<T1, T2, T3>(this QObject sender, string eventName, T1 a1, T2 a2, T3 a3)
-            => ApiRuntime.EmitDeclared(sender, eventName, new object[] { a1, a2, a3 });
-
-        public static void EmitSignal<T1, T2, T3, T4>(this QObject sender, string eventName, T1 a1, T2 a2, T3 a3, T4 a4)
-            => ApiRuntime.EmitDeclared(sender, eventName, new object[] { a1, a2, a3, a4 });
-
-        // The delegate overloads exist for the call site, not for the value: a field-like event
-        // can be read inside its own class, and CallerArgumentExpression hands the runtime the
-        // event's name without a nameof. The handler list itself is ignored (the emit goes through
-        // Qt, which then feeds the list back).
-        public static void EmitSignal(this QObject sender, Delegate signal,
-            [CallerArgumentExpression(nameof(signal))] string expression = null)
-            => ApiRuntime.EmitDeclared(sender, EventName(expression), Array.Empty<object>());
-
-        public static void EmitSignal<T1>(this QObject sender, Delegate signal, T1 a1,
-            [CallerArgumentExpression(nameof(signal))] string expression = null)
-            => ApiRuntime.EmitDeclared(sender, EventName(expression), new object[] { a1 });
-
-        public static void EmitSignal<T1, T2>(this QObject sender, Delegate signal, T1 a1, T2 a2,
-            [CallerArgumentExpression(nameof(signal))] string expression = null)
-            => ApiRuntime.EmitDeclared(sender, EventName(expression), new object[] { a1, a2 });
-
-        public static void EmitSignal<T1, T2, T3>(this QObject sender, Delegate signal, T1 a1, T2 a2, T3 a3,
-            [CallerArgumentExpression(nameof(signal))] string expression = null)
-            => ApiRuntime.EmitDeclared(sender, EventName(expression), new object[] { a1, a2, a3 });
-
-        public static void EmitSignal<T1, T2, T3, T4>(this QObject sender, Delegate signal, T1 a1, T2 a2, T3 a3, T4 a4,
-            [CallerArgumentExpression(nameof(signal))] string expression = null)
-            => ApiRuntime.EmitDeclared(sender, EventName(expression), new object[] { a1, a2, a3, a4 });
-
-        // The expression is whatever the call site wrote - "ValueChanged" or "this.ValueChanged";
-        // the event itself is the last name in it.
-        internal static string EventName(string expression)
-        {
-            if (string.IsNullOrWhiteSpace(expression))
-                throw new ArgumentException(
-                    "pass the declared event itself, e.g. EmitSignal(ValueChanged, value)");
-            int dot = expression.LastIndexOf('.');
-            return (dot < 0 ? expression : expression.Substring(dot + 1)).Trim();
-        }
-    }
-
-    // The same emit as a protected instance method, so the declaring class writes
-    // EmitSignal(ValueChanged, value) - the C# event itself, no nameof and no `this.`.
-    // (The generated part of QObject defines ==/!= without overriding Equals/GetHashCode; the
-    // generated file disables the same two warnings.)
-#pragma warning disable 660, 661
-    public partial class QObject
-    {
-        protected void EmitSignal(Delegate signal,
-            [CallerArgumentExpression(nameof(signal))] string expression = null)
-            => ApiRuntime.EmitDeclared(this, QtSignals.EventName(expression), Array.Empty<object>());
-
-        protected void EmitSignal<T1>(Delegate signal, T1 a1,
-            [CallerArgumentExpression(nameof(signal))] string expression = null)
-            => ApiRuntime.EmitDeclared(this, QtSignals.EventName(expression), new object[] { a1 });
-
-        protected void EmitSignal<T1, T2>(Delegate signal, T1 a1, T2 a2,
-            [CallerArgumentExpression(nameof(signal))] string expression = null)
-            => ApiRuntime.EmitDeclared(this, QtSignals.EventName(expression), new object[] { a1, a2 });
-
-        protected void EmitSignal<T1, T2, T3>(Delegate signal, T1 a1, T2 a2, T3 a3,
-            [CallerArgumentExpression(nameof(signal))] string expression = null)
-            => ApiRuntime.EmitDeclared(this, QtSignals.EventName(expression), new object[] { a1, a2, a3 });
-
-        protected void EmitSignal<T1, T2, T3, T4>(Delegate signal, T1 a1, T2 a2, T3 a3, T4 a4,
-            [CallerArgumentExpression(nameof(signal))] string expression = null)
-            => ApiRuntime.EmitDeclared(this, QtSignals.EventName(expression), new object[] { a1, a2, a3, a4 });
-    }
-#pragma warning restore 660, 661
 
     // The C# type -> Qt type name map the declared members use, plus the conversions between a
     // managed value and the native storage moc's qt_metacall would have used.
@@ -1004,7 +919,7 @@ namespace QtSharp.Api
         {
             // Only a QObject has a meta-object to extend; the interface alone is not enough (the
             // generated value types implement IQtHandle too).
-            if (shuttingDown || target is not QObject || target is not IQtHandle handle)
+            if (shuttingDown || target is not IQtObject handle)
                 return;
             var type = target.GetType();
             MetaObjectSpec spec;
@@ -1079,7 +994,7 @@ namespace QtSharp.Api
             const BindingFlags declared = BindingFlags.Public | BindingFlags.NonPublic
                                           | BindingFlags.Instance | BindingFlags.DeclaredOnly;
             for (var current = type;
-                 current != null && current != typeof(object) && current.Namespace != typeof(QObject).Namespace;
+                 current != null && current != typeof(object) && current.GetCustomAttribute<GeneratedCodeAttribute>() == null;
                  current = current.BaseType)
             {
                 foreach (var property in current.GetProperties(declared))
@@ -1182,7 +1097,7 @@ namespace QtSharp.Api
                 return null;
             // Only an explicit name may reach a generated Qt method; the convention never does
             // (resetFoo exists on some QObjects and is not ours).
-            return generated && method.DeclaringType.Namespace == typeof(QObject).Namespace ? null : method;
+            return generated && method.DeclaringType.GetCustomAttribute<GeneratedCodeAttribute>() != null ? null : method;
         }
 
         // Feeds an attributed event from its Qt signal. The connection's userData is the sender
@@ -1223,7 +1138,7 @@ namespace QtSharp.Api
         /// Activates the signal an [QtSignal] event declared, by the C# event's name. The native
         /// signature and argument types come from the declaration, so only the values are passed.
         /// </summary>
-        internal static void EmitDeclared(QObject sender, string eventName, object[] args)
+        public static void EmitDeclared(IQtObject sender, string eventName, object[] args)
         {
             var declared = DeclaredSignal(sender, eventName);
             if (args.Length != declared.Parameters.Length)
@@ -1233,7 +1148,7 @@ namespace QtSharp.Api
             EmitUser(sender.Handle, declared.Signature, declared.Parameters, args);
         }
 
-        static AttributedSignal DeclaredSignal(QObject sender, string eventName)
+        static AttributedSignal DeclaredSignal(IQtObject sender, string eventName)
         {
             MetaObjectSpec spec;
             lock (metaSpecs)

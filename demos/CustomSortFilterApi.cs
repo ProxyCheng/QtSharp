@@ -1,5 +1,4 @@
 using System;
-using QtSharp.Api;
 
 // Port of examples/widgets/itemviews/customsortfiltermodel on the new pipeline.
 //
@@ -7,7 +6,7 @@ using QtSharp.Api;
 // expression *and* a date range, and that also sorts by its own rule. Both hooks are what this
 // demo is for - `filterAcceptsRow` and `lessThan` are the two virtuals a real application
 // overrides, and they are only reachable from C# because QSortFilterProxyModel is an extension
-// class in the model (see gen/ApiModel2.cs).
+// class in the model (see gen/ClangExtractor.cs).
 //
 // Two mechanical differences, both because QVariant has no bound date accessor:
 //   * the date column is carried as an ISO-8601 string, which compares correctly as text;

@@ -11,7 +11,8 @@ properties, signals and virtuals over the native Qt Charts library.
 ```
 
 ```csharp
-using QtSharp.Api;
+using QtSharp.QtCore;
+using QtSharp.QtWidgets;
 using QtSharp.Charts;
 
 var chart = new QChart();
@@ -27,8 +28,24 @@ view.Resize(480, 320);
 view.Show();
 ```
 
-The package contains the QtCharts binding, its native glue (`QtSharp.Charts.Native.dll`) and
-`Qt6Charts.dll`. It references `QtSharp.Api` and does not repeat any of its types.
+The package contains the QtCharts binding and its native glue (`QtSharp.Charts.Native.dll`). It
+depends on `QtSharp.Api` for the base modules and on `QtSharp.Charts.Qt6`, the companion package
+that carries `Qt6Charts.dll`; neither is repeated here.
+
+## What is bound
+
+`QChart`, `QChartView`, `QPolarChart`; the series families (`QXYSeries`, `QLineSeries`,
+`QSplineSeries`, `QScatterSeries`, `QAreaSeries`, the bar family with `QBarSet`, `QPieSeries` with
+`QPieSlice`, box plots and candlesticks); the axes (`QValueAxis`, `QCategoryAxis`,
+`QBarCategoryAxis`, `QDateTimeAxis`, `QLogValueAxis`); and the legend with its markers. The list is
+`model/qtsharp.charts.json` in the repository, and the 38 ported official examples under
+`demos.charts/` exercise it (570 assertions) in the gate, CI and release.
+
+## Why it is a separate package
+
+**Qt Charts is GPLv3-or-commercial, not LGPL.** Keeping it out of `QtSharp.Api` is what stops
+everyone who uses the core binding from inheriting that license; it is also the same split PyQt6
+makes with `PyQt6-Charts`. See `NOTICE.md` in the repository and Qt's own terms before you ship.
 
 ## License
 

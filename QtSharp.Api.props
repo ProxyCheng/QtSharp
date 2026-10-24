@@ -4,22 +4,23 @@
     Everything a program needs to use the generated Qt binding without living inside this
     repository's test app:
 
-      * the binding itself  - out/api/generated/**/*.cs, one file per Qt header
-        (produced by tools/regen-api.ps1)
-      * the hand-written managed runtime - runtime/ApiRuntime.cs, ApiApplication.cs,
-        BclInterop.cs
+      * the binding itself  - out/<module>/generated/**/*.cs, one tree per Qt module
+        (produced by tools/regen-api.ps1: qtgen split-core + one codegen run per module)
+      * the hand-written managed runtime - runtime/ApiRuntime.cs (QtSharp.Runtime) and
+        runtime/QtCore|QtGui|QtWidgets (the QObject/app parts that belong to those modules)
       * the native side     - out/api/QtSharp.Api.dll, plus the Qt DLLs and the platform plugin
 
     Import it and the project is complete:
 
         <Import Project="..\..\QtSharp.Api.props" />
 
-    Override QtSharpRoot / QtSharpApiDir / QtRuntimeDir if the pieces live elsewhere.
+    Override QtSharpRoot / QtSharpApiDir / QtSharpOutDir / QtRuntimeDir if the pieces live
+    elsewhere.
 
     A project that *references* an assembly which already compiles the binding (the demos library,
     QtSharp.Demos.dll) must set QtSharpCompileBinding=false first - compiling it twice defines every
-    QtSharp.Api type in two assemblies, which is CS0433 everywhere. The import still brings the
-    native DLLs and the Qt runtime, so such a project needs no further setup:
+    QtSharp.QtCore/QtGui/... type in two assemblies, which is CS0433 everywhere. The import still
+    brings the native DLLs and the Qt runtime, so such a project needs no further setup:
 
         <PropertyGroup>
           <QtSharpCompileBinding>false</QtSharpCompileBinding>
@@ -32,6 +33,7 @@
   <PropertyGroup>
     <QtSharpRoot Condition="'$(QtSharpRoot)' == ''">$(MSBuildThisFileDirectory)</QtSharpRoot>
     <QtSharpApiDir Condition="'$(QtSharpApiDir)' == ''">$(QtSharpRoot)out\api</QtSharpApiDir>
+    <QtSharpOutDir Condition="'$(QtSharpOutDir)' == ''">$(QtSharpRoot)out</QtSharpOutDir>
     <QtRuntimeDir Condition="'$(QtRuntimeDir)' == ''">$(QtSharpRoot)Qt\6.11.0\runtime</QtRuntimeDir>
     <!-- true (the default) compiles the generated binding into this project. -->
     <QtSharpCompileBinding Condition="'$(QtSharpCompileBinding)' == ''">true</QtSharpCompileBinding>
@@ -40,14 +42,25 @@
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup Condition="'$(QtSharpCompileBinding)' == 'true'">
+    <!-- The Qt-type-free runtime (handles, QSignal, attributes, marshalling). -->
     <Compile Include="$(QtSharpRoot)runtime\ApiRuntime.cs" />
-    <!-- The hand-written command-line constructors of QCoreApplication/QGuiApplication/QApplication. -->
-    <Compile Include="$(QtSharpRoot)runtime\ApiApplication.cs" />
-    <!-- Explicit QDateTime/QDate/QTime/QByteArray conversions to the BCL types. -->
-    <Compile Include="$(QtSharpRoot)runtime\BclInterop.cs" />
-    <!-- The Qt types the binding gives as structs rather than wrappers: QPointF and QPoint cross the
-         boundary as their coordinates, so no wrapper is created per point. -->
-    <Compile Include="$(QtSharpApiDir)\generated\**\*.cs" />
+    <!-- The pieces that belong to a module and must sit beside its generated classes: the
+         QObject signal API (QtCore), the BCL conversions (QtCore), and the command-line
+         constructors of QCoreApplication/QGuiApplication/QApplication. -->
+    <Compile Include="$(QtSharpRoot)runtime\QtCore\*.cs" />
+    <Compile Include="$(QtSharpRoot)runtime\QtGui\*.cs" />
+    <Compile Include="$(QtSharpRoot)runtime\QtWidgets\*.cs" />
+    <!-- One generated tree per Qt module, exactly what QtSharp.Api packs as ten assemblies. -->
+    <Compile Include="$(QtSharpOutDir)\qtcore\generated\**\*.cs" />
+    <Compile Include="$(QtSharpOutDir)\qtgui\generated\**\*.cs" />
+    <Compile Include="$(QtSharpOutDir)\qtwidgets\generated\**\*.cs" />
+    <Compile Include="$(QtSharpOutDir)\qtnetwork\generated\**\*.cs" />
+    <Compile Include="$(QtSharpOutDir)\qtsvg\generated\**\*.cs" />
+    <Compile Include="$(QtSharpOutDir)\qtsvgwidgets\generated\**\*.cs" />
+    <Compile Include="$(QtSharpOutDir)\qtprintsupport\generated\**\*.cs" />
+    <Compile Include="$(QtSharpOutDir)\qtxml\generated\**\*.cs" />
+    <Compile Include="$(QtSharpOutDir)\qtopengl\generated\**\*.cs" />
+    <Compile Include="$(QtSharpOutDir)\qtopenglwidgets\generated\**\*.cs" />
   </ItemGroup>
 
   <Target Name="CopyQtSharpNativeDeps" AfterTargets="Build">
@@ -72,7 +85,7 @@
   <!-- A stale binding is the one thing that fails confusingly (a missing method rather than a
        build error), so say so loudly when it has not been generated yet. -->
   <Target Name="QtSharpApiCheck" BeforeTargets="BeforeBuild">
-    <Error Condition="!Exists('$(QtSharpApiDir)\generated')"
+    <Error Condition="!Exists('$(QtSharpOutDir)\qtcore\generated')"
            Text="The generated binding is missing - run: powershell -File $(QtSharpRoot)tools\regen-api.ps1" />
     <Error Condition="!Exists('$(QtSharpApiDir)\QtSharp.Api.dll')"
            Text="QtSharp.Api.dll is missing - run: powershell -File $(QtSharpRoot)tools\regen-api.ps1" />

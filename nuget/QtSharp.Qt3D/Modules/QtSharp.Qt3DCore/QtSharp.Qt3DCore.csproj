@@ -20,7 +20,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\QtSharp.Api\QtSharp.Api.csproj" />
+    <ProjectReference Include="..\..\..\QtSharp.Runtime\QtSharp.Runtime.csproj" />
+    <ProjectReference Include="..\..\..\QtSharp.Api\Modules\QtSharp.QtCore\QtSharp.QtCore.csproj" />
+    <ProjectReference Include="..\..\..\QtSharp.Api\Modules\QtSharp.QtGui\QtSharp.QtGui.csproj" />
   </ItemGroup>
 
 </Project>

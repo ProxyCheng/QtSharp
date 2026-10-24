@@ -1,5 +1,5 @@
 using System;
-using QtSharp.Api;
+using QtSharp.Demos;
 
 // A minimal Qt application written against the generated binding: a window, a layout, a signal
 // wired to a handler, a widget that paints itself from C#, and a class that declares its *own*

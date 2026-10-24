@@ -20,12 +20,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\QtSharp.Api\QtSharp.Api.csproj" />
-    <ProjectReference Include="..\QtSharp.Qt3DCore\QtSharp.Qt3DCore.csproj" />
-    <ProjectReference Include="..\QtSharp.Qt3DRender\QtSharp.Qt3DRender.csproj" />
-    <ProjectReference Include="..\QtSharp.Qt3DInput\QtSharp.Qt3DInput.csproj" />
-    <ProjectReference Include="..\QtSharp.Qt3DLogic\QtSharp.Qt3DLogic.csproj" />
-    <ProjectReference Include="..\QtSharp.Qt3DAnimation\QtSharp.Qt3DAnimation.csproj" />
+    <ProjectReference Include="..\..\..\QtSharp.Runtime\QtSharp.Runtime.csproj" />
+    <ProjectReference Include="..\..\..\QtSharp.Api\Modules\QtSharp.QtCore\QtSharp.QtCore.csproj" />
+    <ProjectReference Include="..\..\..\QtSharp.Api\Modules\QtSharp.QtGui\QtSharp.QtGui.csproj" />
+    <ProjectReference Include="..\..\..\QtSharp.Api\Modules\QtSharp.QtWidgets\QtSharp.QtWidgets.csproj" />
+    <ProjectReference Include="..\..\..\QtSharp.Api\Modules\QtSharp.QtOpenGL\QtSharp.QtOpenGL.csproj" />
+    <ProjectReference Include="..\QtSharp.Qt3DCore\QtSharp.Qt3DCore.csproj"  />
+    <ProjectReference Include="..\QtSharp.Qt3DRender\QtSharp.Qt3DRender.csproj"  />
+    <ProjectReference Include="..\QtSharp.Qt3DInput\QtSharp.Qt3DInput.csproj"  />
+    <ProjectReference Include="..\QtSharp.Qt3DLogic\QtSharp.Qt3DLogic.csproj"  />
+    <ProjectReference Include="..\QtSharp.Qt3DAnimation\QtSharp.Qt3DAnimation.csproj"  />
   </ItemGroup>
 
 </Project>

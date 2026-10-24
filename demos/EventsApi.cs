@@ -1,5 +1,4 @@
 using System;
-using QtSharp.Api;
 
 // The input events and the rich text types, on the new pipeline.
 //

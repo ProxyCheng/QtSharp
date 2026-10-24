@@ -6,6 +6,38 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 
 ## Unreleased
 
+- **The standalone `QtSharp.Charts` repository was merged in.** Its 38-example conformance suite
+  (the official Qt Charts examples, 570 assertions) now lives in the main repository as
+  `demos.charts/` and runs in the gate, CI and release against the separate `QtSharp.Charts`
+  assembly. Charts' model, native glue and package had already been built here; the second
+  repository is now redundant.
+- **The whole binding is split the way PyQt6 is.** `QtSharp.Api` now contains ten assemblies, one
+  per Qt module and one C# namespace each: `QtSharp.QtCore`, `QtSharp.QtGui`, `QtSharp.QtWidgets`,
+  `QtSharp.QtNetwork`, `QtSharp.QtSvg`, `QtSharp.QtSvgWidgets`, `QtSharp.QtPrintSupport`,
+  `QtSharp.QtXml`, `QtSharp.QtOpenGL`, `QtSharp.QtOpenGLWidgets`. A type owned by another module is
+  emitted fully qualified, so the namespaces cannot collide.
+- **New runtime and companion packages**, matching PyQt6's dependency graph:
+  `QtSharp.Runtime` (managed handles/signals/marshalling + the shared native `QtSharp.Api.dll`
+  glue), `QtSharp.Qt6` (the Qt base runtime DLLs, MSVC runtime and platform plugin),
+  `QtSharp.Charts.Qt6` and `QtSharp.Qt3D.Qt6` (each addon's Qt runtime and plugins). Consumers
+  reference only `QtSharp.Api`, `QtSharp.Charts` or `QtSharp.Qt3D`; the companions flow as NuGet
+  dependencies and copy their payload through `buildTransitive`.
+- `qtgen split-core` derives one model per base Qt module from the combined `qtsharp.api.json`.
+  The ten split models are checked in and are what the assemblies are generated from; the combined
+  model remains the extraction gate and produces only the shared native glue
+  (`qtgen codegen --native-only`). The splitter assigns classes by header, enums by the module
+  that declares them, and fails on a dependency cycle instead of silently emitting one.
+- The runtime is split along the same assembly lines: `runtime/ApiRuntime.cs` (Qt-type-free) builds
+  `QtSharp.Runtime`, while the `QObject` signal half, `QtSignals`, the BCL conversions and the
+  command-line constructors live in `runtime/QtCore`, `runtime/QtGui` and `runtime/QtWidgets`,
+  beside the generated classes they extend. A partial class cannot span assemblies.
+- The generator no longer has any addon-specific branch. All module rows (the ten base modules,
+  Charts and Qt3D's six) live in `gen/ApiModel.Modules.cs`; the libclang front end moved to
+  `ClangExtractor.cs`.
+- Demos, samples, CI and release moved to the module namespaces and now pack, upload and verify all
+  seven packages; `tools/regen-api.ps1` gates the split models and codegen determinism per module,
+  and `tools/pack-qt-binding.ps1` inspects every package's payload.
+
 - Added the `QtSharp.Qt3D` extension package: 230 classes from Qt3DCore, Qt3DRender, Qt3DInput,
   Qt3DLogic, Qt3DAnimation and Qt3DExtras, as **six assemblies with six namespaces**
   (`QtSharp.Qt3DCore` … `QtSharp.Qt3DExtras`) in one package, mirroring Qt's module split and the
@@ -25,8 +57,7 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   `qt3d-simple` (simple-cpp), `qt3d-basicshapes` (basicshapes-cpp) and `qt3d-text` (3d-text),
   run by `tools/run-window-tests.ps1` exactly like the core demos.
 - `QtSharp.Charts` is now packable with the same `buildTransitive` native-payload handling as the
-  core and Qt3D packages, and CI/release build and upload all three packages (`QtSharp.Api`,
-  `QtSharp.Charts`, `QtSharp.Qt3D`).
+  core and Qt3D packages; CI/release build and upload the addon packages alongside the core.
 - Fixed the Q_PROPERTY scanner for a type whose template arguments contain spaces
   (`Q_PROPERTY(QList<QSpriteSheetItem *> sprites …)`), which it read as a property named `>`, and
   for declarations with a leading space after the parenthesis (`Q_PROPERTY( bool hasTopEndcap …)`),
@@ -34,7 +65,7 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 - `tools/build-qt-kit.ps1` now fetches the Qt3D addon along with qtbase/qtsvg/QtCharts, and copies
   its runtime DLLs and plugins.
 - The generated C# binding is now split one file per Qt header
-  (`out/api/generated/<Module>/<header>.cs`), mirroring the C++ include layout instead of one
+  (`out/<module>/generated/<Module>/<header>.cs`), mirroring the C++ include layout instead of one
   9 MB / 194k-line source file. The determinism gate hashes the generated tree. The native C++
   glue stays a single translation unit.
 - Generated wrapper types now carry `[GeneratedCode("qtgen", …)]`, and their XML docs spell out

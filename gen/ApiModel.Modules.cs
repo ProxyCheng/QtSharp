@@ -1,15 +1,88 @@
 using System;
+using System.Linq;
 
-// The Qt3D family as six extension modules, one per Qt module. They are separate assemblies and
-// packages (as Qt itself ships them), and each one declares the modules it builds on: Qt3DRender
-// derives from Qt3DCore classes, Qt3DAnimation and Qt3DExtras build on both, and so on.
+// Every binding module this generator knows, in one table: the ten base modules of QtSharp.Api
+// and the addon families (Qt Charts, Qt3D). A module is data - name, assembly, package, Qt modules,
+// dependencies, native library, roots - and the generator, the build scripts, the project
+// generator and the package projects all read this one registry. There are no per-addon branches
+// anywhere in the generator: adding a Qt module is a row here plus its model and projects.
+//
+// Base modules take their classes from the checked-in combined model (grouped by header); addon
+// modules list their Roots explicitly, because those roots seed their own extraction.
 public static partial class ApiModel
 {
+    static ExtensionModule CoreModule(string name, string ns, string qtModule,
+                                      string[] dependsOn, string[] libs, string[] cppNamespaces)
+        => new ExtensionModule
+        {
+            Name = name,
+            Namespace = ns,
+            Assembly = ns,
+            Package = "QtSharp.Api",
+            IsCore = true,
+            // The base modules share the one native glue generated from the combined model.
+            NativeLibrary = "QtSharp.Api",
+            QtModules = new[] { qtModule },
+            QtDefines = Array.Empty<string>(),
+            QtLibs = libs,
+            DependsOn = dependsOn,
+            CppNamespaces = cppNamespaces,
+            Roots = Roots.Where(r => r.Module == qtModule).ToArray(),
+        };
+
+    static ExtensionModule QtCoreModule()
+        => CoreModule("qtcore", "QtSharp.QtCore", "QtCore",
+            Array.Empty<string>(), new[] { "Qt6Core" }, new[] { "Qt" });
+
+    static ExtensionModule QtGuiModule()
+        => CoreModule("qtgui", "QtSharp.QtGui", "QtGui",
+            new[] { "qtcore" }, new[] { "Qt6Gui", "Qt6Core" }, Array.Empty<string>());
+
+    static ExtensionModule QtWidgetsModule()
+        => CoreModule("qtwidgets", "QtSharp.QtWidgets", "QtWidgets",
+            new[] { "qtgui", "qtcore" }, new[] { "Qt6Widgets", "Qt6Gui", "Qt6Core" }, Array.Empty<string>());
+
+    static ExtensionModule QtNetworkModule()
+        => CoreModule("qtnetwork", "QtSharp.QtNetwork", "QtNetwork",
+            new[] { "qtcore" }, new[] { "Qt6Network", "Qt6Core" }, Array.Empty<string>());
+
+    static ExtensionModule QtSvgModule()
+        => CoreModule("qtsvg", "QtSharp.QtSvg", "QtSvg",
+            new[] { "qtgui", "qtcore" }, new[] { "Qt6Svg", "Qt6Gui", "Qt6Core" }, Array.Empty<string>());
+
+    static ExtensionModule QtSvgWidgetsModule()
+        => CoreModule("qtsvgwidgets", "QtSharp.QtSvgWidgets", "QtSvgWidgets",
+            new[] { "qtsvg", "qtwidgets", "qtgui", "qtcore" },
+            new[] { "Qt6SvgWidgets", "Qt6Svg", "Qt6Widgets", "Qt6Gui", "Qt6Core" }, Array.Empty<string>());
+
+    static ExtensionModule QtPrintSupportModule()
+        => CoreModule("qtprintsupport", "QtSharp.QtPrintSupport", "QtPrintSupport",
+            new[] { "qtwidgets", "qtgui", "qtcore" },
+            new[] { "Qt6PrintSupport", "Qt6Widgets", "Qt6Gui", "Qt6Core" }, Array.Empty<string>());
+
+    static ExtensionModule QtXmlModule()
+        => CoreModule("qtxml", "QtSharp.QtXml", "QtXml",
+            new[] { "qtcore" }, new[] { "Qt6Xml", "Qt6Core" }, Array.Empty<string>());
+
+    static ExtensionModule QtOpenGLModule()
+        => CoreModule("qtopengl", "QtSharp.QtOpenGL", "QtOpenGL",
+            new[] { "qtgui", "qtcore" }, new[] { "Qt6OpenGL", "Qt6Gui", "Qt6Core" }, Array.Empty<string>());
+
+    static ExtensionModule QtOpenGLWidgetsModule()
+        => CoreModule("qtopenglwidgets", "QtSharp.QtOpenGLWidgets", "QtOpenGLWidgets",
+            new[] { "qtopengl", "qtwidgets", "qtgui", "qtcore" },
+            new[] { "Qt6OpenGLWidgets", "Qt6OpenGL", "Qt6Widgets", "Qt6Gui", "Qt6Core" }, Array.Empty<string>());
+
     static ExtensionModule Qt3DCoreModule() => new ExtensionModule
     {
         Name = "qt3dcore",
         Namespace = "QtSharp.Qt3DCore",
+        // Qt3DCore is a QtGui/QtCore addon: every class derives from QObject.
+        DependsOn = new[] { "qtcore", "qtgui" },
+        Assembly = "QtSharp.Qt3DCore",
+        Package = "QtSharp.Qt3D",
         NativeLibrary = "QtSharp.Qt3DCore.Native",
+        CppNamespaces = new[] { "Qt3DCore" },
         QtModules = new[] { "Qt3DCore" },
         QtDefines = new[] { "QT3DCORE_LIB" },
         QtLibs = new[] { "Qt63DCore" },
@@ -42,11 +115,14 @@ public static partial class ApiModel
     {
         Name = "qt3drender",
         Namespace = "QtSharp.Qt3DRender",
+        Assembly = "QtSharp.Qt3DRender",
+        Package = "QtSharp.Qt3D",
         NativeLibrary = "QtSharp.Qt3DRender.Native",
+        CppNamespaces = new[] { "Qt3DRender" },
         QtModules = new[] { "Qt3DRender" },
         QtDefines = new[] { "QT3DRENDER_LIB" },
         QtLibs = new[] { "Qt63DRender", "Qt63DCore" },
-        DependsOn = new[] { "qt3dcore" },
+        DependsOn = new[] {"qtcore", "qtgui", "qtopengl", "qt3dcore"},
         // qrenderapi.h declares Qt3DRender::API; no Qt3DRender root includes it, but Qt3DExtras'
         // Qt3DWindow constructor takes it, so the module has to publish it.
         ExtraHeaders = new[] { "qrenderapi.h" },
@@ -173,11 +249,14 @@ public static partial class ApiModel
     {
         Name = "qt3dinput",
         Namespace = "QtSharp.Qt3DInput",
+        Assembly = "QtSharp.Qt3DInput",
+        Package = "QtSharp.Qt3D",
         NativeLibrary = "QtSharp.Qt3DInput.Native",
+        CppNamespaces = new[] { "Qt3DInput" },
         QtModules = new[] { "Qt3DInput" },
         QtDefines = new[] { "QT3DINPUT_LIB" },
         QtLibs = new[] { "Qt63DInput", "Qt63DCore" },
-        DependsOn = new[] { "qt3dcore" },
+        DependsOn = new[] {"qtcore", "qtgui", "qt3dcore"},
         Roots = new[]
         {
             R("Qt3DInput::QAbstractActionInput", "qabstractactioninput.h", "Qt3DInput"),
@@ -209,11 +288,14 @@ public static partial class ApiModel
     {
         Name = "qt3dlogic",
         Namespace = "QtSharp.Qt3DLogic",
+        Assembly = "QtSharp.Qt3DLogic",
+        Package = "QtSharp.Qt3D",
         NativeLibrary = "QtSharp.Qt3DLogic.Native",
+        CppNamespaces = new[] { "Qt3DLogic" },
         QtModules = new[] { "Qt3DLogic" },
         QtDefines = new[] { "QT3DLOGIC_LIB" },
         QtLibs = new[] { "Qt63DLogic", "Qt63DCore" },
-        DependsOn = new[] { "qt3dcore" },
+        DependsOn = new[] {"qtcore", "qt3dcore"},
         Roots = new[]
         {
             R("Qt3DLogic::QFrameAction", "qframeaction.h", "Qt3DLogic"),
@@ -225,11 +307,14 @@ public static partial class ApiModel
     {
         Name = "qt3danimation",
         Namespace = "QtSharp.Qt3DAnimation",
+        Assembly = "QtSharp.Qt3DAnimation",
+        Package = "QtSharp.Qt3D",
         NativeLibrary = "QtSharp.Qt3DAnimation.Native",
+        CppNamespaces = new[] { "Qt3DAnimation" },
         QtModules = new[] { "Qt3DAnimation" },
         QtDefines = new[] { "QT3DANIMATION_LIB" },
         QtLibs = new[] { "Qt63DAnimation", "Qt63DRender", "Qt63DCore" },
-        DependsOn = new[] { "qt3dcore", "qt3drender" },
+        DependsOn = new[] {"qtcore", "qtgui", "qt3dcore", "qt3drender"},
         Roots = new[]
         {
             R("Qt3DAnimation::QAbstractAnimation", "qabstractanimation.h", "Qt3DAnimation"),
@@ -267,11 +352,14 @@ public static partial class ApiModel
     {
         Name = "qt3dextras",
         Namespace = "QtSharp.Qt3DExtras",
+        Assembly = "QtSharp.Qt3DExtras",
+        Package = "QtSharp.Qt3D",
         NativeLibrary = "QtSharp.Qt3DExtras.Native",
+        CppNamespaces = new[] { "Qt3DExtras" },
         QtModules = new[] { "Qt3DExtras" },
         QtDefines = new[] { "QT3DEXTRAS_LIB" },
         QtLibs = new[] { "Qt63DExtras", "Qt63DRender", "Qt63DInput", "Qt63DLogic", "Qt63DAnimation", "Qt63DCore" },
-        DependsOn = new[] { "qt3dcore", "qt3drender", "qt3dinput", "qt3dlogic", "qt3danimation" },
+        DependsOn = new[] {"qtcore", "qtgui", "qtwidgets", "qtopengl", "qt3dcore", "qt3drender", "qt3dinput", "qt3dlogic", "qt3danimation"},
         Roots = new[]
         {
             R("Qt3DExtras::QAbstractCameraController", "qabstractcameracontroller.h", "Qt3DExtras"),
@@ -320,5 +408,4 @@ public static partial class ApiModel
             R("Qt3DExtras::QTorusMesh", "qtorusmesh.h", "Qt3DExtras"),
         },
     };
-
 }

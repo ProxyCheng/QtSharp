@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using QtSharp.Api;
 
 // Port of the official Qt "Document Viewer" demo
 // (qtdoc/examples/demos/documentviewer) onto the new pipeline.

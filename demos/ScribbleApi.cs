@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using QtSharp.Api;
 
 // The official widgets/widgets/scribble example, ported onto the *new* pipeline. Everything below
 // comes from model/qtsharp.api.json through the code generator - there is no hand-written glue.

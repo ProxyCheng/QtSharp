@@ -5,15 +5,16 @@ contains **six assemblies, one per Qt module**, each with its own namespace:
 
 | assembly / namespace | Qt module | builds on |
 |---|---|---|
-| `QtSharp.Qt3DCore` | Qt3DCore | — |
-| `QtSharp.Qt3DRender` | Qt3DRender | Qt3DCore |
-| `QtSharp.Qt3DInput` | Qt3DInput | Qt3DCore |
-| `QtSharp.Qt3DLogic` | Qt3DLogic | Qt3DCore |
-| `QtSharp.Qt3DAnimation` | Qt3DAnimation | Qt3DCore, Qt3DRender |
-| `QtSharp.Qt3DExtras` | Qt3DExtras | Qt3DCore, Qt3DRender, Qt3DInput, Qt3DLogic, Qt3DAnimation |
+| `QtSharp.Qt3DCore` | Qt3DCore | QtCore, QtGui |
+| `QtSharp.Qt3DRender` | Qt3DRender | Qt3DCore, QtCore, QtGui, QtOpenGL |
+| `QtSharp.Qt3DInput` | Qt3DInput | Qt3DCore, QtCore, QtGui |
+| `QtSharp.Qt3DLogic` | Qt3DLogic | Qt3DCore, QtCore |
+| `QtSharp.Qt3DAnimation` | Qt3DAnimation | Qt3DCore, Qt3DRender, QtCore, QtGui |
+| `QtSharp.Qt3DExtras` | Qt3DExtras | all of the above, QtWidgets, QtOpenGL |
 
 This mirrors `PyQt6-3D` / `PySide6-Addons`: one package to install, separate importable modules.
-The Qt libraries and plugins are laid out as Qt ships them.
+The package depends on `QtSharp.Api` and on `QtSharp.Qt3D.Qt6`, the companion package that carries
+the Qt3D libraries and the renderer/geometry/scene plugins.
 
 ```xml
 <ItemGroup>
@@ -23,7 +24,7 @@ The Qt libraries and plugins are laid out as Qt ships them.
 ```
 
 ```csharp
-using QtSharp.Api;
+using QtSharp.QtGui;
 using QtSharp.Qt3DCore;
 using QtSharp.Qt3DRender;
 using QtSharp.Qt3DExtras;

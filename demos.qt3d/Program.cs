@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using QtSharp.Api;
 
 namespace QtSharp.Qt3D.Demos
 {

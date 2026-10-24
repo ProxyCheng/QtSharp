@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Qt's official Qt Charts examples, ported onto the binding, as a self-testing executable.
+       The dispatcher (ChartsDemos) lists the names and runs one; tools/run-window-tests.ps1
+       consumes it exactly like the core and Qt3D demo suites.
+
+       The Charts assembly is a project reference while both live in this repository; a consumer
+       references the QtSharp.Charts package instead. QtSharp.Api.props brings the Qt runtime and
+       the base native glue. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>ChartsDemos</AssemblyName>
+    <RootNamespace>QtSharp.Charts.Tests</RootNamespace>
+    <QtSharpCompileBinding>false</QtSharpCompileBinding>
+  </PropertyGroup>
+
+  <Import Project="..\QtSharp.Api.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\nuget\QtSharp.Charts\QtSharp.Charts.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Runtime\QtSharp.Runtime.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtCore\QtSharp.QtCore.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtGui\QtSharp.QtGui.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtWidgets\QtSharp.QtWidgets.csproj" />
+  </ItemGroup>
+
+  <!-- The QtCharts native glue. The QtCharts runtime DLL is copied by QtSharp.Api.props with the
+       rest of the Qt runtime. -->
+  <Target Name="CopyChartsDemosNative" AfterTargets="Build">
+    <ItemGroup>
+      <_ChartsDemosNative Include="..\out\api-modules\charts\QtSharp.Charts.Native.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_ChartsDemosNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

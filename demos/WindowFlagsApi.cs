@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using QtSharp.Api;
 
 // PARKED - ported but deliberately NOT wired into testbind/Program.cs or the gate yet.
 //

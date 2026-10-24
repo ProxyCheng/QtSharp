@@ -1,9 +1,9 @@
 <Project>
 
   <!-- Imported automatically for any project that references the QtSharp.Qt3D package. It only
-       declares where the native payload lives; the copy itself is in the targets. The core
-       package ships the Qt runtime and the QtSharp.Api glue; this one adds the six Qt3D
-       libraries, their renderer/loader plugins, and the QtSharp.Qt3D native glue. -->
+       declares where the native payload lives; the copy itself is in the targets. The Qt3D runtime
+       DLLs and plugins come from the QtSharp.Qt3D.Qt6 companion package; this package adds the six
+       QtSharp.Qt3D*.Native.dll glues. -->
   <PropertyGroup>
     <QtSharpQt3DNativeDir Condition="'$(QtSharpQt3DNativeDir)' == ''">$(MSBuildThisFileDirectory)..\tools\native\</QtSharpQt3DNativeDir>
     <!-- The native glue is x64 only, so the process must be x64 too. -->

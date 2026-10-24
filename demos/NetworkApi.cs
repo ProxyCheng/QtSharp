@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.Text;
-using QtSharp.Api;
 
 // The QtNetwork module, which is what an app that is more than a window needs: the single-instance
 // handoff (a second launch talks to the running one over QLocalServer/QLocalSocket - QLockFile only

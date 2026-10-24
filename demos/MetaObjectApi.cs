@@ -1,5 +1,4 @@
 ﻿using System;
-using QtSharp.Api;
 
 // A signal and a property declared *in C#, the pyqtSignal/Property equivalent. The declarations
 // are attributes on ordinary members; ApiRuntime.AttachMetaObject (which every generated
