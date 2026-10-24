@@ -12,8 +12,9 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   assembly. Charts' model, native glue and package had already been built here; the second
   repository is now redundant.
 - **The demos are now only the official Qt examples, grouped and named by module.** `demos/`
-  contains the 23 ported examples under `QtGui/` and `QtWidgets/`, and both the files and the
-  `--list` names say which module they exercise (`qtgui-basicdrawing`, `qtwidgets-analogclock`, …).
+  contains the 28 ported examples under `QtGui/`, `QtWidgets/`, `QtSvg/`, `QtSvgWidgets/`,
+  `QtXml/`, `QtPrintSupport/` and `QtNetwork/`, and both the files and the `--list` names say which
+  module they exercise (`qtgui-basicdrawing`, `qtwidgets-analogclock`, …).
   The Qt Charts examples are `qtcharts-*`; Qt3D keeps `qt3d-*`.
 - **Binding-specific tests moved to `tests/`.** Ownership, the exception boundary, C#-declared
   signals/properties, value types, the QtCore tour, network transports, document formats, managed
@@ -40,6 +41,13 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   binding into QtSharp.Demos. The public API is exercised across the same assembly boundaries the
   package ships, and the IDE no longer lists the generated `out/**/*.cs` as files of the demo
   project.
+- Added the remaining feasible official example ports as module-named demos:
+  `qtsvg-svgviewer`, `qtsvgwidgets-svgwidget`, `qtxml-dombookmarks`,
+  `qtprintsupport-notepad` and `qtnetwork-fortune`. OpenGL remains deferred because
+  `QOpenGLFunctions` is not bound and CI has no guaranteed GL context.
+- The demo projects are named consistently - `QtSharp.Demos`, `QtSharp.Charts.Demos`,
+  `QtSharp.Qt3D.Demos` - and `QtSharp.slnx` groups the generator, runtime packages, base modules,
+  addons, demos, tests and samples into solution folders instead of one flat list.
 - Demo registration is attribute-based: `[Demo("qtwidgets-analogclock")]` on a static class with
   `Run(QApplication)`, discovered by each catalog. The hand-maintained runner/name tables are
   gone; duplicate or malformed registrations fail at startup.

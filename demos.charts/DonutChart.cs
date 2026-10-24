@@ -1,6 +1,6 @@
 using QtSharp.Charts;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>
     /// Qt's examples/charts DonutWidget: a pie with a hole, the Fat slice exploded, the legend at the

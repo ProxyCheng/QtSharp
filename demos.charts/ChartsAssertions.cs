@@ -1,6 +1,6 @@
 using System;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>What the ported examples assert on, so each one does not invent its own.</summary>
     public static class ChartsAssertions

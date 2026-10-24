@@ -1,6 +1,6 @@
 using QtSharp.Charts;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>
     /// Qt's examples/charts ModelDataWidget: one table of four columns, with columns 0/1 feeding the

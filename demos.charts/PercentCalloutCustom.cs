@@ -1,6 +1,6 @@
 using QtSharp.Charts;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>
     /// Qt's examples/charts PccWidget: a pie chart with every slice's appearance editable - label,

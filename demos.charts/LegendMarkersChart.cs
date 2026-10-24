@@ -1,7 +1,7 @@
 using System;
 using QtSharp.Charts;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>
     /// Qt's examples/charts LegendMarkersWidget: four sine waves, every legend marker connected to a

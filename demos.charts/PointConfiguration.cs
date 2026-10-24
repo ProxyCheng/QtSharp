@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using QtSharp.Charts;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>
     /// Qt's examples/charts PointConfigurationWidget: one point of a line series given a size, a label

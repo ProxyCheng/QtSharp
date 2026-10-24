@@ -1,6 +1,6 @@
 using QtSharp.Charts;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>
     /// Qt's examples/charts MultiAxisWidget: two spline series sharing one x axis but each getting a

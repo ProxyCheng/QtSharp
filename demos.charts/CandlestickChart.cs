@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using QtSharp.Charts;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>
     /// Qt's examples/charts CandlestickWidget: Acme Ltd's daily candles for July 2015, green when the

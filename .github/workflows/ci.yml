@@ -115,18 +115,18 @@ jobs:
       - name: Build and run the official Qt3D examples
         shell: pwsh
         run: |
-          dotnet build demos.qt3d/QtSharp.Qt3DDemos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
+          dotnet build demos.qt3d/QtSharp.Qt3D.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
           if ($LASTEXITCODE -ne 0) { throw "Qt3D demos build failed" }
-          ./tools/run-window-tests.ps1 -Exe "demos.qt3d/bin/Release/net10.0/qt3ddemos.exe" -Label "qt3d-demos"
+          ./tools/run-window-tests.ps1 -Exe "demos.qt3d/bin/Release/net10.0/QtSharp.Qt3D.Demos.exe" -Label "qt3d-demos"
           if ($LASTEXITCODE -ne 0) { throw "some Qt3D demos failed" }
 
       # The official Qt Charts examples, against the separate Charts assembly.
       - name: Build and run the official Qt Charts examples
         shell: pwsh
         run: |
-          dotnet build demos.charts/ChartsDemos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
+          dotnet build demos.charts/QtSharp.Charts.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
           if ($LASTEXITCODE -ne 0) { throw "Charts demos build failed" }
-          ./tools/run-window-tests.ps1 -Exe "demos.charts/bin/Release/net10.0/ChartsDemos.exe" -Label "charts-demos"
+          ./tools/run-window-tests.ps1 -Exe "demos.charts/bin/Release/net10.0/QtSharp.Charts.Demos.exe" -Label "charts-demos"
           if ($LASTEXITCODE -ne 0) { throw "some Qt Charts demos failed" }
 
 

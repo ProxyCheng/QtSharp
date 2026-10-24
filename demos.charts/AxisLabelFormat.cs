@@ -1,6 +1,6 @@
 using QtSharp.Charts;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>
     /// Not one of Qt's examples: a regression test for a unit that is a word in the reader's language.

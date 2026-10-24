@@ -43,8 +43,8 @@ tests/QtSharp.BindingTests.csproj           ← binding-specific tests (test-*)
 
 Current coverage: **496 classes / 10506 methods / 885 virtuals / 511 enums / 816 Q_PROPERTY
 properties / 463 signals / 70 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg,
-QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets). The gate runs 23 official Qt
-examples (**867 assertions**), 11 binding-specific tests (**387 assertions**), the 38 official Qt
+QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets). The gate runs 28 official Qt
+examples (**899 assertions**), 11 binding-specific tests (**387 assertions**), the 38 official Qt
 Charts examples (**570 assertions**) and the three official Qt3D examples (**37 assertions**).
 
 Extension modules are separate assemblies and packages against the same runtime:
@@ -267,7 +267,8 @@ testapp test-metaobject          # a binding test
 ```
 
 The official demos are named after the module they exercise (`qtgui-*`, `qtwidgets-*`, plus
-`qtcharts-*` and `qt3d-*` from the addon runners); the binding tests use `test-*` and cover
+`qtsvg-*`, `qtsvgwidgets-*`, `qtxml-*`, `qtprintsupport-*`, `qtnetwork-*`, `qtcharts-*` and
+`qt3d-*`); the binding tests use `test-*` and cover
 ownership, exceptions, C#-declared signals/properties, value types, the BCL conversions and the
 modules whose upstream examples are not ported yet. `docs/conformance.md` has the full matrix.
 Registration is discovery, not a list: a class carries `[Demo("qtwidgets-analogclock")]` and each

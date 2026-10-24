@@ -1,7 +1,7 @@
 using System;
 using QtSharp.Charts;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>
     /// Qt's examples/charts ScatterInteractionsWidget: a 7x7 grid of scatter points, and a click that

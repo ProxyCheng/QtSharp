@@ -8,7 +8,7 @@ namespace QtSharp.Demos
     /// The dispatcher for the ported official Qt examples in the base binding. The demos are grouped
     /// by the module they exercise and named after it: <c>qtgui-*</c> for the painting examples,
     /// <c>qtwidgets-*</c> for the widget examples. The addons have their own catalogs
-    /// (<c>ChartsDemos</c>, Qt3D) because they build against separate assemblies.
+    /// (<c>QtSharp.Charts.Demos</c>, <c>QtSharp.Qt3D.Demos</c>) because they build against separate assemblies.
     ///
     /// The list lives in exactly one place: <c>testapp --list</c> reads it, so the gate and the
     /// table cannot drift. Binding-specific tests (ownership, exceptions, C#-declared signals, ...)

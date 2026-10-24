@@ -172,24 +172,24 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-dotnet build "$root\demos.qt3d\QtSharp.Qt3DDemos.csproj" -c Release --nologo *> "$root\out\qt3d_demosbuild.log"
+dotnet build "$root\demos.qt3d\QtSharp.Qt3D.Demos.csproj" -c Release --nologo *> "$root\out\qt3d_demosbuild.log"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Qt3D demos build failed"
     Select-String -Path "$root\out\qt3d_demosbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }
     exit 1
 }
-& "$root\tools\run-window-tests.ps1" -Exe "$root\demos.qt3d\bin\Release\net10.0\qt3ddemos.exe" -Label "qt3d-demos" -Jobs $Jobs
+& "$root\tools\run-window-tests.ps1" -Exe "$root\demos.qt3d\bin\Release\net10.0\QtSharp.Qt3D.Demos.exe" -Label "qt3d-demos" -Jobs $Jobs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Qt's official Qt Charts examples: the Charts module's conformance suite, built against the
 # separate Charts assembly exactly like a consumer would use it.
-dotnet build "$root/demos.charts/ChartsDemos.csproj" -c Release --nologo *> "$root/out/charts_demosbuild.log"
+dotnet build "$root/demos.charts/QtSharp.Charts.Demos.csproj" -c Release --nologo *> "$root/out/charts_demosbuild.log"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Charts demos build failed"
     Select-String -Path "$root/out/charts_demosbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }
     exit 1
 }
-& "$root/tools/run-window-tests.ps1" -Exe "$root/demos.charts/bin/Release/net10.0/ChartsDemos.exe" -Label "charts-demos" -Jobs $Jobs
+& "$root/tools/run-window-tests.ps1" -Exe "$root/demos.charts/bin/Release/net10.0/QtSharp.Charts.Demos.exe" -Label "charts-demos" -Jobs $Jobs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "=== [5] Build the demos and binding tests, then run them ==="

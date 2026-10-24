@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>
     /// The ported Qt examples. Each class carries [Demo("qtcharts-...")]; this catalog discovers
@@ -13,11 +13,11 @@ namespace QtSharp.Charts.Tests
     /// examples were folded into examples/charts/chartsgallery, one widget per chart type; those are
     /// the names without a "chart" suffix. zoomlinechart is still its own example upstream.
     /// </summary>
-    public static class ChartsDemos
+    public static class DemoCatalog
     {
         // Discovered from [Demo("qtcharts-...")] on the classes in this assembly.
         static readonly IReadOnlyList<(string Name, Func<QApplication, int> Run)> Runners =
-            DemoDiscovery.Find(typeof(ChartsDemos).Assembly);
+            DemoDiscovery.Find(typeof(DemoCatalog).Assembly);
 
         public static IReadOnlyList<string> Names => Runners.Select(r => r.Name).ToList();
 

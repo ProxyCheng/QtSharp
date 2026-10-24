@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Qt's official Qt Charts examples, ported onto the binding, as a self-testing executable.
-       The dispatcher (ChartsDemos) lists the names and runs one; tools/run-window-tests.ps1
+       The dispatcher (DemoCatalog) lists the names and runs one; tools/run-window-tests.ps1
        consumes it exactly like the core and Qt3D demo suites.
 
        The Charts assembly is a project reference while both live in this repository; a consumer
@@ -14,8 +14,8 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PlatformTarget>x64</PlatformTarget>
-    <AssemblyName>ChartsDemos</AssemblyName>
-    <RootNamespace>QtSharp.Charts.Tests</RootNamespace>
+    <AssemblyName>QtSharp.Charts.Demos</AssemblyName>
+    <RootNamespace>QtSharp.Charts.Demos</RootNamespace>
     <QtSharpCompileBinding>false</QtSharpCompileBinding>
   </PropertyGroup>
 
@@ -37,11 +37,11 @@
 
   <!-- The QtCharts native glue. The QtCharts runtime DLL is copied by QtSharp.Api.props with the
        rest of the Qt runtime. -->
-  <Target Name="CopyChartsDemosNative" AfterTargets="Build">
+  <Target Name="CopyChartsNative" AfterTargets="Build">
     <ItemGroup>
-      <_ChartsDemosNative Include="..\out\api-modules\charts\QtSharp.Charts.Native.dll" />
+      <_ChartsNative Include="..\out\api-modules\charts\QtSharp.Charts.Native.dll" />
     </ItemGroup>
-    <Copy SourceFiles="@(_ChartsDemosNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_ChartsNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

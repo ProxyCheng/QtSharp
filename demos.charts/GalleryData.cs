@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using QtSharp.Charts;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>
     /// The data Qt ships with the gallery examples, kept as the raw lines the C++ readers read

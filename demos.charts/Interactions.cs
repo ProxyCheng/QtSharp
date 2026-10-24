@@ -1,7 +1,7 @@
 using System;
 using QtSharp.Charts;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>
     /// Qt's examples/charts InteractionsWidget: drag a data point around a line series. The example

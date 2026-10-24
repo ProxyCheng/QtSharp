@@ -1,7 +1,7 @@
 using System;
 using QtSharp.Charts;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>
     /// Qt's examples/charts/linechart: the same idea as splinechart with a QLineSeries of ten points

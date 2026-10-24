@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using QtSharp.Charts;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>
     /// Qt's examples/charts StackedDrilldownWidget: a season's crop per month, and clicking a bar

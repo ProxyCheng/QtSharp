@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>
     /// The editable table model behind the two model-mapper examples: a grid of numbers with a header

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QtSharp.Charts;
 
-namespace QtSharp.Charts.Tests
+namespace QtSharp.Charts.Demos
 {
     /// <summary>
     /// Qt's examples/charts BoxPlotWidget: two QBoxPlotSeries of twelve box-and-whisker sets, each

@@ -14,7 +14,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <AssemblyName>qt3ddemos</AssemblyName>
+    <AssemblyName>QtSharp.Qt3D.Demos</AssemblyName>
     <RootNamespace>QtSharp.Qt3D.Demos</RootNamespace>
     <QtSharpCompileBinding>false</QtSharpCompileBinding>
   </PropertyGroup>
