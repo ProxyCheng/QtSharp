@@ -1,6 +1,7 @@
 param(
     [switch]$SkipExtract,
-    [switch]$Adopt
+    [switch]$Adopt,
+    [int]$Jobs = 0
 )
 $ErrorActionPreference = "Continue"
 # The repository root is this script's parent, so a clone can live anywhere; everything below runs
@@ -8,6 +9,27 @@ $ErrorActionPreference = "Continue"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $root
 $genBin = "$root\gen\bin\Release\net10.0\win-x64"
+
+# The binding is one C# file per Qt header, so the determinism gate hashes the generated tree
+# (relative path + bytes, sorted) rather than a single file.
+function Get-GeneratedTreeHash([string]$dir) {
+    $files = Get-ChildItem -LiteralPath $dir -Recurse -File |
+        Where-Object { $_.Extension -eq '.cs' -or $_.Extension -eq '.cpp' } | Sort-Object FullName
+    $stream = New-Object System.IO.MemoryStream
+    try {
+        foreach ($file in $files) {
+            $relative = $file.FullName.Substring($dir.Length).TrimStart('\', '/')
+            $name = [System.Text.Encoding]::UTF8.GetBytes($relative + "`n")
+            $stream.Write($name, 0, $name.Length)
+            $bytes = [System.IO.File]::ReadAllBytes($file.FullName)
+            $stream.Write($bytes, 0, $bytes.Length)
+        }
+        $sha = [System.Security.Cryptography.SHA256]::Create()
+        try {
+            return (-join ($sha.ComputeHash($stream.ToArray()) | ForEach-Object { $_.ToString('x2') }))
+        } finally { $sha.Dispose() }
+    } finally { $stream.Dispose() }
+}
 
 Write-Host "=== [0] Prerequisites ==="
 $clangHeaders = Get-ChildItem "$root\lib\lib\clang" -Directory -ErrorAction SilentlyContinue |
@@ -62,9 +84,9 @@ Push-Location $genBin
 if ($LASTEXITCODE -ne 0) { Pop-Location; Write-Host "codegen failed"; Get-Content "$root\out\codegen.log" | Select-Object -Last 10; exit 1 }
 & "$genBin\qtgen.exe" codegen "$root\model\qtsharp.api.json" "$root\out\api2" *> "$root\out\codegen2.log"
 Pop-Location
-$h1 = (Get-FileHash "$root\out\api\QtSharp.Api.cs").Hash
-$h2 = (Get-FileHash "$root\out\api2\QtSharp.Api.cs").Hash
-if ($h1 -eq $h2) { Write-Host "codegen is deterministic (identical output on two runs)" }
+$h1 = Get-GeneratedTreeHash "$root\out\api"
+$h2 = Get-GeneratedTreeHash "$root\out\api2"
+if ($h1 -eq $h2) { Write-Host "codegen is deterministic (identical generated tree on two runs)" }
 else { Write-Host "CODEGEN NOT DETERMINISTIC"; exit 1 }
 
 Write-Host "=== [4] Build native bindings ==="
@@ -93,26 +115,12 @@ if ($LASTEXITCODE -ne 0) { Write-Host "testbind build failed"; Select-String -Pa
 # example. Each one drives the generated API, checks what it sees and ends in [SELFTEST OK].
 #
 # The list comes from the library itself (ApiDemos.Names), so a new example is covered by the gate
-# as soon as it is registered - and the demo name is echoed here, which is what makes a crash
-# attributable to one of these 31 GUI processes.
-$demos = & "$root\testbind\bin\Release\net10.0\testapp.exe" --list
-if ($LASTEXITCODE -ne 0 -or -not $demos) { Write-Host "could not list the demos"; exit 1 }
-foreach ($demo in $demos) {
-    Write-Host "  --- $demo"
-    & "$root\testbind\bin\Release\net10.0\testapp.exe" $demo
-    # A demo that shows a window can die in the *teardown*: Qt destroys the widgets while the shell
-    # is still pumping messages to them, which surfaces as 0xC000041D after every assertion has
-    # already passed. It is timing, not logic - the same demo passes on its own - so it is retried
-    # once, as the extension repository's CI does.
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host ("  retrying {0} after exit 0x{1:X8}" -f $demo, $LASTEXITCODE)
-        & "$root\testbind\bin\Release\net10.0\testapp.exe" $demo
-    }
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host ("[FAIL] {0} exited with 0x{1:X8}" -f $demo, $LASTEXITCODE)
-        exit $LASTEXITCODE
-    }
-}
+# as soon as it is registered. The windows are independent processes, so tools\run-window-tests.ps1
+# runs several at a time; each result line names the window, and a failure prints that window's own
+# output, so nothing is lost by running them concurrently.
+& "$root\tools\run-window-tests.ps1" -Exe "$root\testbind\bin\Release\net10.0\testapp.exe" `
+    -Label "demos" -Jobs $Jobs
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 # The sample a user starts from: a project outside this repository's test app that imports only
 # QtSharp.Api.props and references the demo library. Covered here so the "write your own UI" path
 # cannot rot, together with the second entry point into the demos ("hello <demo>").
@@ -144,4 +152,5 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 $names = (& "$root\samples\hello\bin\Release\net10.0\hello.exe" help) -join "`n"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 if ($names -notmatch 'api-pathstroke') { Write-Host "hello help did not list the demos"; exit 1 }
+
 exit 0

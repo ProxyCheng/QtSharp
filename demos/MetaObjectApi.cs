@@ -1,21 +1,37 @@
 ﻿using System;
 using QtSharp.Api;
 
-// A signal and a property declared *in C#*, the pyqtSignal/Property equivalent. The declarations
-// are ordinary static fields on the managed subclass; ApiRuntime.AttachMetaObject (which every
-// generated constructor calls) reflects over them, builds a meta-object with the extra members and
-// installs it on the object. After that they are indistinguishable from moc-generated members:
+// A signal and a property declared *in C#, the pyqtSignal/Property equivalent. The declarations
+// are attributes on ordinary members; ApiRuntime.AttachMetaObject (which every generated
+// constructor calls) reflects over them, builds a meta-object with the extra members and installs
+// it on the object. After that they are indistinguishable from moc-generated members:
 // indexOfSignal finds them, connect() works, and QObject::property/setProperty reach them.
 public class Counter : QObject
 {
-    public static readonly QMetaSignal ValueReset = new("valueReset");
-    public static readonly QMetaSignal<int> ValueChanged = new("valueChanged");
-    public static readonly QMetaSignal<string, int> Renamed = new("renamed");
-    public static readonly QMetaSignal<QObject> ChildAdded = new("childAdded");
-    public static readonly QMetaProperty<int> Value =
-        new("value", o => ((Counter)o)._value, (o, v) => ((Counter)o)._value = v);
-    public static readonly QMetaProperty<string> Label =
-        new("label", o => ((Counter)o)._label, (o, v) => ((Counter)o)._label = v);
+    [QtSignal] public event Action ValueReset;
+    [QtSignal] public event Action<int> ValueChanged;
+    [QtSignal("renamed")] public event Action<string, int> Renamed;
+    [QtSignal] public event Action<QObject> ChildAdded;
+    [QtSignal] public event Action<int> LevelChanged;
+
+    // Explicit Q_PROPERTY metadata: NOTIFY points at ValueChanged, RESET at ResetValue.
+    [QtProperty(Notify = nameof(ValueChanged), Reset = nameof(ResetValue))]
+    public int Value { get => _value; set => _value = value; }
+
+    // The Qt name differs from the member's: "label", not "text".
+    [QtProperty("label")] public string Text { get => _label; set => _label = value; }
+
+    // No Notify/Reset names: the conventions link LevelChanged and ResetLevel.
+    [QtProperty] public int Level { get; set; }
+
+    [QtProperty("caption")] public string Name { get; set; } = "";
+
+    [QtProperty(Constant = true, Final = true)]
+    public string ConstantLabel => "attributed";      // get-only: a read-only, constant property
+
+    [QtProperty(Designable = false, Scriptable = false, Stored = false,
+                User = true, Required = true, Revision = 3)]
+    public string Tag { get; set; } = "";
 
     int _value;
     string _label = "";
@@ -27,8 +43,26 @@ public class Counter : QObject
     public void Bump()
     {
         _value++;
-        ValueChanged.Emit(this, _value);
+        EmitSignal(ValueChanged, _value);
     }
+
+    public void ResetValue()
+    {
+        _value = 0;
+        EmitSignal(ValueReset);
+    }
+
+    public void ResetLevel() => Level = 7;
+
+    public void SetLevel(int level)
+    {
+        Level = level;
+        EmitSignal(LevelChanged, level);
+    }
+
+    public void Rename(string name, int value) => EmitSignal(Renamed, name, value);
+
+    public void AddChild(QObject child) => EmitSignal(ChildAdded, child);
 }
 
 // The declarations are inherited: a subclass gets its own meta-object with the same members.
@@ -52,34 +86,37 @@ public static class ApiMetaObjectDemo
         var counter = new Counter();
         var meta = counter.MetaObject();
         Check(meta.ClassName() == "Counter", $"the object's meta-object is the C# class (got '{meta.ClassName()}')");
-        Check(meta.IndexOfSignal("valueChanged(int)") >= 0, "a C#-declared signal is in the meta-object");
+        Check(meta.IndexOfSignal("valueChanged(int)") >= 0 && meta.IndexOfSignal("valueReset()") >= 0
+              && meta.IndexOfSignal("renamed(QString,int)") >= 0 && meta.IndexOfSignal("childAdded(QObject*)") >= 0,
+            "[QtSignal] events are in the meta-object, including the explicit name");
         Check(meta.IndexOfSignal("objectNameChanged(QString)") >= 0, "the inherited Qt signals are still there");
-        Check(meta.IndexOfProperty("value") >= 0 && meta.IndexOfProperty("label") >= 0,
-            "C#-declared properties are in the meta-object");
+        Check(meta.IndexOfProperty("value") >= 0 && meta.IndexOfProperty("label") >= 0
+              && meta.IndexOfProperty("caption") >= 0,
+            "[QtProperty] properties are in the meta-object, including the explicit name");
 
-        // Connect to the declared signal and drive it from C#.
+        // Subscribe to the declared signals and drive them from C#.
         int seen = 0;
-        Counter.ValueChanged.Connect(counter, v => seen = v);
+        counter.ValueChanged += v => seen = v;
         counter.Bump();
         counter.Bump();
         Check(seen == 2, $"a C#-declared signal reaches its handler (got {seen})");
 
         // Emit the other arities, including a bound class (marshalled as its pointer).
         bool reset = false;
-        Counter.ValueReset.Connect(counter, () => reset = true);
-        Counter.ValueReset.Emit(counter);
+        counter.ValueReset += () => reset = true;
+        counter.ResetValue();
         Check(reset, "a parameterless C#-declared signal fires");
 
         string renamed = null;
         int renamedTo = 0;
-        Counter.Renamed.Connect(counter, (n, v) => { renamed = n; renamedTo = v; });
-        Counter.Renamed.Emit(counter, "counter", 7);
+        counter.Renamed += (n, v) => { renamed = n; renamedTo = v; };
+        counter.Rename("counter", 7);
         Check(renamed == "counter" && renamedTo == 7, $"a two-argument C#-declared signal carries both (got '{renamed}', {renamedTo})");
 
         QObject child = null;
-        Counter.ChildAdded.Connect(counter, c => child = c);
+        counter.ChildAdded += c => child = c;
         var widget = new QWidget();
-        Counter.ChildAdded.Emit(counter, widget);
+        counter.AddChild(widget);
         Check(child != null && child.Handle == widget.Handle, "a C#-declared signal can carry a bound class");
 
         // The properties read and write through QObject::property/setProperty, which is how Qt
@@ -92,17 +129,54 @@ public static class ApiMetaObjectDemo
         Check(counter.Property("label").ToString() == "hello" && counter.RawLabel == "hello",
             $"a string property round-trips (got '{counter.Property("label").ToString()}')");
 
-        // A property reading straight from managed state - no setter involved.
-        counter.SetProperty("value", new QVariant(5));
-        Check(counter.Property("value").ToInt() == 5, "property() reads back what setProperty stored");
+        counter.SetProperty("caption", new QVariant("attributed-name"));
+        Check(counter.Property("caption").ToString() == "attributed-name" && counter.Name == "attributed-name",
+            $"a property with an explicit Qt name round-trips (got '{counter.Name}')");
+
+        // Q_PROPERTY's NOTIFY, RESET and the rest of its flags are in the table as well.
+        var valueProperty = meta.Property(meta.IndexOfProperty("value"));
+        Check(valueProperty.HasNotifySignal()
+              && valueProperty.NotifySignalIndex() == meta.IndexOfSignal("valueChanged(int)"),
+            $"NOTIFY points at the [QtSignal] event (notify index {valueProperty.NotifySignalIndex()})");
+        Check(valueProperty.IsReadable() && valueProperty.IsWritable() && valueProperty.IsResettable()
+              && valueProperty.IsDesignable() && valueProperty.IsScriptable() && valueProperty.IsStored(),
+            "an attributed property carries READ/WRITE/RESET and the default flags");
+        counter.Value = 99;
+        Check(valueProperty.Reset(counter) && counter.Value == 0,
+            $"QMetaProperty::reset() calls the C# ResetValue() (value={counter.Value})");
+
+        var constantProperty = meta.Property(meta.IndexOfProperty("constantLabel"));
+        Check(constantProperty.IsConstant() && constantProperty.IsFinal() && !constantProperty.IsWritable(),
+            "CONSTANT and FINAL are in the meta-object");
+
+        var tagProperty = meta.Property(meta.IndexOfProperty("tag"));
+        Check(!tagProperty.IsDesignable() && !tagProperty.IsScriptable() && !tagProperty.IsStored()
+              && tagProperty.IsUser() && tagProperty.IsRequired() && tagProperty.Revision() == 3,
+            "DESIGNABLE/SCRIPTABLE/STORED/USER/REQUIRED/REVISION are in the meta-object");
+
+        // With no names given, the Qt conventions are enough: LevelChanged notifies, ResetLevel
+        // resets.
+        var levelProperty = meta.Property(meta.IndexOfProperty("level"));
+        Check(levelProperty.HasNotifySignal()
+              && levelProperty.NotifySignalIndex() == meta.IndexOfSignal("levelChanged(int)")
+              && levelProperty.IsResettable(),
+            "NOTIFY and RESET are inferred from the XChanged event and the ResetX method");
+        int levelSeen = 0;
+        counter.LevelChanged += level => levelSeen = level;
+        counter.SetLevel(11);
+        Check(levelSeen == 11, $"the inferred NOTIFY signal fires (level={levelSeen})");
+        counter.Level = 5;
+        Check(levelProperty.Reset(counter) && counter.Level == 7,
+            $"the inferred RESET calls ResetLevel() (level={counter.Level})");
 
         // A managed subclass of a managed subclass keeps the declarations.
         var special = new SpecialCounter();
         Check(special.MetaObject().ClassName() == "SpecialCounter"
-              && special.MetaObject().IndexOfSignal("valueChanged(int)") >= 0,
-            "an inherited C#-declared signal is present on a subclass");
+              && special.MetaObject().IndexOfSignal("valueChanged(int)") >= 0
+              && special.MetaObject().IndexOfProperty("value") >= 0,
+            "an inherited C#-declared member is present on a subclass");
         int specialSeen = 0;
-        SpecialCounter.ValueChanged.Connect(special, v => specialSeen = v);
+        special.ValueChanged += v => specialSeen = v;
         special.Bump();
         Check(specialSeen == 1, "the subclass's own instance emits with its own handler");
 
@@ -116,4 +190,3 @@ public static class ApiMetaObjectDemo
         return failures == 0 ? 0 : 1;
     }
 }
-

@@ -44,7 +44,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\ApiRuntime.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\ApiApplication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\BclInterop.cs" />
-    <Compile Include="$(QtSharpApiDir)\QtSharp.Api.cs" />
+    <Compile Include="$(QtSharpApiDir)\generated\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -56,7 +56,7 @@
   </ItemGroup>
 
   <Target Name="QtSharpApiPackCheck" BeforeTargets="GenerateNuspec">
-    <Error Condition="!Exists('$(QtSharpApiDir)\QtSharp.Api.cs')" Text="The binding source is missing - run: powershell -File tools\regen-api.ps1" />
+    <Error Condition="!Exists('$(QtSharpApiDir)\generated')" Text="The binding source is missing - run: powershell -File tools\regen-api.ps1" />
     <Error Condition="!Exists('$(QtSharpApiDir)\QtSharp.Api.dll')" Text="The native glue is missing - run: powershell -File tools\regen-api.ps1" />
     <Error Condition="!Exists('$(QtRuntimeDir)\Qt6Core.dll')" Text="The Qt runtime DLLs are missing under '$(QtRuntimeDir)' - see README.md, section Prerequisites." />
     <Error Condition="!Exists('$(QtRuntimeDir)\platforms\qwindows.dll')" Text="The Qt platform plugin is missing at '$(QtRuntimeDir)\platforms\qwindows.dll'." />

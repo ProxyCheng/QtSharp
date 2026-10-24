@@ -15,7 +15,7 @@ using System;
 //     byte[] bytes = qba.ToArray();          QByteArray -> byte[] (the ctor already takes byte[])
 //
 // There are deliberately no implicit operators. The generated == on a handle class compares
-// wrapper identity (see QtSharp.Api.cs), not the instant, so with an implicit conversion
+// wrapper identity (see the generated QDateTime), not the instant, so with an implicit conversion
 // `qdt == dateTime` would compile and silently be false even for the same moment. Explicit
 // conversions make every crossing visible; the two explicit operators below exist only because a
 // cast is the idiomatic way to spell ToDateTime()/ToDateTimeOffset() at a call site.
@@ -35,7 +35,7 @@ using System;
 // conversion that keeps the offset as well (the zone rules themselves have no BCL equivalent).
 namespace QtSharp.Api
 {
-    public unsafe partial class QDateTime
+    public partial class QDateTime
     {
         /// <summary>Builds a QDateTime from a BCL timestamp. Utc stays UTC; Local and Unspecified are local time.</summary>
         public QDateTime(DateTime value)
@@ -187,7 +187,7 @@ namespace QtSharp.Api
         }
     }
 
-    public unsafe partial class QByteArray
+    public partial class QByteArray
     {
         /// <summary>
         /// Copies the bytes out, binary-safe (embedded NUL and high bytes included). The wrapper

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security;
@@ -175,158 +176,338 @@ namespace QtSharp.Api
     }
 
     // ------------------------------------------------------------------ user-declared members
-    // A C# class can declare its own signals and properties (the pyqtSignal/Property equivalent):
+    // A C# class declares its own signals and properties (the pyqtSignal/Property equivalent) by
+    // putting an attribute on the member. The member is the declaration:
     //
     //     public sealed class Counter : QObject
     //     {
-    //         public static readonly QMetaSignal<int> ValueChanged = new("valueChanged");
-    //         public static readonly QMetaProperty<int> Value = new("value", o => ((Counter)o)._value, ...);
+    //         [QtSignal] public event Action<int> ValueChanged;
+    //         [QtProperty] public int Value { get; set; }
     //     }
     //
-    // ApiRuntime.AttachMetaObject (called by every generated constructor) reflects over the static
-    // fields of the concrete type, builds a meta-object with the extra members, and installs it on
-    // the object. From then on they are ordinary Qt members: indexOfSignal finds them, connect()
-    // works, and the property read/write goes through QObject::property/setProperty.
+    // ApiRuntime.AttachMetaObject (called by every generated constructor) reflects over the
+    // attributed members of the concrete type and its user base classes, builds a meta-object with
+    // the extra members, and installs it on the object. From then on they are ordinary Qt
+    // members: indexOfSignal finds them, connect() works, and the property read/write goes
+    // through QObject::property/setProperty.
 
-    public abstract class QMetaSignalBase
+    // The QMetaProperty flags, as the native meta-object builder takes them. The C# names match
+    // QMetaProperty's is*() accessors; Readable and Writable mirror READ/WRITE, and the rest are
+    // the Q_PROPERTY keywords of the same names.
+    internal static class MetaPropertyFlags
     {
-        internal string Name;
-        internal string Signature;
+        public const int Readable = 1 << 0;
+        public const int Writable = 1 << 1;
+        public const int Resettable = 1 << 2;
+        public const int Designable = 1 << 3;
+        public const int Scriptable = 1 << 4;
+        public const int Stored = 1 << 5;
+        public const int User = 1 << 6;
+        public const int Constant = 1 << 7;
+        public const int Final = 1 << 8;
+        public const int Required = 1 << 9;
+
+        public const int Defaults = Readable | Writable | Designable | Scriptable | Stored;
     }
 
-    public sealed class QMetaSignal : QMetaSignalBase
-    {
-        public QMetaSignal(string name)
-        {
-            Name = name;
-            Signature = name + "()";
-        }
-
-        public void Connect(QObject sender, Action handler)
-            => ApiRuntime.Connect(sender.Handle, Signature, (argv, _) => handler(), handler);
-
-        /// <summary>Drops the connection a previous Connect made for this handler.</summary>
-        public bool Disconnect(QObject sender, Action handler)
-            => ApiRuntime.Disconnect(sender.Handle, Signature, handler);
-
-        public void Emit(QObject sender) => ApiRuntime.EmitUser(sender.Handle, Signature, Type.EmptyTypes, Array.Empty<object>());
-    }
-
-    public sealed class QMetaSignal<T1> : QMetaSignalBase
-    {
-        public QMetaSignal(string name)
-        {
-            Name = name;
-            Signature = name + "(" + MetaType.QtName(typeof(T1)) + ")";
-        }
-
-        public void Connect(QObject sender, Action<T1> handler)
-            => ApiRuntime.Connect(sender.Handle, Signature, (argv, _) => handler(MetaType.Read<T1>(argv, 0)), handler);
-
-        /// <summary>Drops the connection a previous Connect made for this handler.</summary>
-        public bool Disconnect(QObject sender, Action<T1> handler)
-            => ApiRuntime.Disconnect(sender.Handle, Signature, handler);
-
-        public void Emit(QObject sender, T1 a1) => ApiRuntime.EmitUser(sender.Handle, Signature, new[] { typeof(T1) }, new object[] { a1 });
-    }
-
-    public sealed class QMetaSignal<T1, T2> : QMetaSignalBase
-    {
-        public QMetaSignal(string name)
-        {
-            Name = name;
-            Signature = name + "(" + MetaType.QtName(typeof(T1)) + "," + MetaType.QtName(typeof(T2)) + ")";
-        }
-
-        public void Connect(QObject sender, Action<T1, T2> handler)
-            => ApiRuntime.Connect(sender.Handle, Signature,
-                (argv, _) => handler(MetaType.Read<T1>(argv, 0), MetaType.Read<T2>(argv, 1)), handler);
-
-        /// <summary>Drops the connection a previous Connect made for this handler.</summary>
-        public bool Disconnect(QObject sender, Action<T1, T2> handler)
-            => ApiRuntime.Disconnect(sender.Handle, Signature, handler);
-
-        public void Emit(QObject sender, T1 a1, T2 a2)
-            => ApiRuntime.EmitUser(sender.Handle, Signature, new[] { typeof(T1), typeof(T2) }, new object[] { a1, a2 });
-    }
-
-    public sealed class QMetaSignal<T1, T2, T3> : QMetaSignalBase
-    {
-        public QMetaSignal(string name)
-        {
-            Name = name;
-            Signature = name + "(" + MetaType.QtName(typeof(T1)) + "," + MetaType.QtName(typeof(T2))
-                      + "," + MetaType.QtName(typeof(T3)) + ")";
-        }
-
-        public void Connect(QObject sender, Action<T1, T2, T3> handler)
-            => ApiRuntime.Connect(sender.Handle, Signature,
-                (argv, _) => handler(MetaType.Read<T1>(argv, 0), MetaType.Read<T2>(argv, 1), MetaType.Read<T3>(argv, 2)),
-                handler);
-
-        /// <summary>Drops the connection a previous Connect made for this handler.</summary>
-        public bool Disconnect(QObject sender, Action<T1, T2, T3> handler)
-            => ApiRuntime.Disconnect(sender.Handle, Signature, handler);
-
-
-        public void Emit(QObject sender, T1 a1, T2 a2, T3 a3)
-            => ApiRuntime.EmitUser(sender.Handle, Signature, new[] { typeof(T1), typeof(T2), typeof(T3) }, new object[] { a1, a2, a3 });
-    }
-
-    public sealed class QMetaSignal<T1, T2, T3, T4> : QMetaSignalBase
-    {
-        public QMetaSignal(string name)
-        {
-            Name = name;
-            Signature = name + "(" + MetaType.QtName(typeof(T1)) + "," + MetaType.QtName(typeof(T2))
-                      + "," + MetaType.QtName(typeof(T3)) + "," + MetaType.QtName(typeof(T4)) + ")";
-        }
-
-        public void Connect(QObject sender, Action<T1, T2, T3, T4> handler)
-            => ApiRuntime.Connect(sender.Handle, Signature, (argv, _) => handler(
-                MetaType.Read<T1>(argv, 0), MetaType.Read<T2>(argv, 1),
-                MetaType.Read<T3>(argv, 2), MetaType.Read<T4>(argv, 3)), handler);
-
-        /// <summary>Drops the connection a previous Connect made for this handler.</summary>
-        public bool Disconnect(QObject sender, Action<T1, T2, T3, T4> handler)
-            => ApiRuntime.Disconnect(sender.Handle, Signature, handler);
-
-
-        public void Emit(QObject sender, T1 a1, T2 a2, T3 a3, T4 a4)
-            => ApiRuntime.EmitUser(sender.Handle, Signature, new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4) }, new object[] { a1, a2, a3, a4 });
-    }
-
-    // A user-declared property: the getter/setter are ordinary C# delegates, and the runtime calls
-    // them when Qt asks for the value (QObject::property, a QML binding, a data widget mapper...).
-    public abstract class QMetaPropertyBase
+    // A declared property: the C# PropertyInfo in AttributedProperty is the accessor pair, and the
+    // runtime calls it when Qt asks for the value (QObject::property, a QML binding, a data widget
+    // mapper...).
+    internal abstract class QMetaPropertyBase
     {
         internal string Name;
         internal string TypeName;
+
+        // The rest of the Q_PROPERTY surface, handed to the native builder. NotifyIndex is
+        // resolved from the declaration while the spec is built.
+        internal virtual int Flags => MetaPropertyFlags.Defaults;
+        internal virtual int Revision => 0;
+        internal int NotifyIndex = -1;
+
         internal abstract void Get(object target, IntPtr value);
         internal abstract void Set(object target, IntPtr value);
+        internal virtual void Reset(object target) { }
     }
 
-    public sealed class QMetaProperty<T> : QMetaPropertyBase
+    // Declaring a member: put the attribute on the C# member whose accessors (or handler list) are
+    // already the property (or signal). The member *is* the declaration, so there is no second
+    // place to keep in sync:
+    //
+    //     [QtProperty] public double MinValue { get => GetMinValue(); set => SetMinValue(value); }
+    //     [QtSignal]   public event Action<double> ValueChanged;
+    //
+    // AttachMetaObject discovers them while it builds the meta-object. The Qt name is the member's
+    // name with a lower-case first letter ("minValue", "valueChanged"); the constructor argument
+    // overrides it when a name differs.
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    public sealed class QtPropertyAttribute : Attribute
     {
-        readonly Func<object, T> read;
-        readonly Action<object, T> write;
+        public QtPropertyAttribute() { }
+        public QtPropertyAttribute(string name) => Name = name;
 
-        public QMetaProperty(string name, Func<object, T> read, Action<object, T> write = null)
+        /// <summary>The Qt property name; null derives it from the C# member name.</summary>
+        public string Name { get; }
+
+        /// <summary>
+        /// The signal that tells Qt the property changed (Q_PROPERTY's NOTIFY). Name a declared
+        /// signal by its C# member name or its Qt name; when omitted, a signal named
+        /// "&lt;Property&gt;Changed" is linked if the class declares one. The property's setter
+        /// still emits the signal - NOTIFY only tells bindings and QML which signal to watch.
+        /// </summary>
+        public string Notify { get; set; }
+
+        /// <summary>
+        /// The parameterless method QMetaProperty::reset() calls (Q_PROPERTY's RESET). When
+        /// omitted, a method named "Reset&lt;Property&gt;" is used if one exists. It is not run
+        /// automatically; the method puts the property back to its default.
+        /// </summary>
+        public string Reset { get; set; }
+
+        /// <summary>Q_PROPERTY's DESIGNABLE (default true).</summary>
+        public bool Designable { get; set; } = true;
+
+        /// <summary>Q_PROPERTY's SCRIPTABLE (default true).</summary>
+        public bool Scriptable { get; set; } = true;
+
+        /// <summary>Q_PROPERTY's STORED (default true).</summary>
+        public bool Stored { get; set; } = true;
+
+        /// <summary>Q_PROPERTY's USER.</summary>
+        public bool User { get; set; }
+
+        /// <summary>Q_PROPERTY's CONSTANT.</summary>
+        public bool Constant { get; set; }
+
+        /// <summary>Q_PROPERTY's FINAL.</summary>
+        public bool Final { get; set; }
+
+        /// <summary>Q_PROPERTY's REQUIRED.</summary>
+        public bool Required { get; set; }
+
+        /// <summary>Q_PROPERTY's REVISION; 0 means the property carries no revision.</summary>
+        public int Revision { get; set; }
+    }
+
+    [AttributeUsage(AttributeTargets.Event, AllowMultiple = false, Inherited = true)]
+    public sealed class QtSignalAttribute : Attribute
+    {
+        public QtSignalAttribute() { }
+        public QtSignalAttribute(string name) => Name = name;
+
+        /// <summary>The Qt signal name; null derives it from the C# member name.</summary>
+        public string Name { get; }
+    }
+
+    // An [QtProperty] C# property: the PropertyInfo is the accessor pair, so an auto-property and
+    // a hand-written one (get => GetMinValue(), set => SetMinValue(value)) work the same.
+    sealed class AttributedProperty : QMetaPropertyBase
+    {
+        readonly PropertyInfo property;
+        readonly QtPropertyAttribute declaration;
+
+        public AttributedProperty(PropertyInfo property, string name, QtPropertyAttribute declaration)
         {
+            this.property = property;
+            this.declaration = declaration;
             Name = name;
-            TypeName = MetaType.QtName(typeof(T));
-            this.read = read;
-            this.write = write;
+            TypeName = MetaType.QtName(property.PropertyType);
         }
 
-        internal override void Get(object target, IntPtr value) => MetaType.Write(TypeName, value, read(target));
+        public PropertyInfo Info => property;
+        public string NotifyName => declaration.Notify;
+        public string ResetName => declaration.Reset;
+        public MethodInfo ResetMethod;
+
+        internal override int Flags
+        {
+            get
+            {
+                var flags = MetaPropertyFlags.Readable
+                            | (property.CanWrite ? MetaPropertyFlags.Writable : 0)
+                            | (ResetMethod != null ? MetaPropertyFlags.Resettable : 0)
+                            | (declaration.Designable ? MetaPropertyFlags.Designable : 0)
+                            | (declaration.Scriptable ? MetaPropertyFlags.Scriptable : 0)
+                            | (declaration.Stored ? MetaPropertyFlags.Stored : 0)
+                            | (declaration.User ? MetaPropertyFlags.User : 0)
+                            | (declaration.Constant ? MetaPropertyFlags.Constant : 0)
+                            | (declaration.Final ? MetaPropertyFlags.Final : 0)
+                            | (declaration.Required ? MetaPropertyFlags.Required : 0);
+                return flags;
+            }
+        }
+
+        internal override int Revision => declaration.Revision;
+
+        internal override void Get(object target, IntPtr value)
+            => MetaType.Write(TypeName, value, property.GetValue(target));
 
         internal override void Set(object target, IntPtr value)
+            => property.SetValue(target, MetaType.ReadValue(property.PropertyType, value));
+
+        internal override void Reset(object target) => ResetMethod?.Invoke(target, null);
+    }
+
+    // An [QtSignal] C# event. A field-like event keeps its subscribers in a compiler-generated
+    // delegate field that has the event's name; the native connection installed at attach time
+    // reads that field, so a C# emit, a C++ emit and a QML emit all reach the same handlers.
+    sealed class AttributedSignal
+    {
+        public EventInfo Info;
+        public string Name;          // the Qt signal name (the event name or the attribute's)
+        public string Signature;
+        public Type[] Parameters;
+        FieldInfo subscribers;
+
+        public static AttributedSignal Create(EventInfo info, string name)
         {
-            if (write != null)
-                write(target, MetaType.Read<T>(value));
+            var invoke = info.EventHandlerType?.GetMethod("Invoke");
+            if (invoke == null)
+                throw new InvalidOperationException(
+                    $"[QtSignal] event '{info.DeclaringType}.{info.Name}' is not a delegate type");
+
+            var declared = invoke.GetParameters();
+            var parameters = new Type[declared.Length];
+            for (int i = 0; i < declared.Length; i++)
+            {
+                if (declared[i].ParameterType.IsByRef || declared[i].IsOut)
+                    throw new InvalidOperationException(
+                        $"[QtSignal] event '{info.DeclaringType}.{info.Name}' has a ref/out parameter, "
+                        + "which a Qt signal cannot carry");
+                parameters[i] = declared[i].ParameterType;
+            }
+
+            // A field-like event's backing field is private and has the event's name; a
+            // hand-written add/remove leaves no handler list to read, so it cannot be a Qt signal.
+            var field = info.DeclaringType.GetField(info.Name,
+                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            if (field == null || !typeof(Delegate).IsAssignableFrom(field.FieldType))
+                throw new InvalidOperationException(
+                    $"[QtSignal] event '{info.DeclaringType}.{info.Name}' must be a field-like event "
+                    + "(hand-written add/remove leaves the runtime no subscriber list to call)");
+
+            var signature = new System.Text.StringBuilder(name);
+            signature.Append('(');
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                if (i > 0)
+                    signature.Append(',');
+                signature.Append(MetaType.QtName(parameters[i]));
+            }
+            signature.Append(')');
+
+            return new AttributedSignal
+            {
+                Info = info,
+                Name = name,
+                Signature = signature.ToString(),
+                Parameters = parameters,
+                subscribers = field,
+            };
+        }
+
+        public void Invoke(object target, IntPtr argv)
+        {
+            if (subscribers.GetValue(target) is not Delegate handlers)
+                return;
+            var args = new object[Parameters.Length];
+            for (int i = 0; i < args.Length; i++)
+                args[i] = MetaType.ReadArgument(Parameters[i], argv, i);
+            handlers.DynamicInvoke(args);
         }
     }
+
+    /// <summary>
+    /// Emits a signal declared by <see cref="QtSignalAttribute"/> on an event. Pass the event
+    /// itself: the compiler supplies its name to the runtime, which takes the signature and the
+    /// argument types from the declaration.
+    ///
+    ///     this.EmitSignal(ValueChanged, value);
+    ///
+    /// Calling the event directly (`ValueChanged?.Invoke(value)`) is legal inside the declaring
+    /// class, but it only runs the C# handlers: it never reaches QMetaObject::activate, so QML and
+    /// native connections would not see the emission. This method is the emit that crosses into Qt.
+    /// </summary>
+    public static class QtSignals
+    {
+        public static void EmitSignal(this QObject sender, string eventName)
+            => ApiRuntime.EmitDeclared(sender, eventName, Array.Empty<object>());
+
+        public static void EmitSignal<T1>(this QObject sender, string eventName, T1 a1)
+            => ApiRuntime.EmitDeclared(sender, eventName, new object[] { a1 });
+
+        public static void EmitSignal<T1, T2>(this QObject sender, string eventName, T1 a1, T2 a2)
+            => ApiRuntime.EmitDeclared(sender, eventName, new object[] { a1, a2 });
+
+        public static void EmitSignal<T1, T2, T3>(this QObject sender, string eventName, T1 a1, T2 a2, T3 a3)
+            => ApiRuntime.EmitDeclared(sender, eventName, new object[] { a1, a2, a3 });
+
+        public static void EmitSignal<T1, T2, T3, T4>(this QObject sender, string eventName, T1 a1, T2 a2, T3 a3, T4 a4)
+            => ApiRuntime.EmitDeclared(sender, eventName, new object[] { a1, a2, a3, a4 });
+
+        // The delegate overloads exist for the call site, not for the value: a field-like event
+        // can be read inside its own class, and CallerArgumentExpression hands the runtime the
+        // event's name without a nameof. The handler list itself is ignored (the emit goes through
+        // Qt, which then feeds the list back).
+        public static void EmitSignal(this QObject sender, Delegate signal,
+            [CallerArgumentExpression(nameof(signal))] string expression = null)
+            => ApiRuntime.EmitDeclared(sender, EventName(expression), Array.Empty<object>());
+
+        public static void EmitSignal<T1>(this QObject sender, Delegate signal, T1 a1,
+            [CallerArgumentExpression(nameof(signal))] string expression = null)
+            => ApiRuntime.EmitDeclared(sender, EventName(expression), new object[] { a1 });
+
+        public static void EmitSignal<T1, T2>(this QObject sender, Delegate signal, T1 a1, T2 a2,
+            [CallerArgumentExpression(nameof(signal))] string expression = null)
+            => ApiRuntime.EmitDeclared(sender, EventName(expression), new object[] { a1, a2 });
+
+        public static void EmitSignal<T1, T2, T3>(this QObject sender, Delegate signal, T1 a1, T2 a2, T3 a3,
+            [CallerArgumentExpression(nameof(signal))] string expression = null)
+            => ApiRuntime.EmitDeclared(sender, EventName(expression), new object[] { a1, a2, a3 });
+
+        public static void EmitSignal<T1, T2, T3, T4>(this QObject sender, Delegate signal, T1 a1, T2 a2, T3 a3, T4 a4,
+            [CallerArgumentExpression(nameof(signal))] string expression = null)
+            => ApiRuntime.EmitDeclared(sender, EventName(expression), new object[] { a1, a2, a3, a4 });
+
+        // The expression is whatever the call site wrote - "ValueChanged" or "this.ValueChanged";
+        // the event itself is the last name in it.
+        internal static string EventName(string expression)
+        {
+            if (string.IsNullOrWhiteSpace(expression))
+                throw new ArgumentException(
+                    "pass the declared event itself, e.g. EmitSignal(ValueChanged, value)");
+            int dot = expression.LastIndexOf('.');
+            return (dot < 0 ? expression : expression.Substring(dot + 1)).Trim();
+        }
+    }
+
+    // The same emit as a protected instance method, so the declaring class writes
+    // EmitSignal(ValueChanged, value) - the C# event itself, no nameof and no `this.`.
+    // (The generated part of QObject defines ==/!= without overriding Equals/GetHashCode; the
+    // generated file disables the same two warnings.)
+#pragma warning disable 660, 661
+    public partial class QObject
+    {
+        protected void EmitSignal(Delegate signal,
+            [CallerArgumentExpression(nameof(signal))] string expression = null)
+            => ApiRuntime.EmitDeclared(this, QtSignals.EventName(expression), Array.Empty<object>());
+
+        protected void EmitSignal<T1>(Delegate signal, T1 a1,
+            [CallerArgumentExpression(nameof(signal))] string expression = null)
+            => ApiRuntime.EmitDeclared(this, QtSignals.EventName(expression), new object[] { a1 });
+
+        protected void EmitSignal<T1, T2>(Delegate signal, T1 a1, T2 a2,
+            [CallerArgumentExpression(nameof(signal))] string expression = null)
+            => ApiRuntime.EmitDeclared(this, QtSignals.EventName(expression), new object[] { a1, a2 });
+
+        protected void EmitSignal<T1, T2, T3>(Delegate signal, T1 a1, T2 a2, T3 a3,
+            [CallerArgumentExpression(nameof(signal))] string expression = null)
+            => ApiRuntime.EmitDeclared(this, QtSignals.EventName(expression), new object[] { a1, a2, a3 });
+
+        protected void EmitSignal<T1, T2, T3, T4>(Delegate signal, T1 a1, T2 a2, T3 a3, T4 a4,
+            [CallerArgumentExpression(nameof(signal))] string expression = null)
+            => ApiRuntime.EmitDeclared(this, QtSignals.EventName(expression), new object[] { a1, a2, a3, a4 });
+    }
+#pragma warning restore 660, 661
 
     // The C# type -> Qt type name map the declared members use, plus the conversions between a
     // managed value and the native storage moc's qt_metacall would have used.
@@ -365,8 +546,12 @@ namespace QtSharp.Api
         public static T Read<T>(IntPtr argv, int index)
             => (T)FromStorage(typeof(T), Marshal.ReadIntPtr(argv, index * IntPtr.Size));
 
-        /// <summary>Reads a value out of a property value slot.</summary>
-        internal static T Read<T>(IntPtr value) => (T)FromStorage(typeof(T), value);
+        /// <summary>The non-generic property read an attributed property uses (the type is its PropertyInfo's).</summary>
+        internal static object ReadValue(Type t, IntPtr value) => FromStorage(t, value);
+
+        /// <summary>The non-generic signal-argument read an attributed event uses.</summary>
+        internal static object ReadArgument(Type t, IntPtr argv, int index)
+            => FromStorage(t, Marshal.ReadIntPtr(argv, index * IntPtr.Size));
 
         static readonly Dictionary<Type, System.Reflection.MethodInfo> fromHandle = new();
 
@@ -806,13 +991,13 @@ namespace QtSharp.Api
         sealed class MetaObjectSpec
         {
             public string Name;
-            public List<QMetaSignalBase> Signals = new();
+            public List<AttributedSignal> Events = new();
             public List<QMetaPropertyBase> Properties = new();
         }
 
         /// <summary>
-        /// Gives an object the signals and properties its C# class declared (see QMetaSignal /
-        /// QMetaProperty). Called by every generated constructor; it costs a cached type lookup for
+        /// Gives an object the signals and properties its C# class declared with [QtSignal] /
+        /// [QtProperty]. Called by every generated constructor; it costs a cached type lookup for
         /// the overwhelming majority of types, which declare nothing.
         /// </summary>
         public static void AttachMetaObject(object target)
@@ -844,41 +1029,230 @@ namespace QtSharp.Api
                 metaPropertyCallbackInstalled = true;
             }
 
-            var signatures = new string[spec.Signals.Count];
+            var signatures = new string[spec.Events.Count];
             for (int i = 0; i < signatures.Length; i++)
-                signatures[i] = spec.Signals[i].Signature;
+                signatures[i] = spec.Events[i].Signature;
             var names = new string[spec.Properties.Count];
             var types = new string[spec.Properties.Count];
+            var flags = new int[spec.Properties.Count];
+            var notify = new int[spec.Properties.Count];
+            var revisions = new int[spec.Properties.Count];
             for (int i = 0; i < names.Length; i++)
             {
                 names[i] = spec.Properties[i].Name;
                 types[i] = spec.Properties[i].TypeName;
+                flags[i] = spec.Properties[i].Flags;
+                notify[i] = spec.Properties[i].NotifyIndex;
+                revisions[i] = spec.Properties[i].Revision;
             }
-            if (AttachNative(handle.Handle, spec.Name, signatures, signatures.Length, names, types, types.Length) != 0)
+            if (AttachNative(handle.Handle, spec.Name, signatures, signatures.Length,
+                    names, types, types.Length, flags, notify, revisions) != 0)
             {
+                bool firstAttach;
                 lock (metaByHandle)
+                {
+                    firstAttach = !metaByHandle.ContainsKey(handle.Handle);
                     metaByHandle[handle.Handle] = spec;
+                }
+                // An attributed event needs a native connection to feed its C# handlers; the
+                // generated base constructors each call AttachMetaObject, so only the first one
+                // installs it (the others would double every handler).
+                if (firstAttach)
+                    foreach (var declaredEvent in spec.Events)
+                        ConnectDeclaredSignal(handle.Handle, declaredEvent);
             }
         }
 
         static MetaObjectSpec BuildSpec(Type type)
         {
             var spec = new MetaObjectSpec { Name = type.Name };
-            foreach (var field in type.GetFields(
-                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static
-                | System.Reflection.BindingFlags.FlattenHierarchy))
-            {
-                var value = field.GetValue(null);
-                if (value is QMetaSignalBase signal)
-                    spec.Signals.Add(signal);
-                else if (value is QMetaPropertyBase property)
-                    spec.Properties.Add(property);
-            }
-            return spec.Signals.Count == 0 && spec.Properties.Count == 0 ? null : spec;
+            AddAttributedMembers(spec, type);
+            ResolveAttributedProperties(spec);
+            return spec.Events.Count == 0 && spec.Properties.Count == 0 ? null : spec;
         }
 
+        // [QtProperty]/[QtSignal] members live on the C# class itself (or a user base of it) and
+        // never on a generated binding class, so the walk stops at the first generated type: the
+        // binding's hundreds of inherited properties are not inspected for nothing.
+        static void AddAttributedMembers(MetaObjectSpec spec, Type type)
+        {
+            const BindingFlags declared = BindingFlags.Public | BindingFlags.NonPublic
+                                          | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+            for (var current = type;
+                 current != null && current != typeof(object) && current.Namespace != typeof(QObject).Namespace;
+                 current = current.BaseType)
+            {
+                foreach (var property in current.GetProperties(declared))
+                {
+                    var attribute = property.GetCustomAttribute<QtPropertyAttribute>(false);
+                    if (attribute == null)
+                        continue;
+                    if (property.GetIndexParameters().Length > 0)
+                        throw new InvalidOperationException(
+                            $"[QtProperty] member '{current.Name}.{property.Name}' is an indexer");
+                    if (property.GetMethod == null || !property.GetMethod.IsPublic)
+                        throw new InvalidOperationException(
+                            $"[QtProperty] member '{current.Name}.{property.Name}' must be a public property with a getter");
+                    spec.Properties.Add(new AttributedProperty(
+                        property, DeclaredName(property.Name, attribute.Name), attribute));
+                }
+
+                foreach (var declaredEvent in current.GetEvents(declared))
+                {
+                    var attribute = declaredEvent.GetCustomAttribute<QtSignalAttribute>(false);
+                    if (attribute == null)
+                        continue;
+                    if (declaredEvent.AddMethod == null || !declaredEvent.AddMethod.IsPublic)
+                        throw new InvalidOperationException(
+                            $"[QtSignal] member '{current.Name}.{declaredEvent.Name}' must be a public event");
+                    spec.Events.Add(AttributedSignal.Create(
+                        declaredEvent, DeclaredName(declaredEvent.Name, attribute.Name)));
+                }
+            }
+        }
+
+        static string DeclaredName(string member, string declared)
+            => string.IsNullOrEmpty(declared)
+                ? char.ToLowerInvariant(member[0]) + member.Substring(1)
+                : declared;
+
+        // Resolves NOTIFY and RESET for an attributed property. Both are optional: an explicit
+        // name must resolve (a typo is an error), otherwise the conventional member is used when
+        // it exists - `ValueChanged` for Value's NOTIFY, `ResetValue` for its RESET.
+        static void ResolveAttributedProperties(MetaObjectSpec spec)
+        {
+            foreach (var property in spec.Properties)
+            {
+                if (property is not AttributedProperty attributed)
+                    continue;
+
+                if (!string.IsNullOrEmpty(attributed.NotifyName))
+                {
+                    attributed.NotifyIndex = NotifySignalIndex(spec, attributed.NotifyName);
+                    if (attributed.NotifyIndex < 0)
+                        throw new InvalidOperationException(
+                            $"[QtProperty] '{attributed.Info.DeclaringType.Name}.{attributed.Info.Name}' names "
+                            + $"a notify signal '{attributed.NotifyName}' that the class does not declare "
+                            + "(use the C# event/field name or the Qt name)");
+                }
+                else
+                {
+                    // The Qt convention: the property `value` is notified by `valueChanged`.
+                    string changed = attributed.Info.Name + "Changed";
+                    attributed.NotifyIndex = NotifySignalIndex(spec, changed);
+                    if (attributed.NotifyIndex < 0)
+                        attributed.NotifyIndex = NotifySignalIndex(spec, DeclaredName(changed, null));
+                }
+
+                if (!string.IsNullOrEmpty(attributed.ResetName))
+                {
+                    attributed.ResetMethod = ResetMethod(attributed, attributed.ResetName, generated: false);
+                    if (attributed.ResetMethod == null)
+                        throw new InvalidOperationException(
+                            $"[QtProperty] '{attributed.Info.DeclaringType.Name}.{attributed.Info.Name}' names "
+                            + $"a RESET method '{attributed.ResetName}' that is not a parameterless instance "
+                            + "method returning void");
+                }
+                else
+                {
+                    // The Qt convention: the property `value` is reset by `resetValue`; in C# that
+                    // method is called ResetValue.
+                    attributed.ResetMethod = ResetMethod(attributed, "Reset" + attributed.Info.Name, generated: true);
+                }
+            }
+        }
+
+        static int NotifySignalIndex(MetaObjectSpec spec, string name)
+        {
+            for (int i = 0; i < spec.Events.Count; i++)
+            {
+                var declared = spec.Events[i];
+                if (name == declared.Info.Name || name == declared.Name || name == declared.Signature)
+                    return i;
+            }
+            return -1;
+        }
+
+        static MethodInfo ResetMethod(AttributedProperty property, string name, bool generated)
+        {
+            var method = property.Info.DeclaringType.GetMethod(name,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                null, Type.EmptyTypes, null);
+            if (method == null || method.ReturnType != typeof(void))
+                return null;
+            // Only an explicit name may reach a generated Qt method; the convention never does
+            // (resetFoo exists on some QObjects and is not ours).
+            return generated && method.DeclaringType.Namespace == typeof(QObject).Namespace ? null : method;
+        }
+
+        // Feeds an attributed event from its Qt signal. The connection's userData is the sender
+        // handle, not the wrapper, so a native connection never roots the managed object; the
+        // wrapper is looked up when the signal fires, just as the property callback does.
+        static void ConnectDeclaredSignal(IntPtr sender, AttributedSignal declared)
+        {
+            SignalCallback callback = (userData, argc, argv, typeIds) =>
+            {
+                var target = LookupWrapper(userData);
+                if (target == null)
+                    return;
+                try
+                {
+                    declared.Invoke(target, argv);
+                }
+                catch (TargetInvocationException exception) when (exception.InnerException != null)
+                {
+                    ReportCallbackException("a declared signal handler", exception.InnerException);
+                }
+                catch (Exception exception)
+                {
+                    ReportCallbackException("a declared signal handler", exception);
+                }
+            };
+            var connection = ConnectNative(sender, declared.Signature, callback, sender, 0);
+            if (connection == IntPtr.Zero)
+                return;
+            lock (connections)
+                connections.Add(new SignalConnection
+                {
+                    Sender = sender, Signature = declared.Signature,
+                    Callback = callback, Native = connection,
+                });
+        }
+
+        /// <summary>
+        /// Activates the signal an [QtSignal] event declared, by the C# event's name. The native
+        /// signature and argument types come from the declaration, so only the values are passed.
+        /// </summary>
+        internal static void EmitDeclared(QObject sender, string eventName, object[] args)
+        {
+            var declared = DeclaredSignal(sender, eventName);
+            if (args.Length != declared.Parameters.Length)
+                throw new ArgumentException(
+                    $"'{sender.GetType().Name}.{eventName}' carries {declared.Parameters.Length} argument(s), "
+                    + $"but {args.Length} were emitted", nameof(args));
+            EmitUser(sender.Handle, declared.Signature, declared.Parameters, args);
+        }
+
+        static AttributedSignal DeclaredSignal(QObject sender, string eventName)
+        {
+            MetaObjectSpec spec;
+            lock (metaSpecs)
+                metaSpecs.TryGetValue(sender.GetType(), out spec);
+            if (spec != null)
+                foreach (var declared in spec.Events)
+                    if (declared.Info.Name == eventName)
+                        return declared;
+            throw new InvalidOperationException(
+                $"{sender.GetType().FullName} declares no [QtSignal] event named '{eventName}'");
+        }
+
+        // The call codes the native metaCall forwards; the native side spells the same numbers.
+        const int PropertyRead = 0;
+        const int PropertyWrite = 1;
+        const int PropertyReset = 2;
+
         [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-        static void OnMetaProperty(IntPtr handle, int index, int write, IntPtr value)
+        static void OnMetaProperty(IntPtr handle, int index, int call, IntPtr value)
         {
             MetaObjectSpec spec;
             lock (metaByHandle)
@@ -891,10 +1265,15 @@ namespace QtSharp.Api
             var target = LookupWrapper(handle);
             if (target == null)
                 return;
-            if (write != 0)
+            if (call == PropertyWrite)
             {
                 try { spec.Properties[index].Set(target, value); }
                 catch (Exception exception) { ReportCallbackException("a declared property setter", exception); }
+            }
+            else if (call == PropertyReset)
+            {
+                try { spec.Properties[index].Reset(target); }
+                catch (Exception exception) { ReportCallbackException("a declared property reset", exception); }
             }
             else
             {
@@ -973,7 +1352,10 @@ namespace QtSharp.Api
             [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] signals, int signalCount,
             [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] propertyNames,
             [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] propertyTypes,
-            int propertyCount);
+            int propertyCount,
+            [MarshalAs(UnmanagedType.LPArray)] int[] propertyFlags,
+            [MarshalAs(UnmanagedType.LPArray)] int[] propertyNotify,
+            [MarshalAs(UnmanagedType.LPArray)] int[] propertyRevisions);
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_set_meta_property_callback", CallingConvention = CallingConvention.Cdecl)]
         private static extern void SetMetaPropertyCallback(IntPtr callback);
@@ -1016,6 +1398,14 @@ namespace QtSharp.Api
         public static string ToManagedTransient(IntPtr qstring)
             => qstring == IntPtr.Zero ? null
                : Marshal.PtrToStringUni(StringUtf16(qstring), (int)StringSize(qstring));
+
+        /// <summary>
+        /// Reads a blittable value type (QPoint, QRect, ...) out of moc's argument storage. The
+        /// generated wrappers call this instead of dereferencing a pointer themselves, which is
+        /// what lets the generated classes be ordinary (non-unsafe) declarations; extension
+        /// modules call it from their own assembly, hence public.
+        /// </summary>
+        public static unsafe T ReadStruct<T>(IntPtr storage) where T : unmanaged => *(T*)storage;
 
         /// <summary>
         /// An exception a user handler threw, caught where native code called into managed code.

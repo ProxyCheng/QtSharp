@@ -4,7 +4,8 @@
     Everything a program needs to use the generated Qt binding without living inside this
     repository's test app:
 
-      * the binding itself  - out/api/QtSharp.Api.cs (produced by tools/regen-api.ps1)
+      * the binding itself  - out/api/generated/**/*.cs, one file per Qt header
+        (produced by tools/regen-api.ps1)
       * the hand-written managed runtime - runtime/ApiRuntime.cs, ApiApplication.cs,
         BclInterop.cs
       * the native side     - out/api/QtSharp.Api.dll, plus the Qt DLLs and the platform plugin
@@ -46,7 +47,7 @@
     <Compile Include="$(QtSharpRoot)runtime\BclInterop.cs" />
     <!-- The Qt types the binding gives as structs rather than wrappers: QPointF and QPoint cross the
          boundary as their coordinates, so no wrapper is created per point. -->
-    <Compile Include="$(QtSharpApiDir)\QtSharp.Api.cs" />
+    <Compile Include="$(QtSharpApiDir)\generated\**\*.cs" />
   </ItemGroup>
 
   <Target Name="CopyQtSharpNativeDeps" AfterTargets="Build">
@@ -71,8 +72,8 @@
   <!-- A stale binding is the one thing that fails confusingly (a missing method rather than a
        build error), so say so loudly when it has not been generated yet. -->
   <Target Name="QtSharpApiCheck" BeforeTargets="BeforeBuild">
-    <Error Condition="!Exists('$(QtSharpApiDir)\QtSharp.Api.cs')"
-           Text="QtSharp.Api.cs is missing - run: powershell -File $(QtSharpRoot)tools\regen-api.ps1" />
+    <Error Condition="!Exists('$(QtSharpApiDir)\generated')"
+           Text="The generated binding is missing - run: powershell -File $(QtSharpRoot)tools\regen-api.ps1" />
     <Error Condition="!Exists('$(QtSharpApiDir)\QtSharp.Api.dll')"
            Text="QtSharp.Api.dll is missing - run: powershell -File $(QtSharpRoot)tools\regen-api.ps1" />
   </Target>

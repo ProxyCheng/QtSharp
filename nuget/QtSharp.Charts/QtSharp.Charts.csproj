@@ -23,7 +23,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\out\charts\QtSharp.Charts.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\out\charts\generated\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -59,12 +59,11 @@ public sealed class HelloWindow : QWidget
         // The generated signal property takes the handler Qt's moc will call back into.
         greet.Clicked += _ => Greet();
 
-        // The signal declared in C# (HelloCounter.cs) is subscribed to exactly the same way: the
+        // The signals declared in C# (HelloCounter.cs) are subscribed to exactly the same way: the
         // handler runs when the counter emits, whether the emit came from C# or from Qt
-        // (setProperty). The event is the C#-idiomatic shape; the raw declaration
-        // (HelloCounter.ResetSignal.Connect) is the other spelling, and Emit only exists there.
+        // (setProperty). A declared event is its own handler list, so += and -= are all there is.
         _counter.ValueChanged += v => RefreshCount();
-        HelloCounter.ResetSignal.Connect(_counter, () => RefreshCount());
+        _counter.Reset += () => RefreshCount();
 
         var bump = new QPushButton("Count");
         bump.Clicked += _ => ClickCount();

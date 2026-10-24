@@ -28,7 +28,7 @@ namespace QtSharp.Api
 {
     // The three classes cannot share this body through a base: Handle's setter is protected on the
     // generated root, so only the class itself may assign it.
-    public unsafe partial class QCoreApplication
+    public partial class QCoreApplication
     {
         public QCoreApplication(string[] args, int flags = 0) : this(IntPtr.Zero)
             => BindApplication(args, flags, 0);
@@ -42,7 +42,7 @@ namespace QtSharp.Api
         }
     }
 
-    public unsafe partial class QGuiApplication
+    public partial class QGuiApplication
     {
         public QGuiApplication(string[] args, int flags = 0) : this(IntPtr.Zero)
             => BindApplication(args, flags, 1);
@@ -56,7 +56,7 @@ namespace QtSharp.Api
         }
     }
 
-    public unsafe partial class QApplication
+    public partial class QApplication
     {
         public QApplication(string[] args, int flags = 0) : this(IntPtr.Zero)
             => BindApplication(args, flags, 2);

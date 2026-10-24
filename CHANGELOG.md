@@ -6,6 +6,24 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 
 ## Unreleased
 
+- The generated C# binding is now split one file per Qt header
+  (`out/api/generated/<Module>/<header>.cs`), mirroring the C++ include layout instead of one
+  9 MB / 194k-line source file. The determinism gate hashes the generated tree. The native C++
+  glue stays a single translation unit.
+- Generated wrapper types now carry `[GeneratedCode("qtgen", …)]`, and their XML docs spell out
+  each Q_PROPERTY's Qt name/type/access and each signal's Qt signature. `[QtProperty]`/`[QtSignal]`
+  remain only for members a C# subclass declares, which is where they have runtime meaning. A
+  generated type is `partial` only when `runtime/*.cs` extends it (read from those sources, not a
+  second list), and `unsafe` is confined to the members that use pointers or function pointers.
+- The demo windows now run several at a time: `tools/run-window-tests.ps1` starts them in a pool
+  (default `min(6, cores)`, `-Jobs` to change), keeps each window's output attributable, and
+  retries the known teardown flake once. The gate, CI and the release job all use it.
+- Added `[QtProperty]` and `[QtSignal]` declarations: an attributed C# property or field-like event
+  becomes a Qt property or signal. They are the declaration mechanism (the old static
+  `QMetaProperty<>`/`QMetaSignal<>` fields are gone). `[QtProperty]` carries the rest of
+  `Q_PROPERTY`: `Notify` (inferred as `<Property>Changed` when omitted), `Reset` (inferred as
+  `Reset<Property>`), `Constant`, `Final`, `Required`, `Designable`, `Scriptable`, `Stored`,
+  `User` and `Revision`.
 - Added the `QtSharp.Api` binding package: reference it and write Qt applications in C# with no Qt
   SDK or C++ toolchain installed. It ships the managed binding, the native wrapper and the Qt
   runtime, and copies them to the build and publish output.

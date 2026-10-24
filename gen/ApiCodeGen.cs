@@ -19,7 +19,42 @@ using System.Text.Json;
 //   Foo (by value)    Foo, owned wrapper        IntPtr              Foo* (boxed, dereferenced)
 public static class ApiCodeGen
 {
+    // The identity the generated classes carry in [GeneratedCode]. The generator's own assembly
+    // version is stable for a build, so the output stays deterministic.
+    static readonly string GeneratedByVersion =
+        typeof(ApiCodeGen).Assembly.GetName().Version?.ToString() ?? "0.0.0";
+
+    // The generated types the hand-written runtime extends with a second part. Rather than keeping
+    // a second list in the generator, this is read from runtime/*.cs itself: a `partial class` or
+    // `partial struct` there is the definition of "this type needs to be partial". Everything else
+    // is emitted as one whole declaration.
+    static HashSet<string> handWrittenParts;
+
+    static HashSet<string> ReadHandWrittenParts()
+    {
+        var parts = new HashSet<string>(StringComparer.Ordinal);
+        string runtime = Path.Combine(QtLibrary.RepoRoot, "runtime");
+        if (!Directory.Exists(runtime))
+            return parts;
+        var declaration = new System.Text.RegularExpressions.Regex(
+            @"^\s*(?:(?:public|internal|protected|private|unsafe|static|sealed|abstract|readonly|new)\s+)*partial\s+(?:class|struct)\s+([A-Za-z_][A-Za-z0-9_]*)",
+            System.Text.RegularExpressions.RegexOptions.Multiline);
+        foreach (string file in Directory.EnumerateFiles(runtime, "*.cs"))
+            foreach (System.Text.RegularExpressions.Match match in declaration.Matches(File.ReadAllText(file)))
+                parts.Add(match.Groups[1].Value);
+        return parts;
+    }
+
     static List<JsonElement> Classes;
+
+    // One C# file per Qt header (the model's `header`), mirroring how the C++ headers are split.
+    // The writers below append to the file a declaration belongs to; GenerateCSharp closes the
+    // namespaces and hands the set to Run, which writes them under <out>/generated/.
+    static Dictionary<string, StringBuilder> csharpFiles;
+    static string csharpNamespace;
+    // The P/Invoke entry names for the free functions, computed once over the whole list so two
+    // headers cannot invent the same name for two different overloads.
+    static List<(JsonElement Function, string Entry)> freeFunctionEntries;
 
     /// <summary>
     /// The classes this run's own model declares, before the runtime structs are filtered out of
@@ -261,12 +296,30 @@ public static class ApiCodeGen
                       .Select(e => e.GetProperty("qualified").GetString()), StringComparer.Ordinal);
         PrepareNames();
         derivesFromQObject.Clear();
+        freeFunctionEntries = null;
+        handWrittenParts = ReadHandWrittenParts();
 
         string assemblyName = module?.Namespace ?? ApiModel.CoreNamespace;
         Directory.CreateDirectory(outDir);
-        File.WriteAllText(Path.Combine(outDir, assemblyName + ".cs"), GenerateCSharp(ns));
+        var files = GenerateCSharp(ns);
+
+        // Replace the generated tree, so a type that moved to a different header cannot leave a
+        // stale file behind; the old single-file output is removed as well.
+        string generatedDir = Path.Combine(outDir, "generated");
+        if (Directory.Exists(generatedDir))
+            Directory.Delete(generatedDir, true);
+        foreach (var file in files)
+        {
+            string path = Path.Combine(outDir, file.Key.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            File.WriteAllText(path, file.Value);
+        }
+        string staleSingleFile = Path.Combine(outDir, assemblyName + ".cs");
+        if (File.Exists(staleSingleFile))
+            File.Delete(staleSingleFile);
+
         File.WriteAllText(Path.Combine(outDir, assemblyName + ".native.cpp"), GenerateNative());
-        Console.WriteLine($"[codegen] wrote {outDir}/{assemblyName}.cs + {assemblyName}.native.cpp");
+        Console.WriteLine($"[codegen] wrote {outDir}/generated/ ({files.Count} files) + {assemblyName}.native.cpp");
     }
 
     // ------------------------------------------------------------------ model queries
@@ -545,13 +598,33 @@ public static class ApiCodeGen
     static string CsEnum(string t) => t.Replace("::", ".");
 
     // ------------------------------------------------------------------ C#
-    static string GenerateCSharp(string ns)
+    // The C# binding is split the way Qt's C++ headers are: every class, value-type struct and
+    // free function goes into the file named after the header the model records for it
+    // (QtWidgets/qwidget.h -> generated/QtWidgets/qwidget.cs). Namespace-level enums have no
+    // header in the model and live in <namespace>.Enums.cs; the generated list/assoc/bindable
+    // helpers and the shared P/Invokes have their own files too.
+    static string HeaderFileKey(string header)
     {
+        string path = (header ?? string.Empty).Replace('\\', '/');
+        if (path.EndsWith(".h", StringComparison.OrdinalIgnoreCase))
+            path = path.Substring(0, path.Length - 2);
+        if (path.Length == 0)
+            path = "misc";
+        return "generated/" + path + ".cs";
+    }
+
+    static string PlainFileKey(string name) => "generated/" + name + ".cs";
+
+    static StringBuilder CSharpFile(string key)
+    {
+        if (csharpFiles.TryGetValue(key, out var existing))
+            return existing;
         var sb = new StringBuilder();
         sb.AppendLine($"// <auto-generated> generated from {ModelFileName} - do not edit");
         sb.AppendLine("using System;");
-        if (ns != ApiModel.CoreNamespace)
+        if (csharpNamespace != ApiModel.CoreNamespace)
             sb.AppendLine($"using {ApiModel.CoreNamespace};   // the base classes this module's classes derive from");
+        sb.AppendLine("using System.CodeDom.Compiler;   // [GeneratedCode] on every wrapper type");
         sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using System.Runtime.CompilerServices;");
         sb.AppendLine("using System.Runtime.InteropServices;");
@@ -560,66 +633,118 @@ public static class ApiCodeGen
         // destroyed UnityEngine.Object does - so it is deliberately not an equality relation.
         // Equals/GetHashCode keep their reference semantics (a wrapper must not change its hash when
         // its object dies), and the compiler's "you defined == without Equals" warnings are off for
-        // this file. See IsAlive and operator == on each root class.
+        // every generated file. See IsAlive and operator == on each root class.
         sb.AppendLine("#pragma warning disable 660, 661");
         sb.AppendLine();
-        sb.AppendLine($"namespace {ns}");
+        sb.AppendLine($"namespace {csharpNamespace}");
         sb.AppendLine("{");
+        csharpFiles[key] = sb;
+        return sb;
+    }
 
-        WriteEnums(sb, "", 1);
-        WriteEnums(sb, "Qt", 1);
-        WriteFreeFunctions(sb);
+    static SortedDictionary<string, string> GenerateCSharp(string ns)
+    {
+        csharpNamespace = ns;
+        csharpFiles = new Dictionary<string, StringBuilder>(StringComparer.Ordinal);
 
-        if (BindableElements().Count > 0)
-            WriteBindableClass(sb);
+        // Namespace-level enums do not record a header in the model; one file holds them all.
+        var enums = CSharpFile(PlainFileKey(ns + ".Enums"));
+        WriteEnums(enums, "", 1);
+        WriteEnums(enums, "Qt", 1);
+
+        // Free functions are grouped by the header that declares them; the entry names were
+        // computed over the whole list, so two headers cannot collide.
+        foreach (var group in FreeFunctionEntries()
+                     .GroupBy(f => f.Function.GetProperty("header").GetString(), StringComparer.Ordinal))
+        {
+            var functions = group.ToList();
+            var file = CSharpFile(HeaderFileKey(group.Key));
+            WriteFreeFunctions(file, functions);
+            file.AppendLine("    internal static partial class ApiNative");
+            file.AppendLine("    {");
+            WriteFreeFunctionNativeDeclarations(file, functions);
+            file.AppendLine("    }");
+            file.AppendLine();
+        }
 
         foreach (var cls in Classes)
-            WriteClass(sb, cls);
+        {
+            var file = CSharpFile(HeaderFileKey(cls.GetProperty("header").GetString()));
+            WriteClass(file, cls);
+            file.AppendLine("    internal static partial class ApiNative");
+            file.AppendLine("    {");
+            WriteNativeDeclarations(file, cls);
+            file.AppendLine("    }");
+            file.AppendLine();
+        }
 
-        // The value types' members come from the same model, into the partial structs the hand-written
-        // core extends (see WriteStructMembers).
+        // The value types' members come from the same model, into the partial structs the
+        // hand-written core extends (see WriteStructMembers); they carry their P/Invokes too.
         foreach (var s in ApiTypes.RuntimeStructs)
-            WriteStructMembers(sb, s.Name);
+        {
+            // Only the run that declares the struct emits it: an extension module gets the core's
+            // value types from the core assembly, not as empty files of its own.
+            if (!ModelClassNames.Contains(s.Name) || !ByName.TryGetValue(s.Name, out var row))
+                continue;
+            WriteStructMembers(CSharpFile(HeaderFileKey(row.GetProperty("header").GetString())), s.Name);
+        }
 
-        sb.AppendLine("    internal static partial class ApiNative");
-        sb.AppendLine("    {");
-        sb.AppendLine("        // Where every P/Invoke below goes. The core binding calls the core glue; an extension");
-        sb.AppendLine("        // module calls its own DLL, which is how it stays a separate package.");
-        sb.AppendLine($"        internal const string Library = \"{NativeLibraryName}\";");
-        foreach (var cls in Classes)
-            WriteNativeDeclarations(sb, cls);
-        WriteFreeFunctionNativeDeclarations(sb);
-        foreach (var elem in ListElements())
-            WriteListNativeDeclarations(sb, elem);
-        foreach (var assoc in AssocElements())
-            WriteAssocNativeDeclarations(sb, assoc);
-        foreach (var elem in BindableElements())
-            WriteBindableNativeDeclarations(sb, elem);
+        // Shared P/Invokes: the library name and the boxed-value assign/clone helpers.
+        var shared = CSharpFile(PlainFileKey(ns + ".Shared"));
+        shared.AppendLine("    internal static partial class ApiNative");
+        shared.AppendLine("    {");
+        shared.AppendLine("        // Where every P/Invoke below goes. The core binding calls the core glue; an extension");
+        shared.AppendLine("        // module calls its own DLL, which is how it stays a separate package.");
+        shared.AppendLine($"        internal const string Library = \"{NativeLibraryName}\";");
         foreach (var boxed in VirtualBoxedReturns())
         {
             string stem = ListStem(boxed);
-            sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_assign_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
-            sb.AppendLine($"        internal static extern void Assign_{stem}(IntPtr destination, IntPtr source);");
+            shared.AppendLine();
+            shared.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_assign_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
+            shared.AppendLine($"        internal static extern void Assign_{stem}(IntPtr destination, IntPtr source);");
         }
         foreach (var boxed in VirtualBoxedParams())
         {
             string stem = ListStem(boxed);
-            sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_clone_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
-            sb.AppendLine($"        internal static extern IntPtr Clone_{stem}(IntPtr source);");
+            shared.AppendLine();
+            shared.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_clone_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
+            shared.AppendLine($"        internal static extern IntPtr Clone_{stem}(IntPtr source);");
         }
-        sb.AppendLine("    }");
+        shared.AppendLine("    }");
 
-        foreach (var elem in ListElements())
-            WriteListHelper(sb, elem);
-        foreach (var assoc in AssocElements())
-            WriteAssocHelper(sb, assoc);
-        foreach (var elem in BindableElements())
-            WriteBindableHelper(sb, elem);
+        // The generated helpers for the container types used by the signatures.
+        var listElements = ListElements();
+        var assocElements = AssocElements();
+        var bindableElements = BindableElements();
+        if (listElements.Count > 0 || assocElements.Count > 0 || bindableElements.Count > 0)
+        {
+            var helpers = CSharpFile(PlainFileKey(ns + ".Helpers"));
+            helpers.AppendLine("    internal static partial class ApiNative");
+            helpers.AppendLine("    {");
+            foreach (var elem in listElements)
+                WriteListNativeDeclarations(helpers, elem);
+            foreach (var assoc in assocElements)
+                WriteAssocNativeDeclarations(helpers, assoc);
+            foreach (var elem in bindableElements)
+                WriteBindableNativeDeclarations(helpers, elem);
+            helpers.AppendLine("    }");
+            foreach (var elem in listElements)
+                WriteListHelper(helpers, elem);
+            foreach (var assoc in assocElements)
+                WriteAssocHelper(helpers, assoc);
+            foreach (var elem in bindableElements)
+                WriteBindableHelper(helpers, elem);
+            if (bindableElements.Count > 0)
+                WriteBindableClass(helpers);
+        }
 
-        sb.AppendLine("}");
-        return sb.ToString();
+        var result = new SortedDictionary<string, string>(StringComparer.Ordinal);
+        foreach (var pair in csharpFiles)
+        {
+            pair.Value.AppendLine("}");
+            result[pair.Key] = pair.Value.ToString();
+        }
+        return result;
     }
 
     // Every element type that appears in a QList<...> anywhere in the model, in a stable order.
@@ -1129,20 +1254,34 @@ public static class ApiCodeGen
     // qDraw* helpers) live next to the classes in the module; PyQt publishes them the same way.
     // They become static methods on the same `Qt` class the namespace enums use, so the C# surface
     // is `Qt.QCompress(...)`.
-    static void WriteFreeFunctions(StringBuilder sb)
+    // The free function's P/Invoke entry name, computed once over the whole model so that two
+    // headers (or two files) cannot give two different overloads the same entry.
+    static List<(JsonElement Function, string Entry)> FreeFunctionEntries()
     {
-        if (Functions.Count == 0)
-            return;
-        sb.AppendLine("    /// <summary>Qt's namespace-level functions.</summary>");
-        sb.AppendLine("    public static partial class Qt");
-        sb.AppendLine("    {");
+        if (freeFunctionEntries != null)
+            return freeFunctionEntries;
+        var entries = new List<(JsonElement, string)>();
         var overloads = new Dictionary<string, int>(StringComparer.Ordinal);
         foreach (var fn in Functions)
         {
             string fname = Name(fn);
             overloads.TryGetValue(fname, out int seen);
             overloads[fname] = seen + 1;
-            string entry = $"fn_{fname}{(seen == 0 ? "" : (seen + 1).ToString())}";
+            entries.Add((fn, $"fn_{fname}{(seen == 0 ? "" : (seen + 1).ToString())}"));
+        }
+        return freeFunctionEntries = entries;
+    }
+
+    static void WriteFreeFunctions(StringBuilder sb, IReadOnlyList<(JsonElement Function, string Entry)> functions)
+    {
+        if (functions.Count == 0)
+            return;
+        sb.AppendLine("    /// <summary>Qt's namespace-level functions.</summary>");
+        sb.AppendLine("    public static partial class Qt");
+        sb.AppendLine("    {");
+        foreach (var (fn, entry) in functions)
+        {
+            string fname = Name(fn);
             var ps = Params(fn);
             string sig = string.Join(", ", ps.Select(ParamSig));
             string ret = ReturnType(fn);
@@ -1171,15 +1310,11 @@ public static class ApiCodeGen
         sb.AppendLine();
     }
 
-    static void WriteFreeFunctionNativeDeclarations(StringBuilder sb)
+    static void WriteFreeFunctionNativeDeclarations(
+        StringBuilder sb, IReadOnlyList<(JsonElement Function, string Entry)> functions)
     {
-        var overloads = new Dictionary<string, int>(StringComparer.Ordinal);
-        foreach (var fn in Functions)
+        foreach (var (fn, entry) in functions)
         {
-            string fname = Name(fn);
-            overloads.TryGetValue(fname, out int seen);
-            overloads[fname] = seen + 1;
-            string entry = $"fn_{fname}{(seen == 0 ? "" : (seen + 1).ToString())}";
             var ps = Params(fn);
             string sig = string.Join(", ", ps.SelectMany(NativeParamsFor));
             string ret = ReturnType(fn);
@@ -1193,13 +1328,9 @@ public static class ApiCodeGen
 
     static void WriteFreeFunctionNative(StringBuilder sb)
     {
-        var overloads = new Dictionary<string, int>(StringComparer.Ordinal);
-        foreach (var fn in Functions)
+        foreach (var (fn, entry) in FreeFunctionEntries())
         {
             string fname = Name(fn);
-            overloads.TryGetValue(fname, out int seen);
-            overloads[fname] = seen + 1;
-            string entry = $"fn_{fname}{(seen == 0 ? "" : (seen + 1).ToString())}";
             var ps = Params(fn);
             string sig = string.Join(", ", ps.SelectMany(CppParamsFor));
             string ret = ReturnType(fn);
@@ -1733,7 +1864,9 @@ public static class ApiCodeGen
         var row = ApiTypes.RuntimeStructOf(name).Value;
         sb.AppendLine();
         sb.AppendLine($"    /// <summary>{name}: {row.Scalar} fields, Qt's own members forwarded through them.</summary>");
-        sb.AppendLine($"    public partial struct {name} : IEquatable<{name}>");
+        sb.AppendLine($"    [GeneratedCode(\"qtgen\", \"{GeneratedByVersion}\")]");
+        string partial = handWrittenParts.Contains(name) ? "partial " : "";
+        sb.AppendLine($"    public {partial}struct {name} : IEquatable<{name}>");
         sb.AppendLine("    {");
         // The storage. The field names are the model's, and their order is the POD's, which is Qt's
         // memory order - that is the whole of the C# side of a value type.
@@ -1958,7 +2091,9 @@ public static class ApiCodeGen
         }
         string ifaces = declared.Count > 0 ? " : " + string.Join(", ", declared) : "";
 
-        sb.AppendLine($"    public unsafe partial class {name}{ifaces}");
+        sb.AppendLine($"    [GeneratedCode(\"qtgen\", \"{GeneratedByVersion}\")]");
+        string partial = handWrittenParts.Contains(name) ? "partial " : "";
+        sb.AppendLine($"    public {partial}class {name}{ifaces}");
         sb.AppendLine("    {");
         if (baseName == null)
         {
@@ -2061,11 +2196,14 @@ public static class ApiCodeGen
         {
             var ps = Params(ctor);
             string sig = string.Join(", ", ps.Select(ParamSig));
-            sb.AppendLine($"        public {name}({sig}){(baseName != null ? " : base(IntPtr.Zero)" : "")}");
-            sb.AppendLine("        {");
             string dispatch = virtuals.Count > 0
                 ? "(IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, int, IntPtr, void>)&Dispatch"
                 : "IntPtr.Zero";
+            // Only the constructor that takes the dispatch function pointer needs `unsafe`; the
+            // type itself does not carry the modifier.
+            string unsafeModifier = dispatch == "IntPtr.Zero" ? "" : "unsafe ";
+            sb.AppendLine($"        public {unsafeModifier}{name}({sig}){(baseName != null ? " : base(IntPtr.Zero)" : "")}");
+            sb.AppendLine("        {");
             // A class with no virtuals at all needs no context: the native side reads this pointer
             // for one thing only - dispatching a virtual into the managed object - and this one has
             // none, so it would never be read. Passing one anyway costs the object its life: a
@@ -2087,7 +2225,7 @@ public static class ApiCodeGen
             if (DerivesFromQObject(name))
             {
                 register += "\n            ApiRuntime.Watch(Handle);";
-                // The signals and properties the *C#* class declared (QMetaSignal/QMetaProperty):
+                // The signals and properties the *C#* class declared with [QtSignal]/[QtProperty]:
                 // the object's meta-object gets them before any connection can be made.
                 register += "\n            ApiRuntime.AttachMetaObject(this);";
             }
@@ -2110,7 +2248,12 @@ public static class ApiCodeGen
             string propType = property.GetProperty("type").GetString();
             string getter = property.GetProperty("getter").GetString();
             string setter = property.TryGetProperty("setter", out var s) ? s.GetString() : null;
-            sb.AppendLine($"        /// <summary>The {Name(property)} property (Q_PROPERTY).</summary>");
+            // The Qt name and type are what a reader cannot see from the C# signature (the name is
+            // camelCase, the type is the C++ spelling); the accessors are right below.
+            string qtName = System.Security.SecurityElement.Escape(Name(property));
+            string qtPropType = System.Security.SecurityElement.Escape(propType);
+            string access = setter != null ? "read/write" : "read-only";
+            sb.AppendLine($"        /// <summary>The <c>{qtName}</c> property (Q_PROPERTY, <c>{qtPropType}</c>, {access}).</summary>");
             sb.AppendLine($"        public {NewName(inherited, propName)}{ManagedType(propType)} {propName}");
             sb.AppendLine("        {");
             sb.AppendLine($"            get => {CSharpMemberName(getter)}();");
@@ -2162,8 +2305,9 @@ public static class ApiCodeGen
             string dispatch = virtuals.Count > 0
                 ? "(IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, int, IntPtr, void>)&Dispatch"
                 : "IntPtr.Zero";
+            string unsafeModifier = dispatch == "IntPtr.Zero" ? "" : "unsafe ";
             sb.AppendLine($"        /// <summary>Builds the native subclass a managed subclass of this abstract class dispatches through.</summary>");
-            sb.AppendLine($"        protected {name}(){(baseName != null ? " : base(IntPtr.Zero)" : "")}");
+            sb.AppendLine($"        protected {unsafeModifier}{name}(){(baseName != null ? " : base(IntPtr.Zero)" : "")}");
             sb.AppendLine("        {");
             sb.AppendLine("            var __context = GCHandle.Alloc(this);");
             sb.AppendLine($"            Handle = ApiNative.Ctor_{name}(GCHandle.ToIntPtr(__context), {dispatch});");
@@ -2402,6 +2546,7 @@ public static class ApiCodeGen
                 ? "QSignal"
                 : "QSignal<" + string.Join(", ", csTypes) + ">";
             string mocSig = sname + "(" + string.Join(",", ps.Select(SignalMocType)) + ")";
+            string mocSigDoc = System.Security.SecurityElement.Escape(mocSig);
             // Connect: the runtime hands the raw argv over and each parameter is read with the
             // same per-type rules the virtual dispatch uses (a bound class pointer is a pointer
             // *slot*, a boxed value is the value itself, a container is Qt's and copied out).
@@ -2411,6 +2556,7 @@ public static class ApiCodeGen
             string handler = csTypes.Count == 0
                 ? "h()"
                 : "h(" + string.Join(", ", ps.Select((p, i) => SignalRead(PType(p), i))) + ")";
+            sb.AppendLine($"        /// <summary>The <c>{mocSigDoc}</c> signal as a QSignal (`Connect`/`Emit`).</summary>");
             sb.AppendLine($"        public {NewName(inherited, Pascal(sname) + sSuffix + "Signal")}{signalType} {Pascal(sname)}{sSuffix}Signal =>");
             sb.AppendLine($"            new {signalType}(h => ApiRuntime.Connect(Handle, \"{mocSig}\", (argv, _) => {handler}),");
             foreach (string line in EmitLambda(ps, mocSig))
@@ -2436,7 +2582,7 @@ public static class ApiCodeGen
                     : "Action<" + string.Join(", ", csTypes) + ">";
                 string readArgs = string.Join(", ", ps.Select((p, i) => SignalRead(PType(p), i)));
                 string valueCall = csTypes.Count == 0 ? "value()" : "value(" + readArgs + ")";
-                sb.AppendLine($"        /// <summary>The {sname} signal as a C# event (`+=` handler, `-=` handler disconnects).</summary>");
+                sb.AppendLine($"        /// <summary>The <c>{mocSigDoc}</c> signal as a C# event (`+=` handler, `-=` handler disconnects).</summary>");
                 sb.AppendLine($"        public {NewName(inherited, eventName)}event {delegateType} {eventName}");
                 sb.AppendLine("        {");
                 sb.AppendLine($"            add => ApiRuntime.Connect(Handle, \"{mocSig}\", (argv, _) => {valueCall}, value);");
@@ -2865,7 +3011,7 @@ public static class ApiCodeGen
         if (IsListT(t)) return $"{ListHelper(ListElem(t))}.ReadTransient({slot})";
         if (IsAssocT(t)) return $"{AssocHelper(t)}.ReadTransient({slot})";
         // A value arrives by value: the slot points at the storage that holds it.
-        if (IsStruct(t)) return $"*({t}*)Marshal.ReadIntPtr(argv, {index} * IntPtr.Size)";
+        if (IsStruct(t)) return $"ApiRuntime.ReadStruct<{t}>(Marshal.ReadIntPtr(argv, {index} * IntPtr.Size))";
         // A boxed value is a *copy*: the slot points at the argument (or at a temporary Qt
         // allocated), and the wrapper must own its own object.
         if (IsBoxed(t) && VirtualBoxedParams().Contains(t))
@@ -2917,7 +3063,7 @@ public static class ApiCodeGen
         if (IsListT(t)) return $"{ListHelper(ListElem(t))}.ReadTransient({slot})";
         if (IsAssocT(t)) return $"{AssocHelper(t)}.ReadTransient({slot})";
         // A runtime struct is passed by value, so the storage the slot points at *is* the struct.
-        if (IsStruct(t)) return $"*({t}*){slot}";
+        if (IsStruct(t)) return $"ApiRuntime.ReadStruct<{t}>({slot})";
         if (IsBoxed(t)) return $"{t}.FromTransientHandle({slot})";
         return slot;
     }
@@ -3015,33 +3161,35 @@ public static class ApiCodeGen
         var lines = new List<string>();
         lines.Add("(" + string.Join(", ", Enumerable.Range(1, ps.Count).Select(i => "a" + i)) + ") =>");
         lines.Add("{");
+        // The prelude can declare pointer locals (a pointer parameter becomes a void* variable), so
+        // the whole body is unsafe; the class itself no longer carries the modifier.
+        lines.Add("    unsafe");
+        lines.Add("    {");
         foreach (string line in prelude)
-            lines.Add("    " + line);
+            lines.Add("        " + line);
         if (cleanup.Count > 0)
-            lines.Add("    try");
+            lines.Add("        try");
         if (cleanup.Count > 0)
-            lines.Add("    {");
-        string ind = cleanup.Count > 0 ? "        " : "    ";
-        lines.Add(ind + "unsafe");
-        lines.Add(ind + "{");
+            lines.Add("        {");
+        string ind = cleanup.Count > 0 ? "            " : "        ";
         if (ps.Count > 0)
         {
-            lines.Add($"{ind}    void** __argv = stackalloc void*[{ps.Count}];");
+            lines.Add($"{ind}void** __argv = stackalloc void*[{ps.Count}];");
             for (int i = 0; i < ps.Count; i++)
-                lines.Add($"{ind}    __argv[{i}] = {pointers[i]};");
+                lines.Add($"{ind}__argv[{i}] = {pointers[i]};");
         }
         string args = ps.Count == 0 ? "IntPtr.Zero, 0" : $"(IntPtr)__argv, {ps.Count}";
-        lines.Add($"{ind}    ApiRuntime.Emit(Handle, \"{mocSig}\", {args});");
-        lines.Add(ind + "}");
+        lines.Add($"{ind}ApiRuntime.Emit(Handle, \"{mocSig}\", {args});");
         if (cleanup.Count > 0)
         {
-            lines.Add("    }");
-            lines.Add("    finally");
-            lines.Add("    {");
+            lines.Add("        }");
+            lines.Add("        finally");
+            lines.Add("        {");
             foreach (string line in cleanup)
-                lines.Add("        " + line);
-            lines.Add("    }");
+                lines.Add("            " + line);
+            lines.Add("        }");
         }
+        lines.Add("    }");
         lines.Add("}");
         return lines;
     }

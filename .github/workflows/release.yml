@@ -116,13 +116,8 @@ jobs:
       - name: Run every example
         shell: pwsh
         run: |
-          $failed = @()
-          foreach ($demo in (& testbind/bin/Release/net10.0/testapp.exe --list)) {
-            Write-Host "  --- $demo"
-            & testbind/bin/Release/net10.0/testapp.exe $demo
-            if ($LASTEXITCODE -ne 0) { $failed += ("{0} (0x{1:X8})" -f $demo, $LASTEXITCODE) }
-          }
-          if ($failed.Count -gt 0) { throw "these demos failed: $($failed -join ', ')" }
+          ./tools/run-window-tests.ps1 -Exe "testbind/bin/Release/net10.0/testapp.exe" -Label "demos"
+          if ($LASTEXITCODE -ne 0) { throw "some demos failed (see the output above)" }
 
       - name: Pack QtSharp.Api
         shell: pwsh

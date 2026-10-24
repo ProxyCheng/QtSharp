@@ -21,7 +21,8 @@ Qt 6.11.0 headers (MSVC kit)
 model/qtsharp.api.json                 ← checked in; the gate compares the fresh extraction to it
         │  qtgen codegen (a pure function of the model)
         ▼
-out/api/QtSharp.Api.cs                 ← the binding: 496 classes, C# properties, signals as events
+out/api/generated/QtCore/qobject.cs …  ← the binding, one C# file per Qt header: 496 classes,
+                                          C# properties, signals as events
 out/api/QtSharp.Api.native.cpp         ← one C++ subclass per bound class: virtual hooks, C ABI
         │  build_api.bat (cl.exe)
         ▼
@@ -30,15 +31,15 @@ out/api/QtSharp.Api.dll                ← the native glue
 runtime/ApiRuntime.cs                  ← QSignal/meta-object bookkeeping, ownership, event probes
         │
         ▼
-demos/QtSharp.Demos.csproj             ← the binding + runtime + 34 demos, one assembly
+demos/QtSharp.Demos.csproj             ← the binding + runtime + 35 demos, one assembly
         ▲                    ▲
    testbind/testapp     samples/hello  ← two thin entry points, one name → demo table
 ```
 
 Current coverage: **496 classes / 10506 methods / 885 virtuals / 511 enums / 816 Q_PROPERTY
 properties / 463 signals / 70 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg,
-QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets). The gate runs all 34 demos
-(**1165 assertions**) plus `samples/hello`.
+QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets). The gate runs all 35 demos
+(**1319 assertions**) plus `samples/hello`.
 
 ## Install the binding
 
@@ -167,15 +168,15 @@ powershell -File tools\regen-api.ps1
 ```
 
 That is the whole thing (a clone's first run takes a few minutes — the native glue is a big
-translation unit, and 34 demos are built and run at the end). It runs, in order:
+translation unit, and 35 demos are built and run at the end). It runs, in order:
 
 | step | what it does |
 |---|---|
 | `[1]` | builds the generator (`gen`) |
 | `[2]` | extracts the model from the Qt headers into `out\qtsharp.api.json.new` (**~3 s**) and compares it to the checked-in `model\qtsharp.api.json` — byte for byte |
-| `[3]` | runs the code generator **twice** and compares the two outputs |
+| `[3]` | runs the code generator **twice** and compares the two generated trees (one file per Qt header) |
 | `[4]` | compiles the generated C++ wrapper + the runtime into `out\api\QtSharp.Api.dll` |
-| `[5]` | builds `demos` (binding + runtime + 34 demos) and runs every demo with `testapp` |
+| `[5]` | builds `demos` (binding + runtime + 35 demos) and runs every demo with `testapp`, several windows at a time |
 | `[6]` | builds and runs `samples\hello` (its window, `hello selftest`, `hello api-transform`, `hello help`) |
 
 Two gates live in the middle of that: **the model must come out identical** (it is deterministic by
@@ -183,16 +184,18 @@ construction, so a difference means the Qt version, the clang headers or the `Ro
 and **the generator must be reproducible**. If the model legitimately changes, review the diff and
 re-run with `-Adopt` to accept it; `-SkipExtract` skips step 2 and 3.
 
-Step 5 is 34 GUI processes back to back, and each demo leaves its window up for about a second so it
-can be looked at. On a machine that is being used at the same time, one of them can very occasionally
-die while Qt tears the process down — a `0xC000041D` exit *after* its own `[SELFTEST OK]` line. That
-is a known flake, not a failed assertion; the gate echoes each demo name
-before running it so it is obvious where it happened, and simply running it again is the answer.
+Step 5 starts several GUI processes at once (up to `min(6, cores)`; pass `-Jobs 1` for the old
+one-at-a-time run, or `-Jobs 8` on a big machine). Each demo still leaves its window up for about a
+second so it can be looked at. On a machine that is being used at the same time, one of them can
+very occasionally die while Qt tears the process down — a `0xC000041D` exit *after* its own
+`[SELFTEST OK]` line. That is a known flake, not a failed assertion; the gate prints each window's
+result line with its name, retries a nonzero exit once, and a window that fails twice has its own
+output printed, so the failure stays attributable even though the windows overlapped.
 
 The same suite runs in CI on every push — the `Smoke tests` job in `.github/workflows/ci.yml`. It
 takes the binding the `binding` job built from the checked-in model, fetches Qt, builds the examples
-and the sample, then runs all of them. It retries a demo once, since the teardown flake above is
-timing rather than logic. Note that the examples need a real Qt platform: `QT_QPA_PLATFORM=offscreen`
+and the sample, then runs all of them through the same `tools/run-window-tests.ps1` pool, so it gets
+the same parallelism and the same one retry for the teardown flake above. Note that the examples need a real Qt platform: `QT_QPA_PLATFORM=offscreen`
 is *not* an option, because several of them assert on rendered pixels and one crashes without
 `qwindows`.
 
@@ -209,7 +212,7 @@ dotnet build samples\hello\Hello.csproj -c Release
 ## Run the examples
 
 ```
-testapp                       # the list of demos (34 names)
+testapp                       # the list of demos (35 names)
 testapp api-calculator        # run one
 testapp api-analogclock       # QTSHARP_DEMO_MS=8000 keeps it on screen longer
 
@@ -306,20 +309,39 @@ static class Program
 * **Subclassing**: `override` the virtuals the model publishes — `SizeHint`, `PaintEvent`,
   `MousePressEvent`, `KeyPressEvent`, model/delegate virtuals (`RowCount`, `Data`, `Paint`,
   `CreateEditor`), `Runnable.Run`, `FilterAcceptsRow`, … The native side forwards to your override.
-* **Declaring your own signal or property** (PyQt's `pyqtSignal`/`pyqtProperty`) works, see
-  `samples/hello/HelloCounter.cs`. The declarations must be **static** fields:
+* **Declaring your own signal or property** (PyQt's `pyqtSignal`/`pyqtProperty`): put the
+  attribute on the member, and the member is the declaration:
   ```csharp
-  public static readonly QMetaSignal<int> ValueChangedSignal = new("valueChanged");
-  public static readonly QMetaProperty<int> Value = new(
-      "value", o => ((HelloCounter)o)._value, (o, v) => ((HelloCounter)o).SetValue(v));
+  [QtSignal] public event Action<int> ValueChanged;          // the Qt signal valueChanged(int)
+  [QtProperty] public int Value { get; set; }                // readable and writable
+  [QtProperty("caption")] public string Text { get; set; }   // an explicit Qt name
+  [QtProperty] public string Label => "read-only";           // get-only: a read-only property
 
-  public event Action<int> ValueChanged            // optional: the same signal as a C# event
+  void SetValue(int value)
   {
-      add => ValueChangedSignal.Connect(this, value);
-      remove => ValueChangedSignal.Disconnect(this, value);
+      Value = value;
+      EmitSignal(ValueChanged, value);          // the pyqtSignal emit
   }
   ```
-  Qt reaches `Value` through `QObject::setProperty`/`property`, just like a moc-generated one.
+  The Qt name is the member's name with a lower-case first letter. The C# event, a QML/C++ handler
+  and a Qt `connect()` all reach the same handlers, and Qt reaches a property through
+  `QObject::setProperty`/`property`, just like a moc-generated one.
+  `[QtSignal]` needs a field-like event (the compiler's handler list is what the runtime reads).
+  The rest of `Q_PROPERTY` maps to `QtProperty`'s properties: `Notify` (the signal named by its
+  C# member or Qt name; `<Property>Changed` is used when omitted), `Reset` (a parameterless
+  method; `Reset<Property>` by convention), `Constant`, `Final`, `Required`, `Designable`,
+  `Scriptable`, `Stored`, `User` and `Revision`. `BINDABLE` is not exposed: it needs binding
+  support in the native runtime, not just a flag.
+  `samples/hello/HelloCounter.cs` is the same declaration in a runnable sample.
+  The generated Qt classes are deliberately different: their properties and signals already exist
+  in moc's meta-object, so they do not carry these attributes. Their types are marked
+  `[GeneratedCode("qtgen", …)]`, and the XML docs say what a member is — for example
+  `The windowTitle property (Q_PROPERTY, QString, read/write)` and
+  `The windowTitleChanged(QString) signal as a C# event`. `[QtProperty]`/`[QtSignal]` are only for
+  members *you* declare on a C# subclass. Only the types the hand-written runtime extends (the
+  application classes, `QObject`, and the date/time/byte-array types) are `partial`; every other
+  wrapper is a whole declaration, and `unsafe` sits on the few constructors that pass a function
+  pointer rather than on the class.
 * **Ownership**: an object you `new` is yours — `Dispose()` (or the finalizer) deletes it, unless you
   handed it to Qt (a parent, a layout, a scene, a view), in which case the generated destructor asks
   `parent()` first and leaves it alone. Objects Qt owns are never deleted by the GC, and once Qt has
@@ -399,7 +421,7 @@ Replace the local source path with your checkout's `out/packages` directory.
 | `gen/` | the generator: `ApiModel.cs` (model shape, `Roots` table, vocabulary), `ApiModel2.cs` (the libclang front end), `ApiCodeGen.cs` (model → C# + C++) |
 | `native/` | the hand-written runtime (`QtSharpApiRuntime.cpp`: moc signal forwarder, probes) and the crash tracer |
 | `runtime/` | the managed runtime published with the binding (`ApiRuntime.cs`, `ApiApplication.cs`) |
-| `demos/` | `QtSharp.Demos.csproj` — the binding, the runtime and the 34 demos; `ApiDemos.cs` is the name → window table |
+| `demos/` | `QtSharp.Demos.csproj` — the binding, the runtime and the 35 demos; `ApiDemos.cs` is the name → window table |
 | `testbind/` | `testapp`, the test entry point (13 lines: hand the argument to `ApiDemos`) |
 | `samples/hello/` | the sample / trial entry point |
 | `tools/regen-api.ps1` | the build and the gate |

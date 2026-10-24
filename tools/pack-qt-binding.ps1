@@ -10,7 +10,7 @@ Set-Location -LiteralPath $root
 # What this packs: the managed binding (compiled from the generated source + the runtime), the
 # native glue and the Qt runtime DLLs. It needs a machine that can build those - i.e. the Qt kit
 # and the MSVC tools from README.md - so the generated artifacts must already exist.
-$BindingSource = Join-Path $root 'out\api\QtSharp.Api.cs'
+$BindingSource = Join-Path $root 'out\api\generated'
 $BindingNative = Join-Path $root 'out\api\QtSharp.Api.dll'
 if (-not $QtRuntimeDir) { $QtRuntimeDir = Join-Path $root 'Qt\6.11.0\runtime' }
 $QtRuntime = $QtRuntimeDir
