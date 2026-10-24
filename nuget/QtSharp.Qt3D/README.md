@@ -1,7 +1,19 @@
 # QtSharp.Qt3D
 
-Qt 3D for .NET, generated from the Qt 6.11 headers the same way `QtSharp.Api` is: real C#
-classes, properties, signals and virtuals over the native Qt3D libraries.
+Qt 3D for .NET, generated from the Qt 6.11 headers the same way `QtSharp.Api` is. The package
+contains **six assemblies, one per Qt module**, each with its own namespace:
+
+| assembly / namespace | Qt module | builds on |
+|---|---|---|
+| `QtSharp.Qt3DCore` | Qt3DCore | — |
+| `QtSharp.Qt3DRender` | Qt3DRender | Qt3DCore |
+| `QtSharp.Qt3DInput` | Qt3DInput | Qt3DCore |
+| `QtSharp.Qt3DLogic` | Qt3DLogic | Qt3DCore |
+| `QtSharp.Qt3DAnimation` | Qt3DAnimation | Qt3DCore, Qt3DRender |
+| `QtSharp.Qt3DExtras` | Qt3DExtras | Qt3DCore, Qt3DRender, Qt3DInput, Qt3DLogic, Qt3DAnimation |
+
+This mirrors `PyQt6-3D` / `PySide6-Addons`: one package to install, separate importable modules.
+The Qt libraries and plugins are laid out as Qt ships them.
 
 ```xml
 <ItemGroup>
@@ -12,9 +24,10 @@ classes, properties, signals and virtuals over the native Qt3D libraries.
 
 ```csharp
 using QtSharp.Api;
-using QtSharp.Qt3D;
+using QtSharp.Qt3DCore;
+using QtSharp.Qt3DRender;
+using QtSharp.Qt3DExtras;
 
-var app = new QGuiApplication(args);
 var view = new Qt3DWindow();
 var root = new QEntity();
 var cube = new QEntity(root);
@@ -25,19 +38,14 @@ view.Show();
 return app.Exec();
 ```
 
-The package contains all six Qt3D modules in one assembly and one C# namespace: Qt3DCore,
-Qt3DRender, Qt3DInput, Qt3DLogic, Qt3DAnimation and Qt3DExtras. It references `QtSharp.Api` and
-does not repeat any of its types.
-
 ## A note on names
 
 Qt3D's `QTransform`, `QBuffer`, `QAction`, `QKeyEvent`, `QMouseEvent` and `QWheelEvent` have the
-same names as QtGui/QtCore/QtWidgets classes in `QtSharp.Api`. Inside the binding the Qt3D class
-shadows the core one, so the two are unambiguous in a file that declares its namespace as
-`QtSharp.Qt3D`; in a file that imports both namespaces, alias the Qt3D one:
+same names as QtGui/QtCore/QtWidgets classes in `QtSharp.Api`. Importing both namespaces makes
+those names ambiguous, so alias the Qt3D one:
 
 ```csharp
-using QTransform3D = QtSharp.Qt3D.QTransform;
+using QTransform3D = QtSharp.Qt3DCore.QTransform;
 ```
 
 ## License

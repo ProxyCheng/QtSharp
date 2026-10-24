@@ -96,15 +96,17 @@ if ($LASTEXITCODE -ne 0) { Write-Host "native build failed"; Get-Content "$root\
 # The extension modules are separate assemblies/packages. They are generated from their own
 # checked-in models and their native glue is built by the same parameterized script; the official
 # Qt3D examples then run as their conformance suite, exactly like the core demos below.
-Write-Host "=== [4b] Extension modules (Charts, Qt3D) ==="
+$extensionModules = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras')
+Write-Host "=== [4b] Extension modules (Charts, Qt3D's six modules) ==="
 Push-Location $genBin
-& "$genBin\qtgen.exe" codegen "$root\model\qtsharp.charts.json" "$root\out\charts" --module charts *> "$root\out\codegen-charts.log"
-$chartsCode = $LASTEXITCODE
-& "$genBin\qtgen.exe" codegen "$root\model\qtsharp.qt3d.json" "$root\out\qt3d" --module qt3d *> "$root\out\codegen-qt3d.log"
-$qt3dCode = $LASTEXITCODE
+$extensionCodegen = 0
+foreach ($module in $extensionModules) {
+    & "$genBin\qtgen.exe" codegen "$root\model\qtsharp.$module.json" "$root\out\$module" --module $module *> "$root\out\codegen-$module.log"
+    if ($LASTEXITCODE -ne 0) { $extensionCodegen = 1 }
+}
 Pop-Location
-if ($chartsCode -ne 0 -or $qt3dCode -ne 0) { Write-Host "extension codegen failed"; exit 1 }
-foreach ($module in @('charts', 'qt3d')) {
+if ($extensionCodegen -ne 0) { Write-Host "extension codegen failed"; exit 1 }
+foreach ($module in $extensionModules) {
     & powershell -NoProfile -ExecutionPolicy Bypass -File "$root\tools\build-native-module.ps1" -Module $module *> "$root\out\native-$module.log"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "$module native build failed"

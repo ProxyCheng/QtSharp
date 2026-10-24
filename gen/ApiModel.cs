@@ -319,6 +319,18 @@ public static partial class ApiModel
         public string[] QtDefines;
         /// <summary>The Qt libraries the module's native glue links.</summary>
         public string[] QtLibs;
+        /// <summary>
+        /// Headers of this module that no root includes but whose namespace-level declarations
+        /// are part of its public API (Qt3DRender's qrenderapi.h declares API, which only
+        /// dependent modules name in their signatures).
+        /// </summary>
+        public string[] ExtraHeaders = Array.Empty<string>();
+        /// <summary>
+        /// Other extension modules this one builds on (Qt3DRender builds on Qt3DCore). Their
+        /// classes are part of the vocabulary and may be base classes, but they are emitted and
+        /// packaged by their own module, so this binding references their assembly instead.
+        /// </summary>
+        public string[] DependsOn = Array.Empty<string>();
         /// <summary>The classes to bind. Their bases may be classes of the core binding.</summary>
         public Root[] Roots;
     }
@@ -388,263 +400,14 @@ public static partial class ApiModel
                 R("QLegendMarker",                 "qlegendmarker.h",                "QtCharts", bindCtors: false, owned: false),
             },
         },
-        // Qt3D is one binding over six Qt modules rather than one include directory, and every
-        // class is in a named C++ namespace (Qt3DCore::QEntity, Qt3DRender::QCamera). The
-        // namespace matters twice: the generated C++ has to spell it, and the extractor has to
-        // look the class up by its qualified name because Qt3D's QBuffer/QTransform/QAction/
-        // QKeyEvent/QMouseEvent/QWheelEvent share their simple names with core classes.
-        new ExtensionModule
-        {
-            Name = "qt3d",
-            Namespace = "QtSharp.Qt3D",
-            NativeLibrary = "QtSharp.Qt3D.Native",
-            QtModules = new[]
-            {
-                "Qt3DCore", "Qt3DRender", "Qt3DInput", "Qt3DLogic", "Qt3DAnimation", "Qt3DExtras",
-            },
-            QtDefines = new[]
-            {
-                "QT3DCORE_LIB", "QT3DRENDER_LIB", "QT3DINPUT_LIB", "QT3DLOGIC_LIB",
-                "QT3DANIMATION_LIB", "QT3DEXTRAS_LIB",
-            },
-            QtLibs = new[]
-            {
-                "Qt63DCore", "Qt63DRender", "Qt63DInput", "Qt63DLogic", "Qt63DAnimation", "Qt63DExtras",
-            },
-            Roots = new[]
-            {
-                R("Qt3DAnimation::QAbstractAnimation", "qabstractanimation.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QAbstractAnimationClip", "qabstractanimationclip.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QAbstractChannelMapping", "qabstractchannelmapping.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QAbstractClipAnimator", "qabstractclipanimator.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QAbstractClipBlendNode", "qabstractclipblendnode.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QAdditiveClipBlend", "qadditiveclipblend.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QAnimationAspect", "qanimationaspect.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QAnimationClip", "qanimationclip.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QAnimationClipData", "qanimationclipdata.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QAnimationClipLoader", "qanimationcliploader.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QAnimationController", "qanimationcontroller.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QAnimationGroup", "qanimationgroup.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QBlendedClipAnimator", "qblendedclipanimator.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QCallbackMapping", "qcallbackmapping.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QChannel", "qchannel.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QChannelComponent", "qchannelcomponent.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QChannelMapper", "qchannelmapper.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QChannelMapping", "qchannelmapping.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QClipAnimator", "qclipanimator.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QClipBlendValue", "qclipblendvalue.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QClock", "qclock.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QKeyFrame", "qkeyframe.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QKeyframeAnimation", "qkeyframeanimation.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QLerpClipBlend", "qlerpclipblend.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QMorphingAnimation", "qmorphinganimation.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QMorphTarget", "qmorphtarget.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QSkeletonMapping", "qskeletonmapping.h", "Qt3DAnimation"),
-                R("Qt3DAnimation::QVertexBlendAnimation", "qvertexblendanimation.h", "Qt3DAnimation"),
-                R("Qt3DCore::QAbstractAspect", "qabstractaspect.h", "Qt3DCore"),
-                R("Qt3DCore::QAbstractFunctor", "qabstractfunctor.h", "Qt3DCore"),
-                R("Qt3DCore::QAbstractSkeleton", "qabstractskeleton.h", "Qt3DCore"),
-                R("Qt3DCore::QArmature", "qarmature.h", "Qt3DCore"),
-                R("Qt3DCore::QAspectEngine", "qaspectengine.h", "Qt3DCore"),
-                R("Qt3DCore::QAttribute", "qattribute.h", "Qt3DCore"),
-                R("Qt3DCore::QBoundingVolume", "qboundingvolume.h", "Qt3DCore"),
-                R("Qt3DCore::QBuffer", "qbuffer.h", "Qt3DCore"),
-                R("Qt3DCore::QComponent", "qcomponent.h", "Qt3DCore"),
-                R("Qt3DCore::QCoreAspect", "qcoreaspect.h", "Qt3DCore"),
-                R("Qt3DCore::QCoreSettings", "qcoresettings.h", "Qt3DCore"),
-                R("Qt3DCore::QEntity", "qentity.h", "Qt3DCore"),
-                R("Qt3DCore::QGeometry", "qgeometry.h", "Qt3DCore"),
-                R("Qt3DCore::QGeometryView", "qgeometryview.h", "Qt3DCore"),
-                R("Qt3DCore::QJoint", "qjoint.h", "Qt3DCore"),
-                R("Qt3DCore::QNode", "qnode.h", "Qt3DCore"),
-                R("Qt3DCore::QNodeId", "qnodeid.h", "Qt3DCore"),
-                R("Qt3DCore::QSkeleton", "qskeleton.h", "Qt3DCore"),
-                R("Qt3DCore::QSkeletonLoader", "qskeletonloader.h", "Qt3DCore"),
-                R("Qt3DCore::QTransform", "qtransform.h", "Qt3DCore"),
-                R("Qt3DExtras::QAbstractCameraController", "qabstractcameracontroller.h", "Qt3DExtras"),
-                R("Qt3DExtras::QAbstractSpriteSheet", "qabstractspritesheet.h", "Qt3DExtras"),
-                R("Qt3DExtras::QConeGeometry", "qconegeometry.h", "Qt3DExtras"),
-                R("Qt3DExtras::QConeGeometryView", "qconegeometryview.h", "Qt3DExtras"),
-                R("Qt3DExtras::QConeMesh", "qconemesh.h", "Qt3DExtras"),
-                R("Qt3DExtras::QCuboidGeometry", "qcuboidgeometry.h", "Qt3DExtras"),
-                R("Qt3DExtras::QCuboidGeometryView", "qcuboidgeometryview.h", "Qt3DExtras"),
-                R("Qt3DExtras::QCuboidMesh", "qcuboidmesh.h", "Qt3DExtras"),
-                R("Qt3DExtras::QCylinderGeometry", "qcylindergeometry.h", "Qt3DExtras"),
-                R("Qt3DExtras::QCylinderGeometryView", "qcylindergeometryview.h", "Qt3DExtras"),
-                R("Qt3DExtras::QCylinderMesh", "qcylindermesh.h", "Qt3DExtras"),
-                R("Qt3DExtras::QDiffuseMapMaterial", "qdiffusemapmaterial.h", "Qt3DExtras"),
-                R("Qt3DExtras::QDiffuseSpecularMapMaterial", "qdiffusespecularmapmaterial.h", "Qt3DExtras"),
-                R("Qt3DExtras::QDiffuseSpecularMaterial", "qdiffusespecularmaterial.h", "Qt3DExtras"),
-                R("Qt3DExtras::QExtrudedTextGeometry", "qextrudedtextgeometry.h", "Qt3DExtras"),
-                R("Qt3DExtras::QExtrudedTextMesh", "qextrudedtextmesh.h", "Qt3DExtras"),
-                R("Qt3DExtras::QFirstPersonCameraController", "qfirstpersoncameracontroller.h", "Qt3DExtras"),
-                R("Qt3DExtras::QForwardRenderer", "qforwardrenderer.h", "Qt3DExtras"),
-                R("Qt3DExtras::QGoochMaterial", "qgoochmaterial.h", "Qt3DExtras"),
-                R("Qt3DExtras::QMetalRoughMaterial", "qmetalroughmaterial.h", "Qt3DExtras"),
-                R("Qt3DExtras::QMorphPhongMaterial", "qmorphphongmaterial.h", "Qt3DExtras"),
-                R("Qt3DExtras::QNormalDiffuseMapAlphaMaterial", "qnormaldiffusemapalphamaterial.h", "Qt3DExtras"),
-                R("Qt3DExtras::QNormalDiffuseMapMaterial", "qnormaldiffusemapmaterial.h", "Qt3DExtras"),
-                R("Qt3DExtras::QNormalDiffuseSpecularMapMaterial", "qnormaldiffusespecularmapmaterial.h", "Qt3DExtras"),
-                R("Qt3DExtras::QOrbitCameraController", "qorbitcameracontroller.h", "Qt3DExtras"),
-                R("Qt3DExtras::QPerVertexColorMaterial", "qpervertexcolormaterial.h", "Qt3DExtras"),
-                R("Qt3DExtras::QPhongAlphaMaterial", "qphongalphamaterial.h", "Qt3DExtras"),
-                R("Qt3DExtras::QPhongMaterial", "qphongmaterial.h", "Qt3DExtras"),
-                R("Qt3DExtras::QPlaneGeometry", "qplanegeometry.h", "Qt3DExtras"),
-                R("Qt3DExtras::QPlaneGeometryView", "qplanegeometryview.h", "Qt3DExtras"),
-                R("Qt3DExtras::QPlaneMesh", "qplanemesh.h", "Qt3DExtras"),
-                R("Qt3DExtras::QSkyboxEntity", "qskyboxentity.h", "Qt3DExtras"),
-                R("Qt3DExtras::QSphereGeometry", "qspheregeometry.h", "Qt3DExtras"),
-                R("Qt3DExtras::QSphereGeometryView", "qspheregeometryview.h", "Qt3DExtras"),
-                R("Qt3DExtras::QSphereMesh", "qspheremesh.h", "Qt3DExtras"),
-                R("Qt3DExtras::QSpriteGrid", "qspritegrid.h", "Qt3DExtras"),
-                R("Qt3DExtras::QSpriteSheet", "qspritesheet.h", "Qt3DExtras"),
-                R("Qt3DExtras::QSpriteSheetItem", "qspritesheetitem.h", "Qt3DExtras"),
-                R("Qt3DExtras::Qt3DWindow", "qt3dwindow.h", "Qt3DExtras"),
-                R("Qt3DExtras::QText2DEntity", "qtext2dentity.h", "Qt3DExtras"),
-                R("Qt3DExtras::QTextureMaterial", "qtexturematerial.h", "Qt3DExtras"),
-                R("Qt3DExtras::QTorusGeometry", "qtorusgeometry.h", "Qt3DExtras"),
-                R("Qt3DExtras::QTorusGeometryView", "qtorusgeometryview.h", "Qt3DExtras"),
-                R("Qt3DExtras::QTorusMesh", "qtorusmesh.h", "Qt3DExtras"),
-                R("Qt3DInput::QAbstractActionInput", "qabstractactioninput.h", "Qt3DInput"),
-                R("Qt3DInput::QAbstractAxisInput", "qabstractaxisinput.h", "Qt3DInput"),
-                R("Qt3DInput::QAbstractPhysicalDevice", "qabstractphysicaldevice.h", "Qt3DInput"),
-                R("Qt3DInput::QAction", "qaction.h", "Qt3DInput"),
-                R("Qt3DInput::QActionInput", "qactioninput.h", "Qt3DInput"),
-                R("Qt3DInput::QAnalogAxisInput", "qanalogaxisinput.h", "Qt3DInput"),
-                R("Qt3DInput::QAxis", "qaxis.h", "Qt3DInput"),
-                R("Qt3DInput::QAxisAccumulator", "qaxisaccumulator.h", "Qt3DInput"),
-                R("Qt3DInput::QAxisSetting", "qaxissetting.h", "Qt3DInput"),
-                R("Qt3DInput::QButtonAxisInput", "qbuttonaxisinput.h", "Qt3DInput"),
-                R("Qt3DInput::QInputAspect", "qinputaspect.h", "Qt3DInput"),
-                R("Qt3DInput::QInputChord", "qinputchord.h", "Qt3DInput"),
-                R("Qt3DInput::QInputSequence", "qinputsequence.h", "Qt3DInput"),
-                R("Qt3DInput::QInputSettings", "qinputsettings.h", "Qt3DInput"),
-                R("Qt3DInput::QKeyboardDevice", "qkeyboarddevice.h", "Qt3DInput"),
-                R("Qt3DInput::QKeyboardHandler", "qkeyboardhandler.h", "Qt3DInput"),
-                R("Qt3DInput::QKeyEvent", "qkeyevent.h", "Qt3DInput", bindCtors: false, owned: false),
-                R("Qt3DInput::QLogicalDevice", "qlogicaldevice.h", "Qt3DInput"),
-                R("Qt3DInput::QMouseDevice", "qmousedevice.h", "Qt3DInput"),
-                R("Qt3DInput::QMouseEvent", "qmouseevent.h", "Qt3DInput", bindCtors: false, owned: false),
-                R("Qt3DInput::QMouseHandler", "qmousehandler.h", "Qt3DInput"),
-                R("Qt3DInput::QWheelEvent", "qmouseevent.h", "Qt3DInput", bindCtors: false, owned: false),
-                R("Qt3DLogic::QFrameAction", "qframeaction.h", "Qt3DLogic"),
-                R("Qt3DLogic::QLogicAspect", "qlogicaspect.h", "Qt3DLogic"),
-                R("Qt3DRender::QAbstractLight", "qabstractlight.h", "Qt3DRender"),
-                R("Qt3DRender::QAbstractRayCaster", "qabstractraycaster.h", "Qt3DRender"),
-                R("Qt3DRender::QAbstractTexture", "qabstracttexture.h", "Qt3DRender"),
-                R("Qt3DRender::QAbstractTextureImage", "qabstracttextureimage.h", "Qt3DRender"),
-                R("Qt3DRender::QAlphaCoverage", "qalphacoverage.h", "Qt3DRender"),
-                R("Qt3DRender::QAlphaTest", "qalphatest.h", "Qt3DRender"),
-                R("Qt3DRender::QBlendEquation", "qblendequation.h", "Qt3DRender"),
-                R("Qt3DRender::QBlendEquationArguments", "qblendequationarguments.h", "Qt3DRender"),
-                R("Qt3DRender::QBlitFramebuffer", "qblitframebuffer.h", "Qt3DRender"),
-                R("Qt3DRender::QBufferCapture", "qbuffercapture.h", "Qt3DRender"),
-                R("Qt3DRender::QCamera", "qcamera.h", "Qt3DRender"),
-                R("Qt3DRender::QCameraLens", "qcameralens.h", "Qt3DRender"),
-                R("Qt3DRender::QCameraSelector", "qcameraselector.h", "Qt3DRender"),
-                R("Qt3DRender::QClearBuffers", "qclearbuffers.h", "Qt3DRender"),
-                R("Qt3DRender::QClipPlane", "qclipplane.h", "Qt3DRender"),
-                R("Qt3DRender::QColorMask", "qcolormask.h", "Qt3DRender"),
-                R("Qt3DRender::QComputeCommand", "qcomputecommand.h", "Qt3DRender"),
-                R("Qt3DRender::QCullFace", "qcullface.h", "Qt3DRender"),
-                R("Qt3DRender::QDebugOverlay", "qdebugoverlay.h", "Qt3DRender"),
-                R("Qt3DRender::QDepthRange", "qdepthrange.h", "Qt3DRender"),
-                R("Qt3DRender::QDepthTest", "qdepthtest.h", "Qt3DRender"),
-                R("Qt3DRender::QDirectionalLight", "qdirectionallight.h", "Qt3DRender"),
-                R("Qt3DRender::QDispatchCompute", "qdispatchcompute.h", "Qt3DRender"),
-                R("Qt3DRender::QDithering", "qdithering.h", "Qt3DRender"),
-                R("Qt3DRender::QEffect", "qeffect.h", "Qt3DRender"),
-                R("Qt3DRender::QEnvironmentLight", "qenvironmentlight.h", "Qt3DRender"),
-                R("Qt3DRender::QFilterKey", "qfilterkey.h", "Qt3DRender"),
-                R("Qt3DRender::QFrameGraphNode", "qframegraphnode.h", "Qt3DRender"),
-                R("Qt3DRender::QFrontFace", "qfrontface.h", "Qt3DRender"),
-                R("Qt3DRender::QFrustumCulling", "qfrustumculling.h", "Qt3DRender"),
-                R("Qt3DRender::QGeometryRenderer", "qgeometryrenderer.h", "Qt3DRender"),
-                R("Qt3DRender::QGraphicsApiFilter", "qgraphicsapifilter.h", "Qt3DRender"),
-                R("Qt3DRender::QLayer", "qlayer.h", "Qt3DRender"),
-                R("Qt3DRender::QLayerFilter", "qlayerfilter.h", "Qt3DRender"),
-                R("Qt3DRender::QLevelOfDetail", "qlevelofdetail.h", "Qt3DRender"),
-                R("Qt3DRender::QLevelOfDetailBoundingSphere", "qlevelofdetailboundingsphere.h", "Qt3DRender"),
-                R("Qt3DRender::QLevelOfDetailSwitch", "qlevelofdetailswitch.h", "Qt3DRender"),
-                R("Qt3DRender::QLineWidth", "qlinewidth.h", "Qt3DRender"),
-                R("Qt3DRender::QMaterial", "qmaterial.h", "Qt3DRender"),
-                R("Qt3DRender::QMemoryBarrier", "qmemorybarrier.h", "Qt3DRender"),
-                R("Qt3DRender::QMesh", "qmesh.h", "Qt3DRender"),
-                R("Qt3DRender::QMultiSampleAntiAliasing", "qmultisampleantialiasing.h", "Qt3DRender"),
-                R("Qt3DRender::QNoDepthMask", "qnodepthmask.h", "Qt3DRender"),
-                R("Qt3DRender::QNoDraw", "qnodraw.h", "Qt3DRender"),
-                R("Qt3DRender::QNoPicking", "qnopicking.h", "Qt3DRender"),
-                R("Qt3DRender::QObjectPicker", "qobjectpicker.h", "Qt3DRender"),
-                R("Qt3DRender::QPaintedTextureImage", "qpaintedtextureimage.h", "Qt3DRender"),
-                R("Qt3DRender::QParameter", "qparameter.h", "Qt3DRender"),
-                R("Qt3DRender::QPickEvent", "qpickevent.h", "Qt3DRender", bindCtors: false, owned: false),
-                R("Qt3DRender::QPickingProxy", "qpickingproxy.h", "Qt3DRender"),
-                R("Qt3DRender::QPickingSettings", "qpickingsettings.h", "Qt3DRender"),
-                R("Qt3DRender::QPickLineEvent", "qpicklineevent.h", "Qt3DRender", bindCtors: false, owned: false),
-                R("Qt3DRender::QPickPointEvent", "qpickpointevent.h", "Qt3DRender", bindCtors: false, owned: false),
-                R("Qt3DRender::QPickTriangleEvent", "qpicktriangleevent.h", "Qt3DRender", bindCtors: false, owned: false),
-                R("Qt3DRender::QPointLight", "qpointlight.h", "Qt3DRender"),
-                R("Qt3DRender::QPointSize", "qpointsize.h", "Qt3DRender"),
-                R("Qt3DRender::QPolygonOffset", "qpolygonoffset.h", "Qt3DRender"),
-                R("Qt3DRender::QProximityFilter", "qproximityfilter.h", "Qt3DRender"),
-                R("Qt3DRender::QRasterMode", "qrastermode.h", "Qt3DRender"),
-                R("Qt3DRender::QRayCaster", "qraycaster.h", "Qt3DRender"),
-                R("Qt3DRender::QRayCasterHit", "qraycasterhit.h", "Qt3DRender"),
-                R("Qt3DRender::QRenderAspect", "qrenderaspect.h", "Qt3DRender"),
-                R("Qt3DRender::QRenderCapabilities", "qrendercapabilities.h", "Qt3DRender"),
-                R("Qt3DRender::QRenderCapture", "qrendercapture.h", "Qt3DRender"),
-                R("Qt3DRender::QRenderCaptureReply", "qrendercapture.h", "Qt3DRender"),
-                R("Qt3DRender::QRenderPass", "qrenderpass.h", "Qt3DRender"),
-                R("Qt3DRender::QRenderPassFilter", "qrenderpassfilter.h", "Qt3DRender"),
-                R("Qt3DRender::QRenderSettings", "qrendersettings.h", "Qt3DRender"),
-                R("Qt3DRender::QRenderState", "qrenderstate.h", "Qt3DRender"),
-                R("Qt3DRender::QRenderStateSet", "qrenderstateset.h", "Qt3DRender"),
-                R("Qt3DRender::QRenderSurfaceSelector", "qrendersurfaceselector.h", "Qt3DRender"),
-                R("Qt3DRender::QRenderTarget", "qrendertarget.h", "Qt3DRender"),
-                R("Qt3DRender::QRenderTargetOutput", "qrendertargetoutput.h", "Qt3DRender"),
-                R("Qt3DRender::QRenderTargetSelector", "qrendertargetselector.h", "Qt3DRender"),
-                R("Qt3DRender::QSceneLoader", "qsceneloader.h", "Qt3DRender"),
-                R("Qt3DRender::QScissorTest", "qscissortest.h", "Qt3DRender"),
-                R("Qt3DRender::QScreenRayCaster", "qscreenraycaster.h", "Qt3DRender"),
-                R("Qt3DRender::QSeamlessCubemap", "qseamlesscubemap.h", "Qt3DRender"),
-                R("Qt3DRender::QSetFence", "qsetfence.h", "Qt3DRender"),
-                R("Qt3DRender::QShaderData", "qshaderdata.h", "Qt3DRender"),
-                R("Qt3DRender::QShaderImage", "qshaderimage.h", "Qt3DRender"),
-                R("Qt3DRender::QShaderProgram", "qshaderprogram.h", "Qt3DRender"),
-                R("Qt3DRender::QShaderProgramBuilder", "qshaderprogrambuilder.h", "Qt3DRender"),
-                R("Qt3DRender::QSharedGLTexture", "qtexture.h", "Qt3DRender"),
-                R("Qt3DRender::QSortPolicy", "qsortpolicy.h", "Qt3DRender"),
-                R("Qt3DRender::QSpotLight", "qspotlight.h", "Qt3DRender"),
-                R("Qt3DRender::QStencilMask", "qstencilmask.h", "Qt3DRender"),
-                R("Qt3DRender::QStencilOperation", "qstenciloperation.h", "Qt3DRender"),
-                R("Qt3DRender::QStencilOperationArguments", "qstenciloperationarguments.h", "Qt3DRender"),
-                R("Qt3DRender::QStencilTest", "qstenciltest.h", "Qt3DRender"),
-                R("Qt3DRender::QStencilTestArguments", "qstenciltestarguments.h", "Qt3DRender"),
-                R("Qt3DRender::QSubtreeEnabler", "qsubtreeenabler.h", "Qt3DRender"),
-                R("Qt3DRender::QTechnique", "qtechnique.h", "Qt3DRender"),
-                R("Qt3DRender::QTechniqueFilter", "qtechniquefilter.h", "Qt3DRender"),
-                R("Qt3DRender::QTexture1D", "qtexture.h", "Qt3DRender"),
-                R("Qt3DRender::QTexture1DArray", "qtexture.h", "Qt3DRender"),
-                R("Qt3DRender::QTexture2D", "qtexture.h", "Qt3DRender"),
-                R("Qt3DRender::QTexture2DArray", "qtexture.h", "Qt3DRender"),
-                R("Qt3DRender::QTexture2DMultisample", "qtexture.h", "Qt3DRender"),
-                R("Qt3DRender::QTexture2DMultisampleArray", "qtexture.h", "Qt3DRender"),
-                R("Qt3DRender::QTexture3D", "qtexture.h", "Qt3DRender"),
-                R("Qt3DRender::QTextureBuffer", "qtexture.h", "Qt3DRender"),
-                R("Qt3DRender::QTextureCubeMap", "qtexture.h", "Qt3DRender"),
-                R("Qt3DRender::QTextureCubeMapArray", "qtexture.h", "Qt3DRender"),
-                R("Qt3DRender::QTextureData", "qtexturedata.h", "Qt3DRender"),
-                R("Qt3DRender::QTextureDataUpdate", "qtexturedataupdate.h", "Qt3DRender"),
-                R("Qt3DRender::QTextureImage", "qtextureimage.h", "Qt3DRender"),
-                R("Qt3DRender::QTextureImageData", "qtextureimagedata.h", "Qt3DRender"),
-                R("Qt3DRender::QTextureImageDataGenerator", "qtextureimagedatagenerator.h", "Qt3DRender"),
-                R("Qt3DRender::QTextureLoader", "qtexture.h", "Qt3DRender"),
-                R("Qt3DRender::QTextureRectangle", "qtexture.h", "Qt3DRender"),
-                R("Qt3DRender::QTextureWrapMode", "qtexturewrapmode.h", "Qt3DRender"),
-                R("Qt3DRender::QViewport", "qviewport.h", "Qt3DRender"),
-                R("Qt3DRender::QWaitFence", "qwaitfence.h", "Qt3DRender"),
-            },
-        },
+        // Qt3D is one binding per Qt module (six separate packages), not one package for the
+        // family. Each module declares the ones it builds on; see ApiModel.Qt3D.cs.
+        Qt3DCoreModule(),
+        Qt3DRenderModule(),
+        Qt3DInputModule(),
+        Qt3DLogicModule(),
+        Qt3DAnimationModule(),
+        Qt3DExtrasModule(),
     };
 
     internal static ExtensionModule FindExtensionModule(string name)
@@ -656,6 +419,31 @@ public static partial class ApiModel
                 $"Unknown extension module '{name}'. Known modules: {string.Join(", ", ExtensionModules.Select(m => m.Name))}");
         }
         return module;
+    }
+
+    /// <summary>
+    /// The module itself followed by every extension module it builds on, transitively. The
+    /// extractor needs their roots to accept a base/type that belongs to another package; the
+    /// code generator needs their models for the same reason.
+    /// </summary>
+    internal static IEnumerable<ExtensionModule> ModuleClosure(ExtensionModule module)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var stack = new Stack<ExtensionModule>();
+        stack.Push(module);
+        while (stack.Count > 0)
+        {
+            var current = stack.Pop();
+            if (!seen.Add(current.Name))
+                continue;
+            yield return current;
+            foreach (string dependency in current.DependsOn)
+            {
+                var resolved = ExtensionModules.FirstOrDefault(m => m.Name == dependency);
+                if (resolved != null)
+                    stack.Push(resolved);
+            }
+        }
     }
 
     static readonly Root[] Roots =
@@ -1371,6 +1159,18 @@ public static partial class ApiModel
                 types.Add(root.ManagedClass);
                 types.Add(root.ManagedClass + "*");
             }
+            // ... and the classes of the extension modules this one builds on: a Qt3DRender
+            // signature takes Qt3DCore::QEntity, which is bound, just in another package.
+            foreach (var dependency in ModuleClosure(CurrentModule))
+            {
+                foreach (var root in dependency.Roots)
+                {
+                    types.Add(root.Class);
+                    types.Add(root.Class + "*");
+                    types.Add(root.ManagedClass);
+                    types.Add(root.ManagedClass + "*");
+                }
+            }
         }
         foreach (var opaque in OpaquePointers)
             types.Add(opaque + "*");
@@ -1404,7 +1204,9 @@ public static partial class ApiModel
             // (Qt3DCore::QEntity*); the simple one is what the model's class table and the
             // class-scoped enum names use (QEntity::Aspect).
             : Roots.Select(r => r.Class)
-                .Concat(CurrentModule.Roots.SelectMany(r => new[] { r.Class, r.ManagedClass }))
+                .Concat(ModuleClosure(CurrentModule)
+                    .SelectMany(m => m.Roots)
+                    .SelectMany(r => new[] { r.Class, r.ManagedClass }))
                 .Distinct(StringComparer.Ordinal);
 
         // Only ever asked about a class that is being extracted, so the module's own table is the
@@ -1515,6 +1317,10 @@ public static partial class ApiModel
     {
         sb.Append("    { \"name\": ").Append(Json(entry.Name));
         sb.Append(", \"qualified\": ").Append(Json(entry.Qualified));
+        // The owning extension module. A dependency enum is carried for type resolution but is
+        // emitted by the dependency's own package.
+        if (!string.IsNullOrEmpty(entry.Module))
+            sb.Append(", \"module\": ").Append(Json(entry.Module));
         // The C++ spelling when the published name dropped a module's namespace
         // (Qt3DCore::ChangeFlag -> ChangeFlag), so the native glue can still name the type.
         if (!string.IsNullOrEmpty(entry.CppQualified) &&
@@ -1534,10 +1340,10 @@ public static partial class ApiModel
         public string Qualified;
         // The fully qualified C++ name when Qualified dropped a module namespace.
         public string CppQualified;
-        // Whether the declaration lives in one of the extension module's own include
-        // directories. The core's Qt:: enums are visible in an extension's translation unit
-        // too; only the module's own enums may be published by it.
-        public bool InModule;
+        // The extension module that declares the enum, or null for a core enum. An extension
+        // model carries its dependencies' enums for type resolution, but only its own are
+        // emitted and packaged.
+        public string Module;
         // The items are kept as plain values rather than as a declaration.
         public List<(string Name, long Value)> Items = new();
         public bool Flags;
@@ -1557,7 +1363,8 @@ public static partial class ApiModel
         => scope.Length == 0 || scope == "Qt" || RootClasses.Contains(scope)
            // A module that lives in a C++ namespace (Qt3D) declares enums at that namespace's
            // scope (Qt3DCore::ChangeFlag). They are published as namespace-level C# enums.
-           || (CurrentModule != null && CurrentModule.QtModules.Contains(scope));
+           || (CurrentModule != null
+               && ModuleClosure(CurrentModule).Any(m => m.QtModules.Contains(scope)));
 
     static string Json(string s) => s == null ? "null" : "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
 

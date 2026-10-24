@@ -15,14 +15,19 @@
   <Import Project="..\..\QtSharp.Api.props" />
 
   <ItemGroup>
-    <ProjectReference Include="..\..\nuget\QtSharp.Qt3D\QtSharp.Qt3D.csproj" />
+    <ProjectReference Include="..\..\nuget\QtSharp.Qt3D\Modules\QtSharp.Qt3DExtras\QtSharp.Qt3DExtras.csproj" />
   </ItemGroup>
 
   <!-- The Qt3D native glue and the six Qt3D runtime DLLs. The plugin directories are laid out
        the way Qt expects them next to the executable. -->
   <Target Name="CopyQt3DNativeDeps" AfterTargets="Build">
     <ItemGroup>
-      <Qt3DNative Include="..\..\out\api-modules\qt3d\QtSharp.Qt3D.Native.dll" />
+      <Qt3DNative Include="..\..\out\api-modules\qt3dcore\QtSharp.Qt3DCore.Native.dll" />
+      <Qt3DNative Include="..\..\out\api-modules\qt3drender\QtSharp.Qt3DRender.Native.dll" />
+      <Qt3DNative Include="..\..\out\api-modules\qt3dinput\QtSharp.Qt3DInput.Native.dll" />
+      <Qt3DNative Include="..\..\out\api-modules\qt3dlogic\QtSharp.Qt3DLogic.Native.dll" />
+      <Qt3DNative Include="..\..\out\api-modules\qt3danimation\QtSharp.Qt3DAnimation.Native.dll" />
+      <Qt3DNative Include="..\..\out\api-modules\qt3dextras\QtSharp.Qt3DExtras.Native.dll" />
       <Qt3DRuntime Include="..\..\Qt\6.11.0\runtime\Qt63D*.dll" />
       <Qt3DRenderer Include="..\..\Qt\6.11.0\runtime\plugins\renderers\*.dll" />
       <Qt3DGeometryLoader Include="..\..\Qt\6.11.0\runtime\plugins\geometryloaders\*.dll" />

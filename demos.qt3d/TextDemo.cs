@@ -1,7 +1,9 @@
 using System;
 using QtSharp.Api;
-using QtSharp.Qt3D;
-using QTransform3D = QtSharp.Qt3D.QTransform;
+using QtSharp.Qt3DCore;
+using QtSharp.Qt3DRender;
+using QtSharp.Qt3DExtras;
+using QTransform3D = QtSharp.Qt3DCore.QTransform;
 
 namespace QtSharp.Qt3D.Demos
 {

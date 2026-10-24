@@ -68,7 +68,7 @@ jobs:
           try {
             & "./qtgen.exe" codegen (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/api')
             if ($LASTEXITCODE -ne 0) { throw "codegen (core) failed" }
-            foreach ($module in @('charts', 'qt3d')) {
+            foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras')) {
               & "./qtgen.exe" codegen (Join-Path $root "model/qtsharp.$module.json") (Join-Path $root "out/$module") --module $module
               if ($LASTEXITCODE -ne 0) { throw "codegen ($module) failed" }
             }
@@ -90,7 +90,7 @@ jobs:
         run: |
           cmd /c build_api.bat
           if ($LASTEXITCODE -ne 0) { throw "build_api.bat failed" }
-          foreach ($module in @('charts', 'qt3d')) {
+          foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras')) {
             powershell -NoProfile -File tools\build-native-module.ps1 -Module $module -QtDir "$env:QT_DIR"
             if ($LASTEXITCODE -ne 0) { throw "$module native build failed" }
           }

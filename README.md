@@ -46,7 +46,7 @@ Extension modules are separate assemblies and packages against the same runtime:
 | module | package | contents |
 |---|---|---|
 | QtCharts | `QtSharp.Charts` | `QChart`, `QChartView`, the series, bars, pie and axis families |
-| Qt3D | `QtSharp.Qt3D` | **230 classes** from Qt3DCore, Qt3DRender, Qt3DInput, Qt3DLogic, Qt3DAnimation and Qt3DExtras |
+| Qt3D | `QtSharp.Qt3D` | **230 classes** from Qt3DCore, Qt3DRender, Qt3DInput, Qt3DLogic, Qt3DAnimation and Qt3DExtras, as six assemblies/namespaces in one package |
 
 ## Install the binding
 
@@ -100,7 +100,9 @@ than part of qtbase. It references the core package and adds all six modules:
 
 ```csharp
 using QtSharp.Api;
-using QtSharp.Qt3D;
+using QtSharp.Qt3DCore;
+using QtSharp.Qt3DRender;
+using QtSharp.Qt3DExtras;
 
 var view = new Qt3DWindow();
 var root = new QEntity();
@@ -487,8 +489,9 @@ Replace the local source path with your checkout's `out/packages` directory.
   inheriting that license. Qt3D is **LGPLv3/GPLv2/commercial**; it is split for the packaging
   reason (an optional family of six libraries), not for licensing.
   Qt3D's `QTransform`, `QBuffer`, `QAction`, `QKeyEvent`, `QMouseEvent` and `QWheelEvent` share
-  their names with core classes; inside `QtSharp.Qt3D` the Qt3D class wins, and a file that
-  imports both namespaces aliases the one it means.
+  their names with core classes; each lives in its Qt module namespace (`QtSharp.Qt3DCore`,
+  `QtSharp.Qt3DInput`), so a file that imports both aliases the one it means (`using
+  QTransform3D = QtSharp.Qt3DCore.QTransform;`).
 * **Qt3D-specific virtuals are not override points yet.** The override whitelist is the core's
   widget/event/model set, so a managed subclass of a Qt3D class can use its API but cannot replace
   `QAbstractAspect::onEngineStartup`-style hooks (or `executeCommand`/`jobsToExecute`). Signals,

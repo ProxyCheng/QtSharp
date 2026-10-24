@@ -7,8 +7,10 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 ## Unreleased
 
 - Added the `QtSharp.Qt3D` extension package: 230 classes from Qt3DCore, Qt3DRender, Qt3DInput,
-  Qt3DLogic, Qt3DAnimation and Qt3DExtras, as one assembly against `QtSharp.Api`, with the native
-  glue, the six Qt3D runtime DLLs and the renderer/geometry/scene plugins in the payload.
+  Qt3DLogic, Qt3DAnimation and Qt3DExtras, as **six assemblies with six namespaces**
+  (`QtSharp.Qt3DCore` … `QtSharp.Qt3DExtras`) in one package, mirroring Qt's module split and the
+  `PyQt6-3D` / `PySide6-Addons` package shape. The payload carries the six native glues, the Qt3D
+  runtime DLLs and the renderer/geometry/scene plugins.
 - Extension modules can now span several Qt include directories and defines, and can bind classes
   that live in a C++ namespace (Qt3DCore::QEntity). The extractor identifies every class, base and
   signature type by its fully qualified C++ name; the class table carries the C++ spelling for the

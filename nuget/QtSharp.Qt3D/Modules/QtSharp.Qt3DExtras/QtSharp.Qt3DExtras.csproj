@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- One Qt3D module = one assembly and one C# namespace, as Qt itself splits
+       Qt3DCore/Qt3DRender/... The six assemblies are packed together as one QtSharp.Qt3D
+       package (the PyQt6-3D / PySide6-Addons shape). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>QtSharp.Qt3DExtras</AssemblyName>
+    <RootNamespace>QtSharp.Qt3DExtras</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\out\qt3dextras\generated\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\QtSharp.Api\QtSharp.Api.csproj" />
+    <ProjectReference Include="..\QtSharp.Qt3DCore\QtSharp.Qt3DCore.csproj" />
+    <ProjectReference Include="..\QtSharp.Qt3DRender\QtSharp.Qt3DRender.csproj" />
+    <ProjectReference Include="..\QtSharp.Qt3DInput\QtSharp.Qt3DInput.csproj" />
+    <ProjectReference Include="..\QtSharp.Qt3DLogic\QtSharp.Qt3DLogic.csproj" />
+    <ProjectReference Include="..\QtSharp.Qt3DAnimation\QtSharp.Qt3DAnimation.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -40,7 +40,16 @@ public static partial class ApiModel
         // All roots in one translation unit: the first header is the source file, the rest are
         // pre-included. This is the configuration CppSharp could not parse reproducibly; here the
         // parse is a straight function of its inputs.
-        var headers = ActiveRoots.Select(HeaderOf).Distinct().ToList();
+        var headers = ActiveRoots.Select(HeaderOf).ToList();
+        if (CurrentModule != null)
+        {
+            foreach (var extra in CurrentModule.ExtraHeaders)
+            {
+                headers.Add(Path.Combine(QtLibrary.QtIncludeRoot,
+                    CurrentModule.QtModules[0], extra));
+            }
+        }
+        headers = headers.Distinct().ToList();
         Console.WriteLine($"[model2] parsing {headers.Count} header(s), {ActiveRoots.Length} class(es), one translation unit");
 
         using var index = CXIndex.Create(false, false);
@@ -127,6 +136,11 @@ public static partial class ApiModel
 
         ReportCoverage2();
 
+        // Every public enum the module declares, not only the ones a published signature happens
+        // to mention. Another module that builds on this one may use any of them (Qt3DExtras
+        // uses Qt3DRender::QClearBuffers::BufferType, which no Qt3DRender signature references).
+        CollectDeclaredEnums(index2, part.Enums);
+
         // Enums that are part of the published vocabulary but never appear in a signature.
         CollectExtraEnums(index2, part.Enums);
 
@@ -140,15 +154,14 @@ public static partial class ApiModel
         // signature that mentions a core enum.
         if (CurrentModule != null)
         {
-            var own = new HashSet<string>(ActiveRoots.Select(r => r.ManagedClass), StringComparer.Ordinal);
-            // A namespace-level enum of a namespaced module (Qt3DCore::ChangeFlag) has had its
-            // namespace stripped and is published at the module namespace's top level.
-            own.Add(string.Empty);
-            // The translation unit also parses QtCore/QtGui for the base classes, so an enum has
-            // to be declared in *this* module's headers as well as scoped somewhere publishable;
-            // otherwise Qt::Alignment and friends would be duplicated into the extension.
+            // Keep this module's enums and those of the modules it builds on; drop the core's
+            // (Qt::Alignment and friends are published by the core assembly already). A
+            // dependency enum is not emitted by this package, only used to type its signatures.
+            var allowed = new HashSet<string>(
+                ModuleClosure(CurrentModule).Select(m => m.Name), StringComparer.Ordinal);
             foreach (var key in part.Enums.Keys
-                         .Where(k => !part.Enums[k].InModule || !own.Contains(ScopeOfQualified(k)))
+                         .Where(k => part.Enums[k].Module == null
+                                     || !allowed.Contains(part.Enums[k].Module))
                          .ToList())
                 part.Enums.Remove(key);
             part.Functions.Clear();
@@ -257,13 +270,16 @@ public static partial class ApiModel
         };
         if (CurrentModule != null)
         {
-            // The extension module's own defines and header directories. Everything above stays:
-            // its headers include QtWidgets/QtGui/QtCore, and the classes it derives from are
-            // bound there. Qt3D is one binding over six modules, so both lists are arrays.
-            foreach (var define in CurrentModule.QtDefines)
-                args.Add("-D" + define);
-            foreach (var module in CurrentModule.QtModules)
-                args.Add("-I" + Path.Combine(QtLibrary.QtIncludeRoot, module));
+            // The module's own defines/header directories and those of the extension modules it
+            // builds on. Everything above stays: its headers include QtWidgets/QtGui/QtCore, and
+            // the classes it derives from are bound there.
+            foreach (var dependency in ModuleClosure(CurrentModule))
+            {
+                foreach (var define in dependency.QtDefines)
+                    args.Add("-D" + define);
+                foreach (var module in dependency.QtModules)
+                    args.Add("-I" + Path.Combine(QtLibrary.QtIncludeRoot, module));
+            }
         }
         foreach (var header in headers.Skip(1))
         {
@@ -699,22 +715,28 @@ public static partial class ApiModel
     // Whether a declaration belongs to the extension module being extracted, by the header it
     // lives in. An extension's translation unit also parses QtCore/QtGui (for the base classes),
     // so "declared in this parse" is not the same as "declared by this module".
-    static unsafe bool IsInModuleInclude(CXCursor declaration)
+    // The extension module that declares a cursor, by the include directory its file lives in;
+    // null for a core declaration (QtCore, QtGui, ...). A dependency module's enum is retained in
+    // the model for type resolution but is emitted by that module's own package.
+    static unsafe ExtensionModule ModuleOfDeclaration(CXCursor declaration)
     {
         if (CurrentModule == null)
-            return true;
+            return null;
         var location = clang.getCursorLocation(declaration);
         location.GetSpellingLocation(out var file, out _, out _, out _);
         if (file.Handle == IntPtr.Zero)
-            return false;
+            return null;
         var path = Path.GetFullPath(clang.getFileName(file).ToString());
-        foreach (var module in CurrentModule.QtModules)
+        foreach (var module in ExtensionModules)
         {
-            var dir = Path.Combine(QtLibrary.QtIncludeRoot, module) + Path.DirectorySeparatorChar;
-            if (path.StartsWith(dir, StringComparison.OrdinalIgnoreCase))
-                return true;
+            foreach (var qtModule in module.QtModules)
+            {
+                var dir = Path.Combine(QtLibrary.QtIncludeRoot, qtModule) + Path.DirectorySeparatorChar;
+                if (path.StartsWith(dir, StringComparison.OrdinalIgnoreCase))
+                    return module;
+            }
         }
-        return false;
+        return null;
     }
 
     // The name a declaration is published under. An extension module publishes into one C#
@@ -724,11 +746,16 @@ public static partial class ApiModel
     // class. This is structural - it does not depend on what the namespace is called.
     static string ModelScopeName(CXCursor declaration)
     {
+        var owner = ModuleOfDeclaration(declaration);
+        // A dependency module's type keeps its full C++ name: it is published by that module's
+        // package, and this model only needs it to resolve the type.
+        if (CurrentModule != null && owner != null && owner != CurrentModule)
+            return FullQualifiedName(declaration);
         var name = clang.getCursorSpelling(declaration).ToString();
         var parent = clang.getCursorSemanticParent(declaration);
         if (CurrentModule != null
             && clang.getCursorKind(parent) == CXCursorKind.CXCursor_Namespace
-            && IsInModuleInclude(declaration))
+            && owner == CurrentModule)
             return name;
         var scope = ScopeOf(declaration);
         return scope.Length == 0 ? name : scope + "::" + name;
@@ -750,11 +777,14 @@ public static partial class ApiModel
     // Qt::AlignmentFlag, or just the name for a global enum.
     static string EnumTypeName(CXCursor enumCursor)
     {
+        var owner = ModuleOfDeclaration(enumCursor);
+        if (CurrentModule != null && owner != null && owner != CurrentModule)
+            return FullQualifiedName(enumCursor);
         var name = clang.getCursorSpelling(enumCursor).ToString();
         var parent = clang.getCursorSemanticParent(enumCursor);
         if (CurrentModule != null
             && clang.getCursorKind(parent) == CXCursorKind.CXCursor_Namespace
-            && IsInModuleInclude(enumCursor))
+            && owner == CurrentModule)
             return name;
         var scope = ScopeOf(enumCursor);
         return scope.Length == 0 ? name : scope + "::" + name;
@@ -2237,6 +2267,57 @@ public static partial class ApiModel
         return !expectLetter;
     }
 
+    // Every public enum declared by this extension module: the enums nested in its root classes
+    // and the namespace-level enums in its own headers. A dependent module may name any of them
+    // in its signatures, so the owner has to publish all of them, not only those its own methods
+    // mention.
+    static void CollectDeclaredEnums(ClangIndex index, Dictionary<string, EnumEntry> enums)
+    {
+        if (CurrentModule == null)
+            return;
+
+        foreach (var root in ActiveRoots)
+        {
+            if (!TryGetClass(index, root.Class, out var record))
+                continue;
+            foreach (var child in Children(record))
+            {
+                if (clang.getCursorKind(child) != CXCursorKind.CXCursor_EnumDecl)
+                    continue;
+                if (Access(child) != CX_CXXAccessSpecifier.CX_CXXPublic)
+                    continue;
+                Add(child);
+            }
+        }
+
+        foreach (var cursor in index.Enums.Values.Distinct())
+        {
+            if (ModuleOfDeclaration(cursor) != CurrentModule)
+                continue;
+            if (clang.getCursorKind(clang.getCursorSemanticParent(cursor)) != CXCursorKind.CXCursor_Namespace)
+                continue;
+            Add(cursor);
+        }
+
+        void Add(CXCursor cursor)
+        {
+            if (clang.getCursorSpelling(cursor).ToString().Length == 0)
+                return;
+            var name = EnumTypeName(cursor);
+            if (enums.ContainsKey(name))
+                return;
+            enums[name] = new EnumEntry
+            {
+                Name = clang.getCursorSpelling(cursor).ToString(),
+                Qualified = name,
+                CppQualified = FullQualifiedName(cursor),
+                Module = CurrentModule.Name,
+                Items = EnumItems(cursor),
+                Flags = false,
+            };
+        }
+    }
+
     // Any enum that reaches an accepted signature is part of the model; enums are open (plain
     // integers with no further reachability), but their scope has to be somewhere managed code
     // can put them.
@@ -2261,7 +2342,7 @@ public static partial class ApiModel
                         Name = flags.Substring(flags.LastIndexOf("::", StringComparison.Ordinal) + 2),
                         Qualified = flags,
                         CppQualified = FullQualifiedName(type.Declaration),
-                        InModule = IsInModuleInclude(type.Declaration),
+                        Module = ModuleOfDeclaration(type.Declaration)?.Name,
                         Items = EnumItems(enumCursor),
                         Flags = true,
                     };
@@ -2278,7 +2359,7 @@ public static partial class ApiModel
                 Name = clang.getCursorSpelling(declaration).ToString(),
                 Qualified = name,
                 CppQualified = FullQualifiedName(declaration),
-                InModule = IsInModuleInclude(declaration),
+                Module = ModuleOfDeclaration(declaration)?.Name,
                 Items = EnumItems(declaration),
                 Flags = false,
             };
@@ -2309,7 +2390,7 @@ public static partial class ApiModel
                 Name = qualified.Substring(qualified.LastIndexOf("::", StringComparison.Ordinal) + 2),
                 Qualified = qualified,
                 CppQualified = FullQualifiedName(cursor),
-                InModule = IsInModuleInclude(cursor),
+                Module = ModuleOfDeclaration(cursor)?.Name,
                 Items = EnumItems(cursor),
                 Flags = false,
             };

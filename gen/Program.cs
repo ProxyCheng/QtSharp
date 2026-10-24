@@ -397,6 +397,7 @@ class Program
                     Console.WriteLine("qtModules=" + string.Join(",", m.QtModules));
                     Console.WriteLine("qtDefines=" + string.Join(",", m.QtDefines));
                     Console.WriteLine("qtLibs=" + string.Join(",", m.QtLibs));
+                    Console.WriteLine("dependsOn=" + string.Join(",", m.DependsOn));
                     Console.WriteLine("classes=" + m.Roots.Length);
                     return 0;
                 }

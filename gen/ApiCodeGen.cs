@@ -73,6 +73,11 @@ public static class ApiCodeGen
     // ambiguous when an extension class shadows a core one, so type resolution goes through
     // this table first.
     static Dictionary<string, JsonElement> ByRef;
+    // The owning extension module of every known class/enum (null for the core binding). A class
+    // from another extension module is emitted in that module's assembly and namespace, so its
+    // C# spelling is qualified with that namespace.
+    static Dictionary<string, ApiModel.ExtensionModule> ClassModules = new(StringComparer.Ordinal);
+    static Dictionary<string, ApiModel.ExtensionModule> EnumModules = new(StringComparer.Ordinal);
     static HashSet<string> ClassNames;
     static HashSet<string> EnumNames;
     static HashSet<string> FlagsEnums;
@@ -93,24 +98,23 @@ public static class ApiCodeGen
     // namespace the extension class shadows the imported one, which is what we want for its own
     // signatures; a signature that really means the *core* class has to say QtSharp.Api.<name>.
     static HashSet<string> CoreClassCollisions = new(StringComparer.Ordinal);
-    // The enums this run emits (the extension's own; the core's are filtered out). A nested enum
-    // with a colliding scope - QBuffer::UsageType - belongs to the extension, while a core enum
-    // with the same simple scope does not.
-    static HashSet<string> OwnEnumNames = new(StringComparer.Ordinal);
-
-    // The C# spelling of a model type. A namespaced extension class drops its C++ namespace; an
-    // unqualified core class that collides with an extension class is qualified with the core
-    // assembly's namespace.
+    // The C# spelling of a model type. A class/enum owned by this module is unqualified; one
+    // owned by a dependency extension module is qualified with that module's namespace; a core
+    // class that collides with an extension class is qualified with QtSharp.Api.
     static string CsTypeName(string t)
     {
-        if (ClassNames.Contains(t))
+        if (ClassModules.TryGetValue(t, out var owner))
         {
-            if (!t.Contains("::", StringComparison.Ordinal) && CoreClassCollisions.Contains(t))
-                return ApiModel.CoreNamespace + "." + t;
-            return SimpleName(t);
+            if (owner == null)
+                return !t.Contains("::", StringComparison.Ordinal) && CoreClassCollisions.Contains(t)
+                    ? ApiModel.CoreNamespace + "." + t
+                    : SimpleName(t);
+            return ReferenceEquals(owner, ApiModel.CurrentModule)
+                ? SimpleName(t)
+                : owner.Namespace + "." + SimpleName(t);
         }
-        if (OwnEnumNames.Contains(t))
-            return t.Replace("::", ".");
+        if (EnumModules.TryGetValue(t, out var enumOwner))
+            return EnumCSharpName(t, enumOwner);
         int i = t.LastIndexOf("::", StringComparison.Ordinal);
         if (i >= 0)
         {
@@ -122,6 +126,30 @@ public static class ApiCodeGen
             return t.Replace("::", ".");
         }
         return t;
+    }
+
+    static string EnumCSharpName(string t, ApiModel.ExtensionModule owner)
+    {
+        if (owner == null)
+        {
+            string dotted = t.Replace("::", ".");
+            int at = t.LastIndexOf("::", StringComparison.Ordinal);
+            if (at > 0)
+            {
+                string scope = t.Substring(0, at);
+                if (!scope.Contains("::", StringComparison.Ordinal) && CoreClassCollisions.Contains(scope))
+                    return ApiModel.CoreNamespace + "." + dotted;
+            }
+            return dotted;
+        }
+        string managed = t;
+        string qtModule = owner.QtModules[0];
+        if (managed.StartsWith(qtModule + "::", StringComparison.Ordinal))
+            managed = managed.Substring(qtModule.Length + 2);
+        managed = managed.Replace("::", ".");
+        return ReferenceEquals(owner, ApiModel.CurrentModule)
+            ? managed
+            : owner.Namespace + "." + managed;
     }
 
     // A *model type*: an extension class is spelled by its qualified C++ name, an unqualified
@@ -335,6 +363,34 @@ public static class ApiCodeGen
     }
 
     /// <summary>
+    /// The model of an extension module this one builds on (Qt3DCore for Qt3DRender, ...). The
+    /// sibling of the module model is tried first, then QTSHARP_MODEL_DIR, then the checkout.
+    /// </summary>
+    static string DependencyModelPath(ApiModel.ExtensionModule dependency, string modelPath)
+    {
+        string name = $"qtsharp.{dependency.Name}.json";
+        var sibling = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(modelPath)), name);
+        if (File.Exists(sibling))
+            return sibling;
+        var configured = Environment.GetEnvironmentVariable("QTSHARP_MODEL_DIR");
+        if (!string.IsNullOrEmpty(configured))
+        {
+            var candidate = Path.Combine(configured, name);
+            if (File.Exists(candidate))
+                return candidate;
+        }
+        if (QtLibrary.RepoRoot != null)
+        {
+            var inRepo = Path.Combine(QtLibrary.RepoRoot, "model", name);
+            if (File.Exists(inRepo))
+                return inRepo;
+        }
+        throw new FileNotFoundException(
+            $"'{dependency.Name}' is a dependency of this module, but model/{name} was not found beside " +
+            $"'{modelPath}'. Put it in the same model directory or set QTSHARP_MODEL_DIR.");
+    }
+
+    /// <summary>
     /// Generates a binding from a model. With <paramref name="module"/> null that is the core
     /// binding; with one it is that extension module's binding, which is a separate assembly and a
     /// separate package - it references the core one rather than containing it.
@@ -342,8 +398,8 @@ public static class ApiCodeGen
     public static void Run(string modelPath, string outDir, ApiModel.ExtensionModule module = null)
     {
         using var document = JsonDocument.Parse(File.ReadAllText(modelPath));
-        // An extension also reads the core model, for everything it does not define itself: the base
-        // classes its classes derive from, and the enums those bases and its own signatures use.
+        // An extension also reads the core model and the models of the extension modules it builds
+        // on, for the base classes and enums it does not define itself.
         using var coreDocument = module == null
             ? null
             : JsonDocument.Parse(File.ReadAllText(CoreModelPath(modelPath)));
@@ -357,41 +413,92 @@ public static class ApiCodeGen
         // know which module this run is about as well.
         ApiModel.CurrentModule = module;
 
+        // The dependency models stay alive until the native glue has been written: JsonElement
+        // values point into their documents.
+        var dependencyDocuments = new List<(ApiModel.ExtensionModule Module, JsonDocument Document)>();
+        if (module != null)
+        {
+            foreach (var dependency in ApiModel.ModuleClosure(module))
+            {
+                if (ReferenceEquals(dependency, module))
+                    continue;
+                dependencyDocuments.Add((dependency, JsonDocument.Parse(
+                    File.ReadAllText(DependencyModelPath(dependency, modelPath)))));
+            }
+        }
+
         // What this run *emits*. The runtime's value types are not among them: QPointF and QPoint
         // are structs the binding ships (runtime/QtStructs.cs), so no class is generated for
         // them. They stay *known* further down, which is what keeps their names resolving and an
         // array of them marshalling as the struct array it already is.
         var modelClasses = root.GetProperty("classes").EnumerateArray().ToList();
+        var modelEnums = root.GetProperty("enums").EnumerateArray().ToList();
         Classes = modelClasses.Where(c => !ApiTypes.IsStruct(Name(c))).ToList();
         ModelClassNames = modelClasses.Select(c => Name(c)).ToHashSet(StringComparer.Ordinal);
-        Enums = root.GetProperty("enums").EnumerateArray().ToList();
+        // Emit this module's enums only. A dependency module's enums are in the model for type
+        // resolution but are emitted by that module's package; the core's live in the core model.
+        Enums = module == null
+            ? modelEnums
+            : modelEnums.Where(e => !e.TryGetProperty("module", out var owner)
+                                    || owner.GetString() == module.Name).ToList();
         Functions = root.TryGetProperty("functions", out var fns) && fns.ValueKind == JsonValueKind.Array
             ? fns.EnumerateArray().ToList()
             : new List<JsonElement>();
 
-        // What this run *knows*. For the core that is the model itself. For an extension it is the
-        // core's classes and enums as well, so `QChart : QGraphicsWidget` resolves, inherited members
-        // are spotted, and the core's enums are recognised as already-existing types.
+        // What this run *knows*: the core's classes/enums, those of every dependency extension
+        // module, and its own. `ClassModules`/`EnumModules` remember which assembly owns each
+        // type, which is what makes a Qt3DRender signature spell a Qt3DCore class as
+        // QtSharp.Qt3DCore.QEntity rather than as a local name.
         var knownClasses = modelClasses;
-        var knownEnums = Enums;
+        var knownEnums = modelEnums;
+        ClassModules = new Dictionary<string, ApiModel.ExtensionModule>(StringComparer.Ordinal);
+        EnumModules = new Dictionary<string, ApiModel.ExtensionModule>(StringComparer.Ordinal);
+
         if (coreDocument != null)
         {
             var coreRoot = coreDocument.RootElement;
+            var coreClasses = coreRoot.GetProperty("classes").EnumerateArray().ToList();
             var coreEnums = coreRoot.GetProperty("enums").EnumerateArray().ToList();
-            var coreEnumNames = new HashSet<string>(
-                coreEnums.Select(e => e.GetProperty("qualified").GetString()), StringComparer.Ordinal);
-            // ... and the core's enums are *not* emitted again: one type per name, or the two
-            // assemblies would each carry their own Qt.Alignment and neither would accept the other.
-            Enums = Enums.Where(e => !coreEnumNames.Contains(e.GetProperty("qualified").GetString())).ToList();
-            knownClasses = coreRoot.GetProperty("classes").EnumerateArray().Concat(Classes).ToList();
-            knownEnums = coreEnums.Concat(Enums).ToList();
+            foreach (var c in coreClasses)
+                ClassModules[Ref(c)] = null;
+            foreach (var e in coreEnums)
+                EnumModules[e.GetProperty("qualified").GetString()] = null;
+
+            var dependencyClasses = new List<JsonElement>();
+            var dependencyEnums = new List<JsonElement>();
+            foreach (var (dependency, dependencyDocument) in dependencyDocuments)
+            {
+                foreach (var c in dependencyDocument.RootElement.GetProperty("classes").EnumerateArray())
+                {
+                    dependencyClasses.Add(c);
+                    ClassModules[Ref(c)] = dependency;
+                }
+                foreach (var e in dependencyDocument.RootElement.GetProperty("enums").EnumerateArray())
+                {
+                    dependencyEnums.Add(e);
+                    EnumModules[e.GetProperty("qualified").GetString()] = dependency;
+                }
+            }
+
+            foreach (var c in Classes)
+                ClassModules[Ref(c)] = module;
+            foreach (var e in modelEnums)
+            {
+                string qualified = e.GetProperty("qualified").GetString();
+                if (e.TryGetProperty("module", out var owner) && !string.IsNullOrEmpty(owner.GetString()))
+                    EnumModules[qualified] = ApiModel.FindExtensionModule(owner.GetString());
+                else
+                    EnumModules[qualified] = module;
+            }
+
+            knownClasses = coreClasses.Concat(dependencyClasses).Concat(Classes).ToList();
+            knownEnums = coreEnums.Concat(dependencyEnums).Concat(modelEnums).ToList();
         }
 
         KnownClasses = knownClasses;
         // Keyed by the name the model uses in signatures: simple for the core binding, qualified
-        // for a namespaced module (Qt3DCore::QEntity). An extension class shadows a core class of
-        // the same simple name (Qt3DCore::QTransform vs QtGui::QTransform); the extension's model
-        // is the one this run emits, so it wins.
+        // for a namespaced module (Qt3DCore::QEntity). A core class of the same simple name is
+        // resolved through ByRef, which keeps the two apart.
         ByName = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
         ByRef = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
         CppNames = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -409,21 +516,25 @@ public static class ApiCodeGen
         foreach (var c in knownClasses)
             ClassNames.Add(Name(c));
 
-        // Only an extension has two assemblies to disambiguate. In the core run every class is
-        // the core's own, and qualifying them all would be a pointless (and huge) diff.
+        // A core class whose simple name an extension class also uses (QtGui::QTransform vs
+        // Qt3DCore::QTransform) has to be qualified with the core namespace in C#.
         CoreClassCollisions = new HashSet<string>(StringComparer.Ordinal);
         if (module != null && coreDocument != null)
         {
-            var extensionNames = new HashSet<string>(Classes.Select(Name), StringComparer.Ordinal);
             var coreNames = new HashSet<string>(
                 coreDocument.RootElement.GetProperty("classes").EnumerateArray().Select(Name),
                 StringComparer.Ordinal);
-            foreach (var name in extensionNames)
-                if (coreNames.Contains(name))
-                    CoreClassCollisions.Add(name);
+            foreach (var pair in ClassModules)
+            {
+                if (pair.Value == null)
+                    continue;
+                string simple = SimpleName(pair.Key);
+                if (coreNames.Contains(simple))
+                    CoreClassCollisions.Add(simple);
+            }
         }
-        EnumNames = new HashSet<string>(knownEnums.Select(e => e.GetProperty("qualified").GetString()), StringComparer.Ordinal);
-        OwnEnumNames = new HashSet<string>(Enums.Select(e => e.GetProperty("qualified").GetString()), StringComparer.Ordinal);
+        EnumNames = new HashSet<string>(
+            knownEnums.Select(e => e.GetProperty("qualified").GetString()), StringComparer.Ordinal);
         CppEnumNames = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var e in knownEnums)
         {
@@ -460,6 +571,8 @@ public static class ApiCodeGen
             File.Delete(staleSingleFile);
 
         File.WriteAllText(Path.Combine(outDir, assemblyName + ".native.cpp"), GenerateNative());
+        foreach (var (_, dependencyDocument) in dependencyDocuments)
+            dependencyDocument.Dispose();
         Console.WriteLine($"[codegen] wrote {outDir}/generated/ ({files.Count} files) + {assemblyName}.native.cpp");
     }
 
@@ -913,7 +1026,7 @@ public static class ApiCodeGen
     {
         string helper = ListHelper(elem);
         string stem = ListStem(elem);
-        string managed = ApiTypes.Managed(elem, ClassNames);
+        string managed = ManagedElement(elem);
         // The element is the loop variable of the generated New(): a scalar and a runtime struct both
         // cross as themselves, a handle (class pointer or boxed value) as the raw pointer it wraps.
         string argConv = IsScalarElem(elem) || IsStruct(elem) ? "item" : "item?.Handle ?? IntPtr.Zero";
@@ -1053,7 +1166,7 @@ public static class ApiCodeGen
     {
         string helper = BindableHelper(elem);
         string stem = ListStem(elem);
-        string managed = ApiTypes.Managed(elem, ClassNames);
+        string managed = ManagedElement(elem);
 
         sb.AppendLine();
         sb.AppendLine($"    internal static class {helper}");
@@ -1108,8 +1221,8 @@ public static class ApiCodeGen
         string helper = AssocHelper(t);
         string prefix = AssocPrefix(t);
         string stem = AssocStem(t);
-        string managedKey = ApiTypes.Managed(key, ClassNames);
-        string managedValue = ApiTypes.Managed(value, ClassNames);
+        string managedKey = ManagedElement(key);
+        string managedValue = ManagedElement(value);
 
         sb.AppendLine();
         sb.AppendLine($"    internal static class {helper}");
@@ -1329,8 +1442,7 @@ public static class ApiCodeGen
         sb.AppendLine("}");
     }
 
-    static string ToCSharpElement(string elem)
-        => IsScalarElem(elem) ? ManagedType(elem) : ApiTypes.Managed(elem, ClassNames);
+    static string ToCSharpElement(string elem) => ManagedElement(elem);
 
     static string ReadElement(string elem)
     {
@@ -2213,8 +2325,8 @@ public static class ApiCodeGen
         // The model records a Qt3D base by its qualified C++ name; C# names the class by its
         // simple one, and the inherited-member analysis resolves either.
         string baseRef = bases.Count > 0 ? bases[0] : null;
-        string baseName = baseRef != null ? SimpleName(baseRef) : null;
-        var extraBases = bases.Skip(1).Select(SimpleName).ToList();
+        string baseName = baseRef != null ? CsTypeName(baseRef) : null;
+        var extraBases = bases.Skip(1).ToList();
         var ctors = cls.GetProperty("constructors").EnumerateArray().ToList();
         var methods = cls.GetProperty("methods").EnumerateArray().ToList();
         var virtuals = ChainOf(Name(cls));
@@ -2525,8 +2637,10 @@ public static class ApiCodeGen
         // (which is the complete-object address) cannot simply be reinterpreted.
         foreach (var b in extraBases)
         {
-            sb.AppendLine($"        /// <summary>View of this object as its {b} base (a separate subobject).</summary>");
-            sb.AppendLine($"        public {NewMethod(inherited, "As" + b, "")}{b} As{b}() => {b}.FromHandle(ApiNative.{name}__as_{b}(Handle));");
+            string baseCs = CsTypeName(b);
+            string baseSimple = SimpleName(b);
+            sb.AppendLine($"        /// <summary>View of this object as its {baseSimple} base (a separate subobject).</summary>");
+            sb.AppendLine($"        public {NewMethod(inherited, "As" + baseSimple, "")}{baseCs} As{baseSimple}() => {baseCs}.FromHandle(ApiNative.{name}__as_{baseSimple}(Handle));");
             sb.AppendLine();
         }
 
@@ -3349,11 +3463,29 @@ public static class ApiCodeGen
     }
 
     // ------------------------------------------------------------------ type maps
+    // One container element with its module-aware spelling. A dependency class inside a container
+    // (QList<Qt3DCore::QComponent*>) has to carry the dependency's namespace; ApiTypes.Managed
+    // only knows the flat binding and would emit the simple name.
+    static string ManagedElement(string e)
+    {
+        if (IsPtr(e) && IsClassPtr(e))
+            return CsTypeName(e.Substring(0, e.Length - 1));
+        if (IsEnum(e)) return CsEnum(e);
+        if (IsStruct(e) || IsBoxed(e)) return CsTypeName(e);
+        return ApiTypes.Managed(e, ClassNames);
+    }
+
     static string ManagedType(string t)
     {
         if (IsArray(t)) return ApiTypes.Managed(t, ClassNames);
         if (t == "char*") return "string";
-        if (IsListT(t) || IsAssocT(t) || IsBindableT(t)) return ApiTypes.Managed(t, ClassNames);
+        if (IsListT(t)) return ManagedElement(ListElem(t)) + "[]";
+        if (IsAssocT(t))
+        {
+            var (key, value) = AssocElems(t);
+            return $"Dictionary<{ManagedElement(key)}, {ManagedElement(value)}>";
+        }
+        if (IsBindableT(t)) return $"QBindable<{ManagedElement(BindableElem(t))}>";
         if (IsPtr(t)) return IsClassPtr(t) ? CsTypeName(t.Substring(0, t.Length - 1)) : "IntPtr";
         if (IsEnum(t)) return CsEnum(t);
         if (IsBoxed(t)) return CsTypeName(t);

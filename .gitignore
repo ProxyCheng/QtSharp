@@ -30,3 +30,6 @@ out/
 
 # CrashTracer output (native/CrashTracer.cpp writes this next to the repository root)
 crash_stack.txt
+
+# IDE user-local settings
+*.DotSettings.user

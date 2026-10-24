@@ -1,10 +1,12 @@
 using System;
 using QtSharp.Api;
-using QtSharp.Qt3D;
+using QtSharp.Qt3DCore;
+using QtSharp.Qt3DRender;
+using QtSharp.Qt3DExtras;
 // Qt3D's QTransform and QBuffer have the same names as QtGui/QtCore classes. Inside the binding
 // the Qt3D class shadows the core one; a file that imports both namespaces has to choose.
-using QTransform3D = QtSharp.Qt3D.QTransform;
-using QBuffer3D = QtSharp.Qt3D.QBuffer;
+using QTransform3D = QtSharp.Qt3DCore.QTransform;
+using QBuffer3D = QtSharp.Qt3DCore.QBuffer;
 
 // A Qt3D window needs a display and a working RHI backend, so the default run is a windowless
 // self-test that exercises the same classes. Pass "window" to open the scene.
