@@ -1769,6 +1769,21 @@ public static class ApiCodeGen
             members.MethodKeys.Add(key);
         }
 
+        // A nested enum is a member of the class in C#'s eyes: a method or property with the same
+        // name must say `new`, exactly as it would for an inherited method (QPrinter.PdfVersion()
+        // versus QPagedPaintDevice.PdfVersion). EnumNames is the whole known vocabulary, so a
+        // dependency's enum counts too - the class being written may not declare it itself.
+        foreach (string enumName in EnumNames)
+        {
+            if (!enumName.StartsWith(className + "::", StringComparison.Ordinal))
+                continue;
+            string nested = enumName.Substring(className.Length + 2);
+            if (nested.Contains("::"))
+                continue;
+            members.AllNames.Add(nested);
+            members.NonMethodNames.Add(nested);
+        }
+
         // The handle and liveness members are declared by the root only; every class declares its
         // own factories (FromHandle/FromTransientHandle, and the release pair when it is owned).
         if (baseName == null)

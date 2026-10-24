@@ -14,8 +14,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
       - name: Validate required project files
@@ -50,8 +50,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
@@ -90,7 +90,7 @@ jobs:
           } finally { Pop-Location }
 
       - name: Cache the Qt archives
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: out/qt-cache
           key: qt-6.11.0-msvc2022_64-v1
@@ -146,7 +146,7 @@ jobs:
 
 
       - name: Upload the packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: packages-ci
           path: |
@@ -176,7 +176,7 @@ jobs:
           }
 
       - name: Upload the generated binding
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: binding-api
           path: out/binding-artifact
@@ -192,13 +192,13 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
       - name: Take the generated binding from the build job
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: binding-api
           # The artifact holds api/ and <module>/generated at its root, so downloading into out/
@@ -206,7 +206,7 @@ jobs:
           path: out
 
       - name: Cache the Qt archives
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: out/qt-cache
           key: qt-6.11.0-msvc2022_64-v1

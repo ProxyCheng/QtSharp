@@ -45,6 +45,10 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   `qtsvg-svgviewer`, `qtsvgwidgets-svgwidget`, `qtxml-dombookmarks`,
   `qtprintsupport-notepad` and `qtnetwork-fortune`. OpenGL remains deferred because
   `QOpenGLFunctions` is not bound and CI has no guaranteed GL context.
+- The repository builds with `TreatWarningsAsErrors` (`Directory.Build.props`). The generated
+  `QPrinter.PdfVersion()` now says `new` where it hides `QPagedPaintDevice.PdfVersion` (the
+  generator adds nested enum names to the inherited-member table), and the GitHub Actions were
+  upgraded past the Node 20 deprecation line.
 - The demo projects are named consistently - `QtSharp.Demos`, `QtSharp.Charts.Demos`,
   `QtSharp.Qt3D.Demos` - and `QtSharp.slnx` groups the generator, runtime packages, base modules,
   addons, demos, tests and samples into solution folders instead of one flat list.

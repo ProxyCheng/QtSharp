@@ -43,8 +43,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Install matching Qt tools
@@ -59,7 +59,7 @@ jobs:
             -QtToolsSource "$env:RUNNER_TEMP\qt-tools\PySide6" `
             -QtVersion 6.11.2 `
             -PackageVersion "${{ needs.version.outputs.version }}"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: package-tools
           path: out/packages/QtSharp.Tools.*.nupkg
@@ -71,8 +71,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
       - name: Build the generator
@@ -107,7 +107,7 @@ jobs:
           } finally { Pop-Location }
 
       - name: Cache the Qt archives
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: out/qt-cache
           key: qt-6.11.0-msvc2022_64-v1
@@ -177,7 +177,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "the package consumer failed" }
 
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: package-binding
           path: |
@@ -194,8 +194,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           path: packages
           merge-multiple: true
