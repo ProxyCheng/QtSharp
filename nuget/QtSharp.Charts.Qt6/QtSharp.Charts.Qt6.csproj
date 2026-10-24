@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The Qt Charts runtime payload, the companion package a QtSharp.Charts consumer gets
+       automatically (PyQt6-Charts depends on PyQt6-Qt6 the same way). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+
+    <PackageId>QtSharp.Charts.Qt6</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>ProxyCheng</Authors>
+    <Description>The Qt Charts runtime (Qt6Charts.dll) loaded by QtSharp.Charts.</Description>
+    <PackageTags>Qt;Qt6;QtCharts;runtime;native</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ProxyCheng/QtSharp.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <QtChartsRuntimeDir Condition="'$(QtChartsRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.11.0\runtime</QtChartsRuntimeDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="_._" Pack="true" PackagePath="lib/net10.0/" />
+    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="$(QtChartsRuntimeDir)\Qt6Charts.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+  </ItemGroup>
+
+  <Target Name="QtSharpChartsQt6PackCheck" BeforeTargets="GenerateNuspec">
+    <Error Condition="!Exists('$(QtChartsRuntimeDir)\Qt6Charts.dll')" Text="Qt6Charts.dll is missing under '$(QtChartsRuntimeDir)' - see README.md, section Prerequisites." />
+  </Target>
+
+</Project>

@@ -1,6 +1,7 @@
 # QtSharp.Api
 
-Qt for .NET: the generated C# binding, the native glue, and the Qt runtime — in one package.
+Qt for .NET, organized the way PyQt6 is: one install, one assembly and one C# namespace per Qt
+module.
 
 ```xml
 <ItemGroup>
@@ -9,7 +10,7 @@ Qt for .NET: the generated C# binding, the native glue, and the Qt runtime — i
 ```
 
 ```csharp
-using QtSharp.Api;
+using QtSharp.QtWidgets;
 
 static class Program
 {
@@ -27,24 +28,32 @@ static class Program
 ```
 
 That is the whole setup: no Qt SDK, no Visual Studio C++ workload, and no extra MSBuild
-properties. The package brings `QtSharp.Api.dll` (the native wrapper), the Qt runtime DLLs and
-`platforms\qwindows.dll`, and copies them next to your executable on build and publish.
+properties. `QtSharp.Api` brings `QtSharp.Runtime` (the managed runtime and the native
+`QtSharp.Api.dll` glue) and `QtSharp.Qt6` (the Qt DLLs and the platform plugin); both copy their
+payload next to your executable on build and publish.
 
 ## What is inside
 
-| | |
-|---|---|
-| `lib/net10.0/QtSharp.dll` | the managed binding (`QtSharp.Api` namespace) and the runtime |
-| the native payload | `QtSharp.Api.dll`, the Qt 6 modules and the Windows platform plugin |
+| assembly | namespace | Qt module |
+|---|---|---|
+| `QtSharp.QtCore` | `QtSharp.QtCore` | QtCore (and the `Qt` namespace enums, the `Qt` static class) |
+| `QtSharp.QtGui` | `QtSharp.QtGui` | QtGui |
+| `QtSharp.QtWidgets` | `QtSharp.QtWidgets` | QtWidgets |
+| `QtSharp.QtNetwork` | `QtSharp.QtNetwork` | QtNetwork |
+| `QtSharp.QtSvg` | `QtSharp.QtSvg` | QtSvg |
+| `QtSharp.QtSvgWidgets` | `QtSharp.QtSvgWidgets` | QtSvgWidgets |
+| `QtSharp.QtPrintSupport` | `QtSharp.QtPrintSupport` | QtPrintSupport |
+| `QtSharp.QtXml` | `QtSharp.QtXml` | QtXml |
+| `QtSharp.QtOpenGL` | `QtSharp.QtOpenGL` | QtOpenGL |
+| `QtSharp.QtOpenGLWidgets` | `QtSharp.QtOpenGLWidgets` | QtOpenGLWidgets |
 
-The managed assembly is named `QtSharp.dll` because the native wrapper already owns
-`QtSharp.Api.dll`; the namespace you program against is `QtSharp.Api`.
+A type from another module is written fully qualified in generated code
+(`QtSharp.QtGui.QColor` inside `QtSharp.QtWidgets`), so the namespaces cannot collide.
+`using QtSharp.QtWidgets;` is enough for a typical widget application because the QtWidgets
+assembly builds on QtGui and QtCore; add their usings when you name their types directly.
 
-## Notes
+The value structs follow their Qt header: `QPoint`, `QPointF`, `QSize`, `QRect`, `QDate`, `QTime`
+are in `QtSharp.QtCore`; `QColor`, `QVector2D/3D/4D`, `QQuaternion` are in `QtSharp.QtGui`.
 
-* **Windows x64 only.** The native wrapper is MSVC-compiled and the process must be x64;
-  the package sets `PlatformTarget` to `x64` when your project does not set one.
-* Qt is used under its own license. See the repository's `NOTICE.md` before redistributing
-  binaries that include these Qt libraries.
-* API references, prerequisites, examples and troubleshooting live in the repository
-  readme: https://github.com/ProxyCheng/QtSharp
+Addons are separate packages on top of this one: `QtSharp.Charts` and `QtSharp.Qt3D`, each with a
+companion `*.Qt6` package carrying its Qt runtime.

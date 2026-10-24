@@ -43,8 +43,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Install matching Qt tools
@@ -59,7 +59,7 @@ jobs:
             -QtToolsSource "$env:RUNNER_TEMP\qt-tools\PySide6" `
             -QtVersion 6.11.2 `
             -PackageVersion "${{ needs.version.outputs.version }}"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: package-tools
           path: out/packages/QtSharp.Tools.*.nupkg
@@ -71,25 +71,43 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
       - name: Build the generator
         run: dotnet build gen/gen.csproj -c Release --nologo
-      - name: Generate the binding from the checked-in model
+      - name: Generate the bindings from the checked-in models
         shell: pwsh
         run: |
           # qtgen resolves its arguments against the working directory, so anchor them at the
           # repository root rather than at the generator's own output folder.
-          $genBin = Join-Path $env:GITHUB_WORKSPACE 'gen/bin/Release/net10.0/win-x64'
-          $model = Join-Path $env:GITHUB_WORKSPACE 'model/qtsharp.api.json'
-          $outDir = Join-Path $env:GITHUB_WORKSPACE 'out/api'
+          $root = $env:GITHUB_WORKSPACE
+          $genBin = Join-Path $root 'gen/bin/Release/net10.0/win-x64'
+          $base = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
+                    'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets')
+          $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras')
           Push-Location $genBin
-          try { & "./qtgen.exe" codegen $model $outDir } finally { Pop-Location }
-          if ($LASTEXITCODE -ne 0) { throw "codegen failed" }
+          try {
+            & "./qtgen.exe" split-core (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/split-models')
+            if ($LASTEXITCODE -ne 0) { throw "split-core failed" }
+            foreach ($module in $base) {
+              $fresh = Join-Path $root "out/split-models/qtsharp.$module.json"
+              $checked = Join-Path $root "model/qtsharp.$module.json"
+              if ((Get-FileHash $fresh).Hash -ne (Get-FileHash $checked).Hash) {
+                throw "model/qtsharp.$module.json is stale - run tools/regen-api.ps1 -Adopt and commit it"
+              }
+            }
+            & "./qtgen.exe" codegen (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/api') --native-only
+            if ($LASTEXITCODE -ne 0) { throw "codegen (native glue) failed" }
+            foreach ($module in $base + $addons) {
+              & "./qtgen.exe" codegen (Join-Path $root "model/qtsharp.$module.json") (Join-Path $root "out/$module") --module $module
+              if ($LASTEXITCODE -ne 0) { throw "codegen ($module) failed" }
+            }
+          } finally { Pop-Location }
+
       - name: Cache the Qt archives
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: out/qt-cache
           key: qt-6.11.0-msvc2022_64-v1
@@ -97,11 +115,15 @@ jobs:
         shell: pwsh
         # The script exports QT_DIR / QT_RUNTIME_DIR into the environment for the steps below.
         run: ./tools/build-qt-kit.ps1
-      - name: Compile the native wrapper
+      - name: Compile the native wrappers
         shell: pwsh
         run: |
           cmd /c build_api.bat
           if ($LASTEXITCODE -ne 0) { throw "build_api.bat failed" }
+          foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras')) {
+            powershell -NoProfile -File tools\build-native-module.ps1 -Module $module -QtDir "$env:QT_DIR"
+            if ($LASTEXITCODE -ne 0) { throw "$module native build failed" }
+          }
       # The examples are the binding's own test suite, and a release must not ship a binding that
       # cannot render - which is exactly what the demo gate caught once, after a package had gone
       # out. They run before the pack, so a failing example stops the job before any package exists.
@@ -116,22 +138,54 @@ jobs:
       - name: Run every example
         shell: pwsh
         run: |
-          $failed = @()
-          foreach ($demo in (& testbind/bin/Release/net10.0/testapp.exe --list)) {
-            Write-Host "  --- $demo"
-            & testbind/bin/Release/net10.0/testapp.exe $demo
-            if ($LASTEXITCODE -ne 0) { $failed += ("{0} (0x{1:X8})" -f $demo, $LASTEXITCODE) }
-          }
-          if ($failed.Count -gt 0) { throw "these demos failed: $($failed -join ', ')" }
+          ./tools/run-window-tests.ps1 -Exe "testbind/bin/Release/net10.0/testapp.exe" -Label "demos"
+          if ($LASTEXITCODE -ne 0) { throw "some demos failed (see the output above)" }
 
-      - name: Pack QtSharp.Api
+      # The official Qt3D examples are the extension's conformance suite; like the core demos,
+      # they run before anything is packed.
+      - name: Build and run the official Qt3D examples
         shell: pwsh
         run: |
-          ./tools/pack-qt-binding.ps1 -PackageVersion "${{ needs.version.outputs.version }}" -QtRuntimeDir "$env:QT_RUNTIME_DIR"
-      - uses: actions/upload-artifact@v4
+          dotnet build demos.qt3d/QtSharp.Qt3D.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "Qt3D demos build failed" }
+          ./tools/run-window-tests.ps1 -Exe "demos.qt3d/bin/Release/net10.0/QtSharp.Qt3D.Demos.exe" -Label "qt3d-demos"
+          if ($LASTEXITCODE -ne 0) { throw "some Qt3D demos failed (see the output above)" }
+
+      # The official Qt Charts examples: the Charts module's conformance suite.
+      - name: Build and run the official Qt Charts examples
+        shell: pwsh
+        run: |
+          dotnet build demos.charts/QtSharp.Charts.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "Charts demos build failed" }
+          ./tools/run-window-tests.ps1 -Exe "demos.charts/bin/Release/net10.0/QtSharp.Charts.Demos.exe" -Label "charts-demos"
+          if ($LASTEXITCODE -ne 0) { throw "some Qt Charts demos failed (see the output above)" }
+
+
+      - name: Pack the packages
+        shell: pwsh
+        run: |
+          $version = "${{ needs.version.outputs.version }}"
+          ./tools/pack-qt-binding.ps1 -PackageVersion $version -QtRuntimeDir "$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "packaging failed" }
+
+      # Restore and run the packages through the public NuGet path before publishing them.
+      - name: Verify the packages with a consumer
+        shell: pwsh
+        run: |
+          $version = "${{ needs.version.outputs.version }}"
+          ./tools/test-packages.ps1 -PackageVersion $version -PackagesDir out/packages
+          if ($LASTEXITCODE -ne 0) { throw "the package consumer failed" }
+
+
+      - uses: actions/upload-artifact@v7
         with:
           name: package-binding
-          path: out/packages/QtSharp.Api.*.nupkg
+          path: |
+            out/packages/QtSharp.Api.*.nupkg
+            out/packages/QtSharp.Runtime.*.nupkg
+            out/packages/QtSharp.Qt6.*.nupkg
+            out/packages/QtSharp.Charts.*.nupkg
+            out/packages/QtSharp.Qt3D.*.nupkg
           if-no-files-found: error
 
   publish:
@@ -140,8 +194,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           path: packages
           merge-multiple: true
@@ -162,16 +216,27 @@ jobs:
           $notes = @"
           ## QtSharp $version
 
-          Two packages, both Windows x64:
+          The packages, all Windows x64, follow PyQt6's split:
 
-          * **QtSharp.Api** - the binding: reference it and write Qt applications in C#. It carries
-            the native wrapper and the Qt runtime, so no Qt SDK or C++ toolchain is needed.
+          * **QtSharp.Api** - the binding as ten module assemblies (QtCore, QtGui, QtWidgets,
+            QtNetwork, QtSvg, QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets).
+            Reference it and write Qt applications in C#; no Qt SDK or C++ toolchain is needed.
+          * **QtSharp.Runtime** - the managed runtime and the shared native glue. Brought in by
+            ``QtSharp.Api``; reference it only if you build a binding module yourself.
+          * **QtSharp.Qt6** - the Qt 6 runtime DLLs and platform plugin. Brought in automatically.
           * **QtSharp.Tools** - the Qt command-line tools (``rcc``, ``uic``, ``lrelease``,
             ``lupdate``) plus MSBuild ``QtResource`` support for compiling ``.qrc`` files.
+          * **QtSharp.Charts** - the optional QtCharts extension, against ``QtSharp.Api``;
+            **QtSharp.Charts.Qt6** carries Qt6Charts.dll.
+          * **QtSharp.Qt3D** - the optional Qt3D extension (Qt3DCore, Qt3DRender, Qt3DInput,
+            Qt3DLogic, Qt3DAnimation, Qt3DExtras), against ``QtSharp.Api``;
+            **QtSharp.Qt3D.Qt6** carries the Qt3D runtime and plugins.
 
           See [CHANGELOG.md](https://github.com/ProxyCheng/QtSharp/blob/$tag/CHANGELOG.md),
-          [the binding readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/nuget/QtSharp.Api/README.md)
-          and [the tools readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/tools/QtSharp.Tools/README.md).
+          [the binding readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/nuget/QtSharp.Api/README.md),
+          [the tools readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/tools/QtSharp.Tools/README.md),
+          [the Charts readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/nuget/QtSharp.Charts/README.md)
+          and [the Qt3D readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/nuget/QtSharp.Qt3D/README.md).
           "@
           $assets = @(Get-ChildItem packages\*.nupkg | ForEach-Object { $_.FullName })
           $assets += (Resolve-Path packages\SHA256SUMS.txt).Path

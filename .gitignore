@@ -20,7 +20,7 @@ CONTEXT.md
 
 # Vendored third-party (re-vendor as needed, see notes below)
 #   lib/lib/clang/ - clang builtin headers, used as libClangSharp's resource dir.
-#                    Do NOT delete: ApiModel2.ResourceDir() needs it and gen.csproj copies it.
+#                    Do NOT delete: ClangExtractor.ResourceDir() needs it and gen.csproj copies it.
 #   Qt/            - Qt 6.11 headers/libs/runtime DLLs
 lib/
 Qt/
@@ -30,3 +30,6 @@ out/
 
 # CrashTracer output (native/CrashTracer.cpp writes this next to the repository root)
 crash_stack.txt
+
+# IDE user-local settings
+*.DotSettings.user

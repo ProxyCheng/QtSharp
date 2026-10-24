@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Binding-specific tests, not official demos: ownership, the exception boundary,
+       C#-declared signals/properties, value types, and the modules whose official examples are
+       not ported yet (network, SVG/XML/print). The test app dispatches them under test-* names;
+       the official demo catalog lives in demos/. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>QtSharp.BindingTests</AssemblyName>
+    <RootNamespace>QtSharp.Tests</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+    <QtSharpCompileBinding>false</QtSharpCompileBinding>
+  </PropertyGroup>
+
+  <Import Project="..\QtSharp.Api.props" />
+
+  <ItemGroup>
+    <Compile Include="*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\demos\QtSharp.Demos.csproj" />
+  </ItemGroup>
+
+</Project>

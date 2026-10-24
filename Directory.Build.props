@@ -1,0 +1,11 @@
+<Project>
+
+  <!-- The repository treats a warning as a defect: the generated code, the runtime, the demos and
+       the tests all build warning-free, so a new warning fails the build instead of accumulating in
+       CI logs. Generated-code noise is handled at its source (the generator emits `new` where a
+       member hides a base member, and the generated files disable the two equality warnings). -->
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+</Project>

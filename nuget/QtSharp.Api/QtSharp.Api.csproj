@@ -1,65 +1,68 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- The binding as a *package*, so a consumer only writes:
-         <PackageReference Include="QtSharp.Api" Version="..." />
-       and then `using QtSharp.Api;`.
+  <!-- The base binding as one package of ten assemblies, one per Qt module - the PyQt6 shape:
+       `PyQt6` (here `QtSharp.Api`) is a single install whose importable modules have their own
+       namespaces. The Qt runtime is not bundled here; it comes from the QtSharp.Qt6 dependency,
+       and the managed/native runtime from QtSharp.Runtime.
 
-       It ships three things:
-         * lib/net10.0/QtSharp.dll        the managed binding + runtime, compiled here
-         * tools/native/QtSharp.Api.dll   the native glue (the C++ wrapper)
-         * tools/native/*.dll, platforms/  the Qt runtime the glue needs
-       buildTransitive/ copies the native payload next to the consumer's executable, on
-       both Build and Publish.
-
-       The managed assembly is deliberately *not* named QtSharp.Api.dll: the native glue
-       already owns that name (ApiRuntime.Library), and two files cannot share it. -->
+       This project has no source of its own: it builds the ten module projects and packs their
+       assemblies with the package metadata. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <AssemblyName>QtSharp</AssemblyName>
-    <RootNamespace>QtSharp.Api</RootNamespace>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <!-- The generated binding keeps the C ABI in pointers; only x64 is supported. -->
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <PlatformTarget>x64</PlatformTarget>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
 
     <PackageId>QtSharp.Api</PackageId>
     <Version>0.1.0</Version>
     <Authors>ProxyCheng</Authors>
-    <Description>Qt for .NET: the generated C# binding plus the native glue and the Qt runtime. Reference it and write Qt applications in C#.</Description>
+    <Description>Qt for .NET: the generated C# binding as ten module assemblies (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg, QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets), generated from the Qt 6.11 headers.</Description>
     <PackageTags>Qt;Qt6;CSharp;dotnet;binding;interop;gui</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ProxyCheng/QtSharp.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-
-    <QtSharpApiDir Condition="'$(QtSharpApiDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\api</QtSharpApiDir>
-    <QtRuntimeDir Condition="'$(QtRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.11.0\runtime</QtRuntimeDir>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\ApiRuntime.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\ApiApplication.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\BclInterop.cs" />
-    <Compile Include="$(QtSharpApiDir)\QtSharp.Api.cs" />
+    <!-- Built here, packed below. PrivateAssets keeps the internal module projects out of the
+         package's dependency list; ReferenceOutputAssembly keeps their assemblies out of this
+         project's (empty) compile output. -->
+    <ProjectReference Include="Modules\QtSharp.QtCore\QtSharp.QtCore.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Include="Modules\QtSharp.QtGui\QtSharp.QtGui.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Include="Modules\QtSharp.QtWidgets\QtSharp.QtWidgets.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Include="Modules\QtSharp.QtNetwork\QtSharp.QtNetwork.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Include="Modules\QtSharp.QtSvg\QtSharp.QtSvg.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Include="Modules\QtSharp.QtSvgWidgets\QtSharp.QtSvgWidgets.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Include="Modules\QtSharp.QtPrintSupport\QtSharp.QtPrintSupport.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Include="Modules\QtSharp.QtXml\QtSharp.QtXml.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Include="Modules\QtSharp.QtOpenGL\QtSharp.QtOpenGL.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Include="Modules\QtSharp.QtOpenGLWidgets\QtSharp.QtOpenGLWidgets.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+
+    <!-- The package's two dependencies: the binding runtime (managed + native glue) and the Qt
+         runtime payload. Both are packages of their own, exactly like PyQt6-sip and PyQt6-Qt6. -->
+    <ProjectReference Include="..\QtSharp.Runtime\QtSharp.Runtime.csproj" />
+    <ProjectReference Include="..\QtSharp.Qt6\QtSharp.Qt6.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
-    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
-    <None Include="$(QtSharpApiDir)\QtSharp.Api.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtRuntimeDir)\*.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtRuntimeDir)\platforms\qwindows.dll" Pack="true" PackagePath="tools/native/platforms/" />
+    <None Include="Modules\QtSharp.QtCore\bin\$(Configuration)\net10.0\QtSharp.QtCore.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtGui\bin\$(Configuration)\net10.0\QtSharp.QtGui.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtWidgets\bin\$(Configuration)\net10.0\QtSharp.QtWidgets.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtNetwork\bin\$(Configuration)\net10.0\QtSharp.QtNetwork.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtSvg\bin\$(Configuration)\net10.0\QtSharp.QtSvg.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtSvgWidgets\bin\$(Configuration)\net10.0\QtSharp.QtSvgWidgets.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtPrintSupport\bin\$(Configuration)\net10.0\QtSharp.QtPrintSupport.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtXml\bin\$(Configuration)\net10.0\QtSharp.QtXml.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtOpenGL\bin\$(Configuration)\net10.0\QtSharp.QtOpenGL.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
+    <None Include="Modules\QtSharp.QtOpenGLWidgets\bin\$(Configuration)\net10.0\QtSharp.QtOpenGLWidgets.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
   </ItemGroup>
 
   <Target Name="QtSharpApiPackCheck" BeforeTargets="GenerateNuspec">
-    <Error Condition="!Exists('$(QtSharpApiDir)\QtSharp.Api.cs')" Text="The binding source is missing - run: powershell -File tools\regen-api.ps1" />
-    <Error Condition="!Exists('$(QtSharpApiDir)\QtSharp.Api.dll')" Text="The native glue is missing - run: powershell -File tools\regen-api.ps1" />
-    <Error Condition="!Exists('$(QtRuntimeDir)\Qt6Core.dll')" Text="The Qt runtime DLLs are missing under '$(QtRuntimeDir)' - see README.md, section Prerequisites." />
-    <Error Condition="!Exists('$(QtRuntimeDir)\platforms\qwindows.dll')" Text="The Qt platform plugin is missing at '$(QtRuntimeDir)\platforms\qwindows.dll'." />
+    <Error Condition="!Exists('Modules\QtSharp.QtCore\bin\$(Configuration)\net10.0\QtSharp.QtCore.dll')" Text="The base module assemblies are missing - run: qtgen codegen for the split models (tools\regen-api.ps1)." />
   </Target>
 
 </Project>

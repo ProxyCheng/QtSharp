@@ -242,9 +242,25 @@ extern "C" __declspec(dllexport) int qs_api_emit(void* sender, const char* signa
 // the extra members, and QMetaObject::activate emits them like any other signal.
 //
 // The value a property read/write carries is the plain C++ type (moc's qt_metacall writes into
-// a[0] directly), so the managed side is handed that pointer and does its own conversion.
-typedef void (*QsApiMetaPropertyCallback)(void* object, int index, int write, void* value);
+// a[0] directly), so the managed side is handed that pointer and does its own conversion. `call`
+// is QMetaObject::Call narrowed to the three the table can reach: 0 read, 1 write, 2 reset.
+typedef void (*QsApiMetaPropertyCallback)(void* object, int index, int call, void* value);
 static QsApiMetaPropertyCallback g_metaPropertyCallback = nullptr;
+
+// The Q_PROPERTY flags the managed side sends, one bit per QMetaProperty::is*() accessor.
+enum QsApiMetaPropertyFlag : int
+{
+    QsApiPropertyReadable = 1 << 0,
+    QsApiPropertyWritable = 1 << 1,
+    QsApiPropertyResettable = 1 << 2,
+    QsApiPropertyDesignable = 1 << 3,
+    QsApiPropertyScriptable = 1 << 4,
+    QsApiPropertyStored = 1 << 5,
+    QsApiPropertyUser = 1 << 6,
+    QsApiPropertyConstant = 1 << 7,
+    QsApiPropertyFinal = 1 << 8,
+    QsApiPropertyRequired = 1 << 9,
+};
 
 class QsApiDynamicMetaObject : public QAbstractDynamicMetaObject
 {
@@ -264,11 +280,14 @@ public:
     // table and is handled by moc's generated qt_metacall.
     int metaCall(QObject* object, QMetaObject::Call call, int id, void** args) override
     {
-        if ((call == QMetaObject::ReadProperty || call == QMetaObject::WriteProperty)
+        if ((call == QMetaObject::ReadProperty || call == QMetaObject::WriteProperty
+             || call == QMetaObject::ResetProperty)
             && id >= m_propertyBase && g_metaPropertyCallback)
         {
-            g_metaPropertyCallback(object, id - m_propertyBase, call == QMetaObject::WriteProperty,
-                                   args ? args[0] : nullptr);
+            const int code = call == QMetaObject::WriteProperty ? 1
+                           : call == QMetaObject::ResetProperty ? 2
+                           : 0;
+            g_metaPropertyCallback(object, id - m_propertyBase, code, args ? args[0] : nullptr);
             return 0;
         }
         return object->qt_metacall(call, id, args);
@@ -294,7 +313,8 @@ extern "C" __declspec(dllexport) void qs_api_set_meta_property_callback(QsApiMet
 extern "C" __declspec(dllexport) int qs_api_attach_metaobject(
     void* object, const char* className,
     const char* const* signalSignatures, int signalCount,
-    const char* const* propertyNames, const char* const* propertyTypes, int propertyCount)
+    const char* const* propertyNames, const char* const* propertyTypes, int propertyCount,
+    const int* propertyFlags, const int* propertyNotify, const int* propertyRevisions)
 {
     if (!object || !className)
         return 0;
@@ -319,6 +339,12 @@ extern "C" __declspec(dllexport) int qs_api_attach_metaobject(
         key += propertyNames[i];
         key += ':';
         key += propertyTypes[i];
+        key += ':';
+        key += std::to_string(propertyFlags ? propertyFlags[i] : 0);
+        key += ':';
+        key += std::to_string(propertyNotify ? propertyNotify[i] : -1);
+        key += ':';
+        key += std::to_string(propertyRevisions ? propertyRevisions[i] : 0);
         key += '\n';
     }
 
@@ -334,10 +360,32 @@ extern "C" __declspec(dllexport) int qs_api_attach_metaobject(
         QMetaObjectBuilder builder;
         builder.setClassName(className);
         builder.setSuperClass(base);
+        // `signals` is a Qt keyword macro, so the vector needs another name.
+        std::vector<QMetaMethodBuilder> signalBuilders;
+        signalBuilders.reserve(signalCount);
         for (int i = 0; i < signalCount; ++i)
-            builder.addSignal(signalSignatures[i]);
+            signalBuilders.push_back(builder.addSignal(signalSignatures[i]));
         for (int i = 0; i < propertyCount; ++i)
-            builder.addProperty(propertyNames[i], propertyTypes[i]);
+        {
+            QMetaPropertyBuilder property = builder.addProperty(propertyNames[i], propertyTypes[i]);
+            const int flags = propertyFlags ? propertyFlags[i] : 0;
+            property.setReadable((flags & QsApiPropertyReadable) != 0);
+            property.setWritable((flags & QsApiPropertyWritable) != 0);
+            property.setResettable((flags & QsApiPropertyResettable) != 0);
+            property.setDesignable((flags & QsApiPropertyDesignable) != 0);
+            property.setScriptable((flags & QsApiPropertyScriptable) != 0);
+            property.setStored((flags & QsApiPropertyStored) != 0);
+            property.setUser((flags & QsApiPropertyUser) != 0);
+            property.setConstant((flags & QsApiPropertyConstant) != 0);
+            property.setFinal((flags & QsApiPropertyFinal) != 0);
+            property.setRequired((flags & QsApiPropertyRequired) != 0);
+            const int revision = propertyRevisions ? propertyRevisions[i] : 0;
+            if (revision > 0)
+                property.setRevision(revision);
+            const int notify = propertyNotify ? propertyNotify[i] : -1;
+            if (notify >= 0 && notify < int(signalBuilders.size()))
+                property.setNotifySignal(signalBuilders[size_t(notify)]);
+        }
         // Marks the object as already carrying our table (and is what makes the check above a
         // one-time operation).
         builder.addClassInfo("qtsharp-dynamic", "1");
