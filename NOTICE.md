@@ -5,6 +5,10 @@ and distributions that have their own terms:
 
 - Qt is used under the applicable GNU LGPL or commercial Qt license. Qt is not included in this
   repository; users must obtain a compatible Qt distribution and comply with its license.
+- Qt Charts is licensed under the GPLv3 or a commercial Qt license, not the LGPL; Qt 3D is
+  licensed under the LGPLv3, the GPLv2, or a commercial Qt license. Both are kept out of
+  `QtSharp.Api` and shipped as the separate `QtSharp.Charts` and `QtSharp.Qt3D` packages;
+  distributing either package means complying with the corresponding Qt terms.
 - ClangSharp and `libClangSharp.runtime.win-x64` are restored from NuGet and retain their own
   licenses and notices.
 - The `QtSharp.Tools` package redistributes selected Qt command-line tools and runtime libraries.

@@ -93,6 +93,34 @@ Write-Host "=== [4] Build native bindings ==="
 & cmd /c "`"$root\build_api.bat`"" *> "$root\out\api_native.log"
 if ($LASTEXITCODE -ne 0) { Write-Host "native build failed"; Get-Content "$root\out\api_native.log" | Select-String "error" | Select-Object -First 6; exit 1 }
 
+# The extension modules are separate assemblies/packages. They are generated from their own
+# checked-in models and their native glue is built by the same parameterized script; the official
+# Qt3D examples then run as their conformance suite, exactly like the core demos below.
+Write-Host "=== [4b] Extension modules (Charts, Qt3D) ==="
+Push-Location $genBin
+& "$genBin\qtgen.exe" codegen "$root\model\qtsharp.charts.json" "$root\out\charts" --module charts *> "$root\out\codegen-charts.log"
+$chartsCode = $LASTEXITCODE
+& "$genBin\qtgen.exe" codegen "$root\model\qtsharp.qt3d.json" "$root\out\qt3d" --module qt3d *> "$root\out\codegen-qt3d.log"
+$qt3dCode = $LASTEXITCODE
+Pop-Location
+if ($chartsCode -ne 0 -or $qt3dCode -ne 0) { Write-Host "extension codegen failed"; exit 1 }
+foreach ($module in @('charts', 'qt3d')) {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File "$root\tools\build-native-module.ps1" -Module $module *> "$root\out\native-$module.log"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "$module native build failed"
+        Get-Content "$root\out\native-$module.log" | Select-String "error" | Select-Object -First 6
+        exit 1
+    }
+}
+dotnet build "$root\demos.qt3d\QtSharp.Qt3DDemos.csproj" -c Release --nologo *> "$root\out\qt3d_demosbuild.log"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Qt3D demos build failed"
+    Select-String -Path "$root\out\qt3d_demosbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }
+    exit 1
+}
+& "$root\tools\run-window-tests.ps1" -Exe "$root\demos.qt3d\bin\Release\net10.0\qt3ddemos.exe" -Label "qt3d-demos" -Jobs $Jobs
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 Write-Host "=== [5] Build the demo library, then build + run the smoke tests ==="
 # The ported examples themselves: the generated binding, the managed runtime and every `api-*`
 # window in one assembly. testbind (and samples/hello) only reference it.

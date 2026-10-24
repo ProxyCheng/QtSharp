@@ -6,10 +6,11 @@
        Nothing of the core is repeated here - not the runtime, not the core's classes, not the core's
        enums. This assembly references the core one and only carries QtCharts: `QChart` derives from
        the core's `QGraphicsWidget`, `QChartView` from the core's `QGraphicsView`, and its generated
-       P/Invokes call QtSharp.Charts.dll (the core's call QtSharp.Api.dll).
+       P/Invokes call QtSharp.Charts.Native.dll (the core's call QtSharp.Api.dll).
 
        The generated source is produced by running `qtgen codegen` on model/qtsharp.charts.json
-       with the charts module selected; see docs/extension-modules.md. -->
+       with the charts module selected; nuget/QtSharp.Qt3D is the same shape for a module family
+       that spans several Qt include directories. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <AssemblyName>QtSharp.Charts</AssemblyName>
@@ -20,16 +21,44 @@
     <PlatformTarget>x64</PlatformTarget>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <PackageId>QtSharp.Charts</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>ProxyCheng</Authors>
+    <Description>Qt Charts for .NET, generated from the Qt 6.11 headers. References QtSharp.Api.</Description>
+    <PackageTags>Qt;Qt6;QtCharts;CSharp;dotnet;binding;interop;charts</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ProxyCheng/QtSharp.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <QtSharpChartsDir Condition="'$(QtSharpChartsDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\charts</QtSharpChartsDir>
+    <QtSharpChartsNativeDir Condition="'$(QtSharpChartsNativeDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\api-modules\charts</QtSharpChartsNativeDir>
+    <QtChartsRuntimeDir Condition="'$(QtChartsRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.11.0\runtime</QtChartsRuntimeDir>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\out\charts\generated\**\*.cs" />
+    <Compile Include="$(QtSharpChartsDir)\generated\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- A ProjectReference while both live in this repository; a consumer, and the standalone
-         QtSharp.Charts repository, uses a PackageReference to QtSharp.Api instead. -->
+    <!-- A ProjectReference while both live in this repository; a consumer uses a PackageReference
+         to QtSharp.Api instead. Pack turns this into that dependency. -->
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\QtSharp.Api.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="$(QtSharpChartsNativeDir)\QtSharp.Charts.Native.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(QtChartsRuntimeDir)\Qt6Charts.dll" Pack="true" PackagePath="tools/native/" />
+  </ItemGroup>
+
+  <Target Name="QtSharpChartsPackCheck" BeforeTargets="GenerateNuspec">
+    <Error Condition="!Exists('$(QtSharpChartsDir)\generated')" Text="The QtCharts binding source is missing - run: qtgen codegen model\qtsharp.charts.json out\charts --module charts" />
+    <Error Condition="!Exists('$(QtSharpChartsNativeDir)\QtSharp.Charts.Native.dll')" Text="The QtCharts native glue is missing - run: powershell -File tools\build-native-module.ps1 -Module charts" />
+    <Error Condition="!Exists('$(QtChartsRuntimeDir)\Qt6Charts.dll')" Text="Qt6Charts.dll is missing under '$(QtChartsRuntimeDir)' - see README.md, section Prerequisites." />
+  </Target>
 
 </Project>

@@ -51,7 +51,22 @@
     <None Include="README.md" Pack="true" PackagePath="/" />
     <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
     <None Include="$(QtSharpApiDir)\QtSharp.Api.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtRuntimeDir)\*.dll" Pack="true" PackagePath="tools/native/" />
+    <!-- Only the core modules. The shared runtime directory may also hold the extension modules'
+         Qt3D/QtCharts DLLs (and their dependencies); those belong in QtSharp.Qt3D/QtSharp.Charts,
+         not in every consumer of the core package. -->
+    <None Include="$(QtRuntimeDir)\Qt6Core.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(QtRuntimeDir)\Qt6Gui.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(QtRuntimeDir)\Qt6Widgets.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(QtRuntimeDir)\Qt6Network.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(QtRuntimeDir)\Qt6Svg.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(QtRuntimeDir)\Qt6SvgWidgets.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(QtRuntimeDir)\Qt6PrintSupport.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(QtRuntimeDir)\Qt6Xml.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(QtRuntimeDir)\Qt6OpenGL.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(QtRuntimeDir)\Qt6OpenGLWidgets.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(QtRuntimeDir)\msvcp140*.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(QtRuntimeDir)\vcruntime140*.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(QtRuntimeDir)\concrt140.dll" Pack="true" PackagePath="tools/native/" />
     <None Include="$(QtRuntimeDir)\platforms\qwindows.dll" Pack="true" PackagePath="tools/native/platforms/" />
   </ItemGroup>
 

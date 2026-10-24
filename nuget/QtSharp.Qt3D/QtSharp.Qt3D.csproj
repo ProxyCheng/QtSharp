@@ -1,0 +1,77 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- An *extension module*: the Qt3D family (Qt3DCore, Qt3DRender, Qt3DInput, Qt3DLogic,
+       Qt3DAnimation, Qt3DExtras), bound as its own assembly and its own package against the core
+       binding - the same shape as QtSharp.Charts. Nothing of the core is repeated here: the
+       classes derive from the core's QObject/QWindow and are packaged against QtSharp.Api.
+
+       The generated source is produced by running qtgen codegen on model/qtsharp.qt3d.json with
+       the qt3d module selected, and the native glue by tools/build-native-module.ps1. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>QtSharp.Qt3D</AssemblyName>
+    <RootNamespace>QtSharp.Qt3D</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <PackageId>QtSharp.Qt3D</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>ProxyCheng</Authors>
+    <Description>Qt 3D for .NET (Qt3DCore, Qt3DRender, Qt3DInput, Qt3DLogic, Qt3DAnimation, Qt3DExtras), generated from the Qt 6.11 headers. References QtSharp.Api.</Description>
+    <PackageTags>Qt;Qt6;Qt3D;CSharp;dotnet;binding;interop;3d</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ProxyCheng/QtSharp.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <QtSharpQt3DDir Condition="'$(QtSharpQt3DDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\qt3d</QtSharpQt3DDir>
+    <QtSharpQt3DNativeDir Condition="'$(QtSharpQt3DNativeDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\api-modules\qt3d</QtSharpQt3DNativeDir>
+    <Qt3DRuntimeDir Condition="'$(Qt3DRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.11.0\runtime</Qt3DRuntimeDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(QtSharpQt3DDir)\generated\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- A ProjectReference while both live in this repository; a consumer uses a PackageReference
+         to QtSharp.Api instead. Pack turns this into that dependency. -->
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\QtSharp.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="$(QtSharpQt3DNativeDir)\QtSharp.Qt3D.Native.dll" Pack="true" PackagePath="tools/native/" />
+    <!-- The six Qt3D libraries the binding links. (Qt3DQuick is QML-only and not packaged.) -->
+    <None Include="$(Qt3DRuntimeDir)\Qt63DCore.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(Qt3DRuntimeDir)\Qt63DRender.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(Qt3DRuntimeDir)\Qt63DInput.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(Qt3DRuntimeDir)\Qt63DLogic.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(Qt3DRuntimeDir)\Qt63DAnimation.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(Qt3DRuntimeDir)\Qt63DExtras.dll" Pack="true" PackagePath="tools/native/" />
+    <!-- Qt63DCore imports Concurrent; the RHI renderer plugin imports ShaderTools. Neither is
+         part of the core binding's payload. -->
+    <None Include="$(Qt3DRuntimeDir)\Qt6Concurrent.dll" Pack="true" PackagePath="tools/native/" />
+    <None Include="$(Qt3DRuntimeDir)\Qt6ShaderTools.dll" Pack="true" PackagePath="tools/native/" />
+    <!-- What Qt3DRender loads at runtime: the RHI/OpenGL renderer, and the geometry and scene
+         loaders. (Qt3DQuickScene2D's render plugin is not bound and is left out.) -->
+    <None Include="$(Qt3DRuntimeDir)\plugins\renderers\*.dll" Pack="true" PackagePath="tools/native/renderers/" />
+    <None Include="$(Qt3DRuntimeDir)\plugins\geometryloaders\*.dll" Pack="true" PackagePath="tools/native/geometryloaders/" />
+    <None Include="$(Qt3DRuntimeDir)\plugins\sceneparsers\*.dll" Pack="true" PackagePath="tools/native/sceneparsers/" />
+  </ItemGroup>
+
+  <Target Name="QtSharpQt3DPackCheck" BeforeTargets="GenerateNuspec">
+    <Error Condition="!Exists('$(QtSharpQt3DDir)\generated')" Text="The Qt3D binding source is missing - run: qtgen codegen model\qtsharp.qt3d.json out\qt3d --module qt3d" />
+    <Error Condition="!Exists('$(QtSharpQt3DNativeDir)\QtSharp.Qt3D.Native.dll')" Text="The Qt3D native glue is missing - run: powershell -File tools\build-native-module.ps1 -Module qt3d" />
+    <Error Condition="!Exists('$(Qt3DRuntimeDir)\Qt63DCore.dll')" Text="The Qt3D runtime DLLs are missing under '$(Qt3DRuntimeDir)' - see README.md, section Prerequisites." />
+    <Error Condition="!Exists('$(Qt3DRuntimeDir)\Qt6ShaderTools.dll')" Text="Qt6ShaderTools.dll is missing under '$(Qt3DRuntimeDir)' - the RHI renderer plugin needs it." />
+    <Error Condition="!Exists('$(Qt3DRuntimeDir)\Qt6Concurrent.dll')" Text="Qt6Concurrent.dll is missing under '$(Qt3DRuntimeDir)' - Qt63DCore needs it." />
+  </Target>
+
+</Project>

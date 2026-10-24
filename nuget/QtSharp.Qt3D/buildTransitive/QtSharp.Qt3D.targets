@@ -1,0 +1,32 @@
+<Project>
+
+  <!-- The Qt3D native glue, the Qt3D runtime DLLs and the plugins Qt3DRender loads at runtime.
+       Qt looks for each plugin class in a directory named after it next to the executable, so
+       they are copied as renderers\, geometryloaders\ and sceneparsers\. -->
+  <Target Name="QtSharpQt3DCopyNativeDeps" AfterTargets="Build">
+    <ItemGroup>
+      <_QtSharpQt3DNative Include="$(QtSharpQt3DNativeDir)*.dll" />
+      <_QtSharpQt3DRenderer Include="$(QtSharpQt3DNativeDir)renderers\*.dll" />
+      <_QtSharpQt3DGeometryLoader Include="$(QtSharpQt3DNativeDir)geometryloaders\*.dll" />
+      <_QtSharpQt3DSceneParser Include="$(QtSharpQt3DNativeDir)sceneparsers\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpQt3DNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpQt3DRenderer)" DestinationFolder="$(OutDir)renderers\" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpQt3DGeometryLoader)" DestinationFolder="$(OutDir)geometryloaders\" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpQt3DSceneParser)" DestinationFolder="$(OutDir)sceneparsers\" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="QtSharpQt3DCopyNativeDepsPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <_QtSharpQt3DNativePublish Include="$(QtSharpQt3DNativeDir)*.dll" />
+      <_QtSharpQt3DRendererPublish Include="$(QtSharpQt3DNativeDir)renderers\*.dll" />
+      <_QtSharpQt3DGeometryLoaderPublish Include="$(QtSharpQt3DNativeDir)geometryloaders\*.dll" />
+      <_QtSharpQt3DSceneParserPublish Include="$(QtSharpQt3DNativeDir)sceneparsers\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpQt3DNativePublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpQt3DRendererPublish)" DestinationFolder="$(PublishDir)renderers\" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpQt3DGeometryLoaderPublish)" DestinationFolder="$(PublishDir)geometryloaders\" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpQt3DSceneParserPublish)" DestinationFolder="$(PublishDir)sceneparsers\" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

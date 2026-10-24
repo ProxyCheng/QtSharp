@@ -127,20 +127,45 @@ class Program
             var tokens = body.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
             if (tokens.Length < 2)
                 continue;
-            // The type may be spelled with a detached star (QAbstractItemModel *sourceModel), and
-            // then the pointer sign is glued to the name.
+            // The type may contain spaces of its own (QList<QSpriteSheetItem *>) and a detached
+            // star may follow it (QAbstractItemModel *sourceModel), so the name is what comes
+            // after the complete type, not the second whitespace-delimited token.
+            // Q_PROPERTY( bool hasTopEndcap ...) - the leading space after the parenthesis is
+            // legal (Qt3D writes several that way), so skip it before reading the type.
+            int pos = 0;
+            while (pos < body.Length && char.IsWhiteSpace(body[pos]))
+                pos++;
+            int angle = 0;
+            while (pos < body.Length)
+            {
+                char c = body[pos];
+                if (c == '<') angle++;
+                else if (c == '>') angle--;
+                else if (char.IsWhiteSpace(c) && angle == 0) break;
+                pos++;
+            }
+            while (pos < body.Length && (char.IsWhiteSpace(body[pos]) || body[pos] == '*' || body[pos] == '&'))
+                pos++;
+            int nameStart = pos;
+            while (pos < body.Length && !char.IsWhiteSpace(body[pos]))
+                pos++;
+            if (nameStart >= pos)
+                continue;
             var info = new PropertyInfo
             {
                 ClassName = className,
-                Name = tokens[1].TrimStart('*', '&'),
+                Name = body.Substring(nameStart, pos - nameStart).TrimStart('*', '&'),
             };
-            for (int i = 2; i + 1 < tokens.Length; i++)
+            // Everything after the name is the attribute list (READ/WRITE/NOTIFY/...).
+            var attributes = body.Substring(pos)
+                .Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i + 1 < attributes.Length; i++)
             {
-                switch (tokens[i])
+                switch (attributes[i])
                 {
-                    case "READ": info.Getter = tokens[i + 1]; break;
-                    case "WRITE": info.Setter = tokens[i + 1]; break;
-                    case "NOTIFY": info.Notify = tokens[i + 1]; break;
+                    case "READ": info.Getter = attributes[i + 1]; break;
+                    case "WRITE": info.Setter = attributes[i + 1]; break;
+                    case "NOTIFY": info.Notify = attributes[i + 1]; break;
                 }
             }
             info.HeaderFile = header;
@@ -328,7 +353,7 @@ class Program
             "  --module <name>  bind an extension module instead of the core binding: its classes\n" +
             "                   only, in its own namespace and against its own native library, with\n" +
             "                   the core binding available for the classes it derives from. The module\n" +
-            "                   table lives in ApiModel.ExtensionModules (charts today).";
+            "                   table lives in ApiModel.ExtensionModules (charts, qt3d).";
 
         static int Main(string[] args)
         {
@@ -369,8 +394,8 @@ class Program
                     Console.WriteLine("name=" + m.Name);
                     Console.WriteLine("namespace=" + m.Namespace);
                     Console.WriteLine("nativeLibrary=" + m.NativeLibrary);
-                    Console.WriteLine("qtModule=" + m.QtModule);
-                    Console.WriteLine("qtDefine=" + m.QtDefine);
+                    Console.WriteLine("qtModules=" + string.Join(",", m.QtModules));
+                    Console.WriteLine("qtDefines=" + string.Join(",", m.QtDefines));
                     Console.WriteLine("qtLibs=" + string.Join(",", m.QtLibs));
                     Console.WriteLine("classes=" + m.Roots.Length);
                     return 0;

@@ -30,7 +30,7 @@ jobs:
         run: |
           $errors = $null
           $tokens = $null
-          foreach ($path in @('tools/regen-api.ps1', 'tools/run-window-tests.ps1', 'tools/pack-qt-tools.ps1', 'tools/pack-qt-binding.ps1', 'tools/build-qt-kit.ps1')) {
+          foreach ($path in @('tools/regen-api.ps1', 'tools/run-window-tests.ps1', 'tools/pack-qt-tools.ps1', 'tools/pack-qt-binding.ps1', 'tools/build-qt-kit.ps1', 'tools/build-native-module.ps1')) {
             [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $path), [ref]$tokens, [ref]$errors) | Out-Null
             if ($errors.Count -gt 0) { $errors | Format-List | Out-Host; throw "PowerShell parse failed: $path" }
           }
@@ -57,17 +57,22 @@ jobs:
       - name: Build the generator
         run: dotnet build gen/gen.csproj -c Release --nologo
 
-      - name: Generate the binding from the checked-in model
+      - name: Generate the bindings from the checked-in models
         shell: pwsh
         run: |
           # qtgen resolves its arguments against the working directory, so anchor them at the
           # repository root rather than at the generator's own output folder.
-          $genBin = Join-Path $env:GITHUB_WORKSPACE 'gen/bin/Release/net10.0/win-x64'
-          $model = Join-Path $env:GITHUB_WORKSPACE 'model/qtsharp.api.json'
-          $outDir = Join-Path $env:GITHUB_WORKSPACE 'out/api'
+          $root = $env:GITHUB_WORKSPACE
+          $genBin = Join-Path $root 'gen/bin/Release/net10.0/win-x64'
           Push-Location $genBin
-          try { & "./qtgen.exe" codegen $model $outDir } finally { Pop-Location }
-          if ($LASTEXITCODE -ne 0) { throw "codegen failed" }
+          try {
+            & "./qtgen.exe" codegen (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/api')
+            if ($LASTEXITCODE -ne 0) { throw "codegen (core) failed" }
+            foreach ($module in @('charts', 'qt3d')) {
+              & "./qtgen.exe" codegen (Join-Path $root "model/qtsharp.$module.json") (Join-Path $root "out/$module") --module $module
+              if ($LASTEXITCODE -ne 0) { throw "codegen ($module) failed" }
+            }
+          } finally { Pop-Location }
 
       - name: Cache the Qt archives
         uses: actions/cache@v4
@@ -80,22 +85,49 @@ jobs:
         # The script exports QT_DIR / QT_RUNTIME_DIR into the environment for the steps below.
         run: ./tools/build-qt-kit.ps1
 
-      - name: Compile the native wrapper
+      - name: Compile the native wrappers
         shell: pwsh
         run: |
           cmd /c build_api.bat
           if ($LASTEXITCODE -ne 0) { throw "build_api.bat failed" }
+          foreach ($module in @('charts', 'qt3d')) {
+            powershell -NoProfile -File tools\build-native-module.ps1 -Module $module
+            if ($LASTEXITCODE -ne 0) { throw "$module native build failed" }
+          }
+
+      # The official Qt3D examples as the extension's conformance suite. They build the scene and
+      # assert on it without opening a render loop, so they run on a runner without a GPU.
+      - name: Build and run the official Qt3D examples
+        shell: pwsh
+        run: |
+          dotnet build demos.qt3d/QtSharp.Qt3DDemos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "Qt3D demos build failed" }
+          ./tools/run-window-tests.ps1 -Exe "demos.qt3d/bin/Release/net10.0/qt3ddemos.exe" -Label "qt3d-demos"
+          if ($LASTEXITCODE -ne 0) { throw "some Qt3D demos failed" }
 
       - name: Pack QtSharp.Api
         shell: pwsh
         run: |
           ./tools/pack-qt-binding.ps1 -PackageVersion "0.0.0-ci" -QtRuntimeDir "$env:QT_RUNTIME_DIR"
 
-      - name: Upload the binding package
+      - name: Pack the extension packages
+        shell: pwsh
+        run: |
+          dotnet pack nuget/QtSharp.Charts/QtSharp.Charts.csproj -c Release -o out/packages --nologo `
+            "-p:Version=0.0.0-ci" "-p:QtChartsRuntimeDir=$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "QtSharp.Charts pack failed" }
+          dotnet pack nuget/QtSharp.Qt3D/QtSharp.Qt3D.csproj -c Release -o out/packages --nologo `
+            "-p:Version=0.0.0-ci" "-p:Qt3DRuntimeDir=$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "QtSharp.Qt3D pack failed" }
+
+      - name: Upload the packages
         uses: actions/upload-artifact@v4
         with:
-          name: QtSharp.Api-ci
-          path: out/packages/QtSharp.Api.0.0.0-ci.nupkg
+          name: packages-ci
+          path: |
+            out/packages/QtSharp.Api.0.0.0-ci.nupkg
+            out/packages/QtSharp.Charts.0.0.0-ci.nupkg
+            out/packages/QtSharp.Qt3D.0.0.0-ci.nupkg
           if-no-files-found: error
 
       # Hand the generated binding to the smoke job so it does not have to build it again.
@@ -104,7 +136,7 @@ jobs:
         with:
           name: binding-api
           path: |
-            out/api/QtSharp.Api.cs
+            out/api/generated
             out/api/QtSharp.Api.dll
           if-no-files-found: error
 

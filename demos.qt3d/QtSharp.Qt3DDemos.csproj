@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Ports of Qt's official C++ Qt3D examples, as a self-testing executable.
+
+       The dispatcher is the same shape as demos/ApiDemos.cs: the list switch prints the names,
+       and invoking one runs that demo and exits 0 only when every assertion passed.
+       tools/run-window-tests.ps1 consumes both, so the CI gate treats the Qt3D examples
+       exactly like the core ones.
+
+       The binding is compiled in nuget/QtSharp.Qt3D (against QtSharp.Api), not here, so the
+       project imports the props with QtSharpCompileBinding=false. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>qt3ddemos</AssemblyName>
+    <RootNamespace>QtSharp.Qt3D.Demos</RootNamespace>
+    <QtSharpCompileBinding>false</QtSharpCompileBinding>
+  </PropertyGroup>
+
+  <Import Project="..\QtSharp.Api.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\nuget\QtSharp.Qt3D\QtSharp.Qt3D.csproj" />
+  </ItemGroup>
+
+  <!-- The Qt3D native glue and the renderer/loader plugins. The Qt3D runtime DLLs themselves are
+       copied by QtSharp.Api.props (they live in QtRuntimeDir). -->
+  <Target Name="CopyQt3DTestDeps" AfterTargets="Build">
+    <ItemGroup>
+      <Qt3DTestNative Include="..\out\api-modules\qt3d\QtSharp.Qt3D.Native.dll" />
+      <Qt3DTestRenderer Include="$(QtRuntimeDir)\plugins\renderers\*.dll" />
+      <Qt3DTestGeometryLoader Include="$(QtRuntimeDir)\plugins\geometryloaders\*.dll" />
+      <Qt3DTestSceneParser Include="$(QtRuntimeDir)\plugins\sceneparsers\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(Qt3DTestNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(Qt3DTestRenderer)" DestinationFolder="$(OutDir)renderers\" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(Qt3DTestGeometryLoader)" DestinationFolder="$(OutDir)geometryloaders\" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(Qt3DTestSceneParser)" DestinationFolder="$(OutDir)sceneparsers\" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

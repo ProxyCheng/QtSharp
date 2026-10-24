@@ -38,8 +38,15 @@ demos/QtSharp.Demos.csproj             ← the binding + runtime + 35 demos, one
 
 Current coverage: **496 classes / 10506 methods / 885 virtuals / 511 enums / 816 Q_PROPERTY
 properties / 463 signals / 70 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg,
-QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets). The gate runs all 35 demos
-(**1319 assertions**) plus `samples/hello`.
+QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets). The gate runs all 35 core demos
+(**1319 assertions**), the three official Qt3D examples (**37 assertions**) plus `samples/hello`.
+
+Extension modules are separate assemblies and packages against the same runtime:
+
+| module | package | contents |
+|---|---|---|
+| QtCharts | `QtSharp.Charts` | `QChart`, `QChartView`, the series, bars, pie and axis families |
+| Qt3D | `QtSharp.Qt3D` | **230 classes** from Qt3DCore, Qt3DRender, Qt3DInput, Qt3DLogic, Qt3DAnimation and Qt3DExtras |
 
 ## Install the binding
 
@@ -81,6 +88,31 @@ dotnet add package QtSharp.Api --source .\downloads
 The package is named `QtSharp.Api` deliberately: `QtSharp` on nuget.org is an unrelated,
 long-abandoned project.
 
+Qt 3D is a separate package, because it is an optional addon family of six Qt libraries rather
+than part of qtbase. It references the core package and adds all six modules:
+
+```xml
+<ItemGroup>
+  <PackageReference Include="QtSharp.Api" Version="0.1.0" />
+  <PackageReference Include="QtSharp.Qt3D" Version="0.1.0" />
+</ItemGroup>
+```
+
+```csharp
+using QtSharp.Api;
+using QtSharp.Qt3D;
+
+var view = new Qt3DWindow();
+var root = new QEntity();
+var cube = new QEntity(root);
+cube.AddComponent(new QCuboidMesh());
+cube.AddComponent(new QPhongMaterial());
+view.SetRootEntity(root);
+view.Show();
+```
+
+See `samples/qt3d` for a self-test that runs without a display.
+
 ## Project status
 
 QtSharp is an active pre-1.0 project. The supported target is Windows x64 with Qt 6.11.x and
@@ -93,18 +125,21 @@ drop-in replacement for every Qt module or every desktop deployment scenario.
 
 ## Releases
 
-Pushing a semantic-version tag such as `v0.1.0` starts the release workflow. It builds two Windows
-x64 packages and attaches them, with a `SHA256SUMS.txt`, to a GitHub Release:
+Pushing a semantic-version tag such as `v0.1.0` starts the release workflow. It builds four
+Windows x64 packages and attaches them, with a `SHA256SUMS.txt`, to a GitHub Release:
 
 | package | what it is |
 |---|---|
 | `QtSharp.Api` | the binding — add it and write Qt applications in C# |
 | `QtSharp.Tools` | Qt command-line tools (`rcc`, `uic`, `lrelease`, `lupdate`) + MSBuild `.qrc` support |
+| `QtSharp.Charts` | the optional QtCharts extension, against `QtSharp.Api` |
+| `QtSharp.Qt3D` | the optional Qt3D extension (six modules), against `QtSharp.Api` |
 
-`QtSharp.Api` is built on the runner from the checked-in model: the generator runs without clang,
-the Qt dev files are fetched from Qt's own repository, and the native wrapper is compiled with the
-MSVC tools that ship on the runner. CI runs the same steps on every push, so the consumer path is
-verified continuously; the `binding` job uploads the package as an artifact even outside a release.
+Everything is built on the runner from the checked-in models: the generator runs without clang, the
+Qt dev files (including the QtCharts, Qt3D and Qt Shader Tools addons) are fetched from Qt's own
+repository, and the native wrappers are compiled with the MSVC tools that ship on the runner. CI
+runs the same steps on every push, including the official Qt3D examples as the extension's
+conformance suite, so the consumer path is verified continuously.
 
 The packages are distributed through GitHub Releases. Publishing to nuget.org is kept as a separate
 future step so a public NuGet API key is never required for ordinary repository builds.
@@ -118,7 +153,7 @@ future step so a public NuGet API key is never required for ordinary repository 
 | **Windows x64** | everything | the generated wrapper is MSVC C++; there is no Linux/macOS build |
 | **.NET SDK 10** | everything | the projects target `net10.0` |
 | **Visual Studio with the C++ workload** | `build_api.bat` | `cl.exe` and `vcvarsall.bat` |
-| **Qt 6.11.0 MSVC 2022 64-bit** | extract + native build + running | dev files (headers, `.lib`) **and** the runtime DLLs |
+| **Qt 6.11.0 MSVC 2022 64-bit** | extract + native build + running | dev files (headers, `.lib`) **and** the runtime DLLs; the QtCharts and Qt3D addons and Qt Shader Tools too (`tools\build-qt-kit.ps1` fetches them) |
 | **clang builtin headers** | extract only | any clang version; the checked-in model used clang 19 |
 | **NuGet reachable** | first build | restores `ClangSharp` + `libClangSharp.runtime.win-x64` |
 
@@ -417,13 +452,16 @@ Replace the local source path with your checkout's `out/packages` directory.
 
 | path | what |
 |---|---|
-| `model/qtsharp.api.json` | the checked-in API model — the interface between the two halves |
-| `gen/` | the generator: `ApiModel.cs` (model shape, `Roots` table, vocabulary), `ApiModel2.cs` (the libclang front end), `ApiCodeGen.cs` (model → C# + C++) |
+| `model/qtsharp.api.json` | the checked-in API model — the interface between the two halves; `qtsharp.charts.json` and `qtsharp.qt3d.json` are the extension modules' models |
+| `gen/` | the generator: `ApiModel.cs` (model shape, `Roots` table, extension modules, vocabulary), `ApiModel2.cs` (the libclang front end), `ApiCodeGen.cs` (model → C# + C++) |
 | `native/` | the hand-written runtime (`QtSharpApiRuntime.cpp`: moc signal forwarder, probes) and the crash tracer |
 | `runtime/` | the managed runtime published with the binding (`ApiRuntime.cs`, `ApiApplication.cs`) |
 | `demos/` | `QtSharp.Demos.csproj` — the binding, the runtime and the 35 demos; `ApiDemos.cs` is the name → window table |
 | `testbind/` | `testapp`, the test entry point (13 lines: hand the argument to `ApiDemos`) |
 | `samples/hello/` | the sample / trial entry point |
+| `samples/qt3d/` | a Qt3D sample: windowless self-test by default, `window` opens the scene |
+| `demos.qt3d/` | the official Qt3D C++ examples (`simple-cpp`, `basicshapes-cpp`, `3d-text`) as the extension's conformance tests |
+| `nuget/QtSharp.Api/`, `nuget/QtSharp.Charts/`, `nuget/QtSharp.Qt3D/` | the packable projects (core, and the two extension modules) |
 | `tools/regen-api.ps1` | the build and the gate |
 | `tools/clangprobe/` | the probe used to validate the libclang front end (not part of the build) |
 | `tools/disasm.py` | capstone-based RVA disassembly helper |
@@ -440,17 +478,22 @@ Replace the local source path with your checkout's `out/packages` directory.
   (`QPrinter`, print dialogs/preview), QtXml (the `QDom*` DOM; `QXmlStreamReader/Writer` are in
   QtCore) and QtOpenGL/QtOpenGLWidgets (`QOpenGLWidget`, `QOpenGLContext`, shader/buffer classes).
     **Not bound**: QtSql (no dev files in the kit), QtMultimedia, QtQml/QtQuick, QtPdf, QtWebEngine.
-* **QtCharts is left out on purpose, and it would come back as its own package.** It is a module
-  outside `qtbase`/`qtsvg` (the kit has no `include\QtCharts` and no `Qt6Charts.lib`, and the
-  `QtSharp.Api` payload carries the ten modules listed above), and, unlike qtbase, it is licensed
-  under **GPLv3 or a commercial Qt license rather than the LGPL**. PySide6 and PyQt6 draw the same
-  line for the same reason: `PySide6-Essentials` ships only a `QtCharts.pyi` type stub (the binding
-  itself and `Qt6Charts.dll` live in `PySide6-Addons`), and PyQt6 keeps it in a separate
-  `PyQt6-Charts` wheel. QtSharp follows that shape: if Charts is ever needed it becomes an optional
-  package (for example `QtSharp.Charts`) built the way QtSvg and QtXml were, rather than part of
-  `QtSharp.Api`, so nobody inherits a GPLv3 dependency they did not ask for. A smooth line does not
-  need it: `QPainterPath.CubicTo`/`QuadTo` are bound, so any interpolation scheme can be expressed
-  directly.
+* **QtCharts and Qt3D are optional packages, not part of `QtSharp.Api`.** Both are addon modules
+  outside `qtbase`/`qtsvg`, so they ship the way PySide6 and PyQt6 split their addons: separate
+  assemblies and packages that reference the core (`PySide6-Essentials` ships only a
+  `QtCharts.pyi` stub and leaves the binding and `Qt6Charts.dll` to `PySide6-Addons`; PyQt6 keeps
+  QtCharts in a separate `PyQt6-Charts` wheel). QtCharts is additionally **GPLv3-or-commercial
+  rather than LGPL**, so keeping it out of `QtSharp.Api` is also what stops every consumer from
+  inheriting that license. Qt3D is **LGPLv3/GPLv2/commercial**; it is split for the packaging
+  reason (an optional family of six libraries), not for licensing.
+  Qt3D's `QTransform`, `QBuffer`, `QAction`, `QKeyEvent`, `QMouseEvent` and `QWheelEvent` share
+  their names with core classes; inside `QtSharp.Qt3D` the Qt3D class wins, and a file that
+  imports both namespaces aliases the one it means.
+* **Qt3D-specific virtuals are not override points yet.** The override whitelist is the core's
+  widget/event/model set, so a managed subclass of a Qt3D class can use its API but cannot replace
+  `QAbstractAspect::onEngineStartup`-style hooks (or `executeCommand`/`jobsToExecute`). Signals,
+  properties, enums and flags are bound normally (including class-scoped enums in signal
+  signatures).
 * **Not ported**: the RHI examples (they need `QRhi` and prebuilt shaders) and Window Embedding.
   PDF *output* works through `QPrinter` (see `api-docformats`); PDF *reading* needs the QtPdf
   module, which is not bound.

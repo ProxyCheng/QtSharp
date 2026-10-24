@@ -68,9 +68,109 @@ public static class ApiCodeGen
     // functions, published as a static Qt class.
     static List<JsonElement> Functions = new();
     static Dictionary<string, JsonElement> ByName;
+    // Keyed by the C++ reference name (qualified for a namespaced extension class, simple for a
+    // core class). ByName is keyed by the simple name the emitters use; a simple name is
+    // ambiguous when an extension class shadows a core one, so type resolution goes through
+    // this table first.
+    static Dictionary<string, JsonElement> ByRef;
     static HashSet<string> ClassNames;
     static HashSet<string> EnumNames;
     static HashSet<string> FlagsEnums;
+    // The extension classes whose C++ name is namespace-qualified: simple name -> Qt3DCore::QEntity.
+    // The generated C++ (base specifiers, casts, static calls) has to spell the qualified name.
+    static Dictionary<string, string> CppNames = new(StringComparer.Ordinal);
+    // The same for enums whose published name dropped a module namespace: ChangeFlag ->
+    // Qt3DCore::ChangeFlag, API -> Qt3DRender::API.
+    static Dictionary<string, string> CppEnumNames = new(StringComparer.Ordinal);
+
+    static string Ref(JsonElement cls)
+        => cls.TryGetProperty("cppName", out var cpp) ? cpp.GetString() : Name(cls);
+
+    static string SimpleName(string modelType) => ApiTypes.SimpleName(modelType);
+
+    // Extension classes whose simple name a core class already uses (Qt3D's QTransform/QBuffer/
+    // QAction/QKeyEvent/QMouseEvent/QWheelEvent vs QtGui/QtCore/QtWidgets). Inside the extension
+    // namespace the extension class shadows the imported one, which is what we want for its own
+    // signatures; a signature that really means the *core* class has to say QtSharp.Api.<name>.
+    static HashSet<string> CoreClassCollisions = new(StringComparer.Ordinal);
+    // The enums this run emits (the extension's own; the core's are filtered out). A nested enum
+    // with a colliding scope - QBuffer::UsageType - belongs to the extension, while a core enum
+    // with the same simple scope does not.
+    static HashSet<string> OwnEnumNames = new(StringComparer.Ordinal);
+
+    // The C# spelling of a model type. A namespaced extension class drops its C++ namespace; an
+    // unqualified core class that collides with an extension class is qualified with the core
+    // assembly's namespace.
+    static string CsTypeName(string t)
+    {
+        if (ClassNames.Contains(t))
+        {
+            if (!t.Contains("::", StringComparison.Ordinal) && CoreClassCollisions.Contains(t))
+                return ApiModel.CoreNamespace + "." + t;
+            return SimpleName(t);
+        }
+        if (OwnEnumNames.Contains(t))
+            return t.Replace("::", ".");
+        int i = t.LastIndexOf("::", StringComparison.Ordinal);
+        if (i >= 0)
+        {
+            var scope = t.Substring(0, i);
+            var last = t.Substring(i + 2);
+            // A nested enum of a core class that collides with an extension class.
+            if (!scope.Contains("::", StringComparison.Ordinal) && CoreClassCollisions.Contains(scope))
+                return ApiModel.CoreNamespace + "." + scope + "." + last;
+            return t.Replace("::", ".");
+        }
+        return t;
+    }
+
+    // A *model type*: an extension class is spelled by its qualified C++ name, an unqualified
+    // name is a core class (that is what an unqualified name means in an extension model). This
+    // is what keeps `QKeyEvent` in QWindow::keyPressEvent resolving to the *core* QKeyEvent
+    // rather than Qt3DInput's, which is what decides event-vs-object wrapping.
+    static bool TryLookup(string className, out JsonElement cls)
+        => ByRef.TryGetValue(className, out cls) || ByName.TryGetValue(className, out cls);
+
+    // A class-table name used by the emitters: a simple name is the class this run emits (an
+    // extension class shadows the core one), a qualified name is a base/type reference.
+    static bool TryLookupInternal(string className, out JsonElement cls)
+        => className.Contains("::", StringComparison.Ordinal)
+            ? TryLookup(className, out cls)
+            : ByName.TryGetValue(className, out cls);
+
+    static string CppClass(string simpleName)
+        => CppNames.TryGetValue(simpleName, out var qualified) ? qualified : simpleName;
+
+    // A model type spelled in C++. The model drops the C++ namespace of a Qt3D class from the
+    // class table itself but keeps it in signatures (Qt3DCore::QEntity*); an enum nested in one
+    // of those classes is still written QBuffer::AccessType, so the owning class has to be
+    // qualified here. A core namespace enum (Qt::Alignment) is left alone.
+    static string CppTypeName(string t)
+    {
+        if (string.IsNullOrEmpty(t))
+            return t;
+        if (CppEnumNames.TryGetValue(t, out var cppEnum))
+            return cppEnum;
+        if (t.EndsWith("*", StringComparison.Ordinal))
+            return CppTypeName(t.Substring(0, t.Length - 1)) + "*";
+        foreach (var container in new[] { "QList", "QMap", "QHash" })
+        {
+            if (!t.StartsWith(container + "<", StringComparison.Ordinal) || !t.EndsWith(">", StringComparison.Ordinal))
+                continue;
+            var inner = t.Substring(container.Length + 1, t.Length - container.Length - 2);
+            if (container == "QList")
+                return container + "<" + CppTypeName(inner) + ">";
+            var (key, value) = ApiTypes.SplitPair(inner);
+            return container + "<" + CppTypeName(key) + "," + CppTypeName(value) + ">";
+        }
+        int i = t.LastIndexOf("::", StringComparison.Ordinal);
+        if (i >= 0)
+            return CppClass(t.Substring(0, i)) + "::" + t.Substring(i + 2);
+        // An unqualified model type is a core class (an extension model spells its own classes
+        // qualified), so it must not be mapped through the extension's simple-name table - that
+        // would turn a core QKeyEvent into Qt3DInput::QKeyEvent.
+        return t;
+    }
 
     // Whether a value of this class returned by value is ours to free (a boxed value type) or
     // belongs to Qt (an event, which Qt builds on the stack).
@@ -79,7 +179,7 @@ public static class ApiCodeGen
     // constructors, so a boxed class without published constructors has to be wrapped the
     // transient way (QItemSelection, whose constructors take an unbound QModelIndex).
     static bool IsOwned(string className)
-        => ByName.TryGetValue(className, out var cls)
+        => TryLookup(className, out var cls)
            && cls.GetProperty("owned").GetBoolean()
            && (cls.GetProperty("constructors").GetArrayLength() > 0 || SubclassCtor(cls));
 
@@ -114,7 +214,7 @@ public static class ApiCodeGen
             return known;
         derivesFromQObject[className] = false;      // a cycle would otherwise not terminate
         bool result = false;
-        if (ByName.TryGetValue(className, out var cls))
+        if (TryLookup(className, out var cls))
         {
             foreach (var b in cls.GetProperty("bases").EnumerateArray().Select(x => x.GetString()))
             {
@@ -142,7 +242,7 @@ public static class ApiCodeGen
             return known;
         derivesFromEvent[className] = false;        // a cycle would otherwise not terminate
         bool result = false;
-        if (ByName.TryGetValue(className, out var cls))
+        if (TryLookup(className, out var cls))
         {
             foreach (var b in cls.GetProperty("bases").EnumerateArray().Select(x => x.GetString()))
             {
@@ -168,8 +268,8 @@ public static class ApiCodeGen
     // (that is what a real double-click in the shortcut editor exposed).
     static string ClassPtrRead(string cls, string expression)
         => DerivesFromEvent(cls)
-            ? $"{cls}.FromTransientHandle({expression})"
-            : $"{cls}.FromHandle({expression})";
+            ? $"{CsTypeName(cls)}.FromTransientHandle({expression})"
+            : $"{CsTypeName(cls)}.FromHandle({expression})";
 
     /// <summary>
     /// The native library the generated P/Invokes call. The core binding points at QtSharp.Api; an
@@ -288,9 +388,50 @@ public static class ApiCodeGen
         }
 
         KnownClasses = knownClasses;
-        ByName = knownClasses.ToDictionary(c => c.GetProperty("name").GetString(), c => c, StringComparer.Ordinal);
-        ClassNames = new HashSet<string>(knownClasses.Select(c => c.GetProperty("name").GetString()), StringComparer.Ordinal);
+        // Keyed by the name the model uses in signatures: simple for the core binding, qualified
+        // for a namespaced module (Qt3DCore::QEntity). An extension class shadows a core class of
+        // the same simple name (Qt3DCore::QTransform vs QtGui::QTransform); the extension's model
+        // is the one this run emits, so it wins.
+        ByName = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
+        ByRef = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
+        CppNames = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var c in knownClasses)
+        {
+            ByName[Name(c)] = c;
+            ByRef[Ref(c)] = c;
+            if (c.TryGetProperty("cppName", out var cpp))
+                CppNames[Name(c)] = cpp.GetString();
+        }
+        // ApiTypes.Managed distinguishes a bound handle from an opaque pointer by membership in
+        // this set. A signature read out of the Qt3D AST spells the qualified name, and the class
+        // table's own name is the simple one, so both have to be present.
+        ClassNames = new HashSet<string>(knownClasses.Select(c => Ref(c)), StringComparer.Ordinal);
+        foreach (var c in knownClasses)
+            ClassNames.Add(Name(c));
+
+        // Only an extension has two assemblies to disambiguate. In the core run every class is
+        // the core's own, and qualifying them all would be a pointless (and huge) diff.
+        CoreClassCollisions = new HashSet<string>(StringComparer.Ordinal);
+        if (module != null && coreDocument != null)
+        {
+            var extensionNames = new HashSet<string>(Classes.Select(Name), StringComparer.Ordinal);
+            var coreNames = new HashSet<string>(
+                coreDocument.RootElement.GetProperty("classes").EnumerateArray().Select(Name),
+                StringComparer.Ordinal);
+            foreach (var name in extensionNames)
+                if (coreNames.Contains(name))
+                    CoreClassCollisions.Add(name);
+        }
         EnumNames = new HashSet<string>(knownEnums.Select(e => e.GetProperty("qualified").GetString()), StringComparer.Ordinal);
+        OwnEnumNames = new HashSet<string>(Enums.Select(e => e.GetProperty("qualified").GetString()), StringComparer.Ordinal);
+        CppEnumNames = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var e in knownEnums)
+        {
+            string qualified = e.GetProperty("qualified").GetString();
+            CppEnumNames[qualified] = e.TryGetProperty("cppQualified", out var cppQualified)
+                ? cppQualified.GetString()
+                : qualified;
+        }
         FlagsEnums = new HashSet<string>(
             knownEnums.Where(e => e.TryGetProperty("flags", out var f) && f.ValueKind == JsonValueKind.True)
                       .Select(e => e.GetProperty("qualified").GetString()), StringComparer.Ordinal);
@@ -355,7 +496,7 @@ public static class ApiCodeGen
     // Whether a value type can be default-constructed in C++ (needed when a managed null is
     // passed for a boxed parameter).
     static bool HasDefaultCtor(string className)
-        => ByName.TryGetValue(className, out var cls)
+        => TryLookup(className, out var cls)
            && cls.GetProperty("constructors").EnumerateArray().Any(c => Params(c).Count == 0);
 
     static bool IsInheritedVirtual(JsonElement v)
@@ -556,8 +697,8 @@ public static class ApiCodeGen
         : IsEnumElem(e) ? $"({CsEnum(e)}){expr}"
         : IsStringT(e) ? $"ApiRuntime.ToManaged({expr})"
         : IsStruct(e) ? expr
-        : IsPointerElem(e) ? $"{e.Substring(0, e.Length - 1)}.FromTransientHandle({expr})"
-        : IsOwned(e) ? $"{e}.FromOwnedHandle({expr})" : $"{e}.FromTransientHandle({expr})";
+        : IsPointerElem(e) ? $"{CsTypeName(e.Substring(0, e.Length - 1))}.FromTransientHandle({expr})"
+        : IsOwned(e) ? $"{CsTypeName(e)}.FromOwnedHandle({expr})" : $"{CsTypeName(e)}.FromTransientHandle({expr})";
     // Managed value -> ABI.
     static string ElemArg(string e, string expr) => IsScalarElem(e) || IsStringT(e) || IsStruct(e) ? expr
         : IsEnumElem(e) ? $"(int){expr}"
@@ -595,7 +736,7 @@ public static class ApiCodeGen
     static bool IsEnum(string t) => EnumNames.Contains(t);
     static bool IsFlags(string t) => FlagsEnums.Contains(t);
     static bool IsBoxed(string t) => ClassNames.Contains(t);
-    static string CsEnum(string t) => t.Replace("::", ".");
+    static string CsEnum(string t) => CsTypeName(t);
 
     // ------------------------------------------------------------------ C#
     // The C# binding is split the way Qt's C++ headers are: every class, value-type struct and
@@ -1198,9 +1339,9 @@ public static class ApiCodeGen
         if (IsScalarElem(elem) || IsStruct(elem))
             return call;
         if (IsPointerElem(elem))
-            return $"{elem.Substring(0, elem.Length - 1)}.FromTransientHandle({call})";
+            return $"{CsTypeName(elem.Substring(0, elem.Length - 1))}.FromTransientHandle({call})";
         // A boxed value comes back as a fresh copy that the wrapper owns.
-        return IsOwned(elem) ? $"{elem}.FromOwnedHandle({call})" : $"{elem}.FromTransientHandle({call})";
+        return IsOwned(elem) ? $"{CsTypeName(elem)}.FromOwnedHandle({call})" : $"{CsTypeName(elem)}.FromTransientHandle({call})";
     }
 
     static void WriteEnums(StringBuilder sb, string scope, int indent, Members inherited = null)
@@ -1373,7 +1514,7 @@ public static class ApiCodeGen
             foreach (var e in Enums.Where(e => ScopeOf(e) == Name(cls)))
                 hard.Add(Name(e));
             foreach (var b in cls.GetProperty("bases").EnumerateArray().Select(x => x.GetString()).Skip(1))
-                hard.Add("As" + b);
+                hard.Add("As" + SimpleName(b));
             hardReservedByClass[Name(cls)] = hard;
 
             // A data member keeps its own name (it is published as the property), so its names
@@ -1478,6 +1619,10 @@ public static class ApiCodeGen
     // declares, plus everything it inherits. This is what WriteClass unions over a class's base.
     static Members InheritedMembers(string className)
     {
+        // A base is recorded by its qualified C++ name (Qt3DCore::QNode); the caches and the
+        // member tables use the class's own simple name.
+        if (TryLookupInternal(className, out var resolved))
+            className = Name(resolved);
         if (inheritedMembers.TryGetValue(className, out var cached))
             return cached;
         var members = new Members();
@@ -1495,6 +1640,8 @@ public static class ApiCodeGen
 
     static Members DeclaredMembers(string className)
     {
+        if (TryLookupInternal(className, out var resolved))
+            className = Name(resolved);
         if (declaredMembers.TryGetValue(className, out var cached))
             return cached;
         var members = new Members();
@@ -1538,7 +1685,7 @@ public static class ApiCodeGen
         if (ChainOf(className).Count > 0)
             Method("Dispatch(IntPtr,int,IntPtr)");
         foreach (var b in bases.Skip(1))
-            Method("As" + b + "()");
+            Method("As" + SimpleName(b) + "()");
         foreach (var e in Enums.Where(e => ScopeOf(e) == className))
             Property(Name(e));
 
@@ -1614,7 +1761,7 @@ public static class ApiCodeGen
             return cached;
         subtreeCtorCache[className] = false;        // a cycle must not recurse forever
         bool result = false;
-        if (ByName.TryGetValue(className, out var cls))
+        if (TryLookupInternal(className, out var cls))
             result = cls.GetProperty("constructors").GetArrayLength() > 0 || SubclassCtor(cls);
         if (!result)
             result = Children(className).Any(c => SubtreeHasCtor(Name(c)));
@@ -1625,7 +1772,7 @@ public static class ApiCodeGen
     // The classes that inherit from className through their primary base.
     static IEnumerable<JsonElement> Children(string className)
         => Classes.Where(c => c.GetProperty("bases").EnumerateArray()
-            .Select(b => b.GetString()).FirstOrDefault() == className);
+            .Select(b => b.GetString()).Select(SimpleName).FirstOrDefault() == className);
 
     // Whether any class here declares a virtual whose stub reads `__managedSubclass`.
     static readonly Dictionary<string, bool> subtreeVirtualCache = new(StringComparer.Ordinal);
@@ -1668,7 +1815,7 @@ public static class ApiCodeGen
             return cached;
 
         var slots = new List<VirtualSlot>();
-        if (ByName.TryGetValue(className, out var cls))
+        if (TryLookupInternal(className, out var cls))
         {
             var bases = cls.GetProperty("bases").EnumerateArray().Select(b => b.GetString()).ToList();
             if (bases.Count > 0)
@@ -2063,15 +2210,18 @@ public static class ApiCodeGen
         string name = Name(cls);
         bool boxed = cls.GetProperty("owned").GetBoolean();
         var bases = cls.GetProperty("bases").EnumerateArray().Select(b => b.GetString()).ToList();
-        string baseName = bases.Count > 0 ? bases[0] : null;
-        var extraBases = bases.Skip(1).ToList();
+        // The model records a Qt3D base by its qualified C++ name; C# names the class by its
+        // simple one, and the inherited-member analysis resolves either.
+        string baseRef = bases.Count > 0 ? bases[0] : null;
+        string baseName = baseRef != null ? SimpleName(baseRef) : null;
+        var extraBases = bases.Skip(1).Select(SimpleName).ToList();
         var ctors = cls.GetProperty("constructors").EnumerateArray().ToList();
         var methods = cls.GetProperty("methods").EnumerateArray().ToList();
         var virtuals = ChainOf(Name(cls));
         var signals = cls.GetProperty("signals").EnumerateArray().ToList();
         // The members the base chain already publishes: a member of this class that collides has
         // to say `new`, or the compiler warns that it hides the inherited one (CS0108).
-        var inherited = baseName != null ? InheritedMembers(baseName) : new Members();
+        var inherited = baseRef != null ? InheritedMembers(baseRef) : new Members();
 
         // A class we allocate ourselves needs a release path; Qt-owned objects must not get
         // one, or the GC would free an object the parent still owns (ownership PoC rule 1).
@@ -2185,7 +2335,7 @@ public static class ApiCodeGen
         {
             sb.AppendLine("            Handle = handle;");
             // Qt owns the object and will destroy it: the wrapper has to learn about that.
-            if (DerivesFromQObject(name))
+            if (DerivesFromQObject(Ref(cls)))
                 sb.AppendLine("            ApiRuntime.Watch(handle);");
         }
         sb.AppendLine("        }");
@@ -2222,7 +2372,7 @@ public static class ApiCodeGen
             // This wrapper made the object, so it is the one that may release it. A QObject can
             // still be destroyed by Qt later (it gets reparented), so it is watched as well.
             string register = "            ApiRuntime.Register(Handle, this);\n            __ownsNative = true;\n            __managedSubclass = true;";
-            if (DerivesFromQObject(name))
+            if (DerivesFromQObject(Ref(cls)))
             {
                 register += "\n            ApiRuntime.Watch(Handle);";
                 // The signals and properties the *C#* class declared with [QtSignal]/[QtProperty]:
@@ -2461,7 +2611,7 @@ public static class ApiCodeGen
             // plain `virtual` would only hide the base member, and a call through a base-typed
             // reference - which is how Qt and most callers see the object - would run the base
             // implementation instead (for QAbstractItemModel's pure virtuals, "no data at all").
-            bool overridesBase = baseName != null && ChainOf(baseName).Any(s =>
+            bool overridesBase = baseRef != null && ChainOf(baseRef).Any(s =>
                 VirtualKey(s.Virtual) == VirtualKey(v) && ManagedType(ReturnType(s.Virtual)) == ManagedType(ret));
             // A `virtual` that is not an override can still shadow an inherited member (`override`
             // never warns); mark it `new` in that case.
@@ -2931,9 +3081,10 @@ public static class ApiCodeGen
 
         foreach (var b in cls.GetProperty("bases").EnumerateArray().Select(x => x.GetString()).Skip(1))
         {
+            string baseName = SimpleName(b);
             sb.AppendLine();
-            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}__as_{b}\", CallingConvention = CallingConvention.Cdecl)]");
-            sb.AppendLine($"        internal static extern IntPtr {name}__as_{b}(IntPtr self);");
+            sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}__as_{baseName}\", CallingConvention = CallingConvention.Cdecl)]");
+            sb.AppendLine($"        internal static extern IntPtr {name}__as_{baseName}(IntPtr self);");
         }
 
         var overloadCounts = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -3015,8 +3166,8 @@ public static class ApiCodeGen
         // A boxed value is a *copy*: the slot points at the argument (or at a temporary Qt
         // allocated), and the wrapper must own its own object.
         if (IsBoxed(t) && VirtualBoxedParams().Contains(t))
-            return $"{t}.FromOwnedHandle(ApiNative.Clone_{ListStem(t)}({slot}))";
-        if (IsBoxed(t)) return $"{t}.FromHandle({slot})";
+            return $"{CsTypeName(t)}.FromOwnedHandle(ApiNative.Clone_{ListStem(t)}({slot}))";
+        if (IsBoxed(t)) return $"{CsTypeName(t)}.FromHandle({slot})";
         return slot;
     }
 
@@ -3029,7 +3180,10 @@ public static class ApiCodeGen
     // (QString, QWidget*, QList<int>, Qt::Orientation) and indexOfSignal matches it literally -
     // "const QString &" would not be found. The model type is already that spelling, which is
     // what makes a signal's parameters readable from the model.
-    static string SignalMocType(JsonElement p) => PType(p);
+    // The type as Qt's meta-object spells it. Qt normalizes an enum to its full C++ name
+    // (Qt3DCore::QBuffer::AccessType) even though moc's own signature prints just AccessType;
+    // indexOfSignal accepts the qualified form and rejects the class-scoped QBuffer::AccessType.
+    static string SignalMocType(JsonElement p) => CppTypeName(PType(p));
 
     // Reading one signal argument out of the argv array moc builds. Unlike a virtual's argv (which
     // carries the argument itself), a signal's argv[i] is the *address* of the argument storage:
@@ -3064,7 +3218,7 @@ public static class ApiCodeGen
         if (IsAssocT(t)) return $"{AssocHelper(t)}.ReadTransient({slot})";
         // A runtime struct is passed by value, so the storage the slot points at *is* the struct.
         if (IsStruct(t)) return $"ApiRuntime.ReadStruct<{t}>({slot})";
-        if (IsBoxed(t)) return $"{t}.FromTransientHandle({slot})";
+        if (IsBoxed(t)) return $"{CsTypeName(t)}.FromTransientHandle({slot})";
         return slot;
     }
 
@@ -3200,8 +3354,9 @@ public static class ApiCodeGen
         if (IsArray(t)) return ApiTypes.Managed(t, ClassNames);
         if (t == "char*") return "string";
         if (IsListT(t) || IsAssocT(t) || IsBindableT(t)) return ApiTypes.Managed(t, ClassNames);
-        if (IsPtr(t)) return IsClassPtr(t) ? t.Substring(0, t.Length - 1) : "IntPtr";
+        if (IsPtr(t)) return IsClassPtr(t) ? CsTypeName(t.Substring(0, t.Length - 1)) : "IntPtr";
         if (IsEnum(t)) return CsEnum(t);
+        if (IsBoxed(t)) return CsTypeName(t);
         return ApiTypes.Managed(t, ClassNames);
     }
 
@@ -3435,8 +3590,8 @@ public static class ApiCodeGen
             return $"{BindableHelper(BindableElem(t))}.FromOwnedHandle({call})";
         if (t == "QByteArrayView") return $"ApiRuntime.ToManagedBytes({call})";
         if (IsEnum(t)) return $"({CsEnum(t)}){call}";
-        if (IsClassPtr(t)) return $"{t.Substring(0, t.Length - 1)}.FromHandle({call})";
-        if (IsBoxed(t)) return IsOwned(t) ? $"{t}.FromOwnedHandle({call})" : $"{t}.FromTransientHandle({call})";
+        if (IsClassPtr(t)) return $"{CsTypeName(t.Substring(0, t.Length - 1))}.FromHandle({call})";
+        if (IsBoxed(t)) return IsOwned(t) ? $"{CsTypeName(t)}.FromOwnedHandle({call})" : $"{CsTypeName(t)}.FromTransientHandle({call})";
         return call;
     }
 
@@ -3529,7 +3684,7 @@ public static class ApiCodeGen
         bool subclassCtor = SubclassCtor(cls);
         if (subclassable)
         {
-        sb.AppendLine($"class QsApi_{name} : public {name}");
+        sb.AppendLine($"class QsApi_{name} : public {CppClass(name)}");
         sb.AppendLine("{");
         sb.AppendLine("public:");
         // One constructor per model constructor; the dispatch pair comes first so that the
@@ -3544,7 +3699,7 @@ public static class ApiCodeGen
             string sig = string.Join(", ", ps.Select(p => $"{CppCtorParamTypeFor(p)} {NativeName(PName(p))}"));
             string args = string.Join(", ", ps.Select(CppCtorArgFor));
             sb.AppendLine($"    QsApi_{name}(void* userData, QsApiDispatch dispatch{(ps.Count > 0 ? ", " + sig : "")})");
-            sb.AppendLine($"        : {name}({args}), m_userData(userData), m_dispatch(dispatch) {{}}");
+            sb.AppendLine($"        : {CppClass(name)}({args}), m_userData(userData), m_dispatch(dispatch) {{}}");
         }
         if (subclassCtor)
         {
@@ -3552,7 +3707,7 @@ public static class ApiCodeGen
             // managed subclass uses, and it is concrete because every pure virtual this class
             // inherits is an override point we install.
             sb.AppendLine($"    QsApi_{name}(void* userData, QsApiDispatch dispatch)");
-            sb.AppendLine($"        : {name}(), m_userData(userData), m_dispatch(dispatch) {{}}");
+            sb.AppendLine($"        : {CppClass(name)}(), m_userData(userData), m_dispatch(dispatch) {{}}");
         }
         sb.AppendLine();
         // Qt declares most override points protected, and a protected base member is only
@@ -3582,7 +3737,7 @@ public static class ApiCodeGen
             string ret = ReturnType(v);
             sb.AppendLine($"    static {ret} CallBase_{vname}{vSuffix}(QsApi_{name}* self{(ps.Count > 0 ? ", " + sig : "")})");
             sb.AppendLine("    {");
-            sb.AppendLine($"        {(ret == "void" ? "" : "return ")}self->{name}::{vname}({args});");
+            sb.AppendLine($"        {(ret == "void" ? "" : "return ")}self->{CppClass(name)}::{vname}({args});");
             sb.AppendLine("    }");
         }
         // The protected members the model publishes (createIndex, beginInsertRows, ...): C++ lets
@@ -3672,20 +3827,20 @@ public static class ApiCodeGen
         {
             sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_{name}_dtor(void* self)");
             sb.AppendLine("{");
-            if (DerivesFromQObject(name))
+            if (DerivesFromQObject(Ref(cls)))
             {
                 // A QObject's owner can move to Qt at runtime (setParent, or a layout adopting the
                 // widget), and deleting something Qt owns is a double free - the crash the legacy
                 // pipeline hit with QCommandLinkButton. Qt is asked first; an object it does not
                 // own is still released, so nothing leaks.
-                sb.AppendLine($"    {name}* object = static_cast<{name}*>(self);");
+                sb.AppendLine($"    {CppClass(name)}* object = static_cast<{CppClass(name)}*>(self);");
                 sb.AppendLine("    if (object->parent())");
                 sb.AppendLine("        return;");
                 sb.AppendLine("    delete object;");
             }
             else
             {
-                sb.AppendLine($"    delete static_cast<{name}*>(self);");
+                sb.AppendLine($"    delete static_cast<{CppClass(name)}*>(self);");
             }
             sb.AppendLine("}");
             sb.AppendLine();
@@ -3693,9 +3848,10 @@ public static class ApiCodeGen
 
         foreach (var b in cls.GetProperty("bases").EnumerateArray().Select(x => x.GetString()).Skip(1))
         {
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) void* qs_api_{name}__as_{b}(void* self)");
+            string baseEntry = SimpleName(b);
+            sb.AppendLine($"extern \"C\" __declspec(dllexport) void* qs_api_{name}__as_{baseEntry}(void* self)");
             sb.AppendLine("{");
-            sb.AppendLine($"    return static_cast<{b}*>(static_cast<{name}*>(self));");
+            sb.AppendLine($"    return static_cast<{b}*>(static_cast<{CppClass(name)}*>(self));");
             sb.AppendLine("}");
             sb.AppendLine();
         }
@@ -3705,7 +3861,7 @@ public static class ApiCodeGen
         {
             string fieldName = Name(field);
             string fieldType = field.GetProperty("type").GetString();
-            string access = $"static_cast<{name}*>(self)->{fieldName}";
+            string access = $"static_cast<{CppClass(name)}*>(self)->{fieldName}";
             // A member can be declared `const QWidget *widget`, so a pointer needs its const taken
             // off before it fits the void* slot.
             string getter = IsFlags(fieldType)
@@ -3722,7 +3878,7 @@ public static class ApiCodeGen
             sb.AppendLine("}");
             sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_{name}_set_{fieldName}(void* self, {ElemAbiCppParam(fieldType)} value)");
             sb.AppendLine("{");
-            sb.AppendLine($"    static_cast<{name}*>(self)->{fieldName} = {setter};");
+            sb.AppendLine($"    static_cast<{CppClass(name)}*>(self)->{fieldName} = {setter};");
             sb.AppendLine("}");
             sb.AppendLine();
         }
@@ -3748,12 +3904,12 @@ public static class ApiCodeGen
             string rawArgs = string.Join(", ", ps.SelectMany(AbiArgs));
             string call;
             if (IsStatic(m))
-                call = $"{name}::{mname}({args})";
+                call = $"{CppClass(name)}::{mname}({args})";
             else if (IsProtected(m))
                 call = $"QsApi_{name}::Call{Pascal(mname)}{entrySuffix}(static_cast<QsApi_{name}*>(self)"
                      + (rawArgs.Length > 0 ? ", " + rawArgs : "") + ")";
             else
-                call = $"static_cast<{name}*>(self)->{mname}({args})";
+                call = $"static_cast<{CppClass(name)}*>(self)->{mname}({args})";
             sb.AppendLine($"extern \"C\" __declspec(dllexport) {NativeRetCpp(ret)} qs_api_{name}_{mname}{entrySuffix}({sig})");
             sb.AppendLine("{");
             foreach (string line in NativeBody(m, call))
@@ -3776,7 +3932,7 @@ public static class ApiCodeGen
         bool anyForwardable = declaredVirtuals.Any(s => !IsNoBase(s.Virtual));
         if (anyForwardable && subclassable)
         {
-            sb.AppendLine($"class QsApiAccess_{name} : public {name}");
+            sb.AppendLine($"class QsApiAccess_{name} : public {CppClass(name)}");
             sb.AppendLine("{");
             sb.AppendLine("public:");
             var accessOverloads = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -3797,7 +3953,7 @@ public static class ApiCodeGen
                 string args = string.Join(", ", ps.SelectMany(CppArgsFor));
                 string ret = ReturnType(v);
                 string call = $"static_cast<QsApiAccess_{name}*>(self)->{vname}({args})";
-                sb.AppendLine($"    static {NativeRetCpp(ret)} Call_{vname}{aSuffix}({name}* self{(sig.Length > 0 ? ", " + sig : "")})");
+                sb.AppendLine($"    static {NativeRetCpp(ret)} Call_{vname}{aSuffix}({CppClass(name)}* self{(sig.Length > 0 ? ", " + sig : "")})");
                 sb.AppendLine("    {");
                 sb.AppendLine("        " + NativeRetExpr(ret, call));
                 sb.AppendLine("    }");
@@ -3821,7 +3977,7 @@ public static class ApiCodeGen
 
             var pureParams = Params(v);
             string pureSig = string.Join(", ", new[] { "void* self" }.Concat(pureParams.SelectMany(CppParamsFor)));
-            string pureArgs = string.Join(", ", new[] { $"static_cast<{name}*>(self)" }
+            string pureArgs = string.Join(", ", new[] { $"static_cast<{CppClass(name)}*>(self)" }
                 .Concat(pureParams.SelectMany(AbiArgs)));
             string pureRet = ReturnType(v);
             // The access helper already returns the C ABI value, so this only forwards it.
@@ -3936,11 +4092,11 @@ public static class ApiCodeGen
         if (t == "uchar*") return "unsigned char*";
         if (IsArray(t)) return "const " + t;
         if (IsStringListT(t)) return "const QStringList&";
-        if (IsListT(t) || IsAssocT(t)) return $"const {t}&";
+        if (IsListT(t) || IsAssocT(t)) return $"const {CppTypeName(t)}&";
         // A byte[] argument is carried as a QByteArray, which converts to the view implicitly.
         if (t == "QByteArrayView") return "const QByteArray&";
-        if (IsEnum(t) || IsPtr(t)) return t;
-        if (IsBoxed(t)) return $"const {t}&";
+        if (IsEnum(t) || IsPtr(t)) return CppTypeName(t);
+        if (IsBoxed(t)) return $"const {CppTypeName(t)}&";
         return t;
     }
 
@@ -3952,13 +4108,13 @@ public static class ApiCodeGen
         // A null managed string must not reach QString::fromUtf16 as a null pointer.
         if (IsStringT(t)) return $"{name} ? QString::fromUtf16({name}) : QString()";
         if (IsStringListT(t)) return $"*static_cast<QStringList*>({name})";
-        if (IsListT(t) || IsAssocT(t)) return $"*static_cast<{t}*>({name})";
+        if (IsListT(t) || IsAssocT(t)) return $"*static_cast<{CppTypeName(t)}*>({name})";
         if (t == "QByteArrayView") return $"*static_cast<QByteArray*>({name})";
         if (t == "char*" || t == "uchar*") return name;      // already a matching pointer
-        if (IsPtr(t)) return $"static_cast<{t.Substring(0, t.Length - 1)}*>({name})";
+        if (IsPtr(t)) return $"static_cast<{CppTypeName(t.Substring(0, t.Length - 1))}*>({name})";
         // QFlags has no cast from int; the named constructor is the documented way back.
-        if (IsFlags(t)) return $"{t}::fromInt({name})";
-        if (IsEnum(t)) return $"static_cast<{t}>({name})";
+        if (IsFlags(t)) return $"{CppTypeName(t)}::fromInt({name})";
+        if (IsEnum(t)) return $"static_cast<{CppTypeName(t)}>({name})";
         // A managed null means "the parameter was not given". When the declaration's own default is
         // available as a C++ expression, that is what Qt would have used (QColor(Qt::white),
         // QHostAddress(QHostAddress::Any)); otherwise a default-constructed value is the closest.
@@ -3967,12 +4123,12 @@ public static class ApiCodeGen
             if (defaultCpp != null)
             {
                 // `= {}` is value-initialisation, i.e. `T()`, not `T({})`.
-                string expr = defaultCpp.Replace(" ", "") == "{}" ? $"{t}()" : $"{t}({defaultCpp})";
-                return $"({name} ? *static_cast<{t}*>({name}) : {expr})";
+                string expr = defaultCpp.Replace(" ", "") == "{}" ? $"{CppTypeName(t)}()" : $"{CppTypeName(t)}({defaultCpp})";
+                return $"({name} ? *static_cast<{CppTypeName(t)}*>({name}) : {expr})";
             }
             return HasDefaultCtor(t)
-                ? $"({name} ? *static_cast<{t}*>({name}) : QsApiDefaultValue<{t}>())"
-                : $"*static_cast<{t}*>({name})";
+                ? $"({name} ? *static_cast<{CppTypeName(t)}*>({name}) : QsApiDefaultValue<{CppTypeName(t)}>())"
+                : $"*static_cast<{CppTypeName(t)}*>({name})";
         }
         return name;
     }
@@ -4016,16 +4172,16 @@ public static class ApiCodeGen
             if (IsClassPtr(elem))
                 return "{\n"
                      + $"        auto qs_source = {call};\n"
-                     + $"        auto* qs_list = new {t}();\n"
+                     + $"        auto* qs_list = new {CppTypeName(t)}();\n"
                      + "        for (auto qs_item : qs_source)\n"
                      + $"            qs_list->append(const_cast<{elem}>(qs_item));\n"
                      + "        return qs_list;\n"
                      + "    }";
-            return $"return new {t}({call});";
+            return $"return new {CppTypeName(t)}({call});";
         }
-        if (IsAssocT(t)) return $"return new {t}({call});";
+        if (IsAssocT(t)) return $"return new {CppTypeName(t)}({call});";
         // The bindable handle is a small value; managed code gets a heap copy it disposes.
-        if (IsBindableT(t)) return $"return new {t}({call});";
+        if (IsBindableT(t)) return $"return new {CppTypeName(t)}({call});";
         if (t == "QByteArrayView") return $"return new QByteArray({call});";
         // A duration comes back as nanoseconds whatever unit Qt used.
         if (t == "TimeSpan")
@@ -4033,9 +4189,9 @@ public static class ApiCodeGen
         if (t == "char*") return $"{{ const char* text = ({call}); return new QString(text ? QString::fromUtf8(text) : QString()); }}";
         if (IsFlags(t)) return $"return static_cast<int>({call}.toInt());";
         if (IsEnum(t)) return $"return static_cast<int>({call});";
-        if (IsBoxed(t)) return $"return new {t}({call});";
+        if (IsBoxed(t)) return $"return new {CppTypeName(t)}({call});";
         // Iterators and other const accessors return const pointers; the C ABI is void*.
-        if (IsPtr(t)) return $"return static_cast<void*>(const_cast<{t.Substring(0, t.Length - 1)}*>({call}));";
+        if (IsPtr(t)) return $"return static_cast<void*>(const_cast<{CppTypeName(t.Substring(0, t.Length - 1))}*>({call}));";
         return $"return {call};";
     }
 
@@ -4058,11 +4214,11 @@ public static class ApiCodeGen
     {
         if (IsStringT(t)) return "QString";
         if (t == "char*") return "const char*";
-        if (IsPtr(t)) return t.Substring(0, t.Length - 1) + "*";
-        if (IsEnum(t)) return t;
+        if (IsPtr(t)) return CppTypeName(t.Substring(0, t.Length - 1)) + "*";
+        if (IsEnum(t)) return CppTypeName(t);
         // An override has to repeat the base declaration exactly, and Qt passes its value types
         // by const reference (QAbstractItemDelegate::sizeHint(const QStyleOptionViewItem&, ...)).
-        if (IsBoxed(t)) return $"const {t}&";
+        if (IsBoxed(t)) return $"const {CppTypeName(t)}&";
         return t;
     }
 
