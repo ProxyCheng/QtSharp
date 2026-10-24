@@ -1,30 +1,40 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- The Qt examples this repository has ported to C#, as a library.
+  <!-- The official Qt examples this repository has ported to C#, as a library.
 
-       It compiles, into one assembly:
-         * the generated binding  - out/api/QtSharp.Api.cs
-         * the managed runtime    - runtime/ApiRuntime.cs + runtime/ApiApplication.cs +
-                                   runtime/BclInterop.cs
-         * every `api-*` demo     - ApiDemos.Run("api-calculator") and friends
-       so an entry point is nothing but a reference:
+       It references the ten base module assemblies (QtSharp.Api/Modules), exactly like a consumer
+       of the package does - it does not compile the generated binding into itself. That keeps the
+       IDE view of this project to its own files and runs the demos across the same assembly
+       boundaries the package ships.
+
+       An entry point is nothing but a reference:
 
            <ProjectReference Include="..\demos\QtSharp.Demos.csproj" />
 
-       A project that references this library must set QtSharpCompileBinding=false *before*
-       importing QtSharp.Api.props. Otherwise it compiles the generated binding a second time and
-       every QtSharp.Api type exists in two assemblies (CS0433).
-
-       This is also the assembly to reference if you just want the binding plus a dispatcher for
-       trying the ported examples out - see samples/hello. -->
+       QtSharp.Api.props is still imported (with compilation off) for the native QtSharp.Api.dll and
+       Qt DLLs it copies next to the executable. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <AssemblyName>QtSharp.Demos</AssemblyName>
+    <QtSharpCompileBinding>false</QtSharpCompileBinding>
   </PropertyGroup>
 
-  <!-- The binding, the runtime, the native QtSharp.Api.dll and the Qt DLLs. -->
   <Import Project="..\QtSharp.Api.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\nuget\QtSharp.Runtime\QtSharp.Runtime.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtCore\QtSharp.QtCore.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtGui\QtSharp.QtGui.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtWidgets\QtSharp.QtWidgets.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtNetwork\QtSharp.QtNetwork.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtSvg\QtSharp.QtSvg.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtSvgWidgets\QtSharp.QtSvgWidgets.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtPrintSupport\QtSharp.QtPrintSupport.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtXml\QtSharp.QtXml.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtOpenGL\QtSharp.QtOpenGL.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtOpenGLWidgets\QtSharp.QtOpenGLWidgets.csproj" />
+  </ItemGroup>
 
 </Project>

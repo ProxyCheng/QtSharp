@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The binding runtime, the PyQt6-sip slot in the package graph: the managed types every
+       generated module uses (handles, QSignal, [QtProperty]/[QtSignal], the wrapper cache and
+       marshalling) plus the shared native glue QtSharp.Api.dll that every base module P/Invokes.
+
+       The runtime is Qt-type-free: QObject lives in QtSharp.QtCore, so a Qt-independent runtime
+       can be referenced by all ten base assemblies and by every addon. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>QtSharp.Runtime</AssemblyName>
+    <RootNamespace>QtSharp.Runtime</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <PackageId>QtSharp.Runtime</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>ProxyCheng</Authors>
+    <Description>QtSharp runtime: the managed handle/signal/marshalling layer shared by every QtSharp binding module, plus the native QtSharp.Api glue.</Description>
+    <PackageTags>Qt;Qt6;CSharp;dotnet;binding;interop;runtime</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ProxyCheng/QtSharp.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <QtSharpApiDir Condition="'$(QtSharpApiDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\api</QtSharpApiDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\ApiRuntime.cs">
+      <Link>Runtime\ApiRuntime.cs</Link>
+    </Compile>
+    <!-- The binding tests probe the liveness generation counters (OwnershipApi); those members
+         are internal to the runtime otherwise. -->
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>QtSharp.BindingTests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="$(QtSharpApiDir)\QtSharp.Api.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+  </ItemGroup>
+
+  <Target Name="QtSharpRuntimePackCheck" BeforeTargets="GenerateNuspec">
+    <Error Condition="!Exists('$(QtSharpApiDir)\QtSharp.Api.dll')" Text="The native glue is missing - run: powershell -File tools\regen-api.ps1" />
+  </Target>
+
+</Project>

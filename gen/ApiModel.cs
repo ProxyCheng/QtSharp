@@ -154,10 +154,18 @@ public static class ApiTypes
             // (QRawFont::advancesForGlyphIndexes).
             if (IsStruct(pointee))
                 return Managed(pointee, classes) + "[]";
-            return classes != null && classes.Contains(pointee) ? pointee : "IntPtr";
+            // A bound class in a named C++ namespace (Qt3DCore::QEntity) is emitted under its
+            // simple name: the extension's whole binding is one C# namespace.
+            return classes != null && classes.Contains(pointee) ? SimpleName(pointee) : "IntPtr";
         }
         if (modelType.Contains("::"))
+        {
+            // A bound class keeps only its last segment; a nested enum (QEntity::Aspect) and a
+            // core namespace enum (Qt::Alignment) keep the C# nesting their generator gives them.
+            if (classes != null && classes.Contains(modelType))
+                return SimpleName(modelType);
             return modelType.Replace("::", ".");
+        }
         return modelType switch
         {
             "void" => "void",
@@ -167,6 +175,13 @@ public static class ApiTypes
             "double" => "double",
             _ => modelType,     // a bound class, boxed by value
         };
+    }
+
+    /// <summary>The last segment of a (possibly namespace-qualified) C++ name.</summary>
+    public static string SimpleName(string modelType)
+    {
+        int i = modelType.LastIndexOf("::", StringComparison.Ordinal);
+        return i < 0 ? modelType : modelType.Substring(i + 2);
     }
 
     // The scalar vocabulary of the model, which is what tells an array of values apart from a
@@ -207,7 +222,7 @@ public static class ApiTypes
 // a pure function of a versioned artifact: the same model always produces byte-identical
 // output, and CI can enforce "regenerate -> diff must be empty".
 // The class is split in two files: ApiModel.cs holds the model shape, the roots table, the
-// vocabulary, the header scanners and the serializer; ApiModel2.cs reads the AST through
+// vocabulary, the header scanners and the serializer; ClangExtractor.cs reads the AST through
 // libclang/ClangSharp (the `extract2` command). Everything downstream of "the AST has been
 // read" is shared.
 public static partial class ApiModel
@@ -240,6 +255,10 @@ public static partial class ApiModel
     // is the model's single input description.
     public class Root
     {
+        // The C++ name as the extractor has to look it up. It is unqualified for the core
+        // binding (QObject) and namespace-qualified for a module that lives in one
+        // (Qt3DCore::QEntity), because Qt3D's QBuffer/QTransform/QAction share their simple
+        // names with QtCore/QtGui/QtWidgets classes the core binding already publishes.
         public string Class;
         public string Header;
         public string Module;
@@ -249,6 +268,16 @@ public static partial class ApiModel
         // Whether the binding may delete instances. Only true for the value types we box
         // ourselves; Qt-owned objects and events must never be freed by the GC.
         public bool Owned = true;
+
+        /// <summary>The class name the model and the managed binding use (the last C++ segment).</summary>
+        public string ManagedClass
+        {
+            get
+            {
+                int i = Class.LastIndexOf("::", StringComparison.Ordinal);
+                return i < 0 ? Class : Class.Substring(i + 2);
+            }
+        }
     }
 
     static Root R(string cls, string header, string module, bool bindCtors = true, bool owned = true)
@@ -258,18 +287,19 @@ public static partial class ApiModel
         };
 
     /// <summary>
-    /// A module bound as its own package against the core binding - QtSharp.Charts today, and
-    /// whatever follows it - mirroring how PyQt6-Charts and PySide6-Addons are split away from
-    /// PyQt6 and PySide6.
+    /// A module bound as its own package against the core binding - QtSharp.Charts and
+    /// QtSharp.Qt3D today, and whatever follows them - mirroring how PyQt6-Charts and
+    /// PySide6-Addons are split away from PyQt6 and PySide6.
     ///
-    /// The Qt module must be one outside qtbase/qtsvg, and separately licensed: keeping it out of
-    /// QtSharp.Api is exactly what stops everyone who uses the core from inheriting that license
-    /// (Qt Charts, for one, is GPLv3-or-commercial rather than LGPL). The classes here may derive
-    /// from core classes - the generator knows both models, so `QChart : QGraphicsWidget` works
-    /// even though QGraphicsWidget is only bound in the core assembly.
+    /// The Qt module is an addon outside qtbase/qtsvg. Keeping it out of QtSharp.Api is also what
+    /// stops every core consumer from inheriting an addon's license (Qt Charts, for one, is
+    /// GPLv3-or-commercial rather than LGPL). The classes here may derive from core classes - the
+    /// generator knows both models, so `QChart : QGraphicsWidget` works even though
+    /// QGraphicsWidget is only bound in the core assembly.
     ///
-    /// Adding a module is a row here, a row in the module list of tools/build-qt-kit.ps1, and a
-    /// repository of its own; docs/extension-modules.md has the checklist.
+    /// Adding a module is a row here, an addon row in tools/build-qt-kit.ps1 (when the kit does
+    /// not already carry it), and a package project under nuget/ - QtSharp.Charts and
+    /// QtSharp.Qt3D are the two worked examples.
     /// </summary>
     public sealed class ExtensionModule
     {
@@ -277,32 +307,68 @@ public static partial class ApiModel
         public string Name;
         /// <summary>The managed namespace - and so the assembly name - of the module's binding.</summary>
         public string Namespace;
+        /// <summary>The assembly this module's code is compiled into (normally <see cref="Namespace"/>).</summary>
+        public string Assembly;
+        /// <summary>The NuGet package this assembly is shipped in (QtSharp.Api for a base module).</summary>
+        public string Package;
+        /// <summary>Whether this is a base-binding module rather than an addon.</summary>
+        public bool IsCore;
         /// <summary>The native library the module's generated P/Invokes call.</summary>
         public string NativeLibrary;
-        /// <summary>The Qt module: <c>include\&lt;QtModule&gt;</c> is where its headers live.</summary>
-        public string QtModule;
-        /// <summary>The define its headers expect, e.g. <c>QT_CHARTS_LIB</c>.</summary>
-        public string QtDefine;
+        /// <summary>
+        /// The Qt module(s): <c>include\&lt;QtModule&gt;</c> is where the headers live. One entry
+        /// for a module with a single include directory (QtCharts); Qt3D is a family of six
+        /// modules that share one binding, so its headers span Qt3DCore, Qt3DRender, ...
+        /// </summary>
+        public string[] QtModules;
+        /// <summary>The define(s) the headers expect, e.g. <c>QT_CHARTS_LIB</c>.</summary>
+        public string[] QtDefines;
+        /// <summary>
+        /// The C++ namespaces whose declarations belong to this module. QtCore owns the <c>Qt</c>
+        /// namespace (Qt::Alignment); a Qt3D module owns the namespace with its module name.
+        /// </summary>
+        public string[] CppNamespaces = Array.Empty<string>();
         /// <summary>The Qt libraries the module's native glue links.</summary>
         public string[] QtLibs;
+        /// <summary>
+        /// Headers of this module that no root includes but whose namespace-level declarations
+        /// are part of its public API (Qt3DRender's qrenderapi.h declares API, which only
+        /// dependent modules name in their signatures).
+        /// </summary>
+        public string[] ExtraHeaders = Array.Empty<string>();
+        /// <summary>
+        /// Other extension modules this one builds on (Qt3DRender builds on Qt3DCore). Their
+        /// classes are part of the vocabulary and may be base classes, but they are emitted and
+        /// packaged by their own module, so this binding references their assembly instead.
+        /// </summary>
+        public string[] DependsOn = Array.Empty<string>();
         /// <summary>The classes to bind. Their bases may be classes of the core binding.</summary>
         public Root[] Roots;
     }
 
     /// <summary>The extension modules this generator can bind.</summary>
-    internal static readonly ExtensionModule[] ExtensionModules =
+    static ExtensionModule[] extensionModules;
+    internal static ExtensionModule[] ExtensionModules => extensionModules ??= BuildExtensionModules();
+
+    // Qt Charts: an addon package of its own, because Qt Charts is not part of the LGPL base
+    // runtime - a core consumer must not inherit its license by referencing QtSharp.Api.
+    static ExtensionModule ChartsModule()
     {
-        new ExtensionModule
+        return new ExtensionModule
         {
             Name = "charts",
             Namespace = "QtSharp.Charts",
             // The managed assembly is QtSharp.Charts (the namespace, and what a consumer references);
             // the native glue needs a different file name or the two overwrite each other in the
-            // output directory. The core has the same split: QtSharp.dll beside QtSharp.Api.dll.
+            // output directory. The base binding has the same split: QtSharp.QtCore.dll beside QtSharp.Api.dll.
             NativeLibrary = "QtSharp.Charts.Native",
-            QtModule = "QtCharts",
-            QtDefine = "QT_CHARTS_LIB",
+            Assembly = "QtSharp.Charts",
+            Package = "QtSharp.Charts",
+            QtModules = new[] { "QtCharts" },
+            QtDefines = new[] { "QT_CHARTS_LIB" },
             QtLibs = new[] { "Qt6Charts" },
+            DependsOn = new[] { "qtcore", "qtgui", "qtwidgets" },
+            CppNamespaces = Array.Empty<string>(),
             Roots = new[]
             {
                 // The widget pair the module exists for, and the polar variant.
@@ -353,7 +419,32 @@ public static partial class ApiModel
                 R("QLegend",                       "qlegend.h",                      "QtCharts", bindCtors: false, owned: false),
                 R("QLegendMarker",                 "qlegendmarker.h",                "QtCharts", bindCtors: false, owned: false),
             },
-        },
+        };
+    }
+
+    static ExtensionModule[] BuildExtensionModules() => new[]
+    {
+        ChartsModule(),
+        // Qt3D is one binding per Qt module (six separate packages), not one package for the
+        // family. Each module declares the ones it builds on; see ApiModel.Modules.cs.
+        Qt3DCoreModule(),
+        Qt3DRenderModule(),
+        Qt3DInputModule(),
+        Qt3DLogicModule(),
+        Qt3DAnimationModule(),
+        Qt3DExtrasModule(),
+        // The base binding is the same kind of module family: one assembly per Qt module,
+        // grouped into the QtSharp.Api package. Their roots come from the core Roots table.
+        QtCoreModule(),
+        QtGuiModule(),
+        QtWidgetsModule(),
+        QtNetworkModule(),
+        QtSvgModule(),
+        QtSvgWidgetsModule(),
+        QtPrintSupportModule(),
+        QtXmlModule(),
+        QtOpenGLModule(),
+        QtOpenGLWidgetsModule(),
     };
 
     internal static ExtensionModule FindExtensionModule(string name)
@@ -365,6 +456,31 @@ public static partial class ApiModel
                 $"Unknown extension module '{name}'. Known modules: {string.Join(", ", ExtensionModules.Select(m => m.Name))}");
         }
         return module;
+    }
+
+    /// <summary>
+    /// The module itself followed by every extension module it builds on, transitively. The
+    /// extractor needs their roots to accept a base/type that belongs to another package; the
+    /// code generator needs their models for the same reason.
+    /// </summary>
+    internal static IEnumerable<ExtensionModule> ModuleClosure(ExtensionModule module)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var stack = new Stack<ExtensionModule>();
+        stack.Push(module);
+        while (stack.Count > 0)
+        {
+            var current = stack.Pop();
+            if (!seen.Add(current.Name))
+                continue;
+            yield return current;
+            foreach (string dependency in current.DependsOn)
+            {
+                var resolved = ExtensionModules.FirstOrDefault(m => m.Name == dependency);
+                if (resolved != null)
+                    stack.Push(resolved);
+            }
+        }
     }
 
     static readonly Root[] Roots =
@@ -398,7 +514,10 @@ public static partial class ApiModel
         // be reached, it just could not read the timer id or the child.
         R("QTimerEvent",        "qcoreevent.h", "QtCore", bindCtors: false, owned: false),
         R("QChildEvent",        "qcoreevent.h", "QtCore", bindCtors: false, owned: false),
-        R("QEvent",             "qevent.h", "QtGui", bindCtors: false, owned: false),
+        // QEvent is QtCore's (QtCore/qcoreevent.h); QtGui/qevent.h only includes that header
+        // before declaring the GUI events. The root has to name the defining header, or the
+        // class is split into the wrong module.
+        R("QEvent",             "qcoreevent.h", "QtCore", bindCtors: false, owned: false),
         R("QPointerEvent",      "qevent.h", "QtGui", bindCtors: false, owned: false),
         R("QSinglePointEvent",  "qevent.h", "QtGui", bindCtors: false, owned: false),
         R("QMouseEvent",        "qevent.h", "QtGui", bindCtors: false, owned: false),
@@ -1059,8 +1178,13 @@ public static partial class ApiModel
         };
         foreach (var root in ActiveRoots)
         {
+            // Both spellings: a signature read out of the AST is qualified for Qt3D
+            // (Qt3DCore::QEntity*), while the model's class table and the enum scopes use the
+            // simple name.
             types.Add(root.Class);
             types.Add(root.Class + "*");
+            types.Add(root.ManagedClass);
+            types.Add(root.ManagedClass + "*");
         }
         // An extension module's vocabulary has to include the core's classes as well: a
         // QChart::setBackgroundBrush takes a QBrush and QAbstractSeries::hovered carries a QPointF,
@@ -1072,6 +1196,20 @@ public static partial class ApiModel
             {
                 types.Add(root.Class);
                 types.Add(root.Class + "*");
+                types.Add(root.ManagedClass);
+                types.Add(root.ManagedClass + "*");
+            }
+            // ... and the classes of the extension modules this one builds on: a Qt3DRender
+            // signature takes Qt3DCore::QEntity, which is bound, just in another package.
+            foreach (var dependency in ModuleClosure(CurrentModule))
+            {
+                foreach (var root in dependency.Roots)
+                {
+                    types.Add(root.Class);
+                    types.Add(root.Class + "*");
+                    types.Add(root.ManagedClass);
+                    types.Add(root.ManagedClass + "*");
+                }
             }
         }
         foreach (var opaque in OpaquePointers)
@@ -1092,7 +1230,7 @@ public static partial class ApiModel
                 if (string.IsNullOrEmpty(filter))
                     return roots;
                 var wanted = new HashSet<string>(filter.Split(','), StringComparer.Ordinal);
-                return roots.Where(r => wanted.Contains(r.Class)).ToArray();
+                return roots.Where(r => wanted.Contains(r.Class) || wanted.Contains(r.ManagedClass)).ToArray();
             }
         }
 
@@ -1102,11 +1240,19 @@ public static partial class ApiModel
         // its pointers as the core binding's types rather than as unknown ones.
         static IEnumerable<string> RootClasses => CurrentModule == null
             ? ActiveRoots.Select(r => r.Class)
-            : Roots.Select(r => r.Class).Concat(CurrentModule.Roots.Select(r => r.Class)).Distinct(StringComparer.Ordinal);
+            // The qualified name is what a signature read out of the AST spells
+            // (Qt3DCore::QEntity*); the simple one is what the model's class table and the
+            // class-scoped enum names use (QEntity::Aspect).
+            : Roots.Select(r => r.Class)
+                .Concat(ModuleClosure(CurrentModule)
+                    .SelectMany(m => m.Roots)
+                    .SelectMany(r => new[] { r.Class, r.ManagedClass }))
+                .Distinct(StringComparer.Ordinal);
 
         // Only ever asked about a class that is being extracted, so the module's own table is the
         // one to look in.
-        static bool BindsCtors(string className) => ActiveRoots.First(r => r.Class == className).BindCtors;
+        static bool BindsCtors(string className)
+            => ActiveRoots.First(r => r.ManagedClass == className).BindCtors;
 
     // The override points a managed subclass may install. Everything here lowers to a plain
     // pointer or a supported scalar, so adding a name is all it takes to make an event
@@ -1211,6 +1357,15 @@ public static partial class ApiModel
     {
         sb.Append("    { \"name\": ").Append(Json(entry.Name));
         sb.Append(", \"qualified\": ").Append(Json(entry.Qualified));
+        // The owning extension module. A dependency enum is carried for type resolution but is
+        // emitted by the dependency's own package.
+        if (!string.IsNullOrEmpty(entry.Module))
+            sb.Append(", \"module\": ").Append(Json(entry.Module));
+        // The C++ spelling when the published name dropped a module's namespace
+        // (Qt3DCore::ChangeFlag -> ChangeFlag), so the native glue can still name the type.
+        if (!string.IsNullOrEmpty(entry.CppQualified) &&
+            !string.Equals(entry.CppQualified, entry.Qualified, StringComparison.Ordinal))
+            sb.Append(", \"cppQualified\": ").Append(Json(entry.CppQualified));
         sb.Append(", \"flags\": ").Append(entry.Flags ? "true" : "false");
         sb.Append(", \"items\": [");
         sb.Append(string.Join(", ", entry.Items.Select(item =>
@@ -1223,6 +1378,12 @@ public static partial class ApiModel
     {
         public string Name;
         public string Qualified;
+        // The fully qualified C++ name when Qualified dropped a module namespace.
+        public string CppQualified;
+        // The extension module that declares the enum, or null for a core enum. An extension
+        // model carries its dependencies' enums for type resolution, but only its own are
+        // emitted and packaged.
+        public string Module;
         // The items are kept as plain values rather than as a declaration.
         public List<(string Name, long Value)> Items = new();
         public bool Flags;
@@ -1239,7 +1400,11 @@ public static partial class ApiModel
     }
 
     static bool ScopeIsPublishable(string scope)
-        => scope.Length == 0 || scope == "Qt" || RootClasses.Contains(scope);
+        => scope.Length == 0 || scope == "Qt" || RootClasses.Contains(scope)
+           // A module that lives in a C++ namespace (Qt3D) declares enums at that namespace's
+           // scope (Qt3DCore::ChangeFlag). They are published as namespace-level C# enums.
+           || (CurrentModule != null
+               && ModuleClosure(CurrentModule).Any(m => m.QtModules.Contains(scope)));
 
     static string Json(string s) => s == null ? "null" : "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
 

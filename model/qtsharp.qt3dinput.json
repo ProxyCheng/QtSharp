@@ -1,0 +1,757 @@
+{
+  "formatVersion": 2,
+  "qtVersion": "6.11.0",
+  "namespace": "QtSharp.Qt3DInput",
+  "enums": [
+    { "name": "SourceAxisType", "qualified": "QAxisAccumulator::SourceAxisType", "module": "qt3dinput", "cppQualified": "Qt3DInput::QAxisAccumulator::SourceAxisType", "flags": false, "items": [{ "name": "Velocity", "value": 0 }, { "name": "Acceleration", "value": 1 }] },
+    { "name": "Axis", "qualified": "QMouseDevice::Axis", "module": "qt3dinput", "cppQualified": "Qt3DInput::QMouseDevice::Axis", "flags": false, "items": [{ "name": "X", "value": 0 }, { "name": "Y", "value": 1 }, { "name": "WheelX", "value": 2 }, { "name": "WheelY", "value": 3 }] },
+    { "name": "Buttons", "qualified": "QMouseEvent::Buttons", "module": "qt3dinput", "cppQualified": "Qt3DInput::QMouseEvent::Buttons", "flags": false, "items": [{ "name": "LeftButton", "value": 1 }, { "name": "RightButton", "value": 2 }, { "name": "MiddleButton", "value": 4 }, { "name": "BackButton", "value": 8 }, { "name": "NoButton", "value": 0 }] },
+    { "name": "Modifiers", "qualified": "QMouseEvent::Modifiers", "module": "qt3dinput", "cppQualified": "Qt3DInput::QMouseEvent::Modifiers", "flags": false, "items": [{ "name": "NoModifier", "value": 0 }, { "name": "ShiftModifier", "value": 33554432 }, { "name": "ControlModifier", "value": 67108864 }, { "name": "AltModifier", "value": 134217728 }, { "name": "MetaModifier", "value": 268435456 }, { "name": "KeypadModifier", "value": 536870912 }] },
+    { "name": "Buttons", "qualified": "QWheelEvent::Buttons", "module": "qt3dinput", "cppQualified": "Qt3DInput::QWheelEvent::Buttons", "flags": false, "items": [{ "name": "LeftButton", "value": 1 }, { "name": "RightButton", "value": 2 }, { "name": "MiddleButton", "value": 4 }, { "name": "BackButton", "value": 8 }, { "name": "NoButton", "value": 0 }] },
+    { "name": "Modifiers", "qualified": "QWheelEvent::Modifiers", "module": "qt3dinput", "cppQualified": "Qt3DInput::QWheelEvent::Modifiers", "flags": false, "items": [{ "name": "NoModifier", "value": 0 }, { "name": "ShiftModifier", "value": 33554432 }, { "name": "ControlModifier", "value": 67108864 }, { "name": "AltModifier", "value": 134217728 }, { "name": "MetaModifier", "value": 268435456 }, { "name": "KeypadModifier", "value": 536870912 }] }
+  ],
+  "functions": [
+  ],
+  "classes": [
+    {
+      "name": "QAbstractActionInput",
+      "cppName": "Qt3DInput::QAbstractActionInput",
+      "header": "Qt3DInput/qabstractactioninput.h",
+      "bases": ["Qt3DCore::QNode"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QAbstractAxisInput",
+      "cppName": "Qt3DInput::QAbstractAxisInput",
+      "header": "Qt3DInput/qabstractaxisinput.h",
+      "bases": ["Qt3DCore::QNode"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setSourceDevice", "returnType": "void", "parameters": [{ "name": "sourceDevice", "type": "Qt3DInput::QAbstractPhysicalDevice*" }] },
+        { "name": "sourceDevice", "returnType": "Qt3DInput::QAbstractPhysicalDevice*", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "sourceDevice", "type": "Qt3DInput::QAbstractPhysicalDevice*", "getter": "sourceDevice", "setter": "setSourceDevice" }
+      ],
+      "signals": [
+        { "name": "sourceDeviceChanged", "parameters": [{ "name": "sourceDevice", "type": "Qt3DInput::QAbstractPhysicalDevice*" }] }
+      ]
+    }
+,
+    {
+      "name": "QAbstractPhysicalDevice",
+      "cppName": "Qt3DInput::QAbstractPhysicalDevice",
+      "header": "Qt3DInput/qabstractphysicaldevice.h",
+      "bases": ["Qt3DCore::QNode"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "addAxisSetting", "returnType": "void", "parameters": [{ "name": "axisSetting", "type": "Qt3DInput::QAxisSetting*" }] },
+        { "name": "axisCount", "returnType": "int", "parameters": [] },
+        { "name": "axisIdentifier", "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "axisNames", "returnType": "QStringList", "parameters": [] },
+        { "name": "axisSettings", "returnType": "QList<Qt3DInput::QAxisSetting*>", "parameters": [] },
+        { "name": "buttonCount", "returnType": "int", "parameters": [] },
+        { "name": "buttonIdentifier", "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "buttonNames", "returnType": "QStringList", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "removeAxisSetting", "returnType": "void", "parameters": [{ "name": "axisSetting", "type": "Qt3DInput::QAxisSetting*" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QAction",
+      "cppName": "Qt3DInput::QAction",
+      "header": "Qt3DInput/qaction.h",
+      "bases": ["Qt3DCore::QNode"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "addInput", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractActionInput*" }] },
+        { "name": "inputs", "returnType": "QList<Qt3DInput::QAbstractActionInput*>", "parameters": [] },
+        { "name": "isActive", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "removeInput", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractActionInput*" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "active", "type": "bool", "getter": "isActive" }
+      ],
+      "signals": [
+        { "name": "activeChanged", "parameters": [{ "name": "isActive", "type": "bool" }] }
+      ]
+    }
+,
+    {
+      "name": "QActionInput",
+      "cppName": "Qt3DInput::QActionInput",
+      "header": "Qt3DInput/qactioninput.h",
+      "bases": ["Qt3DInput::QAbstractActionInput"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "buttons", "returnType": "QList<int>", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setButtons", "returnType": "void", "parameters": [{ "name": "buttons", "type": "QList<int>" }] },
+        { "name": "setSourceDevice", "returnType": "void", "parameters": [{ "name": "sourceDevice", "type": "Qt3DInput::QAbstractPhysicalDevice*" }] },
+        { "name": "sourceDevice", "returnType": "Qt3DInput::QAbstractPhysicalDevice*", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "buttons", "type": "QList<int>", "getter": "buttons", "setter": "setButtons" },
+        { "name": "sourceDevice", "type": "Qt3DInput::QAbstractPhysicalDevice*", "getter": "sourceDevice", "setter": "setSourceDevice" }
+      ],
+      "signals": [
+        { "name": "buttonsChanged", "parameters": [{ "name": "buttons", "type": "QList<int>" }] },
+        { "name": "sourceDeviceChanged", "parameters": [{ "name": "sourceDevice", "type": "Qt3DInput::QAbstractPhysicalDevice*" }] }
+      ]
+    }
+,
+    {
+      "name": "QAnalogAxisInput",
+      "cppName": "Qt3DInput::QAnalogAxisInput",
+      "header": "Qt3DInput/qanalogaxisinput.h",
+      "bases": ["Qt3DInput::QAbstractAxisInput"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "axis", "returnType": "int", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setAxis", "returnType": "void", "parameters": [{ "name": "axis", "type": "int" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "axis", "type": "int", "getter": "axis", "setter": "setAxis" }
+      ],
+      "signals": [
+        { "name": "axisChanged", "parameters": [{ "name": "axis", "type": "int" }] }
+      ]
+    }
+,
+    {
+      "name": "QAxis",
+      "cppName": "Qt3DInput::QAxis",
+      "header": "Qt3DInput/qaxis.h",
+      "bases": ["Qt3DCore::QNode"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "addInput", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractAxisInput*" }] },
+        { "name": "inputs", "returnType": "QList<Qt3DInput::QAbstractAxisInput*>", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "removeInput", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractAxisInput*" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "value", "returnType": "float", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "value", "type": "float", "getter": "value" }
+      ],
+      "signals": [
+        { "name": "valueChanged", "parameters": [{ "name": "value", "type": "float" }] }
+      ]
+    }
+,
+    {
+      "name": "QAxisAccumulator",
+      "cppName": "Qt3DInput::QAxisAccumulator",
+      "header": "Qt3DInput/qaxisaccumulator.h",
+      "bases": ["Qt3DCore::QComponent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "scale", "returnType": "float", "parameters": [] },
+        { "name": "setScale", "returnType": "void", "parameters": [{ "name": "scale", "type": "float" }] },
+        { "name": "setSourceAxis", "returnType": "void", "parameters": [{ "name": "sourceAxis", "type": "Qt3DInput::QAxis*" }] },
+        { "name": "setSourceAxisType", "returnType": "void", "parameters": [{ "name": "sourceAxisType", "type": "QAxisAccumulator::SourceAxisType" }] },
+        { "name": "sourceAxis", "returnType": "Qt3DInput::QAxis*", "parameters": [] },
+        { "name": "sourceAxisType", "returnType": "QAxisAccumulator::SourceAxisType", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "value", "returnType": "float", "parameters": [] },
+        { "name": "velocity", "returnType": "float", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "scale", "type": "float", "getter": "scale", "setter": "setScale" },
+        { "name": "sourceAxis", "type": "Qt3DInput::QAxis*", "getter": "sourceAxis", "setter": "setSourceAxis" },
+        { "name": "sourceAxisType", "type": "QAxisAccumulator::SourceAxisType", "getter": "sourceAxisType", "setter": "setSourceAxisType" },
+        { "name": "value", "type": "float", "getter": "value" },
+        { "name": "velocity", "type": "float", "getter": "velocity" }
+      ],
+      "signals": [
+        { "name": "scaleChanged", "parameters": [{ "name": "scale", "type": "float" }] },
+        { "name": "sourceAxisChanged", "parameters": [{ "name": "sourceAxis", "type": "Qt3DInput::QAxis*" }] },
+        { "name": "sourceAxisTypeChanged", "parameters": [{ "name": "sourceAxisType", "type": "QAxisAccumulator::SourceAxisType" }] },
+        { "name": "valueChanged", "parameters": [{ "name": "value", "type": "float" }] },
+        { "name": "velocityChanged", "parameters": [{ "name": "value", "type": "float" }] }
+      ]
+    }
+,
+    {
+      "name": "QAxisSetting",
+      "cppName": "Qt3DInput::QAxisSetting",
+      "header": "Qt3DInput/qaxissetting.h",
+      "bases": ["Qt3DCore::QNode"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "axes", "returnType": "QList<int>", "parameters": [] },
+        { "name": "deadZoneRadius", "returnType": "float", "parameters": [] },
+        { "name": "isSmoothEnabled", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setAxes", "returnType": "void", "parameters": [{ "name": "axes", "type": "QList<int>" }] },
+        { "name": "setDeadZoneRadius", "returnType": "void", "parameters": [{ "name": "deadZoneRadius", "type": "float" }] },
+        { "name": "setSmoothEnabled", "returnType": "void", "parameters": [{ "name": "enabled", "type": "bool" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "axes", "type": "QList<int>", "getter": "axes", "setter": "setAxes" },
+        { "name": "deadZoneRadius", "type": "float", "getter": "deadZoneRadius", "setter": "setDeadZoneRadius" },
+        { "name": "smooth", "type": "bool", "getter": "isSmoothEnabled", "setter": "setSmoothEnabled" }
+      ],
+      "signals": [
+        { "name": "axesChanged", "parameters": [{ "name": "axes", "type": "QList<int>" }] },
+        { "name": "deadZoneRadiusChanged", "parameters": [{ "name": "deadZoneRadius", "type": "float" }] },
+        { "name": "smoothChanged", "parameters": [{ "name": "smooth", "type": "bool" }] }
+      ]
+    }
+,
+    {
+      "name": "QButtonAxisInput",
+      "cppName": "Qt3DInput::QButtonAxisInput",
+      "header": "Qt3DInput/qbuttonaxisinput.h",
+      "bases": ["Qt3DInput::QAbstractAxisInput"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "acceleration", "returnType": "float", "parameters": [] },
+        { "name": "buttons", "returnType": "QList<int>", "parameters": [] },
+        { "name": "deceleration", "returnType": "float", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "scale", "returnType": "float", "parameters": [] },
+        { "name": "setAcceleration", "returnType": "void", "parameters": [{ "name": "acceleration", "type": "float" }] },
+        { "name": "setButtons", "returnType": "void", "parameters": [{ "name": "buttons", "type": "QList<int>" }] },
+        { "name": "setDeceleration", "returnType": "void", "parameters": [{ "name": "deceleration", "type": "float" }] },
+        { "name": "setScale", "returnType": "void", "parameters": [{ "name": "scale", "type": "float" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "acceleration", "type": "float", "getter": "acceleration", "setter": "setAcceleration" },
+        { "name": "buttons", "type": "QList<int>", "getter": "buttons", "setter": "setButtons" },
+        { "name": "deceleration", "type": "float", "getter": "deceleration", "setter": "setDeceleration" },
+        { "name": "scale", "type": "float", "getter": "scale", "setter": "setScale" }
+      ],
+      "signals": [
+        { "name": "accelerationChanged", "parameters": [{ "name": "acceleration", "type": "float" }] },
+        { "name": "buttonsChanged", "parameters": [{ "name": "buttons", "type": "QList<int>" }] },
+        { "name": "decelerationChanged", "parameters": [{ "name": "deceleration", "type": "float" }] },
+        { "name": "scaleChanged", "parameters": [{ "name": "scale", "type": "float" }] }
+      ]
+    }
+,
+    {
+      "name": "QInputAspect",
+      "cppName": "Qt3DInput::QInputAspect",
+      "header": "Qt3DInput/qinputaspect.h",
+      "bases": ["Qt3DCore::QAbstractAspect"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "availablePhysicalDevices", "returnType": "QStringList", "parameters": [] },
+        { "name": "createPhysicalDevice", "returnType": "Qt3DInput::QAbstractPhysicalDevice*", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QInputChord",
+      "cppName": "Qt3DInput::QInputChord",
+      "header": "Qt3DInput/qinputchord.h",
+      "bases": ["Qt3DInput::QAbstractActionInput"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "addChord", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractActionInput*" }] },
+        { "name": "chords", "returnType": "QList<Qt3DInput::QAbstractActionInput*>", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "removeChord", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractActionInput*" }] },
+        { "name": "setTimeout", "returnType": "void", "parameters": [{ "name": "timeout", "type": "int" }] },
+        { "name": "timeout", "returnType": "int", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "timeout", "type": "int", "getter": "timeout", "setter": "setTimeout" }
+      ],
+      "signals": [
+        { "name": "timeoutChanged", "parameters": [{ "name": "timeout", "type": "int" }] }
+      ]
+    }
+,
+    {
+      "name": "QInputSequence",
+      "cppName": "Qt3DInput::QInputSequence",
+      "header": "Qt3DInput/qinputsequence.h",
+      "bases": ["Qt3DInput::QAbstractActionInput"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "addSequence", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractActionInput*" }] },
+        { "name": "buttonInterval", "returnType": "int", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "removeSequence", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractActionInput*" }] },
+        { "name": "sequences", "returnType": "QList<Qt3DInput::QAbstractActionInput*>", "parameters": [] },
+        { "name": "setButtonInterval", "returnType": "void", "parameters": [{ "name": "buttonInterval", "type": "int" }] },
+        { "name": "setTimeout", "returnType": "void", "parameters": [{ "name": "timeout", "type": "int" }] },
+        { "name": "timeout", "returnType": "int", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "buttonInterval", "type": "int", "getter": "buttonInterval", "setter": "setButtonInterval" },
+        { "name": "timeout", "type": "int", "getter": "timeout", "setter": "setTimeout" }
+      ],
+      "signals": [
+        { "name": "buttonIntervalChanged", "parameters": [{ "name": "buttonInterval", "type": "int" }] },
+        { "name": "timeoutChanged", "parameters": [{ "name": "timeout", "type": "int" }] }
+      ]
+    }
+,
+    {
+      "name": "QInputSettings",
+      "cppName": "Qt3DInput::QInputSettings",
+      "header": "Qt3DInput/qinputsettings.h",
+      "bases": ["Qt3DCore::QComponent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "eventSource", "returnType": "QObject*", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setEventSource", "returnType": "void", "parameters": [{ "name": "eventSource", "type": "QObject*" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "eventSource", "type": "QObject*", "getter": "eventSource", "setter": "setEventSource" }
+      ],
+      "signals": [
+        { "name": "eventSourceChanged", "parameters": [{ "name": "arg0", "type": "QObject*" }] }
+      ]
+    }
+,
+    {
+      "name": "QKeyEvent",
+      "cppName": "Qt3DInput::QKeyEvent",
+      "header": "Qt3DInput/qkeyevent.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "count", "returnType": "int", "parameters": [] },
+        { "name": "isAccepted", "returnType": "bool", "parameters": [] },
+        { "name": "isAutoRepeat", "returnType": "bool", "parameters": [] },
+        { "name": "key", "returnType": "int", "parameters": [] },
+        { "name": "matches", "returnType": "bool", "parameters": [{ "name": "key_", "type": "QKeySequence::StandardKey" }] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "modifiers", "returnType": "int", "parameters": [] },
+        { "name": "nativeScanCode", "returnType": "unsigned int", "parameters": [] },
+        { "name": "setAccepted", "returnType": "void", "parameters": [{ "name": "accepted", "type": "bool" }] },
+        { "name": "text", "returnType": "QString", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "type", "returnType": "QEvent::Type", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "accepted", "type": "bool", "getter": "isAccepted", "setter": "setAccepted" },
+        { "name": "count", "type": "int", "getter": "count" },
+        { "name": "isAutoRepeat", "type": "bool", "getter": "isAutoRepeat" },
+        { "name": "key", "type": "int", "getter": "key" },
+        { "name": "modifiers", "type": "int", "getter": "modifiers" },
+        { "name": "nativeScanCode", "type": "unsigned int", "getter": "nativeScanCode" },
+        { "name": "text", "type": "QString", "getter": "text" }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QKeyboardDevice",
+      "cppName": "Qt3DInput::QKeyboardDevice",
+      "header": "Qt3DInput/qkeyboarddevice.h",
+      "bases": ["Qt3DInput::QAbstractPhysicalDevice"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "activeInput", "returnType": "Qt3DInput::QKeyboardHandler*", "parameters": [] },
+        { "name": "axisCount", "returnType": "int", "parameters": [] },
+        { "name": "axisIdentifier", "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "axisNames", "returnType": "QStringList", "parameters": [] },
+        { "name": "buttonCount", "returnType": "int", "parameters": [] },
+        { "name": "buttonIdentifier", "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "buttonNames", "returnType": "QStringList", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "activeInput", "type": "Qt3DInput::QKeyboardHandler*", "getter": "activeInput" }
+      ],
+      "signals": [
+        { "name": "activeInputChanged", "parameters": [{ "name": "activeInput", "type": "Qt3DInput::QKeyboardHandler*" }] }
+      ]
+    }
+,
+    {
+      "name": "QKeyboardHandler",
+      "cppName": "Qt3DInput::QKeyboardHandler",
+      "header": "Qt3DInput/qkeyboardhandler.h",
+      "bases": ["Qt3DCore::QComponent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "focus", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setFocus", "returnType": "void", "parameters": [{ "name": "focus", "type": "bool" }] },
+        { "name": "setSourceDevice", "returnType": "void", "parameters": [{ "name": "keyboardDevice", "type": "Qt3DInput::QKeyboardDevice*" }] },
+        { "name": "sourceDevice", "returnType": "Qt3DInput::QKeyboardDevice*", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "focus", "type": "bool", "getter": "focus", "setter": "setFocus" },
+        { "name": "sourceDevice", "type": "Qt3DInput::QKeyboardDevice*", "getter": "sourceDevice", "setter": "setSourceDevice" }
+      ],
+      "signals": [
+        { "name": "asteriskPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "backPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "backtabPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "callPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "cancelPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "context1Pressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "context2Pressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "context3Pressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "context4Pressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "deletePressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "digit0Pressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "digit1Pressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "digit2Pressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "digit3Pressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "digit4Pressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "digit5Pressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "digit6Pressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "digit7Pressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "digit8Pressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "digit9Pressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "downPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "enterPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "escapePressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "flipPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "focusChanged", "parameters": [{ "name": "focus", "type": "bool" }] },
+        { "name": "hangupPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "leftPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "menuPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "noPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "numberSignPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "pressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "released", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "returnPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "rightPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "selectPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "sourceDeviceChanged", "parameters": [{ "name": "keyboardDevice", "type": "Qt3DInput::QKeyboardDevice*" }] },
+        { "name": "spacePressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "tabPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "upPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "volumeDownPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "volumeUpPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] },
+        { "name": "yesPressed", "parameters": [{ "name": "event", "type": "Qt3DInput::QKeyEvent*" }] }
+      ]
+    }
+,
+    {
+      "name": "QLogicalDevice",
+      "cppName": "Qt3DInput::QLogicalDevice",
+      "header": "Qt3DInput/qlogicaldevice.h",
+      "bases": ["Qt3DCore::QComponent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "actions", "returnType": "QList<Qt3DInput::QAction*>", "parameters": [] },
+        { "name": "addAction", "returnType": "void", "parameters": [{ "name": "action", "type": "Qt3DInput::QAction*" }] },
+        { "name": "addAxis", "returnType": "void", "parameters": [{ "name": "axis", "type": "Qt3DInput::QAxis*" }] },
+        { "name": "axes", "returnType": "QList<Qt3DInput::QAxis*>", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "removeAction", "returnType": "void", "parameters": [{ "name": "action", "type": "Qt3DInput::QAction*" }] },
+        { "name": "removeAxis", "returnType": "void", "parameters": [{ "name": "axis", "type": "Qt3DInput::QAxis*" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QMouseDevice",
+      "cppName": "Qt3DInput::QMouseDevice",
+      "header": "Qt3DInput/qmousedevice.h",
+      "bases": ["Qt3DInput::QAbstractPhysicalDevice"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "axisCount", "returnType": "int", "parameters": [] },
+        { "name": "axisIdentifier", "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "axisNames", "returnType": "QStringList", "parameters": [] },
+        { "name": "buttonCount", "returnType": "int", "parameters": [] },
+        { "name": "buttonIdentifier", "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "buttonNames", "returnType": "QStringList", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "sensitivity", "returnType": "float", "parameters": [] },
+        { "name": "setSensitivity", "returnType": "void", "parameters": [{ "name": "value", "type": "float" }] },
+        { "name": "setUpdateAxesContinuously", "returnType": "void", "parameters": [{ "name": "updateAxesContinuously", "type": "bool" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "updateAxesContinuously", "returnType": "bool", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "sensitivity", "type": "float", "getter": "sensitivity", "setter": "setSensitivity" },
+        { "name": "updateAxesContinuously", "type": "bool", "getter": "updateAxesContinuously", "setter": "setUpdateAxesContinuously" }
+      ],
+      "signals": [
+        { "name": "sensitivityChanged", "parameters": [{ "name": "value", "type": "float" }] },
+        { "name": "updateAxesContinuouslyChanged", "parameters": [{ "name": "updateAxesContinuously", "type": "bool" }] }
+      ]
+    }
+,
+    {
+      "name": "QMouseEvent",
+      "cppName": "Qt3DInput::QMouseEvent",
+      "header": "Qt3DInput/qmouseevent.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "button", "returnType": "QMouseEvent::Buttons", "parameters": [] },
+        { "name": "buttons", "returnType": "int", "parameters": [] },
+        { "name": "isAccepted", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "modifiers", "returnType": "QMouseEvent::Modifiers", "parameters": [] },
+        { "name": "setAccepted", "returnType": "void", "parameters": [{ "name": "accepted", "type": "bool" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "type", "returnType": "QEvent::Type", "parameters": [] },
+        { "name": "wasHeld", "returnType": "bool", "parameters": [] },
+        { "name": "x", "returnType": "int", "parameters": [] },
+        { "name": "y", "returnType": "int", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "accepted", "type": "bool", "getter": "isAccepted", "setter": "setAccepted" },
+        { "name": "button", "type": "QMouseEvent::Buttons", "getter": "button" },
+        { "name": "buttons", "type": "int", "getter": "buttons" },
+        { "name": "modifiers", "type": "QMouseEvent::Modifiers", "getter": "modifiers" },
+        { "name": "wasHeld", "type": "bool", "getter": "wasHeld" },
+        { "name": "x", "type": "int", "getter": "x" },
+        { "name": "y", "type": "int", "getter": "y" }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QMouseHandler",
+      "cppName": "Qt3DInput::QMouseHandler",
+      "header": "Qt3DInput/qmousehandler.h",
+      "bases": ["Qt3DCore::QComponent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "containsMouse", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setSourceDevice", "returnType": "void", "parameters": [{ "name": "mouseDevice", "type": "Qt3DInput::QMouseDevice*" }] },
+        { "name": "sourceDevice", "returnType": "Qt3DInput::QMouseDevice*", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "containsMouse", "type": "bool", "getter": "containsMouse" },
+        { "name": "sourceDevice", "type": "Qt3DInput::QMouseDevice*", "getter": "sourceDevice", "setter": "setSourceDevice" }
+      ],
+      "signals": [
+        { "name": "clicked", "parameters": [{ "name": "mouse", "type": "Qt3DInput::QMouseEvent*" }] },
+        { "name": "containsMouseChanged", "parameters": [{ "name": "containsMouse", "type": "bool" }] },
+        { "name": "doubleClicked", "parameters": [{ "name": "mouse", "type": "Qt3DInput::QMouseEvent*" }] },
+        { "name": "entered", "parameters": [] },
+        { "name": "exited", "parameters": [] },
+        { "name": "positionChanged", "parameters": [{ "name": "mouse", "type": "Qt3DInput::QMouseEvent*" }] },
+        { "name": "pressAndHold", "parameters": [{ "name": "mouse", "type": "Qt3DInput::QMouseEvent*" }] },
+        { "name": "pressed", "parameters": [{ "name": "mouse", "type": "Qt3DInput::QMouseEvent*" }] },
+        { "name": "released", "parameters": [{ "name": "mouse", "type": "Qt3DInput::QMouseEvent*" }] },
+        { "name": "sourceDeviceChanged", "parameters": [{ "name": "mouseDevice", "type": "Qt3DInput::QMouseDevice*" }] },
+        { "name": "wheel", "parameters": [{ "name": "wheel", "type": "Qt3DInput::QWheelEvent*" }] }
+      ]
+    }
+,
+    {
+      "name": "QWheelEvent",
+      "cppName": "Qt3DInput::QWheelEvent",
+      "header": "Qt3DInput/qmouseevent.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": false,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "angleDelta", "returnType": "QPoint", "parameters": [] },
+        { "name": "buttons", "returnType": "int", "parameters": [] },
+        { "name": "isAccepted", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "modifiers", "returnType": "QWheelEvent::Modifiers", "parameters": [] },
+        { "name": "setAccepted", "returnType": "void", "parameters": [{ "name": "accepted", "type": "bool" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "type", "returnType": "QEvent::Type", "parameters": [] },
+        { "name": "x", "returnType": "int", "parameters": [] },
+        { "name": "y", "returnType": "int", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "accepted", "type": "bool", "getter": "isAccepted", "setter": "setAccepted" },
+        { "name": "angleDelta", "type": "QPoint", "getter": "angleDelta" },
+        { "name": "buttons", "type": "int", "getter": "buttons" },
+        { "name": "modifiers", "type": "QWheelEvent::Modifiers", "getter": "modifiers" },
+        { "name": "x", "type": "int", "getter": "x" },
+        { "name": "y", "type": "int", "getter": "y" }
+      ],
+      "signals": [
+      ]
+    }
+
+  ]
+}

@@ -14,8 +14,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
       - name: Validate required project files
@@ -30,8 +30,9 @@ jobs:
         run: |
           $errors = $null
           $tokens = $null
-          foreach ($path in @('tools/regen-api.ps1', 'tools/pack-qt-tools.ps1', 'tools/pack-qt-binding.ps1', 'tools/build-qt-kit.ps1')) {
+          foreach ($path in @('tools/regen-api.ps1', 'tools/run-window-tests.ps1', 'tools/pack-qt-tools.ps1', 'tools/pack-qt-binding.ps1', 'tools/test-packages.ps1', 'tools/build-qt-kit.ps1', 'tools/build-native-module.ps1')) {
             [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $path), [ref]$tokens, [ref]$errors) | Out-Null
+
             if ($errors.Count -gt 0) { $errors | Format-List | Out-Host; throw "PowerShell parse failed: $path" }
           }
       - name: Build tools project
@@ -49,28 +50,47 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
       - name: Build the generator
         run: dotnet build gen/gen.csproj -c Release --nologo
 
-      - name: Generate the binding from the checked-in model
+      - name: Generate the bindings from the checked-in models
         shell: pwsh
         run: |
           # qtgen resolves its arguments against the working directory, so anchor them at the
           # repository root rather than at the generator's own output folder.
-          $genBin = Join-Path $env:GITHUB_WORKSPACE 'gen/bin/Release/net10.0/win-x64'
-          $model = Join-Path $env:GITHUB_WORKSPACE 'model/qtsharp.api.json'
-          $outDir = Join-Path $env:GITHUB_WORKSPACE 'out/api'
+          $root = $env:GITHUB_WORKSPACE
+          $genBin = Join-Path $root 'gen/bin/Release/net10.0/win-x64'
+          $base = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
+                    'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets')
+          $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras')
           Push-Location $genBin
-          try { & "./qtgen.exe" codegen $model $outDir } finally { Pop-Location }
-          if ($LASTEXITCODE -ne 0) { throw "codegen failed" }
+          try {
+            # The combined model is the extraction gate and the shared native glue's input. The ten
+            # base assemblies are generated from the split models, which are checked in.
+            & "./qtgen.exe" split-core (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/split-models')
+            if ($LASTEXITCODE -ne 0) { throw "split-core failed" }
+            foreach ($module in $base) {
+              $fresh = Join-Path $root "out/split-models/qtsharp.$module.json"
+              $checked = Join-Path $root "model/qtsharp.$module.json"
+              if ((Get-FileHash $fresh).Hash -ne (Get-FileHash $checked).Hash) {
+                throw "model/qtsharp.$module.json is stale - run tools/regen-api.ps1 -Adopt and commit it"
+              }
+            }
+            & "./qtgen.exe" codegen (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/api') --native-only
+            if ($LASTEXITCODE -ne 0) { throw "codegen (native glue) failed" }
+            foreach ($module in $base + $addons) {
+              & "./qtgen.exe" codegen (Join-Path $root "model/qtsharp.$module.json") (Join-Path $root "out/$module") --module $module
+              if ($LASTEXITCODE -ne 0) { throw "codegen ($module) failed" }
+            }
+          } finally { Pop-Location }
 
       - name: Cache the Qt archives
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: out/qt-cache
           key: qt-6.11.0-msvc2022_64-v1
@@ -80,32 +100,86 @@ jobs:
         # The script exports QT_DIR / QT_RUNTIME_DIR into the environment for the steps below.
         run: ./tools/build-qt-kit.ps1
 
-      - name: Compile the native wrapper
+      - name: Compile the native wrappers
         shell: pwsh
         run: |
           cmd /c build_api.bat
           if ($LASTEXITCODE -ne 0) { throw "build_api.bat failed" }
+          foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras')) {
+            powershell -NoProfile -File tools\build-native-module.ps1 -Module $module -QtDir "$env:QT_DIR"
+            if ($LASTEXITCODE -ne 0) { throw "$module native build failed" }
+          }
 
-      - name: Pack QtSharp.Api
+      # The official Qt3D examples as the extension's conformance suite. They build the scene and
+      # assert on it without opening a render loop, so they run on a runner without a GPU.
+      - name: Build and run the official Qt3D examples
+        shell: pwsh
+        run: |
+          dotnet build demos.qt3d/QtSharp.Qt3D.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "Qt3D demos build failed" }
+          ./tools/run-window-tests.ps1 -Exe "demos.qt3d/bin/Release/net10.0/QtSharp.Qt3D.Demos.exe" -Label "qt3d-demos"
+          if ($LASTEXITCODE -ne 0) { throw "some Qt3D demos failed" }
+
+      # The official Qt Charts examples, against the separate Charts assembly.
+      - name: Build and run the official Qt Charts examples
+        shell: pwsh
+        run: |
+          dotnet build demos.charts/QtSharp.Charts.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "Charts demos build failed" }
+          ./tools/run-window-tests.ps1 -Exe "demos.charts/bin/Release/net10.0/QtSharp.Charts.Demos.exe" -Label "charts-demos"
+          if ($LASTEXITCODE -ne 0) { throw "some Qt Charts demos failed" }
+
+
+      - name: Pack all packages
         shell: pwsh
         run: |
           ./tools/pack-qt-binding.ps1 -PackageVersion "0.0.0-ci" -QtRuntimeDir "$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "packaging failed" }
 
-      - name: Upload the binding package
-        uses: actions/upload-artifact@v4
+      # Restore and run the packages through the public NuGet path: a source build cannot show a
+      # missing package dependency or buildTransitive payload.
+      - name: Verify the packages with a consumer
+        shell: pwsh
+        run: |
+          ./tools/test-packages.ps1 -PackageVersion "0.0.0-ci" -PackagesDir out/packages
+          if ($LASTEXITCODE -ne 0) { throw "the package consumer failed" }
+
+
+      - name: Upload the packages
+        uses: actions/upload-artifact@v7
         with:
-          name: QtSharp.Api-ci
-          path: out/packages/QtSharp.Api.0.0.0-ci.nupkg
+          name: packages-ci
+          path: |
+            out/packages/QtSharp.Api.0.0.0-ci.nupkg
+            out/packages/QtSharp.Runtime.0.0.0-ci.nupkg
+            out/packages/QtSharp.Qt6.0.0.0-ci.nupkg
+            out/packages/QtSharp.Charts.0.0.0-ci.nupkg
+            out/packages/QtSharp.Charts.Qt6.0.0.0-ci.nupkg
+            out/packages/QtSharp.Qt3D.0.0.0-ci.nupkg
+            out/packages/QtSharp.Qt3D.Qt6.0.0.0-ci.nupkg
           if-no-files-found: error
 
-      # Hand the generated binding to the smoke job so it does not have to build it again.
+      # Hand the generated source tree and the native glue to the smoke job so it does not have to
+      # regenerate them. The staging directory makes the artifact's layout explicit:
+      # out/binding-artifact/api/QtSharp.Api.dll and out/binding-artifact/<module>/generated, which
+      # the smoke job restores under out/.
+      - name: Stage the generated binding
+        shell: pwsh
+        run: |
+          $stage = "out/binding-artifact"
+          Remove-Item $stage -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path "$stage/api" -Force | Out-Null
+          Copy-Item out/api/QtSharp.Api.dll "$stage/api/"
+          foreach ($module in @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
+                                'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets')) {
+            Copy-Item "out/$module/generated" "$stage/$module/generated" -Recurse
+          }
+
       - name: Upload the generated binding
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: binding-api
-          path: |
-            out/api/QtSharp.Api.cs
-            out/api/QtSharp.Api.dll
+          path: out/binding-artifact
           if-no-files-found: error
 
   # The conformance suite: every official example this repository has ported, driving the binding
@@ -118,19 +192,21 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
       - name: Take the generated binding from the build job
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: binding-api
-          path: out/api
+          # The artifact holds api/ and <module>/generated at its root, so downloading into out/
+          # restores the layout QtSharp.Api.props expects.
+          path: out
 
       - name: Cache the Qt archives
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: out/qt-cache
           key: qt-6.11.0-msvc2022_64-v1
@@ -139,7 +215,7 @@ jobs:
         shell: pwsh
         run: ./tools/build-qt-kit.ps1
 
-      - name: Build the examples and the sample
+      - name: Build the examples and the binding tests
         shell: pwsh
         run: |
           # The examples load the Qt runtime, so point them at the kit the build job assembled.
@@ -147,46 +223,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "demos build failed" }
           dotnet build testbind/testbind.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
           if ($LASTEXITCODE -ne 0) { throw "testbind build failed" }
-          dotnet build samples/hello/Hello.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
-          if ($LASTEXITCODE -ne 0) { throw "sample build failed" }
 
       - name: Run every example
         shell: pwsh
         run: |
-          # The list comes from the demo library itself, so a new example is covered as soon as it
-          # is registered. Each demo is echoed, which is what makes a crash attributable.
-          $app = "testbind/bin/Release/net10.0/testapp.exe"
-          $names = & $app --list
-          if ($LASTEXITCODE -ne 0 -or -not $names) { throw "could not list the demos" }
-          $failed = @()
-          foreach ($demo in $names) {
-            Write-Host "  --- $demo"
-            & $app $demo
-            if ($LASTEXITCODE -ne 0) {
-              # Qt tears a process down by itself once in a while (a native message pump reaching a
-              # destroyed window); the assertion output has already been printed by then, so one
-              # retry separates that from a real failure.
-              Write-Host ("  retrying {0} after exit 0x{1:X8}" -f $demo, $LASTEXITCODE)
-              & $app $demo
-            }
-            if ($LASTEXITCODE -ne 0) { $failed += ("{0} (0x{1:X8})" -f $demo, $LASTEXITCODE) }
-          }
-          if ($failed.Count -gt 0) { throw "these demos failed: $($failed -join ', ')" }
-          Write-Host "all $($names.Count) demos passed"
-
-      - name: Run the sample
-        shell: pwsh
-        run: |
-          $hello = "samples/hello/bin/Release/net10.0/hello.exe"
-          # The sample's own C#-declared signal and property, without opening a window.
-          & $hello selftest
-          if ($LASTEXITCODE -ne 0) { throw "hello selftest failed" }
-          # The sample's window, run through the same entry point the demos use.
-          & $hello api-transform
-          if ($LASTEXITCODE -ne 0) { throw "hello api-transform failed" }
-          $env:HELLO_AUTOCLOSE_MS = "1500"
-          & $hello
-          $code = $LASTEXITCODE
-          Remove-Item Env:\HELLO_AUTOCLOSE_MS -ErrorAction SilentlyContinue
-          if ($code -ne 0) { throw "hello failed with 0x$('{0:X8}' -f $code)" }
-          Write-Host "the sample passed"
+          # The runner takes the list from the demo library itself, starts the windows a few at a
+          # time, retries a teardown race once and prints a failing window's own output.
+          ./tools/run-window-tests.ps1 -Exe "testbind/bin/Release/net10.0/testapp.exe" -Label "demos"
+          if ($LASTEXITCODE -ne 0) { throw "some demos failed (see the output above)" }

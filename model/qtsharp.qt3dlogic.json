@@ -1,0 +1,54 @@
+{
+  "formatVersion": 2,
+  "qtVersion": "6.11.0",
+  "namespace": "QtSharp.Qt3DLogic",
+  "enums": [
+  ],
+  "functions": [
+  ],
+  "classes": [
+    {
+      "name": "QFrameAction",
+      "cppName": "Qt3DLogic::QFrameAction",
+      "header": "Qt3DLogic/qframeaction.h",
+      "bases": ["Qt3DCore::QComponent"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+        { "name": "triggered", "parameters": [{ "name": "dt", "type": "float" }] }
+      ]
+    }
+,
+    {
+      "name": "QLogicAspect",
+      "cppName": "Qt3DLogic::QLogicAspect",
+      "header": "Qt3DLogic/qlogicaspect.h",
+      "bases": ["Qt3DCore::QAbstractAspect"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+
+  ]
+}

@@ -18,7 +18,7 @@
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
     <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
-    <None Include="$(QtSharpToolsPayload)\**\*" Exclude="$(QtSharpToolsPayload)\**\*.log" Pack="true" PackagePath="tools/win-x64/%(RecursiveDir)" />
+    <None Include="$(QtSharpToolsPayload)\**\*" Exclude="$(QtSharpToolsPayload)\**\*.log" Pack="true" PackagePath="tools/win-x64/%(RecursiveDir)" Visible="false" />
   </ItemGroup>
   <Target Name="CheckToolsPayload" BeforeTargets="GenerateNuspec">
     <Error Condition="!Exists('$(QtSharpToolsPayload)\rcc.exe')" Text="Stage Qt tools first using tools/pack-qt-tools.ps1." />

@@ -36,17 +36,18 @@ foreach ($line in (& $genExe module $Module)) {
 if (-not $descriptor.ContainsKey('nativeLibrary')) { throw "Could not read the '$Module' module descriptor." }
 $nativeLibrary = $descriptor['nativeLibrary']
 $ns = $descriptor['namespace']
-$qtModule = $descriptor['qtModule']
+$qtModules = $descriptor['qtModules'].Split(',')
 $qtLibs = $descriptor['qtLibs'].Split(',')
-Write-Host "[module] $Module -> $ns ($($descriptor['classes']) classes), links $($qtLibs -join ', ')"
+Write-Host "[module] $Module -> $ns ($($descriptor['classes']) classes), modules $($qtModules -join ', '), links $($qtLibs -join ', ')"
 
 $source = Join-Path $root "out\$Module\$ns.native.cpp"
 if (-not (Test-Path -LiteralPath $source)) {
     throw "'$source' is missing - generate it first: qtgen codegen model/qtsharp.$Module.json out/$Module --module $Module"
 }
-if (-not (Test-Path -LiteralPath (Join-Path $qtInc "$qtModule\qchart.h")) -and
-    -not (Test-Path -LiteralPath (Join-Path $qtInc $qtModule))) {
-    throw "The Qt module '$qtModule' is not in the kit at $qtInc - see README.md (Prerequisites)."
+foreach ($qtModule in $qtModules) {
+    if (-not (Test-Path -LiteralPath (Join-Path $qtInc $qtModule))) {
+        throw "The Qt module '$qtModule' is not in the kit at $qtInc - see README.md (Prerequisites)."
+    }
 }
 
 if (-not $OutDir) { $OutDir = Join-Path $root "out\api-modules\$Module" }
@@ -82,9 +83,9 @@ foreach ($line in $environment) {
 # The module's own header directory plus the ones its headers pull in (QtCharts derives from
 # QtWidgets, and every Qt module needs QtCore/QtGui).
 $includes = @(
-    'QtCore', 'QtGui', 'QtWidgets', $qtModule,
+    'QtCore', 'QtGui', 'QtWidgets',
     'QtNetwork', 'QtSvg', 'QtSvgWidgets', 'QtPrintSupport', 'QtXml', 'QtOpenGLWidgets', 'QtOpenGL'
-) | ForEach-Object { "/I$qtInc\$_" }
+) + $qtModules | ForEach-Object { "/I$qtInc\$_" }
 
 $versionDir = Get-ChildItem (Join-Path $qtInc 'QtCore') -Directory -ErrorAction SilentlyContinue |
     Where-Object { $_.Name -match '^6\.' } | Select-Object -First 1

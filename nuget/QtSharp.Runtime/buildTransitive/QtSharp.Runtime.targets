@@ -1,0 +1,19 @@
+<Project>
+
+  <!-- The native glue every generated module calls (QtSharp.Api.dll) next to the consumer's
+       executable and in its publish output. The Qt DLLs it needs come from QtSharp.Qt6. -->
+  <Target Name="QtSharpRuntimeCopyNativeDeps" AfterTargets="Build">
+    <ItemGroup>
+      <_QtSharpRuntimeNative Include="$(QtSharpRuntimeNativeDir)*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpRuntimeNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="QtSharpRuntimeCopyNativeDepsPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <_QtSharpRuntimeNativePublish Include="$(QtSharpRuntimeNativeDir)*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpRuntimeNativePublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

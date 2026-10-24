@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using QtSharp.Api;
 
 static class Program
 {

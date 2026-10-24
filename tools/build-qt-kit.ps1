@@ -51,6 +51,24 @@ function Find-One([string]$Base, [string]$Relative) {
     return $hit
 }
 
+# The extension modules (addons) the binding needs, as data: the header that marks the addon,
+# which include/lib/bin prefixes to merge into the kit, and which plugin directories the runtime
+# loads. Adding an extension module means adding a row here, not another copy of the merge code.
+$addons = @(
+    @{ Package = 'qtcharts'; Marker = 'include\QtCharts\qchart.h'
+       Includes = @('QtCharts'); Libs = @('Qt6Charts*'); Dlls = @('Qt6Charts.dll')
+       RuntimeModules = @('Qt6Charts'); Plugins = @() },
+    @{ Package = 'qt3d'; Marker = 'include\Qt3DCore\qentity.h'
+       Includes = @('Qt3D*'); Libs = @('Qt63D*'); Dlls = @('Qt63D*.dll')
+       RuntimeModules = @('Qt63DCore', 'Qt63DRender', 'Qt63DInput', 'Qt63DLogic', 'Qt63DAnimation',
+                          'Qt63DExtras', 'Qt6Concurrent')
+       Plugins = @('renderers', 'geometryloaders', 'sceneparsers') },
+    # Qt3DRender's RHI renderer plugin imports Qt6ShaderTools; it is an addon of its own.
+    @{ Package = 'qtshadertools'; Marker = 'include\QtShaderTools\qtshadertoolsexports.h'
+       Includes = @('QtShaderTools'); Libs = @('Qt6ShaderTools*'); Dlls = @('Qt6ShaderTools.dll')
+       RuntimeModules = @('Qt6ShaderTools'); Plugins = @() }
+)
+
 # ---- 1. The dev kit ----------------------------------------------------------------
 $kitRoot = $null
 if ($KitDir) {
@@ -62,13 +80,13 @@ if ($KitDir) {
     $repoBase = "https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_$short/qt6_${short}_msvc2022_64"
     New-Item -ItemType Directory -Path $cache -Force | Out-Null
 
-    # qtbase and qtsvg live in the kit's own package directory; QtCharts is an *addon* and is
-    # published under its own sibling package (qt.qt6.<ver>.addons.qtcharts....). Both are the same
-    # build of the same kit, which is what keeps the module's DLL compatible with the core runtime.
-    $sources = @(
-        @{ Dir = "$repoBase/qt.qt6.$short.win64_msvc2022_64"; Prefixes = @('qtbase', 'qtsvg') },
-        @{ Dir = "$repoBase/qt.qt6.$short.addons.qtcharts.win64_msvc2022_64"; Prefixes = @('qtcharts') }
-    )
+    # qtbase and qtsvg live in the kit's own package directory; the addons are published as
+    # sibling packages (qt.qt6.<ver>.addons.<name>....) built from the same kit.
+    $sources = @(@{ Dir = "$repoBase/qt.qt6.$short.win64_msvc2022_64"; Prefixes = @('qtbase', 'qtsvg') })
+    foreach ($addon in $addons) {
+        $sources += @{ Dir = "$repoBase/qt.qt6.$short.addons.$($addon.Package).win64_msvc2022_64"
+                       Prefixes = @($addon.Package) }
+    }
 
     # Fetch each listing with curl and read it as text: Invoke-WebRequest's .Content is not always a
     # string, which silently turned the archive pattern match into a null reference on CI.
@@ -105,21 +123,40 @@ if ($KitDir) {
     Write-Host "discovered the Qt kit root: $kitRoot"
 
     # An addon package can extract beside the kit root rather than into it. The extension binding
-    # needs the module's headers, import library and DLL in the kit, so put them there if the
-    # archive layout did not already.
-    if (-not (Test-Path -LiteralPath (Join-Path $kitRoot 'include\QtCharts\qchart.h'))) {
-        $chartsHeader = Find-One $kitOut 'include\QtCharts\qchart.h'
-        if (-not $chartsHeader) { throw "The QtCharts archive did not provide include\QtCharts\qchart.h under $kitOut." }
-        $chartsRoot = $chartsHeader.Directory.Parent.Parent.FullName
-        Write-Host "merging the QtCharts pieces from $chartsRoot into $kitRoot"
-        Copy-Item (Join-Path $chartsRoot 'include\QtCharts') (Join-Path $kitRoot 'include') -Recurse -Force
-        Get-ChildItem (Join-Path $chartsRoot 'lib') -Filter 'Qt6Charts*' -File -ErrorAction SilentlyContinue |
-            ForEach-Object { Copy-Item $_.FullName (Join-Path $kitRoot 'lib') -Force }
-        Get-ChildItem (Join-Path $chartsRoot 'bin') -Filter 'Qt6Charts.dll' -File -ErrorAction SilentlyContinue |
-            ForEach-Object { Copy-Item $_.FullName (Join-Path $kitRoot 'bin') -Force }
+    # needs the module's headers, import libraries, DLLs and plugins in the kit, so merge them if
+    # the archive layout did not already put them there.
+    foreach ($addon in $addons) {
+        if (Test-Path -LiteralPath (Join-Path $kitRoot $addon.Marker)) { continue }
+        $marker = Find-One $kitOut $addon.Marker
+        if (-not $marker) { throw "The $($addon.Package) archive did not provide $($addon.Marker) under $kitOut." }
+        $addonRoot = $marker.Directory.Parent.Parent.FullName
+        Write-Host "merging the $($addon.Package) pieces from $addonRoot into $kitRoot"
+
+        foreach ($include in $addon.Includes) {
+            Get-ChildItem (Join-Path $addonRoot 'include') -Directory -Filter $include -ErrorAction SilentlyContinue |
+                ForEach-Object { Copy-Item $_.FullName (Join-Path $kitRoot 'include') -Recurse -Force }
+        }
+        foreach ($pattern in $addon.Libs) {
+            Get-ChildItem (Join-Path $addonRoot 'lib') -Filter $pattern -File -ErrorAction SilentlyContinue |
+                ForEach-Object { Copy-Item $_.FullName (Join-Path $kitRoot 'lib') -Force }
+        }
+        foreach ($pattern in $addon.Dlls) {
+            Get-ChildItem (Join-Path $addonRoot 'bin') -Filter $pattern -File -ErrorAction SilentlyContinue |
+                ForEach-Object { Copy-Item $_.FullName (Join-Path $kitRoot 'bin') -Force }
+        }
+        foreach ($pluginDir in $addon.Plugins) {
+            $from = Join-Path $addonRoot "plugins\$pluginDir"
+            if (-not (Test-Path -LiteralPath $from)) { continue }
+            New-Item -ItemType Directory -Path (Join-Path $kitRoot "plugins\$pluginDir") -Force | Out-Null
+            Get-ChildItem $from -Filter '*.dll' -File |
+                Where-Object { $_.Name -notmatch '[A-Za-z]d\.dll$' } |
+                ForEach-Object { Copy-Item $_.FullName (Join-Path $kitRoot "plugins\$pluginDir") -Force }
+        }
     }
-    if (-not (Test-Path -LiteralPath (Join-Path $kitRoot 'include\QtCharts\qchart.h'))) {
-        throw "QtCharts headers are missing from $kitRoot."
+    foreach ($addon in $addons) {
+        if (-not (Test-Path -LiteralPath (Join-Path $kitRoot $addon.Marker))) {
+            throw "$($addon.Package) headers are missing from $kitRoot."
+        }
     }
 }
 
@@ -132,13 +169,14 @@ if (-not (Test-Path -LiteralPath (Join-Path $binDir 'Qt6Core.dll'))) {
     throw "No Qt6Core.dll under $binDir. Point -KitDir at a kit that ships the runtime DLLs, or add them to <Dest>\runtime by hand."
 }
 New-Item -ItemType Directory -Path $runtimeOut -Force | Out-Null
-# Only the modules the native glue links (build_api.bat): copying the kit's whole bin would add
-# tens of megabytes of Qt modules the binding never touches. Keep this list in step with the
-# Qt6*.lib entries in build_api.bat.
+# Only the modules the native glues link (build_api.bat and build-native-module.ps1): copying the
+# kit's whole bin would add tens of megabytes of Qt modules the binding never touches. Keep this
+# list in step with the Qt6*.lib entries in build_api.bat and the extension modules' QtLibs.
 $modules = @(
     'Qt6Core', 'Qt6Gui', 'Qt6Widgets', 'Qt6Network', 'Qt6Svg',
     'Qt6SvgWidgets', 'Qt6PrintSupport', 'Qt6Xml', 'Qt6OpenGL', 'Qt6OpenGLWidgets'
 )
+foreach ($addon in $addons) { $modules += $addon.RuntimeModules }
 foreach ($module in $modules) {
     $dll = Join-Path $binDir "$module.dll"
     if (-not (Test-Path -LiteralPath $dll)) {
@@ -148,6 +186,19 @@ foreach ($module in $modules) {
 }
 foreach ($crt in @('msvcp140*.dll', 'vcruntime140*.dll', 'concrt140.dll')) {
     Get-ChildItem -Path (Join-Path $binDir $crt) -File -ErrorAction SilentlyContinue | Copy-Item -Destination $runtimeOut -Force
+}
+# Qt3DRender resolves its renderer and loader plugins from <exe>\<class>\ directories, so the
+# runtime payload keeps Qt's plugin layout intact (debug builds are not shipped).
+foreach ($addon in $addons) {
+    foreach ($pluginDir in $addon.Plugins) {
+        $from = Join-Path $kitRoot "plugins\$pluginDir"
+        if (-not (Test-Path -LiteralPath $from)) { continue }
+        $to = Join-Path $runtimeOut "plugins\$pluginDir"
+        New-Item -ItemType Directory -Path $to -Force | Out-Null
+        Get-ChildItem $from -Filter '*.dll' -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -notmatch '[A-Za-z]d\.dll$' } |
+            ForEach-Object { Copy-Item $_.FullName $to -Force }
+    }
 }
 $plugin = Get-ChildItem -Path (Join-Path $kitRoot 'plugins\platforms') -Filter 'qwindows.dll' -File -ErrorAction SilentlyContinue | Select-Object -First 1
 if (-not $plugin) {
