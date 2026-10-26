@@ -174,10 +174,14 @@ jobs:
           Remove-Item $stage -Recurse -Force -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Path "$stage/api" -Force | Out-Null
           Copy-Item out/api/QtSharp.Api.dll "$stage/api/"
+          # The demos reference the extension module projects too (QtWebSockets, QtMultimedia),
+          # so their generated trees and native glues travel with the artifact as well.
           foreach ($module in @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsql', 'qtsvg', 'qtsvgwidgets',
-                                'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets')) {
+                                'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets',
+                                'qtwebsockets', 'qtmultimedia')) {
             Copy-Item "out/$module/generated" "$stage/$module/generated" -Recurse
           }
+          Copy-Item out/api-modules "$stage/api-modules" -Recurse
 
       - name: Upload the generated binding
         uses: actions/upload-artifact@v7
