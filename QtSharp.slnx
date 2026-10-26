@@ -65,8 +65,4 @@
     <Project Path="tests/QtSharp.BindingTests.csproj" />
     <Project Path="testbind/testbind.csproj" />
   </Folder>
-
-  <Folder Name="/Samples/">
-    <Project Path="samples/qt3d/Qt3D.csproj" />
-  </Folder>
 </Solution>
