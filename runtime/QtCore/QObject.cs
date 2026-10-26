@@ -16,9 +16,10 @@ namespace QtSharp.QtCore
     ///
     ///     this.EmitSignal(ValueChanged, value);
     ///
-    /// Calling the event directly (`ValueChanged?.Invoke(value)`) is legal inside the declaring
-    /// class, but it only runs the C# handlers: it never reaches QMetaObject::activate, so QML and
-    /// native connections would not see the emission. This method is the emit that crosses into Qt.
+    /// This is the explicit spelling. The runtime also seeds an emit trampoline into the event's
+    /// handler field when the meta-object is attached, so `ValueChanged?.Invoke(value)` in the
+    /// declaring class is the same emit: it calls QMetaObject::activate, and Qt connections, QML
+    /// and native code all see the signal.
     /// </summary>
     public static class QtSignals
     {

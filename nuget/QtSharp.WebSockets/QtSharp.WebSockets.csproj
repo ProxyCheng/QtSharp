@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Another extension module, the same shape as QtSharp.Charts: its own assembly, its own native
+       glue (QtSharp.QtWebSockets.Native.dll) and its own package against the core binding. The
+       generated source comes from model/qtsharp.qtwebsockets.json, extracted with the qtwebsockets
+       module selected. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>QtSharp.QtWebSockets</AssemblyName>
+    <RootNamespace>QtSharp.QtWebSockets</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <PackageId>QtSharp.WebSockets</PackageId>
+    <Version>0.5.0</Version>
+    <Authors>ProxyCheng</Authors>
+    <Description>Qt WebSockets for .NET, generated from the Qt 6.12 headers. References QtSharp.Api.</Description>
+    <PackageTags>Qt;Qt6;QtWebSockets;CSharp;dotnet;binding;interop</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ProxyCheng/QtSharp.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <QtSharpWebSocketsDir Condition="'$(QtSharpWebSocketsDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\qtwebsockets</QtSharpWebSocketsDir>
+    <QtSharpWebSocketsNativeDir Condition="'$(QtSharpWebSocketsNativeDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\api-modules\qtwebsockets</QtSharpWebSocketsNativeDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(QtSharpWebSocketsDir)\generated\**\*.cs">
+      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Runtime\QtSharp.Runtime.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\Modules\QtSharp.QtCore\QtSharp.QtCore.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\Modules\QtSharp.QtNetwork\QtSharp.QtNetwork.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\QtSharp.Api.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.WebSockets.Qt6\QtSharp.WebSockets.Qt6.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="$(QtSharpWebSocketsNativeDir)\QtSharp.QtWebSockets.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+  </ItemGroup>
+
+  <Target Name="QtSharpWebSocketsPackCheck" BeforeTargets="GenerateNuspec">
+    <Error Condition="!Exists('$(QtSharpWebSocketsDir)\generated')" Text="The QtWebSockets binding source is missing - run: qtgen codegen model\qtsharp.qtwebsockets.json out\qtwebsockets --module qtwebsockets" />
+    <Error Condition="!Exists('$(QtSharpWebSocketsNativeDir)\QtSharp.QtWebSockets.Native.dll')" Text="The QtWebSockets native glue is missing - run: powershell -File tools\build-native-module.ps1 -Module qtwebsockets" />
+  </Target>
+
+</Project>

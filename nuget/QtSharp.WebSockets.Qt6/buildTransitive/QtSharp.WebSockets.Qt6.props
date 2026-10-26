@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <QtSharpWebSocketsQt6NativeDir Condition="'$(QtSharpWebSocketsQt6NativeDir)' == ''">$(MSBuildThisFileDirectory)..\tools\native\</QtSharpWebSocketsQt6NativeDir>
+    <PlatformTarget Condition="'$(PlatformTarget)' == ''">x64</PlatformTarget>
+  </PropertyGroup>
+</Project>

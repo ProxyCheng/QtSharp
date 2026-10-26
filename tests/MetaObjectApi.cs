@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 // A signal and a property declared *in C#, the pyqtSignal/Property equivalent. The declarations
 // are attributes on ordinary members; ApiRuntime.AttachMetaObject (which every generated
@@ -45,6 +46,20 @@ public class Counter : QObject
         _value++;
         EmitSignal(ValueChanged, _value);
     }
+
+    // The emit spelled as an invocation of the event itself. The runtime keeps an emit trampoline
+    // in the event's handler field, so this crosses into Qt exactly like EmitSignal does.
+    public void BumpThroughEvent()
+    {
+        _value++;
+        ValueChanged?.Invoke(_value);
+    }
+
+    public void ResetThroughEvent() => ValueReset?.Invoke();
+
+    public void RenameThroughEvent(string name, int value) => Renamed?.Invoke(name, value);
+
+    public void AddChildThroughEvent(QObject child) => ChildAdded?.Invoke(child);
 
     public void ResetValue()
     {
@@ -113,23 +128,88 @@ public static class ApiMetaObjectDemo
         counter.Bump();
         Check(seen == 2, $"a C#-declared signal reaches its handler (got {seen})");
 
-        // Emit the other arities, including a bound class (marshalled as its pointer).
+        // Raising the event itself is also the emit: a native connection sees the activation, and
+        // the C# handler still runs exactly once (the runtime keeps its own connection out of that
+        // emission; the delegate chain that invoked the trampoline calls the handlers).
+        int nativeSeen = -1;
+        ApiRuntime.Connect(counter.Handle, "valueChanged(int)", (argv, _) =>
+            nativeSeen = Marshal.ReadInt32(Marshal.ReadIntPtr(argv, 0)));
+        int eventSeen = 0;
+        counter.ValueChanged += v => eventSeen = v;
+        counter.BumpThroughEvent();
+        Check(nativeSeen == 3 && eventSeen == 3,
+            $"an event Invoke activates Qt as well (native={nativeSeen}, event={eventSeen})");
+
+        // An emission that did not start in C# reaches the handlers through the native connection.
+        eventSeen = 0;
+        ApiRuntime.EmitUser(counter.Handle, "valueChanged(int)", new[] { typeof(int) }, new object[] { 77 });
+        Check(eventSeen == 77 && nativeSeen == 77,
+            $"a native emission reaches the event's handlers (got {eventSeen})");
+
+        // The trampoline sits in the field before anyone subscribes, so an Invoke with no C#
+        // handler still reaches Qt instead of silently doing nothing.
+        var unsigned = new Counter();
+        int unsignedSeen = -1;
+        ApiRuntime.Connect(unsigned.Handle, "valueChanged(int)", (argv, _) =>
+            unsignedSeen = Marshal.ReadInt32(Marshal.ReadIntPtr(argv, 0)));
+        unsigned.BumpThroughEvent();
+        Check(unsignedSeen == 1, $"an event Invoke with no subscribers still reaches Qt (got {unsignedSeen})");
+
+        // A Qt slot that re-emits the signal from inside the activation must still reach the C#
+        // handlers for its own emission; only the emission that started in C# is left to the chain.
+        var nested = new Counter();
+        int nestedSeen = 0;
+        nested.ValueChanged += _ => nestedSeen++;
+        bool reemitted = false;
+        ApiRuntime.Connect(nested.Handle, "valueChanged(int)", (argv, _) =>
+        {
+            if (!reemitted)
+            {
+                reemitted = true;
+                nested.Bump();               // a Qt slot re-emitting with EmitSignal
+            }
+        });
+        nested.BumpThroughEvent();
+        Check(nestedSeen == 2, $"a Qt slot that re-emits during a C# raise is delivered (got {nestedSeen})");
+
+        // `-=` still removes: the trampoline leads the field but is not a subscriber.
+        var removed = new Counter();
+        int removedSeen = 0;
+        Action<int> counted = _ => removedSeen++;
+        removed.ValueChanged += counted;
+        removed.ValueChanged -= counted;
+        removed.BumpThroughEvent();
+        Check(removedSeen == 0, $"removing a handler leaves only the emit trampoline (got {removedSeen})");
+
+        // Emit the other arities, including a bound class (marshalled as its pointer). Each also
+        // goes through the seeded trampoline once, to cover the arity classes.
         bool reset = false;
+        int resetNative = 0;
+        ApiRuntime.Connect(counter.Handle, "valueReset()", (argv, _) => resetNative++);
         counter.ValueReset += () => reset = true;
         counter.ResetValue();
-        Check(reset, "a parameterless C#-declared signal fires");
+        counter.ResetThroughEvent();
+        Check(reset && resetNative == 2, $"a parameterless event fires through both spellings (native={resetNative})");
 
         string renamed = null;
         int renamedTo = 0;
+        int renamedNative = 0;
+        ApiRuntime.Connect(counter.Handle, "renamed(QString,int)", (argv, _) => renamedNative++);
         counter.Renamed += (n, v) => { renamed = n; renamedTo = v; };
         counter.Rename("counter", 7);
-        Check(renamed == "counter" && renamedTo == 7, $"a two-argument C#-declared signal carries both (got '{renamed}', {renamedTo})");
+        counter.RenameThroughEvent("again", 8);
+        Check(renamed == "again" && renamedTo == 8 && renamedNative == 2,
+            $"a two-argument event carries both through both spellings (got '{renamed}', {renamedTo}, native={renamedNative})");
 
         QObject child = null;
+        int childNative = 0;
+        ApiRuntime.Connect(counter.Handle, "childAdded(QObject*)", (argv, _) => childNative++);
         counter.ChildAdded += c => child = c;
         var widget = new QWidget();
         counter.AddChild(widget);
-        Check(child != null && child.Handle == widget.Handle, "a C#-declared signal can carry a bound class");
+        counter.AddChildThroughEvent(widget);
+        Check(child != null && child.Handle == widget.Handle && childNative == 2,
+            $"a C#-declared signal carries a bound class through both spellings (native={childNative})");
 
         // The properties read and write through QObject::property/setProperty, which is how Qt
         // (a binding, a designer, a data mapper) would reach them.
@@ -191,6 +271,8 @@ public static class ApiMetaObjectDemo
         special.ValueChanged += v => specialSeen = v;
         special.Bump();
         Check(specialSeen == 1, "the subclass's own instance emits with its own handler");
+        special.BumpThroughEvent();
+        Check(specialSeen == 2, $"the inherited event's Invoke emits for the subclass (got {specialSeen})");
 
         // A generated class that declares nothing pays nothing and keeps working.
         var plain = new QPushButton();

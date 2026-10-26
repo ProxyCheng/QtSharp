@@ -43,8 +43,8 @@ tests/QtSharp.BindingTests.csproj           ← binding-specific tests (test-*)
 
 Current coverage: **508 classes / 10997 methods / 913 virtuals / 522 enums / 849 Q_PROPERTY
 properties / 480 signals / 68 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSql,
-QtSvg, QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets). The gate runs 29 official Qt
-examples (**920 assertions**), 11 binding-specific tests (**387 assertions**), the 38 official Qt
+QtSvg, QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets). The gate runs 30 official Qt
+examples (**930 assertions**), 11 binding-specific tests (**393 assertions**), the 38 official Qt
 Charts examples (**570 assertions**) and the three official Qt3D examples (**37 assertions**).
 
 Extension modules are separate assemblies and packages against the same runtime:
@@ -53,6 +53,7 @@ Extension modules are separate assemblies and packages against the same runtime:
 |---|---|---|
 | QtCharts | `QtSharp.Charts` | `QChart`, `QChartView`, the series, bars, pie and axis families |
 | Qt3D | `QtSharp.Qt3D` | **230 classes** from Qt3DCore, Qt3DRender, Qt3DInput, Qt3DLogic, Qt3DAnimation and Qt3DExtras, as six assemblies/namespaces in one package |
+| QtWebSockets | `QtSharp.WebSockets` | `QWebSocket`, `QWebSocketServer`, the CORS authenticator and the handshake options |
 
 ## Install the binding
 
@@ -61,7 +62,7 @@ else to set up. No Qt SDK, no Visual Studio C++ workload, no clone:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.4.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.5.0" />
 </ItemGroup>
 ```
 
@@ -101,8 +102,8 @@ than part of qtbase. It references the core package and adds all six modules:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.4.0" />
-  <PackageReference Include="QtSharp.Qt3D" Version="0.4.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.5.0" />
+  <PackageReference Include="QtSharp.Qt3D" Version="0.5.0" />
 </ItemGroup>
 ```
 
@@ -135,7 +136,7 @@ drop-in replacement for every Qt module or every desktop deployment scenario.
 
 ## Releases
 
-Pushing a semantic-version tag such as `v0.4.0` starts the release workflow. It builds eight
+Pushing a semantic-version tag such as `v0.5.0` starts the release workflow. It builds ten
 Windows x64 packages and attaches them, with a `SHA256SUMS.txt`, to a GitHub Release:
 
 | package | what it is |
@@ -148,9 +149,11 @@ Windows x64 packages and attaches them, with a `SHA256SUMS.txt`, to a GitHub Rel
 | `QtSharp.Charts.Qt6` | Qt6Charts.dll (brought in by `QtSharp.Charts`) |
 | `QtSharp.Qt3D` | the optional Qt3D extension (six modules), against `QtSharp.Api` |
 | `QtSharp.Qt3D.Qt6` | the Qt3D runtime and plugins (brought in by `QtSharp.Qt3D`) |
+| `QtSharp.WebSockets` | the optional QtWebSockets extension, against `QtSharp.Api` |
+| `QtSharp.WebSockets.Qt6` | Qt6WebSockets.dll (brought in by `QtSharp.WebSockets`) |
 
 Everything is built on the runner from the checked-in models: the generator runs without clang, the
-Qt dev files (including the QtCharts, Qt3D and Qt Shader Tools addons) are fetched from Qt's own
+Qt dev files (including the QtCharts, Qt3D, QtWebSockets and Qt Shader Tools addons) are fetched from Qt's own
 repository, and the native wrappers are compiled with the MSVC tools that ship on the runner. CI
 runs the same steps on every push, including the official Qt3D examples as the extension's
 conformance suite, so the consumer path is verified continuously.
@@ -271,8 +274,8 @@ testapp test-metaobject          # a binding test
 ```
 
 The official demos are named after the module they exercise (`qtgui-*`, `qtwidgets-*`, plus
-`qtsql-*`, `qtsvg-*`, `qtsvgwidgets-*`, `qtxml-*`, `qtprintsupport-*`, `qtnetwork-*`, `qtcharts-*`
-and `qt3d-*`); the binding tests use `test-*` and cover
+`qtsql-*`, `qtsvg-*`, `qtsvgwidgets-*`, `qtxml-*`, `qtprintsupport-*`, `qtnetwork-*`, `qtcharts-*`,
+`qtwebsockets-*` and `qt3d-*`); the binding tests use `test-*` and cover
 ownership, exceptions, C#-declared signals/properties, value types, the BCL conversions and the
 modules whose upstream examples are not ported yet. `docs/conformance.md` has the full matrix.
 Registration is discovery, not a list: a class carries `[Demo("qtwidgets-analogclock")]` and each
@@ -291,7 +294,7 @@ module projects directly (the same assemblies the package contains).
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.4.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.5.0" />
 </ItemGroup>
 ```
 
@@ -395,9 +398,16 @@ static class Program
   void SetValue(int value)
   {
       Value = value;
-      EmitSignal(ValueChanged, value);          // the pyqtSignal emit
+      ValueChanged?.Invoke(value);              // the pyqtSignal emit: Qt sees it, then the handlers
   }
   ```
+  Raising the signal is invoking the event, the way PyQt's `signal.emit()` is: the runtime keeps
+  an emit trampoline in the event's handler field, so `?.Invoke` calls `QMetaObject::activate` and
+  a QML/C++ `connect` sees it too. `EmitSignal(ValueChanged, value)` is the explicit spelling of
+  the same emit. The trampoline is always there, so the event is never null and `?.Invoke` emits
+  even with no C# subscriber; `ValueChanged == null` is not a "has subscribers" test. Only
+  `+=`/`-=` the event: assigning it (`ValueChanged = null`) also drops the trampoline, and the
+  Invoke spellings stop reaching Qt.
   The Qt name is the member's name with a lower-case first letter. The C# event, a QML/C++ handler
   and a Qt `connect()` all reach the same handlers, and Qt reaches a property through
   `QObject::setProperty`/`property`, just like a moc-generated one.
@@ -455,7 +465,7 @@ and matching DLLs (normally a Qt kit's `bin`):
 powershell -File tools\pack-qt-tools.ps1 -QtToolsSource C:\Qt\6.12.0\msvc2022_64\bin
 ```
 
-The result is `out/packages/QtSharp.Tools.0.4.0.nupkg`. `-QtVersion` and `-PackageVersion`
+The result is `out/packages/QtSharp.Tools.0.5.0.nupkg`. `-QtVersion` and `-PackageVersion`
 override the defaults. Put the upstream license texts/notices in a `QtSharp-ThirdPartyNotices`
 subdirectory beside the source tools to include them in the payload. Tools are staged under
 `out/qt-tools`; the script checks QtCore's version and runs captured, time-limited startup checks.
@@ -464,7 +474,7 @@ In a consumer project:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Tools" Version="0.4.0" PrivateAssets="all" />
+  <PackageReference Include="QtSharp.Tools" Version="0.5.0" PrivateAssets="all" />
   <QtResource Include="assets\sample.qrc" />
 </ItemGroup>
 ```
@@ -507,7 +517,7 @@ Replace the local source path with your checkout's `out/packages` directory.
 | `demos.qt3d/` | the official Qt3D C++ examples (`simple-cpp`, `basicshapes-cpp`, `3d-text`) as the extension's conformance tests |
 | `demos.charts/` | the official Qt Charts examples (38 windows) as the Charts module's conformance tests |
 | `nuget/QtSharp.Api/`, `nuget/QtSharp.Runtime/`, `nuget/QtSharp.Qt6/` | the base binding and its runtime packages (eleven module assemblies inside `QtSharp.Api`) |
-| `nuget/QtSharp.Charts*`, `nuget/QtSharp.Qt3D*` | the two addon packages and their `*.Qt6` runtime companions |
+| `nuget/QtSharp.Charts*`, `nuget/QtSharp.Qt3D*`, `nuget/QtSharp.WebSockets*` | the addon packages and their `*.Qt6` runtime companions |
 | `docs/conformance.md` | which Qt examples run against which module, and the remaining coverage gaps |
 | `tools/regen-api.ps1` | the build and the gate |
 | `tools/clangprobe/` | the probe used to validate the libclang front end (not part of the build) |

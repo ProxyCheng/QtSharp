@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>QtSharp cover</title>
+<style>
+  @page { size: 1600px 900px; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1600px; height: 900px; overflow: hidden; }
+  body {
+    font-family: 'Segoe UI', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+    background: #08111F;
+    color: #E2E8F0;
+    position: relative;
+  }
+  .bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(900px 620px at 80% 40%, rgba(56,189,248,.20), transparent 62%),
+      radial-gradient(760px 520px at 8% 92%, rgba(251,191,36,.10), transparent 60%),
+      linear-gradient(135deg, #08111F 0%, #0B1220 52%, #101B30 100%);
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(148,163,184,.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148,163,184,.055) 1px, transparent 1px);
+    background-size: 48px 48px;
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.8), transparent 88%);
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,.8), transparent 88%);
+  }
+  .frame {
+    position: absolute; inset: 48px;
+    border: 1px solid rgba(148,163,184,.16);
+    border-radius: 30px;
+    pointer-events: none;
+  }
+  .content {
+    position: absolute; inset: 0;
+    padding: 80px 96px 64px;
+    display: flex;
+  }
+  .left {
+    width: 800px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .rule {
+    width: 72px; height: 3px; border-radius: 3px;
+    background: linear-gradient(90deg, #38BDF8, #FBBF24);
+    margin-bottom: 26px;
+  }
+  .eyebrow {
+    font-family: Consolas, 'Cascadia Code', monospace;
+    font-size: 17px; letter-spacing: 4px; text-transform: uppercase;
+    color: #38BDF8; margin-bottom: 28px;
+  }
+  .eyebrow .dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: #34D399; margin-right: 12px; vertical-align: 2px;
+    box-shadow: 0 0 12px rgba(52,211,153,.9);
+  }
+  h1 {
+    margin: 0; font-size: 96px; line-height: 1.07;
+    letter-spacing: -2px; font-weight: 800; color: #F8FAFC;
+  }
+  h1 .accent { color: #FBBF24; }
+  h1 .cyan { color: #38BDF8; }
+  .sub {
+    margin-top: 30px; font-size: 29px; line-height: 1.5;
+    color: #CBD5E1; font-weight: 400;
+  }
+  .sub code {
+    font-family: Consolas, 'Cascadia Code', monospace;
+    color: #E2E8F0; background: rgba(148,163,184,.13);
+    padding: 2px 9px; border-radius: 7px; font-size: 25px;
+  }
+  .stats {
+    margin-top: 24px;
+    font-family: Consolas, 'Cascadia Code', monospace;
+    font-size: 18px; letter-spacing: .4px; color: #94A3B8;
+  }
+  .stats b { color: #E2E8F0; font-weight: 600; }
+  .badge {
+    margin-top: 34px; display: inline-flex; align-items: center; gap: 10px;
+    width: max-content; padding: 10px 17px; border-radius: 999px;
+    background: rgba(52,211,153,.10);
+    border: 1px solid rgba(52,211,153,.35);
+    color: #6EE7B7; font-size: 18px;
+  }
+  .badge .pulse {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #34D399; box-shadow: 0 0 10px rgba(52,211,153,.9);
+  }
+  .right { flex: 1; position: relative; }
+  .card {
+    position: absolute; width: 520px; border-radius: 18px;
+    background: linear-gradient(180deg, #0F1B2E, #0C1526);
+    border: 1px solid rgba(148,163,184,.20);
+    box-shadow: 0 30px 70px rgba(0,0,0,.48);
+    overflow: hidden;
+  }
+  .card.python {
+    top: 72px; left: 0;
+    transform: rotate(-2.5deg);
+  }
+  .card.csharp {
+    top: 380px; left: 80px;
+    transform: rotate(1.8deg);
+    border-color: rgba(56,189,248,.48);
+    box-shadow: 0 30px 90px rgba(56,189,248,.14), 0 30px 70px rgba(0,0,0,.48);
+  }
+  .bar {
+    height: 44px; display: flex; align-items: center; gap: 8px;
+    padding: 0 16px;
+    background: rgba(148,163,184,.06);
+    border-bottom: 1px solid rgba(148,163,184,.12);
+  }
+  .bar i { width: 10px; height: 10px; border-radius: 50%; display: block; }
+  .bar .r { background: #F87171; }
+  .bar .y { background: #FBBF24; }
+  .bar .g { background: #34D399; }
+  .bar .name {
+    margin-left: 10px;
+    font-family: Consolas, 'Cascadia Code', monospace;
+    font-size: 14px; letter-spacing: .8px; color: #94A3B8;
+  }
+  pre {
+    margin: 0; padding: 22px 24px 26px;
+    font-family: Consolas, 'Cascadia Code', 'Courier New', monospace;
+    font-size: 22px; line-height: 1.75; color: #E2E8F0;
+    white-space: pre;
+  }
+  .py-fn { color: #7DD3FC; }
+  .py-str { color: #FBBF24; }
+  .cs-prop { color: #38BDF8; }
+  .cs-str { color: #FBBF24; }
+  .cs-op { color: #94A3B8; }
+  .arrow {
+    position: absolute; top: 280px; right: 6px;
+    width: 72px; height: 72px; border-radius: 50%;
+    background: rgba(56,189,248,.10);
+    border: 1px solid rgba(56,189,248,.42);
+    display: flex; align-items: center; justify-content: center;
+    color: #38BDF8; font-size: 32px; font-weight: 700;
+    box-shadow: 0 0 34px rgba(56,189,248,.16);
+  }
+  .arrow-label {
+    position: absolute; top: 356px; right: -4px; width: 140px;
+    text-align: center;
+    font-family: Consolas, 'Cascadia Code', monospace;
+    font-size: 13px; letter-spacing: .5px; color: #94A3B8;
+  }
+  .line {
+    position: absolute; left: 96px; right: 96px; bottom: 76px; height: 1px;
+    background: linear-gradient(90deg, rgba(148,163,184,.26), rgba(148,163,184,.06));
+  }
+  .footer {
+    position: absolute; left: 96px; right: 96px; bottom: 34px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: Consolas, 'Cascadia Code', monospace;
+    font-size: 15px; color: #64748B;
+  }
+  .footer .meta { color: #94A3B8; }
+</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="grid"></div>
+  <div class="frame"></div>
+
+  <div class="content">
+    <div class="left">
+      <div class="rule"></div>
+      <div class="eyebrow"><span class="dot"></span>QtSharp / Qt for .NET</div>
+      <h1>像 PyQt 一样<br>在 <span class="accent">C#</span> 里写 <span class="cyan">Qt</span></h1>
+      <div class="sub">从 Qt 6.12 头文件生成 C# 绑定<br>每个对象背后都是真的 <code>QObject</code></div>
+      <div class="stats"><b>496</b> 个类 · <b>10,506</b> 个方法 · <b>885</b> 个虚函数 · <b>463</b> 个信号</div>
+      <div class="badge"><span class="pulse"></span>PolyMount 的桌面端已经在用</div>
+    </div>
+
+    <div class="right">
+      <div class="card python">
+        <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="name">PyQt6</span></div>
+        <pre><span class="py-fn">button</span>.<span class="py-fn">clicked</span>.<span class="py-fn">connect</span>(fn)
+<span class="py-fn">window</span>.<span class="py-fn">setWindowTitle</span>(<span class="py-str">"Hello"</span>)</pre>
+      </div>
+
+      <div class="card csharp">
+        <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="name">QtSharp / C#</span></div>
+        <pre><span class="py-fn">button</span>.<span class="cs-prop">Clicked</span> <span class="cs-op">+=</span> fn;
+<span class="py-fn">window</span>.<span class="cs-prop">WindowTitle</span> <span class="cs-op">=</span> <span class="cs-str">"Hello"</span>;</pre>
+      </div>
+
+      <div class="arrow">→</div>
+      <div class="arrow-label">同一个 QObject</div>
+    </div>
+  </div>
+
+  <div class="line"></div>
+  <div class="footer">
+    <span>github.com/ProxyCheng/QtSharp</span>
+    <span class="meta">Qt 6.12 · .NET 10 · Windows x64 · MIT</span>
+  </div>
+</body>
+</html>

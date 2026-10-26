@@ -79,7 +79,7 @@ if (-not $SkipExtract) {
 }
 
 $baseModules = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsql', 'qtsvg', 'qtsvgwidgets', 'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets')
-$extensionModules = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras')
+$extensionModules = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtwebsockets')
 
 if (-not $SkipExtract) {
     Write-Host "=== [2b] Extract the addon models (each is checked in, extracted from its own headers) ==="
