@@ -187,6 +187,7 @@ jobs:
             out/packages/QtSharp.Multimedia.Qt6.0.0.0-ci.nupkg
             out/packages/QtSharp.Positioning.0.0.0-ci.nupkg
             out/packages/QtSharp.Positioning.Qt6.0.0.0-ci.nupkg
+            out/packages/QtSharp.Sql.0.0.0-ci.nupkg
           if-no-files-found: error
 
       # Hand the generated source tree and the native glue to the smoke job so it does not have to
