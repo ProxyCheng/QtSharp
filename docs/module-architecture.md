@@ -19,7 +19,7 @@ namespace per Qt module**.
 |---|---|---|
 | `QtSharp.Runtime` | `QtSharp.Runtime.dll` (handles, signals, attributes, marshalling; no Qt types) and the shared native glue `QtSharp.Api.dll` | — |
 | `QtSharp.Qt6` | the Qt 6 base runtime DLLs (`Qt6Core`, `Qt6Gui`, `Qt6Widgets`, …, `qwindows.dll`) | — |
-| `QtSharp.Api` | ten assemblies: `QtSharp.QtCore`, `QtSharp.QtGui`, `QtSharp.QtWidgets`, `QtSharp.QtNetwork`, `QtSharp.QtSvg`, `QtSharp.QtSvgWidgets`, `QtSharp.QtPrintSupport`, `QtSharp.QtXml`, `QtSharp.QtOpenGL`, `QtSharp.QtOpenGLWidgets` | `QtSharp.Runtime`, `QtSharp.Qt6` |
+| `QtSharp.Api` | eleven assemblies: `QtSharp.QtCore`, `QtSharp.QtGui`, `QtSharp.QtWidgets`, `QtSharp.QtNetwork`, `QtSharp.QtSql`, `QtSharp.QtSvg`, `QtSharp.QtSvgWidgets`, `QtSharp.QtPrintSupport`, `QtSharp.QtXml`, `QtSharp.QtOpenGL`, `QtSharp.QtOpenGLWidgets` | `QtSharp.Runtime`, `QtSharp.Qt6` |
 | `QtSharp.Charts` | `QtSharp.Charts` assembly + `QtSharp.Charts.Native.dll` | `QtSharp.Api`, `QtSharp.Charts.Qt6` |
 | `QtSharp.Charts.Qt6` | `Qt6Charts.dll` | — |
 | `QtSharp.Qt3D` | six assemblies: `QtSharp.Qt3DCore`, `QtSharp.Qt3DRender`, `QtSharp.Qt3DInput`, `QtSharp.Qt3DLogic`, `QtSharp.Qt3DAnimation`, `QtSharp.Qt3DExtras`; six native glues | `QtSharp.Api`, `QtSharp.Qt3D.Qt6` |
@@ -135,7 +135,7 @@ No generator or build-script code is written per module.
 nuget/
   QtSharp.Runtime/                 managed runtime + shared native glue
   QtSharp.Qt6/                     Qt base runtime payload
-  QtSharp.Api/                     pack project for the ten base assemblies
+  QtSharp.Api/                     pack project for the eleven base assemblies
     Modules/QtSharp.QtCore/ …      one csproj per Qt module
   QtSharp.Charts/                  Charts assembly + native glue + pack
   QtSharp.Charts.Qt6/              Qt6Charts.dll
@@ -154,7 +154,7 @@ NuGet dependencies, so a consumer never lists the runtime packages by hand.
 
 `tools/regen-api.ps1` is the full gate: it re-extracts the combined model, checks the split models
 are byte-identical, generates every module twice (determinism), builds the shared and per-addon
-native glues, builds the ten base assemblies and the Charts assembly, runs the official demos and
+native glues, builds the eleven base assemblies and the Charts assembly, runs the official demos and
 binding tests (including the Qt Charts and Qt3D conformance suites). `tools/pack-qt-binding.ps1` packs and
 inspects all seven packages; a local feed consumer test then proves the dependency graph and the
 `buildTransitive` payload.

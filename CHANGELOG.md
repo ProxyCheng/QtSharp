@@ -4,6 +4,19 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.4.0 - 2026-10-26
+
+- **QtSql is bound**, as the eleventh base module of `QtSharp.Api`: `QSqlDatabase`/`QSqlDriver`,
+  `QSqlQuery`/`QSqlResult`, the `QSqlRecord`/`QSqlField`/`QSqlIndex`/`QSqlError` value classes and
+  the three table models. The Qt runtime payload now ships `Qt6Sql.dll` and the SQL driver plugins
+  under `sqldrivers\`, so a consumer can open a SQLite database without deploying Qt itself.
+- **`qtsql-querymodel`** ports Qt's SQL "Query Model" example: the `person` table built through
+  prepared statements, a `QSqlQueryModel` shown in a `QTableView`, and a `QSqlTableModel` edit
+  committed through `submitAll`.
+- The generator now emits the container helper types used by a class's *inherited* virtuals:
+  `QSqlQueryModel` dispatches `QAbstractItemModel::itemData`/`mimeData`, and those signatures use
+  helpers that so far only existed inside QtCore's assembly.
+
 ## 0.3.0 - 2026-10-26
 
 - **The binding is generated from Qt 6.12.0.** The checked-in model was re-extracted from the

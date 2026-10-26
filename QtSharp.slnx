@@ -14,6 +14,7 @@
     <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtGui/QtSharp.QtGui.csproj" />
     <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtWidgets/QtSharp.QtWidgets.csproj" />
     <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtNetwork/QtSharp.QtNetwork.csproj" />
+    <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtSql/QtSharp.QtSql.csproj" />
     <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtSvg/QtSharp.QtSvg.csproj" />
     <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtSvgWidgets/QtSharp.QtSvgWidgets.csproj" />
     <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtPrintSupport/QtSharp.QtPrintSupport.csproj" />

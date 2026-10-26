@@ -312,6 +312,16 @@
     { "name": "Type", "qualified": "QSocketNotifier::Type", "module": "qtcore", "flags": false, "items": [{ "name": "Read", "value": 0 }, { "name": "Write", "value": 1 }, { "name": "Exception", "value": 2 }] },
     { "name": "DataChangeRelevanceFlags", "qualified": "QSortFilterProxyModel::DataChangeRelevanceFlags", "module": "qtcore", "flags": true, "items": [{ "name": "NotRelevant", "value": 0 }, { "name": "RelevantForFiltering", "value": 1 }, { "name": "RelevantForSorting", "value": 2 }, { "name": "RelevantForFilteringAndSorting", "value": 3 }] },
     { "name": "Directions", "qualified": "QSortFilterProxyModel::Directions", "module": "qtcore", "flags": true, "items": [{ "name": "Rows", "value": 1 }, { "name": "Columns", "value": 2 }, { "name": "Both", "value": 3 }] },
+    { "name": "DbmsType", "qualified": "QSqlDriver::DbmsType", "module": "qtsql", "flags": false, "items": [{ "name": "UnknownDbms", "value": 0 }, { "name": "MSSqlServer", "value": 1 }, { "name": "MySqlServer", "value": 2 }, { "name": "PostgreSQL", "value": 3 }, { "name": "Oracle", "value": 4 }, { "name": "Sybase", "value": 5 }, { "name": "SQLite", "value": 6 }, { "name": "Interbase", "value": 7 }, { "name": "DB2", "value": 8 }, { "name": "MimerSQL", "value": 9 }] },
+    { "name": "DriverFeature", "qualified": "QSqlDriver::DriverFeature", "module": "qtsql", "flags": false, "items": [{ "name": "Transactions", "value": 0 }, { "name": "QuerySize", "value": 1 }, { "name": "BLOB", "value": 2 }, { "name": "Unicode", "value": 3 }, { "name": "PreparedQueries", "value": 4 }, { "name": "NamedPlaceholders", "value": 5 }, { "name": "PositionalPlaceholders", "value": 6 }, { "name": "LastInsertId", "value": 7 }, { "name": "BatchOperations", "value": 8 }, { "name": "SimpleLocking", "value": 9 }, { "name": "LowPrecisionNumbers", "value": 10 }, { "name": "EventNotifications", "value": 11 }, { "name": "FinishQuery", "value": 12 }, { "name": "MultipleResultSets", "value": 13 }, { "name": "CancelQuery", "value": 14 }] },
+    { "name": "IdentifierType", "qualified": "QSqlDriver::IdentifierType", "module": "qtsql", "flags": false, "items": [{ "name": "FieldName", "value": 0 }, { "name": "TableName", "value": 1 }] },
+    { "name": "NotificationSource", "qualified": "QSqlDriver::NotificationSource", "module": "qtsql", "flags": false, "items": [{ "name": "UnknownSource", "value": 0 }, { "name": "SelfSource", "value": 1 }, { "name": "OtherSource", "value": 2 }] },
+    { "name": "StatementType", "qualified": "QSqlDriver::StatementType", "module": "qtsql", "flags": false, "items": [{ "name": "WhereStatement", "value": 0 }, { "name": "SelectStatement", "value": 1 }, { "name": "UpdateStatement", "value": 2 }, { "name": "InsertStatement", "value": 3 }, { "name": "DeleteStatement", "value": 4 }] },
+    { "name": "ErrorType", "qualified": "QSqlError::ErrorType", "module": "qtsql", "flags": false, "items": [{ "name": "NoError", "value": 0 }, { "name": "ConnectionError", "value": 1 }, { "name": "StatementError", "value": 2 }, { "name": "TransactionError", "value": 3 }, { "name": "UnknownError", "value": 4 }] },
+    { "name": "RequiredStatus", "qualified": "QSqlField::RequiredStatus", "module": "qtsql", "flags": false, "items": [{ "name": "Unknown", "value": -1 }, { "name": "Optional", "value": 0 }, { "name": "Required", "value": 1 }] },
+    { "name": "BatchExecutionMode", "qualified": "QSqlQuery::BatchExecutionMode", "module": "qtsql", "flags": false, "items": [{ "name": "ValuesAsRows", "value": 0 }, { "name": "ValuesAsColumns", "value": 1 }] },
+    { "name": "JoinMode", "qualified": "QSqlRelationalTableModel::JoinMode", "module": "qtsql", "flags": false, "items": [{ "name": "InnerJoin", "value": 0 }, { "name": "LeftJoin", "value": 1 }] },
+    { "name": "EditStrategy", "qualified": "QSqlTableModel::EditStrategy", "module": "qtsql", "flags": false, "items": [{ "name": "OnFieldChange", "value": 0 }, { "name": "OnRowChange", "value": 1 }, { "name": "OnManualSubmit", "value": 2 }] },
     { "name": "StackingMode", "qualified": "QStackedLayout::StackingMode", "module": "qtwidgets", "flags": false, "items": [{ "name": "StackOne", "value": 0 }, { "name": "StackAll", "value": 1 }] },
     { "name": "LocateOptions", "qualified": "QStandardPaths::LocateOptions", "module": "qtcore", "flags": true, "items": [{ "name": "LocateFile", "value": 0 }, { "name": "LocateDirectory", "value": 1 }] },
     { "name": "StandardLocation", "qualified": "QStandardPaths::StandardLocation", "module": "qtcore", "flags": false, "items": [{ "name": "DesktopLocation", "value": 0 }, { "name": "DocumentsLocation", "value": 1 }, { "name": "FontsLocation", "value": 2 }, { "name": "ApplicationsLocation", "value": 3 }, { "name": "MusicLocation", "value": 4 }, { "name": "MoviesLocation", "value": 5 }, { "name": "PicturesLocation", "value": 6 }, { "name": "TempLocation", "value": 7 }, { "name": "HomeLocation", "value": 8 }, { "name": "AppLocalDataLocation", "value": 9 }, { "name": "CacheLocation", "value": 10 }, { "name": "GenericDataLocation", "value": 11 }, { "name": "RuntimeLocation", "value": 12 }, { "name": "ConfigLocation", "value": 13 }, { "name": "DownloadLocation", "value": 14 }, { "name": "GenericCacheLocation", "value": 15 }, { "name": "GenericConfigLocation", "value": 16 }, { "name": "AppDataLocation", "value": 17 }, { "name": "AppConfigLocation", "value": 18 }, { "name": "PublicShareLocation", "value": 19 }, { "name": "TemplatesLocation", "value": 20 }, { "name": "StateLocation", "value": 21 }, { "name": "GenericStateLocation", "value": 22 }] },
@@ -16723,6 +16733,534 @@
         { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
       ],
       "signals": [
+      ]
+    }
+,
+    {
+      "name": "QSqlDatabase",
+      "header": "QtSql/qsqldatabase.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] }
+      ],
+      "methods": [
+        { "name": "addDatabase", "static": true, "returnType": "QSqlDatabase", "parameters": [{ "name": "driver", "type": "QSqlDriver*" }, { "name": "connectionName", "type": "QString", "optional": true, "defaultCpp": "defaultConnectionName()" }] },
+        { "name": "addDatabase", "static": true, "returnType": "QSqlDatabase", "parameters": [{ "name": "type", "type": "QString" }, { "name": "connectionName", "type": "QString", "optional": true, "defaultCpp": "defaultConnectionName()" }] },
+        { "name": "cloneDatabase", "static": true, "returnType": "QSqlDatabase", "parameters": [{ "name": "other", "type": "QSqlDatabase" }, { "name": "connectionName", "type": "QString" }] },
+        { "name": "cloneDatabase", "static": true, "returnType": "QSqlDatabase", "parameters": [{ "name": "other", "type": "QString" }, { "name": "connectionName", "type": "QString" }] },
+        { "name": "close", "returnType": "void", "parameters": [] },
+        { "name": "commit", "returnType": "bool", "parameters": [] },
+        { "name": "connectOptions", "returnType": "QString", "parameters": [] },
+        { "name": "connectionName", "returnType": "QString", "parameters": [] },
+        { "name": "connectionNames", "static": true, "returnType": "QStringList", "parameters": [] },
+        { "name": "contains", "static": true, "returnType": "bool", "parameters": [{ "name": "connectionName", "type": "QString", "optional": true, "defaultCpp": "defaultConnectionName()" }] },
+        { "name": "database", "static": true, "returnType": "QSqlDatabase", "parameters": [{ "name": "connectionName", "type": "QString", "optional": true, "defaultCpp": "defaultConnectionName()" }, { "name": "open", "type": "bool", "optional": true, "default": "true" }] },
+        { "name": "databaseName", "returnType": "QString", "parameters": [] },
+        { "name": "driver", "returnType": "QSqlDriver*", "parameters": [] },
+        { "name": "driverName", "returnType": "QString", "parameters": [] },
+        { "name": "drivers", "static": true, "returnType": "QStringList", "parameters": [] },
+        { "name": "exec", "returnType": "QSqlQuery", "parameters": [{ "name": "query", "type": "QString", "optional": true, "defaultCpp": "QString()" }] },
+        { "name": "hostName", "returnType": "QString", "parameters": [] },
+        { "name": "isDriverAvailable", "static": true, "returnType": "bool", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "isOpen", "returnType": "bool", "parameters": [] },
+        { "name": "isOpenError", "returnType": "bool", "parameters": [] },
+        { "name": "isValid", "returnType": "bool", "parameters": [] },
+        { "name": "lastError", "returnType": "QSqlError", "parameters": [] },
+        { "name": "moveToThread", "returnType": "bool", "parameters": [{ "name": "targetThread", "type": "QThread*" }] },
+        { "name": "open", "returnType": "bool", "parameters": [] },
+        { "name": "open", "returnType": "bool", "parameters": [{ "name": "user", "type": "QString" }, { "name": "password", "type": "QString" }] },
+        { "name": "password", "returnType": "QString", "parameters": [] },
+        { "name": "port", "returnType": "int", "parameters": [] },
+        { "name": "primaryIndex", "returnType": "QSqlIndex", "parameters": [{ "name": "tablename", "type": "QString" }] },
+        { "name": "record", "returnType": "QSqlRecord", "parameters": [{ "name": "tablename", "type": "QString" }] },
+        { "name": "removeDatabase", "static": true, "returnType": "void", "parameters": [{ "name": "connectionName", "type": "QString" }] },
+        { "name": "rollback", "returnType": "bool", "parameters": [] },
+        { "name": "setConnectOptions", "returnType": "void", "parameters": [{ "name": "options", "type": "QString", "optional": true, "defaultCpp": "QString()" }] },
+        { "name": "setDatabaseName", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "setHostName", "returnType": "void", "parameters": [{ "name": "host", "type": "QString" }] },
+        { "name": "setPassword", "returnType": "void", "parameters": [{ "name": "password", "type": "QString" }] },
+        { "name": "setPort", "returnType": "void", "parameters": [{ "name": "p", "type": "int" }] },
+        { "name": "setUserName", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "tables", "returnType": "QStringList", "parameters": [] },
+        { "name": "thread", "returnType": "QThread*", "parameters": [] },
+        { "name": "transaction", "returnType": "bool", "parameters": [] },
+        { "name": "userName", "returnType": "QString", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QSqlDriver",
+      "header": "QtSql/qsqldriver.h",
+      "bases": ["QObject"],
+      "isAbstract": true,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "beginTransaction", "returnType": "bool", "parameters": [] },
+        { "name": "cancelQuery", "returnType": "bool", "parameters": [] },
+        { "name": "close", "returnType": "void", "parameters": [] },
+        { "name": "commitTransaction", "returnType": "bool", "parameters": [] },
+        { "name": "connectionName", "returnType": "QString", "parameters": [] },
+        { "name": "createResult", "returnType": "QSqlResult*", "parameters": [] },
+        { "name": "dbmsType", "returnType": "QSqlDriver::DbmsType", "parameters": [] },
+        { "name": "escapeIdentifier", "returnType": "QString", "parameters": [{ "name": "identifier", "type": "QString" }, { "name": "type", "type": "QSqlDriver::IdentifierType" }] },
+        { "name": "formatValue", "returnType": "QString", "parameters": [{ "name": "field", "type": "QSqlField" }, { "name": "trimStrings", "type": "bool", "optional": true, "default": "false" }] },
+        { "name": "handle", "returnType": "QVariant", "parameters": [] },
+        { "name": "hasFeature", "returnType": "bool", "parameters": [{ "name": "f", "type": "QSqlDriver::DriverFeature" }] },
+        { "name": "isIdentifierEscaped", "returnType": "bool", "parameters": [{ "name": "identifier", "type": "QString" }, { "name": "type", "type": "QSqlDriver::IdentifierType" }] },
+        { "name": "isOpen", "returnType": "bool", "parameters": [] },
+        { "name": "isOpenError", "returnType": "bool", "parameters": [] },
+        { "name": "lastError", "returnType": "QSqlError", "parameters": [] },
+        { "name": "maximumIdentifierLength", "returnType": "int", "parameters": [{ "name": "type", "type": "QSqlDriver::IdentifierType" }] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "open", "returnType": "bool", "parameters": [{ "name": "db", "type": "QString" }, { "name": "user", "type": "QString", "optional": true, "defaultCpp": "QString()" }, { "name": "password", "type": "QString", "optional": true, "defaultCpp": "QString()" }, { "name": "host", "type": "QString", "optional": true, "defaultCpp": "QString()" }, { "name": "port", "type": "int", "optional": true, "default": "-1" }, { "name": "connOpts", "type": "QString", "optional": true, "defaultCpp": "QString()" }] },
+        { "name": "primaryIndex", "returnType": "QSqlIndex", "parameters": [{ "name": "tableName", "type": "QString" }] },
+        { "name": "record", "returnType": "QSqlRecord", "parameters": [{ "name": "tableName", "type": "QString" }] },
+        { "name": "rollbackTransaction", "returnType": "bool", "parameters": [] },
+        { "name": "sqlStatement", "returnType": "QString", "parameters": [{ "name": "type", "type": "QSqlDriver::StatementType" }, { "name": "tableName", "type": "QString" }, { "name": "rec", "type": "QSqlRecord" }, { "name": "preparedStatement", "type": "bool" }] },
+        { "name": "stripDelimiters", "returnType": "QString", "parameters": [{ "name": "identifier", "type": "QString" }, { "name": "type", "type": "QSqlDriver::IdentifierType" }] },
+        { "name": "subscribeToNotification", "returnType": "bool", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "subscribedToNotifications", "returnType": "QStringList", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "unsubscribeFromNotification", "returnType": "bool", "parameters": [{ "name": "name", "type": "QString" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+        { "name": "notification", "parameters": [{ "name": "name", "type": "QString" }, { "name": "source", "type": "QSqlDriver::NotificationSource" }, { "name": "payload", "type": "QVariant" }] }
+      ]
+    }
+,
+    {
+      "name": "QSqlError",
+      "header": "QtSql/qsqlerror.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "driverText", "type": "QString", "optional": true, "defaultCpp": "QString()" }, { "name": "databaseText", "type": "QString", "optional": true, "defaultCpp": "QString()" }, { "name": "type", "type": "QSqlError::ErrorType", "optional": true, "default": "QSqlError.ErrorType.NoError" }, { "name": "nativeErrorCode", "type": "QString", "optional": true, "defaultCpp": "QString()" }] }
+      ],
+      "methods": [
+        { "name": "databaseText", "returnType": "QString", "parameters": [] },
+        { "name": "driverText", "returnType": "QString", "parameters": [] },
+        { "name": "isValid", "returnType": "bool", "parameters": [] },
+        { "name": "nativeErrorCode", "returnType": "QString", "parameters": [] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QSqlError" }] },
+        { "name": "text", "returnType": "QString", "parameters": [] },
+        { "name": "type", "returnType": "QSqlError::ErrorType", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QSqlField",
+      "header": "QtSql/qsqlfield.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "fieldName", "type": "QString", "optional": true, "defaultCpp": "QString()" }, { "name": "type", "type": "QMetaType", "optional": true, "defaultCpp": "QMetaType()" }, { "name": "tableName", "type": "QString", "optional": true, "defaultCpp": "QString()" }] },
+        { "parameters": [{ "name": "fieldName", "type": "QString" }, { "name": "type", "type": "QVariant::Type" }, { "name": "tableName", "type": "QString", "optional": true, "defaultCpp": "QString()" }] }
+      ],
+      "methods": [
+        { "name": "clear", "returnType": "void", "parameters": [] },
+        { "name": "defaultValue", "returnType": "QVariant", "parameters": [] },
+        { "name": "isAutoValue", "returnType": "bool", "parameters": [] },
+        { "name": "isGenerated", "returnType": "bool", "parameters": [] },
+        { "name": "isNull", "returnType": "bool", "parameters": [] },
+        { "name": "isReadOnly", "returnType": "bool", "parameters": [] },
+        { "name": "isValid", "returnType": "bool", "parameters": [] },
+        { "name": "length", "returnType": "int", "parameters": [] },
+        { "name": "metaType", "returnType": "QMetaType", "parameters": [] },
+        { "name": "name", "returnType": "QString", "parameters": [] },
+        { "name": "precision", "returnType": "int", "parameters": [] },
+        { "name": "requiredStatus", "returnType": "QSqlField::RequiredStatus", "parameters": [] },
+        { "name": "setAutoValue", "returnType": "void", "parameters": [{ "name": "autoVal", "type": "bool" }] },
+        { "name": "setDefaultValue", "returnType": "void", "parameters": [{ "name": "value", "type": "QVariant" }] },
+        { "name": "setGenerated", "returnType": "void", "parameters": [{ "name": "gen", "type": "bool" }] },
+        { "name": "setLength", "returnType": "void", "parameters": [{ "name": "fieldLength", "type": "int" }] },
+        { "name": "setMetaType", "returnType": "void", "parameters": [{ "name": "type", "type": "QMetaType" }] },
+        { "name": "setName", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "setPrecision", "returnType": "void", "parameters": [{ "name": "precision", "type": "int" }] },
+        { "name": "setReadOnly", "returnType": "void", "parameters": [{ "name": "readOnly", "type": "bool" }] },
+        { "name": "setRequired", "returnType": "void", "parameters": [{ "name": "required", "type": "bool" }] },
+        { "name": "setRequiredStatus", "returnType": "void", "parameters": [{ "name": "status", "type": "QSqlField::RequiredStatus" }] },
+        { "name": "setSqlType", "returnType": "void", "parameters": [{ "name": "type", "type": "int" }] },
+        { "name": "setTableName", "returnType": "void", "parameters": [{ "name": "tableName", "type": "QString" }] },
+        { "name": "setType", "returnType": "void", "parameters": [{ "name": "type", "type": "QVariant::Type" }] },
+        { "name": "setValue", "returnType": "void", "parameters": [{ "name": "value", "type": "QVariant" }] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QSqlField" }] },
+        { "name": "tableName", "returnType": "QString", "parameters": [] },
+        { "name": "type", "returnType": "QVariant::Type", "parameters": [] },
+        { "name": "typeID", "returnType": "int", "parameters": [] },
+        { "name": "value", "returnType": "QVariant", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "autoValue", "type": "bool", "getter": "isAutoValue", "setter": "setAutoValue" },
+        { "name": "defaultValue", "type": "QVariant", "getter": "defaultValue", "setter": "setDefaultValue" },
+        { "name": "generated", "type": "bool", "getter": "isGenerated", "setter": "setGenerated" },
+        { "name": "length", "type": "int", "getter": "length", "setter": "setLength" },
+        { "name": "metaType", "type": "QMetaType", "getter": "metaType", "setter": "setMetaType" },
+        { "name": "name", "type": "QString", "getter": "name", "setter": "setName" },
+        { "name": "precision", "type": "int", "getter": "precision", "setter": "setPrecision" },
+        { "name": "readOnly", "type": "bool", "getter": "isReadOnly", "setter": "setReadOnly" },
+        { "name": "requiredStatus", "type": "QSqlField::RequiredStatus", "getter": "requiredStatus", "setter": "setRequiredStatus" },
+        { "name": "tableName", "type": "QString", "getter": "tableName", "setter": "setTableName" },
+        { "name": "value", "type": "QVariant", "getter": "value", "setter": "setValue" }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QSqlIndex",
+      "header": "QtSql/qsqlindex.h",
+      "bases": ["QSqlRecord"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "cursorName", "type": "QString", "optional": true, "defaultCpp": "QString()" }, { "name": "name", "type": "QString", "optional": true, "defaultCpp": "QString()" }] }
+      ],
+      "methods": [
+        { "name": "append", "returnType": "void", "parameters": [{ "name": "field", "type": "QSqlField" }] },
+        { "name": "append", "returnType": "void", "parameters": [{ "name": "field", "type": "QSqlField" }, { "name": "desc", "type": "bool" }] },
+        { "name": "cursorName", "returnType": "QString", "parameters": [] },
+        { "name": "isDescending", "returnType": "bool", "parameters": [{ "name": "i", "type": "int" }] },
+        { "name": "name", "returnType": "QString", "parameters": [] },
+        { "name": "setCursorName", "returnType": "void", "parameters": [{ "name": "cursorName", "type": "QString" }] },
+        { "name": "setDescending", "returnType": "void", "parameters": [{ "name": "i", "type": "int" }, { "name": "desc", "type": "bool" }] },
+        { "name": "setName", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QSqlIndex" }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "cursorName", "type": "QString", "getter": "cursorName", "setter": "setCursorName" },
+        { "name": "name", "type": "QString", "getter": "name", "setter": "setName" }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QSqlQuery",
+      "header": "QtSql/qsqlquery.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "db", "type": "QSqlDatabase" }] },
+        { "parameters": [{ "name": "r", "type": "QSqlResult*" }] },
+        { "parameters": [{ "name": "query", "type": "QString", "optional": true, "defaultCpp": "QString()" }, { "name": "db", "type": "QSqlDatabase", "optional": true, "defaultCpp": "QSqlDatabase()" }] }
+      ],
+      "methods": [
+        { "name": "addBindValue", "returnType": "void", "parameters": [{ "name": "val", "type": "QVariant" }] },
+        { "name": "at", "returnType": "int", "parameters": [] },
+        { "name": "bindValue", "returnType": "void", "parameters": [{ "name": "placeholder", "type": "QString" }, { "name": "val", "type": "QVariant" }] },
+        { "name": "bindValue", "returnType": "void", "parameters": [{ "name": "pos", "type": "int" }, { "name": "val", "type": "QVariant" }] },
+        { "name": "boundValue", "returnType": "QVariant", "parameters": [{ "name": "placeholder", "type": "QString" }] },
+        { "name": "boundValue", "returnType": "QVariant", "parameters": [{ "name": "pos", "type": "int" }] },
+        { "name": "boundValueName", "returnType": "QString", "parameters": [{ "name": "pos", "type": "int" }] },
+        { "name": "boundValueNames", "returnType": "QStringList", "parameters": [] },
+        { "name": "boundValues", "returnType": "QList<QVariant>", "parameters": [] },
+        { "name": "clear", "returnType": "void", "parameters": [] },
+        { "name": "driver", "returnType": "QSqlDriver*", "parameters": [] },
+        { "name": "exec", "returnType": "bool", "parameters": [] },
+        { "name": "exec", "returnType": "bool", "parameters": [{ "name": "query", "type": "QString" }] },
+        { "name": "execBatch", "returnType": "bool", "parameters": [{ "name": "mode", "type": "QSqlQuery::BatchExecutionMode", "optional": true, "default": "QSqlQuery.BatchExecutionMode.ValuesAsRows" }] },
+        { "name": "executedQuery", "returnType": "QString", "parameters": [] },
+        { "name": "finish", "returnType": "void", "parameters": [] },
+        { "name": "first", "returnType": "bool", "parameters": [] },
+        { "name": "isActive", "returnType": "bool", "parameters": [] },
+        { "name": "isForwardOnly", "returnType": "bool", "parameters": [] },
+        { "name": "isNull", "returnType": "bool", "parameters": [{ "name": "name", "type": "QAnyStringView" }] },
+        { "name": "isNull", "returnType": "bool", "parameters": [{ "name": "field", "type": "int" }] },
+        { "name": "isPositionalBindingEnabled", "returnType": "bool", "parameters": [] },
+        { "name": "isSelect", "returnType": "bool", "parameters": [] },
+        { "name": "isValid", "returnType": "bool", "parameters": [] },
+        { "name": "last", "returnType": "bool", "parameters": [] },
+        { "name": "lastError", "returnType": "QSqlError", "parameters": [] },
+        { "name": "lastInsertId", "returnType": "QVariant", "parameters": [] },
+        { "name": "lastQuery", "returnType": "QString", "parameters": [] },
+        { "name": "next", "returnType": "bool", "parameters": [] },
+        { "name": "nextResult", "returnType": "bool", "parameters": [] },
+        { "name": "numRowsAffected", "returnType": "int", "parameters": [] },
+        { "name": "prepare", "returnType": "bool", "parameters": [{ "name": "query", "type": "QString" }] },
+        { "name": "previous", "returnType": "bool", "parameters": [] },
+        { "name": "record", "returnType": "QSqlRecord", "parameters": [] },
+        { "name": "result", "returnType": "QSqlResult*", "parameters": [] },
+        { "name": "seek", "returnType": "bool", "parameters": [{ "name": "i", "type": "int" }, { "name": "relative", "type": "bool", "optional": true, "default": "false" }] },
+        { "name": "setForwardOnly", "returnType": "void", "parameters": [{ "name": "forward", "type": "bool" }] },
+        { "name": "setPositionalBindingEnabled", "returnType": "void", "parameters": [{ "name": "enable", "type": "bool" }] },
+        { "name": "size", "returnType": "int", "parameters": [] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QSqlQuery" }] },
+        { "name": "value", "returnType": "QVariant", "parameters": [{ "name": "name", "type": "QAnyStringView" }] },
+        { "name": "value", "returnType": "QVariant", "parameters": [{ "name": "i", "type": "int" }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "forwardOnly", "type": "bool", "getter": "isForwardOnly", "setter": "setForwardOnly" },
+        { "name": "positionalBindingEnabled", "type": "bool", "getter": "isPositionalBindingEnabled", "setter": "setPositionalBindingEnabled" }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QSqlQueryModel",
+      "header": "QtSql/qsqlquerymodel.h",
+      "bases": ["QAbstractTableModel"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "beginInsertColumns", "protected": true, "returnType": "void", "parameters": [{ "name": "parent", "type": "QModelIndex" }, { "name": "first", "type": "int" }, { "name": "last", "type": "int" }] },
+        { "name": "beginInsertRows", "protected": true, "returnType": "void", "parameters": [{ "name": "parent", "type": "QModelIndex" }, { "name": "first", "type": "int" }, { "name": "last", "type": "int" }] },
+        { "name": "beginRemoveColumns", "protected": true, "returnType": "void", "parameters": [{ "name": "parent", "type": "QModelIndex" }, { "name": "first", "type": "int" }, { "name": "last", "type": "int" }] },
+        { "name": "beginRemoveRows", "protected": true, "returnType": "void", "parameters": [{ "name": "parent", "type": "QModelIndex" }, { "name": "first", "type": "int" }, { "name": "last", "type": "int" }] },
+        { "name": "beginResetModel", "protected": true, "returnType": "void", "parameters": [] },
+        { "name": "clear", "returnType": "void", "parameters": [] },
+        { "name": "endInsertColumns", "protected": true, "returnType": "void", "parameters": [] },
+        { "name": "endInsertRows", "protected": true, "returnType": "void", "parameters": [] },
+        { "name": "endRemoveColumns", "protected": true, "returnType": "void", "parameters": [] },
+        { "name": "endRemoveRows", "protected": true, "returnType": "void", "parameters": [] },
+        { "name": "endResetModel", "protected": true, "returnType": "void", "parameters": [] },
+        { "name": "indexInQuery", "protected": true, "returnType": "QModelIndex", "parameters": [{ "name": "item", "type": "QModelIndex" }] },
+        { "name": "lastError", "returnType": "QSqlError", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "query", "returnType": "QSqlQuery", "parameters": [] },
+        { "name": "queryChange", "protected": true, "returnType": "void", "parameters": [] },
+        { "name": "record", "returnType": "QSqlRecord", "parameters": [] },
+        { "name": "record", "returnType": "QSqlRecord", "parameters": [{ "name": "row", "type": "int" }] },
+        { "name": "refresh", "returnType": "void", "parameters": [] },
+        { "name": "setLastError", "protected": true, "returnType": "void", "parameters": [{ "name": "error", "type": "QSqlError" }] },
+        { "name": "setQuery", "returnType": "void", "parameters": [{ "name": "query", "type": "QSqlQuery" }] },
+        { "name": "setQuery", "returnType": "void", "parameters": [{ "name": "query", "type": "QString" }, { "name": "db", "type": "QSqlDatabase", "optional": true, "defaultCpp": "QSqlDatabase()" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+        { "name": "canFetchMore", "const": true, "returnType": "bool", "parameters": [{ "name": "parent", "type": "QModelIndex", "cpp": "const QModelIndex &", "optional": true, "defaultCpp": "QModelIndex()" }] },
+        { "name": "columnCount", "const": true, "returnType": "int", "parameters": [{ "name": "parent", "type": "QModelIndex", "cpp": "const QModelIndex &", "optional": true, "defaultCpp": "QModelIndex()" }] },
+        { "name": "data", "const": true, "returnType": "QVariant", "parameters": [{ "name": "item", "type": "QModelIndex", "cpp": "const QModelIndex &" }, { "name": "role", "type": "int", "cpp": "int", "optional": true, "defaultCpp": "Qt::DisplayRole" }] },
+        { "name": "fetchMore", "returnType": "void", "parameters": [{ "name": "parent", "type": "QModelIndex", "cpp": "const QModelIndex &", "optional": true, "defaultCpp": "QModelIndex()" }] },
+        { "name": "headerData", "const": true, "returnType": "QVariant", "parameters": [{ "name": "section", "type": "int", "cpp": "int" }, { "name": "orientation", "type": "Qt::Orientation", "cpp": "Qt::Orientation" }, { "name": "role", "type": "int", "cpp": "int", "optional": true, "defaultCpp": "Qt::DisplayRole" }] },
+        { "name": "insertColumns", "returnType": "bool", "parameters": [{ "name": "column", "type": "int", "cpp": "int" }, { "name": "count", "type": "int", "cpp": "int" }, { "name": "parent", "type": "QModelIndex", "cpp": "const QModelIndex &", "optional": true, "defaultCpp": "QModelIndex()" }] },
+        { "name": "removeColumns", "returnType": "bool", "parameters": [{ "name": "column", "type": "int", "cpp": "int" }, { "name": "count", "type": "int", "cpp": "int" }, { "name": "parent", "type": "QModelIndex", "cpp": "const QModelIndex &", "optional": true, "defaultCpp": "QModelIndex()" }] },
+        { "name": "roleNames", "const": true, "returnType": "QHash<int,QByteArray>", "parameters": [] },
+        { "name": "rowCount", "const": true, "returnType": "int", "parameters": [{ "name": "parent", "type": "QModelIndex", "cpp": "const QModelIndex &", "optional": true, "defaultCpp": "QModelIndex()" }] },
+        { "name": "setHeaderData", "returnType": "bool", "parameters": [{ "name": "section", "type": "int", "cpp": "int" }, { "name": "orientation", "type": "Qt::Orientation", "cpp": "Qt::Orientation" }, { "name": "value", "type": "QVariant", "cpp": "const QVariant &" }, { "name": "role", "type": "int", "cpp": "int", "optional": true, "defaultCpp": "Qt::EditRole" }] }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QSqlRecord",
+      "header": "QtSql/qsqlrecord.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] }
+      ],
+      "methods": [
+        { "name": "append", "returnType": "void", "parameters": [{ "name": "field", "type": "QSqlField" }] },
+        { "name": "clear", "returnType": "void", "parameters": [] },
+        { "name": "clearValues", "returnType": "void", "parameters": [] },
+        { "name": "contains", "returnType": "bool", "parameters": [{ "name": "name", "type": "QAnyStringView" }] },
+        { "name": "count", "returnType": "int", "parameters": [] },
+        { "name": "field", "returnType": "QSqlField", "parameters": [{ "name": "name", "type": "QAnyStringView" }] },
+        { "name": "field", "returnType": "QSqlField", "parameters": [{ "name": "i", "type": "int" }] },
+        { "name": "fieldName", "returnType": "QString", "parameters": [{ "name": "i", "type": "int" }] },
+        { "name": "indexOf", "returnType": "int", "parameters": [{ "name": "name", "type": "QAnyStringView" }] },
+        { "name": "insert", "returnType": "void", "parameters": [{ "name": "pos", "type": "int" }, { "name": "field", "type": "QSqlField" }] },
+        { "name": "isEmpty", "returnType": "bool", "parameters": [] },
+        { "name": "isGenerated", "returnType": "bool", "parameters": [{ "name": "name", "type": "QAnyStringView" }] },
+        { "name": "isGenerated", "returnType": "bool", "parameters": [{ "name": "i", "type": "int" }] },
+        { "name": "isNull", "returnType": "bool", "parameters": [{ "name": "name", "type": "QAnyStringView" }] },
+        { "name": "isNull", "returnType": "bool", "parameters": [{ "name": "i", "type": "int" }] },
+        { "name": "keyValues", "returnType": "QSqlRecord", "parameters": [{ "name": "keyFields", "type": "QSqlRecord" }] },
+        { "name": "remove", "returnType": "void", "parameters": [{ "name": "pos", "type": "int" }] },
+        { "name": "replace", "returnType": "void", "parameters": [{ "name": "pos", "type": "int" }, { "name": "field", "type": "QSqlField" }] },
+        { "name": "setGenerated", "returnType": "void", "parameters": [{ "name": "name", "type": "QAnyStringView" }, { "name": "generated", "type": "bool" }] },
+        { "name": "setGenerated", "returnType": "void", "parameters": [{ "name": "i", "type": "int" }, { "name": "generated", "type": "bool" }] },
+        { "name": "setNull", "returnType": "void", "parameters": [{ "name": "name", "type": "QAnyStringView" }] },
+        { "name": "setNull", "returnType": "void", "parameters": [{ "name": "i", "type": "int" }] },
+        { "name": "setValue", "returnType": "void", "parameters": [{ "name": "name", "type": "QAnyStringView" }, { "name": "val", "type": "QVariant" }] },
+        { "name": "setValue", "returnType": "void", "parameters": [{ "name": "i", "type": "int" }, { "name": "val", "type": "QVariant" }] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QSqlRecord" }] },
+        { "name": "value", "returnType": "QVariant", "parameters": [{ "name": "name", "type": "QAnyStringView" }] },
+        { "name": "value", "returnType": "QVariant", "parameters": [{ "name": "i", "type": "int" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QSqlRelation",
+      "header": "QtSql/qsqlrelationaltablemodel.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] },
+        { "parameters": [{ "name": "aTableName", "type": "QString" }, { "name": "indexCol", "type": "QString" }, { "name": "displayCol", "type": "QString" }] }
+      ],
+      "methods": [
+        { "name": "displayColumn", "returnType": "QString", "parameters": [] },
+        { "name": "indexColumn", "returnType": "QString", "parameters": [] },
+        { "name": "isValid", "returnType": "bool", "parameters": [] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QSqlRelation" }] },
+        { "name": "tableName", "returnType": "QString", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QSqlRelationalTableModel",
+      "header": "QtSql/qsqlrelationaltablemodel.h",
+      "bases": ["QSqlTableModel"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }, { "name": "db", "type": "QSqlDatabase", "optional": true, "defaultCpp": "QSqlDatabase()" }] }
+      ],
+      "methods": [
+        { "name": "clear", "returnType": "void", "parameters": [] },
+        { "name": "insertRowIntoTable", "protected": true, "returnType": "bool", "parameters": [{ "name": "values", "type": "QSqlRecord" }] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "orderByClause", "protected": true, "returnType": "QString", "parameters": [] },
+        { "name": "relation", "returnType": "QSqlRelation", "parameters": [{ "name": "column", "type": "int" }] },
+        { "name": "relationModel", "returnType": "QSqlTableModel*", "parameters": [{ "name": "column", "type": "int" }] },
+        { "name": "revertRow", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }] },
+        { "name": "select", "returnType": "bool", "parameters": [] },
+        { "name": "selectStatement", "protected": true, "returnType": "QString", "parameters": [] },
+        { "name": "setJoinMode", "returnType": "void", "parameters": [{ "name": "joinMode", "type": "QSqlRelationalTableModel::JoinMode" }] },
+        { "name": "setRelation", "returnType": "void", "parameters": [{ "name": "column", "type": "int" }, { "name": "relation", "type": "QSqlRelation" }] },
+        { "name": "setTable", "returnType": "void", "parameters": [{ "name": "tableName", "type": "QString" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "updateRowInTable", "protected": true, "returnType": "bool", "parameters": [{ "name": "row", "type": "int" }, { "name": "values", "type": "QSqlRecord" }] }
+      ],
+      "virtuals": [
+        { "name": "data", "const": true, "returnType": "QVariant", "parameters": [{ "name": "item", "type": "QModelIndex", "cpp": "const QModelIndex &" }, { "name": "role", "type": "int", "cpp": "int", "optional": true, "defaultCpp": "Qt::DisplayRole" }] },
+        { "name": "removeColumns", "returnType": "bool", "parameters": [{ "name": "column", "type": "int", "cpp": "int" }, { "name": "count", "type": "int", "cpp": "int" }, { "name": "parent", "type": "QModelIndex", "cpp": "const QModelIndex &", "optional": true, "defaultCpp": "QModelIndex()" }] },
+        { "name": "setData", "returnType": "bool", "parameters": [{ "name": "item", "type": "QModelIndex", "cpp": "const QModelIndex &" }, { "name": "value", "type": "QVariant", "cpp": "const QVariant &" }, { "name": "role", "type": "int", "cpp": "int", "optional": true, "defaultCpp": "Qt::EditRole" }] }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QSqlResult",
+      "header": "QtSql/qsqlresult.h",
+      "bases": [],
+      "isAbstract": true,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "handle", "returnType": "QVariant", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QSqlTableModel",
+      "header": "QtSql/qsqltablemodel.h",
+      "bases": ["QSqlQueryModel"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }, { "name": "db", "type": "QSqlDatabase", "optional": true, "defaultCpp": "QSqlDatabase()" }] }
+      ],
+      "methods": [
+        { "name": "clear", "returnType": "void", "parameters": [] },
+        { "name": "database", "returnType": "QSqlDatabase", "parameters": [] },
+        { "name": "deleteRowFromTable", "protected": true, "returnType": "bool", "parameters": [{ "name": "row", "type": "int" }] },
+        { "name": "editStrategy", "returnType": "QSqlTableModel::EditStrategy", "parameters": [] },
+        { "name": "fieldIndex", "returnType": "int", "parameters": [{ "name": "fieldName", "type": "QString" }] },
+        { "name": "filter", "returnType": "QString", "parameters": [] },
+        { "name": "indexInQuery", "protected": true, "returnType": "QModelIndex", "parameters": [{ "name": "item", "type": "QModelIndex" }] },
+        { "name": "insertRecord", "returnType": "bool", "parameters": [{ "name": "row", "type": "int" }, { "name": "record", "type": "QSqlRecord" }] },
+        { "name": "insertRowIntoTable", "protected": true, "returnType": "bool", "parameters": [{ "name": "values", "type": "QSqlRecord" }] },
+        { "name": "isDirty", "returnType": "bool", "parameters": [] },
+        { "name": "isDirty", "returnType": "bool", "parameters": [{ "name": "index", "type": "QModelIndex" }] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "orderByClause", "protected": true, "returnType": "QString", "parameters": [] },
+        { "name": "primaryKey", "returnType": "QSqlIndex", "parameters": [] },
+        { "name": "primaryValues", "protected": true, "returnType": "QSqlRecord", "parameters": [{ "name": "row", "type": "int" }] },
+        { "name": "record", "returnType": "QSqlRecord", "parameters": [] },
+        { "name": "record", "returnType": "QSqlRecord", "parameters": [{ "name": "row", "type": "int" }] },
+        { "name": "revertAll", "returnType": "void", "parameters": [] },
+        { "name": "revertRow", "returnType": "void", "parameters": [{ "name": "row", "type": "int" }] },
+        { "name": "select", "returnType": "bool", "parameters": [] },
+        { "name": "selectRow", "returnType": "bool", "parameters": [{ "name": "row", "type": "int" }] },
+        { "name": "selectStatement", "protected": true, "returnType": "QString", "parameters": [] },
+        { "name": "setEditStrategy", "returnType": "void", "parameters": [{ "name": "strategy", "type": "QSqlTableModel::EditStrategy" }] },
+        { "name": "setFilter", "returnType": "void", "parameters": [{ "name": "filter", "type": "QString" }] },
+        { "name": "setPrimaryKey", "protected": true, "returnType": "void", "parameters": [{ "name": "key", "type": "QSqlIndex" }] },
+        { "name": "setRecord", "returnType": "bool", "parameters": [{ "name": "row", "type": "int" }, { "name": "record", "type": "QSqlRecord" }] },
+        { "name": "setSort", "returnType": "void", "parameters": [{ "name": "column", "type": "int" }, { "name": "order", "type": "Qt::SortOrder" }] },
+        { "name": "setTable", "returnType": "void", "parameters": [{ "name": "tableName", "type": "QString" }] },
+        { "name": "submitAll", "returnType": "bool", "parameters": [] },
+        { "name": "tableName", "returnType": "QString", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "updateRowInTable", "protected": true, "returnType": "bool", "parameters": [{ "name": "row", "type": "int" }, { "name": "values", "type": "QSqlRecord" }] }
+      ],
+      "virtuals": [
+        { "name": "clearItemData", "returnType": "bool", "parameters": [{ "name": "index", "type": "QModelIndex", "cpp": "const QModelIndex &" }] },
+        { "name": "data", "const": true, "returnType": "QVariant", "parameters": [{ "name": "idx", "type": "QModelIndex", "cpp": "const QModelIndex &" }, { "name": "role", "type": "int", "cpp": "int", "optional": true, "defaultCpp": "Qt::DisplayRole" }] },
+        { "name": "flags", "const": true, "returnType": "Qt::ItemFlags", "parameters": [{ "name": "index", "type": "QModelIndex", "cpp": "const QModelIndex &" }] },
+        { "name": "headerData", "const": true, "returnType": "QVariant", "parameters": [{ "name": "section", "type": "int", "cpp": "int" }, { "name": "orientation", "type": "Qt::Orientation", "cpp": "Qt::Orientation" }, { "name": "role", "type": "int", "cpp": "int", "optional": true, "defaultCpp": "Qt::DisplayRole" }] },
+        { "name": "insertRows", "returnType": "bool", "parameters": [{ "name": "row", "type": "int", "cpp": "int" }, { "name": "count", "type": "int", "cpp": "int" }, { "name": "parent", "type": "QModelIndex", "cpp": "const QModelIndex &", "optional": true, "defaultCpp": "QModelIndex()" }] },
+        { "name": "removeColumns", "returnType": "bool", "parameters": [{ "name": "column", "type": "int", "cpp": "int" }, { "name": "count", "type": "int", "cpp": "int" }, { "name": "parent", "type": "QModelIndex", "cpp": "const QModelIndex &", "optional": true, "defaultCpp": "QModelIndex()" }] },
+        { "name": "removeRows", "returnType": "bool", "parameters": [{ "name": "row", "type": "int", "cpp": "int" }, { "name": "count", "type": "int", "cpp": "int" }, { "name": "parent", "type": "QModelIndex", "cpp": "const QModelIndex &", "optional": true, "defaultCpp": "QModelIndex()" }] },
+        { "name": "revert", "returnType": "void", "parameters": [] },
+        { "name": "rowCount", "const": true, "returnType": "int", "parameters": [{ "name": "parent", "type": "QModelIndex", "cpp": "const QModelIndex &", "optional": true, "defaultCpp": "QModelIndex()" }] },
+        { "name": "setData", "returnType": "bool", "parameters": [{ "name": "index", "type": "QModelIndex", "cpp": "const QModelIndex &" }, { "name": "value", "type": "QVariant", "cpp": "const QVariant &" }, { "name": "role", "type": "int", "cpp": "int", "optional": true, "defaultCpp": "Qt::EditRole" }] },
+        { "name": "sort", "returnType": "void", "parameters": [{ "name": "column", "type": "int", "cpp": "int" }, { "name": "order", "type": "Qt::SortOrder", "cpp": "Qt::SortOrder" }] },
+        { "name": "submit", "returnType": "bool", "parameters": [] }
+      ],
+      "signals": [
+        { "name": "beforeDelete", "parameters": [{ "name": "row", "type": "int" }] },
+        { "name": "beforeInsert", "parameters": [{ "name": "record", "type": "QSqlRecord" }] },
+        { "name": "beforeUpdate", "parameters": [{ "name": "row", "type": "int" }, { "name": "record", "type": "QSqlRecord" }] },
+        { "name": "primeInsert", "parameters": [{ "name": "row", "type": "int" }, { "name": "record", "type": "QSqlRecord" }] }
       ]
     }
 ,

@@ -73,6 +73,10 @@ public static partial class ApiModel
             new[] { "qtopengl", "qtwidgets", "qtgui", "qtcore" },
             new[] { "Qt6OpenGLWidgets", "Qt6OpenGL", "Qt6Widgets", "Qt6Gui", "Qt6Core" }, Array.Empty<string>());
 
+    static ExtensionModule QtSqlModule()
+        => CoreModule("qtsql", "QtSharp.QtSql", "QtSql",
+            new[] { "qtcore" }, new[] { "Qt6Sql", "Qt6Core" }, Array.Empty<string>());
+
     static ExtensionModule Qt3DCoreModule() => new ExtensionModule
     {
         Name = "qt3dcore",

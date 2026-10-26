@@ -11,7 +11,7 @@ over Qt.
 One libclang parse of the Qt headers produces a normalized API model (checked in, byte for byte
 reproducible). A pure-function code generator turns that model into C# plus a C++ wrapper, and a
 small runtime makes signals, virtual overrides and object ownership behave the way a C# program
-expects. On top of that, 34 runnable demos — Qt's official examples plus tours of QtCore, QtNetwork
+expects. On top of that, 35 runnable demos — Qt's official examples plus tours of QtCore, QtNetwork
 and the document modules — have been rewritten in C# and run by the repository's own gate.
 
 ```
@@ -21,11 +21,11 @@ Qt 6.12.0 headers (MSVC kit)
 model/qtsharp.api.json                 ← checked in; the gate compares the fresh extraction to it
         │  qtgen split-core (a pure function of the model)
         ▼
-model/qtsharp.qtcore.json …            ← ten checked-in base models, one per Qt module
+model/qtsharp.qtcore.json …            ← eleven checked-in base models, one per Qt module
         │  qtgen codegen (one run per module)
         ▼
-out/<module>/generated/QtCore/qobject.cs …  ← the binding, one C# file per Qt header: 496 classes,
-                                               C# properties, signals as events, ten assemblies
+out/<module>/generated/QtCore/qobject.cs …  ← the binding, one C# file per Qt header: 508 classes,
+                                               C# properties, signals as events, eleven assemblies
 out/api/QtSharp.Api.native.cpp              ← one C++ subclass per bound class: virtual hooks, C ABI
         │  build_api.bat (cl.exe)
         ▼
@@ -35,16 +35,16 @@ runtime/ApiRuntime.cs (QtSharp.Runtime)     ← QSignal, attributes, ownership, 
 runtime/QtCore, QtGui, QtWidgets            ← the QObject/app halves that belong to those modules
         │
         ▼
-demos/QtSharp.Demos.csproj                  ← the official demos, referencing the ten base assemblies
+demos/QtSharp.Demos.csproj                  ← the official demos, referencing the eleven base assemblies
 tests/QtSharp.BindingTests.csproj           ← binding-specific tests (test-*)
         ▲
    testbind/testapp                         ← the one entry point: demos + tests, one name table
 ```
 
-Current coverage: **496 classes / 10506 methods / 885 virtuals / 511 enums / 816 Q_PROPERTY
-properties / 463 signals / 70 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg,
-QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets). The gate runs 28 official Qt
-examples (**899 assertions**), 11 binding-specific tests (**387 assertions**), the 38 official Qt
+Current coverage: **508 classes / 10997 methods / 913 virtuals / 522 enums / 849 Q_PROPERTY
+properties / 480 signals / 68 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSql,
+QtSvg, QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets). The gate runs 29 official Qt
+examples (**920 assertions**), 11 binding-specific tests (**387 assertions**), the 38 official Qt
 Charts examples (**570 assertions**) and the three official Qt3D examples (**37 assertions**).
 
 Extension modules are separate assemblies and packages against the same runtime:
@@ -61,7 +61,7 @@ else to set up. No Qt SDK, no Visual Studio C++ workload, no clone:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.3.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.4.0" />
 </ItemGroup>
 ```
 
@@ -83,7 +83,7 @@ static class Program
 }
 ```
 
-The package carries the ten module assemblies and depends on `QtSharp.Runtime` (the managed
+The package carries the eleven module assemblies and depends on `QtSharp.Runtime` (the managed
 runtime and native wrapper) and `QtSharp.Qt6` (the Qt runtime); all three copy their payload next
 to your executable on build and publish. One assembly and one C# namespace per Qt module, the way
 PyQt6 is organized. Download the `.nupkg` from a release and add its folder as a
@@ -101,8 +101,8 @@ than part of qtbase. It references the core package and adds all six modules:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.3.0" />
-  <PackageReference Include="QtSharp.Qt3D" Version="0.3.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.4.0" />
+  <PackageReference Include="QtSharp.Qt3D" Version="0.4.0" />
 </ItemGroup>
 ```
 
@@ -135,12 +135,12 @@ drop-in replacement for every Qt module or every desktop deployment scenario.
 
 ## Releases
 
-Pushing a semantic-version tag such as `v0.3.0` starts the release workflow. It builds eight
+Pushing a semantic-version tag such as `v0.4.0` starts the release workflow. It builds eight
 Windows x64 packages and attaches them, with a `SHA256SUMS.txt`, to a GitHub Release:
 
 | package | what it is |
 |---|---|
-| `QtSharp.Api` | the binding as ten module assemblies — add it and write Qt applications in C# |
+| `QtSharp.Api` | the binding as eleven module assemblies — add it and write Qt applications in C# |
 | `QtSharp.Runtime` | the managed runtime + native glue (brought in by `QtSharp.Api`) |
 | `QtSharp.Qt6` | the Qt 6 runtime DLLs + platform plugin (brought in by `QtSharp.Api`) |
 | `QtSharp.Tools` | Qt command-line tools (`rcc`, `uic`, `lrelease`, `lupdate`) + MSBuild `.qrc` support |
@@ -227,8 +227,8 @@ translation unit, and every module's demos and tests are built and run at the en
 | `[1]` | builds the generator (`gen`) |
 | `[2]` | extracts the model from the Qt headers into `out\qtsharp.api.json.new` (**~3 s**) and compares it to the checked-in `model\qtsharp.api.json` — byte for byte |
 | `[2b]` | extracts the seven addon models (Charts, Qt3D) from their own headers and compares them to the checked-in ones — the same gate |
-| `[3]` | splits the combined model into the ten base models and runs the code generator **twice** for every module, comparing the trees |
-| `[4]` | compiles the generated C++ wrapper and builds the ten base assemblies |
+| `[3]` | splits the combined model into the eleven base models and runs the code generator **twice** for every module, comparing the trees |
+| `[4]` | compiles the generated C++ wrapper and builds the eleven base assemblies |
 | `[5]` | builds the official demos and the binding tests, then runs all of them with `testapp`, several windows at a time |
 
 Two gates live in the middle of that: **the models must come out identical** (extraction is
@@ -271,8 +271,8 @@ testapp test-metaobject          # a binding test
 ```
 
 The official demos are named after the module they exercise (`qtgui-*`, `qtwidgets-*`, plus
-`qtsvg-*`, `qtsvgwidgets-*`, `qtxml-*`, `qtprintsupport-*`, `qtnetwork-*`, `qtcharts-*` and
-`qt3d-*`); the binding tests use `test-*` and cover
+`qtsql-*`, `qtsvg-*`, `qtsvgwidgets-*`, `qtxml-*`, `qtprintsupport-*`, `qtnetwork-*`, `qtcharts-*`
+and `qt3d-*`); the binding tests use `test-*` and cover
 ownership, exceptions, C#-declared signals/properties, value types, the BCL conversions and the
 modules whose upstream examples are not ported yet. `docs/conformance.md` has the full matrix.
 Registration is discovery, not a list: a class carries `[Demo("qtwidgets-analogclock")]` and each
@@ -291,7 +291,7 @@ module projects directly (the same assemblies the package contains).
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.3.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.4.0" />
 </ItemGroup>
 ```
 
@@ -455,7 +455,7 @@ and matching DLLs (normally a Qt kit's `bin`):
 powershell -File tools\pack-qt-tools.ps1 -QtToolsSource C:\Qt\6.12.0\msvc2022_64\bin
 ```
 
-The result is `out/packages/QtSharp.Tools.0.3.0.nupkg`. `-QtVersion` and `-PackageVersion`
+The result is `out/packages/QtSharp.Tools.0.4.0.nupkg`. `-QtVersion` and `-PackageVersion`
 override the defaults. Put the upstream license texts/notices in a `QtSharp-ThirdPartyNotices`
 subdirectory beside the source tools to include them in the payload. Tools are staged under
 `out/qt-tools`; the script checks QtCore's version and runs captured, time-limited startup checks.
@@ -464,7 +464,7 @@ In a consumer project:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Tools" Version="0.3.0" PrivateAssets="all" />
+  <PackageReference Include="QtSharp.Tools" Version="0.4.0" PrivateAssets="all" />
   <QtResource Include="assets\sample.qrc" />
 </ItemGroup>
 ```
@@ -496,7 +496,7 @@ Replace the local source path with your checkout's `out/packages` directory.
 | path | what |
 |---|---|
 | `model/qtsharp.api.json` | the checked-in combined API model — the extraction gate and the shared native glue's input |
-| `model/qtsharp.<module>.json` | the ten checked-in base models (`split-core`) and the addon models (`charts`, six Qt3D modules) the assemblies are generated from |
+| `model/qtsharp.<module>.json` | the eleven checked-in base models (`split-core`) and the addon models (`charts`, six Qt3D modules) the assemblies are generated from |
 | `gen/` | the generator: `ApiModel.cs` (model shape, vocabulary), `ApiModel.Modules.cs` (the module registry), `CoreSplit.cs` (combined → per-module models), `ClangExtractor.cs` (the libclang front end), `ApiCodeGen.cs` (model → C# + C++) |
 | `native/` | the hand-written runtime (`QtSharpApiRuntime.cpp`: moc signal forwarder, probes) and the crash tracer |
 | `runtime/` | the managed runtime: `ApiRuntime.cs` (`QtSharp.Runtime`) and the per-module halves under `QtCore/`, `QtGui/`, `QtWidgets/` |
@@ -506,7 +506,7 @@ Replace the local source path with your checkout's `out/packages` directory.
 | `samples/qt3d/` | a Qt3D sample: windowless self-test by default, `window` opens the scene |
 | `demos.qt3d/` | the official Qt3D C++ examples (`simple-cpp`, `basicshapes-cpp`, `3d-text`) as the extension's conformance tests |
 | `demos.charts/` | the official Qt Charts examples (38 windows) as the Charts module's conformance tests |
-| `nuget/QtSharp.Api/`, `nuget/QtSharp.Runtime/`, `nuget/QtSharp.Qt6/` | the base binding and its runtime packages (ten module assemblies inside `QtSharp.Api`) |
+| `nuget/QtSharp.Api/`, `nuget/QtSharp.Runtime/`, `nuget/QtSharp.Qt6/` | the base binding and its runtime packages (eleven module assemblies inside `QtSharp.Api`) |
 | `nuget/QtSharp.Charts*`, `nuget/QtSharp.Qt3D*` | the two addon packages and their `*.Qt6` runtime companions |
 | `docs/conformance.md` | which Qt examples run against which module, and the remaining coverage gaps |
 | `tools/regen-api.ps1` | the build and the gate |
@@ -521,10 +521,12 @@ Replace the local source path with your checkout's `out/packages` directory.
 * **Windows x64 and Qt 6.12.0 only** — the model is extracted from that kit, and the wrapper is
   MSVC-compiled.
 * **The bound modules** are QtCore, QtGui, QtWidgets, QtNetwork (host addressing, local sockets
-  `QLocalServer`/`QLocalSocket`, TCP/UDP, the HTTP client), QtSvg/QtSvgWidgets, QtPrintSupport
+  `QLocalServer`/`QLocalSocket`, TCP/UDP, the HTTP client), QtSql (`QSqlDatabase`/`QSqlQuery`, the
+  record/field classes, `QSqlQueryModel`/`QSqlTableModel`; the SQLite driver ships in
+  `QtSharp.Qt6`), QtSvg/QtSvgWidgets, QtPrintSupport
   (`QPrinter`, print dialogs/preview), QtXml (the `QDom*` DOM; `QXmlStreamReader/Writer` are in
   QtCore) and QtOpenGL/QtOpenGLWidgets (`QOpenGLWidget`, `QOpenGLContext`, shader/buffer classes).
-    **Not bound**: QtSql (no dev files in the kit), QtMultimedia, QtQml/QtQuick, QtPdf, QtWebEngine.
+    **Not bound**: QtMultimedia, QtQml/QtQuick, QtPdf, QtWebEngine.
 * **QtCharts and Qt3D are optional packages, not part of `QtSharp.Api`.** Both are addon modules
   outside `qtbase`/`qtsvg`, so they ship the way PySide6 and PyQt6 split their addons: separate
   assemblies and packages that reference the core (`PySide6-Essentials` ships only a
