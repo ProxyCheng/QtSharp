@@ -71,9 +71,6 @@
     <Compile Include="$(QtSharpOutDir)\qtnetwork\generated\**\*.cs">
       <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
-    <Compile Include="$(QtSharpOutDir)\qtsql\generated\**\*.cs">
-      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
-    </Compile>
     <Compile Include="$(QtSharpOutDir)\qtsvg\generated\**\*.cs">
       <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
@@ -81,9 +78,6 @@
       <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
     <Compile Include="$(QtSharpOutDir)\qtprintsupport\generated\**\*.cs">
-      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
-    </Compile>
-    <Compile Include="$(QtSharpOutDir)\qtxml\generated\**\*.cs">
       <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
     <Compile Include="$(QtSharpOutDir)\qtopengl\generated\**\*.cs">
@@ -99,12 +93,10 @@
       <QtSharpApiNative Include="$(QtSharpApiDir)\QtSharp.Api.dll" />
       <QtRuntimeDll Include="$(QtRuntimeDir)\*.dll" />
       <QtPlatformPlugin Include="$(QtRuntimeDir)\platforms\qwindows.dll" />
-      <QtSqlDriver Include="$(QtRuntimeDir)\sqldrivers\*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(QtSharpApiNative)" DestinationFolder="$(OutDir)" />
     <Copy SourceFiles="@(QtRuntimeDll)" DestinationFolder="$(OutDir)" />
     <Copy SourceFiles="@(QtPlatformPlugin)" DestinationFolder="$(OutDir)platforms\" />
-    <Copy SourceFiles="@(QtSqlDriver)" DestinationFolder="$(OutDir)sqldrivers\" />
   </Target>
 
   <Target Name="PublishQtSharpNativeDeps" AfterTargets="Publish">
@@ -113,7 +105,6 @@
     </ItemGroup>
     <Copy SourceFiles="@(_QtSharpPublishNative)" DestinationFolder="$(PublishDir)" />
     <Copy SourceFiles="$(QtRuntimeDir)\platforms\qwindows.dll" DestinationFolder="$(PublishDir)platforms\" />
-    <Copy SourceFiles="@(QtRuntimeDir)\sqldrivers\*.dll" DestinationFolder="$(PublishDir)sqldrivers\" />
   </Target>
 
   <!-- A stale binding is the one thing that fails confusingly (a missing method rather than a

@@ -1,5 +1,5 @@
 param(
-    [string]$PackageVersion = '0.12.0',
+    [string]$PackageVersion = '0.13.0',
     [string]$PackagesDir = '',
     [string]$WorkDir = ''
 )
@@ -40,7 +40,6 @@ New-Item -ItemType Directory -Path $WorkDir | Out-Null
     <PackageReference Include="QtSharp.Api" Version="$PackageVersion" />
     <PackageReference Include="QtSharp.Charts" Version="$PackageVersion" />
     <PackageReference Include="QtSharp.Qt3D" Version="$PackageVersion" />
-    <PackageReference Include="QtSharp.WebSockets" Version="$PackageVersion" />
     <PackageReference Include="QtSharp.Multimedia" Version="$PackageVersion" />
   </ItemGroup>
 </Project>
@@ -51,7 +50,6 @@ using System;
 using QtSharp.Charts;
 using QtSharp.Qt3DCore;
 using QtSharp.QtMultimedia;
-using QtSharp.QtWebSockets;
 using QtSharp.QtWidgets;
 
 static class Program
@@ -65,9 +63,8 @@ static class Program
         using var chart = new QChart();
         chart.Title = "package consumer";
         using var entity = new QEntity();
-        using var server = new QWebSocketServer("consumer", QWebSocketServer.SslMode.NonSecureMode);
         using var player = new QMediaPlayer();
-        Console.WriteLine(`$"[PASS] {app.GetType().FullName}, {chart.GetType().FullName}, {entity.GetType().FullName}, {server.GetType().FullName}, {player.GetType().FullName}");
+        Console.WriteLine(`$"[PASS] {app.GetType().FullName}, {chart.GetType().FullName}, {entity.GetType().FullName}, {player.GetType().FullName}");
         return 0;
     }
 }
@@ -85,4 +82,4 @@ try {
 $output | ForEach-Object { Write-Host $_ }
 if ($code -ne 0) { throw "The package consumer failed with exit code $code." }
 if (-not ($output -match '\[PASS\]')) { throw 'The package consumer ran but printed no [PASS] line.' }
-Write-Host "OK: QtSharp.Api + QtSharp.Charts + QtSharp.Qt3D + QtSharp.WebSockets + QtSharp.Multimedia restored from $PackagesDir and ran."
+Write-Host "OK: QtSharp.Api + QtSharp.Charts + QtSharp.Qt3D + QtSharp.Multimedia restored from $PackagesDir and ran."

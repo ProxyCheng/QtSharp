@@ -67,9 +67,6 @@ $addons = @(
     @{ Package = 'qtshadertools'; Marker = 'include\QtShaderTools\qtshadertoolsexports.h'
        Includes = @('QtShaderTools'); Libs = @('Qt6ShaderTools*'); Dlls = @('Qt6ShaderTools.dll')
        RuntimeModules = @('Qt6ShaderTools'); Plugins = @() },
-    @{ Package = 'qtwebsockets'; Marker = 'include\QtWebSockets\qwebsocket.h'
-       Includes = @('QtWebSockets'); Libs = @('Qt6WebSockets*'); Dlls = @('Qt6WebSockets.dll')
-       RuntimeModules = @('Qt6WebSockets'); Plugins = @() },
     @{ Package = 'qtmultimedia'; Marker = 'include\QtMultimedia\qmediaplayer.h'
        Includes = @('QtMultimedia', 'QtMultimediaWidgets')
        Libs = @('Qt6Multimedia*')
@@ -187,8 +184,8 @@ New-Item -ItemType Directory -Path $runtimeOut -Force | Out-Null
 # kit's whole bin would add tens of megabytes of Qt modules the binding never touches. Keep this
 # list in step with the Qt6*.lib entries in build_api.bat and the extension modules' QtLibs.
 $modules = @(
-    'Qt6Core', 'Qt6Gui', 'Qt6Widgets', 'Qt6Network', 'Qt6Sql', 'Qt6Svg',
-    'Qt6SvgWidgets', 'Qt6PrintSupport', 'Qt6Xml', 'Qt6OpenGL', 'Qt6OpenGLWidgets'
+    'Qt6Core', 'Qt6Gui', 'Qt6Widgets', 'Qt6Network', 'Qt6Svg',
+    'Qt6SvgWidgets', 'Qt6PrintSupport', 'Qt6OpenGL', 'Qt6OpenGLWidgets'
 )
 foreach ($addon in $addons) { $modules += $addon.RuntimeModules }
 foreach ($module in $modules) {
@@ -231,17 +228,6 @@ if (-not $plugin) {
 if (-not $plugin) { throw "qwindows.dll was not found under $kitRoot - the built app cannot show a window without it." }
 New-Item -ItemType Directory -Path (Join-Path $runtimeOut 'platforms') -Force | Out-Null
 Copy-Item -LiteralPath $plugin.FullName -Destination (Join-Path $runtimeOut 'platforms') -Force
-# SQL drivers are loaded from <exe>\sqldrivers, not from a plugins\ parent, so the runtime payload
-# carries them in the layout Qt looks for. Without one, QSqlDatabase.addDatabase() returns an
-# invalid database and every query fails.
-$sqlDrivers = Join-Path $kitRoot 'plugins\sqldrivers'
-if (Test-Path -LiteralPath $sqlDrivers) {
-    $to = Join-Path $runtimeOut 'sqldrivers'
-    New-Item -ItemType Directory -Path $to -Force | Out-Null
-    Get-ChildItem $sqlDrivers -Filter '*.dll' -File |
-        Where-Object { $_.Name -notmatch '[A-Za-z]d\.dll$' } |
-        ForEach-Object { Copy-Item $_.FullName $to -Force }
-}
 
 # ---- 3. What the caller needs ------------------------------------------------------
 $core = (Get-Item (Join-Path $runtimeOut 'Qt6Core.dll')).VersionInfo.FileVersion

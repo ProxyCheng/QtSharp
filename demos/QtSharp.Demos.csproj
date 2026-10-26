@@ -29,14 +29,11 @@
     <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtGui\QtSharp.QtGui.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtWidgets\QtSharp.QtWidgets.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtNetwork\QtSharp.QtNetwork.csproj" />
-    <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtSql\QtSharp.QtSql.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtSvg\QtSharp.QtSvg.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtSvgWidgets\QtSharp.QtSvgWidgets.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtPrintSupport\QtSharp.QtPrintSupport.csproj" />
-    <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtXml\QtSharp.QtXml.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtOpenGL\QtSharp.QtOpenGL.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtOpenGLWidgets\QtSharp.QtOpenGLWidgets.csproj" />
-    <ProjectReference Include="..\nuget\QtSharp.WebSockets\QtSharp.WebSockets.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Multimedia\QtSharp.Multimedia.csproj" />
   </ItemGroup>
 

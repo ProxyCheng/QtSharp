@@ -21,17 +21,15 @@
     <ProjectReference Include="../tests/QtSharp.BindingTests.csproj" />
   </ItemGroup>
 
-  <!-- The QtWebSockets extension's native glue and Qt runtime DLL, the way the package's
+  <!-- The QtMultimedia extension's native glue and Qt runtime plugin, the way the package's
        buildTransitive would copy them for a consumer. The Qt runtime location comes from
        QtSharp.Api.props (QT_RUNTIME_DIR in CI), not from a repository-relative guess. -->
-  <Target Name="CopyQtWebSocketsNativeDeps" AfterTargets="Build">
+  <Target Name="CopyQtMultimediaNativeDeps" AfterTargets="Build">
     <ItemGroup>
-      <QtWebSocketsNative Include="..\out\api-modules\qtwebsockets\QtSharp.QtWebSockets.Native.dll" />
-      <QtWebSocketsRuntime Include="$(QtRuntimeDir)\Qt6WebSockets.dll" />
       <QtMultimediaNative Include="..\out\api-modules\qtmultimedia\QtSharp.QtMultimedia.Native.dll" />
       <QtMultimediaPlugin Include="$(QtRuntimeDir)\plugins\multimedia\*.dll" />
     </ItemGroup>
-    <Copy SourceFiles="@(QtWebSocketsNative);@(QtWebSocketsRuntime);@(QtMultimediaNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(QtMultimediaNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(QtMultimediaPlugin)" DestinationFolder="$(OutDir)multimedia\" SkipUnchangedFiles="true" />
   </Target>
 

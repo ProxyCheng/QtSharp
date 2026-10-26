@@ -60,6 +60,6 @@ if errorlevel 1 exit /b 1
 
 if not exist "out\api" mkdir "out\api"
 
-cl /nologo /LD /EHsc /permissive- /std:c++17 /Zc:__cplusplus /utf-8 /DUNICODE /D_UNICODE /DQT_NO_DEBUG /MD /O2 /Fe"out\api\QtSharp.Api.dll" /I"%QT_INC%" /I"%QT_INC%\QtCore" /I"%QT_INC%\QtGui" /I"%QT_INC%\QtWidgets" /I"%QT_INC%\QtNetwork" /I"%QT_INC%\QtSql" /I"%QT_INC%\QtSvg" /I"%QT_INC%\QtSvgWidgets" /I"%QT_INC%\QtPrintSupport" /I"%QT_INC%\QtXml" /I"%QT_INC%\QtOpenGLWidgets" /I"%QT_INC%\QtOpenGL" /I"%QT_INC%\QtCore\%QT_VER%" /I"%QT_INC%\QtCore\%QT_VER%\QtCore" /Inative native\QtSharpApiRuntime.cpp out\api\QtSharp.Api.native.cpp /link /LIBPATH:"%QT_LIB%" Qt6Core.lib Qt6Gui.lib Qt6Widgets.lib Qt6Network.lib Qt6Sql.lib Qt6Svg.lib Qt6SvgWidgets.lib Qt6PrintSupport.lib Qt6Xml.lib Qt6OpenGL.lib Qt6OpenGLWidgets.lib
+cl /nologo /LD /EHsc /permissive- /std:c++17 /Zc:__cplusplus /utf-8 /DUNICODE /D_UNICODE /DQT_NO_DEBUG /MD /O2 /Fe"out\api\QtSharp.Api.dll" /I"%QT_INC%" /I"%QT_INC%\QtCore" /I"%QT_INC%\QtGui" /I"%QT_INC%\QtWidgets" /I"%QT_INC%\QtNetwork" /I"%QT_INC%\QtSvg" /I"%QT_INC%\QtSvgWidgets" /I"%QT_INC%\QtPrintSupport" /I"%QT_INC%\QtOpenGLWidgets" /I"%QT_INC%\QtOpenGL" /I"%QT_INC%\QtCore\%QT_VER%" /I"%QT_INC%\QtCore\%QT_VER%\QtCore" /Inative native\QtSharpApiRuntime.cpp out\api\QtSharp.Api.native.cpp /link /LIBPATH:"%QT_LIB%" Qt6Core.lib Qt6Gui.lib Qt6Widgets.lib Qt6Network.lib Qt6Svg.lib Qt6SvgWidgets.lib Qt6PrintSupport.lib Qt6OpenGL.lib Qt6OpenGLWidgets.lib
 
 exit /b %errorlevel%
