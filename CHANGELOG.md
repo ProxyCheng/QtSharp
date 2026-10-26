@@ -4,6 +4,20 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.15.0 - 2026-10-26
+
+- **`QtSharp.Sql` restores the two Qt model classes that went with the QtSql binding**, implemented
+  over ADO.NET instead: `QSqlQueryModel` (a read-only `QAbstractTableModel` over a query) and
+  `QSqlTableModel` (staged edits, written by `SubmitAll` in one transaction, `RevertAll` to
+  discard). They keep the `QtSharp.QtSql` namespace and class names, so code written against the
+  removed binding still compiles, but there is no Qt SQL module behind them: pass any
+  `DbConnection` (Microsoft.Data.Sqlite, SqlClient, Npgsql, ...).
+- **`test-sqlmodel`** covers the seam rather than SQLite itself: a .NET result set behind a
+  `QTableView`, cell reads through `QVariant`, and a staged edit reaching the database.
+- Why this one gets a substitute and QtXml/QtWebSockets do not: `QSqlQueryModel` is an
+  `QAbstractItemModel`, the interface Qt views consume; `QDomDocument` and `QWebSocket` are leaf
+  services whose .NET counterparts can be used directly.
+
 ## 0.14.0 - 2026-10-26
 
 - **QtPositioning is bound**, as the separate `QtSharp.Positioning` package: `QGeoCoordinate` and

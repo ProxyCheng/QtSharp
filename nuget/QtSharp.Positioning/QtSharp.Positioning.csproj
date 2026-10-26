@@ -15,7 +15,7 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
 
     <PackageId>QtSharp.Positioning</PackageId>
-    <Version>0.14.0</Version>
+    <Version>0.15.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>Qt Positioning for .NET, generated from the Qt 6.12 headers. References QtSharp.Api.</Description>
     <PackageTags>Qt;Qt6;QtPositioning;CSharp;dotnet;binding;interop;geo</PackageTags>

@@ -24,6 +24,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\demos\QtSharp.Demos.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Sql\QtSharp.Sql.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The SQL-provider the substitute test uses; the package itself only depends on
+         System.Data.Common. -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
   </ItemGroup>
 
 </Project>
