@@ -35,8 +35,8 @@ public class ApiArthurFrame : QWidget
     public ApiArthurFrame(QWidget parent = null) : base(parent)
     {
         Tile = new QPixmap(128, 128);
-        // QPixmap::fill(QColor) is not bound (its default argument is a QColor, which C# cannot
-        // express as a default), so the tile is filled through a painter instead.
+        // The official paints the tile's white/grey checkerboard; QPixmap::fill(QColor) exists
+        // but only lays one colour down, so the pattern goes through a painter.
         using (var painter = new QPainter(Tile))
         {
             using var white = new QColor(Qt.GlobalColor.white);
@@ -173,7 +173,7 @@ public sealed class ApiPathStrokeRenderer : ApiArthurFrame
     public int TimerId() => timer.TimerId();
     public int MappedFingerCount() => fingerPointMapping.Count;
 
-    public override QSize SizeHint() => new QSize(500, 500);
+    public override QSize sizeHint() => new QSize(500, 500);
 
     public void SetAnimation(bool animation)
     {
@@ -636,7 +636,7 @@ public sealed class ApiPathStrokeControls : QWidget
             StyleButtons[i] = button;
         }
         for (int i = 0; i < 5; i++)
-            StyleButtons[i].SetFixedHeight(StyleButtons[0].SizeHint().Height());
+            StyleButtons[i].SetFixedHeight(StyleButtons[0].SizeHint.Height());
 
         PathModeGroup = BuildRadioGroup(mainGroup, "Line Style",
             new[] { "Curves", "Lines" }, PathModeButtons, new Action[]

@@ -52,8 +52,8 @@ public static class StackedBarChart
 
             var view = ChartsAssertions.Present(chart);
 
-            check.Check(series.Type() == QAbstractSeries.SeriesType.SeriesTypeStackedBar,
-                $"the series reports itself as a stacked bar series (got {series.Type()})");
+            check.Check(series.type() == QAbstractSeries.SeriesType.SeriesTypeStackedBar,
+                $"the series reports itself as a stacked bar series (got {series.type()})");
             check.Check(series.Count == 5, $"the series reports its five sets (got {series.Count})");
             check.Check(series.BarSets().Length == 5, $"the series holds five sets (got {series.BarSets().Length})");
 

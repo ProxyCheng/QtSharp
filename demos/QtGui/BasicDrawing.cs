@@ -66,8 +66,8 @@ public sealed class ApiRenderArea : QWidget
     public void SetAntialiased(bool on) { Antialiased = on; Update(); }
     public void SetTransformed(bool on) { Transformed = on; Update(); }
 
-    public override QSize SizeHint() => new QSize(400, 200);
-    public override QSize MinimumSizeHint() => new QSize(100, 100);
+    public override QSize sizeHint() => new QSize(400, 200);
+    public override QSize minimumSizeHint() => new QSize(100, 100);
 
     // The four points the official example uses for Points/Polyline/Polygon.
     static QPolygon Poly(params (int X, int Y)[] points)
@@ -420,8 +420,8 @@ public static class BasicDrawing
             $"each setShape() repainted ({area.PaintCount} paintEvent calls reached C#)");
 
         // The virtual overrides, read back through the generated accessors.
-        var hint = area.SizeHint();
-        var minimum = area.MinimumSizeHint();
+        var hint = area.SizeHint;
+        var minimum = area.MinimumSizeHint;
             Check(hint.Width() == 400 && hint.Height() == 200
                   && minimum.Width() == 100 && minimum.Height() == 100,
                 $"sizeHint()/minimumSizeHint() report the official sizes "

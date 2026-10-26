@@ -4,6 +4,33 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.17.0 - 2026-10-26
+
+- **Every expressible virtual is an override point.** The curated name whitelist is gone: a managed
+  subclass can override any virtual whose signature the glue can reproduce and dispatch, including
+  `QGraphicsItem::boundingRect`/`paint`/`shape`/`advance`, `QGraphicsEffect::draw`, the `QStyle`
+  hooks and Qt3D's `QAbstractAspect` hooks. Private and `final` virtuals, operators, reference
+  returns and unbounded out buffers stay callable only - C++ forbids the override or the ABI
+  cannot carry it.
+- **A `Q_PROPERTY` and its virtual accessor coexist.** When the getter is also a virtual, the
+  property keeps the Pascal name (`QXYSeries.Color`, `QWidget.SizeHint`) and the override uses the
+  C++ spelling (`color()`, `sizeHint()`); the property reads the overridden value. Previously the
+  property disappeared as soon as its accessor became an override point.
+- **In-out virtual parameters write back on the wrapper path too.** `QValidator::fixup`/`validate`
+  return the rewritten string through the virtual forwarder, not only through the dispatch into a
+  managed override.
+- **One flags list per declaration** in the model instead of a growing set of booleans: classes
+  (`abstract`, `subclassable`, `subclassCtor`, `owned`, `nonCopyable`), methods (`static`,
+  `protected`, `const`, `iterator`), parameters (`buffer`, `optional`, plus a `mode` of
+  `out`/`ref`) and virtuals (`pure`, `const`, `noBase`, `final`).
+- **`QStyleFactory` is bound** (`Keys`/`Create`), so the Widget Gallery lists Qt's own styles.
+- **Demo audit:** stale workarounds were removed where the API is now bound - the calendar's
+  locale row and `addItem(text, variant)`, the system tray's `setVisible` override and combo item
+  data, the gallery's `QCommandLinkButton`, the scribble's `QColorDialog::getColor(color)`, and the
+  save-game's field-by-field JSON construction.
+- **New official examples:** Flow Layout (a `QLayout` subclass) and Colliding Mice (a
+  `QGraphicsItem` subclass with `paint`/`boundingRect`/`shape`/`advance`).
+
 ## 0.16.0 - 2026-10-26
 
 - **Abstract Qt classes can be subclassed from C# (issue #9).** A pure virtual is now an override

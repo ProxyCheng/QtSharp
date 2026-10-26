@@ -44,8 +44,8 @@ public static class LineChart
 
             Check(series.Count() == 10, $"the series carries the example's 10 points (got {series.Count()})");
             Check(chart.Title == "Simple line chart example", $"the title round-trips (got '{chart.Title}')");
-            Check(series.Type() == QAbstractSeries.SeriesType.SeriesTypeLine,
-                $"the series reports itself as a line series (got {series.Type()})");
+            Check(series.type() == QAbstractSeries.SeriesType.SeriesTypeLine,
+                $"the series reports itself as a line series (got {series.type()})");
 
             using var rendered = view.Grab();
             Check(rendered != null && rendered.Width() > 0, $"the chart renders off-screen ({rendered?.Width()}x{rendered?.Height()})");

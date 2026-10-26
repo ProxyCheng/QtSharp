@@ -117,7 +117,7 @@ public static class FlowLayoutDemo
                 var widget = QWidget.FromHandle(parent.Handle);
                 return widget.Style().pixelMetric(metric, null, widget);
             }
-            return QLayout.FromHandle(parent.Handle).spacing();
+            return QLayout.FromHandle(parent.Handle).Spacing;
         }
     }
 

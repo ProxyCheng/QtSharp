@@ -61,7 +61,7 @@ public sealed class ApiGradientWidget : QWidget
 
     public void SetMode(GradientMode mode) { Mode = mode; Update(); }
 
-    public override QSize SizeHint() => new QSize(200, 200);
+    public override QSize sizeHint() => new QSize(200, 200);
 
     public override void PaintEvent(QPaintEvent e)
     {

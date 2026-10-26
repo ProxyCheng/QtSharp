@@ -34,7 +34,7 @@ public static class ApiSubclassDemo
             painter.FillRect(new QRect(0, 0, width(), height()), colour);
         }
 
-        public override QSize SizeHint()
+        public override QSize sizeHint()
         {
             SizeHintCalls++;
             return new QSize(120, 40);

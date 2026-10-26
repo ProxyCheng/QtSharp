@@ -834,6 +834,9 @@ public static partial class ApiModel
         R("QSpacerItem",           "qlayoutitem.h", "QtWidgets", owned: false),
         R("QStringListModel",      "qstringlistmodel.h", "QtCore"),
         R("QStyle",                "qstyle.h", "QtWidgets"),
+        // The style registry the Qt Widget Gallery's style combo reads (keys/create); without it
+        // the port had to hard-code the style list.
+        R("QStyleFactory",         "qstylefactory.h", "QtWidgets"),
         R("QStyledItemDelegate",   "qstyleditemdelegate.h", "QtWidgets"),
         R("QStyleOption",          "qstyleoption.h", "QtWidgets"),
         R("QStyleOptionButton",    "qstyleoption.h", "QtWidgets"),
@@ -1242,27 +1245,9 @@ public static partial class ApiModel
         static bool BindsCtors(string className)
             => ActiveRoots.First(r => r.ManagedClass == className).BindCtors;
 
-    // The override points a managed subclass may install. Everything here lowers to a plain
-    // pointer or a supported scalar, so adding a name is all it takes to make an event
-    // handler reachable from native code.
-    static readonly HashSet<string> VirtualAllow = new()
-    {
-        // QObject
-        "eventFilter", "event", "customEvent", "timerEvent", "childEvent",
-        // QWidget
-        "paintEvent", "resizeEvent", "moveEvent", "closeEvent", "showEvent", "hideEvent",
-        "mousePressEvent", "mouseReleaseEvent", "mouseMoveEvent", "mouseDoubleClickEvent",
-        "wheelEvent", "keyPressEvent", "keyReleaseEvent", "focusInEvent", "focusOutEvent",
-        "enterEvent", "leaveEvent", "changeEvent", "contextMenuEvent",
-        "dragEnterEvent", "dragMoveEvent", "dragLeaveEvent", "dropEvent",
-        // The tablet pen, next to the mouse handlers above.
-        "tabletEvent",
-        // The layout side of a custom widget: without these a managed widget cannot say how big
-        // it wants to be (the Calculator example's CalcButton overrides sizeHint).
-        "sizeHint", "minimumSizeHint", "heightForWidth", "hasHeightForWidth",
-        // QOpenGLWidget: a widget that renders through OpenGL, subclassed from C#.
-        "initializeGL", "resizeGL", "paintGL",
-    };
+    // The override points a managed subclass may install. Every virtual whose signature the glue
+    // can reproduce and dispatch is one (see PublishesAsVirtual in ClangExtractor.cs); there is
+    // no curated name list any more. The exclusion rules are expressibility only.
 
     // The parse-only side of the pipeline only needs the headers of the roots it is given:
     // no generator, no type maps, no code generation, none of the legacy post-processing.

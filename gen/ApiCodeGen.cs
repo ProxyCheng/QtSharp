@@ -240,14 +240,14 @@ public static class ApiCodeGen
     // transient way (QItemSelection, whose constructors take an unbound QModelIndex).
     static bool IsOwned(string className)
         => TryLookup(className, out var cls)
-           && cls.GetProperty("owned").GetBoolean()
+           && HasClass(cls, ApiModel.ClassFlags.Owned)
            && (cls.GetProperty("constructors").GetArrayLength() > 0 || SubclassCtor(cls));
 
     // An abstract class a managed subclass can derive from: it has no constructor of its own, but
     // the generated native subclass is concrete, so one can be built for it (QAbstractItemModel,
     // QAbstractTableModel). Only an abstract class is ever marked this way.
     static bool SubclassCtor(JsonElement cls)
-        => cls.TryGetProperty("subclassCtor", out var s) && s.ValueKind == JsonValueKind.True;
+        => HasClass(cls, ApiModel.ClassFlags.SubclassCtor);
 
     // The public data members the model published for a class.
     static List<JsonElement> FieldList(JsonElement cls)
@@ -584,27 +584,80 @@ public static class ApiCodeGen
     static string PName(JsonElement p) => p.GetProperty("name").GetString();
 
     static bool IsStatic(JsonElement m)
-        => m.TryGetProperty("static", out var s) && s.ValueKind == JsonValueKind.True;
+        => HasMethod(m, ApiModel.MethodFlags.Static);
 
     // C++ lets us derive from the class, so a native subclass can install the vtable hooks.
     static bool Subclassable(JsonElement cls)
-        => !cls.TryGetProperty("subclassable", out var s) || s.ValueKind != JsonValueKind.False;
+        => HasClass(cls, ApiModel.ClassFlags.Subclassable);
 
-    // A pure virtual has no C++ body, so there is nothing to chain a managed override to.
-    static bool IsPure(JsonElement v)
-        => v.TryGetProperty("pure", out var p) && p.ValueKind == JsonValueKind.True;
+    // Every declaration kind carries one flag list; these read it once and the callers test bits.
+    static int FlagBits(JsonElement e, Func<string, int> bit)
+    {
+        int bits = 0;
+        if (!e.TryGetProperty("flags", out var list) || list.ValueKind != JsonValueKind.Array)
+            return bits;
+        foreach (var entry in list.EnumerateArray())
+            bits |= bit(entry.GetString());
+        return bits;
+    }
 
-    // A private virtual is the same from the generated subclass's point of view: Qt's
-    // implementation exists but is not reachable (QAbstractListModel::columnCount).
-    static bool IsNoBase(JsonElement v)
-        => v.TryGetProperty("noBase", out var n) && n.ValueKind == JsonValueKind.True;
+    static ApiModel.ClassFlags ClassFlagsOf(JsonElement cls)
+        => (ApiModel.ClassFlags)FlagBits(cls, name => name switch
+        {
+            "abstract" => (int)ApiModel.ClassFlags.Abstract,
+            "subclassable" => (int)ApiModel.ClassFlags.Subclassable,
+            "subclassCtor" => (int)ApiModel.ClassFlags.SubclassCtor,
+            "owned" => (int)ApiModel.ClassFlags.Owned,
+            "nonCopyable" => (int)ApiModel.ClassFlags.NonCopyable,
+            _ => 0,
+        });
+
+    static ApiModel.MethodFlags MethodFlagsOf(JsonElement m)
+        => (ApiModel.MethodFlags)FlagBits(m, name => name switch
+        {
+            "static" => (int)ApiModel.MethodFlags.Static,
+            "protected" => (int)ApiModel.MethodFlags.Protected,
+            "const" => (int)ApiModel.MethodFlags.Const,
+            "iterator" => (int)ApiModel.MethodFlags.Iterator,
+            _ => 0,
+        });
+
+    static ApiModel.ParamFlags ParamFlagsOf(JsonElement p)
+        => (ApiModel.ParamFlags)FlagBits(p, name => name switch
+        {
+            "buffer" => (int)ApiModel.ParamFlags.Buffer,
+            "optional" => (int)ApiModel.ParamFlags.Optional,
+            _ => 0,
+        });
+
+    static bool HasClass(JsonElement cls, ApiModel.ClassFlags flag)
+        => (ClassFlagsOf(cls) & flag) != 0;
+    static bool HasMethod(JsonElement m, ApiModel.MethodFlags flag)
+        => (MethodFlagsOf(m) & flag) != 0;
+    static bool HasParam(JsonElement p, ApiModel.ParamFlags flag)
+        => (ParamFlagsOf(p) & flag) != 0;
+
+    // The traits a virtual declaration carries, read from the model's one flag list.
+    static ApiModel.VirtualFlags VirtualFlagsOf(JsonElement v)
+        => (ApiModel.VirtualFlags)FlagBits(v, name => name switch
+        {
+            "pure" => (int)ApiModel.VirtualFlags.Pure,
+            "const" => (int)ApiModel.VirtualFlags.Const,
+            "noBase" => (int)ApiModel.VirtualFlags.NoBase,
+            "final" => (int)ApiModel.VirtualFlags.Final,
+            _ => 0,
+        });
+
+    static bool Has(JsonElement v, ApiModel.VirtualFlags flag)
+        => (VirtualFlagsOf(v) & flag) != 0;
 
     // A virtual with nothing to chain to: the managed default implementation does nothing.
-    static bool HasNoBase(JsonElement v) => IsPure(v) || IsNoBase(v);
+    static bool HasNoBase(JsonElement v)
+        => Has(v, ApiModel.VirtualFlags.Pure | ApiModel.VirtualFlags.NoBase);
 
     // A const virtual must be declared const to override anything (QWidget::sizeHint() const).
     static string ConstSuffix(JsonElement v)
-        => v.TryGetProperty("const", out var c) && c.ValueKind == JsonValueKind.True ? " const" : "";
+        => Has(v, ApiModel.VirtualFlags.Const) ? " const" : "";
 
     // Whether a value type can be default-constructed in C++ (needed when a managed null is
     // passed for a boxed parameter).
@@ -618,21 +671,23 @@ public static class ApiCodeGen
     static string DeclaringClass(JsonElement v) => v.GetProperty("declaring").GetString();
 
     static bool IsOptional(JsonElement p)
-        => p.TryGetProperty("optional", out var o) && o.ValueKind == JsonValueKind.True;
+        => HasParam(p, ApiModel.ParamFlags.Optional);
 
     // A protected member of an extension class (QAbstractItemModel::createIndex, beginInsertRows,
     // ...). C++ only lets a *member* call it, so the generated subclass exposes a static helper
     // the native forwarders go through - the same shape as the CallBase_* forwarders.
     static bool IsProtected(JsonElement m)
-        => m.TryGetProperty("protected", out var p) && p.ValueKind == JsonValueKind.True;
+        => HasMethod(m, ApiModel.MethodFlags.Protected);
 
-    // A parameter Qt writes back: a non-const scalar pointer (`out`, QColor::getRgb) or a
-    // non-const scalar reference (`ref`, QValidator::validate's int &pos). The extractor records
-    // which, and neither can carry a C# default value.
-    static bool IsOut(JsonElement p)
-        => p.TryGetProperty("out", out var o) && o.ValueKind == JsonValueKind.True;
-    static bool IsRef(JsonElement p)
-        => p.TryGetProperty("ref", out var r) && r.ValueKind == JsonValueKind.True;
+    // How a parameter crosses: "out" (Qt writes one value through a non-const pointer), "ref"
+    // (in and out through a non-const reference), or null for a plain input.
+    static string ParamModeName(JsonElement p)
+        => p.TryGetProperty("mode", out var m) && m.ValueKind == JsonValueKind.String
+            ? m.GetString()
+            : null;
+
+    static bool IsOut(JsonElement p) => ParamModeName(p) == "out";
+    static bool IsRef(JsonElement p) => ParamModeName(p) == "ref";
     static bool IsByRef(JsonElement p) => IsOut(p) || IsRef(p);
 
     // The value a by-reference parameter carries: an out pointer's model type is the scalar
@@ -860,8 +915,7 @@ public static class ApiCodeGen
     // takes such a value as a transient handle over Qt's object instead of a copy.
     static bool IsNonCopyable(string t)
         => ByName.TryGetValue(t, out var c)
-           && c.TryGetProperty("nonCopyable", out var flag)
-           && flag.ValueKind == JsonValueKind.True;
+           && HasClass(c, ApiModel.ClassFlags.NonCopyable);
     static string CsEnum(string t) => CsTypeName(t);
 
     // ------------------------------------------------------------------ C#
@@ -1679,22 +1733,16 @@ public static class ApiCodeGen
             var fields = new HashSet<string>(
                 FieldList(cls).Select(f => Pascal(Name(f))), StringComparer.Ordinal);
 
-            // A property must not take the name of a virtual either: a virtual's C# name is the
-            // same all the way down the chain (QWidget::sizeHint is re-declared by QCalendarWidget
-            // and friends), so a property named SizeHint would leave them overriding a property.
-            var virtualNames = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var slot in ChainOf(Name(cls)))
-                virtualNames.Add(Pascal(Name(slot.Virtual)));
-
-            // A member cannot share a name with a nested type, so a property reserves its C#
-            // name: the getter that would have taken it keeps its C++ spelling (QLineEdit::text
-            // stays text(), the property is Text).
+            // A property reserves its C# name even when a virtual has the same name: the property
+            // takes the Pascal spelling and the accessor keeps the C++ one (QXYSeries::color is a
+            // virtual, the Q_PROPERTY is Color, and the getter stays color()). The virtual's name
+            // is the base-most declarer's (VirtualCsName), so the override chain stays consistent.
             var reserved = new HashSet<string>(hard, StringComparer.Ordinal);
             reserved.UnionWith(fields);
             foreach (var p in PropertyList(cls))
             {
                 string pascal = Pascal(Name(p));
-                if (!hard.Contains(pascal) && !fields.Contains(pascal) && !virtualNames.Contains(pascal))
+                if (!hard.Contains(pascal) && !fields.Contains(pascal))
                     reserved.Add(pascal);
             }
             reservedByClass[Name(cls)] = reserved;
@@ -1808,7 +1856,7 @@ public static class ApiCodeGen
 
         var bases = cls.GetProperty("bases").EnumerateArray().Select(b => b.GetString()).ToList();
         string baseName = bases.Count > 0 ? bases[0] : null;
-        bool boxed = cls.GetProperty("owned").GetBoolean();
+        bool boxed = HasClass(cls, ApiModel.ClassFlags.Owned);
         var ctors = cls.GetProperty("constructors").EnumerateArray().ToList();
         bool owned = boxed && (ctors.Count > 0 || SubclassCtor(cls));
 
@@ -2011,7 +2059,10 @@ public static class ApiCodeGen
                     var index = slots.FindIndex(s => VirtualKey(s.Virtual) == key);
                     var slot = new VirtualSlot
                     {
-                        Virtual = v, Declaring = className, DeclaredHere = true, Blocked = IsNoBase(v),
+                        Virtual = v, Declaring = className, DeclaredHere = true,
+                        // A private or final declaration gets no hook: C++ forbids overriding a
+                        // final one, and a private one has no base implementation to chain to.
+                        Blocked = Has(v, ApiModel.VirtualFlags.NoBase | ApiModel.VirtualFlags.Final),
                     };
                     if (index >= 0)
                         slots[index] = slot;
@@ -2031,6 +2082,14 @@ public static class ApiCodeGen
 
     static string VirtualKey(JsonElement v)
         => Name(v) + "(" + string.Join(",", Params(v).Select(PType)) + ")" + ConstSuffix(v);
+
+    // The C++ type a virtual's native override has to return, verbatim from clang. An override
+    // repeats the declaration exactly - `const QMetaObject *`, `qreal`, `QValidator::State` - and
+    // the model's returnType is the normalized managed type instead.
+    static string VirtualReturnCpp(JsonElement v)
+        => v.TryGetProperty("returnCpp", out var cpp) && cpp.ValueKind == JsonValueKind.String
+            ? cpp.GetString()
+            : ReturnType(v);
 
     // The C# name of a virtual: the one its base-most declaring class published. A class that
     // redeclares an inherited virtual cannot choose its own spelling - C# overrides keep the
@@ -2348,7 +2407,7 @@ public static class ApiCodeGen
         => !IsStatic(m) && ret == "void" && !IsConstMethod(m);
 
     static bool IsConstMethod(JsonElement m)
-        => m.TryGetProperty("const", out var c) && c.ValueKind == JsonValueKind.True;
+        => HasMethod(m, ApiModel.MethodFlags.Const);
 
     static void WriteStructNative(StringBuilder sb, string name)
     {
@@ -2405,7 +2464,7 @@ public static class ApiCodeGen
     static void WriteClass(StringBuilder sb, JsonElement cls)
     {
         string name = Name(cls);
-        bool boxed = cls.GetProperty("owned").GetBoolean();
+        bool boxed = HasClass(cls, ApiModel.ClassFlags.Owned);
         var bases = cls.GetProperty("bases").EnumerateArray().Select(b => b.GetString()).ToList();
         // The model records a Qt3D base by its qualified C++ name; C# names the class by its
         // simple one, and the inherited-member analysis resolves either.
@@ -2547,8 +2606,7 @@ public static class ApiCodeGen
             string unsafeModifier = dispatch == "IntPtr.Zero" ? "" : "unsafe ";
             // The native subclass is concrete, but the abstract Qt class itself is not: its
             // constructors exist for a managed subclass, so they are protected in C#.
-            bool abstractClass = cls.TryGetProperty("isAbstract", out var abstractFlag)
-                                 && abstractFlag.ValueKind == JsonValueKind.True;
+            bool abstractClass = HasClass(cls, ApiModel.ClassFlags.Abstract);
             string access = abstractClass ? "protected" : "public";
             sb.AppendLine($"        {access} {unsafeModifier}{name}({sig}){(baseName != null ? " : base(IntPtr.Zero)" : "")}");
             sb.AppendLine("        {");
@@ -2584,14 +2642,12 @@ public static class ApiCodeGen
 
         // Q_PROPERTY declarations, as C# properties. These are pure sugar: the body calls the
         // accessor methods that are generated anyway, so no native glue is duplicated and the
-        // accessors keep working under their own names.
-        var virtualNames = new HashSet<string>(
-            ChainOf(name).Select(s => Pascal(Name(s.Virtual))), StringComparer.Ordinal);
+        // accessors keep working under their own names. A property whose name a virtual also wants
+        // keeps it; the virtual is emitted under its C++ spelling (see MemberName).
         foreach (var property in PropertyList(cls))
         {
             string propName = Pascal(Name(property));
-            if (hardReservedByClass[name].Contains(propName) || fieldNamesByClass[name].Contains(propName)
-                || virtualNames.Contains(propName))
+            if (hardReservedByClass[name].Contains(propName) || fieldNamesByClass[name].Contains(propName))
                 continue;
             string propType = property.GetProperty("type").GetString();
             string getter = property.GetProperty("getter").GetString();
@@ -2844,9 +2900,25 @@ public static class ApiCodeGen
                 foreach (string line in forward.Prelude)
                     sb.AppendLine("                " + line);
                 string virtualCall = $"ApiNative.{name}_{vname}{vSuffix}_vt({string.Join(", ", forward.Args)})";
-                string virtualBody = ret == "void"
-                    ? $"{virtualCall}; return;"
-                    : $"return {RetToManaged(ret, virtualCall)};";
+                // An in-out string comes back through an out slot, so the postlude that reads it
+                // has to run before the wrapper returns (QValidator::fixup rewrites its input).
+                string virtualBody;
+                if (forward.Postlude.Count == 0)
+                {
+                    virtualBody = ret == "void"
+                        ? $"{virtualCall}; return;"
+                        : $"return {RetToManaged(ret, virtualCall)};";
+                }
+                else
+                {
+                    var lines = new List<string>();
+                    lines.Add(ret == "void"
+                        ? $"{virtualCall};"
+                        : $"var __result = {RetToManaged(ret, virtualCall)};");
+                    lines.AddRange(forward.Postlude);
+                    lines.Add(ret == "void" ? "return;" : "return __result;");
+                    virtualBody = string.Join("\n", lines);
+                }
                 EmitGuarded(sb, "                ", virtualBody, forward.Cleanup);
                 sb.AppendLine("            }");
                 sb.AppendLine("            else");
@@ -2872,7 +2944,22 @@ public static class ApiCodeGen
                 foreach (string line in baseMarshal.Prelude)
                     sb.AppendLine(inner + line);
                 string baseCall = $"ApiNative.{name}_{vname}__base{vSuffix}({string.Join(", ", baseMarshal.Args)})";
-                string body = ret == "void" ? $"{baseCall};" : $"return {RetToManaged(ret, baseCall)};";
+                string body;
+                if (baseMarshal.Postlude.Count == 0)
+                {
+                    body = ret == "void" ? $"{baseCall};" : $"return {RetToManaged(ret, baseCall)};";
+                }
+                else
+                {
+                    var lines = new List<string>();
+                    lines.Add(ret == "void"
+                        ? $"{baseCall};"
+                        : $"var __result = {RetToManaged(ret, baseCall)};");
+                    lines.AddRange(baseMarshal.Postlude);
+                    if (ret != "void")
+                        lines.Add("return __result;");
+                    body = string.Join("\n", lines);
+                }
                 EmitGuarded(sb, inner, body, baseMarshal.Cleanup);
             }
             if (Subclassable(cls))
@@ -3010,6 +3097,18 @@ public static class ApiCodeGen
                             : $"var {local} = {DispatchRead(valueType, slot)};");
                         args.Add($"{(IsOut(p) ? "out" : "ref")} {local}");
                         postlude.Add(DispatchStore(valueType, local, slot));
+                        continue;
+                    }
+                    // A `const T *items, int count` pair: the managed override gets an array of
+                    // the value type. The count is the next parameter (PublishesAsVirtual only
+                    // accepts that shape).
+                    if (IsStructPtr(PType(p)) && !IsOpaqueStructPtr(p))
+                    {
+                        string count = a + 1 < ps.Count
+                            ? $"Marshal.ReadInt32(Marshal.ReadIntPtr(argv, {slot + 1} * IntPtr.Size))"
+                            : "0";
+                        string elem = RefValueType(PType(p));
+                        args.Add($"ApiRuntime.ReadArray<{CsTypeName(elem)}>(Marshal.ReadIntPtr(argv, {slot} * IntPtr.Size), {count})");
                         continue;
                     }
                     args.Add(DispatchRead(PType(p), slot));
@@ -3256,10 +3355,11 @@ public static class ApiCodeGen
             // declared for it (the suffix counter is still advanced above, to stay aligned with the
             // other three emitters). A pure one has no base implementation either, but the C++
             // object still implements the virtual, so the stub calls it through the vtable.
-            // A private virtual has no forwarder at all, and neither has any virtual of a class
-            // that gets no generated subclass (there is no access class to reach the vtable
-            // through - see WriteNativeClass).
-            if (IsNoBase(v) || !Subclassable(cls))
+            // A private or final virtual has no forwarder at all, and neither has any virtual of
+            // a class that gets no generated subclass (there is no access class to reach the
+            // vtable through - see WriteNativeClass). A final one is published as a plain method
+            // through the ordinary forwarder instead.
+            if (Has(v, ApiModel.VirtualFlags.NoBase | ApiModel.VirtualFlags.Final) || !Subclassable(cls))
                 continue;
             var ps = Params(v);
             string sig = string.Join(", ", new[] { "IntPtr self" }.Concat(ps.SelectMany(NativeParamsFor)));
@@ -3312,7 +3412,7 @@ public static class ApiCodeGen
             sb.AppendLine($"        internal static extern void {name}_set_{fieldName}(IntPtr self, {ElemAbiCsParam(fieldType)} value);");
         }
 
-        if (cls.GetProperty("owned").GetBoolean() && (ctors.Count > 0 || SubclassCtor(cls)))
+        if (HasClass(cls, ApiModel.ClassFlags.Owned) && (ctors.Count > 0 || SubclassCtor(cls)))
         {
             sb.AppendLine();
             sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}_dtor\", CallingConvention = CallingConvention.Cdecl)]");
@@ -3782,14 +3882,14 @@ public static class ApiCodeGen
         if (ret == "void")
             lines.Add(call + ";");
         else
-            lines.Add($"auto qs_result = {call};");
+            lines.Add($"auto qs_api_result = {call};");
         foreach (var p in refs)
         {
             string n = NativeName(PName(p));
             lines.Add($"*{n}_out = new QString({StringInLocal(n)});");
         }
         if (ret != "void")
-            lines.Add(finish("qs_result"));
+            lines.Add(finish("qs_api_result"));
         return lines;
     }
 
@@ -3800,8 +3900,7 @@ public static class ApiCodeGen
         string ret = ReturnType(m);
         // An insert whose C++ return is the container's iterator publishes the value it points at;
         // the glue spells that as `.value()` on the call.
-        if (m.TryGetProperty("iteratorValue", out var iteratorValue) &&
-            iteratorValue.ValueKind == JsonValueKind.True)
+        if (HasMethod(m, ApiModel.MethodFlags.Iterator))
             call += ".value()";
         var refs = Params(m).Where(IsStringByRef).ToList();
         if (refs.Count == 0)
@@ -4030,7 +4129,7 @@ public static class ApiCodeGen
             declaredOverloads.TryGetValue(vname, out int vseen);
             declaredOverloads[vname] = vseen + 1;
             string vSuffix = vseen == 0 ? "" : (vseen + 1).ToString();
-            if (HasNoBase(v))
+            if (Has(v, ApiModel.VirtualFlags.Pure | ApiModel.VirtualFlags.NoBase | ApiModel.VirtualFlags.Final))
                 continue;
             var ps = Params(v);
             // The helper takes the flat C ABI parameters and converts them itself. A conversion
@@ -4041,7 +4140,7 @@ public static class ApiCodeGen
             string sig = string.Join(", ", ps.SelectMany(CppParamsFor));
             string args = string.Join(", ", ps.SelectMany(CppArgsFor));
             string ret = ReturnType(v);
-            sb.AppendLine($"    static {ret} CallBase_{vname}{vSuffix}(QsApi_{name}* self{(ps.Count > 0 ? ", " + sig : "")})");
+            sb.AppendLine($"    static {VirtualReturnCpp(v)} CallBase_{vname}{vSuffix}(QsApi_{name}* self{(ps.Count > 0 ? ", " + sig : "")})");
             sb.AppendLine("    {");
             foreach (string line in VirtualCallBody(
                          v, $"self->{CppClass(name)}::{vname}({args})", r => $"return {r};"))
@@ -4086,16 +4185,21 @@ public static class ApiCodeGen
             var ps = Params(v);
             string sig = string.Join(", ", ps.Select(p => $"{CppVirtualParamType(p)} {NativeName(PName(p))}"));
             string ret = ReturnType(v);
-            sb.AppendLine($"    {ret} {Name(v)}({sig}){ConstSuffix(v)} override");
+            // The override must repeat Qt's declaration exactly; the model type is the normalized
+            // managed one (a const pointer or a typedef differs).
+            string retCpp = VirtualReturnCpp(v);
+            sb.AppendLine($"    {retCpp} {Name(v)}({sig}){ConstSuffix(v)} override");
             sb.AppendLine("    {");
+            // A virtual may have a parameter named `result` (QWidget::nativeEvent's qintptr *result),
+            // so the local the dispatch fills is spelled with a reserved prefix.
             if (ret != "void")
-                sb.AppendLine($"        {ret} result = {{}};");
-            var argv = new List<string> { ret == "void" ? "nullptr" : "&result" };
+                sb.AppendLine($"        {retCpp} qs_api_result = {{}};");
+            var argv = new List<string> { ret == "void" ? "nullptr" : "&qs_api_result" };
             argv.AddRange(ps.Select(p => DispatchArgStore(PType(p), NativeName(PName(p)))));
             sb.AppendLine($"        void* argv[] = {{ {string.Join(", ", argv)} }};");
             sb.AppendLine($"        m_dispatch(m_userData, {i + 1}, argv);");
             if (ret != "void")
-                sb.AppendLine("        return result;");
+                sb.AppendLine("        return qs_api_result;");
             sb.AppendLine("    }");
             sb.AppendLine();
         }
@@ -4131,7 +4235,7 @@ public static class ApiCodeGen
             sb.AppendLine();
         }
 
-        if (subclassable && cls.GetProperty("owned").GetBoolean() && (ctors.Count > 0 || subclassCtor))
+        if (subclassable && HasClass(cls, ApiModel.ClassFlags.Owned) && (ctors.Count > 0 || subclassCtor))
         {
             sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_{name}_dtor(void* self)");
             sb.AppendLine("{");
@@ -4237,7 +4341,7 @@ public static class ApiCodeGen
         // one. A derived class with no overrides of its own can: the call below is virtual, so it
         // lands on whatever the object really implements, and the cast is the same identity cast
         // the chaining forwarders already rely on.
-        bool anyForwardable = declaredVirtuals.Any(s => !IsNoBase(s.Virtual));
+        bool anyForwardable = declaredVirtuals.Any(s => !Has(s.Virtual, ApiModel.VirtualFlags.NoBase));
         if (anyForwardable && subclassable)
         {
             sb.AppendLine($"class QsApiAccess_{name} : public {CppClass(name)}");
@@ -4251,7 +4355,7 @@ public static class ApiCodeGen
                 accessOverloads.TryGetValue(vname, out int aseen);
                 accessOverloads[vname] = aseen + 1;
                 string aSuffix = aseen == 0 ? "" : (aseen + 1).ToString();
-                if (IsNoBase(v))
+                if (Has(v, ApiModel.VirtualFlags.NoBase | ApiModel.VirtualFlags.Final))
                     continue;
                 var ps = Params(v);
                 // The helper takes and returns the same flat C ABI types the export does, so the
@@ -4281,7 +4385,7 @@ public static class ApiCodeGen
             pureOverloads.TryGetValue(vname, out int pseen);
             pureOverloads[vname] = pseen + 1;
             string pSuffix = pseen == 0 ? "" : (pseen + 1).ToString();
-            if (IsNoBase(v) || !subclassable)
+            if (Has(v, ApiModel.VirtualFlags.NoBase | ApiModel.VirtualFlags.Final) || !subclassable)
                 continue;
 
             var pureParams = Params(v);
@@ -4306,7 +4410,7 @@ public static class ApiCodeGen
             virtualOverloads.TryGetValue(vname, out int vseen);
             virtualOverloads[vname] = vseen + 1;
             string vSuffix = vseen == 0 ? "" : (vseen + 1).ToString();
-            if (HasNoBase(v))
+            if (Has(v, ApiModel.VirtualFlags.Pure | ApiModel.VirtualFlags.NoBase | ApiModel.VirtualFlags.Final))
                 continue;
 
             var ps = Params(v);
@@ -4350,7 +4454,7 @@ public static class ApiCodeGen
             return $"std::chrono::duration_cast<{p.GetProperty("cpp").GetString()}>(std::chrono::nanoseconds({NativeName(PName(p))}))";
         // A raw byte buffer crosses as void*; the C++ declaration spelled it char* / const char*,
         // so the call casts back to that spelling.
-        if (p.TryGetProperty("buffer", out var buffer) && buffer.ValueKind == JsonValueKind.True)
+        if (HasParam(p, ApiModel.ParamFlags.Buffer))
             return $"static_cast<{p.GetProperty("cpp").GetString()}>({NativeName(PName(p))})";
         if (IsRef(p))
             return "*" + NativeName(PName(p));

@@ -19,10 +19,8 @@ using System.IO;
 //     test can read a painted pixel straight back out of the QImage.
 //
 // Deviations from the C++ original, all forced by what the model can express today:
-//   * QPen(QColor, int, ...) is not in the model (QPen(QRgb) is not either); the pen is built with
-//     new QPen(QColor) plus SetWidth/SetStyle/SetCapStyle/SetJoinStyle, which yields the same pen;
-//   * QColorDialog::getColor(QColor) is not in the model (only the no-argument overload is), so
-//     ApplyPenColor(QColor) is the shared body and the dialog is a separate, never-called wrapper;
+//   * the C++ `QPen(color, width, ...)` relies on QColor converting to QBrush implicitly; C#
+//     spells the QBrush explicitly - the same pen;
 //   * QInputDialog::getInt(..., bool *) is not in the model (only the version returning int is), so
 //     ApplyPenWidth(int) clamps to the 1..50 range the dialog would have enforced and is what the
 //     self-test drives; the dialog wrapper is never called;
@@ -80,12 +78,10 @@ public sealed class ApiScribbleArea : QWidget
     /// </summary>
     public QPen CreatePen()
     {
-        var pen = new QPen(myPenColor);
-        pen.SetWidth(myPenWidth);
-        pen.SetStyle(Qt.PenStyle.SolidLine);
-        pen.SetCapStyle(Qt.PenCapStyle.RoundCap);
-        pen.SetJoinStyle(Qt.PenJoinStyle.RoundJoin);
-        return pen;
+        // QPen takes a QBrush; the C++ passes the QColor and lets it convert.
+        using var brush = new QBrush(myPenColor);
+        return new QPen(brush, myPenWidth, Qt.PenStyle.SolidLine,
+                        Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin);
     }
 
     public void SetPenColor(QColor newColor)
@@ -453,8 +449,8 @@ public sealed class ApiScribbleWindow : QMainWindow
 
     void PenColorInteractive()
     {
-        // QColorDialog::getColor(QColor) is not in the model; the plain overload is.
-        var newColor = QColorDialog.GetColor();
+        // The official call: QColorDialog::getColor(penColor).
+        var newColor = QColorDialog.GetColor(ScribbleArea.PenColor);
         if (newColor.IsValid())
             ScribbleArea.SetPenColor(newColor);
     }

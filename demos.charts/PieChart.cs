@@ -65,8 +65,8 @@ public static class PieChart
 
             check.Check(chart.Title == "Simple Pie Chart", $"the title round-trips (got '{chart.Title}')");
             check.Check(!ChartsAssertions.IsLegendVisible(chart), "the legend is hidden, as the example asks");
-            check.Check(series.Type() == QAbstractSeries.SeriesType.SeriesTypePie,
-                $"the series reports itself as a pie series (got {series.Type()})");
+            check.Check(series.type() == QAbstractSeries.SeriesType.SeriesTypePie,
+                $"the series reports itself as a pie series (got {series.type()})");
 
             using var rendered = view.Grab();
             check.Check(rendered != null && rendered.Width() > 0,

@@ -34,8 +34,8 @@ public static class PercentBarChart
 
             var view = ChartsAssertions.Present(chart);
 
-            check.Check(series.Type() == QAbstractSeries.SeriesType.SeriesTypePercentBar,
-                $"the series reports itself as a percent bar series (got {series.Type()})");
+            check.Check(series.type() == QAbstractSeries.SeriesType.SeriesTypePercentBar,
+                $"the series reports itself as a percent bar series (got {series.type()})");
             check.Check(series.BarSets().Length == 5, $"five sets (got {series.BarSets().Length})");
             check.Check(set0.Sum() == 21, $"the sets keep their own values, not the percentages (got {set0.Sum()})");
             check.Check(set2.At(3) == 13, $"the 13 in Axel's set is untouched (got {set2.At(3)})");

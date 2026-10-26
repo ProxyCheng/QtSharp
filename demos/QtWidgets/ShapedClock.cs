@@ -58,7 +58,7 @@ public sealed class ApiShapedClock : QWidget
         UpdateMask();
     }
 
-    public override QSize SizeHint() => new QSize(200, 200);
+    public override QSize sizeHint() => new QSize(200, 200);
 
     // The round window: the mask is recomputed whenever the clock is resized (the official
     // example's resizeEvent).
@@ -278,7 +278,7 @@ public static class ShapedClock
         }
 
         // The virtual override: the boxed QSize comes back through the generated accessor.
-        var hint = clock.SizeHint();
+        var hint = clock.SizeHint;
             Check(hint.Width() == 200 && hint.Height() == 200,
                 $"sizeHint() reports 200x200 (got {hint.Width()}x{hint.Height()})");
 

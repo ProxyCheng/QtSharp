@@ -16,10 +16,6 @@ using System;
 // Deviations from the C++ original, and why:
 //   * the example's badge/heart/trash PNG resources (.qrc) are not shipped with the binding, so
 //     QStyle::standardIcon() stands in for them (the icons' *identity* is asserted, not their art);
-//   * QDialog::setVisible() is not a published virtual in the model, so the official
-//     "enable/disable minimise/maximise/restore whenever the window becomes visible" override is
-//     impossible. The same logic lives in UpdateActionStates(), which ShowEvent() calls - the
-//     method is public so the self-test can drive it;
 //   * the original closeEvent() asks a *modal* QMessageBox for confirmation. A self-test must not
 //     block on a dialog, so the message box is behind SuppressModalDialogs and the decision itself
 //     (spontaneous + visible + tray visible => hide and ignore the close) is exposed through
@@ -82,7 +78,7 @@ public sealed class ApiSystemTrayWindow : QDialog
         CreateMessageGroupBox();
 
         // The original sizes the "Icon:" label to the width of the "Duration:" label's size hint.
-        IconLabel.MinimumWidth = DurationLabel.SizeHint().Width();
+        IconLabel.MinimumWidth = DurationLabel.SizeHint.Width();
 
         CreateActions();
         CreateTrayIcon();
@@ -110,8 +106,14 @@ public sealed class ApiSystemTrayWindow : QDialog
         => QApplication.Style().StandardIcon(which);
 
     // QMessageBox::standardIcon() is no longer needed: QStyle::standardIcon() is modelled.
-    static void SetMessageIconData(QComboBox comboBox, int index, int value)
-        => comboBox.SetItemData(index, new QVariant(value), (int)Qt.ItemDataRole.UserRole);
+    static void AddMessageIcon(QComboBox comboBox, QIcon icon, string text, int value)
+    {
+        using var data = new QVariant(value);
+        if (icon == null)
+            comboBox.AddItem(text, data);
+        else
+            comboBox.AddItem(icon, text, data);
+    }
 
     // The official closeEvent(), minus the modal confirmation (see the header comment). Returns
     // true when the window hid itself and the caller must ignore the close.
@@ -141,20 +143,18 @@ public sealed class ApiSystemTrayWindow : QDialog
 
     // The official setVisible() override, which the model cannot publish as a virtual: it enables
     // the actions according to the window's visibility and window state.
-    public void UpdateActionStates()
+    // The official override: visibility is the signal for the action states.
+    public override void SetVisible(bool visible)
     {
-        bool visible = IsVisible();
-        bool minimized = IsMinimized();
-        bool maximized = IsMaximized();
-        MinimizeAction.Enabled = visible && !minimized;
-        MaximizeAction.Enabled = visible && !maximized;
-        RestoreAction.Enabled = visible && (minimized || maximized);
+        base.SetVisible(visible);
+        MinimizeAction.Enabled = visible;
+        MaximizeAction.Enabled = !IsMaximized();
+        RestoreAction.Enabled = IsMaximized() || !visible;
     }
 
     public override void ShowEvent(QShowEvent @event)
     {
         ShowEventCount++;
-        UpdateActionStates();
     }
 
     void SetIcon(int index)
@@ -193,8 +193,7 @@ public sealed class ApiSystemTrayWindow : QDialog
 
         if (selectedIcon == -1)
         {
-            // addItem(QString, QVariant) is not modelled, so the icon still comes from the icon
-            // combo box (the official "custom icon" path).
+            // The official "custom icon" path takes the icon from the icon combo box.
             LastMessageCustomIcon = IconComboBox.ItemIcon(IconComboBox.CurrentIndex);
             LastMessageIconType = QSystemTrayIcon.MessageIcon.NoIcon;
             TrayIcon.ShowMessage(LastMessageTitle, LastMessageBody, LastMessageCustomIcon, LastMessageMsecs);
@@ -245,16 +244,15 @@ public sealed class ApiSystemTrayWindow : QDialog
         TypeLabel = new QLabel("Type:");
 
         TypeComboBox = new QComboBox();
-        TypeComboBox.AddItem("None");
-        SetMessageIconData(TypeComboBox, TypeComboBox.Count - 1, (int)QSystemTrayIcon.MessageIcon.NoIcon);
-        TypeComboBox.AddItem(StandardIcon(QStyle.StandardPixmap.SP_MessageBoxInformation), "Information");
-        SetMessageIconData(TypeComboBox, TypeComboBox.Count - 1, (int)QSystemTrayIcon.MessageIcon.Information);
-        TypeComboBox.AddItem(StandardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning), "Warning");
-        SetMessageIconData(TypeComboBox, TypeComboBox.Count - 1, (int)QSystemTrayIcon.MessageIcon.Warning);
-        TypeComboBox.AddItem(StandardIcon(QStyle.StandardPixmap.SP_MessageBoxCritical), "Critical");
-        SetMessageIconData(TypeComboBox, TypeComboBox.Count - 1, (int)QSystemTrayIcon.MessageIcon.Critical);
-        TypeComboBox.AddItem(new QIcon(), "Custom icon");
-        SetMessageIconData(TypeComboBox, TypeComboBox.Count - 1, -1);
+        AddMessageIcon(TypeComboBox, null, "None", (int)QSystemTrayIcon.MessageIcon.NoIcon);
+        AddMessageIcon(TypeComboBox, StandardIcon(QStyle.StandardPixmap.SP_MessageBoxInformation),
+            "Information", (int)QSystemTrayIcon.MessageIcon.Information);
+        AddMessageIcon(TypeComboBox, StandardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning),
+            "Warning", (int)QSystemTrayIcon.MessageIcon.Warning);
+        AddMessageIcon(TypeComboBox, StandardIcon(QStyle.StandardPixmap.SP_MessageBoxCritical),
+            "Critical", (int)QSystemTrayIcon.MessageIcon.Critical);
+        using (var customIcon = new QIcon())
+            AddMessageIcon(TypeComboBox, customIcon, "Custom icon", -1);
         TypeComboBox.CurrentIndex = 1;
 
         DurationLabel = new QLabel("Duration:");
@@ -390,7 +388,7 @@ public static class SystemTray
               && typeCombo.ItemText(4) == "Custom icon",
             "the type combo texts are None/Information/Warning/Critical/Custom icon");
 
-        // addItem(QString, QVariant) is not modelled: the value is per-item user-role data.
+        // The per-item user-role data the official addItem(text, variant) calls store.
         int[] expectedIconData =
         {
             (int)QSystemTrayIcon.MessageIcon.NoIcon,
@@ -464,14 +462,11 @@ public static class SystemTray
         Check(window.QuitAction.Enabled, "the quit action starts enabled");
 
         // ---------------------------------------------------------------- window visibility / actions
-        // The official setVisible() override is replaced by UpdateActionStates(), called from
-        // ShowEvent(); the test also drives it explicitly so the logic is asserted directly.
+        // Showing the window runs the official setVisible() override, which sets the action states.
         window.Show();
         Check(window.ShowEventCount >= 1, $"showing the window delivered the show event ({window.ShowEventCount} time(s))");
-        window.UpdateActionStates();
         Check(window.MinimizeAction.Enabled && window.MaximizeAction.Enabled && !window.RestoreAction.Enabled,
             "a visible, normal window enables minimize/maximize and disables restore");
-        window.UpdateActionStates();
         Check(!window.RestoreAction.Enabled, "restore stays disabled while the window is normal");
 
         // ---------------------------------------------------------------- ShowMessage arguments

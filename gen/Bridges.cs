@@ -5,8 +5,9 @@ using System.Reflection;
 
 // Bridges: the places where the binding deliberately departs from its general rules so a .NET
 // capability can sit behind a Qt type. Each bridge is one small class that says which Qt classes
-// it applies to, which virtuals it publishes, and how it maps special parameters. The extractor
-// asks the registry; a bridge joins it by carrying [VirtualBridge] - there is no list to edit.
+// it applies to, whether its override points propagate to subclasses, and how it maps special
+// parameters. The extractor asks the registry; a bridge joins it by carrying [VirtualBridge] -
+// there is no list to edit.
 //
 // Today there is one (QIODevice, so a C# Stream can be a Qt device). The likely next ones are more
 // QIODevice-shaped than general: QAbstractItemModel/QStyledItemDelegate are already covered by the
@@ -16,9 +17,6 @@ internal interface IVirtualBridge
 {
     /// <summary>Whether this bridge owns the given Qt class.</summary>
     bool AppliesTo(string className);
-
-    /// <summary>Whether a virtual of that class is published as an override point.</summary>
-    bool Publishes(string className, string name);
 
     /// <summary>
     /// Whether the published virtuals apply to subclasses too. A bridge that only needs to wrap
@@ -51,14 +49,6 @@ internal static class VirtualBridges
         .OrderBy(type => type.FullName, StringComparer.Ordinal)
         .Select(type => (IVirtualBridge)Activator.CreateInstance(type, nonPublic: true))
         .ToArray();
-
-    public static bool Publishes(string className, string name)
-    {
-        foreach (var bridge in All)
-            if (bridge.AppliesTo(className) && bridge.Publishes(className, name))
-                return true;
-        return false;
-    }
 
     /// <summary>Whether a bridge class's published virtuals may appear in a subclass's chain.</summary>
     public static bool PropagatesToSubclasses(string className)

@@ -12,10 +12,8 @@ using System;
 //     SetForeground shim is gone.
 //
 // Deviations from the C++ original, and why:
-//   * the General Options "Locale" row is still omitted: it needs QLocale::matchingLocales() /
-//     territory() and QLocale::Territory, none of which are in the model;
-//   * QComboBox::addItem(QString, QVariant) is not modelled, so the colour combos add the text
-//     with AddItem() and then store the colour with SetItemData(i, variant, Qt::UserRole);
+//   * the colour combos store Qt::GlobalColor as the item data instead of a QColor: QVariant has
+//     no QColor constructor in the model, so the same colour is stored as its enum value;
 //   * a small preview label under the calendar is updated from selectionChanged() so the signal
 //     can be observed as text (the Sliders port does the same for its valueChanged echo).
 //
@@ -35,6 +33,8 @@ public sealed class ApiCalendarWidgetWindow : QWidget
     public QLabel PreviewLabel;
 
     QGroupBox generalOptionsGroupBox;
+    public QComboBox LocaleCombo;
+    QLabel localeLabel;
     public QComboBox FirstDayCombo;
     public QLabel FirstDayLabel;
     public QComboBox SelectionModeCombo;
@@ -78,8 +78,8 @@ public sealed class ApiCalendarWidgetWindow : QWidget
         OuterLayout.SetSizeConstraint(QLayout.SizeConstraint.SetFixedSize);
         SetLayout(OuterLayout);
 
-        PreviewLayout.SetRowMinimumHeight(0, Calendar.SizeHint().Height());
-        PreviewLayout.SetColumnMinimumWidth(0, Calendar.SizeHint().Width());
+        PreviewLayout.SetRowMinimumHeight(0, Calendar.SizeHint.Height());
+        PreviewLayout.SetColumnMinimumWidth(0, Calendar.SizeHint.Width());
 
         SetWindowTitle("Calendar Widget (new pipeline)");
     }
@@ -107,6 +107,40 @@ public sealed class ApiCalendarWidgetWindow : QWidget
     void CreateGeneralOptionsGroupBox()
     {
         generalOptionsGroupBox = new QGroupBox("General Options");
+
+        // The official Locale row: every locale Qt knows, labelled language/territory, with the
+        // QLocale itself in the item data. matchingLocales was the API this row needed; it is
+        // bound now, so the row is the upstream one.
+        LocaleCombo = new QComboBox();
+        int currentLocaleIndex = -1;
+        int localeIndex = 0;
+        using (var applicationLocale = new QLocale())
+        {
+            for (int lang = (int)QLocale.Language.C; lang <= (int)QLocale.Language.LastLanguage; lang++)
+            {
+                foreach (var locale in QLocale.MatchingLocales((QLocale.Language)lang,
+                                                               QLocale.Script.AnyScript,
+                                                               QLocale.Country.AnyTerritory))
+                {
+                    using (locale)
+                    {
+                        using var value = new QVariant(locale);
+                        string label = QLocale.LanguageToString((QLocale.Language)lang) + "/"
+                                     + QLocale.TerritoryToString(locale.Territory());
+                        LocaleCombo.AddItem(label, value);
+                        if (applicationLocale.language() == locale.language()
+                            && applicationLocale.Territory() == locale.Territory())
+                            currentLocaleIndex = localeIndex;
+                    }
+                    localeIndex++;
+                }
+            }
+        }
+        if (currentLocaleIndex != -1)
+            LocaleCombo.SetCurrentIndex(currentLocaleIndex);
+
+        localeLabel = new QLabel("&Locale:");
+        localeLabel.SetBuddy(LocaleCombo);
 
         FirstDayCombo = new QComboBox();
         FirstDayCombo.AddItem("Sunday");
@@ -149,6 +183,7 @@ public sealed class ApiCalendarWidgetWindow : QWidget
         verticalHeaderLabel = new QLabel("&Vertical header:");
         verticalHeaderLabel.SetBuddy(VerticalHeaderCombo);
 
+        LocaleCombo.CurrentIndexChangedSignal.Connect(LocaleChanged);
         FirstDayCombo.CurrentIndexChangedSignal.Connect(FirstDayChanged);
         SelectionModeCombo.CurrentIndexChangedSignal.Connect(SelectionModeChanged);
         GridCheckBox.ToggledSignal.Connect(b => Calendar.GridVisible = b);
@@ -162,21 +197,34 @@ public sealed class ApiCalendarWidgetWindow : QWidget
         checkBoxLayout.AddWidget(NavigationCheckBox);
 
         var outerLayout = new QGridLayout();
-        outerLayout.AddWidget(FirstDayLabel, 0, 0);
-        outerLayout.AddWidget(FirstDayCombo, 0, 1);
-        outerLayout.AddWidget(selectionModeLabel, 1, 0);
-        outerLayout.AddWidget(SelectionModeCombo, 1, 1);
-        outerLayout.AddLayout(checkBoxLayout, 2, 0, 1, 2);
-        outerLayout.AddWidget(HorizontalHeaderLabel, 3, 0);
-        outerLayout.AddWidget(HorizontalHeaderCombo, 3, 1);
-        outerLayout.AddWidget(verticalHeaderLabel, 4, 0);
-        outerLayout.AddWidget(VerticalHeaderCombo, 4, 1);
+        outerLayout.AddWidget(localeLabel, 0, 0);
+        outerLayout.AddWidget(LocaleCombo, 0, 1);
+        outerLayout.AddWidget(FirstDayLabel, 1, 0);
+        outerLayout.AddWidget(FirstDayCombo, 1, 1);
+        outerLayout.AddWidget(selectionModeLabel, 2, 0);
+        outerLayout.AddWidget(SelectionModeCombo, 2, 1);
+        outerLayout.AddLayout(checkBoxLayout, 3, 0, 1, 2);
+        outerLayout.AddWidget(HorizontalHeaderLabel, 4, 0);
+        outerLayout.AddWidget(HorizontalHeaderCombo, 4, 1);
+        outerLayout.AddWidget(verticalHeaderLabel, 5, 0);
+        outerLayout.AddWidget(VerticalHeaderCombo, 5, 1);
         generalOptionsGroupBox.SetLayout(outerLayout);
 
         FirstDayChanged(FirstDayCombo.CurrentIndex);
         SelectionModeChanged(SelectionModeCombo.CurrentIndex);
         HorizontalHeaderChanged(HorizontalHeaderCombo.CurrentIndex);
         VerticalHeaderChanged(VerticalHeaderCombo.CurrentIndex);
+    }
+
+    void LocaleChanged(int index)
+    {
+        if (index < 0)
+            return;
+        using var data = LocaleCombo.ItemData(index, (int)Qt.ItemDataRole.UserRole);
+        using var newLocale = data.ToLocale();
+        Calendar.SetLocale(newLocale);
+        // The combo lists Sunday..Saturday; Qt's DayOfWeek is Monday=1..Sunday=7.
+        FirstDayCombo.SetCurrentIndex((int)newLocale.FirstDayOfWeek() % 7);
     }
 
     void FirstDayChanged(int index)
@@ -327,8 +375,8 @@ public sealed class ApiCalendarWidgetWindow : QWidget
         ReformatCalendarPage();
     }
 
-    // QComboBox::addItem(QString, QVariant) is not modelled, so the text and the colour are stored
-    // in two calls: AddItem() and SetItemData(..., Qt::UserRole).
+    // The official stores a QColor in the item data; QVariant has no QColor constructor in the
+    // model, so the Qt::GlobalColor value is stored and read back through the same enum.
     QComboBox CreateColorComboBox()
     {
         var comboBox = new QComboBox();
@@ -341,8 +389,8 @@ public sealed class ApiCalendarWidgetWindow : QWidget
 
     static void AddColorItem(QComboBox comboBox, string text, Qt.GlobalColor color)
     {
-        comboBox.AddItem(text);
-        comboBox.SetItemData(comboBox.Count - 1, new QVariant((int)color), (int)Qt.ItemDataRole.UserRole);
+        using var value = new QVariant((int)color);
+        comboBox.AddItem(text, value);
     }
 
     static QColor ColorFromCombo(QComboBox comboBox)
@@ -470,7 +518,7 @@ public static class CalendarWidget
         Check(cal.GridVisible, "the grid starts visible");
         Check(cal.NavigationBarVisible, "the navigation bar starts visible");
         Check(window.PreviewLayout.RowMinimumHeight(0) > 0 && window.PreviewLayout.ColumnMinimumWidth(0) > 0,
-            $"the preview layout was sized from the calendar's size hint ({cal.SizeHint().Width()}x{cal.SizeHint().Height()})");
+            $"the preview layout was sized from the calendar's size hint ({cal.SizeHint.Width()}x{cal.SizeHint.Height()})");
         Check(window.OuterLayout.sizeConstraint() == QLayout.SizeConstraint.SetFixedSize,
             $"the outer layout is fixed-size (got {window.OuterLayout.sizeConstraint()})");
 
@@ -485,6 +533,30 @@ public static class CalendarWidget
             $"the date edit display format round-trips (got '{window.MinimumDateEdit.DisplayFormat}')");
 
         // ---------------------------------------------------------------- General Options group
+        // The official Locale row: the item data carries the QLocale, and choosing one sets the
+        // calendar's locale (and follows the locale's first day of the week).
+        int germanIndex = -1;
+        for (int i = 0; i < window.LocaleCombo.Count; i++)
+        {
+            using var data = window.LocaleCombo.ItemData(i, (int)Qt.ItemDataRole.UserRole);
+            using var localeAtI = data.ToLocale();
+            if (localeAtI.language() == QLocale.Language.German
+                && localeAtI.Territory() == QLocale.Country.Germany)
+            {
+                germanIndex = i;
+                break;
+            }
+        }
+        Check(germanIndex >= 0,
+            $"the locale combo lists German/Germany among Qt's locales ({window.LocaleCombo.Count})");
+        window.LocaleCombo.SetCurrentIndex(germanIndex);
+        using var german = new QLocale(QLocale.Language.German, QLocale.Country.Germany);
+        using var calendarLocale = cal.Locale;
+        Check(calendarLocale.language() == QLocale.Language.German,
+            $"the locale combo sets the calendar's locale (got {calendarLocale.language()})");
+        Check(window.FirstDayCombo.CurrentIndex == (int)german.FirstDayOfWeek() % 7,
+            $"the locale's first day follows (combo {window.FirstDayCombo.CurrentIndex}, expected {(int)german.FirstDayOfWeek() % 7})");
+
         Check(window.FirstDayCombo.Count == 7, $"the first-day combo has the seven weekdays (got {window.FirstDayCombo.Count})");
         Check(window.SelectionModeCombo.Count == 2, $"the selection-mode combo has two entries (got {window.SelectionModeCombo.Count})");
         Check(window.HorizontalHeaderCombo.Count == 3, $"the horizontal-header combo has three entries (got {window.HorizontalHeaderCombo.Count})");
@@ -574,7 +646,7 @@ public static class CalendarWidget
             "the weekend colour defaults to Red");
         Check(window.WeekdayColorCombo.Count == 4, $"the colour combo has four entries (got {window.WeekdayColorCombo.Count})");
 
-        // The colour is stored as combo user data (addItem(text, variant) is not modelled).
+        // The colour is the combo item's user data, as addItem(text, variant) stores it.
         Check(window.WeekdayColorCombo.ItemData(0, (int)Qt.ItemDataRole.UserRole).ToInt() == (int)Qt.GlobalColor.red,
             "combo item 0 carries the Red colour as Qt::UserRole data");
         Check(window.WeekdayColorCombo.ItemData(2, (int)Qt.ItemDataRole.UserRole).ToInt() == (int)Qt.GlobalColor.black,

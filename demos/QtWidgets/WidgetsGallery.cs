@@ -7,10 +7,6 @@ using System;
 // Progress Bar panels the legacy version assembled.
 //
 // Differences from the C++ original, all forced by what the model can express today:
-//   * QStyleFactory is not in the model (see the note on StyleNames below), so the style list is
-//     hard-coded - exactly what the legacy adapter did;
-//   * QCommandLinkButton stays out (it never worked in the old binding and the official gallery
-//     does not use it either);
 //   * the style combo is driven through currentTextChanged rather than textActivated, because
 //     textActivated is only emitted for real user interaction, which a self-test cannot produce
 //     (the handler itself is unchanged);
@@ -18,11 +14,22 @@ using System;
 //     an extra margin widget; the wrapped widget carried no state worth reproducing.
 public sealed class ApiWidgetsGalleryWindow : QDialog
 {
-    // QStyleFactory::keys() is not bound (QStyleFactory is not in model/qtsharp.api.json), so the
-    // style names are hard-coded, the same way the legacy adapter hard-coded QStyleFactory.Keys.
-    // QApplication.SetStyle(string) creates the style and applies it; the round-trip is verified
-    // against QApplication.Style().ObjectName in the self-test below.
-    public static readonly string[] StyleNames = { "windows11", "windowsvista", "Windows", "Fusion" };
+    // QStyleFactory::keys() is Qt's own list; the active style is moved to the front, exactly like
+    // the upstream startup sequence.
+    public static string[] StyleNames()
+    {
+        string defaultStyleName = QApplication.Style()?.ObjectName ?? "";
+        var names = QStyleFactory.Keys();
+        for (int i = 1; i < names.Length; i++)
+        {
+            if (string.Equals(names[i], defaultStyleName, StringComparison.OrdinalIgnoreCase))
+            {
+                (names[0], names[i]) = (names[i], names[0]);
+                break;
+            }
+        }
+        return names;
+    }
 
     public readonly QLabel StyleLabel = new QLabel("&Style:");
     public readonly QComboBox StyleCombo = new QComboBox();
@@ -43,6 +50,8 @@ public sealed class ApiWidgetsGalleryWindow : QDialog
     public readonly QToolButton ToolButton = new QToolButton();
     public readonly QToolButton MenuToolButton = new QToolButton();
     public readonly QMenu ToolMenu = new QMenu();
+    public readonly QCommandLinkButton CommandLink =
+        new QCommandLinkButton("Command Link Button", "A command link button.");
     public readonly QRadioButton Radio1 = new QRadioButton("Radio button 1");
     public readonly QRadioButton Radio2 = new QRadioButton("Radio button 2");
     public readonly QRadioButton Radio3 = new QRadioButton("Radio button 3");
@@ -74,7 +83,7 @@ public sealed class ApiWidgetsGalleryWindow : QDialog
     public ApiWidgetsGalleryWindow()
     {
         // ---------------------------------------------------------------- top row: style + disable
-        StyleCombo.AddItems(StyleNames);
+        StyleCombo.AddItems(StyleNames());
         StyleLabel.SetBuddy(StyleCombo);
         StyleCombo.CurrentTextChangedSignal.Connect(ChangeStyle);
         DisableCheck.ToggledSignal.Connect(DisableWidgets);
@@ -125,7 +134,11 @@ public sealed class ApiWidgetsGalleryWindow : QDialog
 
     public override void PaintEvent(QPaintEvent e) => PaintCount++;
 
-    void ChangeStyle(string styleName) => QApplication.SetStyle(styleName);
+    void ChangeStyle(string styleName)
+    {
+        var style = QStyleFactory.Create(styleName);
+        QApplication.SetStyle(style);
+    }
 
     // The "Disable widgets" check box disables every content panel (the legacy wiring).
     void DisableWidgets(bool disabled)
@@ -176,6 +189,7 @@ public sealed class ApiWidgetsGalleryWindow : QDialog
         buttonLayout.AddWidget(TogglePush);
         buttonLayout.AddWidget(FlatPush);
         buttonLayout.AddLayout(toolButtonLayout);
+        buttonLayout.AddWidget(CommandLink);
         buttonLayout.AddStretch(1);
 
         Radio1.SetChecked(true);
@@ -319,15 +333,17 @@ public static class WidgetsGallery
         window.Show();
 
         // ---------------------------------------------------------------- style selection
-        Check(window.StyleCombo.count() == ApiWidgetsGalleryWindow.StyleNames.Length,
-            $"style combo is populated (got {window.StyleCombo.count()} item(s))");
-        Check(window.StyleCombo.ItemText(0) == ApiWidgetsGalleryWindow.StyleNames[0],
-            $"style combo first item (got '{window.StyleCombo.ItemText(0)}')");
-        Check(window.StyleCombo.ItemText(ApiWidgetsGalleryWindow.StyleNames.Length - 1) == "Fusion",
-            "style combo lists Fusion");
+        var styleNames = ApiWidgetsGalleryWindow.StyleNames();
+        Check(window.StyleCombo.count() == styleNames.Length,
+            $"style combo is QStyleFactory's list (got {window.StyleCombo.count()} item(s))");
+        string activeStyle = QApplication.Style()?.ObjectName ?? "";
+        Check(string.Equals(window.StyleCombo.ItemText(0), activeStyle, StringComparison.OrdinalIgnoreCase),
+            $"the active style is first (got '{window.StyleCombo.ItemText(0)}', active '{activeStyle}')");
+        int fusionIndex = window.StyleCombo.FindText("Fusion");
+        Check(fusionIndex >= 0, "style combo lists Fusion");
 
-        // Selecting "Fusion" walks the combo -> currentTextChanged -> QApplication.SetStyle.
-        window.StyleCombo.SetCurrentIndex(ApiWidgetsGalleryWindow.StyleNames.Length - 1);
+        // Selecting "Fusion" walks the combo -> currentTextChanged -> QStyleFactory::create.
+        window.StyleCombo.SetCurrentIndex(fusionIndex);
         Check(window.StyleCombo.CurrentText == "Fusion",
             $"combo current text (got '{window.StyleCombo.CurrentText}')");
         var style = QApplication.Style();
@@ -369,6 +385,8 @@ public static class WidgetsGallery
             "the menu button pops up instantly");
         Check(window.MenuToolButton.Menu() != null && window.ToolMenu.Actions().Length == 3,
             $"the menu button carries a three-entry menu (got {window.ToolMenu.Actions().Length})");
+        Check(window.CommandLink.Text == "Command Link Button",
+            $"the command link button is part of the gallery (got '{window.CommandLink.Text}')");
 
         Check(window.Radio1.IsChecked() && !window.Radio2.IsChecked() && !window.Radio3.IsChecked(),
             "radio button 1 starts selected");

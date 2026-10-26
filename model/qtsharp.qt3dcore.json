@@ -23,18 +23,23 @@
       "cppName": "Qt3DCore::QAbstractAspect",
       "header": "Qt3DCore/qabstractaspect.h",
       "bases": ["QObject"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "dependencies", "returnType": "QStringList", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
+        { "name": "dependencies", "flags": ["const"], "returnType": "QStringList", "returnCpp": "QStringList", "parameters": [] },
+        { "name": "executeCommand", "flags": ["noBase"], "returnType": "QVariant", "returnCpp": "QVariant", "parameters": [{ "name": "args", "type": "QStringList", "cpp": "const QStringList &" }] },
+        { "name": "frameDone", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] },
+        { "name": "jobsDone", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] },
+        { "name": "onEngineShutdown", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] },
+        { "name": "onEngineStartup", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] },
+        { "name": "onRegistered", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] },
+        { "name": "onUnregistered", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] }
       ],
       "signals": [
       ]
@@ -45,16 +50,14 @@
       "cppName": "Qt3DCore::QAbstractFunctor",
       "header": "Qt3DCore/qabstractfunctor.h",
       "bases": [],
-      "isAbstract": true,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["abstract", "subclassable", "owned"],
       "constructors": [
         { "parameters": [] }
       ],
       "methods": [
       ],
       "virtuals": [
-        { "name": "id", "pure": true, "const": true, "returnType": "long long", "parameters": [] }
+        { "name": "id", "flags": ["pure", "const"], "returnType": "long long", "returnCpp": "qintptr", "parameters": [] }
       ],
       "signals": [
       ]
@@ -65,15 +68,13 @@
       "cppName": "Qt3DCore::QAbstractSkeleton",
       "header": "Qt3DCore/qabstractskeleton.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
       ],
       "methods": [
-        { "name": "jointCount", "returnType": "int", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "jointCount", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -90,17 +91,15 @@
       "cppName": "Qt3DCore::QArmature",
       "header": "Qt3DCore/qarmature.h",
       "bases": ["Qt3DCore::QComponent"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setSkeleton", "returnType": "void", "parameters": [{ "name": "skeleton", "type": "Qt3DCore::QAbstractSkeleton*" }] },
-        { "name": "skeleton", "returnType": "Qt3DCore::QAbstractSkeleton*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "skeleton", "flags": ["const"], "returnType": "Qt3DCore::QAbstractSkeleton*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -117,25 +116,23 @@
       "cppName": "Qt3DCore::QAspectEngine",
       "header": "Qt3DCore/qaspectengine.h",
       "bases": ["QObject"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "aspect", "returnType": "Qt3DCore::QAbstractAspect*", "parameters": [{ "name": "name", "type": "QString" }] },
-        { "name": "aspects", "returnType": "QList<Qt3DCore::QAbstractAspect*>", "parameters": [] },
+        { "name": "aspect", "flags": ["const"], "returnType": "Qt3DCore::QAbstractAspect*", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "aspects", "flags": ["const"], "returnType": "QList<Qt3DCore::QAbstractAspect*>", "parameters": [] },
         { "name": "executeCommand", "returnType": "QVariant", "parameters": [{ "name": "command", "type": "QString" }] },
-        { "name": "lookupNode", "returnType": "Qt3DCore::QNode*", "parameters": [{ "name": "id", "type": "Qt3DCore::QNodeId" }] },
-        { "name": "lookupNodes", "returnType": "QList<Qt3DCore::QNode*>", "parameters": [{ "name": "ids", "type": "QList<Qt3DCore::QNodeId>" }] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "lookupNode", "flags": ["const"], "returnType": "Qt3DCore::QNode*", "parameters": [{ "name": "id", "type": "Qt3DCore::QNodeId" }] },
+        { "name": "lookupNodes", "flags": ["const"], "returnType": "QList<Qt3DCore::QNode*>", "parameters": [{ "name": "ids", "type": "QList<Qt3DCore::QNodeId>" }] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "processFrame", "returnType": "void", "parameters": [] },
         { "name": "registerAspect", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] },
         { "name": "registerAspect", "returnType": "void", "parameters": [{ "name": "aspect", "type": "Qt3DCore::QAbstractAspect*" }] },
-        { "name": "runMode", "returnType": "QAspectEngine::RunMode", "parameters": [] },
+        { "name": "runMode", "flags": ["const"], "returnType": "QAspectEngine::RunMode", "parameters": [] },
         { "name": "setRunMode", "returnType": "void", "parameters": [{ "name": "mode", "type": "QAspectEngine::RunMode" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
         { "name": "unregisterAspect", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] },
         { "name": "unregisterAspect", "returnType": "void", "parameters": [{ "name": "aspect", "type": "Qt3DCore::QAbstractAspect*" }] }
       ],
@@ -150,32 +147,30 @@
       "cppName": "Qt3DCore::QAttribute",
       "header": "Qt3DCore/qattribute.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] },
-        { "parameters": [{ "name": "buf", "type": "Qt3DCore::QBuffer*" }, { "name": "vertexBaseType", "type": "QAttribute::VertexBaseType" }, { "name": "vertexSize", "type": "unsigned int" }, { "name": "count", "type": "unsigned int" }, { "name": "offset", "type": "unsigned int", "optional": true, "default": "0" }, { "name": "stride", "type": "unsigned int", "optional": true, "default": "0" }, { "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] },
-        { "parameters": [{ "name": "buf", "type": "Qt3DCore::QBuffer*" }, { "name": "name", "type": "QString" }, { "name": "vertexBaseType", "type": "QAttribute::VertexBaseType" }, { "name": "vertexSize", "type": "unsigned int" }, { "name": "count", "type": "unsigned int" }, { "name": "offset", "type": "unsigned int", "optional": true, "default": "0" }, { "name": "stride", "type": "unsigned int", "optional": true, "default": "0" }, { "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] },
+        { "parameters": [{ "name": "buf", "type": "Qt3DCore::QBuffer*" }, { "name": "vertexBaseType", "type": "QAttribute::VertexBaseType" }, { "name": "vertexSize", "type": "unsigned int" }, { "name": "count", "type": "unsigned int" }, { "name": "offset", "type": "unsigned int", "flags": ["optional"], "default": "0" }, { "name": "stride", "type": "unsigned int", "flags": ["optional"], "default": "0" }, { "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] },
+        { "parameters": [{ "name": "buf", "type": "Qt3DCore::QBuffer*" }, { "name": "name", "type": "QString" }, { "name": "vertexBaseType", "type": "QAttribute::VertexBaseType" }, { "name": "vertexSize", "type": "unsigned int" }, { "name": "count", "type": "unsigned int" }, { "name": "offset", "type": "unsigned int", "flags": ["optional"], "default": "0" }, { "name": "stride", "type": "unsigned int", "flags": ["optional"], "default": "0" }, { "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "attributeType", "returnType": "QAttribute::AttributeType", "parameters": [] },
-        { "name": "buffer", "returnType": "Qt3DCore::QBuffer*", "parameters": [] },
-        { "name": "byteOffset", "returnType": "unsigned int", "parameters": [] },
-        { "name": "byteStride", "returnType": "unsigned int", "parameters": [] },
-        { "name": "count", "returnType": "unsigned int", "parameters": [] },
-        { "name": "defaultColorAttributeName", "static": true, "returnType": "QString", "parameters": [] },
-        { "name": "defaultJointIndicesAttributeName", "static": true, "returnType": "QString", "parameters": [] },
-        { "name": "defaultJointWeightsAttributeName", "static": true, "returnType": "QString", "parameters": [] },
-        { "name": "defaultNormalAttributeName", "static": true, "returnType": "QString", "parameters": [] },
-        { "name": "defaultPositionAttributeName", "static": true, "returnType": "QString", "parameters": [] },
-        { "name": "defaultTangentAttributeName", "static": true, "returnType": "QString", "parameters": [] },
-        { "name": "defaultTextureCoordinate1AttributeName", "static": true, "returnType": "QString", "parameters": [] },
-        { "name": "defaultTextureCoordinate2AttributeName", "static": true, "returnType": "QString", "parameters": [] },
-        { "name": "defaultTextureCoordinateAttributeName", "static": true, "returnType": "QString", "parameters": [] },
-        { "name": "divisor", "returnType": "unsigned int", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "name", "returnType": "QString", "parameters": [] },
+        { "name": "attributeType", "flags": ["const"], "returnType": "QAttribute::AttributeType", "parameters": [] },
+        { "name": "buffer", "flags": ["const"], "returnType": "Qt3DCore::QBuffer*", "parameters": [] },
+        { "name": "byteOffset", "flags": ["const"], "returnType": "unsigned int", "parameters": [] },
+        { "name": "byteStride", "flags": ["const"], "returnType": "unsigned int", "parameters": [] },
+        { "name": "count", "flags": ["const"], "returnType": "unsigned int", "parameters": [] },
+        { "name": "defaultColorAttributeName", "flags": ["static"], "returnType": "QString", "parameters": [] },
+        { "name": "defaultJointIndicesAttributeName", "flags": ["static"], "returnType": "QString", "parameters": [] },
+        { "name": "defaultJointWeightsAttributeName", "flags": ["static"], "returnType": "QString", "parameters": [] },
+        { "name": "defaultNormalAttributeName", "flags": ["static"], "returnType": "QString", "parameters": [] },
+        { "name": "defaultPositionAttributeName", "flags": ["static"], "returnType": "QString", "parameters": [] },
+        { "name": "defaultTangentAttributeName", "flags": ["static"], "returnType": "QString", "parameters": [] },
+        { "name": "defaultTextureCoordinate1AttributeName", "flags": ["static"], "returnType": "QString", "parameters": [] },
+        { "name": "defaultTextureCoordinate2AttributeName", "flags": ["static"], "returnType": "QString", "parameters": [] },
+        { "name": "defaultTextureCoordinateAttributeName", "flags": ["static"], "returnType": "QString", "parameters": [] },
+        { "name": "divisor", "flags": ["const"], "returnType": "unsigned int", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "name", "flags": ["const"], "returnType": "QString", "parameters": [] },
         { "name": "setAttributeType", "returnType": "void", "parameters": [{ "name": "attributeType", "type": "QAttribute::AttributeType" }] },
         { "name": "setBuffer", "returnType": "void", "parameters": [{ "name": "buffer", "type": "Qt3DCore::QBuffer*" }] },
         { "name": "setByteOffset", "returnType": "void", "parameters": [{ "name": "byteOffset", "type": "unsigned int" }] },
@@ -185,9 +180,9 @@
         { "name": "setName", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] },
         { "name": "setVertexBaseType", "returnType": "void", "parameters": [{ "name": "type", "type": "QAttribute::VertexBaseType" }] },
         { "name": "setVertexSize", "returnType": "void", "parameters": [{ "name": "size", "type": "unsigned int" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "vertexBaseType", "returnType": "QAttribute::VertexBaseType", "parameters": [] },
-        { "name": "vertexSize", "returnType": "unsigned int", "parameters": [] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
+        { "name": "vertexBaseType", "flags": ["const"], "returnType": "QAttribute::VertexBaseType", "parameters": [] },
+        { "name": "vertexSize", "flags": ["const"], "returnType": "unsigned int", "parameters": [] }
       ],
       "virtuals": [
       ],
@@ -231,25 +226,23 @@
       "cppName": "Qt3DCore::QBoundingVolume",
       "header": "Qt3DCore/qboundingvolume.h",
       "bases": ["Qt3DCore::QComponent"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "areImplicitPointsValid", "returnType": "bool", "parameters": [] },
-        { "name": "implicitMaxPoint", "returnType": "QVector3D", "parameters": [] },
-        { "name": "implicitMinPoint", "returnType": "QVector3D", "parameters": [] },
-        { "name": "maxPoint", "returnType": "QVector3D", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minPoint", "returnType": "QVector3D", "parameters": [] },
+        { "name": "areImplicitPointsValid", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "implicitMaxPoint", "flags": ["const"], "returnType": "QVector3D", "parameters": [] },
+        { "name": "implicitMinPoint", "flags": ["const"], "returnType": "QVector3D", "parameters": [] },
+        { "name": "maxPoint", "flags": ["const"], "returnType": "QVector3D", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "minPoint", "flags": ["const"], "returnType": "QVector3D", "parameters": [] },
         { "name": "setMaxPoint", "returnType": "void", "parameters": [{ "name": "maxPoint", "type": "QVector3D" }] },
         { "name": "setMinPoint", "returnType": "void", "parameters": [{ "name": "minPoint", "type": "QVector3D" }] },
         { "name": "setView", "returnType": "void", "parameters": [{ "name": "view", "type": "Qt3DCore::QGeometryView*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
         { "name": "updateImplicitBounds", "returnType": "bool", "parameters": [] },
-        { "name": "view", "returnType": "Qt3DCore::QGeometryView*", "parameters": [] }
+        { "name": "view", "flags": ["const"], "returnType": "Qt3DCore::QGeometryView*", "parameters": [] }
       ],
       "virtuals": [
       ],
@@ -276,22 +269,20 @@
       "cppName": "Qt3DCore::QBuffer",
       "header": "Qt3DCore/qbuffer.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "accessType", "returnType": "QBuffer::AccessType", "parameters": [] },
-        { "name": "data", "returnType": "QByteArray", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "accessType", "flags": ["const"], "returnType": "QBuffer::AccessType", "parameters": [] },
+        { "name": "data", "flags": ["const"], "returnType": "QByteArray", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setAccessType", "returnType": "void", "parameters": [{ "name": "access", "type": "QBuffer::AccessType" }] },
         { "name": "setData", "returnType": "void", "parameters": [{ "name": "bytes", "type": "QByteArray" }] },
         { "name": "setUsage", "returnType": "void", "parameters": [{ "name": "usage", "type": "QBuffer::UsageType" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
         { "name": "updateData", "returnType": "void", "parameters": [{ "name": "offset", "type": "int" }, { "name": "bytes", "type": "QByteArray" }] },
-        { "name": "usage", "returnType": "QBuffer::UsageType", "parameters": [] }
+        { "name": "usage", "flags": ["const"], "returnType": "QBuffer::UsageType", "parameters": [] }
       ],
       "virtuals": [
       ],
@@ -312,18 +303,16 @@
       "cppName": "Qt3DCore::QComponent",
       "header": "Qt3DCore/qcomponent.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "entities", "returnType": "QList<Qt3DCore::QEntity*>", "parameters": [] },
-        { "name": "isShareable", "returnType": "bool", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "entities", "flags": ["const"], "returnType": "QList<Qt3DCore::QEntity*>", "parameters": [] },
+        { "name": "isShareable", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setShareable", "returnType": "void", "parameters": [{ "name": "isShareable", "type": "bool" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -342,17 +331,20 @@
       "cppName": "Qt3DCore::QCoreAspect",
       "header": "Qt3DCore/qcoreaspect.h",
       "bases": ["Qt3DCore::QAbstractAspect"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
+        { "name": "executeCommand", "flags": ["noBase"], "returnType": "QVariant", "returnCpp": "QVariant", "parameters": [{ "name": "args", "type": "QStringList", "cpp": "const QStringList &" }] },
+        { "name": "frameDone", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] },
+        { "name": "onEngineStartup", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] },
+        { "name": "onRegistered", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] },
+        { "name": "onUnregistered", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] }
       ],
       "signals": [
       ]
@@ -363,17 +355,15 @@
       "cppName": "Qt3DCore::QCoreSettings",
       "header": "Qt3DCore/qcoresettings.h",
       "bases": ["Qt3DCore::QComponent"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "boundingVolumesEnabled", "returnType": "bool", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "boundingVolumesEnabled", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setBoundingVolumesEnabled", "returnType": "void", "parameters": [{ "name": "boundingVolumesEnabled", "type": "bool" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -390,19 +380,17 @@
       "cppName": "Qt3DCore::QEntity",
       "header": "Qt3DCore/qentity.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
         { "name": "addComponent", "returnType": "void", "parameters": [{ "name": "comp", "type": "Qt3DCore::QComponent*" }] },
-        { "name": "components", "returnType": "QList<Qt3DCore::QComponent*>", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "parentEntity", "returnType": "Qt3DCore::QEntity*", "parameters": [] },
+        { "name": "components", "flags": ["const"], "returnType": "QList<Qt3DCore::QComponent*>", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "parentEntity", "flags": ["const"], "returnType": "Qt3DCore::QEntity*", "parameters": [] },
         { "name": "removeComponent", "returnType": "void", "parameters": [{ "name": "comp", "type": "Qt3DCore::QComponent*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -415,22 +403,20 @@
       "cppName": "Qt3DCore::QGeometry",
       "header": "Qt3DCore/qgeometry.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
         { "name": "addAttribute", "returnType": "void", "parameters": [{ "name": "attribute", "type": "Qt3DCore::QAttribute*" }] },
-        { "name": "attributes", "returnType": "QList<Qt3DCore::QAttribute*>", "parameters": [] },
-        { "name": "boundingVolumePositionAttribute", "returnType": "Qt3DCore::QAttribute*", "parameters": [] },
-        { "name": "maxExtent", "returnType": "QVector3D", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minExtent", "returnType": "QVector3D", "parameters": [] },
+        { "name": "attributes", "flags": ["const"], "returnType": "QList<Qt3DCore::QAttribute*>", "parameters": [] },
+        { "name": "boundingVolumePositionAttribute", "flags": ["const"], "returnType": "Qt3DCore::QAttribute*", "parameters": [] },
+        { "name": "maxExtent", "flags": ["const"], "returnType": "QVector3D", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "minExtent", "flags": ["const"], "returnType": "QVector3D", "parameters": [] },
         { "name": "removeAttribute", "returnType": "void", "parameters": [{ "name": "attribute", "type": "Qt3DCore::QAttribute*" }] },
         { "name": "setBoundingVolumePositionAttribute", "returnType": "void", "parameters": [{ "name": "boundingVolumePositionAttribute", "type": "Qt3DCore::QAttribute*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -451,23 +437,21 @@
       "cppName": "Qt3DCore::QGeometryView",
       "header": "Qt3DCore/qgeometryview.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "firstInstance", "returnType": "int", "parameters": [] },
-        { "name": "firstVertex", "returnType": "int", "parameters": [] },
-        { "name": "geometry", "returnType": "Qt3DCore::QGeometry*", "parameters": [] },
-        { "name": "indexBufferByteOffset", "returnType": "int", "parameters": [] },
-        { "name": "indexOffset", "returnType": "int", "parameters": [] },
-        { "name": "instanceCount", "returnType": "int", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "primitiveRestartEnabled", "returnType": "bool", "parameters": [] },
-        { "name": "primitiveType", "returnType": "QGeometryView::PrimitiveType", "parameters": [] },
-        { "name": "restartIndexValue", "returnType": "int", "parameters": [] },
+        { "name": "firstInstance", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "firstVertex", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "geometry", "flags": ["const"], "returnType": "Qt3DCore::QGeometry*", "parameters": [] },
+        { "name": "indexBufferByteOffset", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "indexOffset", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "instanceCount", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "primitiveRestartEnabled", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "primitiveType", "flags": ["const"], "returnType": "QGeometryView::PrimitiveType", "parameters": [] },
+        { "name": "restartIndexValue", "flags": ["const"], "returnType": "int", "parameters": [] },
         { "name": "setFirstInstance", "returnType": "void", "parameters": [{ "name": "firstInstance", "type": "int" }] },
         { "name": "setFirstVertex", "returnType": "void", "parameters": [{ "name": "firstVertex", "type": "int" }] },
         { "name": "setGeometry", "returnType": "void", "parameters": [{ "name": "geometry", "type": "Qt3DCore::QGeometry*" }] },
@@ -479,9 +463,9 @@
         { "name": "setRestartIndexValue", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "setVertexCount", "returnType": "void", "parameters": [{ "name": "vertexCount", "type": "int" }] },
         { "name": "setVerticesPerPatch", "returnType": "void", "parameters": [{ "name": "verticesPerPatch", "type": "int" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "vertexCount", "returnType": "int", "parameters": [] },
-        { "name": "verticesPerPatch", "returnType": "int", "parameters": [] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
+        { "name": "vertexCount", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "verticesPerPatch", "flags": ["const"], "returnType": "int", "parameters": [] }
       ],
       "virtuals": [
       ],
@@ -518,24 +502,22 @@
       "cppName": "Qt3DCore::QJoint",
       "header": "Qt3DCore/qjoint.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
         { "name": "addChildJoint", "returnType": "void", "parameters": [{ "name": "joint", "type": "Qt3DCore::QJoint*" }] },
-        { "name": "childJoints", "returnType": "QList<Qt3DCore::QJoint*>", "parameters": [] },
-        { "name": "inverseBindMatrix", "returnType": "QMatrix4x4", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "name", "returnType": "QString", "parameters": [] },
+        { "name": "childJoints", "flags": ["const"], "returnType": "QList<Qt3DCore::QJoint*>", "parameters": [] },
+        { "name": "inverseBindMatrix", "flags": ["const"], "returnType": "QMatrix4x4", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "name", "flags": ["const"], "returnType": "QString", "parameters": [] },
         { "name": "removeChildJoint", "returnType": "void", "parameters": [{ "name": "joint", "type": "Qt3DCore::QJoint*" }] },
-        { "name": "rotation", "returnType": "QQuaternion", "parameters": [] },
-        { "name": "rotationX", "returnType": "float", "parameters": [] },
-        { "name": "rotationY", "returnType": "float", "parameters": [] },
-        { "name": "rotationZ", "returnType": "float", "parameters": [] },
-        { "name": "scale", "returnType": "QVector3D", "parameters": [] },
+        { "name": "rotation", "flags": ["const"], "returnType": "QQuaternion", "parameters": [] },
+        { "name": "rotationX", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "rotationY", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "rotationZ", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "scale", "flags": ["const"], "returnType": "QVector3D", "parameters": [] },
         { "name": "setInverseBindMatrix", "returnType": "void", "parameters": [{ "name": "inverseBindMatrix", "type": "QMatrix4x4" }] },
         { "name": "setName", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] },
         { "name": "setRotation", "returnType": "void", "parameters": [{ "name": "rotation", "type": "QQuaternion" }] },
@@ -545,8 +527,8 @@
         { "name": "setScale", "returnType": "void", "parameters": [{ "name": "scale", "type": "QVector3D" }] },
         { "name": "setToIdentity", "returnType": "void", "parameters": [] },
         { "name": "setTranslation", "returnType": "void", "parameters": [{ "name": "translation", "type": "QVector3D" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "translation", "returnType": "QVector3D", "parameters": [] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
+        { "name": "translation", "flags": ["const"], "returnType": "QVector3D", "parameters": [] }
       ],
       "virtuals": [
       ],
@@ -577,23 +559,21 @@
       "cppName": "Qt3DCore::QNode",
       "header": "Qt3DCore/qnode.h",
       "bases": ["QObject"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
         { "name": "blockNotifications", "returnType": "bool", "parameters": [{ "name": "block", "type": "bool" }] },
-        { "name": "childNodes", "returnType": "QList<Qt3DCore::QNode*>", "parameters": [] },
-        { "name": "id", "returnType": "Qt3DCore::QNodeId", "parameters": [] },
-        { "name": "isEnabled", "returnType": "bool", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "notificationsBlocked", "returnType": "bool", "parameters": [] },
-        { "name": "parentNode", "returnType": "Qt3DCore::QNode*", "parameters": [] },
+        { "name": "childNodes", "flags": ["const"], "returnType": "QList<Qt3DCore::QNode*>", "parameters": [] },
+        { "name": "id", "flags": ["const"], "returnType": "Qt3DCore::QNodeId", "parameters": [] },
+        { "name": "isEnabled", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "notificationsBlocked", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "parentNode", "flags": ["const"], "returnType": "Qt3DCore::QNode*", "parameters": [] },
         { "name": "setEnabled", "returnType": "void", "parameters": [{ "name": "isEnabled", "type": "bool" }] },
         { "name": "setParent", "returnType": "void", "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -613,16 +593,14 @@
       "cppName": "Qt3DCore::QNodeId",
       "header": "Qt3DCore/qnodeid.h",
       "bases": [],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
         { "parameters": [] }
       ],
       "methods": [
-        { "name": "createId", "static": true, "returnType": "Qt3DCore::QNodeId", "parameters": [] },
-        { "name": "id", "returnType": "unsigned long long", "parameters": [] },
-        { "name": "isNull", "returnType": "bool", "parameters": [] }
+        { "name": "createId", "flags": ["static"], "returnType": "Qt3DCore::QNodeId", "parameters": [] },
+        { "name": "id", "flags": ["const"], "returnType": "unsigned long long", "parameters": [] },
+        { "name": "isNull", "flags": ["const"], "returnType": "bool", "parameters": [] }
       ],
       "virtuals": [
       ],
@@ -635,17 +613,15 @@
       "cppName": "Qt3DCore::QSkeleton",
       "header": "Qt3DCore/qskeleton.h",
       "bases": ["Qt3DCore::QAbstractSkeleton"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "rootJoint", "returnType": "Qt3DCore::QJoint*", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "rootJoint", "flags": ["const"], "returnType": "Qt3DCore::QJoint*", "parameters": [] },
         { "name": "setRootJoint", "returnType": "void", "parameters": [{ "name": "rootJoint", "type": "Qt3DCore::QJoint*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -662,22 +638,20 @@
       "cppName": "Qt3DCore::QSkeletonLoader",
       "header": "Qt3DCore/qskeletonloader.h",
       "bases": ["Qt3DCore::QAbstractSkeleton"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] },
-        { "parameters": [{ "name": "source", "type": "QUrl" }, { "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] },
+        { "parameters": [{ "name": "source", "type": "QUrl" }, { "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "isCreateJointsEnabled", "returnType": "bool", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "rootJoint", "returnType": "Qt3DCore::QJoint*", "parameters": [] },
+        { "name": "isCreateJointsEnabled", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "rootJoint", "flags": ["const"], "returnType": "Qt3DCore::QJoint*", "parameters": [] },
         { "name": "setCreateJointsEnabled", "returnType": "void", "parameters": [{ "name": "enabled", "type": "bool" }] },
         { "name": "setSource", "returnType": "void", "parameters": [{ "name": "source", "type": "QUrl" }] },
-        { "name": "source", "returnType": "QUrl", "parameters": [] },
-        { "name": "status", "returnType": "QSkeletonLoader::Status", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "source", "flags": ["const"], "returnType": "QUrl", "parameters": [] },
+        { "name": "status", "flags": ["const"], "returnType": "QSkeletonLoader::Status", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -700,30 +674,28 @@
       "cppName": "Qt3DCore::QTransform",
       "header": "Qt3DCore/qtransform.h",
       "bases": ["Qt3DCore::QComponent"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "fromAxes", "static": true, "returnType": "QQuaternion", "parameters": [{ "name": "xAxis", "type": "QVector3D" }, { "name": "yAxis", "type": "QVector3D" }, { "name": "zAxis", "type": "QVector3D" }] },
-        { "name": "fromAxesAndAngles", "static": true, "returnType": "QQuaternion", "parameters": [{ "name": "axis1", "type": "QVector3D" }, { "name": "angle1", "type": "float" }, { "name": "axis2", "type": "QVector3D" }, { "name": "angle2", "type": "float" }] },
-        { "name": "fromAxesAndAngles", "static": true, "returnType": "QQuaternion", "parameters": [{ "name": "axis1", "type": "QVector3D" }, { "name": "angle1", "type": "float" }, { "name": "axis2", "type": "QVector3D" }, { "name": "angle2", "type": "float" }, { "name": "axis3", "type": "QVector3D" }, { "name": "angle3", "type": "float" }] },
-        { "name": "fromAxisAndAngle", "static": true, "returnType": "QQuaternion", "parameters": [{ "name": "axis", "type": "QVector3D" }, { "name": "angle", "type": "float" }] },
-        { "name": "fromAxisAndAngle", "static": true, "returnType": "QQuaternion", "parameters": [{ "name": "x", "type": "float" }, { "name": "y", "type": "float" }, { "name": "z", "type": "float" }, { "name": "angle", "type": "float" }] },
-        { "name": "fromEulerAngles", "static": true, "returnType": "QQuaternion", "parameters": [{ "name": "eulerAngles", "type": "QVector3D" }] },
-        { "name": "fromEulerAngles", "static": true, "returnType": "QQuaternion", "parameters": [{ "name": "pitch", "type": "float" }, { "name": "yaw", "type": "float" }, { "name": "roll", "type": "float" }] },
-        { "name": "matrix", "returnType": "QMatrix4x4", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "rotateAround", "static": true, "returnType": "QMatrix4x4", "parameters": [{ "name": "point", "type": "QVector3D" }, { "name": "angle", "type": "float" }, { "name": "axis", "type": "QVector3D" }] },
-        { "name": "rotateFromAxes", "static": true, "returnType": "QMatrix4x4", "parameters": [{ "name": "xAxis", "type": "QVector3D" }, { "name": "yAxis", "type": "QVector3D" }, { "name": "zAxis", "type": "QVector3D" }] },
-        { "name": "rotation", "returnType": "QQuaternion", "parameters": [] },
-        { "name": "rotationX", "returnType": "float", "parameters": [] },
-        { "name": "rotationY", "returnType": "float", "parameters": [] },
-        { "name": "rotationZ", "returnType": "float", "parameters": [] },
-        { "name": "scale", "returnType": "float", "parameters": [] },
-        { "name": "scale3D", "returnType": "QVector3D", "parameters": [] },
+        { "name": "fromAxes", "flags": ["static"], "returnType": "QQuaternion", "parameters": [{ "name": "xAxis", "type": "QVector3D" }, { "name": "yAxis", "type": "QVector3D" }, { "name": "zAxis", "type": "QVector3D" }] },
+        { "name": "fromAxesAndAngles", "flags": ["static"], "returnType": "QQuaternion", "parameters": [{ "name": "axis1", "type": "QVector3D" }, { "name": "angle1", "type": "float" }, { "name": "axis2", "type": "QVector3D" }, { "name": "angle2", "type": "float" }] },
+        { "name": "fromAxesAndAngles", "flags": ["static"], "returnType": "QQuaternion", "parameters": [{ "name": "axis1", "type": "QVector3D" }, { "name": "angle1", "type": "float" }, { "name": "axis2", "type": "QVector3D" }, { "name": "angle2", "type": "float" }, { "name": "axis3", "type": "QVector3D" }, { "name": "angle3", "type": "float" }] },
+        { "name": "fromAxisAndAngle", "flags": ["static"], "returnType": "QQuaternion", "parameters": [{ "name": "axis", "type": "QVector3D" }, { "name": "angle", "type": "float" }] },
+        { "name": "fromAxisAndAngle", "flags": ["static"], "returnType": "QQuaternion", "parameters": [{ "name": "x", "type": "float" }, { "name": "y", "type": "float" }, { "name": "z", "type": "float" }, { "name": "angle", "type": "float" }] },
+        { "name": "fromEulerAngles", "flags": ["static"], "returnType": "QQuaternion", "parameters": [{ "name": "eulerAngles", "type": "QVector3D" }] },
+        { "name": "fromEulerAngles", "flags": ["static"], "returnType": "QQuaternion", "parameters": [{ "name": "pitch", "type": "float" }, { "name": "yaw", "type": "float" }, { "name": "roll", "type": "float" }] },
+        { "name": "matrix", "flags": ["const"], "returnType": "QMatrix4x4", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "rotateAround", "flags": ["static"], "returnType": "QMatrix4x4", "parameters": [{ "name": "point", "type": "QVector3D" }, { "name": "angle", "type": "float" }, { "name": "axis", "type": "QVector3D" }] },
+        { "name": "rotateFromAxes", "flags": ["static"], "returnType": "QMatrix4x4", "parameters": [{ "name": "xAxis", "type": "QVector3D" }, { "name": "yAxis", "type": "QVector3D" }, { "name": "zAxis", "type": "QVector3D" }] },
+        { "name": "rotation", "flags": ["const"], "returnType": "QQuaternion", "parameters": [] },
+        { "name": "rotationX", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "rotationY", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "rotationZ", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "scale", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "scale3D", "flags": ["const"], "returnType": "QVector3D", "parameters": [] },
         { "name": "setMatrix", "returnType": "void", "parameters": [{ "name": "matrix", "type": "QMatrix4x4" }] },
         { "name": "setRotation", "returnType": "void", "parameters": [{ "name": "rotation", "type": "QQuaternion" }] },
         { "name": "setRotationX", "returnType": "void", "parameters": [{ "name": "rotationX", "type": "float" }] },
@@ -732,9 +704,9 @@
         { "name": "setScale", "returnType": "void", "parameters": [{ "name": "scale", "type": "float" }] },
         { "name": "setScale3D", "returnType": "void", "parameters": [{ "name": "scale", "type": "QVector3D" }] },
         { "name": "setTranslation", "returnType": "void", "parameters": [{ "name": "translation", "type": "QVector3D" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "translation", "returnType": "QVector3D", "parameters": [] },
-        { "name": "worldMatrix", "returnType": "QMatrix4x4", "parameters": [] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
+        { "name": "translation", "flags": ["const"], "returnType": "QVector3D", "parameters": [] },
+        { "name": "worldMatrix", "flags": ["const"], "returnType": "QMatrix4x4", "parameters": [] }
       ],
       "virtuals": [
       ],

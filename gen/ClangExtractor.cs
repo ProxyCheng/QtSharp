@@ -72,14 +72,9 @@ public static partial class ApiModel
         var index2 = BuildIndex(tu);
         Console.WriteLine($"[model2] indexed {index2.Classes.Count} class(es), {index2.Enums.Count} enum(s)");
 
-        // The extension points a managed subclass has to be able to implement: publishing them is
-        // a *name* closure, because a name published only on the class that declares it would
-        // leave concrete subclasses (QStandardItemModel::data) without an implementation to chain
-        // to. Done before any class is rendered, so every class sees the same set.
-        CollectVirtualExtensionNames(index2);
-        CollectPureVirtualNames(index2);
+        // Copyability is only needed for classes that cross a virtual by value, and that depends
+        // on the whole parse: collect it before any class is rendered.
         CollectVirtualValueClasses(index2);
-        Console.WriteLine($"[model2] {VirtualExtensionNames.Count} virtual name(s) published for {VirtualExtensionClasses.Length} extension class(es)");
 
         var part = new ModelPart();
         Skipped2.Clear();
@@ -890,9 +885,9 @@ public static partial class ApiModel
     // Whether a managed subclass of this (abstract) class can exist. The generated native
     // subclass is concrete only if every pure virtual it inherits is published as an override
     // point - otherwise `new QsApi_X` does not compile. A pure virtual is mandatory for any
-    // concrete subclass, so it is published whether or not it is on the curated list; what can
-    // still disqualify the class is a pure virtual the binding cannot express (an unbound type,
-    // an out parameter on a virtual, a deleted member).
+    // concrete subclass, so it is published whenever it is expressible; what can still disqualify
+    // the class is a pure virtual the binding cannot express (an unbound type, a reference
+    // return, a private hook, a deleted member).
     // Whether a derived C++ class can construct this one with no arguments: no declared
     // constructor (the implicit default one), or a non-private constructor whose parameters all
     // have defaults. A deleted default constructor does not count.
@@ -920,10 +915,15 @@ public static partial class ApiModel
     // The single decision on whether a virtual is published as an override point. Three places
     // must agree or the model loses a member: the virtuals list picks the published ones, the
     // methods list keeps the rest as plain callables, and CanSubclassFromManaged requires every
-    // inherited pure virtual to be published. `PublishAsVirtual` is the *name* rule; this adds
-    // the expressibility the generated glue needs. A by-reference parameter (QValidator::validate)
-    // is expressible: the dispatch stub reads the initial value and writes the override's result
-    // back into the caller's slot.
+    // inherited pure virtual to be published.
+    //
+    // There is no name list: every virtual whose signature the glue can reproduce exactly and
+    // dispatch is an override point, the way PyQt/SIP wraps every virtual it parses. What is left
+    // is expressibility - an operator has no C# operator to install, a reference return cannot be
+    // spelled by the by-value model, an unsupported parameter type has no marshalling, an out
+    // buffer has no length, and a private virtual gets no hook (Qt's QAbstractListModel hides
+    // columnCount that way). A by-reference parameter is expressible: the dispatch stub reads the
+    // initial value and writes the override's result back into the caller's slot.
     static bool PublishesAsVirtual(FnFact fn, string className)
     {
         if (!fn.IsVirtual || fn.IsCtor)
@@ -931,60 +931,78 @@ public static partial class ApiModel
         // There is no C# operator to install, and the native glue cannot name one.
         if (fn.Name.StartsWith("operator", StringComparison.Ordinal))
             return false;
-        if (!(fn.IsPure || PublishAsVirtual(fn.Name, className)))
+        // The Q_OBJECT scaffolding is not an API: moc generates metaObject, qt_metacall and
+        // qt_metacast in every QObject subclass, and they must not become overridable members.
+        if (fn.Name == "metaObject" || fn.Name.StartsWith("qt_", StringComparison.Ordinal))
             return false;
-        // An override has to repeat the return type exactly, and the model carries only the
-        // value type; a reference return (`const QFutureInterfaceBase &futureInterface()`) would
-        // be emitted as a by-value override and silently not override anything.
+        // An override has to repeat the return type exactly. The model carries only the value
+        // type, so a reference return (QFutureInterfaceBase &futureInterface()) would be emitted
+        // as a by-value override and silently not override anything.
         if (Unwrap(fn.ReturnClangType).kind == CXTypeKind.CXType_LValueReference
             || Unwrap(fn.ReturnClangType).kind == CXTypeKind.CXType_RValueReference)
             return false;
         if (!fn.ReturnDropped && !SupportedType(fn.ReturnClangType, isReturn: true))
             return false;
-        // A by-reference parameter is dispatched with write-back: the managed override gets the
-        // initial value and the generated stub stores what it wrote into the caller's slot. An
-        // out *buffer* is the one shape that cannot work (the length is not in the signature).
+        // A pointer written as a *buffer* has no length in the signature, so the ABI cannot carry
+        // it (QMatrix4x4::copyDataTo). Nothing in the bound set declares such a virtual, but the
+        // rule is the same one the method path uses.
         if (fn.Params.Any(p => p.Mode == ParamMode.Out) && IsOutBufferMethod(fn.Name))
             return false;
-        foreach (var p in fn.Params)
+        for (int i = 0; i < fn.Params.Count; i++)
         {
+            var p = fn.Params[i];
             // A QIODevice byte buffer is an IntPtr by construction (QioDeviceBridge.cs).
             if (p.Buffer)
                 continue;
             if (p.Type == null || !SupportedType(p.ClangType, isParameter: true))
                 return false;
+            // A pointer to a runtime value type is an array on the managed side. Qt spells the
+            // length as the parameter after it (`const QPoint *points, int count`); without one
+            // (QPaintDevice::redirected's `QPoint *offset`, a single value written through) the
+            // model has no faithful spelling, and a non-const array would be an output buffer the
+            // dispatch cannot write back.
+            if (IsStructPointer(p) && !IsConstArrayWithCount(fn.Params, i))
+                return false;
         }
         return true;
     }
 
-    // Every pure virtual name in the bound set, collected once per run. A pure virtual is
-    // mandatory for a concrete subclass, so it is an override point wherever it is declared -
-    // including the classes that merely *redeclare* it (QLineSeries::type): publishing it only on
-    // QAbstractSeries would leave QLineSeries' own override as a plain method, and the native
-    // hook would dispatch back into that plain method - infinite recursion.
-    static readonly HashSet<string> PureVirtualNames = new(StringComparer.Ordinal);
+    static bool IsStructPointer(ParamFact p)
+        => p.Type != null && p.Type.EndsWith("*", StringComparison.Ordinal)
+           && ApiTypes.IsStruct(p.Type.Substring(0, p.Type.Length - 1));
 
-    static void CollectPureVirtualNames(ClangIndex index)
+    // A `const T *items, int count` pair: an input array an override can read.
+    static bool IsConstArrayWithCount(List<ParamFact> ps, int index)
     {
-        PureVirtualNames.Clear();
-        foreach (var record in index.Classes.Values)
-        {
-            foreach (var child in Children(record))
-            {
-                if (clang.getCursorKind(child) != CXCursorKind.CXCursor_CXXMethod)
-                    continue;
-                if (clang.CXXMethod_isPureVirtual(child) == 0)
-                    continue;
-                var name = clang.getCursorSpelling(child).ToString();
-                if (name.Length == 0
-                    || name.StartsWith("operator", StringComparison.Ordinal)
-                    || name == "metaObject"
-                    || name.StartsWith("qt_", StringComparison.Ordinal))
-                    continue;
-                PureVirtualNames.Add(name);
-            }
-        }
+        var p = ps[index];
+        bool isConst = p.CppType != null
+                       && p.CppType.Replace(" ", string.Empty)
+                           .StartsWith("const", StringComparison.Ordinal);
+        return isConst
+               && index + 1 < ps.Count
+               && (ps[index + 1].Type == "int" || ps[index + 1].Type == "unsigned int");
     }
+
+    // libclang exposes no "is final" query, so the keyword is read from the declaration's own
+    // text (`virtual int axisCount() const final;`). A final virtual can be called but never
+    // overridden; the generated native subclass would not compile (C3248). It stays in the
+    // virtuals list as a blocked slot (so it shadows the same signature declared further up) and
+    // is published as a plain callable method.
+    static readonly System.Text.RegularExpressions.Regex FinalKeyword =
+        new(@"\bfinal\b", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+    static bool IsFinalVirtual(CXCursor cursor)
+    {
+        // A declaration that came out of a macro has an extent spanning files, and SourceText
+        // answers null for it; such a declaration is not `final`.
+        var text = SourceText(clang.getCursorExtent(cursor));
+        return text != null && FinalKeyword.IsMatch(text);
+    }
+
+    // The pure virtuals are mandatory for a concrete subclass, so they are recorded even when a
+    // *private* redeclaration hides them: the chain needs the slot to shadow the public base
+    // declaration further up, and the code generator marks it `noBase` (Blocked) instead of
+    // installing a hook. See ChainOf in ApiCodeGen.
 
     // The classes that cross a virtual by value. Those are the only ones whose copyability the
     // model has to record: a virtual's by-value argument is cloned for the managed override, and
@@ -1072,24 +1090,10 @@ public static partial class ApiModel
         return true;
     }
 
-    // Which virtuals a managed subclass may override. The curated list (VirtualAllow) is the
-    // event handlers and the layout hooks; `VirtualExtensionNames` adds the extension points a
-    // real application needs - without them a custom QAbstractItemModel or QStyledItemDelegate
-    // cannot be written from C# at all. The rule is by *name*, not by class: publishing a name
-    // only on the class that declares it would leave every concrete subclass without an
-    // implementation to chain to (QStandardItemModel::data would fall back to the pure virtual),
-    // so every class declaring that name gets it.
-    static bool PublishAsVirtual(string name, string className)
-        => VirtualAllow.Contains(name)
-           || PureVirtualNames.Contains(name)
-           || (VirtualExtensionNames.Contains(name) && IsInExtensionTree(className))
-           // The bridges (QioDeviceBridge today) are the deliberate exceptions; see Bridges.cs.
-           || VirtualBridges.Publishes(className, name);
-
-    // Whether the class is one of the extension classes or inherits from one. The name closure
-    // has to stay inside that subtree: a name like `setData` is also declared, completely
-    // unrelated, by QPicture/QPixmap as `setData(const char *, uint)`, and publishing that as an
-    // override point would generate a slot for a method no model ever calls.
+    // Whether the class is one of the extension classes or inherits from one. The protected
+    // *methods* of that subtree are published (createIndex, beginInsertRows - a model has to call
+    // them on itself), and so is a protected virtual's conversion helper; outside the subtree a
+    // protected member is of no use to a managed subclass.
     static readonly Dictionary<string, bool> extensionTree = new(StringComparer.Ordinal);
 
     static bool IsInExtensionTree(string className)
@@ -1119,12 +1123,8 @@ public static partial class ApiModel
         return result;
     }
 
-    // The union of the virtual names declared by the extension classes, filled once per run
-    // (RunExtract2) so `PublishAsVirtual` stays a set lookup.
-    static readonly HashSet<string> VirtualExtensionNames = new(StringComparer.Ordinal);
-
-    // The classes whose virtualls a managed subclass must be able to implement: the item model and
-    // the item delegate are the two extension points every real Qt application uses.
+    // The classes whose protected *methods* a managed subclass has to call on itself: the item
+    // model and the item delegate are the two extension points every real Qt application uses.
     static readonly string[] VirtualExtensionClasses =
     {
         "QAbstractItemModel", "QAbstractListModel", "QAbstractTableModel",
@@ -1139,32 +1139,6 @@ public static partial class ApiModel
         // model down, and filterAcceptsRow/filterAcceptsColumn/lessThan are the hooks it overrides.
         "QSortFilterProxyModel",
     };
-
-    // Collect the virtual names those classes declare, by walking their own members.
-    static void CollectVirtualExtensionNames(ClangIndex index)
-    {
-        VirtualExtensionNames.Clear();
-        foreach (var className in VirtualExtensionClasses)
-        {
-            if (!index.Classes.TryGetValue(className, out var record))
-                continue;
-            foreach (var child in Children(record))
-            {
-                var kind = clang.getCursorKind(child);
-                if (kind != CXCursorKind.CXCursor_CXXMethod && kind != CXCursorKind.CXCursor_FunctionTemplate)
-                    continue;
-                if (clang.CXXMethod_isVirtual(child) == 0)
-                    continue;
-                var name = clang.getCursorSpelling(child).ToString();
-                // The Q_OBJECT scaffolding is not an API: moc generates metaObject, qt_metacall
-                // and qt_metacast in every QObject subclass, and they must not become overridable
-                // C# members.
-                if (name.Length == 0 || name == "metaObject" || name.StartsWith("qt_", StringComparison.Ordinal))
-                    continue;
-                VirtualExtensionNames.Add(name);
-            }
-        }
-    }
 
     // How one parameter crosses the boundary.
     internal enum ParamMode
@@ -1296,6 +1270,69 @@ public static partial class ApiModel
     }
 
     // --------------------------------------------------------------- facts and rendering
+
+    // The traits a class declaration carries, in one flag list.
+    [Flags]
+    internal enum ClassFlags
+    {
+        None = 0,
+        Abstract = 1,
+        // C++ lets the generated native subclass derive from it (no private/deleted destructor).
+        Subclassable = 2,
+        // An abstract class with no constructor of its own: the generator synthesizes the one a
+        // managed subclass uses.
+        SubclassCtor = 4,
+        // The binding may delete instances it creates (the runtime wrapper owns the object).
+        Owned = 8,
+        // A by-value virtual parameter of this class cannot be cloned (QDataStream); the override
+        // receives a transient wrapper instead. Only read from the type's own class entry.
+        NonCopyable = 16,
+    }
+
+    // The traits a method declaration carries.
+    [Flags]
+    internal enum MethodFlags
+    {
+        None = 0,
+        Static = 1,
+        Protected = 2,
+        // The C++ return is the container's iterator; the published value is what it points at
+        // (QJsonObject::insert) and the native call appends `.value()`.
+        Iterator = 4,
+        // `int foo() const`: the method does not mutate the receiver (the struct emitters pass
+        // `this` by value rather than by reference).
+        Const = 8,
+    }
+
+    // The traits a parameter carries; how it crosses (in/out/ref) is a separate mode string.
+    [Flags]
+    internal enum ParamFlags
+    {
+        None = 0,
+        // A QIODevice byte buffer: the model type is void*, the C++ type stays char*.
+        Buffer = 1,
+        // The declaration has a default argument.
+        Optional = 2,
+    }
+
+    // The traits a virtual declaration carries. The model stores them as one flag list and the
+    // code generator tests bits, instead of accumulating an independent boolean per trait.
+    [Flags]
+    internal enum VirtualFlags
+    {
+        None = 0,
+        // Declared `= 0`: mandatory for a concrete subclass, and there is no base implementation
+        // to chain to.
+        Pure = 1,
+        // A const member (`int foo() const`); the native override must repeat the qualifier.
+        Const = 2,
+        // A private virtual: Qt has an implementation but the generated subclass cannot reach it
+        // (QAbstractListModel::columnCount), so no hook is installed.
+        NoBase = 4,
+        // `final`: callable but a further subclass may not override it (C3248).
+        Final = 8,
+    }
+
     internal class ParamFact
     {
         public string Name;
@@ -1435,8 +1472,10 @@ public static partial class ApiModel
             // it belongs here as a plain callable member (QAbstractItemView::setModel,
             // QDialog::accept, QWidget::sizeHint). The one predicate decides that, so a virtual
             // that the virtuals list cannot express (QValidator::validate) comes back here with
-            // its by-reference parameters intact.
-            .Where(m => !m.IsCtor && !PublishesAsVirtual(m, className))
+            // its by-reference parameters intact. A *final* virtual is recorded in the chain (as
+            // a blocked slot, so it shadows the same signature further up) but it is callable
+            // only - no subclass may override it.
+            .Where(m => !m.IsCtor && (!PublishesAsVirtual(m, className) || IsFinalVirtual(m.Cursor)))
             // Qt's "qt_" members are macro scaffolding (Q_OBJECT), not API, and have no exported
             // symbol either.
             .Where(m => !m.Name.StartsWith("qt_", StringComparison.Ordinal))
@@ -1478,11 +1517,10 @@ public static partial class ApiModel
         // It has to stay in the list, though, or the chain merge would walk past it and pick up
         // the public pure QAbstractItemModel::columnCount instead.
         var virtuals = callable
-            // A pure virtual is mandatory for a concrete subclass, so it is always a candidate;
-            // the curated list decides only the optional hooks (events, layouts, models).
             // PublishesAsVirtual is the one decision shared with the methods list and with
-            // CanSubclassFromManaged, and it covers the operator rule and the expressibility
-            // checks (a by-reference parameter cannot be dispatched).
+            // CanSubclassFromManaged: every expressible virtual is a candidate (there is no name
+            // list), including a private or final one - those are recorded as blocked slots so
+            // they shadow a base declaration without getting a hook.
             .Where(m => PublishesAsVirtual(m, className))
             // An override has to repeat the base declaration exactly, so a virtual keeps its
             // whole parameter list - the marshalable-prefix rule is for callable members only.
@@ -1566,22 +1604,30 @@ public static partial class ApiModel
             body.Append($"      \"cppName\": \"{root.Class}\",\n");
         body.Append($"      \"header\": \"{root.Module}/{root.Header}\",\n");
         body.Append($"      \"bases\": [{string.Join(", ", bases.Select(Json))}],\n");
-        body.Append($"      \"isAbstract\": {(isAbstract ? "true" : "false")},\n");
-        body.Append($"      \"subclassable\": {(subclassable ? "true" : "false")},\n");
         // An abstract class a managed subclass can still derive from: the native subclass is
         // concrete because every pure virtual it inherits is published as an override point, so
         // the code generator can give it a constructor (QAbstractItemModel/QAbstractTableModel).
         bool subclassCtor = isAbstract && subclassable && virtuals.Count > 0 && ctors.Count == 0
                             && CanSubclassFromManaged(className, index, new HashSet<string>(StringComparer.Ordinal));
+        var classFlags = ClassFlags.None;
+        if (isAbstract)
+            classFlags |= ClassFlags.Abstract;
+        if (subclassable)
+            classFlags |= ClassFlags.Subclassable;
         if (subclassCtor)
-            body.Append("      \"subclassCtor\": true,\n");
-        body.Append($"      \"owned\": {(OwnedOf(root) ? "true" : "false")},\n");
+            classFlags |= ClassFlags.SubclassCtor;
+        if (OwnedOf(root))
+            classFlags |= ClassFlags.Owned;
         // A class the binding cannot copy, when a virtual hands it over by value. Only the virtual
         // dispatch path copies a value (so an override owns its parameter); everywhere else a
         // boxed value crosses as a handle.
         if ((VirtualValueClasses.Contains(className) || VirtualValueClasses.Contains(root.Class))
             && !CopyableByValue(record))
-            body.Append("      \"nonCopyable\": true,\n");
+            classFlags |= ClassFlags.NonCopyable;
+        if (classFlags != ClassFlags.None)
+            body.Append("      \"flags\": [")
+                .Append(string.Join(", ", ClassFlagNames(classFlags).Select(Json)))
+                .Append("],\n");
         var fields = FieldsOf(record);
         if (fields.Count > 0)
         {
@@ -2708,13 +2754,20 @@ public static partial class ApiModel
         {
             var m = methods[i];
             sb.Append("        { \"name\": ").Append(Json(m.Name));
+            var methodFlags = MethodFlags.None;
             if (m.IsStatic)
-                sb.Append(", \"static\": true");
+                methodFlags |= MethodFlags.Static;
             if (m.IsProtected)
-                sb.Append(", \"protected\": true");
-            sb.Append(", \"returnType\": ").Append(Json(m.ReturnType));
+                methodFlags |= MethodFlags.Protected;
+            if (m.IsConst)
+                methodFlags |= MethodFlags.Const;
             if (m.ReturnFromIterator)
-                sb.Append(", \"iteratorValue\": true");
+                methodFlags |= MethodFlags.Iterator;
+            if (methodFlags != MethodFlags.None)
+                sb.Append(", \"flags\": [")
+                  .Append(string.Join(", ", MethodFlagNames(methodFlags).Select(Json)))
+                  .Append("]");
+            sb.Append(", \"returnType\": ").Append(Json(m.ReturnType));
             sb.Append(", \"parameters\": [");
             sb.Append(string.Join(", ", m.Visible.Select(p => ParamJson2(p))));
             sb.Append("] }");
@@ -2730,20 +2783,26 @@ public static partial class ApiModel
         {
             var v = virtuals[i];
             sb.Append("        { \"name\": ").Append(Json(v.Name));
-            // A pure virtual has no C++ implementation to chain to (QAbstractButton::paintEvent
-            // is declared "= 0"), so the code generator must not emit a base call for it.
+            // One flag list, not four independent booleans: the traits are read together by the
+            // code generator (and grow here without another field).
+            var flags = VirtualFlags.None;
             if (v.IsPure)
-                sb.Append(", \"pure\": true");
-            // A const virtual has to be declared const in the native override or it does not
-            // override anything (QWidget::sizeHint() const).
+                flags |= VirtualFlags.Pure;         // mandatory, no base implementation to chain to
             if (v.IsConst)
-                sb.Append(", \"const\": true");
-            // A private virtual has no accessible base implementation. The code generator must
-            // leave the slot alone (Qt's own implementation is the only correct one) - overriding
-            // it with a do-nothing default is what broke QStringListModel's indices.
+                flags |= VirtualFlags.Const;        // the native override must repeat `const`
             if (v.Private)
-                sb.Append(", \"noBase\": true");
+                flags |= VirtualFlags.NoBase;       // private: no hook, no base call
+            if (IsFinalVirtual(v.Cursor))
+                flags |= VirtualFlags.Final;        // callable, not overridable (C3248)
+            if (flags != VirtualFlags.None)
+                sb.Append(", \"flags\": [")
+                  .Append(string.Join(", ", FlagNames(flags).Select(Json)))
+                  .Append("]");
             sb.Append(", \"returnType\": ").Append(Json(v.ReturnType));
+            // The native override has to repeat the return type exactly (a const pointer, a
+            // typedef such as qreal, a nested enum), and the model type is the normalized managed
+            // one. The spelling clang printed is what the override is emitted with.
+            sb.Append(", \"returnCpp\": ").Append(Json(Spelling(v.ReturnClangType)));
             sb.Append(", \"parameters\": [");
             sb.Append(string.Join(", ", v.Visible.Select(p => ParamJson2(p, withCpp: true))));
             sb.Append("] }");
@@ -2771,6 +2830,52 @@ public static partial class ApiModel
         sb.Append("      ],\n");
     }
 
+    static IEnumerable<string> ClassFlagNames(ClassFlags flags)
+    {
+        if ((flags & ClassFlags.Abstract) != 0)
+            yield return "abstract";
+        if ((flags & ClassFlags.Subclassable) != 0)
+            yield return "subclassable";
+        if ((flags & ClassFlags.SubclassCtor) != 0)
+            yield return "subclassCtor";
+        if ((flags & ClassFlags.Owned) != 0)
+            yield return "owned";
+        if ((flags & ClassFlags.NonCopyable) != 0)
+            yield return "nonCopyable";
+    }
+
+    static IEnumerable<string> MethodFlagNames(MethodFlags flags)
+    {
+        if ((flags & MethodFlags.Static) != 0)
+            yield return "static";
+        if ((flags & MethodFlags.Protected) != 0)
+            yield return "protected";
+        if ((flags & MethodFlags.Const) != 0)
+            yield return "const";
+        if ((flags & MethodFlags.Iterator) != 0)
+            yield return "iterator";
+    }
+
+    static IEnumerable<string> ParamFlagNames(ParamFlags flags)
+    {
+        if ((flags & ParamFlags.Buffer) != 0)
+            yield return "buffer";
+        if ((flags & ParamFlags.Optional) != 0)
+            yield return "optional";
+    }
+
+    static IEnumerable<string> FlagNames(VirtualFlags flags)
+    {
+        if ((flags & VirtualFlags.Pure) != 0)
+            yield return "pure";
+        if ((flags & VirtualFlags.Const) != 0)
+            yield return "const";
+        if ((flags & VirtualFlags.NoBase) != 0)
+            yield return "noBase";
+        if ((flags & VirtualFlags.Final) != 0)
+            yield return "final";
+    }
+
     static string ParamJson2(ParamFact p, bool withCpp = false)
     {
         var sb = new StringBuilder();
@@ -2781,15 +2886,22 @@ public static partial class ApiModel
         // conversion (std::chrono::duration_cast<std::chrono::milliseconds>).
         if ((withCpp || p.Type == "TimeSpan") && p.CppType != null)
             sb.Append(", \"cpp\": ").Append(Json(p.CppType));
-        if (p.Buffer)
-            sb.Append(", \"buffer\": true");
+        // How the parameter crosses is one mode; the traits are one flag list.
         if (p.Mode == ParamMode.Out)
-            sb.Append(", \"out\": true");
+            sb.Append(", \"mode\": \"out\"");
         else if (p.Mode == ParamMode.Ref)
-            sb.Append(", \"ref\": true");
+            sb.Append(", \"mode\": \"ref\"");
+        var paramFlags = ParamFlags.None;
+        if (p.Buffer)
+            paramFlags |= ParamFlags.Buffer;
+        if (p.Optional)
+            paramFlags |= ParamFlags.Optional;
+        if (paramFlags != ParamFlags.None)
+            sb.Append(", \"flags\": [")
+              .Append(string.Join(", ", ParamFlagNames(paramFlags).Select(Json)))
+              .Append("]");
         if (p.Optional)
         {
-            sb.Append(", \"optional\": true");
             if (p.Default != null)
                 sb.Append(", \"default\": ").Append(Json(p.Default));
             else if (p.DefaultCpp != null)
