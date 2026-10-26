@@ -12,6 +12,7 @@ using System;
 //     the C++ spelling (the virtual override must repeat Qt's declaration exactly), but the
 //     parameter's model type becomes void* so managed code receives an IntPtr it can copy into or
 //     read from.
+[VirtualBridge]
 internal sealed class QioDeviceBridge : IVirtualBridge
 {
     public bool AppliesTo(string className) => className == "QIODevice";
