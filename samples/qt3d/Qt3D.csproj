@@ -28,10 +28,10 @@
       <Qt3DNative Include="..\..\out\api-modules\qt3dlogic\QtSharp.Qt3DLogic.Native.dll" />
       <Qt3DNative Include="..\..\out\api-modules\qt3danimation\QtSharp.Qt3DAnimation.Native.dll" />
       <Qt3DNative Include="..\..\out\api-modules\qt3dextras\QtSharp.Qt3DExtras.Native.dll" />
-      <Qt3DRuntime Include="..\..\Qt\6.11.0\runtime\Qt63D*.dll" />
-      <Qt3DRenderer Include="..\..\Qt\6.11.0\runtime\plugins\renderers\*.dll" />
-      <Qt3DGeometryLoader Include="..\..\Qt\6.11.0\runtime\plugins\geometryloaders\*.dll" />
-      <Qt3DSceneParser Include="..\..\Qt\6.11.0\runtime\plugins\sceneparsers\*.dll" />
+      <Qt3DRuntime Include="..\..\Qt\6.12.0\runtime\Qt63D*.dll" />
+      <Qt3DRenderer Include="..\..\Qt\6.12.0\runtime\plugins\renderers\*.dll" />
+      <Qt3DGeometryLoader Include="..\..\Qt\6.12.0\runtime\plugins\geometryloaders\*.dll" />
+      <Qt3DSceneParser Include="..\..\Qt\6.12.0\runtime\plugins\sceneparsers\*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(Qt3DNative);@(Qt3DRuntime)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(Qt3DRenderer)" DestinationFolder="$(OutDir)renderers\" SkipUnchangedFiles="true" />

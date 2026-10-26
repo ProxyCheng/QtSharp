@@ -277,7 +277,7 @@ public sealed class ApiWidgetsGalleryWindow : QDialog
         PlainEdit = new QPlainTextEdit(plainText);
         Browser = new QTextBrowser();
         Browser.SetHtml(
-            "<html><head/><body><h3>System Info</h3><p>Qt 6.11 / QtSharp binding demo.</p></body></html>");
+            "<html><head/><body><h3>System Info</h3><p>Qt 6.12 / QtSharp binding demo.</p></body></html>");
 
         result.AddItem(TextEdit, "Text Edit");
         result.AddItem(PlainEdit, "Plain Text Edit");

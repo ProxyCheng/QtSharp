@@ -21,7 +21,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <QtRuntimeDir Condition="'$(QtRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.11.0\runtime</QtRuntimeDir>
+    <QtRuntimeDir Condition="'$(QtRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.12.0\runtime</QtRuntimeDir>
   </PropertyGroup>
 
   <ItemGroup>

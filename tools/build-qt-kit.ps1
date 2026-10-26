@@ -1,5 +1,5 @@
 param(
-    [string]$QtVersion = '6.11.0',
+    [string]$QtVersion = '6.12.0',
     [string]$KitDir = '',
     [string]$Dest = '',
     [switch]$Force

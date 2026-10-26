@@ -6,6 +6,23 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 
 ## Unreleased
 
+- **The binding is generated from Qt 6.12.0.** The checked-in model was re-extracted from the
+  6.12.0 `msvc2022_64` kit, so the assemblies, the native glue and the packages now carry 6.12's
+  API: `QSortFilterProxyModel::DataChangeRelevanceFlags`, `QStyleHints::toolTipWakeUpDelay`,
+  `QImageReader::effectiveSize`, `QTreeView::itemDecorationRect`, `QMetaType::rawId`,
+  `QEasingCurve::fromCubicBezier`, `QHostInfo::clearCache`, `QDialogButtonBox`'s
+  `standardButtonText`/`standardButtonShortcut`, and the `QScatterSeries` signals that Qt now
+  declares for the property move to `QXYSeries`.
+- **The seven addon models are extracted by the gate now.** `regen-api.ps1` step `[2b]` extracts
+  the Charts and Qt3D models from their own headers and compares them to the checked-in files
+  byte for byte, exactly like the combined base model; previously they were checked in but never
+  re-extracted, so a Qt upgrade could leave them behind.
+- **The header scanners unwrap `QT6_ONLY(...)`/`QT7_ONLY(...)`.** Qt 6.12 wraps declarations that
+  differ between Qt 6 and Qt 7 in those macros (`QScatterSeries::colorChanged` is one), and the
+  Q_PROPERTY/signal scanners read the raw header text, so the wrapper made them invisible.
+- **The model files are pinned to LF** in `.gitattributes`. The model gate compares bytes, and
+  `core.autocrlf=true` was checking the checked-in models out as CRLF, which made the gate report
+  a model change on every Windows checkout.
 - **The standalone `QtSharp.Charts` repository was merged in.** Its 38-example conformance suite
   (the official Qt Charts examples, 570 assertions) now lives in the main repository as
   `demos.charts/` and runs in the gate, CI and release against the separate `QtSharp.Charts`

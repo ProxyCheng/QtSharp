@@ -51,13 +51,13 @@ jobs:
         shell: pwsh
         run: |
           python -m pip install --disable-pip-version-check --no-deps `
-            --target "$env:RUNNER_TEMP\qt-tools" PySide6-Essentials==6.11.2
+            --target "$env:RUNNER_TEMP\qt-tools" PySide6-Essentials==6.12.0
       - name: Build the tools package
         shell: pwsh
         run: |
           powershell -NoProfile -File tools\pack-qt-tools.ps1 `
             -QtToolsSource "$env:RUNNER_TEMP\qt-tools\PySide6" `
-            -QtVersion 6.11.2 `
+            -QtVersion 6.12.0 `
             -PackageVersion "${{ needs.version.outputs.version }}"
       - uses: actions/upload-artifact@v7
         with:
@@ -110,7 +110,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: out/qt-cache
-          key: qt-6.11.0-msvc2022_64-v1
+          key: qt-6.12.0-msvc2022_64-v1
       - name: Fetch the Qt kit
         shell: pwsh
         # The script exports QT_DIR / QT_RUNTIME_DIR into the environment for the steps below.

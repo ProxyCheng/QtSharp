@@ -228,7 +228,7 @@ public static class ApiTypes
 public static partial class ApiModel
 {
     public const int FormatVersion = 2;
-    public const string QtVersion = "6.11.0";
+    public const string QtVersion = "6.12.0";
 
     /// <summary>
     /// The managed namespace the binding being produced lives in: QtSharp.Api for the core binding,

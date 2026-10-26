@@ -1,6 +1,6 @@
 # QtSharp.Qt3D
 
-Qt 3D for .NET, generated from the Qt 6.11 headers the same way `QtSharp.Api` is. The package
+Qt 3D for .NET, generated from the Qt 6.12 headers the same way `QtSharp.Api` is. The package
 contains **six assemblies, one per Qt module**, each with its own namespace:
 
 | assembly / namespace | Qt module | builds on |

@@ -10,7 +10,7 @@ using System.Text;
 static class QtLibrary
 {
     /// <summary>
-    /// The Qt kit the model is extracted from: <c>&lt;repo&gt;\Qt\6.11.0\msvc2022_64\include</c> by
+    /// The Qt kit the model is extracted from: <c>&lt;repo&gt;\Qt\6.12.0\msvc2022_64\include</c> by
     /// default, so a clone laid out like this repository just works wherever it lives. A different
     /// installation (or version) is pointed at with QTSHARP_QT_INCLUDE - and ApiModel.QtVersion has
     /// to match the kit, since the version is what the model records.
@@ -90,7 +90,7 @@ class Program
         var path = Path.Combine(QtLibrary.QtIncludeRoot, dir, header);
         if (!File.Exists(path))
             return result;
-        var text = File.ReadAllText(path);
+        var text = UnwrapQtVersionMacros(File.ReadAllText(path));
         const string macro = "Q_PROPERTY(";
         int search = 0;
         while (true)
@@ -192,6 +192,58 @@ class Program
         return found;
     }
 
+    /// <summary>
+    /// Qt 6.12 spells a declaration that differs between Qt 6 and Qt 7 as <c>QT6_ONLY(...)</c> /
+    /// <c>QT7_ONLY(...)</c>. Both scanners below read the raw header text, so the wrapper has to be
+    /// unwrapped before a declaration is recognizable: QT6_ONLY keeps its contents (this binding is
+    /// built for Qt 6), QT7_ONLY is dropped. Preprocessor directives are copied untouched - that is
+    /// where the macros themselves are defined (qtversionchecks.h).
+    /// </summary>
+    static string UnwrapQtVersionMacros(string text)
+    {
+        var pattern = new System.Text.RegularExpressions.Regex(@"(?<![A-Za-z0-9_])(QT[67]_ONLY)\s*\(");
+        var sb = new System.Text.StringBuilder(text.Length);
+        int copied = 0;
+        foreach (System.Text.RegularExpressions.Match m in pattern.Matches(text))
+        {
+            // A match inside an already unwrapped block was handled by the recursive call below.
+            if (m.Index < copied || StartsPreprocessorLine(text, m.Index))
+                continue;
+            int open = text.IndexOf('(', m.Index);
+            int depth = 0, end = -1;
+            for (int i = open; i < text.Length; i++)
+            {
+                if (text[i] == '(') depth++;
+                else if (text[i] == ')')
+                {
+                    depth--;
+                    if (depth == 0)
+                    {
+                        end = i;
+                        break;
+                    }
+                }
+            }
+            if (end < 0)
+                continue;
+            sb.Append(text, copied, m.Index - copied);
+            if (m.Groups[1].Value == "QT6_ONLY")
+                sb.Append(UnwrapQtVersionMacros(text.Substring(open + 1, end - open - 1)));
+            copied = end + 1;
+        }
+        sb.Append(text, copied, text.Length - copied);
+        return sb.ToString();
+    }
+
+    static bool StartsPreprocessorLine(string text, int index)
+    {
+        int lineStart = text.LastIndexOf('\n', Math.Max(0, index - 1)) + 1;
+        for (int i = lineStart; i < index; i++)
+            if (!char.IsWhiteSpace(text[i]))
+                return text[i] == '#';
+        return false;
+    }
+
     internal static List<SignalInfo> ScanSignals(string dir, string header)
     {
         var result = new List<SignalInfo>();
@@ -203,7 +255,8 @@ class Program
 
     static void ScanSignalsInFile(string path, string dir, string header, List<SignalInfo> result)
     {
-        var lines = File.ReadAllLines(path);
+        var text = UnwrapQtVersionMacros(File.ReadAllText(path));
+        var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
         string currentClass = null;
         bool inSignals = false;
         foreach (var rawLine in lines)

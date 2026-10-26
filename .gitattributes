@@ -1,5 +1,9 @@
 * text=auto
 
+# The API models are generated with LF and regen-api.ps1 compares them byte for byte, so they must
+# not be smudged to CRLF on checkout (core.autocrlf=true does that to any text=auto file).
+model/*.json text eol=lf
+
 *.bat text eol=crlf
 *.cmd text eol=crlf
 *.ps1 text eol=crlf

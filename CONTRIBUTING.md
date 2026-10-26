@@ -1,7 +1,7 @@
 # Contributing to QtSharp
 
 Thank you for helping build a practical Qt binding for .NET. The project is Windows x64 today,
-uses Qt 6.11.x and .NET 10, and treats the checked-in API model as a reproducible contract.
+uses Qt 6.12.x and .NET 10, and treats the checked-in API model as a reproducible contract.
 
 ## Before opening an issue
 

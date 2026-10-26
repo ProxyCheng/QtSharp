@@ -93,7 +93,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: out/qt-cache
-          key: qt-6.11.0-msvc2022_64-v1
+          key: qt-6.12.0-msvc2022_64-v1
 
       - name: Fetch the Qt kit
         shell: pwsh
@@ -209,7 +209,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: out/qt-cache
-          key: qt-6.11.0-msvc2022_64-v1
+          key: qt-6.12.0-msvc2022_64-v1
 
       - name: Fetch the Qt kit
         shell: pwsh

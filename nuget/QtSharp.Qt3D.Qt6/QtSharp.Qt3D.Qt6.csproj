@@ -20,7 +20,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <Qt3DRuntimeDir Condition="'$(Qt3DRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.11.0\runtime</Qt3DRuntimeDir>
+    <Qt3DRuntimeDir Condition="'$(Qt3DRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.12.0\runtime</Qt3DRuntimeDir>
   </PropertyGroup>
 
   <ItemGroup>

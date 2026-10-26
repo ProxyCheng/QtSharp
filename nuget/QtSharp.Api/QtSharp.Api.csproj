@@ -17,7 +17,7 @@
     <PackageId>QtSharp.Api</PackageId>
     <Version>0.1.0</Version>
     <Authors>ProxyCheng</Authors>
-    <Description>Qt for .NET: the generated C# binding as ten module assemblies (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg, QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets), generated from the Qt 6.11 headers.</Description>
+    <Description>Qt for .NET: the generated C# binding as ten module assemblies (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg, QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets), generated from the Qt 6.12 headers.</Description>
     <PackageTags>Qt;Qt6;CSharp;dotnet;binding;interop;gui</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>

@@ -6,10 +6,10 @@ rem fine to run by hand.
 rem
 rem Everything it needs can be pointed at from the environment, so a clone does not have to live in
 rem D:\QtSharp:
-rem   QT_DIR       a Qt kit's dev files (include\ and lib\)   default: this repo's Qt\6.11.0\msvc2022_64
+rem   QT_DIR       a Qt kit's dev files (include\ and lib\)   default: this repo's Qt\6.12.0\msvc2022_64
 rem   VCVARS       vcvarsall.bat of a Visual Studio with C++  default: found automatically
 rem   VCVARS_VER   the toolset version for -vcvars_ver         default: whatever vcvarsall picks
-if "%QT_DIR%"=="" set QT_DIR=%~dp0Qt\6.11.0\msvc2022_64
+if "%QT_DIR%"=="" set QT_DIR=%~dp0Qt\6.12.0\msvc2022_64
 
 rem A Visual Studio with the C++ tools: VCVARS overrides, otherwise probe the usual install roots
 rem for any edition of the 2022 / 2019 / 18.x lines and take the first vcvarsall.bat found, so a
@@ -42,7 +42,7 @@ if not exist "%VCVARS%" (
 )
 if not exist "%QT_INC%\QtCore\qobject.h" (
     echo [build_api] Qt headers not found under "%QT_INC%".
-    echo [build_api] Set QT_DIR to a Qt 6.11.0 msvc2022_64 kit - see README.md.
+    echo [build_api] Set QT_DIR to a Qt 6.12.0 msvc2022_64 kit - see README.md.
     exit /b 1
 )
 

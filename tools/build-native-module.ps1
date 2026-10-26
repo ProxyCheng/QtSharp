@@ -18,7 +18,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $root
 
-if (-not $QtDir) { $QtDir = Join-Path $root 'Qt\6.11.0\msvc2022_64' }
+if (-not $QtDir) { $QtDir = Join-Path $root 'Qt\6.12.0\msvc2022_64' }
 $qtInc = Join-Path $QtDir 'include'
 $qtLib = Join-Path $QtDir 'lib'
 
