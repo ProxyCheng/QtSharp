@@ -200,7 +200,8 @@ foreach ($addon in $addons) {
             ForEach-Object { Copy-Item $_.FullName $to -Force }
     }
 }
-$plugin = Get-ChildItem -Path (Join-Path $kitRoot 'plugins\platforms') -Filter 'qwindows.dll' -File -ErrorAction SilentlyContinue | Select-Object -First 1if (-not $plugin) {
+$plugin = Get-ChildItem -Path (Join-Path $kitRoot 'plugins\platforms') -Filter 'qwindows.dll' -File -ErrorAction SilentlyContinue | Select-Object -First 1
+if (-not $plugin) {
     Get-ChildItem -Path $kitRoot -Recurse -Filter 'qwindows.dll' -File -ErrorAction SilentlyContinue |
         Select-Object -First 1 | ForEach-Object { $plugin = $_ }
 }
