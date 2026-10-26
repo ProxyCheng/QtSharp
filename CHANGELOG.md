@@ -33,7 +33,10 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 - **`test-subclass`** covers the seam end to end: Qt paints a managed `QAbstractButton`, activates
   and measures a managed `QLayout`, calls a `QListView::moveCursor` override that chains to the
   protected base member, and drives `QLineEdit`'s acceptability through a managed
-  `QValidator::validate` with reference parameters.
+  `QValidator::validate` with reference parameters. The official **Flow Layout** example (a
+  `QLayout` subclass, `qtwidgets-flowlayout`) joins the demo suite - the ported examples
+  subclassed only concrete widgets, which is why the abstract-class construction path stayed
+  untested.
 
 ## 0.15.0 - 2026-10-26
 
