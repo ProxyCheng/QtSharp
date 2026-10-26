@@ -148,4 +148,91 @@ namespace QtSharp.QtCore
             return result;
         }
     }
+
+    /// <summary>
+    /// QJsonArray as a writable C# list of <see cref="QJsonValue"/>. Values it hands out are Qt
+    /// wrappers, so the caller owns them; <see cref="QJsonArrayExtensions.ToObjectList"/> gives the
+    /// unwrapped snapshot for LINQ (a second IEnumerable&lt;T&gt; here would make inference
+    /// ambiguous, the same reason QJsonObject's unwrapped view is an extension method).
+    /// </summary>
+    public partial class QJsonArray : IList<QJsonValue>
+    {
+        QJsonValue IList<QJsonValue>.this[int index]
+        {
+            get => At(index);
+            set => Replace(index, value);
+        }
+
+        int ICollection<QJsonValue>.Count => (int)Count();
+
+        bool ICollection<QJsonValue>.IsReadOnly => false;
+
+        void ICollection<QJsonValue>.Add(QJsonValue item) => Append(item);
+
+        void IList<QJsonValue>.Insert(int index, QJsonValue item) => Insert(index, item);
+
+        void IList<QJsonValue>.RemoveAt(int index) => RemoveAt(index);
+
+        bool ICollection<QJsonValue>.Remove(QJsonValue item)
+        {
+            int index = ((IList<QJsonValue>)this).IndexOf(item);
+            if (index < 0)
+                return false;
+            RemoveAt(index);
+            return true;
+        }
+
+        void ICollection<QJsonValue>.Clear()
+        {
+            using (var empty = new QJsonArray())
+                Swap(empty);
+        }
+
+        bool ICollection<QJsonValue>.Contains(QJsonValue item)
+            => ((IList<QJsonValue>)this).IndexOf(item) >= 0;
+
+        int IList<QJsonValue>.IndexOf(QJsonValue item)
+        {
+            object wanted = QJsonObject.ToObject(item);
+            for (int i = 0; i < (int)Count(); i++)
+            {
+                using (var current = At(i))
+                    if (Equals(QJsonObject.ToObject(current), wanted))
+                        return i;
+            }
+            return -1;
+        }
+
+        void ICollection<QJsonValue>.CopyTo(QJsonValue[] array, int arrayIndex)
+        {
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
+            foreach (QJsonValue item in (IEnumerable<QJsonValue>)this)
+                array[arrayIndex++] = item;
+        }
+
+        IEnumerator<QJsonValue> IEnumerable<QJsonValue>.GetEnumerator()
+        {
+            for (int i = 0; i < (int)Count(); i++)
+                yield return At(i);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+            => ((IEnumerable<QJsonValue>)this).GetEnumerator();
+    }
+
+    /// <summary>The unwrapped snapshot of a QJsonArray, for LINQ over BCL values.</summary>
+    public static class QJsonArrayExtensions
+    {
+        public static List<object> ToObjectList(this QJsonArray qjson)
+        {
+            if (qjson == null)
+                throw new ArgumentNullException(nameof(qjson));
+            var result = new List<object>((int)qjson.Count());
+            for (int i = 0; i < (int)qjson.Count(); i++)
+                using (var value = qjson.At(i))
+                    result.Add(QJsonObject.ToObject(value));
+            return result;
+        }
+    }
 }

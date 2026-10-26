@@ -16,7 +16,7 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
 
     <PackageId>QtSharp.WebSockets</PackageId>
-    <Version>0.10.0</Version>
+    <Version>0.11.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>Qt WebSockets for .NET, generated from the Qt 6.12 headers. References QtSharp.Api.</Description>
     <PackageTags>Qt;Qt6;QtWebSockets;CSharp;dotnet;binding;interop</PackageTags>

@@ -91,6 +91,42 @@ namespace QtSharp.Tests
             writable.Clear();
             Check(root.Count() == 0, "Clear() empties the object");
 
+            // ---- QJsonArray as a list ---------------------------------------------------
+            using (var array = new QJsonArray())
+            {
+                var list = (IList<QJsonValue>)array;
+                using (var a = new QJsonValue("a"))
+                    list.Add(a);
+                using (var b = new QJsonValue("b"))
+                    list.Add(b);
+                Check(list.Count == 2, "IList.Add appends");
+
+                using (var z = new QJsonValue("z"))
+                    list.Insert(0, z);
+                using (var first = list[0])
+                    Check(list.Count == 3 && (string)first.ToVariant().ToObject() == "z",
+                        "IList.Insert inserts at the index");
+
+                using (var capitalB = new QJsonValue("B"))
+                    list[1] = capitalB;
+                using (var replaced = list[1])
+                    Check((string)replaced.ToVariant().ToObject() == "B",
+                        "the indexer setter replaces the element");
+
+                using (var probe = new QJsonValue("B"))
+                    Check(list.IndexOf(probe) == 1, "IndexOf compares the values");
+
+                list.RemoveAt(0);
+                Check(list.Count == 2, "RemoveAt removes the element");
+
+                var snapshot = array.ToObjectList();
+                Check(snapshot.Count == 2 && (string)snapshot[0] == "B",
+                    "ToObjectList() unwraps the elements in order");
+
+                list.Clear();
+                Check(list.Count == 0, "Clear() empties the array");
+            }
+
             Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[FAIL] {failures} check(s) failed");
             return failures == 0 ? 0 : 1;
         }
