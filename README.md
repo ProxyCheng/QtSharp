@@ -15,7 +15,7 @@ expects. On top of that, 34 runnable demos — Qt's official examples plus tours
 and the document modules — have been rewritten in C# and run by the repository's own gate.
 
 ```
-Qt 6.11.0 headers (MSVC kit)
+Qt 6.12.0 headers (MSVC kit)
         │  libclang via ClangSharp — one translation unit, ~3 s, deterministic
         ▼
 model/qtsharp.api.json                 ← checked in; the gate compares the fresh extraction to it
@@ -125,7 +125,7 @@ See `samples/qt3d` for a self-test that runs without a display.
 
 ## Project status
 
-QtSharp is an active pre-1.0 project. The supported target is Windows x64 with Qt 6.11.x and
+QtSharp is an active pre-1.0 project. The supported target is Windows x64 with Qt 6.12.x and
 .NET 10. The generated model, native wrapper, and runtime are under active development, so binary
 and source compatibility can change between releases. Contributions, reproducible bug reports, and
 new conformance demos are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -167,7 +167,7 @@ future step so a public NuGet API key is never required for ordinary repository 
 | **Windows x64** | everything | the generated wrapper is MSVC C++; there is no Linux/macOS build |
 | **.NET SDK 10** | everything | the projects target `net10.0` |
 | **Visual Studio with the C++ workload** | `build_api.bat` | `cl.exe` and `vcvarsall.bat` |
-| **Qt 6.11.0 MSVC 2022 64-bit** | extract + native build + running | dev files (headers, `.lib`) **and** the runtime DLLs; the QtCharts and Qt3D addons and Qt Shader Tools too (`tools\build-qt-kit.ps1` fetches them) |
+| **Qt 6.12.0 MSVC 2022 64-bit** | extract + native build + running | dev files (headers, `.lib`) **and** the runtime DLLs; the QtCharts and Qt3D addons and Qt Shader Tools too (`tools\build-qt-kit.ps1` fetches them) |
 | **clang builtin headers** | extract only | any clang version; the checked-in model used clang 19 |
 | **NuGet reachable** | first build | restores `ClangSharp` + `libClangSharp.runtime.win-x64` |
 
@@ -177,32 +177,35 @@ them can be pointed elsewhere instead:
 
 | piece | default | override |
 |---|---|---|
-| Qt dev files (headers + lib) | `<repo>\Qt\6.11.0\msvc2022_64` | `QT_DIR` (build_api.bat), `QTSHARP_QT_INCLUDE` (generator) |
-| Qt runtime DLLs + `platforms\qwindows.dll` | `<repo>\Qt\6.11.0\runtime` | `QtRuntimeDir` in `QtSharp.Api.props` |
+| Qt dev files (headers + lib) | `<repo>\Qt\6.12.0\msvc2022_64` | `QT_DIR` (build_api.bat), `QTSHARP_QT_INCLUDE` (generator) |
+| Qt runtime DLLs + `platforms\qwindows.dll` | `<repo>\Qt\6.12.0\runtime` | `QtRuntimeDir` in `QtSharp.Api.props` |
 | clang builtin headers | `<repo>\lib\lib\clang\<version>\include` | `QTSHARP_CLANG_RESOURCE_DIR` |
 | Visual Studio | found among the 2022 / 2019 / 18.x installs | `VCVARS` (a `vcvarsall.bat`), `VCVARS_VER` (pin a toolset) |
 
 ### Getting the pieces
 
-* **Qt**: take the `msvc2022_64` kit from the official installer (`C:\Qt\6.11.0\msvc2022_64`) and
-  copy it to `<repo>\Qt\6.11.0\msvc2022_64`, or set `QT_DIR`/`QTSHARP_QT_INCLUDE` to it. The kit
-  must contain the **private** headers (`include\QtCore\6.11.0\QtCore\private\...`) — the official
-  binaries ship them.
+* **Qt**: the repository's own fetcher does this — `tools\build-qt-kit.ps1 -QtVersion 6.12.0 -Dest <dir>`
+  downloads the `msvc2022_64` archives from Qt's online repository (qtbase, qtsvg and the addons),
+  merges the addon pieces into one kit and stages the runtime DLLs. Put the kit at
+  `<repo>\Qt\6.12.0\msvc2022_64` and the runtime DLLs at `<repo>\Qt\6.12.0\runtime`, or set
+  `QT_DIR`/`QTSHARP_QT_INCLUDE`/`QtRuntimeDir` to wherever they are. A kit from the official
+  installer (`C:\Qt\6.12.0\msvc2022_64`) works too. The kit must contain the **private** headers
+  (`include\QtCore\6.12.0\QtCore\private\...`) — the official binaries ship them.
 
-  `aqt install-qt` cannot fetch 6.11.0 at the moment: Qt's repository no longer serves the top-level
-  `desktop/Updates.xml` that aqt reads the archive folder name out of, so it looks for
-  `qt6_6110/qt6_6110/` instead of the real `qt6_6110/qt6_6110_msvc2022_64/`. Downloading
+  `aqt install-qt` has been unreliable for this repository: Qt's repository no longer serves the
+  top-level `desktop/Updates.xml` that aqt reads the archive folder name out of, so it looks for
+  `qt6_6120/qt6_6120/` instead of the real `qt6_6120/qt6_6120_msvc2022_64/`. Downloading
   `qtbase-…-X86_64.7z` (plus `d3dcompiler_47-x64.7z`) from
-  `…/desktop/qt6_6110/qt6_6110_msvc2022_64/qt.qt6.6110.win64_msvc2022_64/` and unpacking it at the
+  `…/desktop/qt6_6120/qt6_6120_msvc2022_64/qt.qt6.6120.win64_msvc2022_64/` and unpacking it at the
   kit root gives the same result. `qtbase` covers QtCore/QtGui/QtWidgets/QtNetwork/QtPrintSupport/
   QtXml/QtOpenGL; QtSvg and QtSvgWidgets come from the separate `qtsvg` module (add its
   `include`/`lib` the same way).
-* **Qt runtime DLLs**: `<repo>\Qt\6.11.0\runtime` needs the modules the binding links —
+* **Qt runtime DLLs**: `<repo>\Qt\6.12.0\runtime` needs the modules the binding links —
   `Qt6Core.dll`, `Qt6Gui.dll`, `Qt6Widgets.dll`, `Qt6Network.dll`, `Qt6Svg.dll`,
   `Qt6SvgWidgets.dll`, `Qt6PrintSupport.dll`, `Qt6Xml.dll`, `Qt6OpenGL.dll`,
   `Qt6OpenGLWidgets.dll` — plus the MSVC runtime DLLs (`msvcp140*.dll`, `vcruntime140*.dll`) and
   `platforms\qwindows.dll`. The easy way is to build any Qt widget app and run `windeployqt` on it.
-  All of them must be the *same* Qt version (6.11.x) — they share `Qt6Core`.
+  All of them must be the *same* Qt version (6.12.x) — they share `Qt6Core`.
 * **clang builtin headers**: `<repo>\lib\lib\clang\<version>\include` (with `stddef.h` in it) — copy
   them out of an LLVM installation (`C:\Program Files\LLVM\lib\clang\19\include`) or from the
   `libclang.runtime.win-x64` NuGet package. Any version works; a different version from clang 19 may
@@ -223,14 +226,15 @@ translation unit, and every module's demos and tests are built and run at the en
 |---|---|
 | `[1]` | builds the generator (`gen`) |
 | `[2]` | extracts the model from the Qt headers into `out\qtsharp.api.json.new` (**~3 s**) and compares it to the checked-in `model\qtsharp.api.json` — byte for byte |
+| `[2b]` | extracts the seven addon models (Charts, Qt3D) from their own headers and compares them to the checked-in ones — the same gate |
 | `[3]` | splits the combined model into the ten base models and runs the code generator **twice** for every module, comparing the trees |
 | `[4]` | compiles the generated C++ wrapper and builds the ten base assemblies |
 | `[5]` | builds the official demos and the binding tests, then runs all of them with `testapp`, several windows at a time |
 
-Two gates live in the middle of that: **the model must come out identical** (it is deterministic by
-construction, so a difference means the Qt version, the clang headers or the `Roots` table changed)
-and **the generator must be reproducible**. If the model legitimately changes, review the diff and
-re-run with `-Adopt` to accept it; `-SkipExtract` skips step 2 and 3.
+Two gates live in the middle of that: **the models must come out identical** (extraction is
+deterministic by construction, so a difference means the Qt version, the clang headers or the
+`Roots` table changed) and **the generator must be reproducible**. If a model legitimately changes,
+review the diff and re-run with `-Adopt` to accept it; `-SkipExtract` skips steps 2, 2b and 3.
 
 Step 5 starts several GUI processes at once (up to `min(6, cores)`; pass `-Jobs 1` for the old
 one-at-a-time run, or `-Jobs 8` on a big machine). Each demo still leaves its window up for about a
@@ -440,7 +444,7 @@ static class Program
 ## Qt development tools
 
 `QtSharp.Tools` is a separate development NuGet package containing native Qt tools and their
-DLL dependencies (Windows x64). The initial Qt 6.11.2 payload includes `rcc`, `uic`, `lrelease`
+DLL dependencies (Windows x64). The initial Qt 6.12.0 payload includes `rcc`, `uic`, `lrelease`
 and `lupdate`; `moc` is also copied when supplied by the source distribution. Consumers do not
 need a Qt SDK or Python installed. It is currently built locally, not published to nuget.org.
 
@@ -448,7 +452,7 @@ To produce the package, point the staging script at a directory containing these
 and matching DLLs (normally a Qt kit's `bin`):
 
 ```powershell
-powershell -File tools\pack-qt-tools.ps1 -QtToolsSource C:\Qt\6.11.2\msvc2022_64\bin
+powershell -File tools\pack-qt-tools.ps1 -QtToolsSource C:\Qt\6.12.0\msvc2022_64\bin
 ```
 
 The result is `out/packages/QtSharp.Tools.0.1.0.nupkg`. `-QtVersion` and `-PackageVersion`
@@ -514,7 +518,7 @@ Replace the local source path with your checkout's `out/packages` directory.
 
 ## Known limitations
 
-* **Windows x64 and Qt 6.11.0 only** — the model is extracted from that kit, and the wrapper is
+* **Windows x64 and Qt 6.12.0 only** — the model is extracted from that kit, and the wrapper is
   MSVC-compiled.
 * **The bound modules** are QtCore, QtGui, QtWidgets, QtNetwork (host addressing, local sockets
   `QLocalServer`/`QLocalSocket`, TCP/UDP, the HTTP client), QtSvg/QtSvgWidgets, QtPrintSupport

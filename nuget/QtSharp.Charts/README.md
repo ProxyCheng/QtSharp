@@ -1,6 +1,6 @@
 # QtSharp.Charts
 
-Qt Charts for .NET, generated from the Qt 6.11 headers the same way `QtSharp.Api` is: C# classes,
+Qt Charts for .NET, generated from the Qt 6.12 headers the same way `QtSharp.Api` is: C# classes,
 properties, signals and virtuals over the native Qt Charts library.
 
 ```xml

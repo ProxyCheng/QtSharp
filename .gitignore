@@ -21,7 +21,7 @@ CONTEXT.md
 # Vendored third-party (re-vendor as needed, see notes below)
 #   lib/lib/clang/ - clang builtin headers, used as libClangSharp's resource dir.
 #                    Do NOT delete: ClangExtractor.ResourceDir() needs it and gen.csproj copies it.
-#   Qt/            - Qt 6.11 headers/libs/runtime DLLs
+#   Qt/            - Qt 6.12 headers/libs/runtime DLLs
 lib/
 Qt/
 

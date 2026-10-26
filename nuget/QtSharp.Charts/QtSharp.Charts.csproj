@@ -25,7 +25,7 @@
     <PackageId>QtSharp.Charts</PackageId>
     <Version>0.1.0</Version>
     <Authors>ProxyCheng</Authors>
-    <Description>Qt Charts for .NET, generated from the Qt 6.11 headers. References QtSharp.Api.</Description>
+    <Description>Qt Charts for .NET, generated from the Qt 6.12 headers. References QtSharp.Api.</Description>
     <PackageTags>Qt;Qt6;QtCharts;CSharp;dotnet;binding;interop;charts</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>

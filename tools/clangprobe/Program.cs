@@ -21,7 +21,7 @@ static class Program
     // with QTSHARP_QT_INCLUDE / QTSHARP_CLANG_RESOURCE_DIR.
     static readonly string RepoRoot = FindRepoRoot();
     static readonly string QtRoot = Environment.GetEnvironmentVariable("QTSHARP_QT_INCLUDE")
-        ?? Path.Combine(RepoRoot, "Qt", "6.11.0", "msvc2022_64", "include");
+        ?? Path.Combine(RepoRoot, "Qt", "6.12.0", "msvc2022_64", "include");
     static readonly string ResourceDir = Environment.GetEnvironmentVariable("QTSHARP_CLANG_RESOURCE_DIR")
         ?? (Directory.GetDirectories(Path.Combine(RepoRoot, "lib", "lib", "clang"))
                 .OrderByDescending(d => d, StringComparer.Ordinal)

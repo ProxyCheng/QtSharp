@@ -34,7 +34,7 @@
     <QtSharpRoot Condition="'$(QtSharpRoot)' == ''">$(MSBuildThisFileDirectory)</QtSharpRoot>
     <QtSharpApiDir Condition="'$(QtSharpApiDir)' == ''">$(QtSharpRoot)out\api</QtSharpApiDir>
     <QtSharpOutDir Condition="'$(QtSharpOutDir)' == ''">$(QtSharpRoot)out</QtSharpOutDir>
-    <QtRuntimeDir Condition="'$(QtRuntimeDir)' == ''">$(QtSharpRoot)Qt\6.11.0\runtime</QtRuntimeDir>
+    <QtRuntimeDir Condition="'$(QtRuntimeDir)' == ''">$(QtSharpRoot)Qt\6.12.0\runtime</QtRuntimeDir>
     <!-- true (the default) compiles the generated binding into this project. -->
     <QtSharpCompileBinding Condition="'$(QtSharpCompileBinding)' == ''">true</QtSharpCompileBinding>
     <!-- The generated binding keeps the C ABI in pointers and blittable structures. -->

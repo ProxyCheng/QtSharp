@@ -1,7 +1,7 @@
 # QtSharp.Tools
 
 Windows x64 Qt development tools, with their native dependencies. No Qt SDK or Python
-installation is needed to run the packaged tools. The initial payload contains Qt 6.11.2
+installation is needed to run the packaged tools. The initial payload contains Qt 6.12.0
 `rcc`, `uic`, `lrelease` and `lupdate`; `moc` is included when present in the source distribution.
 
 ```xml

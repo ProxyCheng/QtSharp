@@ -12,7 +12,7 @@ Set-Location -LiteralPath $root
 # Qt-runtime package for each addon (Charts, Qt3D). This script packs all of them; the generated
 # sources and native glues have to exist already (tools\regen-api.ps1).
 $BindingNative = Join-Path $root 'out\api\QtSharp.Api.dll'
-if (-not $QtRuntimeDir) { $QtRuntimeDir = Join-Path $root 'Qt\6.11.0\runtime' }
+if (-not $QtRuntimeDir) { $QtRuntimeDir = Join-Path $root 'Qt\6.12.0\runtime' }
 $QtRuntime = $QtRuntimeDir
 $modules = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
              'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets',

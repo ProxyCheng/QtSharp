@@ -81,6 +81,46 @@ if (-not $SkipExtract) {
 $baseModules = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets', 'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets')
 $extensionModules = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras')
 
+if (-not $SkipExtract) {
+    Write-Host "=== [2b] Extract the addon models (each is checked in, extracted from its own headers) ==="
+    New-Item -ItemType Directory -Path "$root\out\addon-models" -Force | Out-Null
+    Push-Location $genBin
+    foreach ($module in $extensionModules) {
+        & "$genBin\qtgen.exe" extract2 "$root\out\addon-models\qtsharp.$module.json" --module $module *> "$root\out\extract-$module.log"
+        if ($LASTEXITCODE -ne 0) {
+            Pop-Location
+            Write-Host "addon extraction failed: $module"
+            Get-Content "$root\out\extract-$module.log" | Select-Object -Last 10
+            exit 1
+        }
+    }
+    Pop-Location
+    # The addon models are extracted rather than derived, so they get the same reproducibility gate
+    # as the combined base model: a difference means the Qt kit (or the extractor) changed.
+    $addonChanged = @()
+    foreach ($module in $extensionModules) {
+        $fresh = "$root\out\addon-models\qtsharp.$module.json"
+        $checked = "$root\model\qtsharp.$module.json"
+        if (-not (Test-Path $checked) -or (Get-FileHash $fresh).Hash -ne (Get-FileHash $checked).Hash) {
+            $addonChanged += $module
+        }
+    }
+    if ($addonChanged.Count -eq 0) {
+        Write-Host "addon models are byte-identical (reproducible extraction)"
+    } elseif ($Adopt) {
+        Write-Host "ADDON MODELS CHANGED - adopting deliberately: $($addonChanged -join ', ')"
+        foreach ($module in $addonChanged) {
+            Copy-Item "$root\out\addon-models\qtsharp.$module.json" "$root\model\qtsharp.$module.json" -Force
+        }
+    } else {
+        Write-Host "ADDON MODELS CHANGED - review the diff, then re-run with -Adopt: $($addonChanged -join ', ')"
+        foreach ($module in $addonChanged) {
+            git -C $root diff --no-index -- "$root\model\qtsharp.$module.json" "$root\out\addon-models\qtsharp.$module.json" | Select-Object -First 30
+        }
+        exit 1
+    }
+}
+
 Write-Host "=== [3] Split the combined base model into one model per Qt module ==="
 Push-Location $genBin
 & "$genBin\qtgen.exe" split-core "$root\model\qtsharp.api.json" "$root\out\split-models" *> "$root\out\split-core.log"

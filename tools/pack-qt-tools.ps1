@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)][string]$QtToolsSource,
-    [string]$QtVersion = '6.11.2',
+    [string]$QtVersion = '6.12.0',
     [string]$PackageVersion = '0.1.0'
 )
 $ErrorActionPreference = 'Stop'

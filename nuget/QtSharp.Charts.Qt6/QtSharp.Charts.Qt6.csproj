@@ -19,7 +19,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <QtChartsRuntimeDir Condition="'$(QtChartsRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.11.0\runtime</QtChartsRuntimeDir>
+    <QtChartsRuntimeDir Condition="'$(QtChartsRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.12.0\runtime</QtChartsRuntimeDir>
   </PropertyGroup>
 
   <ItemGroup>
