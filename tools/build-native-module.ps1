@@ -96,7 +96,7 @@ if ($versionDir) {
 
 $out = Join-Path $OutDir "$nativeLibrary.dll"
 Write-Host "[module] compiling $source"
-& cl /nologo /LD /EHsc /permissive- /std:c++17 /Zc:__cplusplus /utf-8 `
+& cl /nologo /LD /EHsc /bigobj /permissive- /std:c++17 /Zc:__cplusplus /utf-8 `
     /DUNICODE /D_UNICODE /DQT_NO_DEBUG /MD /O2 `
     "/Fe$out" "/Fo$OutDir\" `
     $includes $privateIncludes "/I$qtInc" "/Inative" `

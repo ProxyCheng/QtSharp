@@ -744,9 +744,15 @@ public static class ApiCodeGen
     /// optional value type.
     /// </summary>
     static IEnumerable<string> AbiArgs(JsonElement p)
-        => IsOptionalStructDefault(p)
-            ? new[] { NativeName(PName(p)), GivenName(p) }
-            : new[] { NativeName(PName(p)) };
+    {
+        if (IsOptionalStructDefault(p))
+            return new[] { NativeName(PName(p)), GivenName(p) };
+        // A QString& is two ABI parameters: the text and the slot the updated copy comes back
+        // through (see CppParamsFor / NativeParamsFor).
+        if (IsStringByRef(p))
+            return new[] { NativeName(PName(p)), $"{NativeName(PName(p))}_out" };
+        return new[] { NativeName(PName(p)) };
+    }
 
     static string DefaultCppOf(JsonElement p)
         => p.GetProperty("defaultCpp").GetString();
@@ -850,6 +856,12 @@ public static class ApiCodeGen
     static bool IsEnum(string t) => EnumNames.Contains(t);
     static bool IsFlags(string t) => FlagsEnums.Contains(t);
     static bool IsBoxed(string t) => ClassNames.Contains(t);
+    // A boxed class with no accessible copy constructor (Q_DISABLE_COPY: QDataStream). A virtual
+    // takes such a value as a transient handle over Qt's object instead of a copy.
+    static bool IsNonCopyable(string t)
+        => ByName.TryGetValue(t, out var c)
+           && c.TryGetProperty("nonCopyable", out var flag)
+           && flag.ValueKind == JsonValueKind.True;
     static string CsEnum(string t) => CsTypeName(t);
 
     // ------------------------------------------------------------------ C#
@@ -1548,12 +1560,22 @@ public static class ApiCodeGen
         return freeFunctionEntries = entries;
     }
 
+    // The static class that carries a module's namespace-level surface. Only the core module owns
+    // the name `Qt`: a widget application imports QtCore and QtGui together, and two types called
+    // `Qt` make every `Qt.Alignment` reference ambiguous (CS0104). The other modules name their
+    // free-function class after the module (`QtGui.QHash(...)`), which is also what the module
+    // assembly itself is called.
+    static string NamespaceClassName
+        => ApiModel.CurrentModule == null || ApiModel.CurrentModule.Name == "qtcore"
+            ? "Qt"
+            : ApiModel.CurrentModule.QtModules[0];
+
     static void WriteFreeFunctions(StringBuilder sb, IReadOnlyList<(JsonElement Function, string Entry)> functions)
     {
         if (functions.Count == 0)
             return;
         sb.AppendLine("    /// <summary>Qt's namespace-level functions.</summary>");
-        sb.AppendLine("    public static partial class Qt");
+        sb.AppendLine($"    public static partial class {NamespaceClassName}");
         sb.AppendLine("    {");
         foreach (var (fn, entry) in functions)
         {
@@ -2009,6 +2031,26 @@ public static class ApiCodeGen
 
     static string VirtualKey(JsonElement v)
         => Name(v) + "(" + string.Join(",", Params(v).Select(PType)) + ")" + ConstSuffix(v);
+
+    // The C# name of a virtual: the one its base-most declaring class published. A class that
+    // redeclares an inherited virtual cannot choose its own spelling - C# overrides keep the
+    // base member's name - and the base-most declarer is where that name was decided (QStyle's
+    // PixelMetric enum forces pixelMetric() on QCommonStyle and QProxyStyle).
+    static string VirtualCsName(string className, JsonElement v)
+    {
+        string key = VirtualKey(v);
+        string declarer = null;
+        string current = className;
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        while (current != null && seen.Add(current) && ByName.TryGetValue(current, out var cls))
+        {
+            if (cls.GetProperty("virtuals").EnumerateArray().Any(x => VirtualKey(x) == key))
+                declarer = current;
+            var bases = cls.GetProperty("bases").EnumerateArray().Select(b => b.GetString()).ToList();
+            current = bases.Count > 0 ? bases[0] : null;
+        }
+        return MemberName(declarer ?? className, Name(v));
+    }
 
     // ------------------------------------------------------------------ the runtime structs
     //
@@ -2503,7 +2545,12 @@ public static class ApiCodeGen
             // Only the constructor that takes the dispatch function pointer needs `unsafe`; the
             // type itself does not carry the modifier.
             string unsafeModifier = dispatch == "IntPtr.Zero" ? "" : "unsafe ";
-            sb.AppendLine($"        public {unsafeModifier}{name}({sig}){(baseName != null ? " : base(IntPtr.Zero)" : "")}");
+            // The native subclass is concrete, but the abstract Qt class itself is not: its
+            // constructors exist for a managed subclass, so they are protected in C#.
+            bool abstractClass = cls.TryGetProperty("isAbstract", out var abstractFlag)
+                                 && abstractFlag.ValueKind == JsonValueKind.True;
+            string access = abstractClass ? "protected" : "public";
+            sb.AppendLine($"        {access} {unsafeModifier}{name}({sig}){(baseName != null ? " : base(IntPtr.Zero)" : "")}");
             sb.AppendLine("        {");
             // A class with no virtuals at all needs no context: the native side reads this pointer
             // for one thing only - dispatching a virtual into the managed object - and this one has
@@ -2769,9 +2816,14 @@ public static class ApiCodeGen
                 VirtualKey(s.Virtual) == VirtualKey(v) && ManagedType(ReturnType(s.Virtual)) == ManagedType(ret));
             // A `virtual` that is not an override can still shadow an inherited member (`override`
             // never warns); mark it `new` in that case.
+            // An override has to use the C# name the base's declaration received. QStyle keeps
+            // pixelMetric() (its own PixelMetric enum reserves the property name); a subclass
+            // inheriting that enum would otherwise emit PixelMetric() and override nothing. The
+            // name is the base-most declarer's, all the way up the chain.
+            string virtualCsName = overridesBase ? VirtualCsName(name, v) : CSharpMemberName(vname);
             string virtualNew = overridesBase ? "" : NewMethod(inherited, CSharpMemberName(vname), ps);
             sb.AppendLine($"        /// <summary>Virtual from {name}; override in a managed subclass.</summary>");
-            sb.AppendLine($"        public {virtualNew}{(overridesBase ? "override" : "virtual")} {ManagedRetType(ret)} {CSharpMemberName(vname)}({sig})");
+            sb.AppendLine($"        public {virtualNew}{(overridesBase ? "override" : "virtual")} {ManagedRetType(ret)} {virtualCsName}({sig})");
             sb.AppendLine("        {");
             // A wrapper of a *C++* object has to reach the object's own override, not the
             // declaring class's implementation: `view.model()` for a QTableWidget hands back a
@@ -2932,19 +2984,48 @@ public static class ApiCodeGen
                 var v = virtuals[i].Virtual;
                 var ps = Params(v);
                 // The slot id is the position in the whole chain, and an inherited slot is
-                // dispatched into the member the declaring class already published.
-                string member = MemberName(virtuals[i].Declaring, Name(v));
+                // dispatched into the member the declaring class already published. A slot the
+                // class redeclares but a base published first uses the base's C# spelling (an
+                // override cannot rename the member), the same rule as the virtual emitter.
+                string member = VirtualCsName(name, v);
                 sb.AppendLine($"                case {i + 1}: // {Name(v)}");
                 sb.AppendLine("                {");
-                var reads = ps.Select((p, a) => DispatchRead(PType(p), a + 1)).ToList();
-                string args = string.Join(", ", reads);
+                // A by-reference parameter crosses as the caller's storage address. The override
+                // receives it as a C# ref/out and the result is copied back into that storage
+                // once it returns - the argv convention has no other way to carry the value out.
+                var prelude = new List<string>();
+                var args = new List<string>();
+                var postlude = new List<string>();
+                for (int a = 0; a < ps.Count; a++)
+                {
+                    var p = ps[a];
+                    int slot = a + 1;
+                    if (IsByRef(p))
+                    {
+                        string valueType = RefValueType(PType(p));
+                        string local = "__ref" + slot;
+                        // A ref reads the value Qt passed; an out has nothing to read.
+                        prelude.Add(IsOut(p)
+                            ? $"{ManagedType(valueType)} {local};"
+                            : $"var {local} = {DispatchRead(valueType, slot)};");
+                        args.Add($"{(IsOut(p) ? "out" : "ref")} {local}");
+                        postlude.Add(DispatchStore(valueType, local, slot));
+                        continue;
+                    }
+                    args.Add(DispatchRead(PType(p), slot));
+                }
+                foreach (string line in prelude)
+                    sb.AppendLine("                    " + line);
+                string argList = string.Join(", ", args);
                 if (ReturnType(v) == "void")
-                    sb.AppendLine($"                    target.{member}({args});");
+                    sb.AppendLine($"                    target.{member}({argList});");
                 else
                 {
-                    sb.AppendLine($"                    var result = target.{member}({args});");
+                    sb.AppendLine($"                    var result = target.{member}({argList});");
                     sb.AppendLine("                    " + DispatchStore(ReturnType(v), "result"));
                 }
+                foreach (string line in postlude)
+                    sb.AppendLine("                    " + line);
                 sb.AppendLine("                    break;");
                 sb.AppendLine("                }");
             }
@@ -2963,10 +3044,11 @@ public static class ApiCodeGen
 
     // Stores the value a managed override produced into the slot the native caller provided.
     // Scalars go through the runtime's typed writers; a boxed value needs a per-type assignment
-    // (the caller's slot holds the value itself, not a pointer to it).
-    static string DispatchStore(string t, string value)
+    // (the caller's slot holds the value itself, not a pointer to it). `slot` is the argv index:
+    // 0 is the return value, and a by-reference parameter's own slot is the variable Qt pointed at.
+    static string DispatchStore(string t, string value, int slot = 0)
     {
-        string dest = "Marshal.ReadIntPtr(argv, 0)";
+        string dest = $"Marshal.ReadIntPtr(argv, {slot} * IntPtr.Size)";
         if (t == "void")
             return "";
         if (IsEnum(t))
@@ -2997,7 +3079,9 @@ public static class ApiCodeGen
 
     // The boxed types a virtual may take *by value*: the override receives a copy, because the
     // address Qt passes points at a temporary that the next call reuses (and, worse, is an object
-    // Qt owns - a wrapper over it would delete it at finalization).
+    // Qt owns - a wrapper over it would delete it at finalization). A class the binding cannot
+    // copy has no clone to call, so it is not in this set; DispatchRead hands such a value over
+    // as a transient handle instead.
     // Both walk the *chain*, not just the class's own virtuals: the native wrapper overrides every
     // slot the chain declares, so a class whose ancestor returns a QSizeF needs the helper for it
     // even though it declares no such virtual itself. (An extension module is all ancestors - its
@@ -3010,7 +3094,7 @@ public static class ApiCodeGen
                 foreach (var p in slot.Virtual.GetProperty("parameters").EnumerateArray())
                 {
                     var t = PType(p);
-                    if (IsBoxed(t))
+                    if (IsBoxed(t) && !IsNonCopyable(t))
                         types.Add(t);
                 }
         return types.ToList();
@@ -3320,7 +3404,12 @@ public static class ApiCodeGen
         // A value arrives by value: the slot points at the storage that holds it.
         if (IsStruct(t)) return $"ApiRuntime.ReadStruct<{CsTypeName(t)}>(Marshal.ReadIntPtr(argv, {index} * IntPtr.Size))";
         // A boxed value is a *copy*: the slot points at the argument (or at a temporary Qt
-        // allocated), and the wrapper must own its own object.
+        // allocated), and the wrapper must own its own object. A class that cannot be copied
+        // (QDataStream) is wrapped over Qt's object for the duration of the call instead - the
+        // override still sees the real argument, which is what a stream needs, but must not keep
+        // the wrapper.
+        if (IsBoxed(t) && IsNonCopyable(t))
+            return $"{CsTypeName(t)}.FromTransientHandle({slot})";
         if (IsBoxed(t) && VirtualBoxedParams().Contains(t))
             return $"{CsTypeName(t)}.FromOwnedHandle(ApiNative.Clone_{ListStem(t)}({slot}))";
         if (IsBoxed(t)) return $"{CsTypeName(t)}.FromHandle({slot})";
@@ -3673,7 +3762,36 @@ public static class ApiCodeGen
         return $"{StructPod(t)}{{ {string.Join(", ", entry.Fields.Select(f => $"{value}.{f}()"))} }}";
     }
 
-
+    // The body of a native helper that calls a virtual through its flat ABI parameters. Most
+    // parameters need nothing beyond the conversion CppArgsFor already spells; a QString& is the
+    // exception, because the ABI carries it as the input text plus an out slot (the same shape a
+    // normal method forwarder uses - see NativeBody). `finish` turns the call (or its result) into
+    // the helper's return statement.
+    static List<string> VirtualCallBody(JsonElement v, string call, Func<string, string> finish)
+    {
+        var refs = Params(v).Where(IsStringByRef).ToList();
+        if (refs.Count == 0)
+            return new List<string> { finish(call) };
+        var lines = new List<string>();
+        foreach (var p in refs)
+        {
+            string n = NativeName(PName(p));
+            lines.Add($"QString {StringInLocal(n)} = {n} ? QString::fromUtf16({n}) : QString();");
+        }
+        string ret = ReturnType(v);
+        if (ret == "void")
+            lines.Add(call + ";");
+        else
+            lines.Add($"auto qs_result = {call};");
+        foreach (var p in refs)
+        {
+            string n = NativeName(PName(p));
+            lines.Add($"*{n}_out = new QString({StringInLocal(n)});");
+        }
+        if (ret != "void")
+            lines.Add(finish("qs_result"));
+        return lines;
+    }
 
     // The body of an exported forwarder. Most are a single expression; an in-out string needs a
     // local to pass by reference and a statement that publishes the result.
@@ -3915,12 +4033,19 @@ public static class ApiCodeGen
             if (HasNoBase(v))
                 continue;
             var ps = Params(v);
-            string sig = string.Join(", ", ps.Select(p => $"{CppVirtualParamType(p)} {NativeName(PName(p))}"));
-            string args = string.Join(", ", ps.Select(p => NativeName(PName(p))));
+            // The helper takes the flat C ABI parameters and converts them itself. A conversion
+            // spells the C++ type it aims at, and Qt declares some of those *protected* nested
+            // types (QAbstractItemView::CursorAction), which only a member of the class - this
+            // helper - may name. Doing the cast here is what keeps the exported forwarder (a free
+            // function, which has no such access) down to the ABI types.
+            string sig = string.Join(", ", ps.SelectMany(CppParamsFor));
+            string args = string.Join(", ", ps.SelectMany(CppArgsFor));
             string ret = ReturnType(v);
             sb.AppendLine($"    static {ret} CallBase_{vname}{vSuffix}(QsApi_{name}* self{(ps.Count > 0 ? ", " + sig : "")})");
             sb.AppendLine("    {");
-            sb.AppendLine($"        {(ret == "void" ? "" : "return ")}self->{CppClass(name)}::{vname}({args});");
+            foreach (string line in VirtualCallBody(
+                         v, $"self->{CppClass(name)}::{vname}({args})", r => $"return {r};"))
+                sb.AppendLine("        " + line);
             sb.AppendLine("    }");
         }
         // The protected members the model publishes (createIndex, beginInsertRows, ...): C++ lets
@@ -4138,7 +4263,8 @@ public static class ApiCodeGen
                 string call = $"static_cast<QsApiAccess_{name}*>(self)->{vname}({args})";
                 sb.AppendLine($"    static {NativeRetCpp(ret)} Call_{vname}{aSuffix}({CppClass(name)}* self{(sig.Length > 0 ? ", " + sig : "")})");
                 sb.AppendLine("    {");
-                sb.AppendLine("        " + NativeRetExpr(ret, call));
+                foreach (string line in VirtualCallBody(v, call, r => NativeRetExpr(ret, r)))
+                    sb.AppendLine("        " + line);
                 sb.AppendLine("    }");
             }
             sb.AppendLine("};");
@@ -4187,8 +4313,11 @@ public static class ApiCodeGen
             string sig = string.Join(", ", new[] { "void* self" }
                 .Concat(ps.SelectMany(CppParamsFor)));
             string ret = ReturnType(v);
+            // The conversions happen in CallBase_ - a member of the generated subclass, which may
+            // name the protected nested types some of those conversions target. This forwarder
+            // only carries the ABI values across.
             string baseArgs = string.Join(", ", new[] { $"static_cast<QsApi_{name}*>(self)" }
-                .Concat(ps.SelectMany(CppArgsFor)));
+                .Concat(ps.SelectMany(AbiArgs)));
             sb.AppendLine($"extern \"C\" __declspec(dllexport) {NativeRetCpp(ret)} qs_api_{name}_{vname}__base{vSuffix}({sig})");
             sb.AppendLine("{");
             sb.AppendLine("    " + NativeRetExpr(ret, $"QsApi_{name}::CallBase_{vname}{vSuffix}({baseArgs})"));

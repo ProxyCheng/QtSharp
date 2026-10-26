@@ -6,5 +6,5 @@ global using QtSharp.QtGui;
 global using QtSharp.QtWidgets;
 global using QtSharp.Demos;
 
-// The namespace enums here are QtCore's; the alias keeps Qt.Alignment unambiguous.
-global using Qt = QtSharp.QtCore.Qt;
+// The namespace enums here are QtCore's, and only QtCore declares a static `Qt` class (the other
+// modules name theirs after the module), so `Qt.Alignment` needs no alias.

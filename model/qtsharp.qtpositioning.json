@@ -110,25 +110,25 @@
       "constructors": [
       ],
       "methods": [
-        { "name": "activeMonitors", "returnType": "QList<QGeoAreaMonitorInfo>", "parameters": [] },
-        { "name": "activeMonitors", "returnType": "QList<QGeoAreaMonitorInfo>", "parameters": [{ "name": "lookupArea", "type": "QGeoShape" }] },
         { "name": "availableSources", "static": true, "returnType": "QStringList", "parameters": [] },
         { "name": "backendProperty", "returnType": "QVariant", "parameters": [{ "name": "name", "type": "QString" }] },
         { "name": "createDefaultSource", "static": true, "returnType": "QGeoAreaMonitorSource*", "parameters": [{ "name": "parent", "type": "QObject*" }] },
         { "name": "createSource", "static": true, "returnType": "QGeoAreaMonitorSource*", "parameters": [{ "name": "sourceName", "type": "QString" }, { "name": "parent", "type": "QObject*" }] },
-        { "name": "error", "returnType": "QGeoAreaMonitorSource::Error", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "positionInfoSource", "returnType": "QGeoPositionInfoSource*", "parameters": [] },
-        { "name": "requestUpdate", "returnType": "bool", "parameters": [{ "name": "monitor", "type": "QGeoAreaMonitorInfo" }, { "name": "signal", "type": "char*" }] },
         { "name": "setBackendProperty", "returnType": "bool", "parameters": [{ "name": "name", "type": "QString" }, { "name": "value", "type": "QVariant" }] },
         { "name": "setPositionInfoSource", "returnType": "void", "parameters": [{ "name": "source", "type": "QGeoPositionInfoSource*" }] },
         { "name": "sourceName", "returnType": "QString", "parameters": [] },
-        { "name": "startMonitoring", "returnType": "bool", "parameters": [{ "name": "monitor", "type": "QGeoAreaMonitorInfo" }] },
-        { "name": "stopMonitoring", "returnType": "bool", "parameters": [{ "name": "monitor", "type": "QGeoAreaMonitorInfo" }] },
-        { "name": "supportedAreaMonitorFeatures", "returnType": "QGeoAreaMonitorSource::AreaMonitorFeatures", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "activeMonitors", "pure": true, "const": true, "returnType": "QList<QGeoAreaMonitorInfo>", "parameters": [] },
+        { "name": "activeMonitors", "pure": true, "const": true, "returnType": "QList<QGeoAreaMonitorInfo>", "parameters": [{ "name": "lookupArea", "type": "QGeoShape", "cpp": "const QGeoShape &" }] },
+        { "name": "error", "pure": true, "const": true, "returnType": "QGeoAreaMonitorSource::Error", "parameters": [] },
+        { "name": "requestUpdate", "pure": true, "returnType": "bool", "parameters": [{ "name": "monitor", "type": "QGeoAreaMonitorInfo", "cpp": "const QGeoAreaMonitorInfo &" }, { "name": "signal", "type": "char*", "cpp": "const char *" }] },
+        { "name": "startMonitoring", "pure": true, "returnType": "bool", "parameters": [{ "name": "monitor", "type": "QGeoAreaMonitorInfo", "cpp": "const QGeoAreaMonitorInfo &" }] },
+        { "name": "stopMonitoring", "pure": true, "returnType": "bool", "parameters": [{ "name": "monitor", "type": "QGeoAreaMonitorInfo", "cpp": "const QGeoAreaMonitorInfo &" }] },
+        { "name": "supportedAreaMonitorFeatures", "pure": true, "const": true, "returnType": "QGeoAreaMonitorSource::AreaMonitorFeatures", "parameters": [] }
       ],
       "signals": [
         { "name": "areaEntered", "parameters": [{ "name": "monitor", "type": "QGeoAreaMonitorInfo" }, { "name": "update", "type": "QGeoPositionInfo" }] },
@@ -370,23 +370,23 @@
         { "name": "createDefaultSource", "static": true, "returnType": "QGeoPositionInfoSource*", "parameters": [{ "name": "parameters", "type": "QMap<QString,QVariant>" }, { "name": "parent", "type": "QObject*" }] },
         { "name": "createSource", "static": true, "returnType": "QGeoPositionInfoSource*", "parameters": [{ "name": "sourceName", "type": "QString" }, { "name": "parent", "type": "QObject*" }] },
         { "name": "createSource", "static": true, "returnType": "QGeoPositionInfoSource*", "parameters": [{ "name": "sourceName", "type": "QString" }, { "name": "parameters", "type": "QMap<QString,QVariant>" }, { "name": "parent", "type": "QObject*" }] },
-        { "name": "error", "returnType": "QGeoPositionInfoSource::Error", "parameters": [] },
-        { "name": "lastKnownPosition", "returnType": "QGeoPositionInfo", "parameters": [{ "name": "fromSatellitePositioningMethodsOnly", "type": "bool", "optional": true, "default": "false" }] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumUpdateInterval", "returnType": "int", "parameters": [] },
         { "name": "preferredPositioningMethods", "returnType": "QGeoPositionInfoSource::PositioningMethods", "parameters": [] },
-        { "name": "requestUpdate", "returnType": "void", "parameters": [{ "name": "timeout", "type": "int", "optional": true, "default": "0" }] },
         { "name": "setBackendProperty", "returnType": "bool", "parameters": [{ "name": "name", "type": "QString" }, { "name": "value", "type": "QVariant" }] },
         { "name": "setPreferredPositioningMethods", "returnType": "void", "parameters": [{ "name": "methods", "type": "QGeoPositionInfoSource::PositioningMethods" }] },
         { "name": "setUpdateInterval", "returnType": "void", "parameters": [{ "name": "msec", "type": "int" }] },
         { "name": "sourceName", "returnType": "QString", "parameters": [] },
-        { "name": "startUpdates", "returnType": "void", "parameters": [] },
-        { "name": "stopUpdates", "returnType": "void", "parameters": [] },
-        { "name": "supportedPositioningMethods", "returnType": "QGeoPositionInfoSource::PositioningMethods", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "updateInterval", "returnType": "int", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "error", "pure": true, "const": true, "returnType": "QGeoPositionInfoSource::Error", "parameters": [] },
+        { "name": "lastKnownPosition", "pure": true, "const": true, "returnType": "QGeoPositionInfo", "parameters": [{ "name": "fromSatellitePositioningMethodsOnly", "type": "bool", "cpp": "bool", "optional": true, "default": "false" }] },
+        { "name": "minimumUpdateInterval", "pure": true, "const": true, "returnType": "int", "parameters": [] },
+        { "name": "requestUpdate", "pure": true, "returnType": "void", "parameters": [{ "name": "timeout", "type": "int", "cpp": "int", "optional": true, "default": "0" }] },
+        { "name": "startUpdates", "pure": true, "returnType": "void", "parameters": [] },
+        { "name": "stopUpdates", "pure": true, "returnType": "void", "parameters": [] },
+        { "name": "supportedPositioningMethods", "pure": true, "const": true, "returnType": "QGeoPositionInfoSource::PositioningMethods", "parameters": [] }
       ],
       "properties": [
         { "name": "minimumUpdateInterval", "type": "int", "getter": "minimumUpdateInterval" },
@@ -505,19 +505,19 @@
         { "name": "createDefaultSource", "static": true, "returnType": "QGeoSatelliteInfoSource*", "parameters": [{ "name": "parameters", "type": "QMap<QString,QVariant>" }, { "name": "parent", "type": "QObject*" }] },
         { "name": "createSource", "static": true, "returnType": "QGeoSatelliteInfoSource*", "parameters": [{ "name": "sourceName", "type": "QString" }, { "name": "parent", "type": "QObject*" }] },
         { "name": "createSource", "static": true, "returnType": "QGeoSatelliteInfoSource*", "parameters": [{ "name": "sourceName", "type": "QString" }, { "name": "parameters", "type": "QMap<QString,QVariant>" }, { "name": "parent", "type": "QObject*" }] },
-        { "name": "error", "returnType": "QGeoSatelliteInfoSource::Error", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumUpdateInterval", "returnType": "int", "parameters": [] },
-        { "name": "requestUpdate", "returnType": "void", "parameters": [{ "name": "timeout", "type": "int", "optional": true, "default": "0" }] },
         { "name": "setBackendProperty", "returnType": "bool", "parameters": [{ "name": "name", "type": "QString" }, { "name": "value", "type": "QVariant" }] },
         { "name": "setUpdateInterval", "returnType": "void", "parameters": [{ "name": "msec", "type": "int" }] },
         { "name": "sourceName", "returnType": "QString", "parameters": [] },
-        { "name": "startUpdates", "returnType": "void", "parameters": [] },
-        { "name": "stopUpdates", "returnType": "void", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "updateInterval", "returnType": "int", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "error", "pure": true, "const": true, "returnType": "QGeoSatelliteInfoSource::Error", "parameters": [] },
+        { "name": "minimumUpdateInterval", "pure": true, "const": true, "returnType": "int", "parameters": [] },
+        { "name": "requestUpdate", "pure": true, "returnType": "void", "parameters": [{ "name": "timeout", "type": "int", "cpp": "int", "optional": true, "default": "0" }] },
+        { "name": "startUpdates", "pure": true, "returnType": "void", "parameters": [] },
+        { "name": "stopUpdates", "pure": true, "returnType": "void", "parameters": [] }
       ],
       "properties": [
         { "name": "minimumUpdateInterval", "type": "int", "getter": "minimumUpdateInterval" },
@@ -573,22 +573,22 @@
       ],
       "methods": [
         { "name": "device", "returnType": "QIODevice*", "parameters": [] },
-        { "name": "error", "returnType": "QGeoPositionInfoSource::Error", "parameters": [] },
-        { "name": "lastKnownPosition", "returnType": "QGeoPositionInfo", "parameters": [{ "name": "fromSatellitePositioningMethodsOnly", "type": "bool", "optional": true, "default": "false" }] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumUpdateInterval", "returnType": "int", "parameters": [] },
-        { "name": "requestUpdate", "returnType": "void", "parameters": [{ "name": "timeout", "type": "int", "optional": true, "default": "0" }] },
         { "name": "setDevice", "returnType": "void", "parameters": [{ "name": "source", "type": "QIODevice*" }] },
         { "name": "setUpdateInterval", "returnType": "void", "parameters": [{ "name": "msec", "type": "int" }] },
         { "name": "setUserEquivalentRangeError", "returnType": "void", "parameters": [{ "name": "uere", "type": "double" }] },
-        { "name": "startUpdates", "returnType": "void", "parameters": [] },
-        { "name": "stopUpdates", "returnType": "void", "parameters": [] },
-        { "name": "supportedPositioningMethods", "returnType": "QGeoPositionInfoSource::PositioningMethods", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "updateMode", "returnType": "QNmeaPositionInfoSource::UpdateMode", "parameters": [] },
         { "name": "userEquivalentRangeError", "returnType": "double", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "error", "const": true, "returnType": "QGeoPositionInfoSource::Error", "parameters": [] },
+        { "name": "lastKnownPosition", "const": true, "returnType": "QGeoPositionInfo", "parameters": [{ "name": "fromSatellitePositioningMethodsOnly", "type": "bool", "cpp": "bool", "optional": true, "default": "false" }] },
+        { "name": "minimumUpdateInterval", "const": true, "returnType": "int", "parameters": [] },
+        { "name": "requestUpdate", "returnType": "void", "parameters": [{ "name": "timeout", "type": "int", "cpp": "int", "optional": true, "default": "0" }] },
+        { "name": "startUpdates", "returnType": "void", "parameters": [] },
+        { "name": "stopUpdates", "returnType": "void", "parameters": [] },
+        { "name": "supportedPositioningMethods", "const": true, "returnType": "QGeoPositionInfoSource::PositioningMethods", "parameters": [] }
       ],
       "signals": [
       ]
@@ -607,19 +607,19 @@
       "methods": [
         { "name": "backendProperty", "returnType": "QVariant", "parameters": [{ "name": "name", "type": "QString" }] },
         { "name": "device", "returnType": "QIODevice*", "parameters": [] },
-        { "name": "error", "returnType": "QGeoSatelliteInfoSource::Error", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "minimumUpdateInterval", "returnType": "int", "parameters": [] },
-        { "name": "requestUpdate", "returnType": "void", "parameters": [{ "name": "timeout", "type": "int", "optional": true, "default": "0" }] },
         { "name": "setBackendProperty", "returnType": "bool", "parameters": [{ "name": "name", "type": "QString" }, { "name": "value", "type": "QVariant" }] },
         { "name": "setDevice", "returnType": "void", "parameters": [{ "name": "source", "type": "QIODevice*" }] },
         { "name": "setUpdateInterval", "returnType": "void", "parameters": [{ "name": "msec", "type": "int" }] },
-        { "name": "startUpdates", "returnType": "void", "parameters": [] },
-        { "name": "stopUpdates", "returnType": "void", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
         { "name": "updateMode", "returnType": "QNmeaSatelliteInfoSource::UpdateMode", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "error", "const": true, "returnType": "QGeoSatelliteInfoSource::Error", "parameters": [] },
+        { "name": "minimumUpdateInterval", "const": true, "returnType": "int", "parameters": [] },
+        { "name": "requestUpdate", "returnType": "void", "parameters": [{ "name": "timeout", "type": "int", "cpp": "int", "optional": true, "default": "0" }] },
+        { "name": "startUpdates", "returnType": "void", "parameters": [] },
+        { "name": "stopUpdates", "returnType": "void", "parameters": [] }
       ],
       "signals": [
       ]

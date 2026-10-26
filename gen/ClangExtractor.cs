@@ -77,6 +77,8 @@ public static partial class ApiModel
         // leave concrete subclasses (QStandardItemModel::data) without an implementation to chain
         // to. Done before any class is rendered, so every class sees the same set.
         CollectVirtualExtensionNames(index2);
+        CollectPureVirtualNames(index2);
+        CollectVirtualValueClasses(index2);
         Console.WriteLine($"[model2] {VirtualExtensionNames.Count} virtual name(s) published for {VirtualExtensionClasses.Length} extension class(es)");
 
         var part = new ModelPart();
@@ -886,30 +888,187 @@ public static partial class ApiModel
     }
 
     // Whether a managed subclass of this (abstract) class can exist. The generated native
-    // subclass is concrete only if every pure virtual it inherits is one we publish as an
-    // override point - otherwise `new QsApi_X` does not compile. QAbstractTableModel qualifies
-    // (all of QAbstractItemModel's pure virtuals are published), QLayout does not (itemAt /
-    // takeAt are neither published nor implemented).
+    // subclass is concrete only if every pure virtual it inherits is published as an override
+    // point - otherwise `new QsApi_X` does not compile. A pure virtual is mandatory for any
+    // concrete subclass, so it is published whether or not it is on the curated list; what can
+    // still disqualify the class is a pure virtual the binding cannot express (an unbound type,
+    // an out parameter on a virtual, a deleted member).
+    // Whether a derived C++ class can construct this one with no arguments: no declared
+    // constructor (the implicit default one), or a non-private constructor whose parameters all
+    // have defaults. A deleted default constructor does not count.
+    static bool HasAccessibleDefaultCtor(CXCursor record)
+    {
+        bool sawConstructor = false;
+        foreach (var child in Children(record))
+        {
+            if (clang.getCursorKind(child) != CXCursorKind.CXCursor_Constructor)
+                continue;
+            sawConstructor = true;
+            if (clang.CXXMethod_isDeleted(child) != 0)
+                continue;
+            if (Access(child) == CX_CXXAccessSpecifier.CX_CXXPrivate)
+                continue;
+            var fn = Member(child);
+            if (fn == null)
+                continue;
+            if (fn.Params.All(p => p.Optional))
+                return true;
+        }
+        return !sawConstructor;
+    }
+
+    // The single decision on whether a virtual is published as an override point. Three places
+    // must agree or the model loses a member: the virtuals list picks the published ones, the
+    // methods list keeps the rest as plain callables, and CanSubclassFromManaged requires every
+    // inherited pure virtual to be published. `PublishAsVirtual` is the *name* rule; this adds
+    // the expressibility the generated glue needs. A by-reference parameter (QValidator::validate)
+    // is expressible: the dispatch stub reads the initial value and writes the override's result
+    // back into the caller's slot.
+    static bool PublishesAsVirtual(FnFact fn, string className)
+    {
+        if (!fn.IsVirtual || fn.IsCtor)
+            return false;
+        // There is no C# operator to install, and the native glue cannot name one.
+        if (fn.Name.StartsWith("operator", StringComparison.Ordinal))
+            return false;
+        if (!(fn.IsPure || PublishAsVirtual(fn.Name, className)))
+            return false;
+        // An override has to repeat the return type exactly, and the model carries only the
+        // value type; a reference return (`const QFutureInterfaceBase &futureInterface()`) would
+        // be emitted as a by-value override and silently not override anything.
+        if (Unwrap(fn.ReturnClangType).kind == CXTypeKind.CXType_LValueReference
+            || Unwrap(fn.ReturnClangType).kind == CXTypeKind.CXType_RValueReference)
+            return false;
+        if (!fn.ReturnDropped && !SupportedType(fn.ReturnClangType, isReturn: true))
+            return false;
+        // A by-reference parameter is dispatched with write-back: the managed override gets the
+        // initial value and the generated stub stores what it wrote into the caller's slot. An
+        // out *buffer* is the one shape that cannot work (the length is not in the signature).
+        if (fn.Params.Any(p => p.Mode == ParamMode.Out) && IsOutBufferMethod(fn.Name))
+            return false;
+        foreach (var p in fn.Params)
+        {
+            // A QIODevice byte buffer is an IntPtr by construction (QioDeviceBridge.cs).
+            if (p.Buffer)
+                continue;
+            if (p.Type == null || !SupportedType(p.ClangType, isParameter: true))
+                return false;
+        }
+        return true;
+    }
+
+    // Every pure virtual name in the bound set, collected once per run. A pure virtual is
+    // mandatory for a concrete subclass, so it is an override point wherever it is declared -
+    // including the classes that merely *redeclare* it (QLineSeries::type): publishing it only on
+    // QAbstractSeries would leave QLineSeries' own override as a plain method, and the native
+    // hook would dispatch back into that plain method - infinite recursion.
+    static readonly HashSet<string> PureVirtualNames = new(StringComparer.Ordinal);
+
+    static void CollectPureVirtualNames(ClangIndex index)
+    {
+        PureVirtualNames.Clear();
+        foreach (var record in index.Classes.Values)
+        {
+            foreach (var child in Children(record))
+            {
+                if (clang.getCursorKind(child) != CXCursorKind.CXCursor_CXXMethod)
+                    continue;
+                if (clang.CXXMethod_isPureVirtual(child) == 0)
+                    continue;
+                var name = clang.getCursorSpelling(child).ToString();
+                if (name.Length == 0
+                    || name.StartsWith("operator", StringComparison.Ordinal)
+                    || name == "metaObject"
+                    || name.StartsWith("qt_", StringComparison.Ordinal))
+                    continue;
+                PureVirtualNames.Add(name);
+            }
+        }
+    }
+
+    // The classes that cross a virtual by value. Those are the only ones whose copyability the
+    // model has to record: a virtual's by-value argument is cloned for the managed override, and
+    // a class the binding cannot copy (Q_DISABLE_COPY: QDataStream) has to cross as a transient
+    // handle instead. Collected before any class is rendered so the flag does not depend on the
+    // order the roots are walked in.
+    static readonly HashSet<string> VirtualValueClasses = new(StringComparer.Ordinal);
+
+    static void CollectVirtualValueClasses(ClangIndex index)
+    {
+        VirtualValueClasses.Clear();
+        foreach (var record in index.Classes.Values)
+        {
+            foreach (var child in Children(record))
+            {
+                if (clang.getCursorKind(child) != CXCursorKind.CXCursor_CXXMethod)
+                    continue;
+                if (clang.CXXMethod_isVirtual(child) == 0)
+                    continue;
+                // Operators are never override points (there is no C# operator to install), so
+                // their parameters do not need the flag.
+                if (clang.getCursorSpelling(child).ToString()
+                    .StartsWith("operator", StringComparison.Ordinal))
+                    continue;
+                AddVirtualValueClass(clang.getCursorResultType(child), index);
+                int count = clang.Cursor_getNumArguments(child);
+                for (int i = 0; i < count; i++)
+                    AddVirtualValueClass(
+                        clang.getCursorType(clang.Cursor_getArgument(child, (uint)i)), index);
+            }
+        }
+    }
+
+    static void AddVirtualValueClass(CXType type, ClangIndex index)
+    {
+        var name = ModelName(type);
+        if (name == null || name.EndsWith("*", StringComparison.Ordinal))
+            return;
+        // ModelName spells a global class by its simple name and a namespaced one by the full
+        // path, which are the two keys the index keeps.
+        if (index.Classes.ContainsKey(name) || index.QualifiedClasses.ContainsKey(name))
+            VirtualValueClasses.Add(name);
+    }
+
     static bool CanSubclassFromManaged(string className, ClangIndex index, HashSet<string> seen)
     {
         if (!seen.Add(className))
             return true;                        // already visited on this path
         if (!index.Classes.TryGetValue(className, out var record))
             return true;                        // an unbound base: nothing we can check
+        // The generated native subclass has to construct its base. A class whose only
+        // constructors take a private implementation reference (QAbstractAxis, QAbstractSeries,
+        // QLegendMarker) cannot be default-constructed, and the generator's synthesized subclass
+        // constructor has no way to supply one.
+        if (!HasAccessibleDefaultCtor(record))
+            return false;
         foreach (var child in Children(record))
         {
             if (clang.getCursorKind(child) != CXCursorKind.CXCursor_CXXMethod)
                 continue;
             if (clang.CXXMethod_isPureVirtual(child) == 0)
                 continue;
-            var name = clang.getCursorSpelling(child).ToString();
-            if (!PublishAsVirtual(name, className))
+            var fn = Member(child);
+            if (fn == null)
+                return false;
+            // The native subclass has to override every pure virtual it inherits - otherwise it
+            // stays abstract and its constructor cannot be generated. That is possible exactly
+            // when the virtual is published as an override point; a *private* one is recorded in
+            // the chain but gets no hook (Qt's QAbstractListModel hides columnCount that way), so
+            // it cannot count either.
+            if (!PublishesAsVirtual(fn, className) || fn.Private)
                 return false;
         }
         if (ClassBases.TryGetValue(className, out var bases))
             foreach (var b in bases)
+            {
+                // A bridge that keeps its slots on the bridged class itself (QIODevice) cannot
+                // be passed down: a subclass would inherit pure virtuals whose overrides the
+                // generated C# class does not publish, so the native subclass stays abstract.
+                if (!VirtualBridges.PropagatesToSubclasses(b))
+                    return false;
                 if (!CanSubclassFromManaged(b, index, seen))
                     return false;
+            }
         return true;
     }
 
@@ -922,6 +1081,7 @@ public static partial class ApiModel
     // so every class declaring that name gets it.
     static bool PublishAsVirtual(string name, string className)
         => VirtualAllow.Contains(name)
+           || PureVirtualNames.Contains(name)
            || (VirtualExtensionNames.Contains(name) && IsInExtensionTree(className))
            // The bridges (QioDeviceBridge today) are the deliberate exceptions; see Bridges.cs.
            || VirtualBridges.Publishes(className, name);
@@ -1249,10 +1409,14 @@ public static partial class ApiModel
         callable.RemoveAll(m => IsRedundantApplicationExec(className, m.Name));
 
 
-        // An abstract class cannot be instantiated: its C++ pure virtuals are not implemented by
-        // the generated subclass, so offering constructors would only produce a wrapper that
-        // fails at link time (or worse, at run time).
-        var ctors = BindsCtors(className) && !isAbstract
+        // An abstract class a managed subclass can still derive from gets its constructors
+        // published (as protected in C#): the native subclass is concrete because every pure
+        // virtual it inherits is published as an override point (QAbstractButton, QLayout,
+        // QAbstractItemModel). Only when the class declares no constructor at all does the
+        // generator synthesize one.
+        bool managedSubclass = isAbstract
+                               && CanSubclassFromManaged(className, index, new HashSet<string>(StringComparer.Ordinal));
+        var ctors = BindsCtors(className) && (!isAbstract || managedSubclass)
             ? callable.Where(m => m.IsCtor)
                 .Where(m => Access(m.Cursor) == CX_CXXAccessSpecifier.CX_CXXPublic)
                 // CppSharp only marks copy constructors after its own passes, so they have to be
@@ -1269,9 +1433,10 @@ public static partial class ApiModel
         var methods = callable
             // A virtual the model does not offer as an override point is still part of the API:
             // it belongs here as a plain callable member (QAbstractItemView::setModel,
-            // QDialog::accept, QWidget::sizeHint). Only the whitelisted ones are published as
-            // overridable C# virtuals instead.
-            .Where(m => !m.IsCtor && !(m.IsVirtual && PublishAsVirtual(m.Name, className)))
+            // QDialog::accept, QWidget::sizeHint). The one predicate decides that, so a virtual
+            // that the virtuals list cannot express (QValidator::validate) comes back here with
+            // its by-reference parameters intact.
+            .Where(m => !m.IsCtor && !PublishesAsVirtual(m, className))
             // Qt's "qt_" members are macro scaffolding (Q_OBJECT), not API, and have no exported
             // symbol either.
             .Where(m => !m.Name.StartsWith("qt_", StringComparison.Ordinal))
@@ -1313,11 +1478,15 @@ public static partial class ApiModel
         // It has to stay in the list, though, or the chain merge would walk past it and pick up
         // the public pure QAbstractItemModel::columnCount instead.
         var virtuals = callable
-            .Where(m => m.IsVirtual && !m.IsCtor)
-            .Where(m => PublishAsVirtual(m.Name, className))
+            // A pure virtual is mandatory for a concrete subclass, so it is always a candidate;
+            // the curated list decides only the optional hooks (events, layouts, models).
+            // PublishesAsVirtual is the one decision shared with the methods list and with
+            // CanSubclassFromManaged, and it covers the operator rule and the expressibility
+            // checks (a by-reference parameter cannot be dispatched).
+            .Where(m => PublishesAsVirtual(m, className))
             // An override has to repeat the base declaration exactly, so a virtual keeps its
             // whole parameter list - the marshalable-prefix rule is for callable members only.
-            .Where(m => { m.Visible = m.Params; return Accept(m, className); })
+            .Select(m => { m.Visible = m.Params; return m; })
             .GroupBy(DedupeKey)
             .Select(g => g.First())
             .OrderBy(m => m.Name, StringComparer.Ordinal)
@@ -1402,11 +1571,17 @@ public static partial class ApiModel
         // An abstract class a managed subclass can still derive from: the native subclass is
         // concrete because every pure virtual it inherits is published as an override point, so
         // the code generator can give it a constructor (QAbstractItemModel/QAbstractTableModel).
-        bool subclassCtor = isAbstract && subclassable && virtuals.Count > 0
+        bool subclassCtor = isAbstract && subclassable && virtuals.Count > 0 && ctors.Count == 0
                             && CanSubclassFromManaged(className, index, new HashSet<string>(StringComparer.Ordinal));
         if (subclassCtor)
             body.Append("      \"subclassCtor\": true,\n");
         body.Append($"      \"owned\": {(OwnedOf(root) ? "true" : "false")},\n");
+        // A class the binding cannot copy, when a virtual hands it over by value. Only the virtual
+        // dispatch path copies a value (so an override owns its parameter); everywhere else a
+        // boxed value crosses as a handle.
+        if ((VirtualValueClasses.Contains(className) || VirtualValueClasses.Contains(root.Class))
+            && !CopyableByValue(record))
+            body.Append("      \"nonCopyable\": true,\n");
         var fields = FieldsOf(record);
         if (fields.Count > 0)
         {
@@ -1486,6 +1661,47 @@ public static partial class ApiModel
                 return false;
         }
         return true;
+    }
+
+    // Whether the binding may copy a value of this class. A virtual's by-value parameter is
+    // cloned so the managed override gets an object it can keep, and a class that switches
+    // copying off (Q_DISABLE_COPY: QDataStream) has no copy constructor to call. Such a parameter
+    // crosses as a transient handle over Qt's own object instead - it is alive for the duration
+    // of the override, which is as long as the managed code may use it.
+    static bool CopyableByValue(CXCursor record)
+    {
+        bool sawCopy = false;
+        bool sawMove = false;
+        foreach (var child in Children(record))
+        {
+            if (clang.getCursorKind(child) != CXCursorKind.CXCursor_Constructor)
+                continue;
+            if (clang.Cursor_getNumArguments(child) != 1)
+                continue;
+            var type = clang.getCursorType(clang.Cursor_getArgument(child, 0));
+            if (!IsRecordOf(type, record))
+                continue;
+            // A parameter of the class's own type makes it a copy or a move constructor.
+            if (Unwrap(type).kind == CXTypeKind.CXType_RValueReference)
+            {
+                sawMove = true;
+                continue;
+            }
+            sawCopy = true;
+            if (clang.CXXMethod_isDeleted(child) == 0
+                && Access(child) == CX_CXXAccessSpecifier.CX_CXXPublic)
+                return true;
+        }
+        // No copy constructor of its own: the implicit one exists - unless a move constructor was
+        // declared, which deletes it.
+        return !sawCopy && !sawMove;
+    }
+
+    static bool IsRecordOf(CXType type, CXCursor record)
+    {
+        var declaration = NoRef(type).CanonicalType.Declaration;
+        return clang.getCursorKind(declaration) == clang.getCursorKind(record)
+               && clang.getCursorUSR(declaration).ToString() == clang.getCursorUSR(record).ToString();
     }
 
     // The base classes that are bound types, in declaration order. Template bases
@@ -2098,13 +2314,12 @@ public static partial class ApiModel
             : DescribeBlocked(fn.ReturnClangType);
         if (blocker == null && fn.Visible.Any(p => p.Mode != ParamMode.In))
         {
-            // A by-reference parameter is only supported on a plain method: the native wrapper
-            // the virtual dispatch path builds has no way to hand an out value back through the
-            // argv slot convention. No whitelisted virtual declares one today; this keeps it
-            // that way.
-            if (fn.IsVirtual && PublishAsVirtual(fn.Name, className))
-                blocker = "out parameter on an overridable virtual";
-            else if (fn.IsCtor)
+            // A by-reference parameter is fine on a plain method: the generated forwarder carries
+            // it through an out slot, and the managed spelling is `ref`/`out`. (A virtual with one
+            // is an override point - PublishesAsVirtual accepts it - and its dispatch writes the
+            // value back.) A constructor has no such slot, and a pointer written as a *buffer*
+            // has no length the ABI could carry.
+            if (fn.IsCtor)
                 // The generated constructor forwarders take the flat C ABI types and have no
                 // room for the extra out slot a by-reference parameter needs.
                 blocker = "a by-reference constructor parameter";

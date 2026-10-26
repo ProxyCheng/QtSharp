@@ -606,11 +606,9 @@
       ],
       "methods": [
         { "name": "aspectRatioMode", "returnType": "Qt::AspectRatioMode", "parameters": [] },
-        { "name": "boundingRect", "returnType": "QRectF", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "nativeSize", "returnType": "QSizeF", "parameters": [] },
         { "name": "offset", "returnType": "QPointF", "parameters": [] },
-        { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*" }, { "name": "option", "type": "QStyleOptionGraphicsItem*" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
         { "name": "setAspectRatioMode", "returnType": "void", "parameters": [{ "name": "mode", "type": "Qt::AspectRatioMode" }] },
         { "name": "setOffset", "returnType": "void", "parameters": [{ "name": "offset", "type": "QPointF" }] },
         { "name": "setSize", "returnType": "void", "parameters": [{ "name": "size", "type": "QSizeF" }] },
@@ -620,6 +618,8 @@
         { "name": "videoSink", "returnType": "QVideoSink*", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "boundingRect", "const": true, "returnType": "QRectF", "parameters": [] },
+        { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*", "cpp": "QPainter *" }, { "name": "option", "type": "QStyleOptionGraphicsItem*", "cpp": "const QStyleOptionGraphicsItem *" }, { "name": "widget", "type": "QWidget*", "cpp": "QWidget *", "optional": true, "default": "null" }] },
         { "name": "timerEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QTimerEvent*", "cpp": "QTimerEvent *" }] }
       ],
       "properties": [

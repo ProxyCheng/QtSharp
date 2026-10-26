@@ -15,7 +15,7 @@ global using QtSharp.QtPrintSupport;
 global using QtSharp.QtOpenGL;
 global using QtSharp.QtOpenGLWidgets;
 
-// Each module has its own static Qt class for the free functions it declares (qHash of a QFont
-// is QtGui's). The Qt namespace enums a UI program uses are QtCore's, so one alias keeps `Qt.Key`,
-// `Qt.Alignment`, ... unambiguous when several module namespaces are imported.
-global using Qt = QtSharp.QtCore.Qt;
+// Only QtCore declares a static `Qt` class: every other module names its free-function class
+// after the module (QtGui, QtWidgets, ...). `Qt.Key`, `Qt.Alignment`, ... therefore resolve on
+// their own, and a second module publishing a `Qt` would break these files - the compile-level
+// regression test for issue #8.
