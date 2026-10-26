@@ -159,6 +159,8 @@ jobs:
             out/packages/QtSharp.Qt3D.Qt6.0.0.0-ci.nupkg
             out/packages/QtSharp.WebSockets.0.0.0-ci.nupkg
             out/packages/QtSharp.WebSockets.Qt6.0.0.0-ci.nupkg
+            out/packages/QtSharp.Multimedia.0.0.0-ci.nupkg
+            out/packages/QtSharp.Multimedia.Qt6.0.0.0-ci.nupkg
           if-no-files-found: error
 
       # Hand the generated source tree and the native glue to the smoke job so it does not have to
