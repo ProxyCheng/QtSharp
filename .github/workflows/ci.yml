@@ -65,9 +65,9 @@ jobs:
           # repository root rather than at the generator's own output folder.
           $root = $env:GITHUB_WORKSPACE
           $genBin = Join-Path $root 'gen/bin/Release/net10.0/win-x64'
-          $base = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsql', 'qtsvg', 'qtsvgwidgets',
-                    'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets')
-          $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtwebsockets', 'qtmultimedia')
+          $base = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
+                    'qtprintsupport', 'qtopengl', 'qtopenglwidgets')
+          $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia')
           Push-Location $genBin
           try {
             # The combined model is the extraction gate and the shared native glue's input. The ten
@@ -105,7 +105,7 @@ jobs:
         run: |
           cmd /c build_api.bat
           if ($LASTEXITCODE -ne 0) { throw "build_api.bat failed" }
-          foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtwebsockets', 'qtmultimedia')) {
+          foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia')) {
             powershell -NoProfile -File tools\build-native-module.ps1 -Module $module -QtDir "$env:QT_DIR"
             if ($LASTEXITCODE -ne 0) { throw "$module native build failed" }
           }
@@ -157,8 +157,6 @@ jobs:
             out/packages/QtSharp.Charts.Qt6.0.0.0-ci.nupkg
             out/packages/QtSharp.Qt3D.0.0.0-ci.nupkg
             out/packages/QtSharp.Qt3D.Qt6.0.0.0-ci.nupkg
-            out/packages/QtSharp.WebSockets.0.0.0-ci.nupkg
-            out/packages/QtSharp.WebSockets.Qt6.0.0.0-ci.nupkg
             out/packages/QtSharp.Multimedia.0.0.0-ci.nupkg
             out/packages/QtSharp.Multimedia.Qt6.0.0.0-ci.nupkg
           if-no-files-found: error
@@ -174,11 +172,11 @@ jobs:
           Remove-Item $stage -Recurse -Force -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Path "$stage/api" -Force | Out-Null
           Copy-Item out/api/QtSharp.Api.dll "$stage/api/"
-          # The demos reference the extension module projects too (QtWebSockets, QtMultimedia),
-          # so their generated trees and native glues travel with the artifact as well.
-          foreach ($module in @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsql', 'qtsvg', 'qtsvgwidgets',
-                                'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets',
-                                'qtwebsockets', 'qtmultimedia')) {
+          # The demos reference the QtMultimedia extension project too, so its generated tree and
+          # native glue travel with the artifact as well.
+          foreach ($module in @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
+                                'qtprintsupport', 'qtopengl', 'qtopenglwidgets',
+                                'qtmultimedia')) {
             Copy-Item "out/$module/generated" "$stage/$module/generated" -Recurse
           }
           Copy-Item out/api-modules "$stage/api-modules" -Recurse

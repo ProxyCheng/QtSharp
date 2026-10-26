@@ -73,10 +73,6 @@ public static partial class ApiModel
             new[] { "qtopengl", "qtwidgets", "qtgui", "qtcore" },
             new[] { "Qt6OpenGLWidgets", "Qt6OpenGL", "Qt6Widgets", "Qt6Gui", "Qt6Core" }, Array.Empty<string>());
 
-    static ExtensionModule QtSqlModule()
-        => CoreModule("qtsql", "QtSharp.QtSql", "QtSql",
-            new[] { "qtcore" }, new[] { "Qt6Sql", "Qt6Core" }, Array.Empty<string>());
-
     static ExtensionModule QtMultimediaModule() => new ExtensionModule
     {
         Name = "qtmultimedia",
@@ -122,28 +118,6 @@ public static partial class ApiModel
             R("QWindowCapture", "qwindowcapture.h", "QtMultimedia"),
             R("QGraphicsVideoItem", "qgraphicsvideoitem.h", "QtMultimediaWidgets"),
             R("QVideoWidget", "qvideowidget.h", "QtMultimediaWidgets"),
-        },
-    };
-
-    static ExtensionModule QtWebSocketsModule() => new ExtensionModule
-    {
-        Name = "qtwebsockets",
-        Namespace = "QtSharp.QtWebSockets",
-        Assembly = "QtSharp.QtWebSockets",
-        Package = "QtSharp.WebSockets",
-        NativeLibrary = "QtSharp.QtWebSockets.Native",
-        CppNamespaces = Array.Empty<string>(),
-        QtModules = new[] { "QtWebSockets" },
-        QtDefines = Array.Empty<string>(),
-        QtLibs = new[] { "Qt6WebSockets", "Qt6Network" },
-        DependsOn = new[] { "qtcore", "qtnetwork" },
-        Roots = new[]
-        {
-            R("QMaskGenerator", "qmaskgenerator.h", "QtWebSockets", bindCtors: false),
-            R("QWebSocket", "qwebsocket.h", "QtWebSockets"),
-            R("QWebSocketCorsAuthenticator", "qwebsocketcorsauthenticator.h", "QtWebSockets"),
-            R("QWebSocketHandshakeOptions", "qwebsockethandshakeoptions.h", "QtWebSockets"),
-            R("QWebSocketServer", "qwebsocketserver.h", "QtWebSockets"),
         },
     };
 

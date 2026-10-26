@@ -84,9 +84,9 @@ jobs:
           # repository root rather than at the generator's own output folder.
           $root = $env:GITHUB_WORKSPACE
           $genBin = Join-Path $root 'gen/bin/Release/net10.0/win-x64'
-          $base = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsql', 'qtsvg', 'qtsvgwidgets',
-                    'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets')
-          $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtwebsockets', 'qtmultimedia')
+          $base = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
+                    'qtprintsupport', 'qtopengl', 'qtopenglwidgets')
+          $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia')
           Push-Location $genBin
           try {
             & "./qtgen.exe" split-core (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/split-models')
@@ -120,7 +120,7 @@ jobs:
         run: |
           cmd /c build_api.bat
           if ($LASTEXITCODE -ne 0) { throw "build_api.bat failed" }
-          foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtwebsockets', 'qtmultimedia')) {
+          foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia')) {
             powershell -NoProfile -File tools\build-native-module.ps1 -Module $module -QtDir "$env:QT_DIR"
             if ($LASTEXITCODE -ne 0) { throw "$module native build failed" }
           }
@@ -186,7 +186,6 @@ jobs:
             out/packages/QtSharp.Qt6.*.nupkg
             out/packages/QtSharp.Charts.*.nupkg
             out/packages/QtSharp.Qt3D.*.nupkg
-            out/packages/QtSharp.WebSockets.*.nupkg
             out/packages/QtSharp.Multimedia.*.nupkg
             out/packages/QtSharp.Multimedia.Qt6.*.nupkg
           if-no-files-found: error
@@ -234,9 +233,6 @@ jobs:
           * **QtSharp.Qt3D** - the optional Qt3D extension (Qt3DCore, Qt3DRender, Qt3DInput,
             Qt3DLogic, Qt3DAnimation, Qt3DExtras), against ``QtSharp.Api``;
             **QtSharp.Qt3D.Qt6** carries the Qt3D runtime and plugins.
-          * **QtSharp.WebSockets** - the optional QtWebSockets extension (``QWebSocket``,
-            ``QWebSocketServer``), against ``QtSharp.Api``; **QtSharp.WebSockets.Qt6** carries
-            Qt6WebSockets.dll.
           * **QtSharp.Multimedia** - the optional QtMultimedia extension (playback, capture, the
             device/format classes and ``QVideoWidget``), against ``QtSharp.Api``;
             **QtSharp.Multimedia.Qt6** carries the Qt multimedia libraries and backend plugin.

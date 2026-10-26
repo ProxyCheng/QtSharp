@@ -14,11 +14,9 @@
     <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtGui/QtSharp.QtGui.csproj" />
     <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtWidgets/QtSharp.QtWidgets.csproj" />
     <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtNetwork/QtSharp.QtNetwork.csproj" />
-    <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtSql/QtSharp.QtSql.csproj" />
     <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtSvg/QtSharp.QtSvg.csproj" />
     <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtSvgWidgets/QtSharp.QtSvgWidgets.csproj" />
     <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtPrintSupport/QtSharp.QtPrintSupport.csproj" />
-    <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtXml/QtSharp.QtXml.csproj" />
     <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtOpenGL/QtSharp.QtOpenGL.csproj" />
     <Project Path="nuget/QtSharp.Api/Modules/QtSharp.QtOpenGLWidgets/QtSharp.QtOpenGLWidgets.csproj" />
   </Folder>
@@ -26,11 +24,6 @@
   <Folder Name="/Packages - Charts/">
     <Project Path="nuget/QtSharp.Charts/QtSharp.Charts.csproj" />
     <Project Path="nuget/QtSharp.Charts.Qt6/QtSharp.Charts.Qt6.csproj" />
-  </Folder>
-
-  <Folder Name="/Packages - WebSockets/">
-    <Project Path="nuget/QtSharp.WebSockets/QtSharp.WebSockets.csproj" />
-    <Project Path="nuget/QtSharp.WebSockets.Qt6/QtSharp.WebSockets.Qt6.csproj" />
   </Folder>
 
   <Folder Name="/Packages - Multimedia/">

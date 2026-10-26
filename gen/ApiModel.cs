@@ -433,10 +433,12 @@ public static partial class ApiModel
         Qt3DLogicModule(),
         Qt3DAnimationModule(),
         Qt3DExtrasModule(),
-        QtWebSocketsModule(),
         QtMultimediaModule(),
         // The base binding is the same kind of module family: one assembly per Qt module,
         // grouped into the QtSharp.Api package. Their roots come from the core Roots table.
+        // QtXml (QDom), QtSql and QtWebSockets are deliberately absent: .NET's System.Xml,
+        // EF Core/Sqlite and ClientWebSocket cover those, and QtXml/QtSql leak no types into
+        // the remaining bound modules.
         QtCoreModule(),
         QtGuiModule(),
         QtWidgetsModule(),
@@ -444,10 +446,8 @@ public static partial class ApiModel
         QtSvgModule(),
         QtSvgWidgetsModule(),
         QtPrintSupportModule(),
-        QtXmlModule(),
         QtOpenGLModule(),
         QtOpenGLWidgetsModule(),
-        QtSqlModule(),
     };
 
     internal static ExtensionModule FindExtensionModule(string name)
@@ -1051,22 +1051,6 @@ public static partial class ApiModel
         R("QPrinterInfo",          "qprinterinfo.h", "QtPrintSupport"),
         R("QPrintPreviewDialog",   "qprintpreviewdialog.h", "QtPrintSupport"),
         R("QPrintPreviewWidget",   "qprintpreviewwidget.h", "QtPrintSupport"),
-        // QtXml: the DOM (QXmlStreamReader/Writer are already bound). Implicitly-shared value
-        // classes that point into the document they came from.
-        R("QDomNode",              "qdom.h", "QtXml"),
-        R("QDomDocument",          "qdom.h", "QtXml"),
-        R("QDomDocumentType",      "qdom.h", "QtXml"),
-        R("QDomDocumentFragment",  "qdom.h", "QtXml"),
-        R("QDomElement",           "qdom.h", "QtXml"),
-        R("QDomAttr",              "qdom.h", "QtXml"),
-        R("QDomCharacterData",     "qdom.h", "QtXml"),
-        R("QDomText",              "qdom.h", "QtXml"),
-        R("QDomComment",           "qdom.h", "QtXml"),
-        R("QDomCDATASection",      "qdom.h", "QtXml"),
-        R("QDomProcessingInstruction", "qdom.h", "QtXml"),
-        R("QDomImplementation",    "qdom.h", "QtXml"),
-        R("QDomNodeList",          "qdom.h", "QtXml"),
-        R("QDomNamedNodeMap",      "qdom.h", "QtXml"),
         // QtOpenGLWidgets / QtOpenGL: rendering with OpenGL, including from C# (QOpenGLWidget's
         // initializeGL/resizeGL/paintGL are overridable). QOpenGLContext is the QtGui half.
         R("QPaintEngine",          "qpaintengine.h", "QtGui", bindCtors: false),
@@ -1118,24 +1102,6 @@ public static partial class ApiModel
         R("QPixelFormat",          "qpixelformat.h", "QtGui"),
         R("QRgba64",               "qrgba64.h", "QtGui"),
         R("QMovie",                "qmovie.h", "QtGui"),
-
-        // ---------------------------------------------------------- QtSql
-        // QtSql is part of qtbase, so it needs no addon download; the driver plugins it loads
-        // (sqldrivers/qsqlite.dll) are part of the runtime payload instead. QSqlRelationalDelegate
-        // is deliberately absent: it derives from QStyledItemDelegate, and binding it would make
-        // the QtSql assembly depend on QtWidgets for one convenience class.
-        R("QSqlDatabase",  "qsqldatabase.h",  "QtSql"),
-        R("QSqlDriver",    "qsqldriver.h",    "QtSql", bindCtors: false),
-        R("QSqlError",     "qsqlerror.h",     "QtSql"),
-        R("QSqlField",     "qsqlfield.h",     "QtSql"),
-        R("QSqlRecord",    "qsqlrecord.h",    "QtSql"),
-        R("QSqlIndex",     "qsqlindex.h",     "QtSql"),
-        R("QSqlQuery",     "qsqlquery.h",     "QtSql"),
-        R("QSqlResult",    "qsqlresult.h",    "QtSql", bindCtors: false),
-        R("QSqlQueryModel", "qsqlquerymodel.h", "QtSql"),
-        R("QSqlTableModel", "qsqltablemodel.h", "QtSql"),
-        R("QSqlRelationalTableModel", "qsqlrelationaltablemodel.h", "QtSql"),
-        R("QSqlRelation",  "qsqlrelationaltablemodel.h", "QtSql"),
     };
 
     // Names that only ever occur as a pointer and are deliberately left opaque (IntPtr).

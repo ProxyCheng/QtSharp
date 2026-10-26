@@ -4,6 +4,17 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.13.0 - 2026-10-26
+
+- **QtXml, QtSql and QtWebSockets are gone.** .NET covers the same ground (System.Xml,
+  EF Core/SQLite, ClientWebSocket), none of the three leaked types into the remaining bound
+  modules, and `QtSharp.Api` is back to nine assemblies. `QXmlStreamReader`/`QXmlStreamWriter`
+  stay in QtCore, so Qt-style XML streaming is still available.
+- **The seams are tested, not the .NET libraries.** `test-xmlseam` hands documents between
+  System.Xml and QXmlStreamReader/Writer; `test-docformats` keeps SVG/PDF and drops the DOM part.
+  The QtSql and QtWebSockets demos and their packages went with their modules.
+- The Qt6 runtime payload no longer ships Qt6Sql.dll, Qt6Xml.dll or the SQL driver plugins.
+
 ## 0.12.0 - 2026-10-26
 
 - **A .NET `Stream` can sit behind Qt's `QIODevice`.** `StreamIODevice` implements the device

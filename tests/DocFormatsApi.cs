@@ -2,9 +2,11 @@ using System;
 using System.IO;
 using System.Text;
 
-// The document modules: QtXml's DOM, QtSvg (render an SVG, and paint *to* SVG) and QtPrintSupport
-// (QPrinter, which is also how a PDF is produced). Each is its own Qt module with its own runtime
-// DLL, so this is also the proof that the extra modules link and load.
+// The document modules: QtSvg (render an SVG, and paint *to* SVG) and QtPrintSupport (QPrinter,
+// which is also how a PDF is produced). Each is its own Qt module with its own runtime DLL, so
+// this is also the proof that the extra modules link and load. XML is no longer a Qt module in
+// the binding - System.Xml covers it, and QXmlStreamReader/Writer stay in QtCore; the seam is
+// exercised by test-xmlseam.
 [Demo("test-docformats")]
 public static class ApiDocFormatsDemo
 {
@@ -20,28 +22,6 @@ public static class ApiDocFormatsDemo
 
         string dir = Path.Combine(Path.GetTempPath(), "qtsharp-doc-" + Guid.NewGuid().ToString("N").Substring(0, 8));
         Directory.CreateDirectory(dir);
-
-        // ---- QtXml: build a DOM, serialise it, parse it back -------------------------------
-        var doc = new QDomDocument("dashboard-doc");
-        var root = doc.CreateElement("dashboard");
-        root.SetAttribute("theme", "dark");
-        var panel = doc.CreateElement("panel");
-        panel.SetAttribute("id", "1");
-        panel.AppendChild(doc.CreateTextNode("hello"));
-        root.AppendChild(panel);
-        doc.AppendChild(root);
-
-        string xml = doc.ToString();
-        Check(xml.Contains("<dashboard theme=\"dark\">") && xml.Contains("<panel id=\"1\">hello</panel>"),
-            "QDomDocument builds and serialises a tree");
-
-        var parsed = new QDomDocument();
-        Check(parsed.SetContent(xml, false), "QDomDocument::setContent parses the document back");
-        var parsedRoot = parsed.DocumentElement();
-        Check(parsedRoot.TagName() == "dashboard" && parsedRoot.Attribute("theme") == "dark",
-            $"the parsed root carries its tag and attribute ('{parsedRoot.TagName()}')");
-        Check(parsedRoot.FirstChild().ToElement().TagName() == "panel",
-            "the child element round-trips");
 
         // ---- QtSvg: render an SVG onto an image --------------------------------------------
         string svg = "<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'>"

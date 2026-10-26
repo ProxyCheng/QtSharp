@@ -1,5 +1,5 @@
 param(
-    [string]$PackageVersion = '0.12.0',
+    [string]$PackageVersion = '0.13.0',
     [string]$QtRuntimeDir = '',
     [switch]$SkipBuild
 )
@@ -14,10 +14,10 @@ Set-Location -LiteralPath $root
 $BindingNative = Join-Path $root 'out\api\QtSharp.Api.dll'
 if (-not $QtRuntimeDir) { $QtRuntimeDir = Join-Path $root 'Qt\6.12.0\runtime' }
 $QtRuntime = $QtRuntimeDir
-$modules = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsql', 'qtsvg', 'qtsvgwidgets',
-             'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets',
+$modules = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
+             'qtprintsupport', 'qtopengl', 'qtopenglwidgets',
              'charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras',
-             'qtwebsockets', 'qtmultimedia')
+             'qtmultimedia')
 
 if (-not $SkipBuild) {
     $required = @($BindingNative, (Join-Path $QtRuntime 'Qt6Core.dll'))
@@ -37,8 +37,6 @@ $packages = @(
     @{ Name = 'QtSharp.Charts';      Args = @() },
     @{ Name = 'QtSharp.Qt3D.Qt6';    Args = @("-p:Qt3DRuntimeDir=$QtRuntime") },
     @{ Name = 'QtSharp.Qt3D';        Args = @() },
-    @{ Name = 'QtSharp.WebSockets.Qt6'; Args = @("-p:QtWebSocketsRuntimeDir=$QtRuntime") },
-    @{ Name = 'QtSharp.WebSockets';  Args = @() },
     @{ Name = 'QtSharp.Multimedia.Qt6'; Args = @("-p:QtMultimediaRuntimeDir=$QtRuntime") },
     @{ Name = 'QtSharp.Multimedia';  Args = @() }
 )
@@ -58,13 +56,11 @@ $expected = @{
     'QtSharp.Runtime'    = @('lib/net10.0/QtSharp.Runtime.dll', 'tools/native/QtSharp.Api.dll',
                              'buildTransitive/QtSharp.Runtime.targets')
     'QtSharp.Qt6'        = @('tools/native/Qt6Core.dll', 'tools/native/Qt6Widgets.dll',
-                             'tools/native/Qt6Sql.dll', 'tools/native/sqldrivers/qsqlite.dll',
                              'tools/native/platforms/qwindows.dll', 'buildTransitive/QtSharp.Qt6.targets')
     'QtSharp.Api'        = @('lib/net10.0/QtSharp.QtCore.dll', 'lib/net10.0/QtSharp.QtGui.dll',
                              'lib/net10.0/QtSharp.QtWidgets.dll', 'lib/net10.0/QtSharp.QtNetwork.dll',
-                             'lib/net10.0/QtSharp.QtSql.dll',
                              'lib/net10.0/QtSharp.QtSvg.dll', 'lib/net10.0/QtSharp.QtSvgWidgets.dll',
-                             'lib/net10.0/QtSharp.QtPrintSupport.dll', 'lib/net10.0/QtSharp.QtXml.dll',
+                             'lib/net10.0/QtSharp.QtPrintSupport.dll',
                              'lib/net10.0/QtSharp.QtOpenGL.dll', 'lib/net10.0/QtSharp.QtOpenGLWidgets.dll')
     'QtSharp.Charts.Qt6' = @('tools/native/Qt6Charts.dll', 'buildTransitive/QtSharp.Charts.Qt6.targets')
     'QtSharp.Charts'     = @('lib/net10.0/QtSharp.Charts.dll', 'tools/native/QtSharp.Charts.Native.dll',
@@ -74,10 +70,6 @@ $expected = @{
     'QtSharp.Qt3D'       = @('lib/net10.0/QtSharp.Qt3DCore.dll', 'lib/net10.0/QtSharp.Qt3DExtras.dll',
                              'tools/native/QtSharp.Qt3DCore.Native.dll',
                              'tools/native/QtSharp.Qt3DExtras.Native.dll')
-    'QtSharp.WebSockets.Qt6' = @('tools/native/Qt6WebSockets.dll', 'buildTransitive/QtSharp.WebSockets.Qt6.targets')
-    'QtSharp.WebSockets' = @('lib/net10.0/QtSharp.QtWebSockets.dll',
-                             'tools/native/QtSharp.QtWebSockets.Native.dll',
-                             'buildTransitive/QtSharp.WebSockets.targets')
     'QtSharp.Multimedia.Qt6' = @('tools/native/Qt6Multimedia.dll', 'tools/native/Qt6MultimediaWidgets.dll',
                                  'tools/native/multimedia', 'buildTransitive/QtSharp.Multimedia.Qt6.targets')
     'QtSharp.Multimedia' = @('lib/net10.0/QtSharp.QtMultimedia.dll',
@@ -103,4 +95,4 @@ foreach ($package in $packages) {
         Write-Host ("  {0,-22} {1,8:N1} KB  {2} entries" -f $file.Name, ($file.Length / 1KB), $zip.Entries.Count)
     } finally { $zip.Dispose() }
 }
-Write-Host "OK: 11 packages in $outDir"
+Write-Host "OK: 9 packages in $outDir"

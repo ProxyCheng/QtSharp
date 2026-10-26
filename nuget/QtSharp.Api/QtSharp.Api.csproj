@@ -15,9 +15,9 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
 
     <PackageId>QtSharp.Api</PackageId>
-    <Version>0.12.0</Version>
+    <Version>0.13.0</Version>
     <Authors>ProxyCheng</Authors>
-    <Description>Qt for .NET: the generated C# binding as eleven module assemblies (QtCore, QtGui, QtWidgets, QtNetwork, QtSql, QtSvg, QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets), generated from the Qt 6.12 headers.</Description>
+    <Description>Qt for .NET: the generated C# binding as nine module assemblies (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg, QtSvgWidgets, QtPrintSupport, QtOpenGL, QtOpenGLWidgets), generated from the Qt 6.12 headers.</Description>
     <PackageTags>Qt;Qt6;CSharp;dotnet;binding;interop;gui</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>
@@ -34,11 +34,9 @@
     <ProjectReference Include="Modules\QtSharp.QtGui\QtSharp.QtGui.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
     <ProjectReference Include="Modules\QtSharp.QtWidgets\QtSharp.QtWidgets.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
     <ProjectReference Include="Modules\QtSharp.QtNetwork\QtSharp.QtNetwork.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
-    <ProjectReference Include="Modules\QtSharp.QtSql\QtSharp.QtSql.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
     <ProjectReference Include="Modules\QtSharp.QtSvg\QtSharp.QtSvg.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
     <ProjectReference Include="Modules\QtSharp.QtSvgWidgets\QtSharp.QtSvgWidgets.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
     <ProjectReference Include="Modules\QtSharp.QtPrintSupport\QtSharp.QtPrintSupport.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
-    <ProjectReference Include="Modules\QtSharp.QtXml\QtSharp.QtXml.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
     <ProjectReference Include="Modules\QtSharp.QtOpenGL\QtSharp.QtOpenGL.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
     <ProjectReference Include="Modules\QtSharp.QtOpenGLWidgets\QtSharp.QtOpenGLWidgets.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
 
@@ -54,11 +52,9 @@
     <None Include="Modules\QtSharp.QtGui\bin\$(Configuration)\net10.0\QtSharp.QtGui.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
     <None Include="Modules\QtSharp.QtWidgets\bin\$(Configuration)\net10.0\QtSharp.QtWidgets.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
     <None Include="Modules\QtSharp.QtNetwork\bin\$(Configuration)\net10.0\QtSharp.QtNetwork.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
-    <None Include="Modules\QtSharp.QtSql\bin\$(Configuration)\net10.0\QtSharp.QtSql.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
     <None Include="Modules\QtSharp.QtSvg\bin\$(Configuration)\net10.0\QtSharp.QtSvg.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
     <None Include="Modules\QtSharp.QtSvgWidgets\bin\$(Configuration)\net10.0\QtSharp.QtSvgWidgets.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
     <None Include="Modules\QtSharp.QtPrintSupport\bin\$(Configuration)\net10.0\QtSharp.QtPrintSupport.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
-    <None Include="Modules\QtSharp.QtXml\bin\$(Configuration)\net10.0\QtSharp.QtXml.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
     <None Include="Modules\QtSharp.QtOpenGL\bin\$(Configuration)\net10.0\QtSharp.QtOpenGL.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
     <None Include="Modules\QtSharp.QtOpenGLWidgets\bin\$(Configuration)\net10.0\QtSharp.QtOpenGLWidgets.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
   </ItemGroup>
