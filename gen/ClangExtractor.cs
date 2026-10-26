@@ -1168,6 +1168,12 @@ public static partial class ApiModel
         public bool IsProtected;
         public string ReturnType;
         public CXType ReturnClangType;
+        // A return value dropped on purpose: the method's result is not a managed type, but the
+        // call is still useful. When the result is the container's iterator (insert) the value it
+        // points at is what the caller wants, so the managed return is that element type; any
+        // other unsupported return is published as void.
+        public bool ReturnDropped;
+        public bool ReturnFromIterator;
         public List<ParamFact> Params = new();
         // The longest marshalable prefix of the declaration: what the model emits.
         public List<ParamFact> Visible = new();
@@ -1596,6 +1602,31 @@ public static partial class ApiModel
         };
         if (fn.Name.Length == 0)
             fn.Name = clang.getCursorSpelling(cursor).ToString();
+
+        // QJsonObject::insert and QJsonArray::insert return the class's nested iterator, which no
+        // managed type can represent. Taking an iterator is how C++ reaches the value, so the
+        // managed return is that value (the glue spells the call `insert(...).value()`). A
+        // non-iterator unsupported return stays a plain void call.
+        if (!isCtor && fn.Name == "insert" && !SupportedType(fn.ReturnClangType, isReturn: true))
+        {
+            string spelling = Spelling(fn.ReturnClangType);
+            string parent = clang.getCursorSpelling(clang.getCursorSemanticParent(handle)).ToString();
+            // The cursor spells the nested type unqualified ("iterator") in the class scope, and
+            // qualified when the model names it from outside.
+            bool iteratorReturn = spelling == "iterator" || spelling == "const_iterator"
+                                  || spelling.EndsWith("::iterator", StringComparison.Ordinal)
+                                  || spelling.EndsWith("::const_iterator", StringComparison.Ordinal);
+            if (iteratorReturn && (parent == "QJsonObject" || parent == "QJsonArray"))
+            {
+                fn.ReturnType = "QJsonValue";
+                fn.ReturnFromIterator = true;
+            }
+            else
+            {
+                fn.ReturnType = "void";
+            }
+            fn.ReturnDropped = true;
+        }
 
         int count = clang.Cursor_getNumArguments(handle);
         if (count < 0)
@@ -2051,7 +2082,9 @@ public static partial class ApiModel
 
     static bool Accept(FnFact fn, string className)
     {
-        var blocker = SupportedType(fn.ReturnClangType, isReturn: true) ? null : DescribeBlocked(fn.ReturnClangType);
+        var blocker = fn.ReturnDropped || SupportedType(fn.ReturnClangType, isReturn: true)
+            ? null
+            : DescribeBlocked(fn.ReturnClangType);
         if (blocker == null && fn.Visible.Any(p => p.Mode != ParamMode.In))
         {
             // A by-reference parameter is only supported on a plain method: the native wrapper
@@ -2450,6 +2483,8 @@ public static partial class ApiModel
             if (m.IsProtected)
                 sb.Append(", \"protected\": true");
             sb.Append(", \"returnType\": ").Append(Json(m.ReturnType));
+            if (m.ReturnFromIterator)
+                sb.Append(", \"iteratorValue\": true");
             sb.Append(", \"parameters\": [");
             sb.Append(string.Join(", ", m.Visible.Select(p => ParamJson2(p))));
             sb.Append("] }");
