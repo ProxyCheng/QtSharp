@@ -5,7 +5,7 @@ module.
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.11.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.12.0" />
 </ItemGroup>
 ```
 
