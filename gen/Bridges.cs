@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 // Bridges: the places where the binding deliberately departs from its general rules so a .NET
 // capability can sit behind a Qt type. Each bridge is one small class that says which Qt classes
 // it applies to, which virtuals it publishes, and how it maps special parameters. The extractor
-// asks the registry; adding a bridge is adding a class here and one row in VirtualBridges.All.
+// asks the registry; a bridge joins it by carrying [VirtualBridge] - there is no list to edit.
 //
 // Today there is one (QIODevice, so a C# Stream can be a Qt device). The likely next ones are more
 // QIODevice-shaped than general: QAbstractItemModel/QStyledItemDelegate are already covered by the
@@ -30,12 +32,25 @@ internal interface IVirtualBridge
     void MapParameters(ApiModel.FnFact fn, string declaringClass);
 }
 
+/// <summary>Marks an <see cref="IVirtualBridge"/> the registry discovers on startup.</summary>
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+internal sealed class VirtualBridgeAttribute : Attribute
+{
+}
+
 internal static class VirtualBridges
 {
-    static readonly IVirtualBridge[] All =
-    {
-        new QioDeviceBridge(),
-    };
+    // Discovered from the generator's own assembly, so adding a bridge is adding a class with the
+    // attribute. Sorted by type name: GetTypes() makes no ordering promise, and a stable order
+    // keeps two runs (and two machines) identical.
+    static readonly IVirtualBridge[] All = typeof(VirtualBridges).Assembly
+        .GetTypes()
+        .Where(type => !type.IsAbstract
+                       && typeof(IVirtualBridge).IsAssignableFrom(type)
+                       && type.GetCustomAttribute<VirtualBridgeAttribute>(inherit: false) != null)
+        .OrderBy(type => type.FullName, StringComparer.Ordinal)
+        .Select(type => (IVirtualBridge)Activator.CreateInstance(type, nonPublic: true))
+        .ToArray();
 
     public static bool Publishes(string className, string name)
     {
