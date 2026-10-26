@@ -7,7 +7,7 @@ cannot drift):
 
 | runner | source | windows | assertions |
 |---|---|---|---|
-| `testbind` | `demos/` — the official Qt examples, plus `tests/` — binding-specific tests | 39 | 1286 |
+| `testbind` | `demos/` — the official Qt examples, plus `tests/` — binding-specific tests | 40 | 1307 |
 | `QtSharp.Charts.Demos` | `demos.charts/` — Qt Charts | 38 | 570 |
 | `QtSharp.Qt3D.Demos` | `demos.qt3d/` — Qt 3D | 3 | 37 |
 
@@ -21,6 +21,7 @@ runnable names both name the module the example exercises:
 | QtGui | `qtgui-basicdrawing`, `qtgui-gradients`, `qtgui-painterpaths`, `qtgui-composition`, `qtgui-transformations`, `qtgui-pathstroke` |
 | QtWidgets | `qtwidgets-analogclock`, `qtwidgets-calculator`, `qtwidgets-calendarwidget`, `qtwidgets-completer`, `qtwidgets-lineedits`, `qtwidgets-menus`, `qtwidgets-scribble`, `qtwidgets-shapedclock`, `qtwidgets-shortcuteditor`, `qtwidgets-sliders`, `qtwidgets-spinboxes`, `qtwidgets-stardelegate`, `qtwidgets-systray`, `qtwidgets-documentviewer`, `qtwidgets-basiclayouts`, `qtwidgets-gallery`, `qtwidgets-customsortfilter` |
 | QtNetwork | `qtnetwork-fortune` — the fortune server/client pair over loopback |
+| QtSql | `qtsql-querymodel` — Qt's SQL "Query Model" example: SQLite via `QSqlQueryModel`, plus a `QSqlTableModel` edit |
 | QtSvg | `qtsvg-svgviewer` — the SVG Viewer's render/export path |
 | QtSvgWidgets | `qtsvgwidgets-svgwidget` — QSvgWidget loading and off-screen rendering |
 | QtXml | `qtxml-dombookmarks` — the DOM bookmarks reader/editor |
@@ -58,6 +59,7 @@ run under `test-*` names and stay in the gate:
 | QtGui | the six painting examples | |
 | QtWidgets | 17 widget examples | |
 | QtNetwork | `qtnetwork-fortune` | |
+| QtSql | `qtsql-querymodel` | the official `cachedtable`/`relationaltablemodel` examples are candidates |
 | QtSvg | `qtsvg-svgviewer` | |
 | QtSvgWidgets | `qtsvgwidgets-svgwidget` | |
 | QtPrintSupport | `qtprintsupport-notepad` | |

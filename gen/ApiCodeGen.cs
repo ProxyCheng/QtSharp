@@ -1009,6 +1009,19 @@ public static class ApiCodeGen
             if (cls.TryGetProperty("fields", out var fields))
                 foreach (var field in fields.EnumerateArray())
                     yield return field.GetProperty("type").GetString();
+
+            // The dispatch switch forwards every virtual in the chain, including the ones the class
+            // only inherits: QSqlQueryModel dispatches QAbstractItemModel::itemData/mimeData even
+            // though it never declares them. Those signatures use the same container helpers, and
+            // the helpers are internal to the assembly that declares them, so this module has to
+            // emit its own copy.
+            foreach (var slot in ChainOf(Name(cls)))
+            {
+                if (slot.Virtual.TryGetProperty("returnType", out var virtualReturn))
+                    yield return virtualReturn.GetString();
+                foreach (var p in slot.Virtual.GetProperty("parameters").EnumerateArray())
+                    yield return PType(p);
+            }
         }
         foreach (var fn in Functions)
         {

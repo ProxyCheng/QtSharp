@@ -445,6 +445,7 @@ public static partial class ApiModel
         QtXmlModule(),
         QtOpenGLModule(),
         QtOpenGLWidgetsModule(),
+        QtSqlModule(),
     };
 
     internal static ExtensionModule FindExtensionModule(string name)
@@ -1115,6 +1116,24 @@ public static partial class ApiModel
         R("QPixelFormat",          "qpixelformat.h", "QtGui"),
         R("QRgba64",               "qrgba64.h", "QtGui"),
         R("QMovie",                "qmovie.h", "QtGui"),
+
+        // ---------------------------------------------------------- QtSql
+        // QtSql is part of qtbase, so it needs no addon download; the driver plugins it loads
+        // (sqldrivers/qsqlite.dll) are part of the runtime payload instead. QSqlRelationalDelegate
+        // is deliberately absent: it derives from QStyledItemDelegate, and binding it would make
+        // the QtSql assembly depend on QtWidgets for one convenience class.
+        R("QSqlDatabase",  "qsqldatabase.h",  "QtSql"),
+        R("QSqlDriver",    "qsqldriver.h",    "QtSql", bindCtors: false),
+        R("QSqlError",     "qsqlerror.h",     "QtSql"),
+        R("QSqlField",     "qsqlfield.h",     "QtSql"),
+        R("QSqlRecord",    "qsqlrecord.h",    "QtSql"),
+        R("QSqlIndex",     "qsqlindex.h",     "QtSql"),
+        R("QSqlQuery",     "qsqlquery.h",     "QtSql"),
+        R("QSqlResult",    "qsqlresult.h",    "QtSql", bindCtors: false),
+        R("QSqlQueryModel", "qsqlquerymodel.h", "QtSql"),
+        R("QSqlTableModel", "qsqltablemodel.h", "QtSql"),
+        R("QSqlRelationalTableModel", "qsqlrelationaltablemodel.h", "QtSql"),
+        R("QSqlRelation",  "qsqlrelationaltablemodel.h", "QtSql"),
     };
 
     // Names that only ever occur as a pointer and are deliberately left opaque (IntPtr).

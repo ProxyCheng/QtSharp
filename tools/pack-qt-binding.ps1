@@ -1,5 +1,5 @@
 param(
-    [string]$PackageVersion = '0.3.0',
+    [string]$PackageVersion = '0.4.0',
     [string]$QtRuntimeDir = '',
     [switch]$SkipBuild
 )
@@ -53,9 +53,11 @@ $expected = @{
     'QtSharp.Runtime'    = @('lib/net10.0/QtSharp.Runtime.dll', 'tools/native/QtSharp.Api.dll',
                              'buildTransitive/QtSharp.Runtime.targets')
     'QtSharp.Qt6'        = @('tools/native/Qt6Core.dll', 'tools/native/Qt6Widgets.dll',
+                             'tools/native/Qt6Sql.dll', 'tools/native/sqldrivers/qsqlite.dll',
                              'tools/native/platforms/qwindows.dll', 'buildTransitive/QtSharp.Qt6.targets')
     'QtSharp.Api'        = @('lib/net10.0/QtSharp.QtCore.dll', 'lib/net10.0/QtSharp.QtGui.dll',
                              'lib/net10.0/QtSharp.QtWidgets.dll', 'lib/net10.0/QtSharp.QtNetwork.dll',
+                             'lib/net10.0/QtSharp.QtSql.dll',
                              'lib/net10.0/QtSharp.QtSvg.dll', 'lib/net10.0/QtSharp.QtSvgWidgets.dll',
                              'lib/net10.0/QtSharp.QtPrintSupport.dll', 'lib/net10.0/QtSharp.QtXml.dll',
                              'lib/net10.0/QtSharp.QtOpenGL.dll', 'lib/net10.0/QtSharp.QtOpenGLWidgets.dll')

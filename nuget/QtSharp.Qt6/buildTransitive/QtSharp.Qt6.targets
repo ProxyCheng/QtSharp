@@ -7,18 +7,22 @@
     <ItemGroup>
       <_QtSharpQt6Native Include="$(QtSharpQt6NativeDir)*.dll" />
       <_QtSharpQt6Platform Include="$(QtSharpQt6NativeDir)platforms\qwindows.dll" />
+      <_QtSharpQt6SqlDriver Include="$(QtSharpQt6NativeDir)sqldrivers\*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_QtSharpQt6Native)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(_QtSharpQt6Platform)" DestinationFolder="$(OutDir)platforms\" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpQt6SqlDriver)" DestinationFolder="$(OutDir)sqldrivers\" SkipUnchangedFiles="true" />
   </Target>
 
   <Target Name="QtSharpQt6CopyNativeDepsPublish" AfterTargets="Publish">
     <ItemGroup>
       <_QtSharpQt6NativePublish Include="$(QtSharpQt6NativeDir)*.dll" />
       <_QtSharpQt6PlatformPublish Include="$(QtSharpQt6NativeDir)platforms\qwindows.dll" />
+      <_QtSharpQt6SqlDriverPublish Include="$(QtSharpQt6NativeDir)sqldrivers\*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_QtSharpQt6NativePublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(_QtSharpQt6PlatformPublish)" DestinationFolder="$(PublishDir)platforms\" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpQt6SqlDriverPublish)" DestinationFolder="$(PublishDir)sqldrivers\" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>
