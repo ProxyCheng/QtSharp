@@ -4,6 +4,15 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.6.0 - 2026-10-26
+
+- **QtSql rows are C# sequences now.** `QSqlQuery.Rows()` yields one `Dictionary<string, object>`
+  per row (values unwrapped through `QVariant.ToObject()`), `SelectRows` projects typed rows, and
+  `QSqlRecord.Get<T>` does the conversion SQLite's `LongLong` needs. `QSqlQueryModel.Rows()` gives
+  the same shape for a model. This is LINQ to Objects over the rows Qt returned: there is no
+  `IQueryable` provider translating expressions to SQL and no ADO.NET bridge. `test-qtsql` covers
+  the whole path in the gate.
+
 ## 0.5.0 - 2026-10-26
 
 - **Invoking an `[QtSignal]` event is now an emit.** `ValueChanged?.Invoke(value)` in the declaring

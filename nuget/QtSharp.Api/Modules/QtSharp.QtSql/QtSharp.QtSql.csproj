@@ -20,6 +20,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\out\qtsql\generated\**\*.cs">
       <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
+    <!-- The BCL-facing half: LINQ-friendly rows and typed reads over QSqlQuery/QSqlRecord. -->
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\runtime\QtSql\*.cs">
+      <Link>Runtime\QtSql\%(Filename)%(Extension)</Link>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
