@@ -5,8 +5,8 @@ properties, signals and virtuals over the native Qt Charts library.
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.1.0" />
-  <PackageReference Include="QtSharp.Charts" Version="0.1.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.3.0" />
+  <PackageReference Include="QtSharp.Charts" Version="0.3.0" />
 </ItemGroup>
 ```
 

@@ -4,7 +4,7 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
-## Unreleased
+## 0.3.0 - 2026-10-26
 
 - **The binding is generated from Qt 6.12.0.** The checked-in model was re-extracted from the
   6.12.0 `msvc2022_64` kit, so the assemblies, the native glue and the packages now carry 6.12's
@@ -23,6 +23,8 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 - **The model files are pinned to LF** in `.gitattributes`. The model gate compares bytes, and
   `core.autocrlf=true` was checking the checked-in models out as CRLF, which made the gate report
   a model change on every Windows checkout.
+## 0.2.0 - 2026-10-24
+
 - **The standalone `QtSharp.Charts` repository was merged in.** Its 38-example conformance suite
   (the official Qt Charts examples, 570 assertions) now lives in the main repository as
   `demos.charts/` and runs in the gate, CI and release against the separate `QtSharp.Charts`
