@@ -27,6 +27,7 @@
 
     <QtSharpPositioningDir Condition="'$(QtSharpPositioningDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\qtpositioning</QtSharpPositioningDir>
     <QtSharpPositioningNativeDir Condition="'$(QtSharpPositioningNativeDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\api-modules\qtpositioning</QtSharpPositioningNativeDir>
+    <QtSharpPositioningNativeLinuxDir Condition="'$(QtSharpPositioningNativeLinuxDir)' == ''">$(QtSharpPositioningNativeDir)</QtSharpPositioningNativeLinuxDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -45,12 +46,13 @@
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
     <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
-    <None Include="$(QtSharpPositioningNativeDir)\QtSharp.QtPositioning.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(QtSharpPositioningNativeDir)\QtSharp.QtPositioning.Native.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" Condition="Exists('$(QtSharpPositioningNativeDir)\QtSharp.QtPositioning.Native.dll')" />
+    <None Include="$(QtSharpPositioningNativeLinuxDir)\libQtSharp.QtPositioning.Native.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="Exists('$(QtSharpPositioningNativeLinuxDir)\libQtSharp.QtPositioning.Native.so')" />
   </ItemGroup>
 
   <Target Name="QtSharpPositioningPackCheck" BeforeTargets="GenerateNuspec">
     <Error Condition="!Exists('$(QtSharpPositioningDir)\generated')" Text="The QtPositioning binding source is missing - run the code generator for model\qtsharp.qtpositioning.json." />
-    <Error Condition="!Exists('$(QtSharpPositioningNativeDir)\QtSharp.QtPositioning.Native.dll')" Text="The QtPositioning native glue is missing - run: powershell -File tools\build-native-module.ps1 -Module qtpositioning" />
+    <Error Condition="!Exists('$(QtSharpPositioningNativeDir)\QtSharp.QtPositioning.Native.dll') and !Exists('$(QtSharpPositioningNativeLinuxDir)\libQtSharp.QtPositioning.Native.so')" Text="The QtPositioning native glue is missing - run build-native-module for the qtpositioning module (Windows or Linux)." />
   </Target>
 
 </Project>

@@ -3,7 +3,7 @@
 [![CI](https://github.com/ProxyCheng/QtSharp/actions/workflows/ci.yml/badge.svg)](https://github.com/ProxyCheng/QtSharp/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/ProxyCheng/QtSharp?display_name=tag)](https://github.com/ProxyCheng/QtSharp/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Target: Windows x64](https://img.shields.io/badge/target-Windows%20x64-0078D4.svg)](#prerequisites)
+[![Target: Windows x64 · Linux x64](https://img.shields.io/badge/target-Windows%20x64%20%C2%B7%20Linux%20x64-0078D4.svg)](#prerequisites)
 
 Qt for .NET, **generated from Qt's own headers** — no hand-written bindings, no runtime reflection
 over Qt.
@@ -64,7 +64,7 @@ else to set up. No Qt SDK, no Visual Studio C++ workload, no clone:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.14.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.17.0" />
 </ItemGroup>
 ```
 
@@ -104,8 +104,8 @@ than part of qtbase. It references the core package and adds all six modules:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.14.0" />
-  <PackageReference Include="QtSharp.Qt3D" Version="0.14.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.17.0" />
+  <PackageReference Include="QtSharp.Qt3D" Version="0.17.0" />
 </ItemGroup>
 ```
 
@@ -128,40 +128,45 @@ See `demos.qt3d` for the official Qt3D examples, which run without a display.
 
 ## Project status
 
-QtSharp is an active pre-1.0 project. The supported target is Windows x64 with Qt 6.12.x and
-.NET 10. The generated model, native wrapper, and runtime are under active development, so binary
-and source compatibility can change between releases. Contributions, reproducible bug reports, and
-new conformance demos are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+QtSharp is an active pre-1.0 project. The supported targets are Windows x64 and Linux x64 (glibc),
+with Qt 6.12.x and .NET 10. The generated model, native wrapper, and runtime are under active
+development, so binary and source compatibility can change between releases. Contributions,
+reproducible bug reports, and new conformance demos are welcome; see
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 The repository's own generated binding is the primary validation surface. It is not yet a stable
 drop-in replacement for every Qt module or every desktop deployment scenario.
 
 ## Releases
 
-Pushing a semantic-version tag such as `v0.14.0` starts the release workflow. It builds twelve
-Windows x64 packages and attaches them, with a `SHA256SUMS.txt`, to a GitHub Release:
+Pushing a semantic-version tag such as `v0.17.0` starts the release workflow. It builds twelve
+packages and attaches them, with a `SHA256SUMS.txt`, to a GitHub Release. Every package that
+carries native code holds both `tools/native/win-x64/` and `tools/native/linux-x64/`; the managed
+assemblies are platform-neutral.
 
 | package | what it is |
 |---|---|
 | `QtSharp.Api` | the binding as nine module assemblies — add it and write Qt applications in C# |
 | `QtSharp.Runtime` | the managed runtime + native glue (brought in by `QtSharp.Api`) |
-| `QtSharp.Qt6` | the Qt 6 runtime DLLs + platform plugin (brought in by `QtSharp.Api`) |
-| `QtSharp.Tools` | Qt command-line tools (`rcc`, `uic`, `lrelease`, `lupdate`) + MSBuild `.qrc` support |
+| `QtSharp.Qt6` | the Qt 6 runtime — Windows DLLs + `qwindows.dll`; on Linux the `lib/` + `plugins/` prefix and `qt.conf` for both platforms' consumer builds (brought in by `QtSharp.Api`) |
+| `QtSharp.Tools` | Qt command-line tools (`rcc`, `uic`, `lrelease`, `lupdate`) + MSBuild `.qrc` support — Windows x64 only |
 | `QtSharp.Charts` | the optional QtCharts extension, against `QtSharp.Api` |
-| `QtSharp.Charts.Qt6` | Qt6Charts.dll (brought in by `QtSharp.Charts`) |
+| `QtSharp.Charts.Qt6` | Qt6Charts.dll (brought in by `QtSharp.Charts`; on Linux the base `QtSharp.Qt6` already deploys the whole Qt tree) |
 | `QtSharp.Qt3D` | the optional Qt3D extension (six modules), against `QtSharp.Api` |
-| `QtSharp.Qt3D.Qt6` | the Qt3D runtime and plugins (brought in by `QtSharp.Qt3D`) |
+| `QtSharp.Qt3D.Qt6` | the Qt3D runtime and plugins (brought in by `QtSharp.Qt3D`; Windows payload) |
 | `QtSharp.Multimedia` | the optional QtMultimedia extension, against `QtSharp.Api` |
-| `QtSharp.Multimedia.Qt6` | Qt6Multimedia.dll, Qt6MultimediaWidgets.dll and the backend plugin (brought in by `QtSharp.Multimedia`) |
+| `QtSharp.Multimedia.Qt6` | Qt6Multimedia.dll, Qt6MultimediaWidgets.dll and the backend plugin (brought in by `QtSharp.Multimedia`; Windows payload) |
 | `QtSharp.Positioning` | the optional QtPositioning extension, against `QtSharp.Api` |
-| `QtSharp.Positioning.Qt6` | Qt6Positioning.dll (brought in by `QtSharp.Positioning`) |
+| `QtSharp.Positioning.Qt6` | Qt6Positioning.dll (brought in by `QtSharp.Positioning`; Windows payload) |
 | `QtSharp.Sql` | the Qt model classes QtSql used to bind (`QSqlQueryModel`, `QSqlTableModel`) over ADO.NET — no Qt SQL module involved |
 
-Everything is built on the runner from the checked-in models: the generator runs without clang, the
-Qt dev files (including the QtCharts, Qt3D, QtMultimedia and Qt Shader Tools addons) are fetched from Qt's own
-repository, and the native wrappers are compiled with the MSVC tools that ship on the runner. CI
-runs the same steps on every push, including the official Qt3D examples as the extension's
-conformance suite, so the consumer path is verified continuously.
+Everything is built on the runners from the checked-in models: the generator runs without clang,
+the Qt dev files (including the QtCharts, Qt3D, QtMultimedia and Qt Shader Tools addons) are
+fetched from Qt's own repository, and the native wrappers are compiled with the platform's
+toolchain — MSVC on Windows, g++ on Linux. CI runs the same steps on every push: a Windows job and
+a Linux job build and test their own payload, a pack job combines the two into the multi-RID
+packages, and a consumer restores them on both platforms. The official Qt3D examples are part of
+the Windows gate, so the extension's conformance suite runs continuously.
 
 The packages are distributed through GitHub Releases. Publishing to nuget.org is kept as a separate
 future step so a public NuGet API key is never required for ordinary repository builds.
@@ -172,12 +177,15 @@ future step so a public NuGet API key is never required for ordinary repository 
 
 | | needed for | notes |
 |---|---|---|
-| **Windows x64** | everything | the generated wrapper is MSVC C++; there is no Linux/macOS build |
+| **Windows x64** | the Windows build | the generated wrapper is MSVC C++ |
+| **Linux x64 (glibc)** | the Linux build | the same wrapper compiled with g++; X11/GL system libraries to run |
 | **.NET SDK 10** | everything | the projects target `net10.0` |
 | **Visual Studio with the C++ workload** | `build_api.bat` | `cl.exe` and `vcvarsall.bat` |
-| **Qt 6.12.0 MSVC 2022 64-bit** | extract + native build + running | dev files (headers, `.lib`) **and** the runtime DLLs; the QtCharts and Qt3D addons and Qt Shader Tools too (`tools\build-qt-kit.ps1` fetches them) |
-| **clang builtin headers** | extract only | any clang version; the checked-in model used clang 19 |
-| **NuGet reachable** | first build | restores `ClangSharp` + `libClangSharp.runtime.win-x64` |
+| **g++ (or clang++)** | `build_api.sh` | `$CXX` selects the compiler; C++17 |
+| **Qt 6.12.0** | native build + running | Windows: MSVC 2022 64-bit dev files **and** runtime DLLs; Linux: the `gcc_64` kit. The repository's fetchers download the QtCharts, Qt3D, QtMultimedia, QtPositioning and Qt Shader Tools addons too |
+| **clang builtin headers** | extract only (Windows) | any clang version; the checked-in model used clang 19 |
+| **patchelf, 7z** | the Linux build | `p7zip-full` for the Qt archives, `patchelf` for the deployment rpaths |
+| **NuGet reachable** | first build | restores `ClangSharp` + `libClangSharp.runtime.<host>` |
 
 Nothing Qt- or clang-shaped is committed (it is all in `.gitignore`), so a clone has to put those
 three pieces somewhere. The defaults are the layout this repository was developed in; every one of
@@ -185,8 +193,8 @@ them can be pointed elsewhere instead:
 
 | piece | default | override |
 |---|---|---|
-| Qt dev files (headers + lib) | `<repo>\Qt\6.12.0\msvc2022_64` | `QT_DIR` (build_api.bat), `QTSHARP_QT_INCLUDE` (generator) |
-| Qt runtime DLLs + `platforms\qwindows.dll` | `<repo>\Qt\6.12.0\runtime` | `QtRuntimeDir` in `QtSharp.Api.props` |
+| Qt dev files (headers + lib) | Windows `<repo>\Qt\6.12.0\msvc2022_64`; Linux `<repo>/out/qt-kit/kit` | `QT_DIR`, `QTSHARP_QT_INCLUDE` (generator) |
+| Qt runtime | Windows `<repo>\Qt\6.12.0\runtime` (DLLs + `platforms\qwindows.dll`); Linux `<repo>/out/qt-kit/runtime` (`lib/` + `plugins/` + `qt.conf`) | `QtRuntimeDir` in `QtSharp.Api.props` (a Linux runtime dir must include `qt.conf`, or set `QT_PLUGIN_PATH`) |
 | clang builtin headers | `<repo>\lib\lib\clang\<version>\include` | `QTSHARP_CLANG_RESOURCE_DIR` |
 | Visual Studio | found among the 2022 / 2019 / 18.x installs | `VCVARS` (a `vcvarsall.bat`), `VCVARS_VER` (pin a toolset) |
 
@@ -206,29 +214,56 @@ them can be pointed elsewhere instead:
   `qtbase-…-X86_64.7z` (plus `d3dcompiler_47-x64.7z`) from
   `…/desktop/qt6_6120/qt6_6120_msvc2022_64/qt.qt6.6120.win64_msvc2022_64/` and unpacking it at the
   kit root gives the same result. `qtbase` covers QtCore/QtGui/QtWidgets/QtNetwork/QtPrintSupport/
-  QtXml/QtOpenGL; QtSvg and QtSvgWidgets come from the separate `qtsvg` module (add its
+  QtOpenGL; QtSvg and QtSvgWidgets come from the separate `qtsvg` module (add its
   `include`/`lib` the same way).
 * **Qt runtime DLLs**: `<repo>\Qt\6.12.0\runtime` needs the modules the binding links —
   `Qt6Core.dll`, `Qt6Gui.dll`, `Qt6Widgets.dll`, `Qt6Network.dll`, `Qt6Svg.dll`,
-  `Qt6SvgWidgets.dll`, `Qt6PrintSupport.dll`, `Qt6Xml.dll`, `Qt6OpenGL.dll`,
+  `Qt6SvgWidgets.dll`, `Qt6PrintSupport.dll`, `Qt6OpenGL.dll`,
   `Qt6OpenGLWidgets.dll` — plus the MSVC runtime DLLs (`msvcp140*.dll`, `vcruntime140*.dll`) and
   `platforms\qwindows.dll`. The easy way is to build any Qt widget app and run `windeployqt` on it.
   All of them must be the *same* Qt version (6.12.x) — they share `Qt6Core`.
+* **Qt on Linux**: `tools/build-qt-kit.sh` does the same job for the `gcc_64` kit — it downloads
+  the qtbase, qtsvg, ICU and addon archives from Qt's own repository (the same HTML-listing and
+  7z mechanism the Windows fetcher uses; `aqt` cannot be used for the reason above), merges the
+  addons into `<repo>/out/qt-kit/kit` and stages the deployment tree:
+
+  ```
+  out/qt-kit/kit       include/ + lib/ + plugins/       (QT_DIR)
+  out/qt-kit/runtime   lib/*.so.6 + plugins/ + qt.conf  (QT_RUNTIME_DIR)
+  ```
+
+  It pins the deployment rpaths with `patchelf` (`$ORIGIN` on the libraries,
+  `$ORIGIN/../../lib` on the plugins), so an application directory needs no `LD_LIBRARY_PATH`.
+  `--kit-dir` points at an existing kit instead of downloading one. The script needs `curl`, `7z`
+  (`p7zip-full`) and `patchelf`; the built application additionally needs the system X11/GL
+  libraries Qt itself needs (`libxcb-*`, `libxkbcommon-x11-0`, `libgl1`/`libegl1`, `libdbus-1-3`,
+  fonts). The staged runtime includes QtDeclarative (Qt6Qml/Qt6Quick, which QtMultimedia's ffmpeg
+  backend links); for playback the machine also needs the distribution's FFmpeg runtime libraries
+  (`libavcodec`, `libavformat`, `libavutil`, `libswresample`, `libswscale`).
 * **clang builtin headers**: `<repo>\lib\lib\clang\<version>\include` (with `stddef.h` in it) — copy
   them out of an LLVM installation (`C:\Program Files\LLVM\lib\clang\19\include`) or from the
   `libclang.runtime.win-x64` NuGet package. Any version works; a different version from clang 19 may
   change a fact or two in the extracted model, which the model diff gate below will show you.
+  Extraction is Windows-only by design: the model is the MSVC kit's, and a Linux checkout rebuilds
+  everything from the checked-in model (`regen-api.ps1` skips the extraction steps off Windows).
 
 ---
 
 ## Build and verify
 
 ```
+# Windows
 powershell -File tools\regen-api.ps1
+
+# Linux (PowerShell 7)
+pwsh ./tools/regen-api.ps1
 ```
 
 That is the whole thing (a clone's first run takes a few minutes — the native glue is a big
-translation unit, and every module's demos and tests are built and run at the end). It runs, in order:
+translation unit, and every module's demos and tests are built and run at the end). On Linux the
+extraction steps are skipped (the model is the Windows one); everything else runs, including the
+determinism gate, the g++ build and the demo/test suite. For a bare native build without the gate,
+`./build_api.sh` and `tools/build-native-module.sh <module>` compile the glue directly. It runs, in order:
 
 | step | what it does |
 |---|---|
@@ -255,12 +290,17 @@ not a failed assertion; the gate prints each window's result line with its name,
 exit once, and a window that fails twice has its own output printed, so the failure stays
 attributable even though the windows overlapped.
 
-The same suite runs in CI on every push — the `Smoke tests` job in `.github/workflows/ci.yml`. It
-takes the binding the `binding` job built from the checked-in model, fetches Qt, builds the examples
-and the binding tests, then runs all of them through the same `tools/run-window-tests.ps1` pool, so it gets
-the same parallelism and the same one retry for the teardown flake above. Note that the examples need a real Qt platform: `QT_QPA_PLATFORM=offscreen`
-is *not* an option, because several of them assert on rendered pixels and one crashes without
-`qwindows`.
+The same suite runs in CI on every push — the `Smoke tests` job in `.github/workflows/ci.yml` on
+Windows and the `linux-bind` job on Ubuntu. The Windows job takes the binding the `binding` job
+built from the checked-in model, fetches Qt, builds the examples and the binding tests, then runs
+all of them through the same `tools/run-window-tests.ps1` pool, so it gets the same parallelism and
+the same one retry for the teardown flake above. The Linux job does the same with g++ and runs the
+suite under `xvfb-run` (a real platform plugin, because several examples assert on rendered
+pixels); `LIBGL_ALWAYS_SOFTWARE=1` supplies OpenGL for the Qt3D examples. Note that the examples
+need a real Qt platform on Windows as well: `QT_QPA_PLATFORM=offscreen` is *not* an option, because
+several of them assert on rendered pixels and one crashes without `qwindows`. The package consumer
+check on Linux uses the offscreen platform (`tools/test-packages.ps1` selects it when there is no
+display).
 
 Once that has succeeded, the ordinary `dotnet build` of any project works too:
 
@@ -280,6 +320,10 @@ testapp qtwidgets-calculator     # an official example
 testapp qtgui-pathstroke         # QTSHARP_DEMO_MS=8000 keeps it on screen longer
 testapp test-metaobject          # a binding test
 ```
+
+On Linux the executable has no extension: `testbind/bin/Release/net10.0/testapp qtwidgets-calculator`
+(or `xvfb-run -a` when there is no display; `QT_QPA_PLATFORM=offscreen` works for the non-rendering
+tests).
 
 The official demos are named after the module they exercise (`qtcore-*`, `qtgui-*`, `qtwidgets-*`, plus
 `qtsvg-*`, `qtsvgwidgets-*`, `qtprintsupport-*`, `qtnetwork-*`, `qtcharts-*`,
@@ -302,7 +346,7 @@ module projects directly (the same assemblies the package contains).
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.14.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.17.0" />
 </ItemGroup>
 ```
 
@@ -487,7 +531,7 @@ and matching DLLs (normally a Qt kit's `bin`):
 powershell -File tools\pack-qt-tools.ps1 -QtToolsSource C:\Qt\6.12.0\msvc2022_64\bin
 ```
 
-The result is `out/packages/QtSharp.Tools.0.14.0.nupkg`. `-QtVersion` and `-PackageVersion`
+The result is `out/packages/QtSharp.Tools.0.17.0.nupkg`. `-QtVersion` and `-PackageVersion`
 override the defaults. Put the upstream license texts/notices in a `QtSharp-ThirdPartyNotices`
 subdirectory beside the source tools to include them in the payload. Tools are staged under
 `out/qt-tools`; the script checks QtCore's version and runs captured, time-limited startup checks.
@@ -496,7 +540,7 @@ In a consumer project:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Tools" Version="0.14.0" PrivateAssets="all" />
+  <PackageReference Include="QtSharp.Tools" Version="0.17.0" PrivateAssets="all" />
   <QtResource Include="assets\sample.qrc" />
 </ItemGroup>
 ```
@@ -550,8 +594,31 @@ Replace the local source path with your checkout's `out/packages` directory.
 
 ## Known limitations
 
-* **Windows x64 and Qt 6.12.0 only** — the model is extracted from that kit, and the wrapper is
-  MSVC-compiled.
+* **Windows x64 and Linux x64 (glibc), Qt 6.12.0 only** — the model is extracted from the MSVC
+  kit, and the Linux build compiles the same generated C++ with g++. ARM64 and musl are not
+  packaged.
+* **`long`-typed Qt APIs stay 32-bit on Linux.** The model comes from the MSVC headers, where
+  `long` is 32 bits, so the C ABI pins it to `int`/`uint` on both platforms and the wrapper
+  converts at the Qt call. That keeps one C# API across platforms, but `QByteArray.toLong`,
+  `QLocale.toLong`, the `QEventPoint` timestamps and the `QThread`/`QWaitCondition` timeout
+  parameters truncate to 32 bits on Linux (the timestamps wrap after ~49.7 days of uptime). Use the
+  `QByteArray::toLongLong` / `QLocale::toLongLong` overloads when the full range matters.
+* **Windows-only Qt members are not bound.** `QProcess.nativeArguments`/`setNativeArguments` are
+  declared by Qt only on Windows; the generator filters them out so one API surface compiles on
+  both platforms. Use `ProcessStartInfo.Arguments` instead.
+* **The addon `.Qt6` packages have no separate Linux payload.** On Linux the base
+  `QtSharp.Qt6` package deploys the whole Qt tree (`lib/` + `plugins/` + `qt.conf`, addon modules
+  included), because every addon package depends on it anyway; the addon packages still carry the
+  addon's native glue for both RIDs.
+* **Single-file publish is not supported on Linux.** The deployment relies on `$ORIGIN` rpaths
+  between the application directory, `lib/` and `plugins/`; a single-file bundle extracts the
+  native libraries elsewhere and breaks that layout.
+* **`QtSharp.Tools` is Windows x64 only** — its `rcc`/`uic`/`lrelease`/`lupdate` payload is the
+  MSVC build. On Linux use the tools from the Qt kit directly.
+* **QtMultimedia on Linux needs the distribution's FFmpeg runtime.** Qt's ffmpeg backend plugin
+  links `libavcodec`/`libavformat`/`libavutil`/`libswresample`/`libswscale`; install the ffmpeg
+  runtime packages that match the kit's build (on Ubuntu 24.04, the `libavcodec60` family). The
+  binding and the plugin load without them, but `QMediaPlayer` reports no media.
 * **`QtSharp.Sql` materializes a whole result set.** Qt's `QSqlTableModel` fetches in 256-row
   batches; the substitute loads everything up front, so page very large tables with `WHERE`/`LIMIT`.
   Its per-cell `Data()` also crosses the managed/native boundary (a constant cost per visible cell).

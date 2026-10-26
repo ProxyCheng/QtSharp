@@ -1,0 +1,38 @@
+name: Linux builder image
+
+# Builds the container the Linux CI jobs run in (see .github/docker/linux-builder.Dockerfile):
+# the toolchain, X11/GL headers and the audio/codec runtime, so the jobs never call apt.
+# The image is pushed to GHCR and pulled by ci.yml/release.yml with the workflow token.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master, linux-support]
+    paths:
+      - '.github/docker/**'
+      - '.github/workflows/linux-builder.yml'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Build and push
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .github/docker
+          file: .github/docker/linux-builder.Dockerfile
+          push: true
+          tags: ghcr.io/proxycheng/qtsharp-linux-builder:24.04

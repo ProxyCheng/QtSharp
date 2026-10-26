@@ -32,88 +32,137 @@
   -->
   <PropertyGroup>
     <QtSharpRoot Condition="'$(QtSharpRoot)' == ''">$(MSBuildThisFileDirectory)</QtSharpRoot>
-    <QtSharpApiDir Condition="'$(QtSharpApiDir)' == ''">$(QtSharpRoot)out\api</QtSharpApiDir>
+    <QtSharpApiDir Condition="'$(QtSharpApiDir)' == ''">$(QtSharpRoot)out/api</QtSharpApiDir>
     <QtSharpOutDir Condition="'$(QtSharpOutDir)' == ''">$(QtSharpRoot)out</QtSharpOutDir>
-    <QtRuntimeDir Condition="'$(QtRuntimeDir)' == ''">$(QtSharpRoot)Qt\6.12.0\runtime</QtRuntimeDir>
+    <!-- The Qt runtime a developer has staged: the MSVC kit's DLLs on Windows, the gcc_64 kit's
+         prefix-shaped lib/ + plugins/ tree on Linux (tools/build-qt-kit.sh writes it). -->
+    <QtRuntimeDir Condition="'$(QtRuntimeDir)' == '' and $([MSBuild]::IsOSPlatform('Linux'))">$(QtSharpRoot)out/qt-kit/runtime</QtRuntimeDir>
+    <QtRuntimeDir Condition="'$(QtRuntimeDir)' == ''">$(QtSharpRoot)Qt/6.12.0/runtime</QtRuntimeDir>
     <!-- true (the default) compiles the generated binding into this project. -->
     <QtSharpCompileBinding Condition="'$(QtSharpCompileBinding)' == ''">true</QtSharpCompileBinding>
     <!-- The generated binding keeps the C ABI in pointers and blittable structures. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PlatformTarget>x64</PlatformTarget>
+    <!-- How a native glue library is named on this host (QtSharp.Api.dll / libQtSharp.Api.so).
+         Projects that reference the addon glues directly build their item names from these. -->
+    <QtSharpNativePrefix Condition="$([MSBuild]::IsOSPlatform('Windows'))"></QtSharpNativePrefix>
+    <QtSharpNativePrefix Condition="$([MSBuild]::IsOSPlatform('Linux'))">lib</QtSharpNativePrefix>
+    <QtSharpNativeSuffix Condition="$([MSBuild]::IsOSPlatform('Windows'))">.dll</QtSharpNativeSuffix>
+    <QtSharpNativeSuffix Condition="$([MSBuild]::IsOSPlatform('Linux'))">.so</QtSharpNativeSuffix>
   </PropertyGroup>
   <ItemGroup Condition="'$(QtSharpCompileBinding)' == 'true'">
     <!-- The Qt-type-free runtime (handles, QSignal, attributes, marshalling). -->
-    <Compile Include="$(QtSharpRoot)runtime\ApiRuntime.cs">
+    <Compile Include="$(QtSharpRoot)runtime/ApiRuntime.cs">
       <Link>Runtime\%(Filename)%(Extension)</Link>
     </Compile>
     <!-- The pieces that belong to a module and must sit beside its generated classes: the
          QObject signal API (QtCore), the BCL conversions (QtCore), and the command-line
          constructors of QCoreApplication/QGuiApplication/QApplication. -->
-    <Compile Include="$(QtSharpRoot)runtime\QtCore\*.cs">
+    <Compile Include="$(QtSharpRoot)runtime/QtCore/*.cs">
       <Link>Runtime\QtCore\%(Filename)%(Extension)</Link>
     </Compile>
-    <Compile Include="$(QtSharpRoot)runtime\QtGui\*.cs">
+    <Compile Include="$(QtSharpRoot)runtime/QtGui/*.cs">
       <Link>Runtime\QtGui\%(Filename)%(Extension)</Link>
     </Compile>
-    <Compile Include="$(QtSharpRoot)runtime\QtWidgets\*.cs">
+    <Compile Include="$(QtSharpRoot)runtime/QtWidgets/*.cs">
       <Link>Runtime\QtWidgets\%(Filename)%(Extension)</Link>
     </Compile>
     <!-- One generated tree per Qt module, exactly what QtSharp.Api packs as ten assemblies. -->
-    <Compile Include="$(QtSharpOutDir)\qtcore\generated\**\*.cs">
+    <Compile Include="$(QtSharpOutDir)/qtcore/generated/**/*.cs">
       <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
-    <Compile Include="$(QtSharpOutDir)\qtgui\generated\**\*.cs">
+    <Compile Include="$(QtSharpOutDir)/qtgui/generated/**/*.cs">
       <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
-    <Compile Include="$(QtSharpOutDir)\qtwidgets\generated\**\*.cs">
+    <Compile Include="$(QtSharpOutDir)/qtwidgets/generated/**/*.cs">
       <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
-    <Compile Include="$(QtSharpOutDir)\qtnetwork\generated\**\*.cs">
+    <Compile Include="$(QtSharpOutDir)/qtnetwork/generated/**/*.cs">
       <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
-    <Compile Include="$(QtSharpOutDir)\qtsvg\generated\**\*.cs">
+    <Compile Include="$(QtSharpOutDir)/qtsvg/generated/**/*.cs">
       <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
-    <Compile Include="$(QtSharpOutDir)\qtsvgwidgets\generated\**\*.cs">
+    <Compile Include="$(QtSharpOutDir)/qtsvgwidgets/generated/**/*.cs">
       <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
-    <Compile Include="$(QtSharpOutDir)\qtprintsupport\generated\**\*.cs">
+    <Compile Include="$(QtSharpOutDir)/qtprintsupport/generated/**/*.cs">
       <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
-    <Compile Include="$(QtSharpOutDir)\qtopengl\generated\**\*.cs">
+    <Compile Include="$(QtSharpOutDir)/qtopengl/generated/**/*.cs">
       <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
-    <Compile Include="$(QtSharpOutDir)\qtopenglwidgets\generated\**\*.cs">
+    <Compile Include="$(QtSharpOutDir)/qtopenglwidgets/generated/**/*.cs">
       <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
   </ItemGroup>
 
-  <Target Name="CopyQtSharpNativeDeps" AfterTargets="Build">
+  <!-- Windows: the DLLs and qwindows.dll go flat next to the executable, as Qt expects there. -->
+  <Target Name="CopyQtSharpNativeDeps" AfterTargets="Build" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
     <ItemGroup>
-      <QtSharpApiNative Include="$(QtSharpApiDir)\QtSharp.Api.dll" />
-      <QtRuntimeDll Include="$(QtRuntimeDir)\*.dll" />
-      <QtPlatformPlugin Include="$(QtRuntimeDir)\platforms\qwindows.dll" />
+      <QtSharpApiNative Include="$(QtSharpApiDir)/QtSharp.Api.dll" />
+      <QtRuntimeDll Include="$(QtRuntimeDir)/*.dll" />
+      <QtPlatformPlugin Include="$(QtRuntimeDir)/platforms/qwindows.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(QtSharpApiNative)" DestinationFolder="$(OutDir)" />
     <Copy SourceFiles="@(QtRuntimeDll)" DestinationFolder="$(OutDir)" />
-    <Copy SourceFiles="@(QtPlatformPlugin)" DestinationFolder="$(OutDir)platforms\" />
+    <Copy SourceFiles="@(QtPlatformPlugin)" DestinationFolder="$(OutDir)platforms/" />
   </Target>
 
-  <Target Name="PublishQtSharpNativeDeps" AfterTargets="Publish">
+  <!-- Linux: the glue stays next to the executable (its rpath is $ORIGIN/lib), the Qt libraries go
+       into lib/ and the plugins into plugins/, which is the prefix layout the runtime and the
+       plugins' own rpaths expect. The managed runtime adds <app>/plugins to QT_PLUGIN_PATH. -->
+  <Target Name="CopyQtSharpNativeDepsLinux" AfterTargets="Build" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
     <ItemGroup>
-      <_QtSharpPublishNative Include="$(QtSharpApiDir)\QtSharp.Api.dll;$(QtRuntimeDir)\*.dll" />
+      <QtSharpApiNativeLinux Include="$(QtSharpApiDir)/libQtSharp.Api.so" />
+      <QtRuntimeLibLinux Include="$(QtRuntimeDir)/lib/**/*" />
+      <QtRuntimePluginLinux Include="$(QtRuntimeDir)/plugins/**/*" />
+      <QtRuntimeConfigLinux Include="$(QtRuntimeDir)/qt.conf" />
+    </ItemGroup>
+    <Copy SourceFiles="@(QtSharpApiNativeLinux)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(QtRuntimeConfigLinux)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(QtRuntimeLibLinux)"
+          DestinationFiles="@(QtRuntimeLibLinux->'$(OutDir)lib/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(QtRuntimePluginLinux)"
+          DestinationFiles="@(QtRuntimePluginLinux->'$(OutDir)plugins/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <!-- A silent missing runtime is the worst failure mode (the app starts and cannot load the
+         glue), so fail the build here with the paths that were used. -->
+    <Error Condition="!Exists('$(OutDir)lib/libQt6Core.so.6')"
+           Text="The Qt libraries were not deployed to $(OutDir)lib/ (QtRuntimeDir=$(QtRuntimeDir))." />
+    <Error Condition="!Exists('$(OutDir)plugins/platforms')"
+           Text="The Qt plugins were not deployed to $(OutDir)plugins/ (QtRuntimeDir=$(QtRuntimeDir))." />
+  </Target>
+
+  <Target Name="PublishQtSharpNativeDeps" AfterTargets="Publish" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <ItemGroup>
+      <_QtSharpPublishNative Include="$(QtSharpApiDir)/QtSharp.Api.dll;$(QtRuntimeDir)/*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_QtSharpPublishNative)" DestinationFolder="$(PublishDir)" />
-    <Copy SourceFiles="$(QtRuntimeDir)\platforms\qwindows.dll" DestinationFolder="$(PublishDir)platforms\" />
+    <Copy SourceFiles="$(QtRuntimeDir)/platforms/qwindows.dll" DestinationFolder="$(PublishDir)platforms/" />
+  </Target>
+
+  <Target Name="PublishQtSharpNativeDepsLinux" AfterTargets="Publish" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <ItemGroup>
+      <_QtSharpPublishNativeLinux Include="$(QtSharpApiDir)/libQtSharp.Api.so" />
+      <_QtSharpPublishLibLinux Include="$(QtRuntimeDir)/lib/**/*" />
+      <_QtSharpPublishPluginLinux Include="$(QtRuntimeDir)/plugins/**/*" />
+      <_QtSharpPublishConfigLinux Include="$(QtRuntimeDir)/qt.conf" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpPublishNativeLinux)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpPublishConfigLinux)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpPublishLibLinux)"
+          DestinationFiles="@(_QtSharpPublishLibLinux->'$(PublishDir)lib/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpPublishPluginLinux)"
+          DestinationFiles="@(_QtSharpPublishPluginLinux->'$(PublishDir)plugins/%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
 
   <!-- A stale binding is the one thing that fails confusingly (a missing method rather than a
        build error), so say so loudly when it has not been generated yet. -->
   <Target Name="QtSharpApiCheck" BeforeTargets="BeforeBuild">
-    <Error Condition="!Exists('$(QtSharpOutDir)\qtcore\generated')"
-           Text="The generated binding is missing - run: powershell -File $(QtSharpRoot)tools\regen-api.ps1" />
-    <Error Condition="!Exists('$(QtSharpApiDir)\QtSharp.Api.dll')"
-           Text="QtSharp.Api.dll is missing - run: powershell -File $(QtSharpRoot)tools\regen-api.ps1" />
+    <Error Condition="!Exists('$(QtSharpOutDir)/qtcore/generated')"
+           Text="The generated binding is missing - run: powershell -File $(QtSharpRoot)tools/regen-api.ps1" />
+    <Error Condition="!Exists('$(QtSharpApiDir)/QtSharp.Api.dll') and !Exists('$(QtSharpApiDir)/libQtSharp.Api.so')"
+           Text="QtSharp.Api is missing - run: powershell -File $(QtSharpRoot)tools/regen-api.ps1" />
   </Target>
 
 </Project>

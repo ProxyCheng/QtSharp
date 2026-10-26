@@ -28,6 +28,7 @@
 
     <QtSharpMultimediaDir Condition="'$(QtSharpMultimediaDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\qtmultimedia</QtSharpMultimediaDir>
     <QtSharpMultimediaNativeDir Condition="'$(QtSharpMultimediaNativeDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\api-modules\qtmultimedia</QtSharpMultimediaNativeDir>
+    <QtSharpMultimediaNativeLinuxDir Condition="'$(QtSharpMultimediaNativeLinuxDir)' == ''">$(QtSharpMultimediaNativeDir)</QtSharpMultimediaNativeLinuxDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -49,12 +50,13 @@
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
     <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
-    <None Include="$(QtSharpMultimediaNativeDir)\QtSharp.QtMultimedia.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(QtSharpMultimediaNativeDir)\QtSharp.QtMultimedia.Native.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" Condition="Exists('$(QtSharpMultimediaNativeDir)\QtSharp.QtMultimedia.Native.dll')" />
+    <None Include="$(QtSharpMultimediaNativeLinuxDir)\libQtSharp.QtMultimedia.Native.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="Exists('$(QtSharpMultimediaNativeLinuxDir)\libQtSharp.QtMultimedia.Native.so')" />
   </ItemGroup>
 
   <Target Name="QtSharpMultimediaPackCheck" BeforeTargets="GenerateNuspec">
     <Error Condition="!Exists('$(QtSharpMultimediaDir)\generated')" Text="The QtMultimedia binding source is missing - run codegen for model\qtsharp.qtmultimedia.json." />
-    <Error Condition="!Exists('$(QtSharpMultimediaNativeDir)\QtSharp.QtMultimedia.Native.dll')" Text="The QtMultimedia native glue is missing - run: powershell -File tools\build-native-module.ps1 -Module qtmultimedia" />
+    <Error Condition="!Exists('$(QtSharpMultimediaNativeDir)\QtSharp.QtMultimedia.Native.dll') and !Exists('$(QtSharpMultimediaNativeLinuxDir)\libQtSharp.QtMultimedia.Native.so')" Text="The QtMultimedia native glue is missing - run: build-native-module for the qtmultimedia module (Windows or Linux)." />
   </Target>
 
 </Project>

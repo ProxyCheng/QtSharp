@@ -203,11 +203,13 @@ public static class ApiCoreDemo
         lockFile.Unlock();
 
         // ---------------------------------------------------------------- processes and threads
-        Check(QProcess.Execute("cmd.exe", new[] { "/c", "exit", "7" }) == 7,
+        // QProcess starts a real program; the shell that answers -c (or /c) is the platform's,
+        // and its spelling lives in tests/TestPlatform.<platform>.cs.
+        Check(QProcess.Execute(TestPlatform.Shell, TestPlatform.Exit7Args) == 7,
             "QProcess::execute returns the child's exit code");
 
         var process = new QProcess();
-        process.Start("cmd.exe", new[] { "/c", "echo", "captured" });
+        process.Start(TestPlatform.Shell, TestPlatform.EchoArgs);
         Check(process.WaitForFinished(10000), "QProcess::waitForFinished");
         var captured = process.ReadAllStandardOutput().ConstData();
         Check(captured != null && captured.Contains("captured"),
@@ -435,11 +437,13 @@ public static class ApiCoreDemo
         var mime = new QMimeDatabase().MimeTypeForFile("a.txt");
         Check(mime.Name.Length > 0 && mime.Comment.Length > 0,
             $"QMimeDatabase::mimeTypeForFile (got '{mime.Name}')");
-        Check(QOperatingSystemVersion.Current().MajorVersion() > 0,
+        Check(QOperatingSystemVersion.Current().MajorVersion() > 0 || !TestPlatform.OperatingSystemVersionIsKnown,
             $"QOperatingSystemVersion::current (got {QOperatingSystemVersion.Current().MajorVersion()}.{QOperatingSystemVersion.Current().MinorVersion()})");
 
-        // Collation: the native string ordering (a locale-aware compare, not Ordinal).
-        var collator = new QCollator();
+        // Collation: the native string ordering (a locale-aware compare, not Ordinal). The locale
+        // is explicit so the result does not depend on the machine's default locale (the CI
+        // runner's C locale has no numeric collation on Linux).
+        var collator = new QCollator(new QLocale("en_US"));
         collator.SetNumericMode(true);
         Check(collator.Compare("file10", "file9") > 0, "QCollator compares numbers numerically with numeric mode");
 

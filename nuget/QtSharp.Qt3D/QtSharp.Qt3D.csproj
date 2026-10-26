@@ -54,18 +54,25 @@
     <None Include="Modules\QtSharp.Qt3DAnimation\bin\$(Configuration)\net10.0\QtSharp.Qt3DAnimation.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
     <None Include="Modules\QtSharp.Qt3DExtras\bin\$(Configuration)\net10.0\QtSharp.Qt3DExtras.dll" Pack="true" PackagePath="lib/net10.0/" Visible="false" />
 
-    <None Include="$(QtSharpQt3DNativeDir)\qt3dcore\QtSharp.Qt3DCore.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
-    <None Include="$(QtSharpQt3DNativeDir)\qt3drender\QtSharp.Qt3DRender.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
-    <None Include="$(QtSharpQt3DNativeDir)\qt3dinput\QtSharp.Qt3DInput.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
-    <None Include="$(QtSharpQt3DNativeDir)\qt3dlogic\QtSharp.Qt3DLogic.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
-    <None Include="$(QtSharpQt3DNativeDir)\qt3danimation\QtSharp.Qt3DAnimation.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
-    <None Include="$(QtSharpQt3DNativeDir)\qt3dextras\QtSharp.Qt3DExtras.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3dcore\QtSharp.Qt3DCore.Native.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3drender\QtSharp.Qt3DRender.Native.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3dinput\QtSharp.Qt3DInput.Native.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3dlogic\QtSharp.Qt3DLogic.Native.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3danimation\QtSharp.Qt3DAnimation.Native.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3dextras\QtSharp.Qt3DExtras.Native.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" />
+
+    <None Include="$(QtSharpQt3DNativeDir)\qt3dcore\libQtSharp.Qt3DCore.Native.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="Exists('$(QtSharpQt3DNativeDir)\qt3dcore\libQtSharp.Qt3DCore.Native.so')" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3drender\libQtSharp.Qt3DRender.Native.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="Exists('$(QtSharpQt3DNativeDir)\qt3drender\libQtSharp.Qt3DRender.Native.so')" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3dinput\libQtSharp.Qt3DInput.Native.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="Exists('$(QtSharpQt3DNativeDir)\qt3dinput\libQtSharp.Qt3DInput.Native.so')" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3dlogic\libQtSharp.Qt3DLogic.Native.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="Exists('$(QtSharpQt3DNativeDir)\qt3dlogic\libQtSharp.Qt3DLogic.Native.so')" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3danimation\libQtSharp.Qt3DAnimation.Native.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="Exists('$(QtSharpQt3DNativeDir)\qt3danimation\libQtSharp.Qt3DAnimation.Native.so')" />
+    <None Include="$(QtSharpQt3DNativeDir)\qt3dextras\libQtSharp.Qt3DExtras.Native.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="Exists('$(QtSharpQt3DNativeDir)\qt3dextras\libQtSharp.Qt3DExtras.Native.so')" />
 
   </ItemGroup>
 
   <Target Name="QtSharpQt3DPackCheck" BeforeTargets="GenerateNuspec">
     <Error Condition="!Exists('Modules\QtSharp.Qt3DCore\bin\$(Configuration)\net10.0\QtSharp.Qt3DCore.dll')" Text="The Qt3DCore assembly is missing - build the module projects first." />
-    <Error Condition="!Exists('$(QtSharpQt3DNativeDir)\qt3dcore\QtSharp.Qt3DCore.Native.dll')" Text="The Qt3DCore native glue is missing - run tools\build-native-module.ps1 -Module qt3dcore." />
+    <Error Condition="!Exists('$(QtSharpQt3DNativeDir)\qt3dcore\QtSharp.Qt3DCore.Native.dll') and !Exists('$(QtSharpQt3DNativeDir)\qt3dcore\libQtSharp.Qt3DCore.Native.so')" Text="The Qt3DCore native glue is missing - run the build-native-module script for the qt3dcore module." />
   </Target>
 
 </Project>

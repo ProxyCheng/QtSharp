@@ -23,64 +23,65 @@
 #include <unordered_set>
 #include <vector>
 #include "QtSharpApiRuntime.h"
+#include "QtSharpApiExport.h"
 
 // ------------------------------------------------------------------ QString bridge
-extern "C" __declspec(dllexport) void* qs_api_qstring_from_utf16(const char16_t* s)
+extern "C" QS_API_EXPORT void* qs_api_qstring_from_utf16(const char16_t* s)
 {
     return new QString(QString::fromUtf16(s));
 }
 
-extern "C" __declspec(dllexport) const unsigned short* qs_api_qstring_utf16(const void* s)
+extern "C" QS_API_EXPORT const unsigned short* qs_api_qstring_utf16(const void* s)
 {
     return static_cast<const QString*>(s)->utf16();
 }
 
-extern "C" __declspec(dllexport) long long qs_api_qstring_size(const void* s)
+extern "C" QS_API_EXPORT long long qs_api_qstring_size(const void* s)
 {
     return static_cast<long long>(static_cast<const QString*>(s)->size());
 }
 
-extern "C" __declspec(dllexport) void qs_api_qstring_free(void* s)
+extern "C" QS_API_EXPORT void qs_api_qstring_free(void* s)
 {
     delete static_cast<QString*>(s);
 }
 
 // QStringList: the managed side copies the elements out one by one. The list itself belongs to
 // the signal's caller, so only the copies have to be freed.
-extern "C" __declspec(dllexport) int qs_api_qstringlist_count(const void* list)
+extern "C" QS_API_EXPORT int qs_api_qstringlist_count(const void* list)
 {
     return static_cast<int>(static_cast<const QStringList*>(list)->size());
 }
 
-extern "C" __declspec(dllexport) void* qs_api_qstringlist_at(const void* list, int index)
+extern "C" QS_API_EXPORT void* qs_api_qstringlist_at(const void* list, int index)
 {
     return new QString(static_cast<const QStringList*>(list)->at(index));
 }
 
 // A QStringList built for a single call (a managed string[] passed as a container argument).
-extern "C" __declspec(dllexport) void* qs_api_qstringlist_new()
+extern "C" QS_API_EXPORT void* qs_api_qstringlist_new()
 {
     return new QStringList();
 }
 
-extern "C" __declspec(dllexport) void qs_api_qstringlist_append(void* list, const char16_t* text)
+extern "C" QS_API_EXPORT void qs_api_qstringlist_append(void* list, const char16_t* text)
 {
     static_cast<QStringList*>(list)->append(text ? QString::fromUtf16(text) : QString());
 }
 
-extern "C" __declspec(dllexport) void qs_api_qstringlist_free(void* list)
+extern "C" QS_API_EXPORT void qs_api_qstringlist_free(void* list)
 {
     delete static_cast<QStringList*>(list);
 }
 
 // The virtual-dispatch counterparts of the two above: there the managed override *produced* the
 // value, and it has to land in the slot the native caller provided rather than in a heap object.
-extern "C" __declspec(dllexport) void qs_api_write_qstring(void* destination, const char16_t* text)
+extern "C" QS_API_EXPORT void qs_api_write_qstring(void* destination, const char16_t* text)
 {
     *static_cast<QString*>(destination) = text ? QString::fromUtf16(text) : QString();
 }
 
-extern "C" __declspec(dllexport) void qs_api_write_qstringlist(void* destination, void* list)
+extern "C" QS_API_EXPORT void qs_api_write_qstringlist(void* destination, void* list)
 {
     if (list)
         *static_cast<QStringList*>(destination) = *static_cast<QStringList*>(list);
@@ -88,22 +89,22 @@ extern "C" __declspec(dllexport) void qs_api_write_qstringlist(void* destination
 
 // QByteArray: built from a managed byte[] for the duration of a call, and copied out when a
 // QByteArrayView (or a QByteArray) comes back.
-extern "C" __declspec(dllexport) void* qs_api_qbytearray_from_bytes(const unsigned char* data, int length)
+extern "C" QS_API_EXPORT void* qs_api_qbytearray_from_bytes(const unsigned char* data, int length)
 {
     return new QByteArray(reinterpret_cast<const char*>(data), length);
 }
 
-extern "C" __declspec(dllexport) int qs_api_qbytearray_size(const void* array)
+extern "C" QS_API_EXPORT int qs_api_qbytearray_size(const void* array)
 {
     return static_cast<int>(static_cast<const QByteArray*>(array)->size());
 }
 
-extern "C" __declspec(dllexport) const unsigned char* qs_api_qbytearray_data(const void* array)
+extern "C" QS_API_EXPORT const unsigned char* qs_api_qbytearray_data(const void* array)
 {
     return reinterpret_cast<const unsigned char*>(static_cast<const QByteArray*>(array)->constData());
 }
 
-extern "C" __declspec(dllexport) void qs_api_qbytearray_free(void* array)
+extern "C" QS_API_EXPORT void qs_api_qbytearray_free(void* array)
 {
     delete static_cast<QByteArray*>(array);
 }
@@ -158,7 +159,7 @@ private:
 // Connects a managed callback to a signal. The returned handle is the QMetaObject::Connection kept
 // on the heap: the C# side needs it back to disconnect (the `-=` of a signal exposed as a C# event),
 // and QObject::disconnect(connection) is the public way to drop exactly that one connection.
-extern "C" __declspec(dllexport) void* qs_api_connect(void* sender, const char* signature,
+extern "C" QS_API_EXPORT void* qs_api_connect(void* sender, const char* signature,
     QsApiSignalCallback callback, void* userData, int connectionType)
 {
     if (!sender || !signature || !callback)
@@ -191,7 +192,7 @@ extern "C" __declspec(dllexport) void* qs_api_connect(void* sender, const char* 
 
 // Drops one connection and the handle with it. Safe on an already-broken connection (the sender may
 // have died first), which is why the handle is deleted either way.
-extern "C" __declspec(dllexport) int qs_api_disconnect(void* connection)
+extern "C" QS_API_EXPORT int qs_api_disconnect(void* connection)
 {
     if (!connection)
         return 0;
@@ -207,7 +208,7 @@ extern "C" __declspec(dllexport) int qs_api_disconnect(void* connection)
 // The managed side builds that storage (a QString object, a pointer variable, a boxed value) and
 // this only has to forward it, which is what makes `Emit` possible for any signal the model
 // publishes - and, with a dynamic meta-object, for a signal a managed class declared itself.
-extern "C" __declspec(dllexport) int qs_api_emit(void* sender, const char* signature, void** args, int argc)
+extern "C" QS_API_EXPORT int qs_api_emit(void* sender, const char* signature, void** args, int argc)
 {
     if (!sender || !signature)
         return 0;
@@ -302,7 +303,7 @@ private:
 // managed type; a managed type is identified by the name it hands over.
 static std::unordered_map<std::string, QMetaObject*> g_dynamicMetaObjects;
 
-extern "C" __declspec(dllexport) void qs_api_set_meta_property_callback(QsApiMetaPropertyCallback callback)
+extern "C" QS_API_EXPORT void qs_api_set_meta_property_callback(QsApiMetaPropertyCallback callback)
 {
     g_metaPropertyCallback = callback;
 }
@@ -310,7 +311,7 @@ extern "C" __declspec(dllexport) void qs_api_set_meta_property_callback(QsApiMet
 // Installs a meta-object carrying the extra signals and properties. Must be called before any
 // connection to them (i.e. right after the object is constructed).
 // (`signals`/`slots` are macros in Qt, so the parameter names avoid them.)
-extern "C" __declspec(dllexport) int qs_api_attach_metaobject(
+extern "C" QS_API_EXPORT int qs_api_attach_metaobject(
     void* object, const char* className,
     const char* const* signalSignatures, int signalCount,
     const char* const* propertyNames, const char* const* propertyTypes, int propertyCount,
@@ -461,7 +462,7 @@ private:
     long long m_generation;
 };
 
-extern "C" __declspec(dllexport) void qs_api_set_destroyed_callback(QsApiDestroyedCallback callback)
+extern "C" QS_API_EXPORT void qs_api_set_destroyed_callback(QsApiDestroyedCallback callback)
 {
     g_destroyedCallback = callback;
 }
@@ -470,7 +471,7 @@ extern "C" __declspec(dllexport) void qs_api_set_destroyed_callback(QsApiDestroy
 // QRect, QSize, ...) costs none, because it is a struct and never reaches this table. Exposed so a
 // test can show that pushing a hundred thousand points through a bulk call adds nothing here - the
 // shape of the leak a sampling chart had.
-extern "C" __declspec(dllexport) int qs_api_watched_count()
+extern "C" QS_API_EXPORT int qs_api_watched_count()
 {
     return static_cast<int>(g_watchedObjects.size());
 }
@@ -478,7 +479,7 @@ extern "C" __declspec(dllexport) int qs_api_watched_count()
 // Watching is idempotent and cheap: one slot per object generation, and nothing for an object that
 // was already watched. The generation is passed in by the managed side and comes back with the
 // notification, so a notification that arrives after the address has been reused is recognisable.
-extern "C" __declspec(dllexport) void qs_api_watch_destroyed(void* object, long long generation)
+extern "C" QS_API_EXPORT void qs_api_watch_destroyed(void* object, long long generation)
 {
     if (!object || !g_destroyedCallback)
         return;
@@ -500,21 +501,21 @@ extern "C" __declspec(dllexport) void qs_api_watch_destroyed(void* object, long 
 
 // PoC probe: call a virtual from native code so the generated C++ wrapper's override
 // (and therefore the managed dispatch) is exercised.
-extern "C" __declspec(dllexport) int qs_api_probe_event_filter(void* self, void* watched, void* event)
+extern "C" QS_API_EXPORT int qs_api_probe_event_filter(void* self, void* watched, void* event)
 {
     return static_cast<QObject*>(self)->eventFilter(
         static_cast<QObject*>(watched), static_cast<QEvent*>(event)) ? 1 : 0;
 }
 
 // Diagnostic/lookup helper for the managed event layer: the numeric QEvent::Type.
-extern "C" __declspec(dllexport) int qs_api_event_type(const void* event)
+extern "C" QS_API_EXPORT int qs_api_event_type(const void* event)
 {
     return event ? int(static_cast<const QEvent*>(event)->type()) : -1;
 }
 
 // Delivers a user event, which QObject::event routes to the virtual customEvent(). Used to
 // check that a managed override of a virtual declared in an *ancestor* class is reached.
-extern "C" __declspec(dllexport) int qs_api_probe_user_event(void* object)
+extern "C" QS_API_EXPORT int qs_api_probe_user_event(void* object)
 {
     QEvent event(QEvent::User);
     return QCoreApplication::sendEvent(static_cast<QObject*>(object), &event) ? 1 : 0;
@@ -522,7 +523,7 @@ extern "C" __declspec(dllexport) int qs_api_probe_user_event(void* object)
 
 // Delivers a synthetic mouse press, so a managed mousePressEvent override can be exercised
 // (and its event payload read) without a real input device.
-extern "C" __declspec(dllexport) int qs_api_probe_mouse_press(void* widget, int x, int y)
+extern "C" QS_API_EXPORT int qs_api_probe_mouse_press(void* widget, int x, int y)
 {
     const QPointF pos(x, y);
     QMouseEvent event(QEvent::MouseButtonPress, pos, pos,
@@ -533,7 +534,7 @@ extern "C" __declspec(dllexport) int qs_api_probe_mouse_press(void* widget, int 
 // Delivers a synthetic mouse move with the given button mask held, so a managed mouseMoveEvent
 // override can be exercised (a press/move/release sequence is what a drag looks like, and a
 // managed widget cannot construct a QMouseEvent itself).
-extern "C" __declspec(dllexport) int qs_api_probe_mouse_move(void* widget, int x, int y, int buttons)
+extern "C" QS_API_EXPORT int qs_api_probe_mouse_move(void* widget, int x, int y, int buttons)
 {
     const QPointF pos(x, y);
     QMouseEvent event(QEvent::MouseMove, pos, pos,
@@ -542,7 +543,7 @@ extern "C" __declspec(dllexport) int qs_api_probe_mouse_move(void* widget, int x
 }
 
 // Delivers a synthetic left mouse release, the other end of the drag above.
-extern "C" __declspec(dllexport) int qs_api_probe_mouse_release(void* widget, int x, int y)
+extern "C" QS_API_EXPORT int qs_api_probe_mouse_release(void* widget, int x, int y)
 {
     const QPointF pos(x, y);
     QMouseEvent event(QEvent::MouseButtonRelease, pos, pos,
@@ -553,7 +554,7 @@ extern "C" __declspec(dllexport) int qs_api_probe_mouse_release(void* widget, in
 // Delivers a synthetic wheel turn (the delta in eighths of a degree, as Qt's own events carry
 // it, with the vertical component set - a wheel turn is a vertical scroll) so a managed
 // wheelEvent override has a real QWheelEvent to read.
-extern "C" __declspec(dllexport) int qs_api_probe_wheel(void* widget, int x, int y, int degrees, int modifiers)
+extern "C" QS_API_EXPORT int qs_api_probe_wheel(void* widget, int x, int y, int degrees, int modifiers)
 {
     const QPointF pos(x, y);
     const QPoint angle(0, degrees * 8);
@@ -564,7 +565,7 @@ extern "C" __declspec(dllexport) int qs_api_probe_wheel(void* widget, int x, int
 
 // Delivers a synthetic key press, so a managed keyPressEvent override can read the key code and
 // the text the event carries.
-extern "C" __declspec(dllexport) int qs_api_probe_key_press(void* widget, int key, int modifiers)
+extern "C" QS_API_EXPORT int qs_api_probe_key_press(void* widget, int key, int modifiers)
 {
     const QString text = key < 0x10000 ? QString(QChar(key)) : QString();
     QKeyEvent event(QEvent::KeyPress, key, Qt::KeyboardModifier(modifiers), text);
@@ -665,7 +666,7 @@ QCoreApplication* Application(const char* const* args, int count, int flags, int
 } // namespace
 
 // kind: 0 = QCoreApplication, 1 = QGuiApplication, 2 = QApplication (the default).
-extern "C" __declspec(dllexport) void* qs_api_app_create_args(
+extern "C" QS_API_EXPORT void* qs_api_app_create_args(
     const char* const* args, int count, int flags, int kind)
 {
     return Application(args, count, flags, kind);
@@ -679,7 +680,7 @@ extern "C" __declspec(dllexport) void* qs_api_app_create_args(
 // if that step is skipped entirely, leaves Qt's later static destructors running with a half
 // destroyed platform integration. This is the explicit equivalent of Qt's own `QApplication app;`
 // local in main, which is likewise destroyed before static teardown.
-extern "C" __declspec(dllexport) void qs_api_app_destroy()
+extern "C" QS_API_EXPORT void qs_api_app_destroy()
 {
     // Only an application this runtime built, and only while Qt still considers it *the*
     // application: a host that built its own has already replaced (or will destroy) it.

@@ -1,19 +1,33 @@
 <Project>
 
-  <!-- The QtCharts native glue and Qt6Charts.dll next to the consumer's executable, on Build and
-       on Publish. -->
-  <Target Name="QtSharpChartsCopyNativeDeps" AfterTargets="Build">
+  <!-- The QtCharts native glue next to the consumer's executable, on Build and on Publish. The
+       glue is QtSharp.Charts.Native.dll on Windows and libQtSharp.Charts.Native.so on Linux. -->
+  <Target Name="QtSharpChartsCopyNativeDeps" AfterTargets="Build" Condition="'$(QtSharpNativeRid)' == 'win-x64'">
     <ItemGroup>
       <_QtSharpChartsNative Include="$(QtSharpChartsNativeDir)*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_QtSharpChartsNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
 
-  <Target Name="QtSharpChartsCopyNativeDepsPublish" AfterTargets="Publish">
+  <Target Name="QtSharpChartsCopyNativeDepsPublish" AfterTargets="Publish" Condition="'$(QtSharpNativeRid)' == 'win-x64'">
     <ItemGroup>
       <_QtSharpChartsNativePublish Include="$(QtSharpChartsNativeDir)*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_QtSharpChartsNativePublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="QtSharpChartsCopyNativeDepsLinux" AfterTargets="Build" Condition="'$(QtSharpNativeRid)' == 'linux-x64'">
+    <ItemGroup>
+      <_QtSharpChartsNativeLinux Include="$(QtSharpChartsNativeDir)*.so*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpChartsNativeLinux)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="QtSharpChartsCopyNativeDepsLinuxPublish" AfterTargets="Publish" Condition="'$(QtSharpNativeRid)' == 'linux-x64'">
+    <ItemGroup>
+      <_QtSharpChartsNativeLinuxPublish Include="$(QtSharpChartsNativeDir)*.so*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpChartsNativeLinuxPublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

@@ -79,6 +79,10 @@ static class Program
 # A private global-packages folder, so a cached package with the same version from an earlier run
 # cannot stand in for the one this run just built.
 $env:NUGET_PACKAGES = Join-Path $WorkDir 'packages'
+# The consumer constructs a QApplication; on a Linux CI runner there is no display, and the
+# packages deploy the offscreen platform plugin, so use it unless the caller set a platform.
+$onWindows = $PSVersionTable.PSVersion.Major -lt 6 -or $IsWindows
+if (-not $onWindows -and -not $env:QT_QPA_PLATFORM) { $env:QT_QPA_PLATFORM = 'offscreen' }
 try {
     $output = & dotnet run --project (Join-Path $WorkDir 'PackageConsumer.csproj') -c Release --nologo 2>&1
     $code = $LASTEXITCODE

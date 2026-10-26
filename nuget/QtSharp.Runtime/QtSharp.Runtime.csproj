@@ -29,6 +29,9 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
     <QtSharpApiDir Condition="'$(QtSharpApiDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\api</QtSharpApiDir>
+    <!-- The Linux glue lives beside the Windows one in a full checkout; a release pack job can
+         point it at the artifact the Ubuntu build produced. -->
+    <QtSharpApiLinuxDir Condition="'$(QtSharpApiLinuxDir)' == ''">$(QtSharpApiDir)</QtSharpApiLinuxDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -45,11 +48,12 @@
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
     <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
-    <None Include="$(QtSharpApiDir)\QtSharp.Api.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(QtSharpApiDir)\QtSharp.Api.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" Condition="Exists('$(QtSharpApiDir)\QtSharp.Api.dll')" />
+    <None Include="$(QtSharpApiLinuxDir)\libQtSharp.Api.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="Exists('$(QtSharpApiLinuxDir)\libQtSharp.Api.so')" />
   </ItemGroup>
 
   <Target Name="QtSharpRuntimePackCheck" BeforeTargets="GenerateNuspec">
-    <Error Condition="!Exists('$(QtSharpApiDir)\QtSharp.Api.dll')" Text="The native glue is missing - run: powershell -File tools\regen-api.ps1" />
+    <Error Condition="!Exists('$(QtSharpApiDir)\QtSharp.Api.dll') and !Exists('$(QtSharpApiLinuxDir)\libQtSharp.Api.so')" Text="The native glue is missing - run: powershell -File tools/regen-api.ps1 (or build_api.bat / build_api.sh)" />
   </Target>
 
 </Project>

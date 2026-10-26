@@ -1,19 +1,44 @@
 <Project>
 
-  <!-- The native glue every generated module calls (QtSharp.Api.dll) next to the consumer's
-       executable and in its publish output. The Qt DLLs it needs come from QtSharp.Qt6. -->
-  <Target Name="QtSharpRuntimeCopyNativeDeps" AfterTargets="Build">
+  <!-- The native glue every generated module calls (QtSharp.Api.dll / libQtSharp.Api.so) next to
+       the consumer's executable and in its publish output. The Qt libraries it needs come from
+       QtSharp.Qt6. -->
+
+  <Target Name="QtSharpRuntimeCopyNativeDeps" AfterTargets="Build" Condition="'$(QtSharpNativeRid)' == 'win-x64'">
     <ItemGroup>
       <_QtSharpRuntimeNative Include="$(QtSharpRuntimeNativeDir)*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_QtSharpRuntimeNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
 
-  <Target Name="QtSharpRuntimeCopyNativeDepsPublish" AfterTargets="Publish">
+  <Target Name="QtSharpRuntimeCopyNativeDepsPublish" AfterTargets="Publish" Condition="'$(QtSharpNativeRid)' == 'win-x64'">
     <ItemGroup>
       <_QtSharpRuntimeNativePublish Include="$(QtSharpRuntimeNativeDir)*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_QtSharpRuntimeNativePublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Linux: the glue sits next to the executable (its rpath is $ORIGIN/lib) and loads the Qt
+       libraries from lib/, which QtSharp.Qt6 deploys. -->
+  <Target Name="QtSharpRuntimeCopyNativeDepsLinux" AfterTargets="Build" Condition="'$(QtSharpNativeRid)' == 'linux-x64'">
+    <ItemGroup>
+      <_QtSharpRuntimeNativeLinux Include="$(QtSharpRuntimeNativeDir)*.so*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpRuntimeNativeLinux)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="QtSharpRuntimeCopyNativeDepsLinuxPublish" AfterTargets="Publish" Condition="'$(QtSharpNativeRid)' == 'linux-x64'">
+    <ItemGroup>
+      <_QtSharpRuntimeNativeLinuxPublish Include="$(QtSharpRuntimeNativeDir)*.so*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpRuntimeNativeLinuxPublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Only the two packaged RIDs exist, and a wrong one must fail here rather than as a missing
+       library at run time. -->
+  <Target Name="QtSharpRuntimeCheckRid" BeforeTargets="Build;Publish">
+    <Error Condition="'$(QtSharpNativeRid)' != 'win-x64' and '$(QtSharpNativeRid)' != 'linux-x64'"
+           Text="QtSharp ships native assets for win-x64 and linux-x64 only; '$(QtSharpNativeRid)' is not supported." />
   </Target>
 
 </Project>

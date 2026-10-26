@@ -2,10 +2,15 @@
 
   <!-- Imported automatically for any project that references the QtSharp.Qt3D package. It only
        declares where the native payload lives; the copy itself is in the targets. The Qt3D runtime
-       DLLs and plugins come from the QtSharp.Qt3D.Qt6 companion package; this package adds the six
-       QtSharp.Qt3D*.Native.dll glues. -->
+       libraries and plugins come from the QtSharp.Qt3D.Qt6 companion package; this package adds
+       the six QtSharp.Qt3D*.Native glues. -->
   <PropertyGroup>
-    <QtSharpQt3DNativeDir Condition="'$(QtSharpQt3DNativeDir)' == ''">$(MSBuildThisFileDirectory)..\tools\native\</QtSharpQt3DNativeDir>
+    <QtSharpNativeRid Condition="'$(QtSharpNativeRid)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</QtSharpNativeRid>
+    <QtSharpNativeRid Condition="'$(QtSharpNativeRid)' == '' and '$(PublishRuntimeIdentifier)' != ''">$(PublishRuntimeIdentifier)</QtSharpNativeRid>
+    <QtSharpNativeRid Condition="'$(QtSharpNativeRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</QtSharpNativeRid>
+    <QtSharpNativeRid Condition="'$(QtSharpNativeRid)' == '' and $([MSBuild]::IsOSPlatform('Linux'))">linux-x64</QtSharpNativeRid>
+    <QtSharpNativeRid Condition="'$(QtSharpNativeRid)' == ''">win-x64</QtSharpNativeRid>
+    <QtSharpQt3DNativeDir Condition="'$(QtSharpQt3DNativeDir)' == ''">$(MSBuildThisFileDirectory)../tools/native/$(QtSharpNativeRid)/</QtSharpQt3DNativeDir>
     <!-- The native glue is x64 only, so the process must be x64 too. -->
     <PlatformTarget Condition="'$(PlatformTarget)' == ''">x64</PlatformTarget>
   </PropertyGroup>

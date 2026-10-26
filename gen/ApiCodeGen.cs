@@ -578,6 +578,20 @@ public static class ApiCodeGen
 
     // ------------------------------------------------------------------ model queries
     static string Name(JsonElement e) => e.GetProperty("name").GetString();
+
+    // Members Qt declares only when building for Windows. The model is extracted from the MSVC
+    // headers, so they are in it, but a Linux build has no such symbol - the generated C# and the
+    // native glue both skip them, and the .NET equivalent (ProcessStartInfo.Arguments) covers the
+    // use case. Keep this to APIs qprocess.h puts under #if defined(Q_OS_WIN).
+    static readonly HashSet<string> WindowsOnlyMembers = new(StringComparer.Ordinal)
+    {
+        "QProcess.nativeArguments",
+        "QProcess.setNativeArguments",
+    };
+
+    static IEnumerable<JsonElement> Methods(JsonElement cls)
+        => cls.GetProperty("methods").EnumerateArray()
+            .Where(m => !WindowsOnlyMembers.Contains(Name(cls) + "." + Name(m)));
     static string ReturnType(JsonElement m) => m.GetProperty("returnType").GetString();
     static List<JsonElement> Params(JsonElement m) => m.GetProperty("parameters").EnumerateArray().ToList();
     static string PType(JsonElement p) => p.GetProperty("type").GetString();
@@ -839,6 +853,16 @@ public static class ApiCodeGen
     // The element kinds the generated converters distinguish: a scalar crosses the C ABI as
     // itself, a bound class as its handle, and a boxed value as a pointer to a copy.
     static bool IsScalarElem(string e) => CSharpScalar(e) != null || e == "int" || e == "float" || e == "double" || e == "bool";
+    // The model was extracted from the MSVC headers, where `long` is 32 bits and the managed side is
+    // int/uint. On LP64 (Linux x86-64) the same spelling is 64 bits, which would disagree with the
+    // P/Invoke declaration, so the C ABI pins it to the 32-bit type the managed side uses and lets
+    // the wrapper convert at the Qt call instead.
+    static string CppAbiScalar(string t) => t switch
+    {
+        "long" => "int",
+        "unsigned long" => "unsigned int",
+        _ => t,
+    };
     static bool IsPointerElem(string e) => e.EndsWith("*");
 
     // One container element crossing the C ABI, in the four directions the generated wrapper
@@ -846,8 +870,8 @@ public static class ApiCodeGen
     // container handing an element *back* returns a heap copy, so its ABI type is void*.
     // An enum crosses the C ABI as the int it is.
     static bool IsEnumElem(string e) => IsEnum(e);
-    static string ElemAbiCppParam(string e) => IsScalarElem(e) ? e : IsEnumElem(e) ? "int" : IsStringT(e) ? "const char16_t*" : IsStruct(e) ? StructPod(e) : "void*";
-    static string ElemAbiCppRet(string e) => IsScalarElem(e) ? e : IsEnumElem(e) ? "int" : IsStruct(e) ? StructPod(e) : "void*";
+    static string ElemAbiCppParam(string e) => IsScalarElem(e) ? CppAbiScalar(e) : IsEnumElem(e) ? "int" : IsStringT(e) ? "const char16_t*" : IsStruct(e) ? StructPod(e) : "void*";
+    static string ElemAbiCppRet(string e) => IsScalarElem(e) ? CppAbiScalar(e) : IsEnumElem(e) ? "int" : IsStruct(e) ? StructPod(e) : "void*";
     static string ElemAbiCsParam(string e) => IsScalarElem(e) ? ManagedType(e) : IsEnumElem(e) ? "int"
         : IsStringT(e) ? "[MarshalAs(UnmanagedType.LPWStr)] string" : IsStruct(e) ? ManagedType(e) : "IntPtr";
     static string ElemAbiCsRet(string e) => IsScalarElem(e) ? ManagedType(e) : IsEnumElem(e) ? "int" : IsStruct(e) ? ManagedType(e) : "IntPtr";
@@ -1079,7 +1103,7 @@ public static class ApiCodeGen
     {
         foreach (var cls in Classes)
         {
-            foreach (var fn in cls.GetProperty("methods").EnumerateArray()
+            foreach (var fn in Methods(cls)
                          .Concat(cls.GetProperty("virtuals").EnumerateArray())
                          .Concat(cls.GetProperty("constructors").EnumerateArray()))
             {
@@ -1289,15 +1313,15 @@ public static class ApiCodeGen
         string bindable = $"QBindable<{elem}>";
         sb.AppendLine();
         sb.AppendLine($"// QBindable<{elem}>: read/write through the property Qt gave us.");
-        sb.AppendLine($"extern \"C\" __declspec(dllexport) {ElemAbiCppRet(elem)} qs_api_bindable_{stem}_value(void* bindable)");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT {ElemAbiCppRet(elem)} qs_api_bindable_{stem}_value(void* bindable)");
         sb.AppendLine("{");
         sb.AppendLine($"    return {ElemFromCpp(elem, $"static_cast<{bindable}*>(bindable)->value()")};");
         sb.AppendLine("}");
-        sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_bindable_{stem}_setValue(void* bindable, {ElemAbiCppParam(elem)} value)");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT void qs_api_bindable_{stem}_setValue(void* bindable, {ElemAbiCppParam(elem)} value)");
         sb.AppendLine("{");
         sb.AppendLine($"    static_cast<{bindable}*>(bindable)->setValue({ElemToCpp(elem, "value")});");
         sb.AppendLine("}");
-        sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_bindable_{stem}_free(void* bindable)");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT void qs_api_bindable_{stem}_free(void* bindable)");
         sb.AppendLine("{");
         sb.AppendLine($"    delete static_cast<{bindable}*>(bindable);");
         sb.AppendLine("}");
@@ -1413,38 +1437,38 @@ public static class ApiCodeGen
 
         sb.AppendLine();
         sb.AppendLine($"// {container}: pair-by-pair conversion for the managed side.");
-        sb.AppendLine($"extern \"C\" __declspec(dllexport) void* qs_api_{tag}_{stem}_new()");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT void* qs_api_{tag}_{stem}_new()");
         sb.AppendLine("{");
         sb.AppendLine($"    return new {container}();");
         sb.AppendLine("}");
-        sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_{tag}_{stem}_insert(void* map, {abiKey} key, {abiValue} value)");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT void qs_api_{tag}_{stem}_insert(void* map, {abiKey} key, {abiValue} value)");
         sb.AppendLine("{");
         sb.AppendLine($"    static_cast<{container}*>(map)->insert({ElemToCpp(key, "key")}, {ElemToCpp(value, "value")});");
         sb.AppendLine("}");
-        sb.AppendLine($"extern \"C\" __declspec(dllexport) int qs_api_{tag}_{stem}_count(const void* map)");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT int qs_api_{tag}_{stem}_count(const void* map)");
         sb.AppendLine("{");
         sb.AppendLine($"    return static_cast<int>(static_cast<const {container}*>(map)->size());");
         sb.AppendLine("}");
-        sb.AppendLine($"extern \"C\" __declspec(dllexport) {retKey} qs_api_{tag}_{stem}_key(const void* map, int index)");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT {retKey} qs_api_{tag}_{stem}_key(const void* map, int index)");
         sb.AppendLine("{");
         sb.AppendLine($"    auto it = static_cast<const {container}*>(map)->constBegin();");
         sb.AppendLine("    for (int i = 0; i < index; ++i)");
         sb.AppendLine("        ++it;");
         sb.AppendLine($"    return {ElemFromCpp(key, "it.key()")};");
         sb.AppendLine("}");
-        sb.AppendLine($"extern \"C\" __declspec(dllexport) {retValue} qs_api_{tag}_{stem}_value(const void* map, int index)");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT {retValue} qs_api_{tag}_{stem}_value(const void* map, int index)");
         sb.AppendLine("{");
         sb.AppendLine($"    auto it = static_cast<const {container}*>(map)->constBegin();");
         sb.AppendLine("    for (int i = 0; i < index; ++i)");
         sb.AppendLine("        ++it;");
         sb.AppendLine($"    return {ElemFromCpp(value, "it.value()")};");
         sb.AppendLine("}");
-        sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_{tag}_{stem}_free(void* map)");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT void qs_api_{tag}_{stem}_free(void* map)");
         sb.AppendLine("{");
         sb.AppendLine($"    delete static_cast<{container}*>(map);");
         sb.AppendLine("}");
         sb.AppendLine($"// A virtual override that returns a {container}: copy it into the caller's slot.");
-        sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_assign_{tag}_{stem}(void* destination, void* source)");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT void qs_api_assign_{tag}_{stem}(void* destination, void* source)");
         sb.AppendLine("{");
         sb.AppendLine("    if (source)");
         sb.AppendLine($"        *static_cast<{container}*>(destination) = *static_cast<const {container}*>(source);");
@@ -1503,28 +1527,28 @@ public static class ApiCodeGen
 
         sb.AppendLine();
         sb.AppendLine($"// QList<{elem}>: element-by-element conversion for the managed side.");
-        sb.AppendLine($"extern \"C\" __declspec(dllexport) void* qs_api_list_{stem}_new()");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT void* qs_api_list_{stem}_new()");
         sb.AppendLine("{");
         sb.AppendLine($"    return new {list}();");
         sb.AppendLine("}");
-        sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_list_{stem}_append(void* list, {abi} item)");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT void qs_api_list_{stem}_append(void* list, {abi} item)");
         sb.AppendLine("{");
         sb.AppendLine($"    static_cast<{list}*>(list)->append({appendConv});");
         sb.AppendLine("}");
-        sb.AppendLine($"extern \"C\" __declspec(dllexport) int qs_api_list_{stem}_count(const void* list)");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT int qs_api_list_{stem}_count(const void* list)");
         sb.AppendLine("{");
         sb.AppendLine($"    return static_cast<int>(static_cast<const {list}*>(list)->size());");
         sb.AppendLine("}");
-        sb.AppendLine($"extern \"C\" __declspec(dllexport) {abi} qs_api_list_{stem}_at(const void* list, int index)");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT {abi} qs_api_list_{stem}_at(const void* list, int index)");
         sb.AppendLine("{");
         sb.AppendLine($"    {atConv}");
         sb.AppendLine("}");
-        sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_list_{stem}_free(void* list)");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT void qs_api_list_{stem}_free(void* list)");
         sb.AppendLine("{");
         sb.AppendLine($"    delete static_cast<{list}*>(list);");
         sb.AppendLine("}");
         sb.AppendLine($"// A virtual override that returns a {list}: copy it into the caller's slot.");
-        sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_assign_list_{stem}(void* destination, void* source)");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT void qs_api_assign_list_{stem}(void* destination, void* source)");
         sb.AppendLine("{");
         sb.AppendLine("    if (source)");
         sb.AppendLine($"        *static_cast<{list}*>(destination) = *static_cast<const {list}*>(source);");
@@ -1687,7 +1711,7 @@ public static class ApiCodeGen
             string sig = string.Join(", ", ps.SelectMany(CppParamsFor));
             string ret = ReturnType(fn);
             string args = string.Join(", ", ps.SelectMany(CppArgsFor));
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) {NativeRetCpp(ret)} qs_api_{entry}({sig})");
+            sb.AppendLine($"extern \"C\" QS_API_EXPORT {NativeRetCpp(ret)} qs_api_{entry}({sig})");
             sb.AppendLine("{");
             foreach (string line in NativeBody(fn, $"{fname}({args})"))
                 sb.AppendLine("    " + line);
@@ -1937,7 +1961,7 @@ public static class ApiCodeGen
             }
         }
 
-        foreach (var m in cls.GetProperty("methods").EnumerateArray())
+        foreach (var m in Methods(cls))
             Method(MethodKey(MemberName(className, Name(m)), Params(m)));
         foreach (var slot in ChainOf(className).Where(s => s.DeclaredHere && !s.Blocked))
             Method(MethodKey(MemberName(className, Name(slot.Virtual)), Params(slot.Virtual)));
@@ -2417,7 +2441,7 @@ public static class ApiCodeGen
             foreach (var ctor in StructCtors(name))
             {
                 var cps = Params(ctor);
-                sb.AppendLine($"extern \"C\" __declspec(dllexport) {StructPod(name)} qs_api_{name}_ctor{n}({string.Join(", ", cps.SelectMany(CppParamsFor))})");
+                sb.AppendLine($"extern \"C\" QS_API_EXPORT {StructPod(name)} qs_api_{name}_ctor{n}({string.Join(", ", cps.SelectMany(CppParamsFor))})");
                 sb.AppendLine("{");
                 sb.AppendLine($"    {name} qs_new({string.Join(", ", cps.SelectMany(CppArgsFor))});");
                 sb.AppendLine($"    return {StructToPod(name, "qs_new")};");
@@ -2429,7 +2453,7 @@ public static class ApiCodeGen
         foreach (var op in StructComparisons(name))
         {
             string cmp = ComparisonEntry(op);
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) bool qs_api_{name}_cmp_{cmp}({StructPod(name)} a, {StructPod(name)} b)");
+            sb.AppendLine($"extern \"C\" QS_API_EXPORT bool qs_api_{name}_cmp_{cmp}({StructPod(name)} a, {StructPod(name)} b)");
             sb.AppendLine("{");
             sb.AppendLine($"    return {StructFromPod(name, "a")} {ComparisonSymbol(Name(op))} {StructFromPod(name, "b")};");
             sb.AppendLine("}");
@@ -2447,7 +2471,7 @@ public static class ApiCodeGen
             nativeParams.AddRange(ps.SelectMany(CppParamsFor));
             string args = string.Join(", ", ps.SelectMany(CppArgsFor));
             string call = IsStatic(m) ? $"{name}::{Name(m)}({args})" : $"qs_self.{Name(m)}({args})";
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) {NativeRetCpp(ret)} qs_api_{name}_{entry}({string.Join(", ", nativeParams)})");
+            sb.AppendLine($"extern \"C\" QS_API_EXPORT {NativeRetCpp(ret)} qs_api_{name}_{entry}({string.Join(", ", nativeParams)})");
             sb.AppendLine("{");
             if (!IsStatic(m))
                 sb.AppendLine($"    {name} qs_self = {StructFromPod(name, mutates ? "(*qs_pod)" : "qs_pod")};");
@@ -2472,7 +2496,7 @@ public static class ApiCodeGen
         string baseName = baseRef != null ? CsTypeName(baseRef) : null;
         var extraBases = bases.Skip(1).ToList();
         var ctors = cls.GetProperty("constructors").EnumerateArray().ToList();
-        var methods = cls.GetProperty("methods").EnumerateArray().ToList();
+        var methods = Methods(cls).ToList();
         var virtuals = ChainOf(Name(cls));
         var signals = cls.GetProperty("signals").EnumerateArray().ToList();
         // The members the base chain already publishes: a member of this class that collides has
@@ -3340,7 +3364,7 @@ public static class ApiCodeGen
     {
         string name = Name(cls);
         var ctors = cls.GetProperty("constructors").EnumerateArray().ToList();
-        var methods = cls.GetProperty("methods").EnumerateArray().ToList();
+        var methods = Methods(cls).ToList();
         var virtuals = ChainOf(Name(cls));
 
         var virtualOverloads = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -4009,6 +4033,7 @@ public static class ApiCodeGen
         if (BindableElements().Count > 0)
             sb.AppendLine("#include <qproperty.h>");
         sb.AppendLine("#include \"QtSharpApiRuntime.h\"");
+        sb.AppendLine("#include \"QtSharpApiExport.h\"");
         sb.AppendLine();
         // The mirrors of Qt's value types. Generated, not written into the shared runtime header: the
         // table in ApiModel.cs is their single source of truth, so a binding - the core or a module -
@@ -4047,7 +4072,7 @@ public static class ApiCodeGen
             string stem = ListStem(boxed);
             sb.AppendLine();
             sb.AppendLine($"// {boxed}: the value a managed override returned, copied into the caller's slot.");
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_assign_{stem}(void* destination, void* source)");
+            sb.AppendLine($"extern \"C\" QS_API_EXPORT void qs_api_assign_{stem}(void* destination, void* source)");
             sb.AppendLine("{");
             // A managed override that did not produce a value hands over nullptr; the caller's slot
             // is already value-initialised, so nothing has to happen (it used to be dereferenced).
@@ -4060,7 +4085,7 @@ public static class ApiCodeGen
             string stem = ListStem(boxed);
             sb.AppendLine();
             sb.AppendLine($"// {boxed}: the argument a virtual override receives, copied so the wrapper owns it.");
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) void* qs_api_clone_{stem}(const void* source)");
+            sb.AppendLine($"extern \"C\" QS_API_EXPORT void* qs_api_clone_{stem}(const void* source)");
             sb.AppendLine("{");
             sb.AppendLine($"    return source ? new {boxed}(*static_cast<const {boxed}*>(source)) : nullptr;");
             sb.AppendLine("}");
@@ -4072,7 +4097,7 @@ public static class ApiCodeGen
     {
         string name = Name(cls);
         var ctors = cls.GetProperty("constructors").EnumerateArray().ToList();
-        var methods = cls.GetProperty("methods").EnumerateArray().ToList();
+        var methods = Methods(cls).ToList();
         var virtuals = ChainOf(Name(cls));
 
         var declaredVirtuals = virtuals.Where(s => s.DeclaredHere).ToList();
@@ -4214,7 +4239,7 @@ public static class ApiCodeGen
         // subclass has to be able to build the native subclass that installs the vtable hooks.
         if (subclassCtor)
         {
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) void* qs_api_{name}_ctor(void* userData, QsApiDispatch dispatch)");
+            sb.AppendLine($"extern \"C\" QS_API_EXPORT void* qs_api_{name}_ctor(void* userData, QsApiDispatch dispatch)");
             sb.AppendLine("{");
             sb.AppendLine($"    return new QsApi_{name}(userData, dispatch);");
             sb.AppendLine("}");
@@ -4228,7 +4253,7 @@ public static class ApiCodeGen
                 .Concat(ps.SelectMany(CppParamsFor)));
             string args = string.Join(", ", new[] { "userData", "dispatch" }
                 .Concat(ps.SelectMany(CppArgsFor)));
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) void* qs_api_{name}_ctor{CtorSuffix(i)}({sig})");
+            sb.AppendLine($"extern \"C\" QS_API_EXPORT void* qs_api_{name}_ctor{CtorSuffix(i)}({sig})");
             sb.AppendLine("{");
             sb.AppendLine($"    return new QsApi_{name}({args});");
             sb.AppendLine("}");
@@ -4237,7 +4262,7 @@ public static class ApiCodeGen
 
         if (subclassable && HasClass(cls, ApiModel.ClassFlags.Owned) && (ctors.Count > 0 || subclassCtor))
         {
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_{name}_dtor(void* self)");
+            sb.AppendLine($"extern \"C\" QS_API_EXPORT void qs_api_{name}_dtor(void* self)");
             sb.AppendLine("{");
             if (DerivesFromQObject(Ref(cls)))
             {
@@ -4261,7 +4286,7 @@ public static class ApiCodeGen
         foreach (var b in cls.GetProperty("bases").EnumerateArray().Select(x => x.GetString()).Skip(1))
         {
             string baseEntry = SimpleName(b);
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) void* qs_api_{name}__as_{baseEntry}(void* self)");
+            sb.AppendLine($"extern \"C\" QS_API_EXPORT void* qs_api_{name}__as_{baseEntry}(void* self)");
             sb.AppendLine("{");
             sb.AppendLine($"    return static_cast<{b}*>(static_cast<{CppClass(name)}*>(self));");
             sb.AppendLine("}");
@@ -4284,11 +4309,11 @@ public static class ApiCodeGen
             string setter = IsFlags(fieldType)
                 ? $"{fieldType}::fromInt(value)"
                 : ElemToCpp(fieldType, "value");
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) {ElemAbiCppRet(fieldType)} qs_api_{name}_get_{fieldName}(void* self)");
+            sb.AppendLine($"extern \"C\" QS_API_EXPORT {ElemAbiCppRet(fieldType)} qs_api_{name}_get_{fieldName}(void* self)");
             sb.AppendLine("{");
             sb.AppendLine($"    return {getter};");
             sb.AppendLine("}");
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) void qs_api_{name}_set_{fieldName}(void* self, {ElemAbiCppParam(fieldType)} value)");
+            sb.AppendLine($"extern \"C\" QS_API_EXPORT void qs_api_{name}_set_{fieldName}(void* self, {ElemAbiCppParam(fieldType)} value)");
             sb.AppendLine("{");
             sb.AppendLine($"    static_cast<{CppClass(name)}*>(self)->{fieldName} = {setter};");
             sb.AppendLine("}");
@@ -4322,7 +4347,7 @@ public static class ApiCodeGen
                      + (rawArgs.Length > 0 ? ", " + rawArgs : "") + ")";
             else
                 call = $"static_cast<{CppClass(name)}*>(self)->{mname}({args})";
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) {NativeRetCpp(ret)} qs_api_{name}_{mname}{entrySuffix}({sig})");
+            sb.AppendLine($"extern \"C\" QS_API_EXPORT {NativeRetCpp(ret)} qs_api_{name}_{mname}{entrySuffix}({sig})");
             sb.AppendLine("{");
             foreach (string line in NativeBody(m, call))
                 sb.AppendLine("    " + line);
@@ -4395,7 +4420,7 @@ public static class ApiCodeGen
             string pureRet = ReturnType(v);
             // The access helper already returns the C ABI value, so this only forwards it.
             string forwarded = $"QsApiAccess_{name}::Call_{vname}{pSuffix}({pureArgs})";
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) {NativeRetCpp(pureRet)} qs_api_{name}_{vname}{pSuffix}_vt({pureSig})");
+            sb.AppendLine($"extern \"C\" QS_API_EXPORT {NativeRetCpp(pureRet)} qs_api_{name}_{vname}{pSuffix}_vt({pureSig})");
             sb.AppendLine("{");
             sb.AppendLine("    " + (pureRet == "void" ? forwarded + ";" : "return " + forwarded + ";"));
             sb.AppendLine("}");
@@ -4422,7 +4447,7 @@ public static class ApiCodeGen
             // only carries the ABI values across.
             string baseArgs = string.Join(", ", new[] { $"static_cast<QsApi_{name}*>(self)" }
                 .Concat(ps.SelectMany(AbiArgs)));
-            sb.AppendLine($"extern \"C\" __declspec(dllexport) {NativeRetCpp(ret)} qs_api_{name}_{vname}__base{vSuffix}({sig})");
+            sb.AppendLine($"extern \"C\" QS_API_EXPORT {NativeRetCpp(ret)} qs_api_{name}_{vname}__base{vSuffix}({sig})");
             sb.AppendLine("{");
             sb.AppendLine("    " + NativeRetExpr(ret, $"QsApi_{name}::CallBase_{vname}{vSuffix}({baseArgs})"));
             sb.AppendLine("}");
@@ -4493,7 +4518,7 @@ public static class ApiCodeGen
         if (IsBindableT(t)) return "void*";
         if (IsPtr(t) || IsBoxed(t)) return "void*";
         if (IsEnum(t)) return "int";
-        return t;
+        return CppAbiScalar(t);
     }
 
     // An array of the runtime structs crosses as the POD array: the layouts are Qt's own, so the
@@ -4517,7 +4542,7 @@ public static class ApiCodeGen
         if (t == "QByteArrayView") return "const QByteArray&";
         if (IsEnum(t) || IsPtr(t)) return CppTypeName(t);
         if (IsBoxed(t)) return $"const {CppTypeName(t)}&";
-        return t;
+        return CppAbiScalar(t);
     }
 
     static string CppArg(string t, string name, string defaultCpp = null)
@@ -4550,6 +4575,11 @@ public static class ApiCodeGen
                 ? $"({name} ? *static_cast<{CppTypeName(t)}*>({name}) : QsApiDefaultValue<{CppTypeName(t)}>())"
                 : $"*static_cast<{CppTypeName(t)}*>({name})";
         }
+        // The ABI carries `long` as a fixed-width int (CppAbiScalar); cast back to the type Qt
+        // declared so overload resolution picks the same function on every platform
+        // (QLocale::toString(long), not toString(int)).
+        if (t == "long" || t == "unsigned long")
+            return $"static_cast<{t}>({name})";
         return name;
     }
 
@@ -4565,7 +4595,7 @@ public static class ApiCodeGen
         if (t == "void" || t == "bool" || t == "int" || t == "float" || t == "double")
             return t;
         if (CSharpScalar(t) != null)
-            return t;
+            return CppAbiScalar(t);
         if (t == "TimeSpan") return "long long";
         return IsEnum(t) ? "int" : "void*";
     }
@@ -4612,6 +4642,10 @@ public static class ApiCodeGen
         if (IsBoxed(t)) return $"return new {CppTypeName(t)}({call});";
         // Iterators and other const accessors return const pointers; the C ABI is void*.
         if (IsPtr(t)) return $"return static_cast<void*>(const_cast<{CppTypeName(t.Substring(0, t.Length - 1))}*>({call}));";
+        // `long` comes back from Qt as the model's 32-bit spelling; narrow it explicitly so the
+        // conversion is a stated part of the ABI rather than an implicit one.
+        if (t == "long" || t == "unsigned long")
+            return $"return static_cast<{CppAbiScalar(t)}>({call});";
         return $"return {call};";
     }
 

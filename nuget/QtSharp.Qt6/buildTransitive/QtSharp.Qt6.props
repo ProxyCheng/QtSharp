@@ -1,6 +1,15 @@
 <Project>
   <PropertyGroup>
-    <QtSharpQt6NativeDir Condition="'$(QtSharpQt6NativeDir)' == ''">$(MSBuildThisFileDirectory)..\tools\native\</QtSharpQt6NativeDir>
+    <!-- The Qt runtime is per-RID inside the package: tools/native/win-x64 (DLLs + platforms/
+         qwindows.dll) and tools/native/linux-x64 (lib/ + plugins/). -->
+    <!-- Native assets are per-RID. RuntimeIdentifier (a global property, so `dotnet publish
+         -r linux-x64` from any host selects the Linux payload) wins; otherwise the SDK's host RID. -->
+    <QtSharpNativeRid Condition="'$(QtSharpNativeRid)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</QtSharpNativeRid>
+    <QtSharpNativeRid Condition="'$(QtSharpNativeRid)' == '' and '$(PublishRuntimeIdentifier)' != ''">$(PublishRuntimeIdentifier)</QtSharpNativeRid>
+    <QtSharpNativeRid Condition="'$(QtSharpNativeRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</QtSharpNativeRid>
+    <QtSharpNativeRid Condition="'$(QtSharpNativeRid)' == '' and $([MSBuild]::IsOSPlatform('Linux'))">linux-x64</QtSharpNativeRid>
+    <QtSharpNativeRid Condition="'$(QtSharpNativeRid)' == ''">win-x64</QtSharpNativeRid>
+    <QtSharpQt6NativeDir Condition="'$(QtSharpQt6NativeDir)' == ''">$(MSBuildThisFileDirectory)../tools/native/$(QtSharpNativeRid)/</QtSharpQt6NativeDir>
     <PlatformTarget Condition="'$(PlatformTarget)' == ''">x64</PlatformTarget>
   </PropertyGroup>
 </Project>

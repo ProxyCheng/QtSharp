@@ -1,9 +1,10 @@
 <Project>
 
-  <!-- The Qt3D libraries and the plugins Qt3DRender loads at runtime. Qt looks for each plugin
-       class in a directory named after it next to the executable, so they are copied as
-       renderers\, geometryloaders\ and sceneparsers\. -->
-  <Target Name="QtSharpQt3DQt6CopyNativeDeps" AfterTargets="Build">
+  <!-- The Qt3D libraries and the plugins Qt3DRender loads at runtime. Windows: Qt looks for each
+       plugin class in a directory named after it next to the executable, so they are copied as
+       renderers\, geometryloaders\ and sceneparsers\. Linux: the base QtSharp.Qt6 package deploys
+       the whole plugin tree under plugins/ and the deployed qt.conf points Qt at it. -->
+  <Target Name="QtSharpQt3DQt6CopyNativeDeps" AfterTargets="Build" Condition="'$(QtSharpNativeRid)' == 'win-x64'">
     <ItemGroup>
       <_QtSharpQt3DQt6Native Include="$(QtSharpQt3DQt6NativeDir)*.dll" />
       <_QtSharpQt3DQt6Renderer Include="$(QtSharpQt3DQt6NativeDir)renderers\*.dll" />
@@ -16,7 +17,7 @@
     <Copy SourceFiles="@(_QtSharpQt3DQt6SceneParser)" DestinationFolder="$(OutDir)sceneparsers\" SkipUnchangedFiles="true" />
   </Target>
 
-  <Target Name="QtSharpQt3DQt6CopyNativeDepsPublish" AfterTargets="Publish">
+  <Target Name="QtSharpQt3DQt6CopyNativeDepsPublish" AfterTargets="Publish" Condition="'$(QtSharpNativeRid)' == 'win-x64'">
     <ItemGroup>
       <_QtSharpQt3DQt6NativePublish Include="$(QtSharpQt3DQt6NativeDir)*.dll" />
       <_QtSharpQt3DQt6RendererPublish Include="$(QtSharpQt3DQt6NativeDir)renderers\*.dll" />

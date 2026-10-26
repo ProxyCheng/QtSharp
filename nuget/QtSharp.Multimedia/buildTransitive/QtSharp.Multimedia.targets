@@ -1,18 +1,32 @@
 <Project>
 
   <!-- The QtMultimedia native glue next to the consumer's executable, on Build and on Publish. -->
-  <Target Name="QtSharpMultimediaCopyNativeDeps" AfterTargets="Build">
+  <Target Name="QtSharpMultimediaCopyNativeDeps" AfterTargets="Build" Condition="'$(QtSharpNativeRid)' == 'win-x64'">
     <ItemGroup>
       <_QtSharpMultimediaNative Include="$(QtSharpMultimediaNativeDir)*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_QtSharpMultimediaNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
 
-  <Target Name="QtSharpMultimediaCopyNativeDepsPublish" AfterTargets="Publish">
+  <Target Name="QtSharpMultimediaCopyNativeDepsPublish" AfterTargets="Publish" Condition="'$(QtSharpNativeRid)' == 'win-x64'">
     <ItemGroup>
       <_QtSharpMultimediaNativePublish Include="$(QtSharpMultimediaNativeDir)*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_QtSharpMultimediaNativePublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="QtSharpMultimediaCopyNativeDepsLinux" AfterTargets="Build" Condition="'$(QtSharpNativeRid)' == 'linux-x64'">
+    <ItemGroup>
+      <_QtSharpMultimediaNativeLinux Include="$(QtSharpMultimediaNativeDir)*.so*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpMultimediaNativeLinux)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="QtSharpMultimediaCopyNativeDepsLinuxPublish" AfterTargets="Publish" Condition="'$(QtSharpNativeRid)' == 'linux-x64'">
+    <ItemGroup>
+      <_QtSharpMultimediaNativeLinuxPublish Include="$(QtSharpMultimediaNativeDir)*.so*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpMultimediaNativeLinuxPublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

@@ -22,31 +22,43 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
     <QtRuntimeDir Condition="'$(QtRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.12.0\runtime</QtRuntimeDir>
+    <!-- The gcc_64 kit's staged runtime (tools/build-qt-kit.sh): lib/ + plugins/. A release pack
+         job points this at the artifact the Ubuntu build produced. -->
+    <QtLinuxRuntimeDir Condition="'$(QtLinuxRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\qt-kit\runtime</QtLinuxRuntimeDir>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
     <None Include="_._" Pack="true" PackagePath="lib/net10.0/" />
     <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
-    <None Include="$(QtRuntimeDir)\Qt6Core.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtRuntimeDir)\Qt6Gui.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtRuntimeDir)\Qt6Widgets.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtRuntimeDir)\Qt6Network.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtRuntimeDir)\Qt6Svg.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtRuntimeDir)\Qt6SvgWidgets.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtRuntimeDir)\Qt6PrintSupport.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtRuntimeDir)\Qt6OpenGL.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtRuntimeDir)\Qt6OpenGLWidgets.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtRuntimeDir)\msvcp140*.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtRuntimeDir)\vcruntime140*.dll" Pack="true" PackagePath="tools/native/" />
+    <!-- win-x64 -->
+    <None Include="$(QtRuntimeDir)\Qt6Core.dll" Pack="true" PackagePath="tools/native/win-x64/" />
+    <None Include="$(QtRuntimeDir)\Qt6Gui.dll" Pack="true" PackagePath="tools/native/win-x64/" />
+    <None Include="$(QtRuntimeDir)\Qt6Widgets.dll" Pack="true" PackagePath="tools/native/win-x64/" />
+    <None Include="$(QtRuntimeDir)\Qt6Network.dll" Pack="true" PackagePath="tools/native/win-x64/" />
+    <None Include="$(QtRuntimeDir)\Qt6Svg.dll" Pack="true" PackagePath="tools/native/win-x64/" />
+    <None Include="$(QtRuntimeDir)\Qt6SvgWidgets.dll" Pack="true" PackagePath="tools/native/win-x64/" />
+    <None Include="$(QtRuntimeDir)\Qt6PrintSupport.dll" Pack="true" PackagePath="tools/native/win-x64/" />
+    <None Include="$(QtRuntimeDir)\Qt6OpenGL.dll" Pack="true" PackagePath="tools/native/win-x64/" />
+    <None Include="$(QtRuntimeDir)\Qt6OpenGLWidgets.dll" Pack="true" PackagePath="tools/native/win-x64/" />
+    <None Include="$(QtRuntimeDir)\msvcp140*.dll" Pack="true" PackagePath="tools/native/win-x64/" />
+    <None Include="$(QtRuntimeDir)\vcruntime140*.dll" Pack="true" PackagePath="tools/native/win-x64/" />
     <!-- concrt140 is a redistributable, not a Qt module: some kits ship it and some do not. -->
-    <None Include="$(QtRuntimeDir)\concrt140*.dll" Pack="true" PackagePath="tools/native/" />
-    <None Include="$(QtRuntimeDir)\platforms\qwindows.dll" Pack="true" PackagePath="tools/native/platforms/" />
+    <None Include="$(QtRuntimeDir)\concrt140*.dll" Pack="true" PackagePath="tools/native/win-x64/" />
+    <None Include="$(QtRuntimeDir)\platforms\qwindows.dll" Pack="true" PackagePath="tools/native/win-x64/platforms/" />
+    <!-- linux-x64: the whole staged prefix (all Qt libraries and plugin trees, including the
+         addons). Every addon package depends on QtSharp.Qt6, so keeping the shared tree here - one
+         copy instead of the same libraries in four packages - is both smaller and immune to a
+         missing plugin directory. The layout is what the libraries' and plugins' rpaths expect. -->
+    <None Include="$(QtLinuxRuntimeDir)\lib\*.so*" Pack="true" PackagePath="tools/native/linux-x64/lib/" Condition="Exists('$(QtLinuxRuntimeDir)\lib')" />
+    <None Include="$(QtLinuxRuntimeDir)\qt.conf" Pack="true" PackagePath="tools/native/linux-x64/" Condition="Exists('$(QtLinuxRuntimeDir)\qt.conf')" />
+    <!-- NuGet appends the path matched by the wildcard (plugins/<class>/<file>) to PackagePath;
+         spelling %(RecursiveDir) as well duplicates the first directory. -->
+    <None Include="$(QtLinuxRuntimeDir)\plugins\**\*" Pack="true" PackagePath="tools/native/linux-x64/plugins/" Condition="Exists('$(QtLinuxRuntimeDir)\plugins')" />
   </ItemGroup>
 
   <Target Name="QtSharpQt6PackCheck" BeforeTargets="GenerateNuspec">
-    <Error Condition="!Exists('$(QtRuntimeDir)\Qt6Core.dll')" Text="The Qt runtime DLLs are missing under '$(QtRuntimeDir)' - see README.md, section Prerequisites." />
-    <Error Condition="!Exists('$(QtRuntimeDir)\platforms\qwindows.dll')" Text="The Qt platform plugin is missing at '$(QtRuntimeDir)\platforms\qwindows.dll'." />
+    <Error Condition="!Exists('$(QtRuntimeDir)\Qt6Core.dll') and !Exists('$(QtLinuxRuntimeDir)\lib\libQt6Core.so.6')" Text="The Qt runtime is missing under both '$(QtRuntimeDir)' and '$(QtLinuxRuntimeDir)' - see README.md, section Prerequisites." />
   </Target>
 
 </Project>
