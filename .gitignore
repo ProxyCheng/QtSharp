@@ -28,6 +28,9 @@ Qt/
 # Generated output
 out/
 
+# Notes that are not part of the project (blog drafts and their assets)
+docs/blog/
+
 # CrashTracer output (native/CrashTracer.cpp writes this next to the repository root)
 crash_stack.txt
 
