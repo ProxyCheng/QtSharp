@@ -15,7 +15,7 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
 
     <PackageId>QtSharp.Api</PackageId>
-    <Version>0.10.0</Version>
+    <Version>0.11.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>Qt for .NET: the generated C# binding as eleven module assemblies (QtCore, QtGui, QtWidgets, QtNetwork, QtSql, QtSvg, QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets), generated from the Qt 6.12 headers.</Description>
     <PackageTags>Qt;Qt6;CSharp;dotnet;binding;interop;gui</PackageTags>

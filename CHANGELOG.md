@@ -4,6 +4,13 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.11.0 - 2026-10-26
+
+- **QJsonArray is a C# list.** It implements `IList<QJsonValue>` (indexer, Add, Insert, RemoveAt,
+  Remove, IndexOf, Contains, Clear), and `ToObjectList()` gives the unwrapped snapshot for LINQ.
+  Same ownership rule as the object: the wrappers the list hands out are the caller's, the snapshot
+  is plain BCL values.
+
 ## 0.10.0 - 2026-10-26
 
 - **QJsonObject is a writable C# dictionary.** It implements `IDictionary<string, QJsonValue>`

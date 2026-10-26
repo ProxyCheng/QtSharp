@@ -9,7 +9,7 @@
     <NoWarn>$(NoWarn);NU5128</NoWarn>
 
     <PackageId>QtSharp.WebSockets.Qt6</PackageId>
-    <Version>0.10.0</Version>
+    <Version>0.11.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>The Qt WebSockets runtime (Qt6WebSockets.dll) loaded by QtSharp.WebSockets.</Description>
     <PackageTags>Qt;Qt6;QtWebSockets;runtime;native</PackageTags>
