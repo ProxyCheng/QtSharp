@@ -215,6 +215,7 @@ jobs:
             out/packages/QtSharp.Multimedia.Qt6.*.nupkg
             out/packages/QtSharp.Positioning.*.nupkg
             out/packages/QtSharp.Positioning.Qt6.*.nupkg
+            out/packages/QtSharp.Sql.*.nupkg
           if-no-files-found: error
 
   publish:
