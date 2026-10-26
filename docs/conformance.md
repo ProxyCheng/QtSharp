@@ -7,7 +7,7 @@ cannot drift):
 
 | runner | source | windows | assertions |
 |---|---|---|---|
-| `testbind` | `demos/` — the official Qt examples, plus `tests/` — binding-specific tests | 43 | 1348 |
+| `testbind` | `demos/` — the official Qt examples, plus `tests/` — binding-specific tests | 45 | 1364 |
 | `QtSharp.Charts.Demos` | `demos.charts/` — Qt Charts | 38 | 570 |
 | `QtSharp.Qt3D.Demos` | `demos.qt3d/` — Qt 3D | 3 | 37 |
 
@@ -18,6 +18,7 @@ runnable names both name the module the example exercises:
 
 | module | demos |
 |---|---|
+| QtCore | `qtcore-savegame` — the JSON Save Game example's document model; `qtcore-regexp` — the regexp example's match/capture walk |
 | QtGui | `qtgui-basicdrawing`, `qtgui-gradients`, `qtgui-painterpaths`, `qtgui-composition`, `qtgui-transformations`, `qtgui-pathstroke` |
 | QtWidgets | `qtwidgets-analogclock`, `qtwidgets-calculator`, `qtwidgets-calendarwidget`, `qtwidgets-completer`, `qtwidgets-lineedits`, `qtwidgets-menus`, `qtwidgets-scribble`, `qtwidgets-shapedclock`, `qtwidgets-shortcuteditor`, `qtwidgets-sliders`, `qtwidgets-spinboxes`, `qtwidgets-stardelegate`, `qtwidgets-systray`, `qtwidgets-documentviewer`, `qtwidgets-basiclayouts`, `qtwidgets-gallery`, `qtwidgets-customsortfilter` |
 | QtNetwork | `qtnetwork-fortune` — the fortune server/client pair over loopback |
@@ -58,7 +59,7 @@ run under `test-*` names and stay in the gate:
 
 | module | official example coverage | notes |
 |---|---|---|
-| QtCore | none of the official QtCore examples is ported as a standalone demo; `test-core` covers the API surface | candidate: the official `corelib` examples |
+| QtCore | `qtcore-savegame`, `qtcore-regexp` | |
 | QtGui | the six painting examples | |
 | QtWidgets | 17 widget examples | |
 | QtNetwork | `qtnetwork-fortune` | |

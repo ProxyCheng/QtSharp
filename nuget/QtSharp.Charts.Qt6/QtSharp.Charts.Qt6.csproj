@@ -9,7 +9,7 @@
     <NoWarn>$(NoWarn);NU5128</NoWarn>
 
     <PackageId>QtSharp.Charts.Qt6</PackageId>
-    <Version>0.7.0</Version>
+    <Version>0.8.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>The Qt Charts runtime (Qt6Charts.dll) loaded by QtSharp.Charts.</Description>
     <PackageTags>Qt;Qt6;QtCharts;runtime;native</PackageTags>
