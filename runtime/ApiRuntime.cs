@@ -721,7 +721,7 @@ namespace QtSharp.Runtime
         }
     }
 
-    public static unsafe class ApiRuntime
+    public static unsafe partial class ApiRuntime
     {
         public const string Library = "QtSharp.Api";
 
@@ -1533,6 +1533,10 @@ namespace QtSharp.Runtime
         /// </summary>
         public static IntPtr CreateApplication(string[] args, int flags = 0, int kind = 2)
         {
+            // There is no per-platform preparation here on purpose: Qt finds its plugins through
+            // the deployed qt.conf (Prefix=. / Plugins=plugins) on Linux and through the
+            // application directory on Windows. Platform-specific code lives in the build and
+            // packaging layer, not in the shared managed runtime.
             var argv = args ?? Array.Empty<string>();
             return AppCreateArgs(argv, argv.Length, flags, kind);
         }

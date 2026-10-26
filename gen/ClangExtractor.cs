@@ -21,6 +21,15 @@ public static partial class ApiModel
     // ------------------------------------------------------------------ extract2 entry
     public static int RunExtract2(string modelPath, ExtensionModule module = null)
     {
+        // Extraction is the one host-dependent part of the generator: the clang invocation uses
+        // MSVC compatibility flags, and the checked-in model is the Windows one. The platforms
+        // answer through HostPlatform.<platform>.cs.
+        if (!HostPlatform.CanExtract)
+        {
+            HostPlatform.ReportExtractionUnsupported();
+            return 1;
+        }
+
         var clock = Stopwatch.StartNew();
         CurrentModule = module;
         if (module != null)

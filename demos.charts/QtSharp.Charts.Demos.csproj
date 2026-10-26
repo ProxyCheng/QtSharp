@@ -39,7 +39,7 @@
        rest of the Qt runtime. -->
   <Target Name="CopyChartsNative" AfterTargets="Build">
     <ItemGroup>
-      <_ChartsNative Include="..\out\api-modules\charts\QtSharp.Charts.Native.dll" />
+      <_ChartsNative Include="..\out\api-modules\charts\$(QtSharpNativePrefix)QtSharp.Charts.Native$(QtSharpNativeSuffix)" />
     </ItemGroup>
     <Copy SourceFiles="@(_ChartsNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>

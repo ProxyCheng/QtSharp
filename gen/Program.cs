@@ -17,7 +17,7 @@ static class QtLibrary
     /// </summary>
     internal static string QtIncludeRoot
         => Environment.GetEnvironmentVariable("QTSHARP_QT_INCLUDE")
-           ?? Path.Combine(RepoRoot, "Qt", ApiModel.QtVersion, "msvc2022_64", "include");
+           ?? Path.Combine(RepoRoot, "Qt", ApiModel.QtVersion, HostPlatform.DefaultKitName, "include");
 
     /// <summary>
     /// The repository root, found by walking up from the generator's own folder to the solution

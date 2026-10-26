@@ -19,7 +19,10 @@
   <Import Project="..\QtSharp.Api.props" />
 
   <ItemGroup>
-    <Compile Include="*.cs" />
+    <!-- One platform file per host, so the test sources never branch on the OS. -->
+    <Compile Include="*.cs" Exclude="TestPlatform.Windows.cs;TestPlatform.Unix.cs" />
+    <Compile Include="TestPlatform.Windows.cs" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+    <Compile Include="TestPlatform.Unix.cs" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
   </ItemGroup>
 
   <ItemGroup>

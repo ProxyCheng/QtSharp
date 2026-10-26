@@ -1,9 +1,12 @@
 <Project>
 
-  <!-- The Qt base runtime (and the MSVC runtime it needs) next to the consumer's executable and
-       in its publish output. Qt looks for the platform plugin under platforms\, so it is copied
-       there rather than next to the executable. -->
-  <Target Name="QtSharpQt6CopyNativeDeps" AfterTargets="Build">
+  <!-- The Qt base runtime next to the consumer's executable and in its publish output.
+       Windows: the Qt DLLs go flat into the output directory (Qt finds its platform plugin under
+       platforms/ there). Linux: the runtime keeps the Qt prefix layout - lib/ for the libraries,
+       plugins/ for the platform integration - because that is what the libraries' and plugins'
+       rpaths expect; the deployed qt.conf makes QLibraryInfo look there. -->
+
+  <Target Name="QtSharpQt6CopyNativeDeps" AfterTargets="Build" Condition="'$(QtSharpNativeRid)' == 'win-x64'">
     <ItemGroup>
       <_QtSharpQt6Native Include="$(QtSharpQt6NativeDir)*.dll" />
       <_QtSharpQt6Platform Include="$(QtSharpQt6NativeDir)platforms\qwindows.dll" />
@@ -12,13 +15,39 @@
     <Copy SourceFiles="@(_QtSharpQt6Platform)" DestinationFolder="$(OutDir)platforms\" SkipUnchangedFiles="true" />
   </Target>
 
-  <Target Name="QtSharpQt6CopyNativeDepsPublish" AfterTargets="Publish">
+  <Target Name="QtSharpQt6CopyNativeDepsPublish" AfterTargets="Publish" Condition="'$(QtSharpNativeRid)' == 'win-x64'">
     <ItemGroup>
       <_QtSharpQt6NativePublish Include="$(QtSharpQt6NativeDir)*.dll" />
       <_QtSharpQt6PlatformPublish Include="$(QtSharpQt6NativeDir)platforms\qwindows.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_QtSharpQt6NativePublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(_QtSharpQt6PlatformPublish)" DestinationFolder="$(PublishDir)platforms\" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="QtSharpQt6CopyNativeDepsLinux" AfterTargets="Build" Condition="'$(QtSharpNativeRid)' == 'linux-x64'">
+    <ItemGroup>
+      <_QtSharpQt6Lib Include="$(QtSharpQt6NativeDir)lib/**/*" />
+      <_QtSharpQt6Plugin Include="$(QtSharpQt6NativeDir)plugins/**/*" />
+      <_QtSharpQt6Config Include="$(QtSharpQt6NativeDir)qt.conf" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpQt6Config)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpQt6Lib)"
+          DestinationFiles="@(_QtSharpQt6Lib->'$(OutDir)lib/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpQt6Plugin)"
+          DestinationFiles="@(_QtSharpQt6Plugin->'$(OutDir)plugins/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="QtSharpQt6CopyNativeDepsLinuxPublish" AfterTargets="Publish" Condition="'$(QtSharpNativeRid)' == 'linux-x64'">
+    <ItemGroup>
+      <_QtSharpQt6LibPublish Include="$(QtSharpQt6NativeDir)lib/**/*" />
+      <_QtSharpQt6PluginPublish Include="$(QtSharpQt6NativeDir)plugins/**/*" />
+      <_QtSharpQt6ConfigPublish Include="$(QtSharpQt6NativeDir)qt.conf" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpQt6ConfigPublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpQt6LibPublish)"
+          DestinationFiles="@(_QtSharpQt6LibPublish->'$(PublishDir)lib/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_QtSharpQt6PluginPublish)"
+          DestinationFiles="@(_QtSharpQt6PluginPublish->'$(PublishDir)plugins/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

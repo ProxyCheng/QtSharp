@@ -30,6 +30,45 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   save-game's field-by-field JSON construction.
 - **New official examples:** Flow Layout (a `QLayout` subclass) and Colliding Mice (a
   `QGraphicsItem` subclass with `paint`/`boundingRect`/`shape`/`advance`).
+- **Linux x64 (glibc) is supported.** `build_api.sh` and `tools/build-native-module.sh` compile the
+  generated C++ and the runtime with g++ (`-std=c++17`, `-Wall -Wextra -Werror`, `-fvisibility=hidden`,
+  `-Wl,-z,defs`), and `tools/build-qt-kit.sh` fetches the Qt 6.12.0 `gcc_64` kit from Qt's own
+  repository, merges the addons and stages a deployable `lib/` + `plugins/` + `qt.conf` tree with
+  `$ORIGIN` rpaths (patchelf), so applications need no `LD_LIBRARY_PATH`. The staged runtime
+  includes QtDeclarative (Qt6Qml/Qt6Quick) because QtMultimedia's ffmpeg backend links it, and
+  the app still needs the distribution's FFmpeg runtime libraries for playback.
+- **The packages carry both RIDs.** Every package with native code holds `tools/native/win-x64/`
+  and `tools/native/linux-x64/`; `buildTransitive` selects by `RuntimeIdentifier` (so
+  `dotnet publish -r linux-x64` works from any host) and falls back to the SDK's host RID. On
+  Linux the base `QtSharp.Qt6` package deploys the whole Qt tree, addons included; the addon
+  packages carry the addon's native glue for both RIDs.
+- **Platform code lives in platform-specific files.** The generator's host difference is
+  `gen/HostPlatform.Windows.cs` / `HostPlatform.Unix.cs` (gen.csproj compiles one) and the
+  platform-dependent test helpers are `tests/TestPlatform.Windows.cs` / `.Unix.cs` (the test
+  project compiles one); the shared sources contain no `OperatingSystem` checks. The managed
+  runtime needs no platform branch at all: Qt finds its plugins through the deployed `qt.conf`
+  (`Prefix=./Plugins=plugins`) on Linux and through the application directory on Windows.
+- **The C ABI pins `long` to 32 bits.** The model comes from the MSVC headers, so the glue emits
+  `int`/`unsigned int` and casts back to Qt's `long` at the call; the C# API stays identical on
+  both platforms. `QByteArray::toLong`, `QLocale::toLong` and the input-event timestamps therefore
+  truncate to 32 bits on Linux (see README, Known limitations).
+- **Windows-only Qt members are not bound.** `QProcess.nativeArguments`/`setNativeArguments` exist
+  only under `#if defined(Q_OS_WIN)`, so the generator filters them out of both the C# and the
+  native glue; use `ProcessStartInfo.Arguments` instead. This keeps one API surface that compiles
+  on both platforms.
+- **CI runs Windows and Linux.** The Windows job is unchanged; a new Ubuntu job builds from the
+  checked-in model, compiles with g++, and runs the conformance suite under Xvfb with software
+  OpenGL. A pack job combines the two payloads and verifies the packages with a consumer on each
+  platform. `release.yml` produces the same multi-RID packages.
+- **Warnings are errors on both native builds too:** `/WX` for MSVC, `-Werror` for GCC (Qt's
+  headers are included with `-isystem`, so only this repository's code has to be warning-free).
+  Deprecated Qt declarations are one suppressed class (`-Wno-deprecated-declarations`): the
+  glue's job is to call exactly the Qt function the model declares, and 6.12 still declares many
+  deprecated APIs. Uninitialized-value diagnostics are the other (`-Wno-uninitialized
+  -Wno-maybe-uninitialized`): Qt's `Qt::Uninitialized` constructors intentionally leave the
+  storage untouched and the generated wrapper reads the fields to build the POD.
+- Windows behaviour is unchanged: the same generated sources, the same MSVC build, the same test
+  suite (46 windows, 1379 assertions).
 
 ## 0.16.0 - 2026-10-26
 

@@ -1,8 +1,9 @@
 <Project>
 
   <!-- Qt6Multimedia.dll/Qt6MultimediaWidgets.dll next to the consumer's executable and the backend
-       plugin under <exe>\multimedia\, on Build and on Publish. -->
-  <Target Name="QtSharpMultimediaQt6CopyNativeDeps" AfterTargets="Build">
+       plugin under <exe>\multimedia\, on Build and on Publish. Windows only: on Linux the base
+       QtSharp.Qt6 package deploys the whole Qt runtime tree, addon libraries and plugins included. -->
+  <Target Name="QtSharpMultimediaQt6CopyNativeDeps" AfterTargets="Build" Condition="'$(QtSharpNativeRid)' == 'win-x64'">
     <ItemGroup>
       <_QtSharpMultimediaQt6Native Include="$(QtSharpMultimediaQt6NativeDir)*.dll" />
       <_QtSharpMultimediaQt6Plugin Include="$(QtSharpMultimediaQt6NativeDir)multimedia\*.dll" />
@@ -11,7 +12,7 @@
     <Copy SourceFiles="@(_QtSharpMultimediaQt6Plugin)" DestinationFolder="$(OutDir)multimedia\" SkipUnchangedFiles="true" />
   </Target>
 
-  <Target Name="QtSharpMultimediaQt6CopyNativeDepsPublish" AfterTargets="Publish">
+  <Target Name="QtSharpMultimediaQt6CopyNativeDepsPublish" AfterTargets="Publish" Condition="'$(QtSharpNativeRid)' == 'win-x64'">
     <ItemGroup>
       <_QtSharpMultimediaQt6NativePublish Include="$(QtSharpMultimediaQt6NativeDir)*.dll" />
       <_QtSharpMultimediaQt6PluginPublish Include="$(QtSharpMultimediaQt6NativeDir)multimedia\*.dll" />

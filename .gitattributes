@@ -7,6 +7,7 @@ model/*.json text eol=lf
 *.bat text eol=crlf
 *.cmd text eol=crlf
 *.ps1 text eol=crlf
+*.sh text eol=lf
 *.slnx text eol=crlf
 *.csproj text eol=crlf
 *.props text eol=crlf

@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  packages: read
 
 jobs:
   version:
@@ -65,8 +66,8 @@ jobs:
           path: out/packages/QtSharp.Tools.*.nupkg
           if-no-files-found: error
 
-  binding:
-    name: Package QtSharp.Api
+  binding-win:
+    name: Build and test the binding (Windows)
     needs: version
     runs-on: windows-latest
     timeout-minutes: 45
@@ -185,42 +186,277 @@ jobs:
           ./tools/run-window-tests.ps1 -Exe "demos.charts/bin/Release/net10.0/QtSharp.Charts.Demos.exe" -Label "charts-demos"
           if ($LASTEXITCODE -ne 0) { throw "some Qt Charts demos failed (see the output above)" }
 
+      - name: Stage the Windows payload
+        shell: pwsh
+        run: |
+          $stage = "out/binding-artifact"
+          Remove-Item $stage -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path "$stage/api" -Force | Out-Null
+          Copy-Item out/api/QtSharp.Api.dll "$stage/api/"
+          foreach ($module in @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
+                                'qtprintsupport', 'qtopengl', 'qtopenglwidgets',
+                                'charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic',
+                                'qt3danimation', 'qt3dextras', 'qtmultimedia', 'qtpositioning')) {
+            Copy-Item "out/$module/generated" "$stage/$module/generated" -Recurse
+          }
+          Copy-Item out/api-modules "$stage/api-modules" -Recurse
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: binding-api
+          path: out/binding-artifact
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: qt-runtime-win
+          # build-qt-kit.ps1's default destination; the pack job restores it under
+          # Qt/6.12.0/runtime.
+          path: out/qt-kit/runtime
+          if-no-files-found: error
+
+  binding-linux:
+    name: Build and test the binding (Linux)
+    needs: version
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/proxycheng/qtsharp-linux-builder:24.04
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build the generator
+        run: dotnet build gen/gen.csproj -c Release --nologo
+
+      - name: Generate the bindings from the checked-in models
+        shell: pwsh
+        run: |
+          $root = $env:GITHUB_WORKSPACE
+          $genBin = Join-Path $root 'gen/bin/Release/net10.0/linux-x64'
+          $base = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
+                    'qtprintsupport', 'qtopengl', 'qtopenglwidgets')
+          $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia', 'qtpositioning')
+          Push-Location $genBin
+          try {
+            & "./qtgen" split-core (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/split-models')
+            if ($LASTEXITCODE -ne 0) { throw "split-core failed" }
+            foreach ($module in $base) {
+              $fresh = Join-Path $root "out/split-models/qtsharp.$module.json"
+              $checked = Join-Path $root "model/qtsharp.$module.json"
+              if ((Get-FileHash $fresh).Hash -ne (Get-FileHash $checked).Hash) {
+                throw "model/qtsharp.$module.json is stale - run tools/regen-api.ps1 -Adopt and commit it"
+              }
+            }
+            & "./qtgen" codegen (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/api') --native-only
+            if ($LASTEXITCODE -ne 0) { throw "codegen (native glue) failed" }
+            foreach ($module in $base + $addons) {
+              & "./qtgen" codegen (Join-Path $root "model/qtsharp.$module.json") (Join-Path $root "out/$module") --module $module
+              if ($LASTEXITCODE -ne 0) { throw "codegen ($module) failed" }
+            }
+          } finally { Pop-Location }
+
+      - name: Cache the Qt kit and archives
+        uses: actions/cache@v6
+        with:
+          path: |
+            out/qt-kit
+            out/qt-cache
+          key: qt-6.12.0-linux_gcc_64-v2
+      - name: Fetch the Qt kit
+        shell: bash
+        run: ./tools/build-qt-kit.sh
+
+      - name: Compile the native wrappers
+        shell: pwsh
+        run: |
+          # The same process pool as the Windows job; g++ needs more memory than cl, so the
+          # throttle is lower.
+          . ./tools/parallel.ps1
+          $root = $env:GITHUB_WORKSPACE
+          $modules = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia', 'qtpositioning')
+          $tasks = @([pscustomobject]@{
+            Name = 'QtSharp.Api'
+            FilePath = 'bash'
+            Arguments = @((Join-Path $root 'build_api.sh'))
+            WorkingDirectory = $root
+            LogPath = Join-Path $root 'out/native-api.log'
+          })
+          foreach ($module in $modules) {
+            $tasks += [pscustomobject]@{
+              Name = $module
+              FilePath = 'bash'
+              Arguments = @((Join-Path $root 'tools/build-native-module.sh'), $module)
+              WorkingDirectory = $root
+              LogPath = Join-Path $root "out/native-$module.log"
+            }
+          }
+          $throttle = [Math]::Max(1, [Math]::Min(3, [Environment]::ProcessorCount))
+          $failed = @(Invoke-ProcessPool -Tasks $tasks -Throttle $throttle |
+            Where-Object { $_.ExitCode -ne 0 })
+          if ($failed.Count -gt 0) {
+            foreach ($failure in $failed) {
+              Write-Host "--- $($failure.Name) failed"
+              Get-Content $failure.LogPath -ErrorAction SilentlyContinue | Select-Object -Last 20 | Out-Host
+            }
+            throw "native build failed: $($failed.Name -join ', ')"
+          }
+
+      - name: Check the native libraries
+        shell: bash
+        run: |
+          for so in out/api/libQtSharp.Api.so out/api-modules/*/lib*.so; do
+            readelf -d "$so" | grep -q 'RUNPATH' || { echo "$so has no RUNPATH"; exit 1; }
+            readelf -d "$so" | grep -q 'ORIGIN/lib' || { echo "$so does not point at \$ORIGIN/lib"; readelf -d "$so"; exit 1; }
+          done
+          echo "native libraries carry the \$ORIGIN/lib deployment rpath"
+
+      - name: Build the examples and the binding tests
+        shell: bash
+        run: |
+          dotnet build demos/QtSharp.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$QT_RUNTIME_DIR"
+          dotnet build demos.charts/QtSharp.Charts.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$QT_RUNTIME_DIR"
+          dotnet build demos.qt3d/QtSharp.Qt3D.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$QT_RUNTIME_DIR"
+          dotnet build testbind/testbind.csproj -c Release --nologo "-p:QtRuntimeDir=$QT_RUNTIME_DIR"
+
+      - name: Run the conformance suite
+        shell: bash
+        run: |
+          export LIBGL_ALWAYS_SOFTWARE=1
+          xvfb-run -a --server-args="-screen 0 1280x1024x24" pwsh ./tools/run-window-tests.ps1 -Exe "testbind/bin/Release/net10.0/testapp" -Label "demos-linux"
+          xvfb-run -a --server-args="-screen 0 1280x1024x24" pwsh ./tools/run-window-tests.ps1 -Exe "demos.charts/bin/Release/net10.0/QtSharp.Charts.Demos" -Label "charts-linux"
+          xvfb-run -a --server-args="-screen 0 1280x1024x24" pwsh ./tools/run-window-tests.ps1 -Exe "demos.qt3d/bin/Release/net10.0/QtSharp.Qt3D.Demos" -Label "qt3d-linux"
+
+      - name: Stage the Linux payload
+        shell: bash
+        run: |
+          rm -rf out/linux-payload
+          mkdir -p out/linux-payload/api
+          cp out/api/libQtSharp.Api.so out/linux-payload/api/
+          cp -r out/api-modules out/linux-payload/api-modules
+          mkdir -p out/linux-payload/qt-kit
+          cp -r out/qt-kit/runtime out/linux-payload/qt-kit/runtime
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux-payload
+          path: out/linux-payload
+          if-no-files-found: error
+
+  pack:
+    name: Pack the packages
+    needs: [version, binding-win, binding-linux]
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Take the Windows build
+        uses: actions/download-artifact@v8
+        with:
+          name: binding-api
+          path: out
+      - name: Take the Linux payload
+        uses: actions/download-artifact@v8
+        with:
+          name: linux-payload
+          path: out/linux-payload
+      - name: Take the Windows Qt runtime
+        uses: actions/download-artifact@v8
+        with:
+          name: qt-runtime-win
+          path: Qt/6.12.0/runtime
+
+      - name: Merge the Linux glue into the build tree
+        shell: pwsh
+        run: |
+          Copy-Item out/linux-payload/api/libQtSharp.Api.so out/api/
+          Copy-Item out/linux-payload/api-modules/* out/api-modules -Recurse -Force
+
+      - name: Build the managed assemblies
+        shell: pwsh
+        run: |
+          foreach ($project in @('QtSharp.Api', 'QtSharp.Charts', 'QtSharp.Qt3D', 'QtSharp.Multimedia', 'QtSharp.Positioning', 'QtSharp.Sql')) {
+            dotnet build "nuget/$project/$project.csproj" -c Release --nologo
+            if ($LASTEXITCODE -ne 0) { throw "$project build failed" }
+          }
 
       - name: Pack the packages
         shell: pwsh
         run: |
           $version = "${{ needs.version.outputs.version }}"
-          ./tools/pack-qt-binding.ps1 -PackageVersion $version -QtRuntimeDir "$env:QT_RUNTIME_DIR"
+          ./tools/pack-qt-binding.ps1 -PackageVersion $version `
+            -QtRuntimeDir "Qt/6.12.0/runtime" `
+            -QtLinuxRuntimeDir "out/linux-payload/qt-kit/runtime" `
+            -RequireLinuxPayload
           if ($LASTEXITCODE -ne 0) { throw "packaging failed" }
-
-      # Restore and run the packages through the public NuGet path before publishing them.
-      - name: Verify the packages with a consumer
-        shell: pwsh
-        run: |
-          $version = "${{ needs.version.outputs.version }}"
-          ./tools/test-packages.ps1 -PackageVersion $version -PackagesDir out/packages
-          if ($LASTEXITCODE -ne 0) { throw "the package consumer failed" }
-
 
       - uses: actions/upload-artifact@v7
         with:
           name: package-binding
-          path: |
-            out/packages/QtSharp.Api.*.nupkg
-            out/packages/QtSharp.Runtime.*.nupkg
-            out/packages/QtSharp.Qt6.*.nupkg
-            out/packages/QtSharp.Charts.*.nupkg
-            out/packages/QtSharp.Qt3D.*.nupkg
-            out/packages/QtSharp.Multimedia.*.nupkg
-            out/packages/QtSharp.Multimedia.Qt6.*.nupkg
-            out/packages/QtSharp.Positioning.*.nupkg
-            out/packages/QtSharp.Positioning.Qt6.*.nupkg
-            out/packages/QtSharp.Sql.*.nupkg
+          path: out/packages/*.nupkg
           if-no-files-found: error
+
+  # Both package consumers run after pack and gate the publish: the packages are restored through
+  # the public NuGet path on each platform, which a source build cannot prove.
+  smoke-packages-windows:
+    name: Smoke tests (Windows packages)
+    needs: [version, pack]
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+      - name: Take the packages
+        uses: actions/download-artifact@v8
+        with:
+          name: package-binding
+          path: out/packages
+      - name: Verify the packages with a Windows consumer
+        shell: pwsh
+        run: |
+          ./tools/test-packages.ps1 -PackageVersion "${{ needs.version.outputs.version }}" -PackagesDir out/packages
+          if ($LASTEXITCODE -ne 0) { throw "the package consumer failed" }
+
+  smoke-packages-linux:
+    name: Smoke tests (Linux packages)
+    needs: [version, pack]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/proxycheng/qtsharp-linux-builder:24.04
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+      - name: Take the packages
+        uses: actions/download-artifact@v8
+        with:
+          name: package-binding
+          path: out/packages
+      - name: Verify the packages with a Linux consumer
+        shell: pwsh
+        run: |
+          ./tools/test-packages.ps1 -PackageVersion "${{ needs.version.outputs.version }}" -PackagesDir out/packages
+          if ($LASTEXITCODE -ne 0) { throw "the package consumer failed" }
 
   publish:
     name: Publish the release
-    needs: [version, tools, binding]
+    needs: [version, tools, pack, smoke-packages-windows, smoke-packages-linux]
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
@@ -246,24 +482,35 @@ jobs:
           $notes = @"
           ## QtSharp $version
 
-          The packages, all Windows x64, follow PyQt6's split:
+          The packages follow PyQt6's split and carry native assets for **Windows x64 and Linux
+          x64** in the same package; the .NET assemblies are platform-neutral.
 
-          * **QtSharp.Api** - the binding as ten module assemblies (QtCore, QtGui, QtWidgets,
-            QtNetwork, QtSvg, QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets).
+          * **QtSharp.Api** - the binding as nine module assemblies (QtCore, QtGui, QtWidgets,
+            QtNetwork, QtSvg, QtSvgWidgets, QtPrintSupport, QtOpenGL, QtOpenGLWidgets).
             Reference it and write Qt applications in C#; no Qt SDK or C++ toolchain is needed.
           * **QtSharp.Runtime** - the managed runtime and the shared native glue. Brought in by
             ``QtSharp.Api``; reference it only if you build a binding module yourself.
-          * **QtSharp.Qt6** - the Qt 6 runtime DLLs and platform plugin. Brought in automatically.
+          * **QtSharp.Qt6** - the Qt 6 runtime (Windows DLLs and platform plugin; on Linux the
+            lib/ + plugins/ prefix) . Brought in automatically.
           * **QtSharp.Tools** - the Qt command-line tools (``rcc``, ``uic``, ``lrelease``,
             ``lupdate``) plus MSBuild ``QtResource`` support for compiling ``.qrc`` files.
+            Windows x64 only.
           * **QtSharp.Charts** - the optional QtCharts extension, against ``QtSharp.Api``;
-            **QtSharp.Charts.Qt6** carries Qt6Charts.dll.
+            **QtSharp.Charts.Qt6** carries Qt6Charts.
           * **QtSharp.Qt3D** - the optional Qt3D extension (Qt3DCore, Qt3DRender, Qt3DInput,
             Qt3DLogic, Qt3DAnimation, Qt3DExtras), against ``QtSharp.Api``;
             **QtSharp.Qt3D.Qt6** carries the Qt3D runtime and plugins.
           * **QtSharp.Multimedia** - the optional QtMultimedia extension (playback, capture, the
             device/format classes and ``QVideoWidget``), against ``QtSharp.Api``;
             **QtSharp.Multimedia.Qt6** carries the Qt multimedia libraries and backend plugin.
+          * **QtSharp.Positioning** - the optional QtPositioning extension, against
+            ``QtSharp.Api``; **QtSharp.Positioning.Qt6** carries Qt6Positioning.
+          * **QtSharp.Sql** - the Qt model classes QtSql used to bind (``QSqlQueryModel``,
+            ``QSqlTableModel``) over ADO.NET; no Qt SQL module involved.
+
+          Linux note: Qt's X11/OpenGL runtime libraries (``libxcb-*``, ``libxkbcommon-x11-0``,
+          ``libgl1``) must be installed on the machine, exactly as for any Qt application. The
+          packages deploy the Qt tree and a ``qt.conf``, so no ``LD_LIBRARY_PATH`` is needed.
 
           See [CHANGELOG.md](https://github.com/ProxyCheng/QtSharp/blob/$tag/CHANGELOG.md),
           [the binding readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/nuget/QtSharp.Api/README.md),

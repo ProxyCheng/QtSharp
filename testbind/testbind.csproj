@@ -23,15 +23,16 @@
 
   <!-- The QtMultimedia extension's native glue and Qt runtime plugin, the way the package's
        buildTransitive would copy them for a consumer. The Qt runtime location comes from
-       QtSharp.Api.props (QT_RUNTIME_DIR in CI), not from a repository-relative guess. -->
+       QtSharp.Api.props (QT_RUNTIME_DIR in CI), not from a repository-relative guess. On Linux the
+       props already stages the whole plugins/ tree, so only the glue libraries are copied. -->
   <Target Name="CopyQtMultimediaNativeDeps" AfterTargets="Build">
     <ItemGroup>
-      <QtMultimediaNative Include="..\out\api-modules\qtmultimedia\QtSharp.QtMultimedia.Native.dll" />
-      <QtMultimediaPlugin Include="$(QtRuntimeDir)\plugins\multimedia\*.dll" />
-      <QtPositioningNative Include="..\out\api-modules\qtpositioning\QtSharp.QtPositioning.Native.dll" />
+      <QtMultimediaNative Include="..\out\api-modules\qtmultimedia\$(QtSharpNativePrefix)QtSharp.QtMultimedia.Native$(QtSharpNativeSuffix)" />
+      <QtMultimediaPlugin Include="$(QtRuntimeDir)\plugins\multimedia\*.dll" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+      <QtPositioningNative Include="..\out\api-modules\qtpositioning\$(QtSharpNativePrefix)QtSharp.QtPositioning.Native$(QtSharpNativeSuffix)" />
     </ItemGroup>
     <Copy SourceFiles="@(QtMultimediaNative);@(QtPositioningNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(QtMultimediaPlugin)" DestinationFolder="$(OutDir)multimedia\" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(QtMultimediaPlugin)" DestinationFolder="$(OutDir)multimedia\" SkipUnchangedFiles="true" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
   </Target>
 
 </Project>

@@ -35,6 +35,9 @@
 
     <QtSharpChartsDir Condition="'$(QtSharpChartsDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\charts</QtSharpChartsDir>
     <QtSharpChartsNativeDir Condition="'$(QtSharpChartsNativeDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\api-modules\charts</QtSharpChartsNativeDir>
+    <!-- The Linux glue in a full checkout lives in the same directory; a release pack job can
+         point it at the Ubuntu artifact. -->
+    <QtSharpChartsNativeLinuxDir Condition="'$(QtSharpChartsNativeLinuxDir)' == ''">$(QtSharpChartsNativeDir)</QtSharpChartsNativeLinuxDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -60,12 +63,13 @@
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
     <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
-    <None Include="$(QtSharpChartsNativeDir)\QtSharp.Charts.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(QtSharpChartsNativeDir)\QtSharp.Charts.Native.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" Condition="Exists('$(QtSharpChartsNativeDir)\QtSharp.Charts.Native.dll')" />
+    <None Include="$(QtSharpChartsNativeLinuxDir)\libQtSharp.Charts.Native.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="Exists('$(QtSharpChartsNativeLinuxDir)\libQtSharp.Charts.Native.so')" />
   </ItemGroup>
 
   <Target Name="QtSharpChartsPackCheck" BeforeTargets="GenerateNuspec">
     <Error Condition="!Exists('$(QtSharpChartsDir)\generated')" Text="The QtCharts binding source is missing - run: qtgen codegen model\qtsharp.charts.json out\charts --module charts" />
-    <Error Condition="!Exists('$(QtSharpChartsNativeDir)\QtSharp.Charts.Native.dll')" Text="The QtCharts native glue is missing - run: powershell -File tools\build-native-module.ps1 -Module charts" />
+    <Error Condition="!Exists('$(QtSharpChartsNativeDir)\QtSharp.Charts.Native.dll') and !Exists('$(QtSharpChartsNativeLinuxDir)\libQtSharp.Charts.Native.so')" Text="The QtCharts native glue is missing - run: tools\build-native-module.ps1 -Module charts (Windows) or tools/build-native-module.sh charts (Linux)" />
   </Target>
 
 </Project>

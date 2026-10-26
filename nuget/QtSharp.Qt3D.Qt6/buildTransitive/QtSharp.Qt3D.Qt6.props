@@ -1,6 +1,11 @@
 <Project>
   <PropertyGroup>
-    <QtSharpQt3DQt6NativeDir Condition="'$(QtSharpQt3DQt6NativeDir)' == ''">$(MSBuildThisFileDirectory)..\tools\native\</QtSharpQt3DQt6NativeDir>
+    <QtSharpNativeRid Condition="'$(QtSharpNativeRid)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</QtSharpNativeRid>
+    <QtSharpNativeRid Condition="'$(QtSharpNativeRid)' == '' and '$(PublishRuntimeIdentifier)' != ''">$(PublishRuntimeIdentifier)</QtSharpNativeRid>
+    <QtSharpNativeRid Condition="'$(QtSharpNativeRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</QtSharpNativeRid>
+    <QtSharpNativeRid Condition="'$(QtSharpNativeRid)' == '' and $([MSBuild]::IsOSPlatform('Linux'))">linux-x64</QtSharpNativeRid>
+    <QtSharpNativeRid Condition="'$(QtSharpNativeRid)' == ''">win-x64</QtSharpNativeRid>
+    <QtSharpQt3DQt6NativeDir Condition="'$(QtSharpQt3DQt6NativeDir)' == ''">$(MSBuildThisFileDirectory)../tools/native/$(QtSharpNativeRid)/</QtSharpQt3DQt6NativeDir>
     <PlatformTarget Condition="'$(PlatformTarget)' == ''">x64</PlatformTarget>
   </PropertyGroup>
 </Project>

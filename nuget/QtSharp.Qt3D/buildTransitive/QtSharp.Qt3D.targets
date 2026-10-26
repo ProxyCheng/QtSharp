@@ -1,20 +1,34 @@
 <Project>
 
   <!-- The six Qt3D native glues next to the consumer's executable, on Build and on Publish. The
-       Qt3D runtime DLLs and the renderer/geometry/scene plugins are the QtSharp.Qt3D.Qt6
+       Qt3D runtime libraries and the renderer/geometry/scene plugins are the QtSharp.Qt3D.Qt6
        package's payload. -->
-  <Target Name="QtSharpQt3DCopyNativeDeps" AfterTargets="Build">
+  <Target Name="QtSharpQt3DCopyNativeDeps" AfterTargets="Build" Condition="'$(QtSharpNativeRid)' == 'win-x64'">
     <ItemGroup>
       <_QtSharpQt3DNative Include="$(QtSharpQt3DNativeDir)*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_QtSharpQt3DNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
 
-  <Target Name="QtSharpQt3DCopyNativeDepsPublish" AfterTargets="Publish">
+  <Target Name="QtSharpQt3DCopyNativeDepsPublish" AfterTargets="Publish" Condition="'$(QtSharpNativeRid)' == 'win-x64'">
     <ItemGroup>
       <_QtSharpQt3DNativePublish Include="$(QtSharpQt3DNativeDir)*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_QtSharpQt3DNativePublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="QtSharpQt3DCopyNativeDepsLinux" AfterTargets="Build" Condition="'$(QtSharpNativeRid)' == 'linux-x64'">
+    <ItemGroup>
+      <_QtSharpQt3DNativeLinux Include="$(QtSharpQt3DNativeDir)*.so*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpQt3DNativeLinux)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="QtSharpQt3DCopyNativeDepsLinuxPublish" AfterTargets="Publish" Condition="'$(QtSharpNativeRid)' == 'linux-x64'">
+    <ItemGroup>
+      <_QtSharpQt3DNativeLinuxPublish Include="$(QtSharpQt3DNativeDir)*.so*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpQt3DNativeLinuxPublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

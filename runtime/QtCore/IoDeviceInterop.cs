@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace QtSharp.QtCore
 {
@@ -11,7 +10,7 @@ namespace QtSharp.QtCore
     ///
     /// The bridge is the QIODevice virtual set published by the generator's bridge registry
     /// (<c>gen/QioDeviceBridge.cs</c>): <see cref="ReadData"/>/<see cref="WriteData"/> receive a raw
-    /// byte buffer as an <see cref="IntPtr"/> this class copies through. The Qt object stays a real
+    /// byte buffer as an <see cref="IntPtr"/> this class wraps in a span. The Qt object stays a real
     /// QIODevice, owned by this wrapper; disposing the wrapper deletes it. Dispose the stream
     /// separately unless <c>ownsStream</c> is set.
     /// </summary>
@@ -32,26 +31,24 @@ namespace QtSharp.QtCore
             Open(mode);
         }
 
-        public override long ReadData(IntPtr data, long maxlen)
+        // The caller's buffer is written in place: a per-read byte[] would allocate once per
+        // QIODevice::read() call, which is hot in image/XML/video decoding (and the leak test
+        // measures it as process growth).
+        public override unsafe long ReadData(IntPtr data, long maxlen)
         {
             if (maxlen <= 0)
                 return 0;
             int count = (int)Math.Min(maxlen, int.MaxValue);
-            var buffer = new byte[count];
-            int read = stream.Read(buffer, 0, count);
-            if (read > 0)
-                Marshal.Copy(buffer, 0, data, read);
-            return read;
+            return stream.Read(new Span<byte>((void*)data, count));
         }
 
-        public override long WriteData(IntPtr data, long len)
+        public override unsafe long WriteData(IntPtr data, long len)
         {
             if (len <= 0)
                 return 0;
-            var buffer = new byte[(int)Math.Min(len, int.MaxValue)];
-            Marshal.Copy(data, buffer, 0, buffer.Length);
-            stream.Write(buffer, 0, buffer.Length);
-            return buffer.Length;
+            int count = (int)Math.Min(len, int.MaxValue);
+            stream.Write(new ReadOnlySpan<byte>((void*)data, count));
+            return count;
         }
 
         public override bool Seek(long pos)
