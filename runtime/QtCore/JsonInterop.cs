@@ -1,72 +1,151 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace QtSharp.QtCore
 {
     /// <summary>
-    /// QJsonObject through C#'s container interfaces. The Qt type stays the Qt type; this part
-    /// makes it enumerate like a dictionary of BCL values - each value unwrapped through
-    /// <see cref="QVariant.ToObject"/>, the same conversion QtSql's Rows() uses, so a nested object
-    /// arrives as a Dictionary and an array as an object[]. That means LINQ works over a document
-    /// without the caller disposing a QJsonValue wrapper per element.
+    /// QJsonObject as a writable C# dictionary of <see cref="QJsonValue"/> - the shape Qt itself
+    /// has, backed by the published <c>insert</c>/<c>remove</c>/<c>swap</c>. Values it hands out
+    /// are Qt wrappers, so the caller owns them (dispose, or let the finalizer run).
     ///
-    /// It is read-only on purpose: QJsonObject's mutators (insert, operator[]) return an iterator
-    /// that the model does not publish, so there is no IDictionary here yet.
+    /// For LINQ over unwrapped BCL values use <see cref="QJsonObjectExtensions.ToObjectDictionary"/>:
+    /// implementing a second IEnumerable&lt;T&gt; here would make extension-method inference
+    /// ambiguous for every call on the object.
+    ///
+    /// Keys enumerate in Qt's sorted order, not document order: QJsonObject stores them sorted.
     /// </summary>
-    public partial class QJsonObject : IReadOnlyDictionary<string, object>
+    public partial class QJsonObject : IDictionary<string, QJsonValue>
     {
-        /// <summary>The unwrapped value of a key; a missing key reads as null.</summary>
-        public object this[string key] => Unwrap(key);
+        QJsonValue IDictionary<string, QJsonValue>.this[string key]
+        {
+            // Value() hands back an owned copy, like every other by-value accessor in the binding.
+            get => Value(key);
+            set => Insert(key, value)?.Dispose();
+        }
 
-        // Keys and Count are explicit: the generated class already has Keys() and Count() methods,
-        // and C# does not let a property share a name with a method in the same type.
-        IEnumerable<string> IReadOnlyDictionary<string, object>.Keys => Keys();
+        ICollection<string> IDictionary<string, QJsonValue>.Keys =>
+            new ReadOnlyCollection<string>(Keys());
 
-        IEnumerable<object> IReadOnlyDictionary<string, object>.Values
+        ICollection<QJsonValue> IDictionary<string, QJsonValue>.Values
         {
             get
             {
+                var values = new List<QJsonValue>((int)Count());
                 foreach (string key in Keys())
-                    yield return Unwrap(key);
+                    values.Add(Value(key));
+                return new ReadOnlyCollection<QJsonValue>(values);
             }
         }
 
-        int IReadOnlyCollection<KeyValuePair<string, object>>.Count => (int)Count();
+        void IDictionary<string, QJsonValue>.Add(string key, QJsonValue value)
+            => Insert(key, value)?.Dispose();
 
-        public bool ContainsKey(string key) => Contains(key);
+        bool IDictionary<string, QJsonValue>.ContainsKey(string key) => Contains(key);
 
-        public bool TryGetValue(string key, out object value)
+        bool IDictionary<string, QJsonValue>.Remove(string key)
+        {
+            if (!Contains(key))
+                return false;
+            Remove(key);
+            return true;
+        }
+
+        bool IDictionary<string, QJsonValue>.TryGetValue(string key, out QJsonValue value)
         {
             if (!Contains(key))
             {
                 value = null;
                 return false;
             }
-            value = Unwrap(key);
+            value = Value(key);
             return true;
         }
 
-        public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
+        // ---------------------------------------------- ICollection<KeyValuePair<string, QJsonValue>>
+
+        int ICollection<KeyValuePair<string, QJsonValue>>.Count => (int)Count();
+
+        bool ICollection<KeyValuePair<string, QJsonValue>>.IsReadOnly => false;
+
+        void ICollection<KeyValuePair<string, QJsonValue>>.Add(KeyValuePair<string, QJsonValue> item)
+            => Insert(item.Key, item.Value)?.Dispose();
+
+        void ICollection<KeyValuePair<string, QJsonValue>>.Clear()
         {
-            foreach (string key in Keys())
-                yield return new KeyValuePair<string, object>(key, Unwrap(key));
+            // Qt has no clear(); swapping in an empty object leaves the old contents in the
+            // temporary, which owns and frees them on dispose.
+            using (var empty = new QJsonObject())
+                Swap(empty);
         }
 
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        object Unwrap(string key)
+        bool ICollection<KeyValuePair<string, QJsonValue>>.Contains(KeyValuePair<string, QJsonValue> item)
         {
-            using (var json = Value(key))
-            {
-                var variant = json.ToVariant();
-                object value = variant.ToObject();
-                // ToObject returns the QVariant itself for a type with no BCL equivalent; that
-                // wrapper is the result, so it must stay alive.
-                if (!ReferenceEquals(value, variant))
-                    variant.Dispose();
-                return value;
-            }
+            if (!Contains(item.Key))
+                return false;
+            using (var current = Value(item.Key))
+                return Equals(ToObject(current), ToObject(item.Value));
+        }
+
+        void ICollection<KeyValuePair<string, QJsonValue>>.CopyTo(
+            KeyValuePair<string, QJsonValue>[] array, int arrayIndex)
+        {
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
+            foreach (var entry in (IEnumerable<KeyValuePair<string, QJsonValue>>)this)
+                array[arrayIndex++] = entry;
+        }
+
+        bool ICollection<KeyValuePair<string, QJsonValue>>.Remove(KeyValuePair<string, QJsonValue> item)
+        {
+            if (!((ICollection<KeyValuePair<string, QJsonValue>>)this).Contains(item))
+                return false;
+            Remove(item.Key);
+            return true;
+        }
+
+        IEnumerator<KeyValuePair<string, QJsonValue>>
+            IEnumerable<KeyValuePair<string, QJsonValue>>.GetEnumerator()
+        {
+            foreach (string key in Keys())
+                yield return new KeyValuePair<string, QJsonValue>(key, Value(key));
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+            => ((IEnumerable<KeyValuePair<string, QJsonValue>>)this).GetEnumerator();
+
+        /// <summary>The BCL value behind a QJsonValue, the same unwrapping ToObjectDictionary uses.</summary>
+        internal static object ToObject(QJsonValue json)
+        {
+            if (json == null)
+                return null;
+            var variant = json.ToVariant();
+            object value = variant.ToObject();
+            // ToObject returns the QVariant itself for a type with no BCL equivalent; that wrapper
+            // is the result, so it must stay alive.
+            if (!ReferenceEquals(value, variant))
+                variant.Dispose();
+            return value;
+        }
+    }
+
+    /// <summary>
+    /// The LINQ-friendly view of a QJsonObject: one snapshot of unwrapped BCL values. Nested
+    /// objects come out as Dictionary&lt;string, object&gt; and arrays as object[], because that is
+    /// what <see cref="QVariant.ToObject"/> produces for a QVariantMap/QVariantList.
+    /// </summary>
+    public static class QJsonObjectExtensions
+    {
+        public static Dictionary<string, object> ToObjectDictionary(this QJsonObject qjson)
+        {
+            if (qjson == null)
+                throw new ArgumentNullException(nameof(qjson));
+            var result = new Dictionary<string, object>((int)qjson.Count(), StringComparer.Ordinal);
+            foreach (string key in qjson.Keys())
+                using (var value = qjson.Value(key))
+                    result[key] = QJsonObject.ToObject(value);
+            return result;
         }
     }
 }

@@ -3655,6 +3655,11 @@ public static class ApiCodeGen
     static List<string> NativeBody(JsonElement m, string call)
     {
         string ret = ReturnType(m);
+        // An insert whose C++ return is the container's iterator publishes the value it points at;
+        // the glue spells that as `.value()` on the call.
+        if (m.TryGetProperty("iteratorValue", out var iteratorValue) &&
+            iteratorValue.ValueKind == JsonValueKind.True)
+            call += ".value()";
         var refs = Params(m).Where(IsStringByRef).ToList();
         if (refs.Count == 0)
             return new List<string> { NativeRetExpr(ret, call) };

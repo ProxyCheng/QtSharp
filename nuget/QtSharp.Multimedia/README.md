@@ -7,8 +7,8 @@ the two widget classes from QtMultimediaWidgets (`QVideoWidget`, `QGraphicsVideo
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.9.0" />
-  <PackageReference Include="QtSharp.Multimedia" Version="0.9.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.10.0" />
+  <PackageReference Include="QtSharp.Multimedia" Version="0.10.0" />
 </ItemGroup>
 ```
 

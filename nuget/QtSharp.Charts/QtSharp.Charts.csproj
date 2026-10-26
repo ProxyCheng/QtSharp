@@ -23,7 +23,7 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
 
     <PackageId>QtSharp.Charts</PackageId>
-    <Version>0.9.0</Version>
+    <Version>0.10.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>Qt Charts for .NET, generated from the Qt 6.12 headers. References QtSharp.Api.</Description>
     <PackageTags>Qt;Qt6;QtCharts;CSharp;dotnet;binding;interop;charts</PackageTags>

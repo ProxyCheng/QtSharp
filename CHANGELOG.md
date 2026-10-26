@@ -4,6 +4,18 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.10.0 - 2026-10-26
+
+- **QJsonObject is a writable C# dictionary.** It implements `IDictionary<string, QJsonValue>`
+  (indexer, Add, Remove, ContainsKey, TryGetValue, Clear, the `ICollection` shape), and
+  `ToObjectDictionary()` keeps the LINQ-friendly snapshot of unwrapped values. A second
+  `IEnumerable<T>` on the same type would make LINQ inference ambiguous, so the unwrapped view is
+  an extension method rather than an interface.
+- **An insert that returns a C++ iterator now returns the value it points at.** The extractor maps
+  `QJsonObject::insert`/`QJsonArray::insert` to `QJsonValue` (the glue calls `insert(...).value()`)
+  instead of dropping the return; other iterator-returning members stay unpublished, and a
+  non-iterator unsupported return is still a void call.
+
 ## 0.9.0 - 2026-10-26
 
 - **QJsonObject is a C# dictionary now.** It implements `IReadOnlyDictionary<string, object>`, so
