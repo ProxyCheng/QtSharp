@@ -62,7 +62,7 @@ else to set up. No Qt SDK, no Visual Studio C++ workload, no clone:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.5.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.6.0" />
 </ItemGroup>
 ```
 
@@ -102,8 +102,8 @@ than part of qtbase. It references the core package and adds all six modules:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.5.0" />
-  <PackageReference Include="QtSharp.Qt3D" Version="0.5.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.6.0" />
+  <PackageReference Include="QtSharp.Qt3D" Version="0.6.0" />
 </ItemGroup>
 ```
 
@@ -136,7 +136,7 @@ drop-in replacement for every Qt module or every desktop deployment scenario.
 
 ## Releases
 
-Pushing a semantic-version tag such as `v0.5.0` starts the release workflow. It builds ten
+Pushing a semantic-version tag such as `v0.6.0` starts the release workflow. It builds ten
 Windows x64 packages and attaches them, with a `SHA256SUMS.txt`, to a GitHub Release:
 
 | package | what it is |
@@ -294,7 +294,7 @@ module projects directly (the same assemblies the package contains).
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.5.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.6.0" />
 </ItemGroup>
 ```
 
@@ -381,6 +381,12 @@ static class Program
   There are no implicit operators on purpose: `==` on a handle class compares wrapper identity, so
   an implicit conversion would let `qdt == dateTime` compile and silently be false. Invalid or
   out-of-range Qt values throw `InvalidOperationException` instead of wrapping.
+* **SQL rows are sequences.** QtSql keeps Qt's cursor-and-record API, with the C# shape added on
+  top: `query.Rows()` yields one `Dictionary<string, object>` per row (values unwrapped by
+  `QVariant.ToObject()`), `query.SelectRows(r => new { Id = r.Get<int>("id"), ... })` projects
+  typed rows, and `QSqlQueryModel.Rows()` does the same for a model that already holds its rows.
+  That is LINQ to Objects over what Qt returned - there is no `IQueryable` provider translating
+  expressions to SQL and no ADO.NET bridge; use EF Core's SQLite provider for the former.
 * **The application object** is created and run like PyQt does it: `new QApplication(args)`,
   `app.Exec()`, `app.Quit()`, `app.Exit(code)`. From code that has no application reference (a menu
   action), use `QCoreApplication.Instance().Quit()`.
@@ -465,7 +471,7 @@ and matching DLLs (normally a Qt kit's `bin`):
 powershell -File tools\pack-qt-tools.ps1 -QtToolsSource C:\Qt\6.12.0\msvc2022_64\bin
 ```
 
-The result is `out/packages/QtSharp.Tools.0.5.0.nupkg`. `-QtVersion` and `-PackageVersion`
+The result is `out/packages/QtSharp.Tools.0.6.0.nupkg`. `-QtVersion` and `-PackageVersion`
 override the defaults. Put the upstream license texts/notices in a `QtSharp-ThirdPartyNotices`
 subdirectory beside the source tools to include them in the payload. Tools are staged under
 `out/qt-tools`; the script checks QtCore's version and runs captured, time-limited startup checks.
@@ -474,7 +480,7 @@ In a consumer project:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Tools" Version="0.5.0" PrivateAssets="all" />
+  <PackageReference Include="QtSharp.Tools" Version="0.6.0" PrivateAssets="all" />
   <QtResource Include="assets\sample.qrc" />
 </ItemGroup>
 ```
@@ -533,7 +539,7 @@ Replace the local source path with your checkout's `out/packages` directory.
 * **The bound modules** are QtCore, QtGui, QtWidgets, QtNetwork (host addressing, local sockets
   `QLocalServer`/`QLocalSocket`, TCP/UDP, the HTTP client), QtSql (`QSqlDatabase`/`QSqlQuery`, the
   record/field classes, `QSqlQueryModel`/`QSqlTableModel`; the SQLite driver ships in
-  `QtSharp.Qt6`), QtSvg/QtSvgWidgets, QtPrintSupport
+  `QtSharp.Qt6`, and the module adds LINQ-friendly rows and typed reads), QtSvg/QtSvgWidgets, QtPrintSupport
   (`QPrinter`, print dialogs/preview), QtXml (the `QDom*` DOM; `QXmlStreamReader/Writer` are in
   QtCore) and QtOpenGL/QtOpenGLWidgets (`QOpenGLWidget`, `QOpenGLContext`, shader/buffer classes).
     **Not bound**: QtMultimedia, QtQml/QtQuick, QtPdf, QtWebEngine.
