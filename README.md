@@ -54,6 +54,7 @@ Extension modules are separate assemblies and packages against the same runtime:
 | QtCharts | `QtSharp.Charts` | `QChart`, `QChartView`, the series, bars, pie and axis families |
 | Qt3D | `QtSharp.Qt3D` | **230 classes** from Qt3DCore, Qt3DRender, Qt3DInput, Qt3DLogic, Qt3DAnimation and Qt3DExtras, as six assemblies/namespaces in one package |
 | QtWebSockets | `QtSharp.WebSockets` | `QWebSocket`, `QWebSocketServer`, the CORS authenticator and the handshake options |
+| QtMultimedia | `QtSharp.Multimedia` | playback (`QMediaPlayer`, `QAudioOutput`, `QAudioSink`), capture (`QCamera`, `QMediaCaptureSession`, `QImageCapture`, `QMediaRecorder`), the device/format classes and `QVideoWidget`/`QGraphicsVideoItem` |
 
 ## Install the binding
 
@@ -62,7 +63,7 @@ else to set up. No Qt SDK, no Visual Studio C++ workload, no clone:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.6.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.7.0" />
 </ItemGroup>
 ```
 
@@ -102,8 +103,8 @@ than part of qtbase. It references the core package and adds all six modules:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.6.0" />
-  <PackageReference Include="QtSharp.Qt3D" Version="0.6.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.7.0" />
+  <PackageReference Include="QtSharp.Qt3D" Version="0.7.0" />
 </ItemGroup>
 ```
 
@@ -136,7 +137,7 @@ drop-in replacement for every Qt module or every desktop deployment scenario.
 
 ## Releases
 
-Pushing a semantic-version tag such as `v0.6.0` starts the release workflow. It builds ten
+Pushing a semantic-version tag such as `v0.7.0` starts the release workflow. It builds twelve
 Windows x64 packages and attaches them, with a `SHA256SUMS.txt`, to a GitHub Release:
 
 | package | what it is |
@@ -151,9 +152,11 @@ Windows x64 packages and attaches them, with a `SHA256SUMS.txt`, to a GitHub Rel
 | `QtSharp.Qt3D.Qt6` | the Qt3D runtime and plugins (brought in by `QtSharp.Qt3D`) |
 | `QtSharp.WebSockets` | the optional QtWebSockets extension, against `QtSharp.Api` |
 | `QtSharp.WebSockets.Qt6` | Qt6WebSockets.dll (brought in by `QtSharp.WebSockets`) |
+| `QtSharp.Multimedia` | the optional QtMultimedia extension, against `QtSharp.Api` |
+| `QtSharp.Multimedia.Qt6` | Qt6Multimedia.dll, Qt6MultimediaWidgets.dll and the backend plugin (brought in by `QtSharp.Multimedia`) |
 
 Everything is built on the runner from the checked-in models: the generator runs without clang, the
-Qt dev files (including the QtCharts, Qt3D, QtWebSockets and Qt Shader Tools addons) are fetched from Qt's own
+Qt dev files (including the QtCharts, Qt3D, QtWebSockets, QtMultimedia and Qt Shader Tools addons) are fetched from Qt's own
 repository, and the native wrappers are compiled with the MSVC tools that ship on the runner. CI
 runs the same steps on every push, including the official Qt3D examples as the extension's
 conformance suite, so the consumer path is verified continuously.
@@ -275,7 +278,7 @@ testapp test-metaobject          # a binding test
 
 The official demos are named after the module they exercise (`qtgui-*`, `qtwidgets-*`, plus
 `qtsql-*`, `qtsvg-*`, `qtsvgwidgets-*`, `qtxml-*`, `qtprintsupport-*`, `qtnetwork-*`, `qtcharts-*`,
-`qtwebsockets-*` and `qt3d-*`); the binding tests use `test-*` and cover
+`qtwebsockets-*`, `qtmultimedia-*` and `qt3d-*`); the binding tests use `test-*` and cover
 ownership, exceptions, C#-declared signals/properties, value types, the BCL conversions and the
 modules whose upstream examples are not ported yet. `docs/conformance.md` has the full matrix.
 Registration is discovery, not a list: a class carries `[Demo("qtwidgets-analogclock")]` and each
@@ -294,7 +297,7 @@ module projects directly (the same assemblies the package contains).
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.6.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.7.0" />
 </ItemGroup>
 ```
 
@@ -471,7 +474,7 @@ and matching DLLs (normally a Qt kit's `bin`):
 powershell -File tools\pack-qt-tools.ps1 -QtToolsSource C:\Qt\6.12.0\msvc2022_64\bin
 ```
 
-The result is `out/packages/QtSharp.Tools.0.6.0.nupkg`. `-QtVersion` and `-PackageVersion`
+The result is `out/packages/QtSharp.Tools.0.7.0.nupkg`. `-QtVersion` and `-PackageVersion`
 override the defaults. Put the upstream license texts/notices in a `QtSharp-ThirdPartyNotices`
 subdirectory beside the source tools to include them in the payload. Tools are staged under
 `out/qt-tools`; the script checks QtCore's version and runs captured, time-limited startup checks.
@@ -480,7 +483,7 @@ In a consumer project:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Tools" Version="0.6.0" PrivateAssets="all" />
+  <PackageReference Include="QtSharp.Tools" Version="0.7.0" PrivateAssets="all" />
   <QtResource Include="assets\sample.qrc" />
 </ItemGroup>
 ```
@@ -523,7 +526,7 @@ Replace the local source path with your checkout's `out/packages` directory.
 | `demos.qt3d/` | the official Qt3D C++ examples (`simple-cpp`, `basicshapes-cpp`, `3d-text`) as the extension's conformance tests |
 | `demos.charts/` | the official Qt Charts examples (38 windows) as the Charts module's conformance tests |
 | `nuget/QtSharp.Api/`, `nuget/QtSharp.Runtime/`, `nuget/QtSharp.Qt6/` | the base binding and its runtime packages (eleven module assemblies inside `QtSharp.Api`) |
-| `nuget/QtSharp.Charts*`, `nuget/QtSharp.Qt3D*`, `nuget/QtSharp.WebSockets*` | the addon packages and their `*.Qt6` runtime companions |
+| `nuget/QtSharp.Charts*`, `nuget/QtSharp.Qt3D*`, `nuget/QtSharp.WebSockets*`, `nuget/QtSharp.Multimedia*` | the addon packages and their `*.Qt6` runtime companions |
 | `docs/conformance.md` | which Qt examples run against which module, and the remaining coverage gaps |
 | `tools/regen-api.ps1` | the build and the gate |
 | `tools/clangprobe/` | the probe used to validate the libclang front end (not part of the build) |
@@ -542,7 +545,7 @@ Replace the local source path with your checkout's `out/packages` directory.
   `QtSharp.Qt6`, and the module adds LINQ-friendly rows and typed reads), QtSvg/QtSvgWidgets, QtPrintSupport
   (`QPrinter`, print dialogs/preview), QtXml (the `QDom*` DOM; `QXmlStreamReader/Writer` are in
   QtCore) and QtOpenGL/QtOpenGLWidgets (`QOpenGLWidget`, `QOpenGLContext`, shader/buffer classes).
-    **Not bound**: QtMultimedia, QtQml/QtQuick, QtPdf, QtWebEngine.
+    **Not bound**: QtQml/QtQuick, QtPdf, QtWebEngine.
 * **QtCharts and Qt3D are optional packages, not part of `QtSharp.Api`.** Both are addon modules
   outside `qtbase`/`qtsvg`, so they ship the way PySide6 and PyQt6 split their addons: separate
   assemblies and packages that reference the core (`PySide6-Essentials` ships only a

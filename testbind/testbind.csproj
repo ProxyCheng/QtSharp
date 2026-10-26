@@ -28,8 +28,11 @@
     <ItemGroup>
       <QtWebSocketsNative Include="..\out\api-modules\qtwebsockets\QtSharp.QtWebSockets.Native.dll" />
       <QtWebSocketsRuntime Include="$(QtRuntimeDir)\Qt6WebSockets.dll" />
+      <QtMultimediaNative Include="..\out\api-modules\qtmultimedia\QtSharp.QtMultimedia.Native.dll" />
+      <QtMultimediaPlugin Include="$(QtRuntimeDir)\plugins\multimedia\*.dll" />
     </ItemGroup>
-    <Copy SourceFiles="@(QtWebSocketsNative);@(QtWebSocketsRuntime)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(QtWebSocketsNative);@(QtWebSocketsRuntime);@(QtMultimediaNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(QtMultimediaPlugin)" DestinationFolder="$(OutDir)multimedia\" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

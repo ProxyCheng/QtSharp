@@ -414,8 +414,14 @@ public static partial class ApiModel
                     }
                     case CXCursorKind.CXCursor_EnumDecl:
                     {
-                        if (clang.getCursorSpelling(cursor).ToString().Length == 0)
-                            break;      // anonymous: not addressable from managed code
+                        var spelling = clang.getCursorSpelling(cursor).ToString();
+                        // Anonymous ("enum { Type = 14 }") is not addressable from managed code,
+                        // and clang may spell it "(unnamed enum at <file>:<line>:<col>)" rather
+                        // than leaving it empty - either way there is no identifier to emit.
+                        if (spelling.Length == 0
+                            || spelling.StartsWith("(unnamed", StringComparison.Ordinal)
+                            || spelling.StartsWith("(anonymous", StringComparison.Ordinal))
+                            break;
                         index.Enums[EnumTypeName(cursor)] = cursor;
                         index.FullEnums[FullQualifiedName(cursor)] = cursor;
                         break;
@@ -2302,14 +2308,19 @@ public static partial class ApiModel
 
         void Add(CXCursor cursor)
         {
-            if (clang.getCursorSpelling(cursor).ToString().Length == 0)
+            var spelling = clang.getCursorSpelling(cursor).ToString();
+            // Anonymous enums (`enum { Type = 14 }`) have no identifier; clang spells them
+            // "(unnamed enum at <file>:<line>:<col>)", which is not a C# type name.
+            if (spelling.Length == 0
+                || spelling.StartsWith("(unnamed", StringComparison.Ordinal)
+                || spelling.StartsWith("(anonymous", StringComparison.Ordinal))
                 return;
             var name = EnumTypeName(cursor);
             if (enums.ContainsKey(name))
                 return;
             enums[name] = new EnumEntry
             {
-                Name = clang.getCursorSpelling(cursor).ToString(),
+                Name = spelling,
                 Qualified = name,
                 CppQualified = FullQualifiedName(cursor),
                 Module = CurrentModule.Name,
@@ -2352,12 +2363,15 @@ public static partial class ApiModel
             var declaration = type.CanonicalType.Declaration;
             if (clang.getCursorKind(declaration) != CXCursorKind.CXCursor_EnumDecl)
                 return;
-            if (clang.getCursorSpelling(declaration).ToString().Length == 0)
+            var spelling = clang.getCursorSpelling(declaration).ToString();
+            if (spelling.Length == 0
+                || spelling.StartsWith("(unnamed", StringComparison.Ordinal)
+                || spelling.StartsWith("(anonymous", StringComparison.Ordinal))
                 return;
             var name = EnumTypeName(declaration);
             enums[name] = new EnumEntry
             {
-                Name = clang.getCursorSpelling(declaration).ToString(),
+                Name = spelling,
                 Qualified = name,
                 CppQualified = FullQualifiedName(declaration),
                 Module = ModuleOfDeclaration(declaration)?.Name,

@@ -6,8 +6,8 @@ as C# events and virtuals as overridable methods.
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.6.0" />
-  <PackageReference Include="QtSharp.WebSockets" Version="0.6.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.7.0" />
+  <PackageReference Include="QtSharp.WebSockets" Version="0.7.0" />
 </ItemGroup>
 ```
 

@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The QtMultimedia extension module: playback (QMediaPlayer/QAudioOutput/QAudioSink), capture
+       (QCamera/QMediaCaptureSession/QImageCapture/QMediaRecorder), the device and format value
+       classes, and the two widget classes from QtMultimediaWidgets - one assembly, one package.
+       The generated source comes from model/qtsharp.qtmultimedia.json. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>QtSharp.QtMultimedia</AssemblyName>
+    <RootNamespace>QtSharp.QtMultimedia</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <PackageId>QtSharp.Multimedia</PackageId>
+    <Version>0.7.0</Version>
+    <Authors>ProxyCheng</Authors>
+    <Description>Qt Multimedia for .NET, generated from the Qt 6.12 headers. References QtSharp.Api.</Description>
+    <PackageTags>Qt;Qt6;QtMultimedia;CSharp;dotnet;binding;interop;audio;video</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ProxyCheng/QtSharp.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <QtSharpMultimediaDir Condition="'$(QtSharpMultimediaDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\qtmultimedia</QtSharpMultimediaDir>
+    <QtSharpMultimediaNativeDir Condition="'$(QtSharpMultimediaNativeDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\api-modules\qtmultimedia</QtSharpMultimediaNativeDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(QtSharpMultimediaDir)\generated\**\*.cs">
+      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Runtime\QtSharp.Runtime.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\Modules\QtSharp.QtCore\QtSharp.QtCore.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\Modules\QtSharp.QtGui\QtSharp.QtGui.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\Modules\QtSharp.QtWidgets\QtSharp.QtWidgets.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\Modules\QtSharp.QtNetwork\QtSharp.QtNetwork.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\QtSharp.Api.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Multimedia.Qt6\QtSharp.Multimedia.Qt6.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="$(QtSharpMultimediaNativeDir)\QtSharp.QtMultimedia.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+  </ItemGroup>
+
+  <Target Name="QtSharpMultimediaPackCheck" BeforeTargets="GenerateNuspec">
+    <Error Condition="!Exists('$(QtSharpMultimediaDir)\generated')" Text="The QtMultimedia binding source is missing - run codegen for model\qtsharp.qtmultimedia.json." />
+    <Error Condition="!Exists('$(QtSharpMultimediaNativeDir)\QtSharp.QtMultimedia.Native.dll')" Text="The QtMultimedia native glue is missing - run: powershell -File tools\build-native-module.ps1 -Module qtmultimedia" />
+  </Target>
+
+</Project>

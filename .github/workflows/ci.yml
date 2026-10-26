@@ -67,7 +67,7 @@ jobs:
           $genBin = Join-Path $root 'gen/bin/Release/net10.0/win-x64'
           $base = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsql', 'qtsvg', 'qtsvgwidgets',
                     'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets')
-          $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtwebsockets')
+          $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtwebsockets', 'qtmultimedia')
           Push-Location $genBin
           try {
             # The combined model is the extraction gate and the shared native glue's input. The ten
@@ -105,7 +105,7 @@ jobs:
         run: |
           cmd /c build_api.bat
           if ($LASTEXITCODE -ne 0) { throw "build_api.bat failed" }
-          foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtwebsockets')) {
+          foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtwebsockets', 'qtmultimedia')) {
             powershell -NoProfile -File tools\build-native-module.ps1 -Module $module -QtDir "$env:QT_DIR"
             if ($LASTEXITCODE -ne 0) { throw "$module native build failed" }
           }

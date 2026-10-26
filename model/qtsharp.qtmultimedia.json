@@ -1,0 +1,1448 @@
+{
+  "formatVersion": 2,
+  "qtVersion": "6.12.0",
+  "namespace": "QtSharp.QtMultimedia",
+  "enums": [
+    { "name": "Error", "qualified": "Error", "module": "qtmultimedia", "cppQualified": "QAudio::Error", "flags": false, "items": [{ "name": "NoError", "value": 0 }, { "name": "OpenError", "value": 1 }, { "name": "IOError", "value": 2 }, { "name": "UnderrunError", "value": 3 }, { "name": "FatalError", "value": 4 }] },
+    { "name": "Error", "qualified": "QAudioDecoder::Error", "module": "qtmultimedia", "flags": false, "items": [{ "name": "NoError", "value": 0 }, { "name": "ResourceError", "value": 1 }, { "name": "FormatError", "value": 2 }, { "name": "AccessDeniedError", "value": 3 }, { "name": "NotSupportedError", "value": 4 }] },
+    { "name": "Mode", "qualified": "QAudioDevice::Mode", "module": "qtmultimedia", "flags": false, "items": [{ "name": "Null", "value": 0 }, { "name": "Input", "value": 1 }, { "name": "Output", "value": 2 }] },
+    { "name": "AudioChannelPosition", "qualified": "QAudioFormat::AudioChannelPosition", "module": "qtmultimedia", "flags": false, "items": [{ "name": "UnknownPosition", "value": 0 }, { "name": "FrontLeft", "value": 1 }, { "name": "FrontRight", "value": 2 }, { "name": "FrontCenter", "value": 3 }, { "name": "LFE", "value": 4 }, { "name": "BackLeft", "value": 5 }, { "name": "BackRight", "value": 6 }, { "name": "FrontLeftOfCenter", "value": 7 }, { "name": "FrontRightOfCenter", "value": 8 }, { "name": "BackCenter", "value": 9 }, { "name": "SideLeft", "value": 10 }, { "name": "SideRight", "value": 11 }, { "name": "TopCenter", "value": 12 }, { "name": "TopFrontLeft", "value": 13 }, { "name": "TopFrontCenter", "value": 14 }, { "name": "TopFrontRight", "value": 15 }, { "name": "TopBackLeft", "value": 16 }, { "name": "TopBackCenter", "value": 17 }, { "name": "TopBackRight", "value": 18 }, { "name": "LFE2", "value": 19 }, { "name": "TopSideLeft", "value": 20 }, { "name": "TopSideRight", "value": 21 }, { "name": "BottomFrontCenter", "value": 22 }, { "name": "BottomFrontLeft", "value": 23 }, { "name": "BottomFrontRight", "value": 24 }] },
+    { "name": "ChannelConfig", "qualified": "QAudioFormat::ChannelConfig", "module": "qtmultimedia", "flags": false, "items": [{ "name": "ChannelConfigUnknown", "value": 0 }, { "name": "ChannelConfigMono", "value": 8 }, { "name": "ChannelConfigStereo", "value": 6 }, { "name": "ChannelConfig2Dot1", "value": 22 }, { "name": "ChannelConfig3Dot0", "value": 14 }, { "name": "ChannelConfig3Dot1", "value": 30 }, { "name": "ChannelConfigSurround5Dot0", "value": 110 }, { "name": "ChannelConfigSurround5Dot1", "value": 126 }, { "name": "ChannelConfigSurround7Dot0", "value": 3182 }, { "name": "ChannelConfigSurround7Dot1", "value": 3198 }] },
+    { "name": "SampleFormat", "qualified": "QAudioFormat::SampleFormat", "module": "qtmultimedia", "flags": false, "items": [{ "name": "Unknown", "value": 0 }, { "name": "UInt8", "value": 1 }, { "name": "Int16", "value": 2 }, { "name": "Int32", "value": 3 }, { "name": "Float", "value": 4 }, { "name": "NSampleFormats", "value": 5 }] },
+    { "name": "Error", "qualified": "QCamera::Error", "module": "qtmultimedia", "flags": false, "items": [{ "name": "NoError", "value": 0 }, { "name": "CameraError", "value": 1 }] },
+    { "name": "ExposureMode", "qualified": "QCamera::ExposureMode", "module": "qtmultimedia", "flags": false, "items": [{ "name": "ExposureAuto", "value": 0 }, { "name": "ExposureManual", "value": 1 }, { "name": "ExposurePortrait", "value": 2 }, { "name": "ExposureNight", "value": 3 }, { "name": "ExposureSports", "value": 4 }, { "name": "ExposureSnow", "value": 5 }, { "name": "ExposureBeach", "value": 6 }, { "name": "ExposureAction", "value": 7 }, { "name": "ExposureLandscape", "value": 8 }, { "name": "ExposureNightPortrait", "value": 9 }, { "name": "ExposureTheatre", "value": 10 }, { "name": "ExposureSunset", "value": 11 }, { "name": "ExposureSteadyPhoto", "value": 12 }, { "name": "ExposureFireworks", "value": 13 }, { "name": "ExposureParty", "value": 14 }, { "name": "ExposureCandlelight", "value": 15 }, { "name": "ExposureBarcode", "value": 16 }] },
+    { "name": "Feature", "qualified": "QCamera::Feature", "module": "qtmultimedia", "flags": false, "items": [{ "name": "ColorTemperature", "value": 1 }, { "name": "ExposureCompensation", "value": 2 }, { "name": "IsoSensitivity", "value": 4 }, { "name": "ManualExposureTime", "value": 8 }, { "name": "CustomFocusPoint", "value": 16 }, { "name": "FocusDistance", "value": 32 }] },
+    { "name": "Features", "qualified": "QCamera::Features", "module": "qtmultimedia", "flags": true, "items": [{ "name": "ColorTemperature", "value": 1 }, { "name": "ExposureCompensation", "value": 2 }, { "name": "IsoSensitivity", "value": 4 }, { "name": "ManualExposureTime", "value": 8 }, { "name": "CustomFocusPoint", "value": 16 }, { "name": "FocusDistance", "value": 32 }] },
+    { "name": "FlashMode", "qualified": "QCamera::FlashMode", "module": "qtmultimedia", "flags": false, "items": [{ "name": "FlashOff", "value": 0 }, { "name": "FlashOn", "value": 1 }, { "name": "FlashAuto", "value": 2 }] },
+    { "name": "FocusMode", "qualified": "QCamera::FocusMode", "module": "qtmultimedia", "flags": false, "items": [{ "name": "FocusModeAuto", "value": 0 }, { "name": "FocusModeAutoNear", "value": 1 }, { "name": "FocusModeAutoFar", "value": 2 }, { "name": "FocusModeHyperfocal", "value": 3 }, { "name": "FocusModeInfinity", "value": 4 }, { "name": "FocusModeManual", "value": 5 }] },
+    { "name": "TorchMode", "qualified": "QCamera::TorchMode", "module": "qtmultimedia", "flags": false, "items": [{ "name": "TorchOff", "value": 0 }, { "name": "TorchOn", "value": 1 }, { "name": "TorchAuto", "value": 2 }] },
+    { "name": "WhiteBalanceMode", "qualified": "QCamera::WhiteBalanceMode", "module": "qtmultimedia", "flags": false, "items": [{ "name": "WhiteBalanceAuto", "value": 0 }, { "name": "WhiteBalanceManual", "value": 1 }, { "name": "WhiteBalanceSunlight", "value": 2 }, { "name": "WhiteBalanceCloudy", "value": 3 }, { "name": "WhiteBalanceShade", "value": 4 }, { "name": "WhiteBalanceTungsten", "value": 5 }, { "name": "WhiteBalanceFluorescent", "value": 6 }, { "name": "WhiteBalanceFlash", "value": 7 }, { "name": "WhiteBalanceSunset", "value": 8 }] },
+    { "name": "Position", "qualified": "QCameraDevice::Position", "module": "qtmultimedia", "flags": false, "items": [{ "name": "UnspecifiedPosition", "value": 0 }, { "name": "BackFace", "value": 1 }, { "name": "FrontFace", "value": 2 }] },
+    { "name": "Format", "qualified": "QImage::Format", "module": "qtgui", "flags": false, "items": [{ "name": "Format_Invalid", "value": 0 }, { "name": "Format_Mono", "value": 1 }, { "name": "Format_MonoLSB", "value": 2 }, { "name": "Format_Indexed8", "value": 3 }, { "name": "Format_RGB32", "value": 4 }, { "name": "Format_ARGB32", "value": 5 }, { "name": "Format_ARGB32_Premultiplied", "value": 6 }, { "name": "Format_RGB16", "value": 7 }, { "name": "Format_ARGB8565_Premultiplied", "value": 8 }, { "name": "Format_RGB666", "value": 9 }, { "name": "Format_ARGB6666_Premultiplied", "value": 10 }, { "name": "Format_RGB555", "value": 11 }, { "name": "Format_ARGB8555_Premultiplied", "value": 12 }, { "name": "Format_RGB888", "value": 13 }, { "name": "Format_RGB444", "value": 14 }, { "name": "Format_ARGB4444_Premultiplied", "value": 15 }, { "name": "Format_RGBX8888", "value": 16 }, { "name": "Format_RGBA8888", "value": 17 }, { "name": "Format_RGBA8888_Premultiplied", "value": 18 }, { "name": "Format_BGR30", "value": 19 }, { "name": "Format_A2BGR30_Premultiplied", "value": 20 }, { "name": "Format_RGB30", "value": 21 }, { "name": "Format_A2RGB30_Premultiplied", "value": 22 }, { "name": "Format_Alpha8", "value": 23 }, { "name": "Format_Grayscale8", "value": 24 }, { "name": "Format_RGBX64", "value": 25 }, { "name": "Format_RGBA64", "value": 26 }, { "name": "Format_RGBA64_Premultiplied", "value": 27 }, { "name": "Format_Grayscale16", "value": 28 }, { "name": "Format_BGR888", "value": 29 }, { "name": "Format_RGBX16FPx4", "value": 30 }, { "name": "Format_RGBA16FPx4", "value": 31 }, { "name": "Format_RGBA16FPx4_Premultiplied", "value": 32 }, { "name": "Format_RGBX32FPx4", "value": 33 }, { "name": "Format_RGBA32FPx4", "value": 34 }, { "name": "Format_RGBA32FPx4_Premultiplied", "value": 35 }, { "name": "Format_CMYK8888", "value": 36 }, { "name": "NImageFormats", "value": 37 }] },
+    { "name": "Error", "qualified": "QImageCapture::Error", "module": "qtmultimedia", "flags": false, "items": [{ "name": "NoError", "value": 0 }, { "name": "NotReadyError", "value": 1 }, { "name": "ResourceError", "value": 2 }, { "name": "OutOfSpaceError", "value": 3 }, { "name": "NotSupportedFeatureError", "value": 4 }, { "name": "FormatError", "value": 5 }] },
+    { "name": "FileFormat", "qualified": "QImageCapture::FileFormat", "module": "qtmultimedia", "flags": false, "items": [{ "name": "UnspecifiedFormat", "value": 0 }, { "name": "JPEG", "value": 1 }, { "name": "PNG", "value": 2 }, { "name": "WebP", "value": 3 }, { "name": "Tiff", "value": 4 }, { "name": "LastFileFormat", "value": 4 }] },
+    { "name": "Quality", "qualified": "QImageCapture::Quality", "module": "qtmultimedia", "flags": false, "items": [{ "name": "VeryLowQuality", "value": 0 }, { "name": "LowQuality", "value": 1 }, { "name": "NormalQuality", "value": 2 }, { "name": "HighQuality", "value": 3 }, { "name": "VeryHighQuality", "value": 4 }] },
+    { "name": "AudioCodec", "qualified": "QMediaFormat::AudioCodec", "module": "qtmultimedia", "flags": false, "items": [{ "name": "Unspecified", "value": -1 }, { "name": "MP3", "value": 0 }, { "name": "AAC", "value": 1 }, { "name": "AC3", "value": 2 }, { "name": "EAC3", "value": 3 }, { "name": "FLAC", "value": 4 }, { "name": "DolbyTrueHD", "value": 5 }, { "name": "Opus", "value": 6 }, { "name": "Vorbis", "value": 7 }, { "name": "Wave", "value": 8 }, { "name": "WMA", "value": 9 }, { "name": "ALAC", "value": 10 }, { "name": "LastAudioCodec", "value": 10 }] },
+    { "name": "ConversionMode", "qualified": "QMediaFormat::ConversionMode", "module": "qtmultimedia", "flags": false, "items": [{ "name": "Encode", "value": 0 }, { "name": "Decode", "value": 1 }] },
+    { "name": "FileFormat", "qualified": "QMediaFormat::FileFormat", "module": "qtmultimedia", "flags": false, "items": [{ "name": "UnspecifiedFormat", "value": -1 }, { "name": "WMV", "value": 0 }, { "name": "AVI", "value": 1 }, { "name": "Matroska", "value": 2 }, { "name": "MPEG4", "value": 3 }, { "name": "Ogg", "value": 4 }, { "name": "QuickTime", "value": 5 }, { "name": "WebM", "value": 6 }, { "name": "Mpeg4Audio", "value": 7 }, { "name": "AAC", "value": 8 }, { "name": "WMA", "value": 9 }, { "name": "MP3", "value": 10 }, { "name": "FLAC", "value": 11 }, { "name": "Wave", "value": 12 }, { "name": "LastFileFormat", "value": 12 }] },
+    { "name": "ResolveFlags", "qualified": "QMediaFormat::ResolveFlags", "module": "qtmultimedia", "flags": false, "items": [{ "name": "NoFlags", "value": 0 }, { "name": "RequiresVideo", "value": 1 }] },
+    { "name": "VideoCodec", "qualified": "QMediaFormat::VideoCodec", "module": "qtmultimedia", "flags": false, "items": [{ "name": "Unspecified", "value": -1 }, { "name": "MPEG1", "value": 0 }, { "name": "MPEG2", "value": 1 }, { "name": "MPEG4", "value": 2 }, { "name": "H264", "value": 3 }, { "name": "H265", "value": 4 }, { "name": "VP8", "value": 5 }, { "name": "VP9", "value": 6 }, { "name": "AV1", "value": 7 }, { "name": "Theora", "value": 8 }, { "name": "WMV", "value": 9 }, { "name": "MotionJPEG", "value": 10 }, { "name": "LastVideoCodec", "value": 10 }] },
+    { "name": "Key", "qualified": "QMediaMetaData::Key", "module": "qtmultimedia", "flags": false, "items": [{ "name": "Title", "value": 0 }, { "name": "Author", "value": 1 }, { "name": "Comment", "value": 2 }, { "name": "Description", "value": 3 }, { "name": "Genre", "value": 4 }, { "name": "Date", "value": 5 }, { "name": "Language", "value": 6 }, { "name": "Publisher", "value": 7 }, { "name": "Copyright", "value": 8 }, { "name": "Url", "value": 9 }, { "name": "Duration", "value": 10 }, { "name": "MediaType", "value": 11 }, { "name": "FileFormat", "value": 12 }, { "name": "AudioBitRate", "value": 13 }, { "name": "AudioCodec", "value": 14 }, { "name": "VideoBitRate", "value": 15 }, { "name": "VideoCodec", "value": 16 }, { "name": "VideoFrameRate", "value": 17 }, { "name": "AlbumTitle", "value": 18 }, { "name": "AlbumArtist", "value": 19 }, { "name": "ContributingArtist", "value": 20 }, { "name": "TrackNumber", "value": 21 }, { "name": "Composer", "value": 22 }, { "name": "LeadPerformer", "value": 23 }, { "name": "ThumbnailImage", "value": 24 }, { "name": "CoverArtImage", "value": 25 }, { "name": "Orientation", "value": 26 }, { "name": "Resolution", "value": 27 }, { "name": "HasHdrContent", "value": 28 }] },
+    { "name": "Error", "qualified": "QMediaPlayer::Error", "module": "qtmultimedia", "flags": false, "items": [{ "name": "NoError", "value": 0 }, { "name": "ResourceError", "value": 1 }, { "name": "FormatError", "value": 2 }, { "name": "NetworkError", "value": 3 }, { "name": "AccessDeniedError", "value": 4 }] },
+    { "name": "Loops", "qualified": "QMediaPlayer::Loops", "module": "qtmultimedia", "flags": false, "items": [{ "name": "Infinite", "value": -1 }, { "name": "Once", "value": 1 }] },
+    { "name": "MediaStatus", "qualified": "QMediaPlayer::MediaStatus", "module": "qtmultimedia", "flags": false, "items": [{ "name": "NoMedia", "value": 0 }, { "name": "LoadingMedia", "value": 1 }, { "name": "LoadedMedia", "value": 2 }, { "name": "StalledMedia", "value": 3 }, { "name": "BufferingMedia", "value": 4 }, { "name": "BufferedMedia", "value": 5 }, { "name": "EndOfMedia", "value": 6 }, { "name": "InvalidMedia", "value": 7 }] },
+    { "name": "PitchCompensationAvailability", "qualified": "QMediaPlayer::PitchCompensationAvailability", "module": "qtmultimedia", "flags": false, "items": [{ "name": "AlwaysOn", "value": 0 }, { "name": "Available", "value": 1 }, { "name": "Unavailable", "value": 2 }] },
+    { "name": "PlaybackState", "qualified": "QMediaPlayer::PlaybackState", "module": "qtmultimedia", "flags": false, "items": [{ "name": "StoppedState", "value": 0 }, { "name": "PlayingState", "value": 1 }, { "name": "PausedState", "value": 2 }] },
+    { "name": "EncodingMode", "qualified": "QMediaRecorder::EncodingMode", "module": "qtmultimedia", "flags": false, "items": [{ "name": "ConstantQualityEncoding", "value": 0 }, { "name": "ConstantBitRateEncoding", "value": 1 }, { "name": "AverageBitRateEncoding", "value": 2 }, { "name": "TwoPassEncoding", "value": 3 }] },
+    { "name": "Error", "qualified": "QMediaRecorder::Error", "module": "qtmultimedia", "flags": false, "items": [{ "name": "NoError", "value": 0 }, { "name": "ResourceError", "value": 1 }, { "name": "FormatError", "value": 2 }, { "name": "OutOfSpaceError", "value": 3 }, { "name": "LocationNotWritable", "value": 4 }] },
+    { "name": "Quality", "qualified": "QMediaRecorder::Quality", "module": "qtmultimedia", "flags": false, "items": [{ "name": "VeryLowQuality", "value": 0 }, { "name": "LowQuality", "value": 1 }, { "name": "NormalQuality", "value": 2 }, { "name": "HighQuality", "value": 3 }, { "name": "VeryHighQuality", "value": 4 }] },
+    { "name": "RecorderState", "qualified": "QMediaRecorder::RecorderState", "module": "qtmultimedia", "flags": false, "items": [{ "name": "StoppedState", "value": 0 }, { "name": "RecordingState", "value": 1 }, { "name": "PausedState", "value": 2 }] },
+    { "name": "PlaybackIntent", "qualified": "QPlaybackOptions::PlaybackIntent", "module": "qtmultimedia", "flags": false, "items": [{ "name": "Playback", "value": 0 }, { "name": "LowLatencyStreaming", "value": 1 }] },
+    { "name": "Error", "qualified": "QScreenCapture::Error", "module": "qtmultimedia", "flags": false, "items": [{ "name": "NoError", "value": 0 }, { "name": "InternalError", "value": 1 }, { "name": "CapturingNotSupported", "value": 2 }, { "name": "CaptureFailed", "value": 4 }, { "name": "NotFound", "value": 5 }] },
+    { "name": "Loop", "qualified": "QSoundEffect::Loop", "module": "qtmultimedia", "flags": false, "items": [{ "name": "Infinite", "value": -2 }] },
+    { "name": "Status", "qualified": "QSoundEffect::Status", "module": "qtmultimedia", "flags": false, "items": [{ "name": "Null", "value": 0 }, { "name": "Loading", "value": 1 }, { "name": "Ready", "value": 2 }, { "name": "Error", "value": 3 }] },
+    { "name": "HandleType", "qualified": "QVideoFrame::HandleType", "module": "qtmultimedia", "flags": false, "items": [{ "name": "NoHandle", "value": 0 }, { "name": "RhiTextureHandle", "value": 1 }] },
+    { "name": "MapMode", "qualified": "QVideoFrame::MapMode", "module": "qtmultimedia", "flags": false, "items": [{ "name": "NotMapped", "value": 0 }, { "name": "ReadOnly", "value": 1 }, { "name": "WriteOnly", "value": 2 }, { "name": "ReadWrite", "value": 3 }] },
+    { "name": "RotationAngle", "qualified": "QVideoFrame::RotationAngle", "module": "qtmultimedia", "flags": false, "items": [{ "name": "Rotation0", "value": 0 }, { "name": "Rotation90", "value": 90 }, { "name": "Rotation180", "value": 180 }, { "name": "Rotation270", "value": 270 }] },
+    { "name": "ColorRange", "qualified": "QVideoFrameFormat::ColorRange", "module": "qtmultimedia", "flags": false, "items": [{ "name": "ColorRange_Unknown", "value": 0 }, { "name": "ColorRange_Video", "value": 1 }, { "name": "ColorRange_Full", "value": 2 }] },
+    { "name": "ColorSpace", "qualified": "QVideoFrameFormat::ColorSpace", "module": "qtmultimedia", "flags": false, "items": [{ "name": "ColorSpace_Undefined", "value": 0 }, { "name": "ColorSpace_BT601", "value": 1 }, { "name": "ColorSpace_BT709", "value": 2 }, { "name": "ColorSpace_AdobeRgb", "value": 5 }, { "name": "ColorSpace_BT2020", "value": 6 }] },
+    { "name": "ColorTransfer", "qualified": "QVideoFrameFormat::ColorTransfer", "module": "qtmultimedia", "flags": false, "items": [{ "name": "ColorTransfer_Unknown", "value": 0 }, { "name": "ColorTransfer_BT709", "value": 1 }, { "name": "ColorTransfer_BT601", "value": 2 }, { "name": "ColorTransfer_Linear", "value": 3 }, { "name": "ColorTransfer_Gamma22", "value": 4 }, { "name": "ColorTransfer_Gamma28", "value": 5 }, { "name": "ColorTransfer_ST2084", "value": 6 }, { "name": "ColorTransfer_STD_B67", "value": 7 }] },
+    { "name": "Direction", "qualified": "QVideoFrameFormat::Direction", "module": "qtmultimedia", "flags": false, "items": [{ "name": "TopToBottom", "value": 0 }, { "name": "BottomToTop", "value": 1 }] },
+    { "name": "PixelFormat", "qualified": "QVideoFrameFormat::PixelFormat", "module": "qtmultimedia", "flags": false, "items": [{ "name": "Format_Invalid", "value": 0 }, { "name": "Format_ARGB8888", "value": 1 }, { "name": "Format_ARGB8888_Premultiplied", "value": 2 }, { "name": "Format_XRGB8888", "value": 3 }, { "name": "Format_BGRA8888", "value": 4 }, { "name": "Format_BGRA8888_Premultiplied", "value": 5 }, { "name": "Format_BGRX8888", "value": 6 }, { "name": "Format_ABGR8888", "value": 7 }, { "name": "Format_XBGR8888", "value": 8 }, { "name": "Format_RGBA8888", "value": 9 }, { "name": "Format_RGBX8888", "value": 10 }, { "name": "Format_AYUV", "value": 11 }, { "name": "Format_AYUV_Premultiplied", "value": 12 }, { "name": "Format_YUV420P", "value": 13 }, { "name": "Format_YUV422P", "value": 14 }, { "name": "Format_YV12", "value": 15 }, { "name": "Format_UYVY", "value": 16 }, { "name": "Format_YUYV", "value": 17 }, { "name": "Format_NV12", "value": 18 }, { "name": "Format_NV21", "value": 19 }, { "name": "Format_IMC1", "value": 20 }, { "name": "Format_IMC2", "value": 21 }, { "name": "Format_IMC3", "value": 22 }, { "name": "Format_IMC4", "value": 23 }, { "name": "Format_Y8", "value": 24 }, { "name": "Format_Y16", "value": 25 }, { "name": "Format_P010", "value": 26 }, { "name": "Format_P016", "value": 27 }, { "name": "Format_SamplerExternalOES", "value": 28 }, { "name": "Format_Jpeg", "value": 29 }, { "name": "Format_SamplerRect", "value": 30 }, { "name": "Format_YUV420P10", "value": 31 }] },
+    { "name": "YCbCrColorSpace", "qualified": "QVideoFrameFormat::YCbCrColorSpace", "module": "qtmultimedia", "flags": false, "items": [{ "name": "YCbCr_Undefined", "value": 0 }, { "name": "YCbCr_BT601", "value": 1 }, { "name": "YCbCr_BT709", "value": 2 }, { "name": "YCbCr_xvYCC601", "value": 3 }, { "name": "YCbCr_xvYCC709", "value": 4 }, { "name": "YCbCr_JPEG", "value": 5 }, { "name": "YCbCr_BT2020", "value": 6 }] },
+    { "name": "Error", "qualified": "QWindowCapture::Error", "module": "qtmultimedia", "flags": false, "items": [{ "name": "NoError", "value": 0 }, { "name": "InternalError", "value": 1 }, { "name": "CapturingNotSupported", "value": 2 }, { "name": "CaptureFailed", "value": 4 }, { "name": "NotFound", "value": 5 }] },
+    { "name": "AspectRatioMode", "qualified": "Qt::AspectRatioMode", "module": "qtcore", "flags": false, "items": [{ "name": "IgnoreAspectRatio", "value": 0 }, { "name": "KeepAspectRatio", "value": 1 }, { "name": "KeepAspectRatioByExpanding", "value": 2 }] },
+    { "name": "ChecksumType", "qualified": "Qt::ChecksumType", "module": "qtcore", "flags": false, "items": [{ "name": "ChecksumIso3309", "value": 0 }, { "name": "ChecksumItuV41", "value": 1 }] },
+    { "name": "ItemDataRole", "qualified": "Qt::ItemDataRole", "module": "qtcore", "flags": false, "items": [{ "name": "DisplayRole", "value": 0 }, { "name": "DecorationRole", "value": 1 }, { "name": "EditRole", "value": 2 }, { "name": "ToolTipRole", "value": 3 }, { "name": "StatusTipRole", "value": 4 }, { "name": "WhatsThisRole", "value": 5 }, { "name": "FontRole", "value": 6 }, { "name": "TextAlignmentRole", "value": 7 }, { "name": "BackgroundRole", "value": 8 }, { "name": "ForegroundRole", "value": 9 }, { "name": "CheckStateRole", "value": 10 }, { "name": "AccessibleTextRole", "value": 11 }, { "name": "AccessibleDescriptionRole", "value": 12 }, { "name": "SizeHintRole", "value": 13 }, { "name": "InitialSortOrderRole", "value": 14 }, { "name": "DisplayPropertyRole", "value": 27 }, { "name": "DecorationPropertyRole", "value": 28 }, { "name": "ToolTipPropertyRole", "value": 29 }, { "name": "StatusTipPropertyRole", "value": 30 }, { "name": "WhatsThisPropertyRole", "value": 31 }, { "name": "RangeModelDataRole", "value": 40 }, { "name": "RangeModelAdapterRole", "value": 41 }, { "name": "UserRole", "value": 256 }, { "name": "StandardItemFlagsRole", "value": 255 }, { "name": "FileInfoRole", "value": 252 }, { "name": "RemoteObjectsCacheRole", "value": 255 }] },
+    { "name": "Key", "qualified": "Qt::Key", "module": "qtcore", "flags": false, "items": [{ "name": "Key_Space", "value": 32 }, { "name": "Key_Any", "value": 32 }, { "name": "Key_Exclam", "value": 33 }, { "name": "Key_QuoteDbl", "value": 34 }, { "name": "Key_NumberSign", "value": 35 }, { "name": "Key_Dollar", "value": 36 }, { "name": "Key_Percent", "value": 37 }, { "name": "Key_Ampersand", "value": 38 }, { "name": "Key_Apostrophe", "value": 39 }, { "name": "Key_ParenLeft", "value": 40 }, { "name": "Key_ParenRight", "value": 41 }, { "name": "Key_Asterisk", "value": 42 }, { "name": "Key_Plus", "value": 43 }, { "name": "Key_Comma", "value": 44 }, { "name": "Key_Minus", "value": 45 }, { "name": "Key_Period", "value": 46 }, { "name": "Key_Slash", "value": 47 }, { "name": "Key_0", "value": 48 }, { "name": "Key_1", "value": 49 }, { "name": "Key_2", "value": 50 }, { "name": "Key_3", "value": 51 }, { "name": "Key_4", "value": 52 }, { "name": "Key_5", "value": 53 }, { "name": "Key_6", "value": 54 }, { "name": "Key_7", "value": 55 }, { "name": "Key_8", "value": 56 }, { "name": "Key_9", "value": 57 }, { "name": "Key_Colon", "value": 58 }, { "name": "Key_Semicolon", "value": 59 }, { "name": "Key_Less", "value": 60 }, { "name": "Key_Equal", "value": 61 }, { "name": "Key_Greater", "value": 62 }, { "name": "Key_Question", "value": 63 }, { "name": "Key_At", "value": 64 }, { "name": "Key_A", "value": 65 }, { "name": "Key_B", "value": 66 }, { "name": "Key_C", "value": 67 }, { "name": "Key_D", "value": 68 }, { "name": "Key_E", "value": 69 }, { "name": "Key_F", "value": 70 }, { "name": "Key_G", "value": 71 }, { "name": "Key_H", "value": 72 }, { "name": "Key_I", "value": 73 }, { "name": "Key_J", "value": 74 }, { "name": "Key_K", "value": 75 }, { "name": "Key_L", "value": 76 }, { "name": "Key_M", "value": 77 }, { "name": "Key_N", "value": 78 }, { "name": "Key_O", "value": 79 }, { "name": "Key_P", "value": 80 }, { "name": "Key_Q", "value": 81 }, { "name": "Key_R", "value": 82 }, { "name": "Key_S", "value": 83 }, { "name": "Key_T", "value": 84 }, { "name": "Key_U", "value": 85 }, { "name": "Key_V", "value": 86 }, { "name": "Key_W", "value": 87 }, { "name": "Key_X", "value": 88 }, { "name": "Key_Y", "value": 89 }, { "name": "Key_Z", "value": 90 }, { "name": "Key_BracketLeft", "value": 91 }, { "name": "Key_Backslash", "value": 92 }, { "name": "Key_BracketRight", "value": 93 }, { "name": "Key_AsciiCircum", "value": 94 }, { "name": "Key_Underscore", "value": 95 }, { "name": "Key_QuoteLeft", "value": 96 }, { "name": "Key_BraceLeft", "value": 123 }, { "name": "Key_Bar", "value": 124 }, { "name": "Key_BraceRight", "value": 125 }, { "name": "Key_AsciiTilde", "value": 126 }, { "name": "Key_nobreakspace", "value": 160 }, { "name": "Key_exclamdown", "value": 161 }, { "name": "Key_cent", "value": 162 }, { "name": "Key_sterling", "value": 163 }, { "name": "Key_currency", "value": 164 }, { "name": "Key_yen", "value": 165 }, { "name": "Key_brokenbar", "value": 166 }, { "name": "Key_section", "value": 167 }, { "name": "Key_diaeresis", "value": 168 }, { "name": "Key_copyright", "value": 169 }, { "name": "Key_ordfeminine", "value": 170 }, { "name": "Key_guillemotleft", "value": 171 }, { "name": "Key_notsign", "value": 172 }, { "name": "Key_hyphen", "value": 173 }, { "name": "Key_registered", "value": 174 }, { "name": "Key_macron", "value": 175 }, { "name": "Key_degree", "value": 176 }, { "name": "Key_plusminus", "value": 177 }, { "name": "Key_twosuperior", "value": 178 }, { "name": "Key_threesuperior", "value": 179 }, { "name": "Key_acute", "value": 180 }, { "name": "Key_micro", "value": 181 }, { "name": "Key_mu", "value": 181 }, { "name": "Key_paragraph", "value": 182 }, { "name": "Key_periodcentered", "value": 183 }, { "name": "Key_cedilla", "value": 184 }, { "name": "Key_onesuperior", "value": 185 }, { "name": "Key_masculine", "value": 186 }, { "name": "Key_guillemotright", "value": 187 }, { "name": "Key_onequarter", "value": 188 }, { "name": "Key_onehalf", "value": 189 }, { "name": "Key_threequarters", "value": 190 }, { "name": "Key_questiondown", "value": 191 }, { "name": "Key_Agrave", "value": 192 }, { "name": "Key_Aacute", "value": 193 }, { "name": "Key_Acircumflex", "value": 194 }, { "name": "Key_Atilde", "value": 195 }, { "name": "Key_Adiaeresis", "value": 196 }, { "name": "Key_Aring", "value": 197 }, { "name": "Key_AE", "value": 198 }, { "name": "Key_Ccedilla", "value": 199 }, { "name": "Key_Egrave", "value": 200 }, { "name": "Key_Eacute", "value": 201 }, { "name": "Key_Ecircumflex", "value": 202 }, { "name": "Key_Ediaeresis", "value": 203 }, { "name": "Key_Igrave", "value": 204 }, { "name": "Key_Iacute", "value": 205 }, { "name": "Key_Icircumflex", "value": 206 }, { "name": "Key_Idiaeresis", "value": 207 }, { "name": "Key_ETH", "value": 208 }, { "name": "Key_Ntilde", "value": 209 }, { "name": "Key_Ograve", "value": 210 }, { "name": "Key_Oacute", "value": 211 }, { "name": "Key_Ocircumflex", "value": 212 }, { "name": "Key_Otilde", "value": 213 }, { "name": "Key_Odiaeresis", "value": 214 }, { "name": "Key_multiply", "value": 215 }, { "name": "Key_Ooblique", "value": 216 }, { "name": "Key_Ugrave", "value": 217 }, { "name": "Key_Uacute", "value": 218 }, { "name": "Key_Ucircumflex", "value": 219 }, { "name": "Key_Udiaeresis", "value": 220 }, { "name": "Key_Yacute", "value": 221 }, { "name": "Key_THORN", "value": 222 }, { "name": "Key_ssharp", "value": 223 }, { "name": "Key_division", "value": 247 }, { "name": "Key_ydiaeresis", "value": 255 }, { "name": "Key_Escape", "value": 16777216 }, { "name": "Key_Tab", "value": 16777217 }, { "name": "Key_Backtab", "value": 16777218 }, { "name": "Key_Backspace", "value": 16777219 }, { "name": "Key_Return", "value": 16777220 }, { "name": "Key_Enter", "value": 16777221 }, { "name": "Key_Insert", "value": 16777222 }, { "name": "Key_Delete", "value": 16777223 }, { "name": "Key_Pause", "value": 16777224 }, { "name": "Key_Print", "value": 16777225 }, { "name": "Key_SysReq", "value": 16777226 }, { "name": "Key_Clear", "value": 16777227 }, { "name": "Key_Home", "value": 16777232 }, { "name": "Key_End", "value": 16777233 }, { "name": "Key_Left", "value": 16777234 }, { "name": "Key_Up", "value": 16777235 }, { "name": "Key_Right", "value": 16777236 }, { "name": "Key_Down", "value": 16777237 }, { "name": "Key_PageUp", "value": 16777238 }, { "name": "Key_PageDown", "value": 16777239 }, { "name": "Key_Shift", "value": 16777248 }, { "name": "Key_Control", "value": 16777249 }, { "name": "Key_Meta", "value": 16777250 }, { "name": "Key_Alt", "value": 16777251 }, { "name": "Key_CapsLock", "value": 16777252 }, { "name": "Key_NumLock", "value": 16777253 }, { "name": "Key_ScrollLock", "value": 16777254 }, { "name": "Key_F1", "value": 16777264 }, { "name": "Key_F2", "value": 16777265 }, { "name": "Key_F3", "value": 16777266 }, { "name": "Key_F4", "value": 16777267 }, { "name": "Key_F5", "value": 16777268 }, { "name": "Key_F6", "value": 16777269 }, { "name": "Key_F7", "value": 16777270 }, { "name": "Key_F8", "value": 16777271 }, { "name": "Key_F9", "value": 16777272 }, { "name": "Key_F10", "value": 16777273 }, { "name": "Key_F11", "value": 16777274 }, { "name": "Key_F12", "value": 16777275 }, { "name": "Key_F13", "value": 16777276 }, { "name": "Key_F14", "value": 16777277 }, { "name": "Key_F15", "value": 16777278 }, { "name": "Key_F16", "value": 16777279 }, { "name": "Key_F17", "value": 16777280 }, { "name": "Key_F18", "value": 16777281 }, { "name": "Key_F19", "value": 16777282 }, { "name": "Key_F20", "value": 16777283 }, { "name": "Key_F21", "value": 16777284 }, { "name": "Key_F22", "value": 16777285 }, { "name": "Key_F23", "value": 16777286 }, { "name": "Key_F24", "value": 16777287 }, { "name": "Key_F25", "value": 16777288 }, { "name": "Key_F26", "value": 16777289 }, { "name": "Key_F27", "value": 16777290 }, { "name": "Key_F28", "value": 16777291 }, { "name": "Key_F29", "value": 16777292 }, { "name": "Key_F30", "value": 16777293 }, { "name": "Key_F31", "value": 16777294 }, { "name": "Key_F32", "value": 16777295 }, { "name": "Key_F33", "value": 16777296 }, { "name": "Key_F34", "value": 16777297 }, { "name": "Key_F35", "value": 16777298 }, { "name": "Key_Super_L", "value": 16777299 }, { "name": "Key_Super_R", "value": 16777300 }, { "name": "Key_Menu", "value": 16777301 }, { "name": "Key_Hyper_L", "value": 16777302 }, { "name": "Key_Hyper_R", "value": 16777303 }, { "name": "Key_Help", "value": 16777304 }, { "name": "Key_Direction_L", "value": 16777305 }, { "name": "Key_Direction_R", "value": 16777312 }, { "name": "Key_AltGr", "value": 16781571 }, { "name": "Key_Multi_key", "value": 16781600 }, { "name": "Key_Codeinput", "value": 16781623 }, { "name": "Key_SingleCandidate", "value": 16781628 }, { "name": "Key_MultipleCandidate", "value": 16781629 }, { "name": "Key_PreviousCandidate", "value": 16781630 }, { "name": "Key_Mode_switch", "value": 16781694 }, { "name": "Key_Kanji", "value": 16781601 }, { "name": "Key_Muhenkan", "value": 16781602 }, { "name": "Key_Henkan", "value": 16781603 }, { "name": "Key_Romaji", "value": 16781604 }, { "name": "Key_Hiragana", "value": 16781605 }, { "name": "Key_Katakana", "value": 16781606 }, { "name": "Key_Hiragana_Katakana", "value": 16781607 }, { "name": "Key_Zenkaku", "value": 16781608 }, { "name": "Key_Hankaku", "value": 16781609 }, { "name": "Key_Zenkaku_Hankaku", "value": 16781610 }, { "name": "Key_Touroku", "value": 16781611 }, { "name": "Key_Massyo", "value": 16781612 }, { "name": "Key_Kana_Lock", "value": 16781613 }, { "name": "Key_Kana_Shift", "value": 16781614 }, { "name": "Key_Eisu_Shift", "value": 16781615 }, { "name": "Key_Eisu_toggle", "value": 16781616 }, { "name": "Key_Hangul", "value": 16781617 }, { "name": "Key_Hangul_Start", "value": 16781618 }, { "name": "Key_Hangul_End", "value": 16781619 }, { "name": "Key_Hangul_Hanja", "value": 16781620 }, { "name": "Key_Hangul_Jamo", "value": 16781621 }, { "name": "Key_Hangul_Romaja", "value": 16781622 }, { "name": "Key_Hangul_Jeonja", "value": 16781624 }, { "name": "Key_Hangul_Banja", "value": 16781625 }, { "name": "Key_Hangul_PreHanja", "value": 16781626 }, { "name": "Key_Hangul_PostHanja", "value": 16781627 }, { "name": "Key_Hangul_Special", "value": 16781631 }, { "name": "Key_Dead_Grave", "value": 16781904 }, { "name": "Key_Dead_Acute", "value": 16781905 }, { "name": "Key_Dead_Circumflex", "value": 16781906 }, { "name": "Key_Dead_Tilde", "value": 16781907 }, { "name": "Key_Dead_Macron", "value": 16781908 }, { "name": "Key_Dead_Breve", "value": 16781909 }, { "name": "Key_Dead_Abovedot", "value": 16781910 }, { "name": "Key_Dead_Diaeresis", "value": 16781911 }, { "name": "Key_Dead_Abovering", "value": 16781912 }, { "name": "Key_Dead_Doubleacute", "value": 16781913 }, { "name": "Key_Dead_Caron", "value": 16781914 }, { "name": "Key_Dead_Cedilla", "value": 16781915 }, { "name": "Key_Dead_Ogonek", "value": 16781916 }, { "name": "Key_Dead_Iota", "value": 16781917 }, { "name": "Key_Dead_Voiced_Sound", "value": 16781918 }, { "name": "Key_Dead_Semivoiced_Sound", "value": 16781919 }, { "name": "Key_Dead_Belowdot", "value": 16781920 }, { "name": "Key_Dead_Hook", "value": 16781921 }, { "name": "Key_Dead_Horn", "value": 16781922 }, { "name": "Key_Dead_Stroke", "value": 16781923 }, { "name": "Key_Dead_Abovecomma", "value": 16781924 }, { "name": "Key_Dead_Abovereversedcomma", "value": 16781925 }, { "name": "Key_Dead_Doublegrave", "value": 16781926 }, { "name": "Key_Dead_Belowring", "value": 16781927 }, { "name": "Key_Dead_Belowmacron", "value": 16781928 }, { "name": "Key_Dead_Belowcircumflex", "value": 16781929 }, { "name": "Key_Dead_Belowtilde", "value": 16781930 }, { "name": "Key_Dead_Belowbreve", "value": 16781931 }, { "name": "Key_Dead_Belowdiaeresis", "value": 16781932 }, { "name": "Key_Dead_Invertedbreve", "value": 16781933 }, { "name": "Key_Dead_Belowcomma", "value": 16781934 }, { "name": "Key_Dead_Currency", "value": 16781935 }, { "name": "Key_Dead_a", "value": 16781952 }, { "name": "Key_Dead_A", "value": 16781953 }, { "name": "Key_Dead_e", "value": 16781954 }, { "name": "Key_Dead_E", "value": 16781955 }, { "name": "Key_Dead_i", "value": 16781956 }, { "name": "Key_Dead_I", "value": 16781957 }, { "name": "Key_Dead_o", "value": 16781958 }, { "name": "Key_Dead_O", "value": 16781959 }, { "name": "Key_Dead_u", "value": 16781960 }, { "name": "Key_Dead_U", "value": 16781961 }, { "name": "Key_Dead_Small_Schwa", "value": 16781962 }, { "name": "Key_Dead_Capital_Schwa", "value": 16781963 }, { "name": "Key_Dead_Greek", "value": 16781964 }, { "name": "Key_Dead_Lowline", "value": 16781968 }, { "name": "Key_Dead_Aboveverticalline", "value": 16781969 }, { "name": "Key_Dead_Belowverticalline", "value": 16781970 }, { "name": "Key_Dead_Longsolidusoverlay", "value": 16781971 }, { "name": "Key_Back", "value": 16777313 }, { "name": "Key_Forward", "value": 16777314 }, { "name": "Key_Stop", "value": 16777315 }, { "name": "Key_Refresh", "value": 16777316 }, { "name": "Key_VolumeDown", "value": 16777328 }, { "name": "Key_VolumeMute", "value": 16777329 }, { "name": "Key_VolumeUp", "value": 16777330 }, { "name": "Key_BassBoost", "value": 16777331 }, { "name": "Key_BassUp", "value": 16777332 }, { "name": "Key_BassDown", "value": 16777333 }, { "name": "Key_TrebleUp", "value": 16777334 }, { "name": "Key_TrebleDown", "value": 16777335 }, { "name": "Key_MediaPlay", "value": 16777344 }, { "name": "Key_MediaStop", "value": 16777345 }, { "name": "Key_MediaPrevious", "value": 16777346 }, { "name": "Key_MediaNext", "value": 16777347 }, { "name": "Key_MediaRecord", "value": 16777348 }, { "name": "Key_MediaPause", "value": 16777349 }, { "name": "Key_MediaTogglePlayPause", "value": 16777350 }, { "name": "Key_HomePage", "value": 16777360 }, { "name": "Key_Favorites", "value": 16777361 }, { "name": "Key_Search", "value": 16777362 }, { "name": "Key_Standby", "value": 16777363 }, { "name": "Key_OpenUrl", "value": 16777364 }, { "name": "Key_LaunchMail", "value": 16777376 }, { "name": "Key_LaunchMedia", "value": 16777377 }, { "name": "Key_Launch0", "value": 16777378 }, { "name": "Key_Launch1", "value": 16777379 }, { "name": "Key_Launch2", "value": 16777380 }, { "name": "Key_Launch3", "value": 16777381 }, { "name": "Key_Launch4", "value": 16777382 }, { "name": "Key_Launch5", "value": 16777383 }, { "name": "Key_Launch6", "value": 16777384 }, { "name": "Key_Launch7", "value": 16777385 }, { "name": "Key_Launch8", "value": 16777386 }, { "name": "Key_Launch9", "value": 16777387 }, { "name": "Key_LaunchA", "value": 16777388 }, { "name": "Key_LaunchB", "value": 16777389 }, { "name": "Key_LaunchC", "value": 16777390 }, { "name": "Key_LaunchD", "value": 16777391 }, { "name": "Key_LaunchE", "value": 16777392 }, { "name": "Key_LaunchF", "value": 16777393 }, { "name": "Key_MonBrightnessUp", "value": 16777394 }, { "name": "Key_MonBrightnessDown", "value": 16777395 }, { "name": "Key_KeyboardLightOnOff", "value": 16777396 }, { "name": "Key_KeyboardBrightnessUp", "value": 16777397 }, { "name": "Key_KeyboardBrightnessDown", "value": 16777398 }, { "name": "Key_PowerOff", "value": 16777399 }, { "name": "Key_WakeUp", "value": 16777400 }, { "name": "Key_Eject", "value": 16777401 }, { "name": "Key_ScreenSaver", "value": 16777402 }, { "name": "Key_WWW", "value": 16777403 }, { "name": "Key_Memo", "value": 16777404 }, { "name": "Key_LightBulb", "value": 16777405 }, { "name": "Key_Shop", "value": 16777406 }, { "name": "Key_History", "value": 16777407 }, { "name": "Key_AddFavorite", "value": 16777408 }, { "name": "Key_HotLinks", "value": 16777409 }, { "name": "Key_BrightnessAdjust", "value": 16777410 }, { "name": "Key_Finance", "value": 16777411 }, { "name": "Key_Community", "value": 16777412 }, { "name": "Key_AudioRewind", "value": 16777413 }, { "name": "Key_BackForward", "value": 16777414 }, { "name": "Key_ApplicationLeft", "value": 16777415 }, { "name": "Key_ApplicationRight", "value": 16777416 }, { "name": "Key_Book", "value": 16777417 }, { "name": "Key_CD", "value": 16777418 }, { "name": "Key_Calculator", "value": 16777419 }, { "name": "Key_ToDoList", "value": 16777420 }, { "name": "Key_ClearGrab", "value": 16777421 }, { "name": "Key_Close", "value": 16777422 }, { "name": "Key_Copy", "value": 16777423 }, { "name": "Key_Cut", "value": 16777424 }, { "name": "Key_Display", "value": 16777425 }, { "name": "Key_DOS", "value": 16777426 }, { "name": "Key_Documents", "value": 16777427 }, { "name": "Key_Excel", "value": 16777428 }, { "name": "Key_Explorer", "value": 16777429 }, { "name": "Key_Game", "value": 16777430 }, { "name": "Key_Go", "value": 16777431 }, { "name": "Key_iTouch", "value": 16777432 }, { "name": "Key_LogOff", "value": 16777433 }, { "name": "Key_Market", "value": 16777434 }, { "name": "Key_Meeting", "value": 16777435 }, { "name": "Key_MenuKB", "value": 16777436 }, { "name": "Key_MenuPB", "value": 16777437 }, { "name": "Key_MySites", "value": 16777438 }, { "name": "Key_News", "value": 16777439 }, { "name": "Key_OfficeHome", "value": 16777440 }, { "name": "Key_Option", "value": 16777441 }, { "name": "Key_Paste", "value": 16777442 }, { "name": "Key_Phone", "value": 16777443 }, { "name": "Key_Calendar", "value": 16777444 }, { "name": "Key_Reply", "value": 16777445 }, { "name": "Key_Reload", "value": 16777446 }, { "name": "Key_RotateWindows", "value": 16777447 }, { "name": "Key_RotationPB", "value": 16777448 }, { "name": "Key_RotationKB", "value": 16777449 }, { "name": "Key_Save", "value": 16777450 }, { "name": "Key_Send", "value": 16777451 }, { "name": "Key_Spell", "value": 16777452 }, { "name": "Key_SplitScreen", "value": 16777453 }, { "name": "Key_Support", "value": 16777454 }, { "name": "Key_TaskPane", "value": 16777455 }, { "name": "Key_Terminal", "value": 16777456 }, { "name": "Key_Tools", "value": 16777457 }, { "name": "Key_Travel", "value": 16777458 }, { "name": "Key_Video", "value": 16777459 }, { "name": "Key_Word", "value": 16777460 }, { "name": "Key_Xfer", "value": 16777461 }, { "name": "Key_ZoomIn", "value": 16777462 }, { "name": "Key_ZoomOut", "value": 16777463 }, { "name": "Key_Away", "value": 16777464 }, { "name": "Key_Messenger", "value": 16777465 }, { "name": "Key_WebCam", "value": 16777466 }, { "name": "Key_MailForward", "value": 16777467 }, { "name": "Key_Pictures", "value": 16777468 }, { "name": "Key_Music", "value": 16777469 }, { "name": "Key_Battery", "value": 16777470 }, { "name": "Key_Bluetooth", "value": 16777471 }, { "name": "Key_WLAN", "value": 16777472 }, { "name": "Key_UWB", "value": 16777473 }, { "name": "Key_AudioForward", "value": 16777474 }, { "name": "Key_AudioRepeat", "value": 16777475 }, { "name": "Key_AudioRandomPlay", "value": 16777476 }, { "name": "Key_Subtitle", "value": 16777477 }, { "name": "Key_AudioCycleTrack", "value": 16777478 }, { "name": "Key_Time", "value": 16777479 }, { "name": "Key_Hibernate", "value": 16777480 }, { "name": "Key_View", "value": 16777481 }, { "name": "Key_TopMenu", "value": 16777482 }, { "name": "Key_PowerDown", "value": 16777483 }, { "name": "Key_Suspend", "value": 16777484 }, { "name": "Key_ContrastAdjust", "value": 16777485 }, { "name": "Key_LaunchG", "value": 16777486 }, { "name": "Key_LaunchH", "value": 16777487 }, { "name": "Key_TouchpadToggle", "value": 16777488 }, { "name": "Key_TouchpadOn", "value": 16777489 }, { "name": "Key_TouchpadOff", "value": 16777490 }, { "name": "Key_MicMute", "value": 16777491 }, { "name": "Key_Red", "value": 16777492 }, { "name": "Key_Green", "value": 16777493 }, { "name": "Key_Yellow", "value": 16777494 }, { "name": "Key_Blue", "value": 16777495 }, { "name": "Key_ChannelUp", "value": 16777496 }, { "name": "Key_ChannelDown", "value": 16777497 }, { "name": "Key_Guide", "value": 16777498 }, { "name": "Key_Info", "value": 16777499 }, { "name": "Key_Settings", "value": 16777500 }, { "name": "Key_MicVolumeUp", "value": 16777501 }, { "name": "Key_MicVolumeDown", "value": 16777502 }, { "name": "Key_Keyboard", "value": 16777503 }, { "name": "Key_New", "value": 16777504 }, { "name": "Key_Open", "value": 16777505 }, { "name": "Key_Find", "value": 16777506 }, { "name": "Key_Undo", "value": 16777507 }, { "name": "Key_Redo", "value": 16777508 }, { "name": "Key_MediaLast", "value": 16842751 }, { "name": "Key_Select", "value": 16842752 }, { "name": "Key_Yes", "value": 16842753 }, { "name": "Key_No", "value": 16842754 }, { "name": "Key_Cancel", "value": 16908289 }, { "name": "Key_Printer", "value": 16908290 }, { "name": "Key_Execute", "value": 16908291 }, { "name": "Key_Sleep", "value": 16908292 }, { "name": "Key_Play", "value": 16908293 }, { "name": "Key_Zoom", "value": 16908294 }, { "name": "Key_Exit", "value": 16908298 }, { "name": "Key_Context1", "value": 17825792 }, { "name": "Key_Context2", "value": 17825793 }, { "name": "Key_Context3", "value": 17825794 }, { "name": "Key_Context4", "value": 17825795 }, { "name": "Key_Call", "value": 17825796 }, { "name": "Key_Hangup", "value": 17825797 }, { "name": "Key_Flip", "value": 17825798 }, { "name": "Key_ToggleCallHangup", "value": 17825799 }, { "name": "Key_VoiceDial", "value": 17825800 }, { "name": "Key_LastNumberRedial", "value": 17825801 }, { "name": "Key_Camera", "value": 17825824 }, { "name": "Key_CameraFocus", "value": 17825825 }, { "name": "Key_unknown", "value": 33554431 }] },
+    { "name": "KeyboardModifier", "qualified": "Qt::KeyboardModifier", "module": "qtcore", "flags": false, "items": [{ "name": "NoModifier", "value": 0 }, { "name": "ShiftModifier", "value": 33554432 }, { "name": "ControlModifier", "value": 67108864 }, { "name": "AltModifier", "value": 134217728 }, { "name": "MetaModifier", "value": 268435456 }, { "name": "KeypadModifier", "value": 536870912 }, { "name": "GroupSwitchModifier", "value": 1073741824 }, { "name": "KeyboardModifierMask", "value": -33554432 }] },
+    { "name": "Rotation", "qualified": "Rotation", "module": "qtmultimedia", "cppQualified": "QtVideo::Rotation", "flags": false, "items": [{ "name": "None", "value": 0 }, { "name": "Clockwise90", "value": 90 }, { "name": "Clockwise180", "value": 180 }, { "name": "Clockwise270", "value": 270 }] },
+    { "name": "State", "qualified": "State", "module": "qtmultimedia", "cppQualified": "QAudio::State", "flags": false, "items": [{ "name": "ActiveState", "value": 0 }, { "name": "SuspendedState", "value": 1 }, { "name": "StoppedState", "value": 2 }, { "name": "IdleState", "value": 3 }] },
+    { "name": "VolumeScale", "qualified": "VolumeScale", "module": "qtmultimedia", "cppQualified": "QAudio::VolumeScale", "flags": false, "items": [{ "name": "LinearVolumeScale", "value": 0 }, { "name": "CubicVolumeScale", "value": 1 }, { "name": "LogarithmicVolumeScale", "value": 2 }, { "name": "DecibelVolumeScale", "value": 3 }] }
+  ],
+  "functions": [
+  ],
+  "classes": [
+    {
+      "name": "QAudioBuffer",
+      "header": "QtMultimedia/qaudiobuffer.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] },
+        { "parameters": [{ "name": "data", "type": "QByteArray" }, { "name": "format", "type": "QAudioFormat" }, { "name": "startTime", "type": "long long", "optional": true, "default": "-1" }] },
+        { "parameters": [{ "name": "numFrames", "type": "int" }, { "name": "format", "type": "QAudioFormat" }, { "name": "startTime", "type": "long long", "optional": true, "default": "-1" }] }
+      ],
+      "methods": [
+        { "name": "byteCount", "returnType": "long long", "parameters": [] },
+        { "name": "detach", "returnType": "void", "parameters": [] },
+        { "name": "duration", "returnType": "long long", "parameters": [] },
+        { "name": "format", "returnType": "QAudioFormat", "parameters": [] },
+        { "name": "frameCount", "returnType": "long long", "parameters": [] },
+        { "name": "isValid", "returnType": "bool", "parameters": [] },
+        { "name": "sampleCount", "returnType": "long long", "parameters": [] },
+        { "name": "startTime", "returnType": "long long", "parameters": [] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QAudioBuffer" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QAudioDecoder",
+      "header": "QtMultimedia/qaudiodecoder.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "audioFormat", "returnType": "QAudioFormat", "parameters": [] },
+        { "name": "bufferAvailable", "returnType": "bool", "parameters": [] },
+        { "name": "duration", "returnType": "long long", "parameters": [] },
+        { "name": "errorString", "returnType": "QString", "parameters": [] },
+        { "name": "isDecoding", "returnType": "bool", "parameters": [] },
+        { "name": "isSupported", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "position", "returnType": "long long", "parameters": [] },
+        { "name": "read", "returnType": "QAudioBuffer", "parameters": [] },
+        { "name": "setAudioFormat", "returnType": "void", "parameters": [{ "name": "format", "type": "QAudioFormat" }] },
+        { "name": "setSource", "returnType": "void", "parameters": [{ "name": "fileName", "type": "QUrl" }] },
+        { "name": "setSourceDevice", "returnType": "void", "parameters": [{ "name": "device", "type": "QIODevice*" }] },
+        { "name": "source", "returnType": "QUrl", "parameters": [] },
+        { "name": "sourceDevice", "returnType": "QIODevice*", "parameters": [] },
+        { "name": "start", "returnType": "void", "parameters": [] },
+        { "name": "stop", "returnType": "void", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "bufferAvailable", "type": "bool", "getter": "bufferAvailable" },
+        { "name": "error", "type": "QString", "getter": "errorString" },
+        { "name": "isDecoding", "type": "bool", "getter": "isDecoding" },
+        { "name": "source", "type": "QUrl", "getter": "source", "setter": "setSource" }
+      ],
+      "signals": [
+        { "name": "bufferAvailableChanged", "parameters": [{ "name": "arg0", "type": "bool" }] },
+        { "name": "bufferReady", "parameters": [] },
+        { "name": "durationChanged", "parameters": [{ "name": "duration", "type": "long long" }] },
+        { "name": "error", "parameters": [{ "name": "error", "type": "QAudioDecoder::Error" }] },
+        { "name": "finished", "parameters": [] },
+        { "name": "formatChanged", "parameters": [{ "name": "format", "type": "QAudioFormat" }] },
+        { "name": "isDecodingChanged", "parameters": [{ "name": "arg0", "type": "bool" }] },
+        { "name": "positionChanged", "parameters": [{ "name": "position", "type": "long long" }] },
+        { "name": "sourceChanged", "parameters": [] }
+      ]
+    }
+,
+    {
+      "name": "QAudioDevice",
+      "header": "QtMultimedia/qaudiodevice.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] }
+      ],
+      "methods": [
+        { "name": "channelConfiguration", "returnType": "QAudioFormat::ChannelConfig", "parameters": [] },
+        { "name": "description", "returnType": "QString", "parameters": [] },
+        { "name": "id", "returnType": "QByteArray", "parameters": [] },
+        { "name": "isDefault", "returnType": "bool", "parameters": [] },
+        { "name": "isFormatSupported", "returnType": "bool", "parameters": [{ "name": "format", "type": "QAudioFormat" }] },
+        { "name": "isNull", "returnType": "bool", "parameters": [] },
+        { "name": "maximumChannelCount", "returnType": "int", "parameters": [] },
+        { "name": "maximumSampleRate", "returnType": "int", "parameters": [] },
+        { "name": "minimumChannelCount", "returnType": "int", "parameters": [] },
+        { "name": "minimumSampleRate", "returnType": "int", "parameters": [] },
+        { "name": "mode", "returnType": "QAudioDevice::Mode", "parameters": [] },
+        { "name": "preferredFormat", "returnType": "QAudioFormat", "parameters": [] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QAudioDevice" }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "description", "type": "QString", "getter": "description" },
+        { "name": "id", "type": "QByteArray", "getter": "id" },
+        { "name": "isDefault", "type": "bool", "getter": "isDefault" },
+        { "name": "mode", "type": "QAudioDevice::Mode", "getter": "mode" }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QAudioFormat",
+      "header": "QtMultimedia/qaudioformat.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "bytesForDuration", "returnType": "int", "parameters": [{ "name": "microseconds", "type": "long long" }] },
+        { "name": "bytesForFrames", "returnType": "int", "parameters": [{ "name": "frameCount", "type": "int" }] },
+        { "name": "bytesPerFrame", "returnType": "int", "parameters": [] },
+        { "name": "bytesPerSample", "returnType": "int", "parameters": [] },
+        { "name": "channelConfig", "returnType": "QAudioFormat::ChannelConfig", "parameters": [] },
+        { "name": "channelCount", "returnType": "int", "parameters": [] },
+        { "name": "channelOffset", "returnType": "int", "parameters": [{ "name": "channel", "type": "QAudioFormat::AudioChannelPosition" }] },
+        { "name": "defaultChannelConfigForChannelCount", "static": true, "returnType": "QAudioFormat::ChannelConfig", "parameters": [{ "name": "channelCount", "type": "int" }] },
+        { "name": "durationForBytes", "returnType": "long long", "parameters": [{ "name": "byteCount", "type": "int" }] },
+        { "name": "durationForFrames", "returnType": "long long", "parameters": [{ "name": "frameCount", "type": "int" }] },
+        { "name": "framesForBytes", "returnType": "int", "parameters": [{ "name": "byteCount", "type": "int" }] },
+        { "name": "framesForDuration", "returnType": "int", "parameters": [{ "name": "microseconds", "type": "long long" }] },
+        { "name": "isValid", "returnType": "bool", "parameters": [] },
+        { "name": "normalizedSampleValue", "returnType": "float", "parameters": [{ "name": "sample", "type": "void*" }] },
+        { "name": "sampleFormat", "returnType": "QAudioFormat::SampleFormat", "parameters": [] },
+        { "name": "sampleRate", "returnType": "int", "parameters": [] },
+        { "name": "setChannelConfig", "returnType": "void", "parameters": [{ "name": "config", "type": "QAudioFormat::ChannelConfig" }] },
+        { "name": "setChannelCount", "returnType": "void", "parameters": [{ "name": "channelCount", "type": "int" }] },
+        { "name": "setSampleFormat", "returnType": "void", "parameters": [{ "name": "f", "type": "QAudioFormat::SampleFormat" }] },
+        { "name": "setSampleRate", "returnType": "void", "parameters": [{ "name": "sampleRate", "type": "int" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QAudioInput",
+      "header": "QtMultimedia/qaudioinput.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "deviceInfo", "type": "QAudioDevice" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "device", "returnType": "QAudioDevice", "parameters": [] },
+        { "name": "isMuted", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setDevice", "returnType": "void", "parameters": [{ "name": "device", "type": "QAudioDevice" }] },
+        { "name": "setMuted", "returnType": "void", "parameters": [{ "name": "muted", "type": "bool" }] },
+        { "name": "setVolume", "returnType": "void", "parameters": [{ "name": "volume", "type": "float" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "volume", "returnType": "float", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "device", "type": "QAudioDevice", "getter": "device", "setter": "setDevice" },
+        { "name": "muted", "type": "bool", "getter": "isMuted", "setter": "setMuted" },
+        { "name": "volume", "type": "float", "getter": "volume", "setter": "setVolume" }
+      ],
+      "signals": [
+        { "name": "deviceChanged", "parameters": [] },
+        { "name": "mutedChanged", "parameters": [{ "name": "muted", "type": "bool" }] },
+        { "name": "volumeChanged", "parameters": [{ "name": "volume", "type": "float" }] }
+      ]
+    }
+,
+    {
+      "name": "QAudioOutput",
+      "header": "QtMultimedia/qaudiooutput.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "device", "type": "QAudioDevice" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "device", "returnType": "QAudioDevice", "parameters": [] },
+        { "name": "isMuted", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setDevice", "returnType": "void", "parameters": [{ "name": "device", "type": "QAudioDevice" }] },
+        { "name": "setMuted", "returnType": "void", "parameters": [{ "name": "muted", "type": "bool" }] },
+        { "name": "setVolume", "returnType": "void", "parameters": [{ "name": "volume", "type": "float" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "volume", "returnType": "float", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "device", "type": "QAudioDevice", "getter": "device", "setter": "setDevice" },
+        { "name": "muted", "type": "bool", "getter": "isMuted", "setter": "setMuted" },
+        { "name": "volume", "type": "float", "getter": "volume", "setter": "setVolume" }
+      ],
+      "signals": [
+        { "name": "deviceChanged", "parameters": [] },
+        { "name": "mutedChanged", "parameters": [{ "name": "muted", "type": "bool" }] },
+        { "name": "volumeChanged", "parameters": [{ "name": "volume", "type": "float" }] }
+      ]
+    }
+,
+    {
+      "name": "QAudioSink",
+      "header": "QtMultimedia/qaudiosink.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "format", "type": "QAudioFormat", "optional": true, "defaultCpp": "QAudioFormat()" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "audioDeviceInfo", "type": "QAudioDevice" }, { "name": "format", "type": "QAudioFormat", "optional": true, "defaultCpp": "QAudioFormat()" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "bufferFrameCount", "returnType": "long long", "parameters": [] },
+        { "name": "bufferSize", "returnType": "long long", "parameters": [] },
+        { "name": "bytesFree", "returnType": "long long", "parameters": [] },
+        { "name": "elapsedUSecs", "returnType": "long long", "parameters": [] },
+        { "name": "error", "returnType": "Error", "parameters": [] },
+        { "name": "format", "returnType": "QAudioFormat", "parameters": [] },
+        { "name": "framesFree", "returnType": "long long", "parameters": [] },
+        { "name": "isNull", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "nativePeriodFrameCount", "returnType": "long long", "parameters": [] },
+        { "name": "processedUSecs", "returnType": "long long", "parameters": [] },
+        { "name": "reset", "returnType": "void", "parameters": [] },
+        { "name": "resume", "returnType": "void", "parameters": [] },
+        { "name": "setBufferFrameCount", "returnType": "void", "parameters": [{ "name": "framesCount", "type": "long long" }] },
+        { "name": "setBufferSize", "returnType": "void", "parameters": [{ "name": "bytes", "type": "long long" }] },
+        { "name": "setNativePeriodFrameCount", "returnType": "void", "parameters": [{ "name": "frameCount", "type": "long long" }] },
+        { "name": "setVolume", "returnType": "void", "parameters": [{ "name": "arg0", "type": "double" }] },
+        { "name": "start", "returnType": "QIODevice*", "parameters": [] },
+        { "name": "start", "returnType": "void", "parameters": [{ "name": "device", "type": "QIODevice*" }] },
+        { "name": "state", "returnType": "State", "parameters": [] },
+        { "name": "stop", "returnType": "void", "parameters": [] },
+        { "name": "suspend", "returnType": "void", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "volume", "returnType": "double", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+        { "name": "stateChanged", "parameters": [{ "name": "state", "type": "State" }] }
+      ]
+    }
+,
+    {
+      "name": "QAudioSource",
+      "header": "QtMultimedia/qaudiosource.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "format", "type": "QAudioFormat", "optional": true, "defaultCpp": "QAudioFormat()" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "audioDeviceInfo", "type": "QAudioDevice" }, { "name": "format", "type": "QAudioFormat", "optional": true, "defaultCpp": "QAudioFormat()" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "bufferFrameCount", "returnType": "long long", "parameters": [] },
+        { "name": "bufferSize", "returnType": "long long", "parameters": [] },
+        { "name": "bytesAvailable", "returnType": "long long", "parameters": [] },
+        { "name": "elapsedUSecs", "returnType": "long long", "parameters": [] },
+        { "name": "error", "returnType": "Error", "parameters": [] },
+        { "name": "format", "returnType": "QAudioFormat", "parameters": [] },
+        { "name": "framesAvailable", "returnType": "long long", "parameters": [] },
+        { "name": "isNull", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "nativePeriodFrameCount", "returnType": "long long", "parameters": [] },
+        { "name": "processedUSecs", "returnType": "long long", "parameters": [] },
+        { "name": "reset", "returnType": "void", "parameters": [] },
+        { "name": "resume", "returnType": "void", "parameters": [] },
+        { "name": "setBufferFrameCount", "returnType": "void", "parameters": [{ "name": "frames", "type": "long long" }] },
+        { "name": "setBufferSize", "returnType": "void", "parameters": [{ "name": "bytes", "type": "long long" }] },
+        { "name": "setNativePeriodFrameCount", "returnType": "void", "parameters": [{ "name": "frameCount", "type": "long long" }] },
+        { "name": "setVolume", "returnType": "void", "parameters": [{ "name": "volume", "type": "double" }] },
+        { "name": "start", "returnType": "QIODevice*", "parameters": [] },
+        { "name": "start", "returnType": "void", "parameters": [{ "name": "device", "type": "QIODevice*" }] },
+        { "name": "state", "returnType": "State", "parameters": [] },
+        { "name": "stop", "returnType": "void", "parameters": [] },
+        { "name": "suspend", "returnType": "void", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "volume", "returnType": "double", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+        { "name": "stateChanged", "parameters": [{ "name": "state", "type": "State" }] }
+      ]
+    }
+,
+    {
+      "name": "QCamera",
+      "header": "QtMultimedia/qcamera.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "cameraDevice", "type": "QCameraDevice" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "position", "type": "QCameraDevice::Position" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "cameraDevice", "returnType": "QCameraDevice", "parameters": [] },
+        { "name": "cameraFormat", "returnType": "QCameraFormat", "parameters": [] },
+        { "name": "captureSession", "returnType": "QMediaCaptureSession*", "parameters": [] },
+        { "name": "colorTemperature", "returnType": "int", "parameters": [] },
+        { "name": "customFocusPoint", "returnType": "QPointF", "parameters": [] },
+        { "name": "error", "returnType": "QCamera::Error", "parameters": [] },
+        { "name": "errorString", "returnType": "QString", "parameters": [] },
+        { "name": "exposureCompensation", "returnType": "float", "parameters": [] },
+        { "name": "exposureMode", "returnType": "QCamera::ExposureMode", "parameters": [] },
+        { "name": "exposureTime", "returnType": "float", "parameters": [] },
+        { "name": "flashMode", "returnType": "QCamera::FlashMode", "parameters": [] },
+        { "name": "focusDistance", "returnType": "float", "parameters": [] },
+        { "name": "focusMode", "returnType": "QCamera::FocusMode", "parameters": [] },
+        { "name": "focusPoint", "returnType": "QPointF", "parameters": [] },
+        { "name": "isActive", "returnType": "bool", "parameters": [] },
+        { "name": "isAvailable", "returnType": "bool", "parameters": [] },
+        { "name": "isExposureModeSupported", "returnType": "bool", "parameters": [{ "name": "mode", "type": "QCamera::ExposureMode" }] },
+        { "name": "isFlashModeSupported", "returnType": "bool", "parameters": [{ "name": "mode", "type": "QCamera::FlashMode" }] },
+        { "name": "isFlashReady", "returnType": "bool", "parameters": [] },
+        { "name": "isFocusModeSupported", "returnType": "bool", "parameters": [{ "name": "mode", "type": "QCamera::FocusMode" }] },
+        { "name": "isTorchModeSupported", "returnType": "bool", "parameters": [{ "name": "mode", "type": "QCamera::TorchMode" }] },
+        { "name": "isWhiteBalanceModeSupported", "returnType": "bool", "parameters": [{ "name": "mode", "type": "QCamera::WhiteBalanceMode" }] },
+        { "name": "isoSensitivity", "returnType": "int", "parameters": [] },
+        { "name": "manualExposureTime", "returnType": "float", "parameters": [] },
+        { "name": "manualIsoSensitivity", "returnType": "int", "parameters": [] },
+        { "name": "maximumExposureTime", "returnType": "float", "parameters": [] },
+        { "name": "maximumIsoSensitivity", "returnType": "int", "parameters": [] },
+        { "name": "maximumZoomFactor", "returnType": "float", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "minimumExposureTime", "returnType": "float", "parameters": [] },
+        { "name": "minimumIsoSensitivity", "returnType": "int", "parameters": [] },
+        { "name": "minimumZoomFactor", "returnType": "float", "parameters": [] },
+        { "name": "setActive", "returnType": "void", "parameters": [{ "name": "active", "type": "bool" }] },
+        { "name": "setAutoExposureTime", "returnType": "void", "parameters": [] },
+        { "name": "setAutoIsoSensitivity", "returnType": "void", "parameters": [] },
+        { "name": "setCameraDevice", "returnType": "void", "parameters": [{ "name": "cameraDevice", "type": "QCameraDevice" }] },
+        { "name": "setCameraFormat", "returnType": "void", "parameters": [{ "name": "format", "type": "QCameraFormat" }] },
+        { "name": "setColorTemperature", "returnType": "void", "parameters": [{ "name": "colorTemperature", "type": "int" }] },
+        { "name": "setCustomFocusPoint", "returnType": "void", "parameters": [{ "name": "point", "type": "QPointF" }] },
+        { "name": "setExposureCompensation", "returnType": "void", "parameters": [{ "name": "ev", "type": "float" }] },
+        { "name": "setExposureMode", "returnType": "void", "parameters": [{ "name": "mode", "type": "QCamera::ExposureMode" }] },
+        { "name": "setFlashMode", "returnType": "void", "parameters": [{ "name": "mode", "type": "QCamera::FlashMode" }] },
+        { "name": "setFocusDistance", "returnType": "void", "parameters": [{ "name": "d", "type": "float" }] },
+        { "name": "setFocusMode", "returnType": "void", "parameters": [{ "name": "mode", "type": "QCamera::FocusMode" }] },
+        { "name": "setManualExposureTime", "returnType": "void", "parameters": [{ "name": "seconds", "type": "float" }] },
+        { "name": "setManualIsoSensitivity", "returnType": "void", "parameters": [{ "name": "iso", "type": "int" }] },
+        { "name": "setTorchMode", "returnType": "void", "parameters": [{ "name": "mode", "type": "QCamera::TorchMode" }] },
+        { "name": "setWhiteBalanceMode", "returnType": "void", "parameters": [{ "name": "mode", "type": "QCamera::WhiteBalanceMode" }] },
+        { "name": "setZoomFactor", "returnType": "void", "parameters": [{ "name": "factor", "type": "float" }] },
+        { "name": "start", "returnType": "void", "parameters": [] },
+        { "name": "stop", "returnType": "void", "parameters": [] },
+        { "name": "supportedFeatures", "returnType": "QCamera::Features", "parameters": [] },
+        { "name": "torchMode", "returnType": "QCamera::TorchMode", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "whiteBalanceMode", "returnType": "QCamera::WhiteBalanceMode", "parameters": [] },
+        { "name": "zoomFactor", "returnType": "float", "parameters": [] },
+        { "name": "zoomTo", "returnType": "void", "parameters": [{ "name": "zoom", "type": "float" }, { "name": "rate", "type": "float" }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "active", "type": "bool", "getter": "isActive", "setter": "setActive" },
+        { "name": "cameraDevice", "type": "QCameraDevice", "getter": "cameraDevice", "setter": "setCameraDevice" },
+        { "name": "cameraFormat", "type": "QCameraFormat", "getter": "cameraFormat", "setter": "setCameraFormat" },
+        { "name": "colorTemperature", "type": "int", "getter": "colorTemperature", "setter": "setColorTemperature" },
+        { "name": "customFocusPoint", "type": "QPointF", "getter": "customFocusPoint", "setter": "setCustomFocusPoint" },
+        { "name": "error", "type": "QCamera::Error", "getter": "error" },
+        { "name": "errorString", "type": "QString", "getter": "errorString" },
+        { "name": "exposureCompensation", "type": "float", "getter": "exposureCompensation", "setter": "setExposureCompensation" },
+        { "name": "exposureMode", "type": "QCamera::ExposureMode", "getter": "exposureMode", "setter": "setExposureMode" },
+        { "name": "exposureTime", "type": "float", "getter": "exposureTime" },
+        { "name": "flashMode", "type": "QCamera::FlashMode", "getter": "flashMode", "setter": "setFlashMode" },
+        { "name": "flashReady", "type": "bool", "getter": "isFlashReady" },
+        { "name": "focusDistance", "type": "float", "getter": "focusDistance", "setter": "setFocusDistance" },
+        { "name": "focusMode", "type": "QCamera::FocusMode", "getter": "focusMode", "setter": "setFocusMode" },
+        { "name": "focusPoint", "type": "QPointF", "getter": "focusPoint" },
+        { "name": "isoSensitivity", "type": "int", "getter": "isoSensitivity" },
+        { "name": "manualExposureTime", "type": "float", "getter": "manualExposureTime", "setter": "setManualExposureTime" },
+        { "name": "manualIsoSensitivity", "type": "int", "getter": "manualIsoSensitivity", "setter": "setManualIsoSensitivity" },
+        { "name": "maximumZoomFactor", "type": "float", "getter": "maximumZoomFactor" },
+        { "name": "minimumZoomFactor", "type": "float", "getter": "minimumZoomFactor" },
+        { "name": "supportedFeatures", "type": "QCamera::Features", "getter": "supportedFeatures" },
+        { "name": "torchMode", "type": "QCamera::TorchMode", "getter": "torchMode", "setter": "setTorchMode" },
+        { "name": "whiteBalanceMode", "type": "QCamera::WhiteBalanceMode", "getter": "whiteBalanceMode", "setter": "setWhiteBalanceMode" },
+        { "name": "zoomFactor", "type": "float", "getter": "zoomFactor", "setter": "setZoomFactor" }
+      ],
+      "signals": [
+        { "name": "activeChanged", "parameters": [{ "name": "arg0", "type": "bool" }] },
+        { "name": "brightnessChanged", "parameters": [] },
+        { "name": "cameraDeviceChanged", "parameters": [] },
+        { "name": "cameraFormatChanged", "parameters": [] },
+        { "name": "colorTemperatureChanged", "parameters": [] },
+        { "name": "contrastChanged", "parameters": [] },
+        { "name": "customFocusPointChanged", "parameters": [] },
+        { "name": "errorChanged", "parameters": [] },
+        { "name": "errorOccurred", "parameters": [{ "name": "error", "type": "QCamera::Error" }, { "name": "errorString", "type": "QString" }] },
+        { "name": "exposureCompensationChanged", "parameters": [{ "name": "arg0", "type": "float" }] },
+        { "name": "exposureModeChanged", "parameters": [] },
+        { "name": "exposureTimeChanged", "parameters": [{ "name": "speed", "type": "float" }] },
+        { "name": "flashModeChanged", "parameters": [] },
+        { "name": "flashReady", "parameters": [{ "name": "arg0", "type": "bool" }] },
+        { "name": "focusDistanceChanged", "parameters": [{ "name": "arg0", "type": "float" }] },
+        { "name": "focusModeChanged", "parameters": [] },
+        { "name": "focusPointChanged", "parameters": [] },
+        { "name": "hueChanged", "parameters": [] },
+        { "name": "isoSensitivityChanged", "parameters": [{ "name": "arg0", "type": "int" }] },
+        { "name": "manualExposureTimeChanged", "parameters": [{ "name": "speed", "type": "float" }] },
+        { "name": "manualIsoSensitivityChanged", "parameters": [{ "name": "arg0", "type": "int" }] },
+        { "name": "maximumZoomFactorChanged", "parameters": [{ "name": "arg0", "type": "float" }] },
+        { "name": "minimumZoomFactorChanged", "parameters": [{ "name": "arg0", "type": "float" }] },
+        { "name": "saturationChanged", "parameters": [] },
+        { "name": "supportedFeaturesChanged", "parameters": [] },
+        { "name": "torchModeChanged", "parameters": [] },
+        { "name": "whiteBalanceModeChanged", "parameters": [] },
+        { "name": "zoomFactorChanged", "parameters": [{ "name": "arg0", "type": "float" }] }
+      ]
+    }
+,
+    {
+      "name": "QCameraDevice",
+      "header": "QtMultimedia/qcameradevice.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] }
+      ],
+      "methods": [
+        { "name": "correctionAngle", "returnType": "Rotation", "parameters": [] },
+        { "name": "description", "returnType": "QString", "parameters": [] },
+        { "name": "id", "returnType": "QByteArray", "parameters": [] },
+        { "name": "isDefault", "returnType": "bool", "parameters": [] },
+        { "name": "isNull", "returnType": "bool", "parameters": [] },
+        { "name": "photoResolutions", "returnType": "QList<QSize>", "parameters": [] },
+        { "name": "position", "returnType": "QCameraDevice::Position", "parameters": [] },
+        { "name": "videoFormats", "returnType": "QList<QCameraFormat>", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "correctionAngle", "type": "Rotation", "getter": "correctionAngle" },
+        { "name": "description", "type": "QString", "getter": "description" },
+        { "name": "id", "type": "QByteArray", "getter": "id" },
+        { "name": "isDefault", "type": "bool", "getter": "isDefault" },
+        { "name": "position", "type": "QCameraDevice::Position", "getter": "position" },
+        { "name": "videoFormats", "type": "QList<QCameraFormat>", "getter": "videoFormats" }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QCameraFormat",
+      "header": "QtMultimedia/qcameradevice.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] }
+      ],
+      "methods": [
+        { "name": "isNull", "returnType": "bool", "parameters": [] },
+        { "name": "maxFrameRate", "returnType": "float", "parameters": [] },
+        { "name": "minFrameRate", "returnType": "float", "parameters": [] },
+        { "name": "pixelFormat", "returnType": "QVideoFrameFormat::PixelFormat", "parameters": [] },
+        { "name": "resolution", "returnType": "QSize", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "maxFrameRate", "type": "float", "getter": "maxFrameRate" },
+        { "name": "minFrameRate", "type": "float", "getter": "minFrameRate" },
+        { "name": "pixelFormat", "type": "QVideoFrameFormat::PixelFormat", "getter": "pixelFormat" },
+        { "name": "resolution", "type": "QSize", "getter": "resolution" }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QCapturableWindow",
+      "header": "QtMultimedia/qcapturablewindow.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] },
+        { "parameters": [{ "name": "window", "type": "QWindow*" }] }
+      ],
+      "methods": [
+        { "name": "description", "returnType": "QString", "parameters": [] },
+        { "name": "isValid", "returnType": "bool", "parameters": [] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QCapturableWindow" }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "description", "type": "QString", "getter": "description" },
+        { "name": "isValid", "type": "bool", "getter": "isValid" }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QGraphicsVideoItem",
+      "header": "QtMultimediaWidgets/qgraphicsvideoitem.h",
+      "bases": ["QGraphicsObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QGraphicsItem*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "aspectRatioMode", "returnType": "Qt::AspectRatioMode", "parameters": [] },
+        { "name": "boundingRect", "returnType": "QRectF", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "nativeSize", "returnType": "QSizeF", "parameters": [] },
+        { "name": "offset", "returnType": "QPointF", "parameters": [] },
+        { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*" }, { "name": "option", "type": "QStyleOptionGraphicsItem*" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
+        { "name": "setAspectRatioMode", "returnType": "void", "parameters": [{ "name": "mode", "type": "Qt::AspectRatioMode" }] },
+        { "name": "setOffset", "returnType": "void", "parameters": [{ "name": "offset", "type": "QPointF" }] },
+        { "name": "setSize", "returnType": "void", "parameters": [{ "name": "size", "type": "QSizeF" }] },
+        { "name": "size", "returnType": "QSizeF", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "type", "returnType": "int", "parameters": [] },
+        { "name": "videoSink", "returnType": "QVideoSink*", "parameters": [] }
+      ],
+      "virtuals": [
+        { "name": "timerEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QTimerEvent*", "cpp": "QTimerEvent *" }] }
+      ],
+      "properties": [
+        { "name": "aspectRatioMode", "type": "Qt::AspectRatioMode", "getter": "aspectRatioMode", "setter": "setAspectRatioMode" },
+        { "name": "nativeSize", "type": "QSizeF", "getter": "nativeSize" },
+        { "name": "offset", "type": "QPointF", "getter": "offset", "setter": "setOffset" },
+        { "name": "size", "type": "QSizeF", "getter": "size", "setter": "setSize" },
+        { "name": "videoSink", "type": "QVideoSink*", "getter": "videoSink" }
+      ],
+      "signals": [
+        { "name": "nativeSizeChanged", "parameters": [{ "name": "size", "type": "QSizeF" }] }
+      ]
+    }
+,
+    {
+      "name": "QImageCapture",
+      "header": "QtMultimedia/qimagecapture.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "addMetaData", "returnType": "void", "parameters": [{ "name": "metaData", "type": "QMediaMetaData" }] },
+        { "name": "capture", "returnType": "int", "parameters": [] },
+        { "name": "captureSession", "returnType": "QMediaCaptureSession*", "parameters": [] },
+        { "name": "captureToFile", "returnType": "int", "parameters": [{ "name": "location", "type": "QString", "optional": true, "defaultCpp": "QString()" }] },
+        { "name": "error", "returnType": "QImageCapture::Error", "parameters": [] },
+        { "name": "errorString", "returnType": "QString", "parameters": [] },
+        { "name": "fileFormat", "returnType": "QImageCapture::FileFormat", "parameters": [] },
+        { "name": "fileFormatDescription", "static": true, "returnType": "QString", "parameters": [{ "name": "c", "type": "QImageCapture::FileFormat" }] },
+        { "name": "fileFormatName", "static": true, "returnType": "QString", "parameters": [{ "name": "c", "type": "QImageCapture::FileFormat" }] },
+        { "name": "isAvailable", "returnType": "bool", "parameters": [] },
+        { "name": "isReadyForCapture", "returnType": "bool", "parameters": [] },
+        { "name": "metaData", "returnType": "QMediaMetaData", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "quality", "returnType": "QImageCapture::Quality", "parameters": [] },
+        { "name": "resolution", "returnType": "QSize", "parameters": [] },
+        { "name": "setFileFormat", "returnType": "void", "parameters": [{ "name": "format", "type": "QImageCapture::FileFormat" }] },
+        { "name": "setMetaData", "returnType": "void", "parameters": [{ "name": "metaData", "type": "QMediaMetaData" }] },
+        { "name": "setQuality", "returnType": "void", "parameters": [{ "name": "quality", "type": "QImageCapture::Quality" }] },
+        { "name": "setResolution", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QSize" }] },
+        { "name": "setResolution", "returnType": "void", "parameters": [{ "name": "width", "type": "int" }, { "name": "height", "type": "int" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "error", "type": "QImageCapture::Error", "getter": "error" },
+        { "name": "errorString", "type": "QString", "getter": "errorString" },
+        { "name": "fileFormat", "type": "QImageCapture::FileFormat", "getter": "fileFormat", "setter": "setFileFormat" },
+        { "name": "metaData", "type": "QMediaMetaData", "getter": "metaData", "setter": "setMetaData" },
+        { "name": "quality", "type": "QImageCapture::Quality", "getter": "quality", "setter": "setQuality" },
+        { "name": "readyForCapture", "type": "bool", "getter": "isReadyForCapture" }
+      ],
+      "signals": [
+        { "name": "errorChanged", "parameters": [] },
+        { "name": "errorOccurred", "parameters": [{ "name": "id", "type": "int" }, { "name": "error", "type": "QImageCapture::Error" }, { "name": "errorString", "type": "QString" }] },
+        { "name": "fileFormatChanged", "parameters": [] },
+        { "name": "imageAvailable", "parameters": [{ "name": "id", "type": "int" }, { "name": "frame", "type": "QVideoFrame" }] },
+        { "name": "imageCaptured", "parameters": [{ "name": "id", "type": "int" }, { "name": "preview", "type": "QImage" }] },
+        { "name": "imageExposed", "parameters": [{ "name": "id", "type": "int" }] },
+        { "name": "imageMetadataAvailable", "parameters": [{ "name": "id", "type": "int" }, { "name": "metaData", "type": "QMediaMetaData" }] },
+        { "name": "imageSaved", "parameters": [{ "name": "id", "type": "int" }, { "name": "fileName", "type": "QString" }] },
+        { "name": "metaDataChanged", "parameters": [] },
+        { "name": "qualityChanged", "parameters": [] },
+        { "name": "readyForCaptureChanged", "parameters": [{ "name": "ready", "type": "bool" }] },
+        { "name": "resolutionChanged", "parameters": [] }
+      ]
+    }
+,
+    {
+      "name": "QMediaCaptureSession",
+      "header": "QtMultimedia/qmediacapturesession.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "audioInput", "returnType": "QAudioInput*", "parameters": [] },
+        { "name": "audioOutput", "returnType": "QAudioOutput*", "parameters": [] },
+        { "name": "camera", "returnType": "QCamera*", "parameters": [] },
+        { "name": "imageCapture", "returnType": "QImageCapture*", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "nativeVideoSource", "returnType": "QObject*", "parameters": [] },
+        { "name": "recorder", "returnType": "QMediaRecorder*", "parameters": [] },
+        { "name": "screenCapture", "returnType": "QScreenCapture*", "parameters": [] },
+        { "name": "setAudioInput", "returnType": "void", "parameters": [{ "name": "input", "type": "QAudioInput*" }] },
+        { "name": "setAudioOutput", "returnType": "void", "parameters": [{ "name": "output", "type": "QAudioOutput*" }] },
+        { "name": "setCamera", "returnType": "void", "parameters": [{ "name": "camera", "type": "QCamera*" }] },
+        { "name": "setImageCapture", "returnType": "void", "parameters": [{ "name": "imageCapture", "type": "QImageCapture*" }] },
+        { "name": "setNativeVideoSource", "returnType": "void", "parameters": [{ "name": "videoSource", "type": "QObject*" }] },
+        { "name": "setRecorder", "returnType": "void", "parameters": [{ "name": "recorder", "type": "QMediaRecorder*" }] },
+        { "name": "setScreenCapture", "returnType": "void", "parameters": [{ "name": "screenCapture", "type": "QScreenCapture*" }] },
+        { "name": "setVideoOutput", "returnType": "void", "parameters": [{ "name": "output", "type": "QObject*" }] },
+        { "name": "setVideoSink", "returnType": "void", "parameters": [{ "name": "sink", "type": "QVideoSink*" }] },
+        { "name": "setWindowCapture", "returnType": "void", "parameters": [{ "name": "windowCapture", "type": "QWindowCapture*" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "videoOutput", "returnType": "QObject*", "parameters": [] },
+        { "name": "videoSink", "returnType": "QVideoSink*", "parameters": [] },
+        { "name": "windowCapture", "returnType": "QWindowCapture*", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "audioInput", "type": "QAudioInput*", "getter": "audioInput", "setter": "setAudioInput" },
+        { "name": "audioOutput", "type": "QAudioOutput*", "getter": "audioOutput", "setter": "setAudioOutput" },
+        { "name": "camera", "type": "QCamera*", "getter": "camera", "setter": "setCamera" },
+        { "name": "imageCapture", "type": "QImageCapture*", "getter": "imageCapture", "setter": "setImageCapture" },
+        { "name": "nativeVideoSource", "type": "QObject*", "getter": "nativeVideoSource", "setter": "setNativeVideoSource" },
+        { "name": "recorder", "type": "QMediaRecorder*", "getter": "recorder", "setter": "setRecorder" },
+        { "name": "screenCapture", "type": "QScreenCapture*", "getter": "screenCapture", "setter": "setScreenCapture" },
+        { "name": "videoOutput", "type": "QObject*", "getter": "videoOutput", "setter": "setVideoOutput" },
+        { "name": "windowCapture", "type": "QWindowCapture*", "getter": "windowCapture", "setter": "setWindowCapture" }
+      ],
+      "signals": [
+        { "name": "audioBufferInputChanged", "parameters": [] },
+        { "name": "audioInputChanged", "parameters": [] },
+        { "name": "audioOutputChanged", "parameters": [] },
+        { "name": "cameraChanged", "parameters": [] },
+        { "name": "imageCaptureChanged", "parameters": [] },
+        { "name": "nativeVideoSourceChanged", "parameters": [] },
+        { "name": "recorderChanged", "parameters": [] },
+        { "name": "screenCaptureChanged", "parameters": [] },
+        { "name": "videoFrameInputChanged", "parameters": [] },
+        { "name": "videoOutputChanged", "parameters": [] },
+        { "name": "windowCaptureChanged", "parameters": [] }
+      ]
+    }
+,
+    {
+      "name": "QMediaDevices",
+      "header": "QtMultimedia/qmediadevices.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "audioInputs", "static": true, "returnType": "QList<QAudioDevice>", "parameters": [] },
+        { "name": "audioOutputs", "static": true, "returnType": "QList<QAudioDevice>", "parameters": [] },
+        { "name": "defaultAudioInput", "static": true, "returnType": "QAudioDevice", "parameters": [] },
+        { "name": "defaultAudioOutput", "static": true, "returnType": "QAudioDevice", "parameters": [] },
+        { "name": "defaultVideoInput", "static": true, "returnType": "QCameraDevice", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "videoInputs", "static": true, "returnType": "QList<QCameraDevice>", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "audioInputs", "type": "QList<QAudioDevice>", "getter": "audioInputs" },
+        { "name": "audioOutputs", "type": "QList<QAudioDevice>", "getter": "audioOutputs" },
+        { "name": "defaultAudioInput", "type": "QAudioDevice", "getter": "defaultAudioInput" },
+        { "name": "defaultAudioOutput", "type": "QAudioDevice", "getter": "defaultAudioOutput" },
+        { "name": "defaultVideoInput", "type": "QCameraDevice", "getter": "defaultVideoInput" },
+        { "name": "videoInputs", "type": "QList<QCameraDevice>", "getter": "videoInputs" }
+      ],
+      "signals": [
+        { "name": "audioInputsChanged", "parameters": [] },
+        { "name": "audioOutputsChanged", "parameters": [] },
+        { "name": "videoInputsChanged", "parameters": [] }
+      ]
+    }
+,
+    {
+      "name": "QMediaFormat",
+      "header": "QtMultimedia/qmediaformat.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "format", "type": "QMediaFormat::FileFormat", "optional": true, "default": "QMediaFormat.FileFormat.UnspecifiedFormat" }] }
+      ],
+      "methods": [
+        { "name": "audioCodec", "returnType": "QMediaFormat::AudioCodec", "parameters": [] },
+        { "name": "audioCodecDescription", "static": true, "returnType": "QString", "parameters": [{ "name": "codec", "type": "QMediaFormat::AudioCodec" }] },
+        { "name": "audioCodecName", "static": true, "returnType": "QString", "parameters": [{ "name": "codec", "type": "QMediaFormat::AudioCodec" }] },
+        { "name": "fileFormat", "returnType": "QMediaFormat::FileFormat", "parameters": [] },
+        { "name": "fileFormatDescription", "static": true, "returnType": "QString", "parameters": [{ "name": "fileFormat", "type": "QMediaFormat::FileFormat" }] },
+        { "name": "fileFormatName", "static": true, "returnType": "QString", "parameters": [{ "name": "fileFormat", "type": "QMediaFormat::FileFormat" }] },
+        { "name": "isSupported", "returnType": "bool", "parameters": [{ "name": "mode", "type": "QMediaFormat::ConversionMode" }] },
+        { "name": "mimeType", "returnType": "QMimeType", "parameters": [] },
+        { "name": "resolveForEncoding", "returnType": "void", "parameters": [{ "name": "flags", "type": "QMediaFormat::ResolveFlags" }] },
+        { "name": "setAudioCodec", "returnType": "void", "parameters": [{ "name": "codec", "type": "QMediaFormat::AudioCodec" }] },
+        { "name": "setFileFormat", "returnType": "void", "parameters": [{ "name": "f", "type": "QMediaFormat::FileFormat" }] },
+        { "name": "setVideoCodec", "returnType": "void", "parameters": [{ "name": "codec", "type": "QMediaFormat::VideoCodec" }] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QMediaFormat" }] },
+        { "name": "videoCodec", "returnType": "QMediaFormat::VideoCodec", "parameters": [] },
+        { "name": "videoCodecDescription", "static": true, "returnType": "QString", "parameters": [{ "name": "codec", "type": "QMediaFormat::VideoCodec" }] },
+        { "name": "videoCodecName", "static": true, "returnType": "QString", "parameters": [{ "name": "codec", "type": "QMediaFormat::VideoCodec" }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "audioCodec", "type": "QMediaFormat::AudioCodec", "getter": "audioCodec", "setter": "setAudioCodec" },
+        { "name": "fileFormat", "type": "QMediaFormat::FileFormat", "getter": "fileFormat", "setter": "setFileFormat" },
+        { "name": "videoCodec", "type": "QMediaFormat::VideoCodec", "getter": "videoCodec", "setter": "setVideoCodec" }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QMediaMetaData",
+      "header": "QtMultimedia/qmediametadata.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+      ],
+      "methods": [
+        { "name": "clear", "returnType": "void", "parameters": [] },
+        { "name": "insert", "returnType": "void", "parameters": [{ "name": "k", "type": "QMediaMetaData::Key" }, { "name": "value", "type": "QVariant" }] },
+        { "name": "isEmpty", "returnType": "bool", "parameters": [] },
+        { "name": "metaDataKeyToString", "static": true, "returnType": "QString", "parameters": [{ "name": "k", "type": "QMediaMetaData::Key" }] },
+        { "name": "remove", "returnType": "void", "parameters": [{ "name": "k", "type": "QMediaMetaData::Key" }] },
+        { "name": "stringValue", "returnType": "QString", "parameters": [{ "name": "k", "type": "QMediaMetaData::Key" }] },
+        { "name": "value", "returnType": "QVariant", "parameters": [{ "name": "k", "type": "QMediaMetaData::Key" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QMediaPlayer",
+      "header": "QtMultimedia/qmediaplayer.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "activeAudioTrack", "returnType": "int", "parameters": [] },
+        { "name": "activeSubtitleTrack", "returnType": "int", "parameters": [] },
+        { "name": "activeVideoTrack", "returnType": "int", "parameters": [] },
+        { "name": "audioOutput", "returnType": "QAudioOutput*", "parameters": [] },
+        { "name": "audioTracks", "returnType": "QList<QMediaMetaData>", "parameters": [] },
+        { "name": "bufferProgress", "returnType": "float", "parameters": [] },
+        { "name": "bufferedTimeRange", "returnType": "QMediaTimeRange", "parameters": [] },
+        { "name": "duration", "returnType": "long long", "parameters": [] },
+        { "name": "error", "returnType": "QMediaPlayer::Error", "parameters": [] },
+        { "name": "errorString", "returnType": "QString", "parameters": [] },
+        { "name": "hasAudio", "returnType": "bool", "parameters": [] },
+        { "name": "hasVideo", "returnType": "bool", "parameters": [] },
+        { "name": "isAvailable", "returnType": "bool", "parameters": [] },
+        { "name": "isPlaying", "returnType": "bool", "parameters": [] },
+        { "name": "isSeekable", "returnType": "bool", "parameters": [] },
+        { "name": "loops", "returnType": "int", "parameters": [] },
+        { "name": "mediaStatus", "returnType": "QMediaPlayer::MediaStatus", "parameters": [] },
+        { "name": "metaData", "returnType": "QMediaMetaData", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "pause", "returnType": "void", "parameters": [] },
+        { "name": "pitchCompensation", "returnType": "bool", "parameters": [] },
+        { "name": "pitchCompensationAvailability", "returnType": "QMediaPlayer::PitchCompensationAvailability", "parameters": [] },
+        { "name": "play", "returnType": "void", "parameters": [] },
+        { "name": "playbackOptions", "returnType": "QPlaybackOptions", "parameters": [] },
+        { "name": "playbackRate", "returnType": "double", "parameters": [] },
+        { "name": "playbackState", "returnType": "QMediaPlayer::PlaybackState", "parameters": [] },
+        { "name": "position", "returnType": "long long", "parameters": [] },
+        { "name": "resetPlaybackOptions", "returnType": "void", "parameters": [] },
+        { "name": "setActiveAudioTrack", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
+        { "name": "setActiveSubtitleTrack", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
+        { "name": "setActiveVideoTrack", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
+        { "name": "setAudioOutput", "returnType": "void", "parameters": [{ "name": "output", "type": "QAudioOutput*" }] },
+        { "name": "setLoops", "returnType": "void", "parameters": [{ "name": "loops", "type": "int" }] },
+        { "name": "setPitchCompensation", "returnType": "void", "parameters": [{ "name": "arg0", "type": "bool" }] },
+        { "name": "setPlaybackOptions", "returnType": "void", "parameters": [{ "name": "options", "type": "QPlaybackOptions" }] },
+        { "name": "setPlaybackRate", "returnType": "void", "parameters": [{ "name": "rate", "type": "double" }] },
+        { "name": "setPosition", "returnType": "void", "parameters": [{ "name": "position", "type": "long long" }] },
+        { "name": "setSource", "returnType": "void", "parameters": [{ "name": "source", "type": "QUrl" }] },
+        { "name": "setSourceDevice", "returnType": "void", "parameters": [{ "name": "device", "type": "QIODevice*" }, { "name": "sourceUrl", "type": "QUrl", "optional": true, "defaultCpp": "QUrl()" }] },
+        { "name": "setVideoOutput", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QObject*" }] },
+        { "name": "setVideoSink", "returnType": "void", "parameters": [{ "name": "sink", "type": "QVideoSink*" }] },
+        { "name": "source", "returnType": "QUrl", "parameters": [] },
+        { "name": "sourceDevice", "returnType": "QIODevice*", "parameters": [] },
+        { "name": "stop", "returnType": "void", "parameters": [] },
+        { "name": "subtitleTracks", "returnType": "QList<QMediaMetaData>", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "videoOutput", "returnType": "QObject*", "parameters": [] },
+        { "name": "videoSink", "returnType": "QVideoSink*", "parameters": [] },
+        { "name": "videoTracks", "returnType": "QList<QMediaMetaData>", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "activeAudioTrack", "type": "int", "getter": "activeAudioTrack", "setter": "setActiveAudioTrack" },
+        { "name": "activeSubtitleTrack", "type": "int", "getter": "activeSubtitleTrack", "setter": "setActiveSubtitleTrack" },
+        { "name": "activeVideoTrack", "type": "int", "getter": "activeVideoTrack", "setter": "setActiveVideoTrack" },
+        { "name": "audioOutput", "type": "QAudioOutput*", "getter": "audioOutput", "setter": "setAudioOutput" },
+        { "name": "audioTracks", "type": "QList<QMediaMetaData>", "getter": "audioTracks" },
+        { "name": "bufferProgress", "type": "float", "getter": "bufferProgress" },
+        { "name": "duration", "type": "long long", "getter": "duration" },
+        { "name": "error", "type": "QMediaPlayer::Error", "getter": "error" },
+        { "name": "errorString", "type": "QString", "getter": "errorString" },
+        { "name": "hasAudio", "type": "bool", "getter": "hasAudio" },
+        { "name": "hasVideo", "type": "bool", "getter": "hasVideo" },
+        { "name": "loops", "type": "int", "getter": "loops", "setter": "setLoops" },
+        { "name": "mediaStatus", "type": "QMediaPlayer::MediaStatus", "getter": "mediaStatus" },
+        { "name": "metaData", "type": "QMediaMetaData", "getter": "metaData" },
+        { "name": "pitchCompensation", "type": "bool", "getter": "pitchCompensation", "setter": "setPitchCompensation" },
+        { "name": "pitchCompensationAvailability", "type": "QMediaPlayer::PitchCompensationAvailability", "getter": "pitchCompensationAvailability" },
+        { "name": "playbackOptions", "type": "QPlaybackOptions", "getter": "playbackOptions", "setter": "setPlaybackOptions" },
+        { "name": "playbackRate", "type": "double", "getter": "playbackRate", "setter": "setPlaybackRate" },
+        { "name": "playbackState", "type": "QMediaPlayer::PlaybackState", "getter": "playbackState" },
+        { "name": "playing", "type": "bool", "getter": "isPlaying" },
+        { "name": "position", "type": "long long", "getter": "position", "setter": "setPosition" },
+        { "name": "seekable", "type": "bool", "getter": "isSeekable" },
+        { "name": "source", "type": "QUrl", "getter": "source", "setter": "setSource" },
+        { "name": "subtitleTracks", "type": "QList<QMediaMetaData>", "getter": "subtitleTracks" },
+        { "name": "videoOutput", "type": "QObject*", "getter": "videoOutput", "setter": "setVideoOutput" },
+        { "name": "videoTracks", "type": "QList<QMediaMetaData>", "getter": "videoTracks" }
+      ],
+      "signals": [
+        { "name": "activeTracksChanged", "parameters": [] },
+        { "name": "audioBufferOutputChanged", "parameters": [] },
+        { "name": "audioOutputChanged", "parameters": [] },
+        { "name": "bufferProgressChanged", "parameters": [{ "name": "progress", "type": "float" }] },
+        { "name": "durationChanged", "parameters": [{ "name": "duration", "type": "long long" }] },
+        { "name": "errorChanged", "parameters": [] },
+        { "name": "errorOccurred", "parameters": [{ "name": "error", "type": "QMediaPlayer::Error" }, { "name": "errorString", "type": "QString" }] },
+        { "name": "hasAudioChanged", "parameters": [{ "name": "available", "type": "bool" }] },
+        { "name": "hasVideoChanged", "parameters": [{ "name": "videoAvailable", "type": "bool" }] },
+        { "name": "loopsChanged", "parameters": [] },
+        { "name": "mediaStatusChanged", "parameters": [{ "name": "status", "type": "QMediaPlayer::MediaStatus" }] },
+        { "name": "metaDataChanged", "parameters": [] },
+        { "name": "pitchCompensationChanged", "parameters": [{ "name": "arg0", "type": "bool" }] },
+        { "name": "playbackOptionsChanged", "parameters": [] },
+        { "name": "playbackRateChanged", "parameters": [{ "name": "rate", "type": "double" }] },
+        { "name": "playbackStateChanged", "parameters": [{ "name": "newState", "type": "QMediaPlayer::PlaybackState" }] },
+        { "name": "playingChanged", "parameters": [{ "name": "playing", "type": "bool" }] },
+        { "name": "positionChanged", "parameters": [{ "name": "position", "type": "long long" }] },
+        { "name": "seekableChanged", "parameters": [{ "name": "seekable", "type": "bool" }] },
+        { "name": "sourceChanged", "parameters": [{ "name": "media", "type": "QUrl" }] },
+        { "name": "tracksChanged", "parameters": [] },
+        { "name": "videoOutputChanged", "parameters": [] }
+      ]
+    }
+,
+    {
+      "name": "QMediaRecorder",
+      "header": "QtMultimedia/qmediarecorder.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "actualLocation", "returnType": "QUrl", "parameters": [] },
+        { "name": "addMetaData", "returnType": "void", "parameters": [{ "name": "metaData", "type": "QMediaMetaData" }] },
+        { "name": "audioBitRate", "returnType": "int", "parameters": [] },
+        { "name": "audioChannelCount", "returnType": "int", "parameters": [] },
+        { "name": "audioSampleRate", "returnType": "int", "parameters": [] },
+        { "name": "autoStop", "returnType": "bool", "parameters": [] },
+        { "name": "captureSession", "returnType": "QMediaCaptureSession*", "parameters": [] },
+        { "name": "duration", "returnType": "long long", "parameters": [] },
+        { "name": "encodingMode", "returnType": "QMediaRecorder::EncodingMode", "parameters": [] },
+        { "name": "error", "returnType": "QMediaRecorder::Error", "parameters": [] },
+        { "name": "errorString", "returnType": "QString", "parameters": [] },
+        { "name": "isAvailable", "returnType": "bool", "parameters": [] },
+        { "name": "mediaFormat", "returnType": "QMediaFormat", "parameters": [] },
+        { "name": "metaData", "returnType": "QMediaMetaData", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "outputDevice", "returnType": "QIODevice*", "parameters": [] },
+        { "name": "outputLocation", "returnType": "QUrl", "parameters": [] },
+        { "name": "pause", "returnType": "void", "parameters": [] },
+        { "name": "quality", "returnType": "QMediaRecorder::Quality", "parameters": [] },
+        { "name": "record", "returnType": "void", "parameters": [] },
+        { "name": "recorderState", "returnType": "QMediaRecorder::RecorderState", "parameters": [] },
+        { "name": "setAudioBitRate", "returnType": "void", "parameters": [{ "name": "bitRate", "type": "int" }] },
+        { "name": "setAudioChannelCount", "returnType": "void", "parameters": [{ "name": "channels", "type": "int" }] },
+        { "name": "setAudioSampleRate", "returnType": "void", "parameters": [{ "name": "sampleRate", "type": "int" }] },
+        { "name": "setAutoStop", "returnType": "void", "parameters": [{ "name": "autoStop", "type": "bool" }] },
+        { "name": "setEncodingMode", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMediaRecorder::EncodingMode" }] },
+        { "name": "setMediaFormat", "returnType": "void", "parameters": [{ "name": "format", "type": "QMediaFormat" }] },
+        { "name": "setMetaData", "returnType": "void", "parameters": [{ "name": "metaData", "type": "QMediaMetaData" }] },
+        { "name": "setOutputDevice", "returnType": "void", "parameters": [{ "name": "device", "type": "QIODevice*" }] },
+        { "name": "setOutputLocation", "returnType": "void", "parameters": [{ "name": "location", "type": "QUrl" }] },
+        { "name": "setQuality", "returnType": "void", "parameters": [{ "name": "quality", "type": "QMediaRecorder::Quality" }] },
+        { "name": "setVideoBitRate", "returnType": "void", "parameters": [{ "name": "bitRate", "type": "int" }] },
+        { "name": "setVideoFrameRate", "returnType": "void", "parameters": [{ "name": "frameRate", "type": "double" }] },
+        { "name": "setVideoResolution", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QSize" }] },
+        { "name": "setVideoResolution", "returnType": "void", "parameters": [{ "name": "width", "type": "int" }, { "name": "height", "type": "int" }] },
+        { "name": "stop", "returnType": "void", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "videoBitRate", "returnType": "int", "parameters": [] },
+        { "name": "videoFrameRate", "returnType": "double", "parameters": [] },
+        { "name": "videoResolution", "returnType": "QSize", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "actualLocation", "type": "QUrl", "getter": "actualLocation" },
+        { "name": "audioBitRate", "type": "int", "getter": "audioBitRate", "setter": "setAudioBitRate" },
+        { "name": "audioChannelCount", "type": "int", "getter": "audioChannelCount", "setter": "setAudioChannelCount" },
+        { "name": "audioSampleRate", "type": "int", "getter": "audioSampleRate", "setter": "setAudioSampleRate" },
+        { "name": "autoStop", "type": "bool", "getter": "autoStop", "setter": "setAutoStop" },
+        { "name": "duration", "type": "long long", "getter": "duration" },
+        { "name": "encodingMode", "type": "QMediaRecorder::EncodingMode", "getter": "encodingMode", "setter": "setEncodingMode" },
+        { "name": "error", "type": "QMediaRecorder::Error", "getter": "error" },
+        { "name": "errorString", "type": "QString", "getter": "errorString" },
+        { "name": "mediaFormat", "type": "QMediaFormat", "getter": "mediaFormat", "setter": "setMediaFormat" },
+        { "name": "metaData", "type": "QMediaMetaData", "getter": "metaData", "setter": "setMetaData" },
+        { "name": "outputLocation", "type": "QUrl", "getter": "outputLocation", "setter": "setOutputLocation" },
+        { "name": "quality", "type": "QMediaRecorder::Quality", "getter": "quality", "setter": "setQuality" },
+        { "name": "recorderState", "type": "QMediaRecorder::RecorderState", "getter": "recorderState" },
+        { "name": "videoBitRate", "type": "int", "getter": "videoBitRate", "setter": "setVideoBitRate" },
+        { "name": "videoFrameRate", "type": "double", "getter": "videoFrameRate", "setter": "setVideoFrameRate" },
+        { "name": "videoResolution", "type": "QSize", "getter": "videoResolution", "setter": "setVideoResolution" }
+      ],
+      "signals": [
+        { "name": "actualLocationChanged", "parameters": [{ "name": "location", "type": "QUrl" }] },
+        { "name": "audioBitRateChanged", "parameters": [] },
+        { "name": "audioChannelCountChanged", "parameters": [] },
+        { "name": "audioSampleRateChanged", "parameters": [] },
+        { "name": "autoStopChanged", "parameters": [] },
+        { "name": "durationChanged", "parameters": [{ "name": "duration", "type": "long long" }] },
+        { "name": "encoderSettingsChanged", "parameters": [] },
+        { "name": "encodingModeChanged", "parameters": [] },
+        { "name": "errorChanged", "parameters": [] },
+        { "name": "errorOccurred", "parameters": [{ "name": "error", "type": "QMediaRecorder::Error" }, { "name": "errorString", "type": "QString" }] },
+        { "name": "mediaFormatChanged", "parameters": [] },
+        { "name": "metaDataChanged", "parameters": [] },
+        { "name": "qualityChanged", "parameters": [] },
+        { "name": "recorderStateChanged", "parameters": [{ "name": "state", "type": "QMediaRecorder::RecorderState" }] },
+        { "name": "videoBitRateChanged", "parameters": [] },
+        { "name": "videoFrameRateChanged", "parameters": [] },
+        { "name": "videoResolutionChanged", "parameters": [] }
+      ]
+    }
+,
+    {
+      "name": "QMediaTimeRange",
+      "header": "QtMultimedia/qmediatimerange.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] },
+        { "parameters": [{ "name": "start", "type": "long long" }, { "name": "end", "type": "long long" }] }
+      ],
+      "methods": [
+        { "name": "addInterval", "returnType": "void", "parameters": [{ "name": "start", "type": "long long" }, { "name": "end", "type": "long long" }] },
+        { "name": "addTimeRange", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMediaTimeRange" }] },
+        { "name": "clear", "returnType": "void", "parameters": [] },
+        { "name": "contains", "returnType": "bool", "parameters": [{ "name": "time", "type": "long long" }] },
+        { "name": "detach", "returnType": "void", "parameters": [] },
+        { "name": "earliestTime", "returnType": "long long", "parameters": [] },
+        { "name": "isContinuous", "returnType": "bool", "parameters": [] },
+        { "name": "isEmpty", "returnType": "bool", "parameters": [] },
+        { "name": "latestTime", "returnType": "long long", "parameters": [] },
+        { "name": "removeInterval", "returnType": "void", "parameters": [{ "name": "start", "type": "long long" }, { "name": "end", "type": "long long" }] },
+        { "name": "removeTimeRange", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QMediaTimeRange" }] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QMediaTimeRange" }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QPlaybackOptions",
+      "header": "QtMultimedia/qplaybackoptions.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] }
+      ],
+      "methods": [
+        { "name": "networkTimeout", "returnType": "TimeSpan", "parameters": [] },
+        { "name": "playbackIntent", "returnType": "QPlaybackOptions::PlaybackIntent", "parameters": [] },
+        { "name": "probeSize", "returnType": "long long", "parameters": [] },
+        { "name": "resetNetworkTimeout", "returnType": "void", "parameters": [] },
+        { "name": "resetPlaybackIntent", "returnType": "void", "parameters": [] },
+        { "name": "resetProbeSize", "returnType": "void", "parameters": [] },
+        { "name": "setNetworkTimeout", "returnType": "void", "parameters": [{ "name": "timeout", "type": "TimeSpan", "cpp": "std::chrono::milliseconds" }] },
+        { "name": "setPlaybackIntent", "returnType": "void", "parameters": [{ "name": "intent", "type": "QPlaybackOptions::PlaybackIntent" }] },
+        { "name": "setProbeSize", "returnType": "void", "parameters": [{ "name": "probeSizeBytes", "type": "long long" }] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QPlaybackOptions" }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "networkTimeout", "type": "TimeSpan", "getter": "networkTimeout", "setter": "setNetworkTimeout" },
+        { "name": "playbackIntent", "type": "QPlaybackOptions::PlaybackIntent", "getter": "playbackIntent", "setter": "setPlaybackIntent" },
+        { "name": "probeSize", "type": "long long", "getter": "probeSize", "setter": "setProbeSize" }
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QScreenCapture",
+      "header": "QtMultimedia/qscreencapture.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "captureSession", "returnType": "QMediaCaptureSession*", "parameters": [] },
+        { "name": "error", "returnType": "QScreenCapture::Error", "parameters": [] },
+        { "name": "errorString", "returnType": "QString", "parameters": [] },
+        { "name": "isActive", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "screen", "returnType": "QScreen*", "parameters": [] },
+        { "name": "setActive", "returnType": "void", "parameters": [{ "name": "active", "type": "bool" }] },
+        { "name": "setScreen", "returnType": "void", "parameters": [{ "name": "screen", "type": "QScreen*" }] },
+        { "name": "start", "returnType": "void", "parameters": [] },
+        { "name": "stop", "returnType": "void", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "active", "type": "bool", "getter": "isActive", "setter": "setActive" },
+        { "name": "error", "type": "QScreenCapture::Error", "getter": "error" },
+        { "name": "errorString", "type": "QString", "getter": "errorString" },
+        { "name": "screen", "type": "QScreen*", "getter": "screen", "setter": "setScreen" }
+      ],
+      "signals": [
+        { "name": "activeChanged", "parameters": [{ "name": "arg0", "type": "bool" }] },
+        { "name": "errorChanged", "parameters": [] },
+        { "name": "errorOccurred", "parameters": [{ "name": "error", "type": "QScreenCapture::Error" }, { "name": "errorString", "type": "QString" }] },
+        { "name": "maximumFrameRateChanged", "parameters": [] },
+        { "name": "screenChanged", "parameters": [{ "name": "arg0", "type": "QScreen*" }] }
+      ]
+    }
+,
+    {
+      "name": "QSoundEffect",
+      "header": "QtMultimedia/qsoundeffect.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] },
+        { "parameters": [{ "name": "audioDevice", "type": "QAudioDevice" }, { "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "audioDevice", "returnType": "QAudioDevice", "parameters": [] },
+        { "name": "isLoaded", "returnType": "bool", "parameters": [] },
+        { "name": "isMuted", "returnType": "bool", "parameters": [] },
+        { "name": "isPlaying", "returnType": "bool", "parameters": [] },
+        { "name": "loopCount", "returnType": "int", "parameters": [] },
+        { "name": "loopsRemaining", "returnType": "int", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "play", "returnType": "void", "parameters": [] },
+        { "name": "setAudioDevice", "returnType": "void", "parameters": [{ "name": "device", "type": "QAudioDevice" }] },
+        { "name": "setLoopCount", "returnType": "void", "parameters": [{ "name": "loopCount", "type": "int" }] },
+        { "name": "setMuted", "returnType": "void", "parameters": [{ "name": "muted", "type": "bool" }] },
+        { "name": "setSource", "returnType": "void", "parameters": [{ "name": "url", "type": "QUrl" }] },
+        { "name": "setVolume", "returnType": "void", "parameters": [{ "name": "volume", "type": "float" }] },
+        { "name": "source", "returnType": "QUrl", "parameters": [] },
+        { "name": "status", "returnType": "QSoundEffect::Status", "parameters": [] },
+        { "name": "stop", "returnType": "void", "parameters": [] },
+        { "name": "supportedMimeTypes", "static": true, "returnType": "QStringList", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "volume", "returnType": "float", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "audioDevice", "type": "QAudioDevice", "getter": "audioDevice", "setter": "setAudioDevice" },
+        { "name": "loops", "type": "int", "getter": "loopCount", "setter": "setLoopCount" },
+        { "name": "loopsRemaining", "type": "int", "getter": "loopsRemaining" },
+        { "name": "muted", "type": "bool", "getter": "isMuted", "setter": "setMuted" },
+        { "name": "playing", "type": "bool", "getter": "isPlaying" },
+        { "name": "source", "type": "QUrl", "getter": "source", "setter": "setSource" },
+        { "name": "status", "type": "QSoundEffect::Status", "getter": "status" },
+        { "name": "volume", "type": "float", "getter": "volume", "setter": "setVolume" }
+      ],
+      "signals": [
+        { "name": "audioDeviceChanged", "parameters": [] },
+        { "name": "loadedChanged", "parameters": [] },
+        { "name": "loopCountChanged", "parameters": [] },
+        { "name": "loopsRemainingChanged", "parameters": [] },
+        { "name": "mutedChanged", "parameters": [] },
+        { "name": "playingChanged", "parameters": [] },
+        { "name": "sourceChanged", "parameters": [] },
+        { "name": "statusChanged", "parameters": [] },
+        { "name": "volumeChanged", "parameters": [] }
+      ]
+    }
+,
+    {
+      "name": "QVideoFrame",
+      "header": "QtMultimedia/qvideoframe.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] },
+        { "parameters": [{ "name": "image", "type": "QImage" }] },
+        { "parameters": [{ "name": "format", "type": "QVideoFrameFormat" }] }
+      ],
+      "methods": [
+        { "name": "bytesPerLine", "returnType": "int", "parameters": [{ "name": "plane", "type": "int" }] },
+        { "name": "endTime", "returnType": "long long", "parameters": [] },
+        { "name": "handleType", "returnType": "QVideoFrame::HandleType", "parameters": [] },
+        { "name": "height", "returnType": "int", "parameters": [] },
+        { "name": "isMapped", "returnType": "bool", "parameters": [] },
+        { "name": "isReadable", "returnType": "bool", "parameters": [] },
+        { "name": "isValid", "returnType": "bool", "parameters": [] },
+        { "name": "isWritable", "returnType": "bool", "parameters": [] },
+        { "name": "map", "returnType": "bool", "parameters": [{ "name": "mode", "type": "QVideoFrame::MapMode" }] },
+        { "name": "mapMode", "returnType": "QVideoFrame::MapMode", "parameters": [] },
+        { "name": "mappedBytes", "returnType": "int", "parameters": [{ "name": "plane", "type": "int" }] },
+        { "name": "mirrored", "returnType": "bool", "parameters": [] },
+        { "name": "pixelFormat", "returnType": "QVideoFrameFormat::PixelFormat", "parameters": [] },
+        { "name": "planeCount", "returnType": "int", "parameters": [] },
+        { "name": "rotation", "returnType": "Rotation", "parameters": [] },
+        { "name": "rotationAngle", "returnType": "QVideoFrame::RotationAngle", "parameters": [] },
+        { "name": "setEndTime", "returnType": "void", "parameters": [{ "name": "time", "type": "long long" }] },
+        { "name": "setMirrored", "returnType": "void", "parameters": [{ "name": "arg0", "type": "bool" }] },
+        { "name": "setRotation", "returnType": "void", "parameters": [{ "name": "angle", "type": "Rotation" }] },
+        { "name": "setRotationAngle", "returnType": "void", "parameters": [{ "name": "angle", "type": "QVideoFrame::RotationAngle" }] },
+        { "name": "setStartTime", "returnType": "void", "parameters": [{ "name": "time", "type": "long long" }] },
+        { "name": "setStreamFrameRate", "returnType": "void", "parameters": [{ "name": "rate", "type": "double" }] },
+        { "name": "setSubtitleText", "returnType": "void", "parameters": [{ "name": "text", "type": "QString" }] },
+        { "name": "size", "returnType": "QSize", "parameters": [] },
+        { "name": "startTime", "returnType": "long long", "parameters": [] },
+        { "name": "streamFrameRate", "returnType": "double", "parameters": [] },
+        { "name": "subtitleText", "returnType": "QString", "parameters": [] },
+        { "name": "surfaceFormat", "returnType": "QVideoFrameFormat", "parameters": [] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QVideoFrame" }] },
+        { "name": "toImage", "returnType": "QImage", "parameters": [] },
+        { "name": "unmap", "returnType": "void", "parameters": [] },
+        { "name": "width", "returnType": "int", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QVideoFrameFormat",
+      "header": "QtMultimedia/qvideoframeformat.h",
+      "bases": [],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [] },
+        { "parameters": [{ "name": "size", "type": "QSize" }, { "name": "pixelFormat", "type": "QVideoFrameFormat::PixelFormat" }] }
+      ],
+      "methods": [
+        { "name": "colorRange", "returnType": "QVideoFrameFormat::ColorRange", "parameters": [] },
+        { "name": "colorSpace", "returnType": "QVideoFrameFormat::ColorSpace", "parameters": [] },
+        { "name": "colorTransfer", "returnType": "QVideoFrameFormat::ColorTransfer", "parameters": [] },
+        { "name": "detach", "returnType": "void", "parameters": [] },
+        { "name": "fragmentShaderFileName", "returnType": "QString", "parameters": [] },
+        { "name": "frameHeight", "returnType": "int", "parameters": [] },
+        { "name": "frameRate", "returnType": "double", "parameters": [] },
+        { "name": "frameSize", "returnType": "QSize", "parameters": [] },
+        { "name": "frameWidth", "returnType": "int", "parameters": [] },
+        { "name": "imageFormatFromPixelFormat", "static": true, "returnType": "QImage::Format", "parameters": [{ "name": "format", "type": "QVideoFrameFormat::PixelFormat" }] },
+        { "name": "isMirrored", "returnType": "bool", "parameters": [] },
+        { "name": "isValid", "returnType": "bool", "parameters": [] },
+        { "name": "maxLuminance", "returnType": "float", "parameters": [] },
+        { "name": "pixelFormat", "returnType": "QVideoFrameFormat::PixelFormat", "parameters": [] },
+        { "name": "pixelFormatFromImageFormat", "static": true, "returnType": "QVideoFrameFormat::PixelFormat", "parameters": [{ "name": "format", "type": "QImage::Format" }] },
+        { "name": "pixelFormatToString", "static": true, "returnType": "QString", "parameters": [{ "name": "pixelFormat", "type": "QVideoFrameFormat::PixelFormat" }] },
+        { "name": "planeCount", "returnType": "int", "parameters": [] },
+        { "name": "rotation", "returnType": "Rotation", "parameters": [] },
+        { "name": "scanLineDirection", "returnType": "QVideoFrameFormat::Direction", "parameters": [] },
+        { "name": "setColorRange", "returnType": "void", "parameters": [{ "name": "range", "type": "QVideoFrameFormat::ColorRange" }] },
+        { "name": "setColorSpace", "returnType": "void", "parameters": [{ "name": "colorSpace", "type": "QVideoFrameFormat::ColorSpace" }] },
+        { "name": "setColorTransfer", "returnType": "void", "parameters": [{ "name": "colorTransfer", "type": "QVideoFrameFormat::ColorTransfer" }] },
+        { "name": "setFrameRate", "returnType": "void", "parameters": [{ "name": "rate", "type": "double" }] },
+        { "name": "setFrameSize", "returnType": "void", "parameters": [{ "name": "size", "type": "QSize" }] },
+        { "name": "setFrameSize", "returnType": "void", "parameters": [{ "name": "width", "type": "int" }, { "name": "height", "type": "int" }] },
+        { "name": "setMaxLuminance", "returnType": "void", "parameters": [{ "name": "lum", "type": "float" }] },
+        { "name": "setMirrored", "returnType": "void", "parameters": [{ "name": "mirrored", "type": "bool" }] },
+        { "name": "setRotation", "returnType": "void", "parameters": [{ "name": "rotation", "type": "Rotation" }] },
+        { "name": "setScanLineDirection", "returnType": "void", "parameters": [{ "name": "direction", "type": "QVideoFrameFormat::Direction" }] },
+        { "name": "setStreamFrameRate", "returnType": "void", "parameters": [{ "name": "rate", "type": "double" }] },
+        { "name": "setViewport", "returnType": "void", "parameters": [{ "name": "viewport", "type": "QRect" }] },
+        { "name": "setYCbCrColorSpace", "returnType": "void", "parameters": [{ "name": "colorSpace", "type": "QVideoFrameFormat::YCbCrColorSpace" }] },
+        { "name": "streamFrameRate", "returnType": "double", "parameters": [] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QVideoFrameFormat" }] },
+        { "name": "updateUniformData", "returnType": "void", "parameters": [{ "name": "dst", "type": "QByteArray*" }, { "name": "frame", "type": "QVideoFrame" }, { "name": "transform", "type": "QMatrix4x4" }, { "name": "opacity", "type": "float" }] },
+        { "name": "vertexShaderFileName", "returnType": "QString", "parameters": [] },
+        { "name": "viewport", "returnType": "QRect", "parameters": [] },
+        { "name": "yCbCrColorSpace", "returnType": "QVideoFrameFormat::YCbCrColorSpace", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
+      "name": "QVideoSink",
+      "header": "QtMultimedia/qvideosink.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setSubtitleText", "returnType": "void", "parameters": [{ "name": "subtitle", "type": "QString" }] },
+        { "name": "setVideoFrame", "returnType": "void", "parameters": [{ "name": "frame", "type": "QVideoFrame" }] },
+        { "name": "subtitleText", "returnType": "QString", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "videoFrame", "returnType": "QVideoFrame", "parameters": [] },
+        { "name": "videoSize", "returnType": "QSize", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "subtitleText", "type": "QString", "getter": "subtitleText", "setter": "setSubtitleText" },
+        { "name": "videoSize", "type": "QSize", "getter": "videoSize" }
+      ],
+      "signals": [
+        { "name": "subtitleTextChanged", "parameters": [{ "name": "subtitleText", "type": "QString" }] },
+        { "name": "videoFrameChanged", "parameters": [{ "name": "frame", "type": "QVideoFrame" }] },
+        { "name": "videoSizeChanged", "parameters": [] }
+      ]
+    }
+,
+    {
+      "name": "QVideoWidget",
+      "header": "QtMultimediaWidgets/qvideowidget.h",
+      "bases": ["QWidget"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QWidget*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "aspectRatioMode", "returnType": "Qt::AspectRatioMode", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setAspectRatioMode", "returnType": "void", "parameters": [{ "name": "mode", "type": "Qt::AspectRatioMode" }] },
+        { "name": "setFullScreen", "returnType": "void", "parameters": [{ "name": "fullScreen", "type": "bool" }] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "videoSink", "returnType": "QVideoSink*", "parameters": [] }
+      ],
+      "virtuals": [
+        { "name": "event", "returnType": "bool", "parameters": [{ "name": "event", "type": "QEvent*", "cpp": "QEvent *" }] },
+        { "name": "hideEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QHideEvent*", "cpp": "QHideEvent *" }] },
+        { "name": "moveEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QMoveEvent*", "cpp": "QMoveEvent *" }] },
+        { "name": "resizeEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QResizeEvent*", "cpp": "QResizeEvent *" }] },
+        { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QShowEvent*", "cpp": "QShowEvent *" }] },
+        { "name": "sizeHint", "const": true, "returnType": "QSize", "parameters": [] }
+      ],
+      "properties": [
+        { "name": "aspectRatioMode", "type": "Qt::AspectRatioMode", "getter": "aspectRatioMode", "setter": "setAspectRatioMode" }
+      ],
+      "signals": [
+        { "name": "aspectRatioModeChanged", "parameters": [{ "name": "mode", "type": "Qt::AspectRatioMode" }] },
+        { "name": "fullScreenChanged", "parameters": [{ "name": "fullScreen", "type": "bool" }] }
+      ]
+    }
+,
+    {
+      "name": "QWindowCapture",
+      "header": "QtMultimedia/qwindowcapture.h",
+      "bases": ["QObject"],
+      "isAbstract": false,
+      "subclassable": true,
+      "owned": true,
+      "constructors": [
+        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "capturableWindows", "static": true, "returnType": "QList<QCapturableWindow>", "parameters": [] },
+        { "name": "captureSession", "returnType": "QMediaCaptureSession*", "parameters": [] },
+        { "name": "error", "returnType": "QWindowCapture::Error", "parameters": [] },
+        { "name": "errorString", "returnType": "QString", "parameters": [] },
+        { "name": "isActive", "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setActive", "returnType": "void", "parameters": [{ "name": "active", "type": "bool" }] },
+        { "name": "setWindow", "returnType": "void", "parameters": [{ "name": "window", "type": "QCapturableWindow" }] },
+        { "name": "start", "returnType": "void", "parameters": [] },
+        { "name": "stop", "returnType": "void", "parameters": [] },
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
+        { "name": "window", "returnType": "QCapturableWindow", "parameters": [] }
+      ],
+      "virtuals": [
+      ],
+      "properties": [
+        { "name": "active", "type": "bool", "getter": "isActive", "setter": "setActive" },
+        { "name": "error", "type": "QWindowCapture::Error", "getter": "error" },
+        { "name": "errorString", "type": "QString", "getter": "errorString" },
+        { "name": "window", "type": "QCapturableWindow", "getter": "window", "setter": "setWindow" }
+      ],
+      "signals": [
+        { "name": "activeChanged", "parameters": [{ "name": "arg0", "type": "bool" }] },
+        { "name": "errorChanged", "parameters": [] },
+        { "name": "errorOccurred", "parameters": [{ "name": "error", "type": "QWindowCapture::Error" }, { "name": "errorString", "type": "QString" }] },
+        { "name": "maximumFrameRateChanged", "parameters": [] },
+        { "name": "windowChanged", "parameters": [{ "name": "window", "type": "QCapturableWindow" }] }
+      ]
+    }
+
+  ]
+}

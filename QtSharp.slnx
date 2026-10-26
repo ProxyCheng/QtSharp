@@ -33,6 +33,11 @@
     <Project Path="nuget/QtSharp.WebSockets.Qt6/QtSharp.WebSockets.Qt6.csproj" />
   </Folder>
 
+  <Folder Name="/Packages - Multimedia/">
+    <Project Path="nuget/QtSharp.Multimedia/QtSharp.Multimedia.csproj" />
+    <Project Path="nuget/QtSharp.Multimedia.Qt6/QtSharp.Multimedia.Qt6.csproj" />
+  </Folder>
+
   <Folder Name="/Packages - Qt3D/">
     <Project Path="nuget/QtSharp.Qt3D/QtSharp.Qt3D.csproj" />
     <Project Path="nuget/QtSharp.Qt3D.Qt6/QtSharp.Qt3D.Qt6.csproj" />

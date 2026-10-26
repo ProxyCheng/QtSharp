@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The Qt Multimedia runtime payload, the companion package a QtSharp.Multimedia consumer gets
+       automatically: the two libraries and the backend plugin Qt loads from <exe>\multimedia\. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+
+    <PackageId>QtSharp.Multimedia.Qt6</PackageId>
+    <Version>0.7.0</Version>
+    <Authors>ProxyCheng</Authors>
+    <Description>The Qt Multimedia runtime (Qt6Multimedia.dll, Qt6MultimediaWidgets.dll, the multimedia backend plugin) loaded by QtSharp.Multimedia.</Description>
+    <PackageTags>Qt;Qt6;QtMultimedia;runtime;native</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ProxyCheng/QtSharp.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <QtMultimediaRuntimeDir Condition="'$(QtMultimediaRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.12.0\runtime</QtMultimediaRuntimeDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="_._" Pack="true" PackagePath="lib/net10.0/" />
+    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="$(QtMultimediaRuntimeDir)\Qt6Multimedia.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(QtMultimediaRuntimeDir)\Qt6MultimediaWidgets.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(QtMultimediaRuntimeDir)\plugins\multimedia\*.dll" Pack="true" PackagePath="tools/native/multimedia/" Visible="false" />
+  </ItemGroup>
+
+  <Target Name="QtSharpMultimediaQt6PackCheck" BeforeTargets="GenerateNuspec">
+    <Error Condition="!Exists('$(QtMultimediaRuntimeDir)\Qt6Multimedia.dll')" Text="Qt6Multimedia.dll is missing under '$(QtMultimediaRuntimeDir)' - see README.md, section Prerequisites." />
+    <Error Condition="!Exists('$(QtMultimediaRuntimeDir)\plugins\multimedia')" Text="The multimedia backend plugin is missing under '$(QtMultimediaRuntimeDir)\plugins\multimedia'." />
+  </Target>
+
+</Project>

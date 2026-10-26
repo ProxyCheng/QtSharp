@@ -4,6 +4,19 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.7.0 - 2026-10-26
+
+- **QtMultimedia is bound**, as the separate `QtSharp.Multimedia` package: playback
+  (`QMediaPlayer`, `QAudioOutput`, `QAudioSink`), capture (`QCamera`, `QMediaCaptureSession`,
+  `QImageCapture`, `QMediaRecorder`), the audio device/format and media format/metadata classes,
+  and the widget half (`QVideoWidget`, `QGraphicsVideoItem`). `QtSharp.Multimedia.Qt6` carries the
+  two libraries and the `multimedia` backend plugin.
+- **`qtmultimedia-player`** ports the core of Qt's player example without needing a sound card: it
+  writes a one-second PCM WAV, loads it through `QMediaPlayer` (ffmpeg backend), and asserts the
+  media status, duration, audio track and the video widget's sink.
+- Anonymous enums are no longer published: `QGraphicsVideoItem`'s `enum { Type = 14 }` came back
+  from clang as `(unnamed enum at ...)`, which is not a C# type name.
+
 ## 0.6.0 - 2026-10-26
 
 - **QtSql rows are C# sequences now.** `QSqlQuery.Rows()` yields one `Dictionary<string, object>`
