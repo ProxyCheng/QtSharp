@@ -124,7 +124,7 @@ view.SetRootEntity(root);
 view.Show();
 ```
 
-See `samples/qt3d` for a self-test that runs without a display.
+See `demos.qt3d` for the official Qt3D examples, which run without a display.
 
 ## Project status
 
@@ -267,7 +267,7 @@ Once that has succeeded, the ordinary `dotnet build` of any project works too:
 ```
 dotnet build demos\QtSharp.Demos.csproj -c Release
 dotnet build testbind\testbind.csproj -c Release
-dotnet build samples\hello\Hello.csproj -c Release
+dotnet build samples\resources\Resources.csproj -c Release
 ```
 
 ---
@@ -532,7 +532,6 @@ Replace the local source path with your checkout's `out/packages` directory.
 | `demos/` | `QtSharp.Demos.csproj` — the binding, the runtime and the official Qt examples, grouped as `QtGui/` and `QtWidgets/`; each class is registered with `[Demo("qtwidgets-...")]` and `DemoCatalog` discovers it |
 | `tests/` | `QtSharp.BindingTests.csproj` — the binding-specific tests (`test-*`), registered the same way and discovered by `BindingTests` |
 | `testbind/` | `testapp`, the one entry point: it dispatches both catalogs |
-| `samples/qt3d/` | a Qt3D sample: windowless self-test by default, `window` opens the scene |
 | `demos.qt3d/` | the official Qt3D C++ examples (`simple-cpp`, `basicshapes-cpp`, `3d-text`) as the extension's conformance tests |
 | `demos.charts/` | the official Qt Charts examples (38 windows) as the Charts module's conformance tests |
 | `nuget/QtSharp.Api/`, `nuget/QtSharp.Runtime/`, `nuget/QtSharp.Qt6/` | the base binding and its runtime packages (nine module assemblies inside `QtSharp.Api`) |
