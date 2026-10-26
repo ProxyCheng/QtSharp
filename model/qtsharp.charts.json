@@ -107,10 +107,10 @@
         { "name": "titleFont", "returnType": "QFont", "parameters": [] },
         { "name": "titleText", "returnType": "QString", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "truncateLabels", "returnType": "bool", "parameters": [] },
-        { "name": "type", "returnType": "QAbstractAxis::AxisType", "parameters": [] }
+        { "name": "truncateLabels", "returnType": "bool", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "type", "pure": true, "const": true, "returnType": "QAbstractAxis::AxisType", "parameters": [] }
       ],
       "properties": [
         { "name": "alignment", "type": "Qt::Alignment", "getter": "alignment" },
@@ -261,10 +261,10 @@
         { "name": "setVisible", "returnType": "void", "parameters": [{ "name": "visible", "type": "bool", "optional": true, "default": "true" }] },
         { "name": "show", "returnType": "void", "parameters": [] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractSeries::SeriesType", "parameters": [] },
         { "name": "useOpenGL", "returnType": "bool", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "type", "pure": true, "const": true, "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
       ],
       "properties": [
         { "name": "name", "type": "QString", "getter": "name", "setter": "setName" },
@@ -318,10 +318,10 @@
         { "name": "setPointsVisible", "returnType": "void", "parameters": [{ "name": "visible", "type": "bool", "optional": true, "default": "true" }] },
         { "name": "setUpperSeries", "returnType": "void", "parameters": [{ "name": "series", "type": "QLineSeries*" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractSeries::SeriesType", "parameters": [] },
         { "name": "upperSeries", "returnType": "QLineSeries*", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
       ],
       "properties": [
         { "name": "borderColor", "type": "QColor", "getter": "borderColor", "setter": "setBorderColor" },
@@ -378,10 +378,10 @@
         { "name": "setMax", "returnType": "void", "parameters": [{ "name": "maxCategory", "type": "QString" }] },
         { "name": "setMin", "returnType": "void", "parameters": [{ "name": "minCategory", "type": "QString" }] },
         { "name": "setRange", "returnType": "void", "parameters": [{ "name": "minCategory", "type": "QString" }, { "name": "maxCategory", "type": "QString" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractAxis::AxisType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractAxis::AxisType", "parameters": [] }
       ],
       "properties": [
         { "name": "categories", "type": "QStringList", "getter": "categories", "setter": "setCategories" },
@@ -429,10 +429,10 @@
       ],
       "methods": [
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
       ],
       "signals": [
       ]
@@ -550,10 +550,10 @@
         { "name": "setBrush", "returnType": "void", "parameters": [{ "name": "brush", "type": "QBrush" }] },
         { "name": "setPen", "returnType": "void", "parameters": [{ "name": "pen", "type": "QPen" }] },
         { "name": "take", "returnType": "bool", "parameters": [{ "name": "box", "type": "QBoxSet*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
       ],
       "properties": [
         { "name": "boxOutlineVisible", "type": "bool", "getter": "boxOutlineVisible", "setter": "setBoxOutlineVisible" },
@@ -666,10 +666,10 @@
         { "name": "setPen", "returnType": "void", "parameters": [{ "name": "pen", "type": "QPen" }] },
         { "name": "sets", "returnType": "QList<QCandlestickSet*>", "parameters": [] },
         { "name": "take", "returnType": "bool", "parameters": [{ "name": "set", "type": "QCandlestickSet*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
       ],
       "properties": [
         { "name": "bodyOutlineVisible", "type": "bool", "getter": "bodyOutlineVisible", "setter": "setBodyOutlineVisible" },
@@ -784,10 +784,10 @@
         { "name": "setLabelsPosition", "returnType": "void", "parameters": [{ "name": "position", "type": "QCategoryAxis::AxisLabelsPosition" }] },
         { "name": "setStartValue", "returnType": "void", "parameters": [{ "name": "min", "type": "double" }] },
         { "name": "startValue", "returnType": "double", "parameters": [{ "name": "categoryLabel", "type": "QString", "optional": true, "defaultCpp": "QString()" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractAxis::AxisType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractAxis::AxisType", "parameters": [] }
       ],
       "properties": [
         { "name": "categoriesLabels", "type": "QStringList", "getter": "categoriesLabels" },
@@ -948,10 +948,10 @@
         { "name": "setRange", "returnType": "void", "parameters": [{ "name": "min", "type": "QDateTime" }, { "name": "max", "type": "QDateTime" }] },
         { "name": "setTickCount", "returnType": "void", "parameters": [{ "name": "count", "type": "int" }] },
         { "name": "tickCount", "returnType": "int", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractAxis::AxisType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractAxis::AxisType", "parameters": [] }
       ],
       "properties": [
         { "name": "format", "type": "QString", "getter": "format", "setter": "setFormat" },
@@ -1072,10 +1072,10 @@
       ],
       "methods": [
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
       ],
       "signals": [
       ]
@@ -1093,10 +1093,10 @@
       ],
       "methods": [
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
       ],
       "signals": [
       ]
@@ -1114,10 +1114,10 @@
       ],
       "methods": [
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
       ],
       "signals": [
       ]
@@ -1148,7 +1148,6 @@
         { "name": "markerShape", "returnType": "QLegend::MarkerShape", "parameters": [] },
         { "name": "markers", "returnType": "QList<QLegendMarker*>", "parameters": [{ "name": "series", "type": "QAbstractSeries*", "optional": true, "default": "null" }] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*" }, { "name": "option", "type": "QStyleOptionGraphicsItem*" }, { "name": "widget", "type": "QWidget*", "optional": true, "default": "null" }] },
         { "name": "pen", "returnType": "QPen", "parameters": [] },
         { "name": "reverseMarkers", "returnType": "bool", "parameters": [] },
         { "name": "setAlignment", "returnType": "void", "parameters": [{ "name": "alignment", "type": "Qt::Alignment" }] },
@@ -1169,6 +1168,7 @@
       ],
       "virtuals": [
         { "name": "hideEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QHideEvent*", "cpp": "QHideEvent *" }] },
+        { "name": "paint", "returnType": "void", "parameters": [{ "name": "painter", "type": "QPainter*", "cpp": "QPainter *" }, { "name": "option", "type": "QStyleOptionGraphicsItem*", "cpp": "const QStyleOptionGraphicsItem *" }, { "name": "widget", "type": "QWidget*", "cpp": "QWidget *", "optional": true, "default": "null" }] },
         { "name": "showEvent", "returnType": "void", "parameters": [{ "name": "event", "type": "QShowEvent*", "cpp": "QShowEvent *" }] }
       ],
       "properties": [
@@ -1213,7 +1213,6 @@
         { "name": "labelBrush", "returnType": "QBrush", "parameters": [] },
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
         { "name": "pen", "returnType": "QPen", "parameters": [] },
-        { "name": "series", "returnType": "QAbstractSeries*", "parameters": [] },
         { "name": "setBrush", "returnType": "void", "parameters": [{ "name": "brush", "type": "QBrush" }] },
         { "name": "setFont", "returnType": "void", "parameters": [{ "name": "font", "type": "QFont" }] },
         { "name": "setLabel", "returnType": "void", "parameters": [{ "name": "label", "type": "QString" }] },
@@ -1222,10 +1221,11 @@
         { "name": "setShape", "returnType": "void", "parameters": [{ "name": "shape", "type": "QLegend::MarkerShape" }] },
         { "name": "setVisible", "returnType": "void", "parameters": [{ "name": "visible", "type": "bool" }] },
         { "name": "shape", "returnType": "QLegend::MarkerShape", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QLegendMarker::LegendMarkerType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "series", "pure": true, "returnType": "QAbstractSeries*", "parameters": [] },
+        { "name": "type", "pure": true, "returnType": "QLegendMarker::LegendMarkerType", "parameters": [] }
       ],
       "properties": [
         { "name": "brush", "type": "QBrush", "getter": "brush", "setter": "setBrush" },
@@ -1261,10 +1261,10 @@
       ],
       "methods": [
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
       ],
       "signals": [
       ]
@@ -1294,10 +1294,10 @@
         { "name": "setMinorTickCount", "returnType": "void", "parameters": [{ "name": "minorTickCount", "type": "int" }] },
         { "name": "setRange", "returnType": "void", "parameters": [{ "name": "min", "type": "double" }, { "name": "max", "type": "double" }] },
         { "name": "tickCount", "returnType": "int", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractAxis::AxisType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractAxis::AxisType", "parameters": [] }
       ],
       "properties": [
         { "name": "base", "type": "double", "getter": "base", "setter": "setBase" },
@@ -1330,10 +1330,10 @@
       ],
       "methods": [
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
       ],
       "signals": [
       ]
@@ -1376,10 +1376,10 @@
         { "name": "sum", "returnType": "double", "parameters": [] },
         { "name": "take", "returnType": "bool", "parameters": [{ "name": "slice", "type": "QPieSlice*" }] },
         { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractSeries::SeriesType", "parameters": [] },
         { "name": "verticalPosition", "returnType": "double", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
       ],
       "properties": [
         { "name": "count", "type": "int", "getter": "count" },
@@ -1544,10 +1544,10 @@
         { "name": "setMarkerShape", "returnType": "void", "parameters": [{ "name": "shape", "type": "QScatterSeries::MarkerShape" }] },
         { "name": "setMarkerSize", "returnType": "void", "parameters": [{ "name": "size", "type": "double" }] },
         { "name": "setPen", "returnType": "void", "parameters": [{ "name": "pen", "type": "QPen" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
       ],
       "properties": [
         { "name": "borderColor", "type": "QColor", "getter": "borderColor", "setter": "setBorderColor" },
@@ -1575,10 +1575,10 @@
       ],
       "methods": [
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
       ],
       "signals": [
       ]
@@ -1596,10 +1596,10 @@
       ],
       "methods": [
         { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractSeries::SeriesType", "parameters": [] }
       ],
       "signals": [
       ]
@@ -1727,10 +1727,10 @@
         { "name": "tickCount", "returnType": "int", "parameters": [] },
         { "name": "tickInterval", "returnType": "double", "parameters": [] },
         { "name": "tickType", "returnType": "QValueAxis::TickType", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QAbstractAxis::AxisType", "parameters": [] }
+        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
       ],
       "virtuals": [
+        { "name": "type", "const": true, "returnType": "QAbstractAxis::AxisType", "parameters": [] }
       ],
       "properties": [
         { "name": "labelFormat", "type": "QString", "getter": "labelFormat", "setter": "setLabelFormat" },

@@ -14,6 +14,7 @@ global using QtSharp.QtOpenGL;
 global using QtSharp.QtOpenGLWidgets;
 global using QtSharp.Demos;
 
-// Every module has a static Qt class for the free functions it declares; the namespace enums these
-// tests use are QtCore's, so the alias keeps `Qt.Alignment` unambiguous.
-global using Qt = QtSharp.QtCore.Qt;
+// Only QtCore declares a static `Qt` class: every other module names its free-function class
+// after the module (QtGui, QtWidgets, ...). `Qt.Alignment` therefore resolves on its own, and no
+// alias is needed here - if a second module ever publishes a `Qt` again, these files stop
+// compiling, which is the regression test for issue #8.

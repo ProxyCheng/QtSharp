@@ -49,11 +49,12 @@
       "subclassable": true,
       "owned": true,
       "constructors": [
+        { "parameters": [] }
       ],
       "methods": [
-        { "name": "id", "returnType": "long long", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "id", "pure": true, "const": true, "returnType": "long long", "parameters": [] }
       ],
       "signals": [
       ]

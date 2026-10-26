@@ -7,8 +7,8 @@ Qt Positioning for .NET, generated from the Qt 6.12 headers the same way `QtShar
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.15.0" />
-  <PackageReference Include="QtSharp.Positioning" Version="0.15.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.16.0" />
+  <PackageReference Include="QtSharp.Positioning" Version="0.16.0" />
 </ItemGroup>
 ```
 

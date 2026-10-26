@@ -4,6 +4,37 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.16.0 - 2026-10-26
+
+- **Abstract Qt classes can be subclassed from C# (issue #9).** A pure virtual is now an override
+  point wherever it is declared, not only when its name was on the curated callback list, so
+  `QAbstractButton`, `QLayout`, `QValidator` and `QAbstractItemView` publish the hooks their
+  subclasses have to implement (`QLayout::addItem/itemAt/takeAt/count`, `QValidator::validate`,
+  `QAbstractItemView::moveCursor`). Those classes now get a protected constructor and a native
+  subclass that is concrete; a class with a pure virtual the binding cannot express stays
+  unconstructible instead of producing an abstract native subclass.
+- **`ref`/`out` parameters work on overrides, not just calls.** `QValidator::validate(QString &,
+  int &)` can be overridden: the dispatch stub reads the values Qt passed and writes the override's
+  results back into Qt's variables after it returns. Calls keep their existing spelling - `ref
+  string`/`ref int` for in-out values, `out` for Qt's output pointers.
+- **Protected nested types in override signatures are expressible.** `QAbstractItemView::moveCursor`
+  takes `CursorAction`, which Qt declares protected. The generated forwarders now convert inside a
+  member of the generated subclass - the only scope that may name the type - instead of in an
+  exported free function, which MSVC rejected with C2248. Base-call chaining goes through the same
+  path.
+- **A virtual taking a non-copyable value** (`QStandardItem::read(QDataStream &)`) hands the
+  override a transient wrapper over Qt's object rather than a copy that cannot exist (C2280).
+- **Issue #8:** a non-core module publishes its free functions in a class named after the module
+  (`QtSharp.QtGui.QtGui`), so only QtCore owns `Qt`. `Qt.Alignment` no longer needs an alias when
+  QtGui is imported, and the demos and binding tests now compile without one - a second module
+  publishing a `Qt` is a compile error again.
+- The single-translation-unit native binding is compiled with `/bigobj`; the published virtual and
+  conversion surface crossed MSVC's section limit (C1128).
+- **`test-subclass`** covers the seam end to end: Qt paints a managed `QAbstractButton`, activates
+  and measures a managed `QLayout`, calls a `QListView::moveCursor` override that chains to the
+  protected base member, and drives `QLineEdit`'s acceptability through a managed
+  `QValidator::validate` with reference parameters.
+
 ## 0.15.0 - 2026-10-26
 
 - **`QtSharp.Sql` restores the two Qt model classes that went with the QtSql binding**, implemented

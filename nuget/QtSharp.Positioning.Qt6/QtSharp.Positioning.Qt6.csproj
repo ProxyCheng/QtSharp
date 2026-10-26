@@ -9,7 +9,7 @@
     <NoWarn>$(NoWarn);NU5128</NoWarn>
 
     <PackageId>QtSharp.Positioning.Qt6</PackageId>
-    <Version>0.15.0</Version>
+    <Version>0.16.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>The Qt Positioning runtime (Qt6Positioning.dll) loaded by QtSharp.Positioning.</Description>
     <PackageTags>Qt;Qt6;QtPositioning;runtime;native</PackageTags>
