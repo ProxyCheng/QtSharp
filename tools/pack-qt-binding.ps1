@@ -1,5 +1,5 @@
 param(
-    [string]$PackageVersion = '0.11.0',
+    [string]$PackageVersion = '0.12.0',
     [string]$QtRuntimeDir = '',
     [switch]$SkipBuild
 )

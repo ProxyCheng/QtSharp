@@ -1,7 +1,7 @@
 param(
     [Parameter(Mandatory = $true)][string]$QtToolsSource,
     [string]$QtVersion = '6.12.0',
-    [string]$PackageVersion = '0.11.0'
+    [string]$PackageVersion = '0.12.0'
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot

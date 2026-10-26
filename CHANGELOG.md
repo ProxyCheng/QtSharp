@@ -4,6 +4,18 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.12.0 - 2026-10-26
+
+- **A .NET `Stream` can sit behind Qt's `QIODevice`.** `StreamIODevice` implements the device
+  virtuals (`readData`/`writeData`/`seek`/`pos`/`size`/`atEnd`/`isSequential`/`reset`), so
+  `QImage.Load`, `QXmlStreamReader`, `QDataStream` and every other `QIODevice*` consumer read from
+  or write to managed IO. `test-iodevice` covers both directions plus 1000 create/dispose cycles
+  and 500 abandoned instances as a leak check.
+- **The generator has a bridge registry.** `gen/Bridges.cs` is the single place where a .NET
+  capability wraps itself in a Qt interface: a bridge says which classes it owns, which virtuals
+  it publishes and how it maps special parameters (QIODevice's raw byte buffers become `IntPtr`).
+  Adding the next bridge is a class plus a row, not another branch in the extractor.
+
 ## 0.11.0 - 2026-10-26
 
 - **QJsonArray is a C# list.** It implements `IList<QJsonValue>` (indexer, Add, Insert, RemoveAt,

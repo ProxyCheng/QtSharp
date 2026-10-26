@@ -922,7 +922,9 @@ public static partial class ApiModel
     // so every class declaring that name gets it.
     static bool PublishAsVirtual(string name, string className)
         => VirtualAllow.Contains(name)
-           || (VirtualExtensionNames.Contains(name) && IsInExtensionTree(className));
+           || (VirtualExtensionNames.Contains(name) && IsInExtensionTree(className))
+           // The bridges (QioDeviceBridge today) are the deliberate exceptions; see Bridges.cs.
+           || VirtualBridges.Publishes(className, name);
 
     // Whether the class is one of the extension classes or inherits from one. The name closure
     // has to stay inside that subtree: a name like `setData` is also declared, completely
@@ -1005,7 +1007,7 @@ public static partial class ApiModel
     }
 
     // How one parameter crosses the boundary.
-    enum ParamMode
+    internal enum ParamMode
     {
         In,         // a plain input
         Out,        // a non-const scalar pointer: Qt writes one value back (QColor::getRgb)
@@ -1134,7 +1136,7 @@ public static partial class ApiModel
     }
 
     // --------------------------------------------------------------- facts and rendering
-    class ParamFact
+    internal class ParamFact
     {
         public string Name;
         public string Type;         // model type, null when the vocabulary cannot express it
@@ -1144,6 +1146,10 @@ public static partial class ApiModel
         // pointee const and the reference (const QMimeData * -> QMimeData*).
         public string CppType;
         public ParamMode Mode;      // input, out (non-const scalar pointer) or ref
+        // A raw byte buffer handed to a QIODevice implementation (readData/writeData). Managed
+        // code sees an IntPtr; the parameter is deliberately accepted though its C++ type is not
+        // part of the vocabulary. See QioDeviceBridge.cs.
+        public bool Buffer;
         public bool Optional;       // the C++ declaration has a default here
         public string Default;      // a literal the code generator can emit, or null
         // The C++ default expression verbatim, when it is not expressible as a C# default (a
@@ -1152,7 +1158,7 @@ public static partial class ApiModel
         public string DefaultCpp;
     }
 
-    class FnFact
+    internal class FnFact
     {
         public CXCursor Cursor;
         public string Name;
@@ -1682,6 +1688,11 @@ public static partial class ApiModel
 
         foreach (var p in fn.Params)
             p.Mode = ParamModeOf(p.ClangType);
+
+        // QIODevice's read/watch hooks hand the implementation a raw byte buffer; the mapping
+        // lives with the bridge registry (Bridges.cs).
+        VirtualBridges.MapParameters(fn, clang.getCursorSpelling(clang.getCursorSemanticParent(handle)).ToString());
+
         fn.Visible = VisibleParamsOf(fn);
         return fn;
     }
@@ -2104,6 +2115,10 @@ public static partial class ApiModel
         {
             foreach (var p in fn.Visible)
             {
+                // A QIODevice byte buffer is an IntPtr by construction (QioDeviceBridge.cs); its
+                // C++ type is deliberately outside the vocabulary.
+                if (p.Buffer)
+                    continue;
                 if (p.Type != null && SupportedType(p.ClangType, isParameter: true))
                     continue;
                 blocker = DescribeBlocked(p.ClangType);
@@ -2551,6 +2566,8 @@ public static partial class ApiModel
         // conversion (std::chrono::duration_cast<std::chrono::milliseconds>).
         if ((withCpp || p.Type == "TimeSpan") && p.CppType != null)
             sb.Append(", \"cpp\": ").Append(Json(p.CppType));
+        if (p.Buffer)
+            sb.Append(", \"buffer\": true");
         if (p.Mode == ParamMode.Out)
             sb.Append(", \"out\": true");
         else if (p.Mode == ParamMode.Ref)

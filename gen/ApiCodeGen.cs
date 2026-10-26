@@ -1978,6 +1978,11 @@ public static class ApiCodeGen
                 }
         }
 
+        // A bridge may keep its published virtuals on the class itself (the QIODevice bridge
+        // does); the registry says so, so this stays free of per-class rules. The class that
+        // declares the slot keeps it either way.
+        slots.RemoveAll(s => s.Declaring != className && !VirtualBridges.PropagatesToSubclasses(s.Declaring));
+
         virtualChains[className] = slots;
         return slots;
     }
@@ -4194,6 +4199,10 @@ public static class ApiCodeGen
         // spelling.
         if (PType(p) == "TimeSpan")
             return $"std::chrono::duration_cast<{p.GetProperty("cpp").GetString()}>(std::chrono::nanoseconds({NativeName(PName(p))}))";
+        // A raw byte buffer crosses as void*; the C++ declaration spelled it char* / const char*,
+        // so the call casts back to that spelling.
+        if (p.TryGetProperty("buffer", out var buffer) && buffer.ValueKind == JsonValueKind.True)
+            return $"static_cast<{p.GetProperty("cpp").GetString()}>({NativeName(PName(p))})";
         if (IsRef(p))
             return "*" + NativeName(PName(p));
         return CppArg(PType(p), NativeName(PName(p)), DefaultCpp(p));

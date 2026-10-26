@@ -44,7 +44,7 @@ tests/QtSharp.BindingTests.csproj           ← binding-specific tests (test-*)
 Current coverage: **508 classes / 10997 methods / 913 virtuals / 522 enums / 849 Q_PROPERTY
 properties / 480 signals / 68 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSql,
 QtSvg, QtSvgWidgets, QtPrintSupport, QtXml, QtOpenGL, QtOpenGLWidgets). The gate runs 33 official Qt
-examples (**958 assertions**), 13 binding-specific tests (**434 assertions**), the 38 official Qt
+examples (**958 assertions**), 14 binding-specific tests (**450 assertions**), the 38 official Qt
 Charts examples (**570 assertions**) and the three official Qt3D examples (**37 assertions**).
 
 Extension modules are separate assemblies and packages against the same runtime:
@@ -63,7 +63,7 @@ else to set up. No Qt SDK, no Visual Studio C++ workload, no clone:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.11.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.12.0" />
 </ItemGroup>
 ```
 
@@ -103,8 +103,8 @@ than part of qtbase. It references the core package and adds all six modules:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.11.0" />
-  <PackageReference Include="QtSharp.Qt3D" Version="0.11.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.12.0" />
+  <PackageReference Include="QtSharp.Qt3D" Version="0.12.0" />
 </ItemGroup>
 ```
 
@@ -137,7 +137,7 @@ drop-in replacement for every Qt module or every desktop deployment scenario.
 
 ## Releases
 
-Pushing a semantic-version tag such as `v0.11.0` starts the release workflow. It builds twelve
+Pushing a semantic-version tag such as `v0.12.0` starts the release workflow. It builds twelve
 Windows x64 packages and attaches them, with a `SHA256SUMS.txt`, to a GitHub Release:
 
 | package | what it is |
@@ -297,7 +297,7 @@ module projects directly (the same assemblies the package contains).
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.11.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.12.0" />
 </ItemGroup>
 ```
 
@@ -396,6 +396,11 @@ static class Program
   snapshots are `ToObjectDictionary()` and `ToObjectList()`, with values unwrapped the way
   `QVariant.ToObject()` does (nested objects as `Dictionary<string, object>`, arrays as
   `object[]`). Object keys enumerate in Qt's sorted order.
+* **A .NET Stream can be a Qt IO device.** `StreamIODevice` (in `QtSharp.QtCore`) implements
+  `QIODevice`'s virtuals (`readData`/`writeData`/`seek`/`size`/...), so `QImage.Load`,
+  `QXmlStreamReader`, `QDataStream` and anything else taking a `QIODevice*` reads from or writes to
+  managed IO. The generator publishes QIODevice's virtuals through a small bridge registry
+  (`gen/Bridges.cs`), which is also where future bridges belong.
 * **The application object** is created and run like PyQt does it: `new QApplication(args)`,
   `app.Exec()`, `app.Quit()`, `app.Exit(code)`. From code that has no application reference (a menu
   action), use `QCoreApplication.Instance().Quit()`.
@@ -480,7 +485,7 @@ and matching DLLs (normally a Qt kit's `bin`):
 powershell -File tools\pack-qt-tools.ps1 -QtToolsSource C:\Qt\6.12.0\msvc2022_64\bin
 ```
 
-The result is `out/packages/QtSharp.Tools.0.11.0.nupkg`. `-QtVersion` and `-PackageVersion`
+The result is `out/packages/QtSharp.Tools.0.12.0.nupkg`. `-QtVersion` and `-PackageVersion`
 override the defaults. Put the upstream license texts/notices in a `QtSharp-ThirdPartyNotices`
 subdirectory beside the source tools to include them in the payload. Tools are staged under
 `out/qt-tools`; the script checks QtCore's version and runs captured, time-limited startup checks.
@@ -489,7 +494,7 @@ In a consumer project:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Tools" Version="0.11.0" PrivateAssets="all" />
+  <PackageReference Include="QtSharp.Tools" Version="0.12.0" PrivateAssets="all" />
   <QtResource Include="assets\sample.qrc" />
 </ItemGroup>
 ```
