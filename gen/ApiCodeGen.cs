@@ -525,15 +525,25 @@ public static class ApiCodeGen
         if (!nativeOnly)
         {
             var files = GenerateCSharp(ns);
-            // Replace the generated tree, so a type that moved to a different header cannot leave a
-            // stale file behind; the old single-file output is removed as well.
+            // Keep the generated tree in sync without rewriting files whose bytes did not change: an
+            // unchanged tree keeps its timestamps, so the module assemblies stay up to date and a
+            // `dotnet build` after a regen is a no-op. Files that are no longer generated are
+            // removed, so a type that moved to a different header cannot leave a stale file
+            // behind; the old single-file output goes as well.
+            var expected = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var file in files)
+                expected.Add(Path.GetFullPath(Path.Combine(outDir, file.Key.Replace('/', Path.DirectorySeparatorChar))));
             if (Directory.Exists(generatedDir))
-                Directory.Delete(generatedDir, true);
+            {
+                foreach (var existing in Directory.GetFiles(generatedDir, "*", SearchOption.AllDirectories))
+                    if (!expected.Contains(Path.GetFullPath(existing)))
+                        File.Delete(existing);
+            }
             foreach (var file in files)
             {
                 string path = Path.Combine(outDir, file.Key.Replace('/', Path.DirectorySeparatorChar));
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
-                File.WriteAllText(path, file.Value);
+                WriteIfChanged(path, file.Value);
             }
             string staleSingleFile = Path.Combine(outDir, assemblyName + ".cs");
             if (File.Exists(staleSingleFile))
@@ -548,12 +558,22 @@ public static class ApiCodeGen
             Directory.Delete(generatedDir, true);
         }
 
-        File.WriteAllText(Path.Combine(outDir, assemblyName + ".native.cpp"), GenerateNative());
+        WriteIfChanged(Path.Combine(outDir, assemblyName + ".native.cpp"), GenerateNative());
         foreach (var (_, dependencyDocument) in dependencyDocuments)
             dependencyDocument.Dispose();
         Console.WriteLine(nativeOnly
             ? $"[codegen] wrote {assemblyName}.native.cpp (native glue only)"
             : $"[codegen] wrote {outDir}/generated/ ({written} files) + {assemblyName}.native.cpp");
+    }
+
+    // Writes only when the bytes differ. File.WriteAllText uses UTF-8 without a BOM, and so does
+    // this, so the comparison is against exactly what a previous run wrote.
+    static void WriteIfChanged(string path, string text)
+    {
+        byte[] bytes = Encoding.UTF8.GetBytes(text);
+        if (File.Exists(path) && File.ReadAllBytes(path).AsSpan().SequenceEqual(bytes))
+            return;
+        File.WriteAllBytes(path, bytes);
     }
 
     // ------------------------------------------------------------------ model queries
