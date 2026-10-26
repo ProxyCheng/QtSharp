@@ -33,4 +33,21 @@ roots, or the handwritten runtime, followed by a fresh gate run.
 - Generated model changes must be intentional. Include the extraction/codegen result in the PR
   description and explain any coverage change.
 
+## Releases
+
+A release is a semantic version plus a `v<version>` tag, and every release that changes the binding
+gets its own version: patch for fixes that leave the API alone, minor for API additions and Qt
+version upgrades. Do not reuse a version that is already published - bump it instead.
+
+The version is passed to the release workflow, which builds and smoke-tests every package from the
+checked-in models before publishing, and creates or updates the GitHub Release:
+
+```powershell
+gh workflow run release.yml -f version=0.3.0
+```
+
+Pushing a `v<version>` tag does the same. The `Version` properties in the package projects and the
+defaults in `tools/pack-*.ps1` follow the released version; the workflow overrides them from the
+version it was given.
+
 By contributing, you agree that your contribution is provided under the MIT License in `LICENSE`.
