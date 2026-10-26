@@ -33,8 +33,8 @@ public static class HorizontalStackedBarChart
 
             var view = ChartsAssertions.Present(chart);
 
-            check.Check(series.Type() == QAbstractSeries.SeriesType.SeriesTypeHorizontalStackedBar,
-                $"the series reports itself as a horizontal stacked bar series (got {series.Type()})");
+            check.Check(series.type() == QAbstractSeries.SeriesType.SeriesTypeHorizontalStackedBar,
+                $"the series reports itself as a horizontal stacked bar series (got {series.type()})");
             check.Check(series.Count == 5, $"five sets (got {series.Count})");
             check.Check(set2.At(3) == 13, $"the 13 in Axel's set survives (got {set2.At(3)})");
             check.Check(axisY.Orientation == Qt.Orientation.Vertical,

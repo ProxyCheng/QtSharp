@@ -24,14 +24,12 @@
       "cppName": "Qt3DInput::QAbstractActionInput",
       "header": "Qt3DInput/qabstractactioninput.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
       ],
       "methods": [
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -44,16 +42,14 @@
       "cppName": "Qt3DInput::QAbstractAxisInput",
       "header": "Qt3DInput/qabstractaxisinput.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
       ],
       "methods": [
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setSourceDevice", "returnType": "void", "parameters": [{ "name": "sourceDevice", "type": "Qt3DInput::QAbstractPhysicalDevice*" }] },
-        { "name": "sourceDevice", "returnType": "Qt3DInput::QAbstractPhysicalDevice*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "sourceDevice", "flags": ["const"], "returnType": "Qt3DInput::QAbstractPhysicalDevice*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -70,26 +66,24 @@
       "cppName": "Qt3DInput::QAbstractPhysicalDevice",
       "header": "Qt3DInput/qabstractphysicaldevice.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
         { "name": "addAxisSetting", "returnType": "void", "parameters": [{ "name": "axisSetting", "type": "Qt3DInput::QAxisSetting*" }] },
-        { "name": "axisCount", "returnType": "int", "parameters": [] },
-        { "name": "axisIdentifier", "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
-        { "name": "axisNames", "returnType": "QStringList", "parameters": [] },
-        { "name": "axisSettings", "returnType": "QList<Qt3DInput::QAxisSetting*>", "parameters": [] },
-        { "name": "buttonCount", "returnType": "int", "parameters": [] },
-        { "name": "buttonIdentifier", "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
-        { "name": "buttonNames", "returnType": "QStringList", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "axisSettings", "flags": ["const"], "returnType": "QList<Qt3DInput::QAxisSetting*>", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "removeAxisSetting", "returnType": "void", "parameters": [{ "name": "axisSetting", "type": "Qt3DInput::QAxisSetting*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
+        { "name": "axisCount", "flags": ["const"], "returnType": "int", "returnCpp": "int", "parameters": [] },
+        { "name": "axisIdentifier", "flags": ["const"], "returnType": "int", "returnCpp": "int", "parameters": [{ "name": "name", "type": "QString", "cpp": "const QString &" }] },
+        { "name": "axisNames", "flags": ["const"], "returnType": "QStringList", "returnCpp": "QStringList", "parameters": [] },
+        { "name": "buttonCount", "flags": ["const"], "returnType": "int", "returnCpp": "int", "parameters": [] },
+        { "name": "buttonIdentifier", "flags": ["const"], "returnType": "int", "returnCpp": "int", "parameters": [{ "name": "name", "type": "QString", "cpp": "const QString &" }] },
+        { "name": "buttonNames", "flags": ["const"], "returnType": "QStringList", "returnCpp": "QStringList", "parameters": [] }
       ],
       "signals": [
       ]
@@ -100,19 +94,17 @@
       "cppName": "Qt3DInput::QAction",
       "header": "Qt3DInput/qaction.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
         { "name": "addInput", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractActionInput*" }] },
-        { "name": "inputs", "returnType": "QList<Qt3DInput::QAbstractActionInput*>", "parameters": [] },
-        { "name": "isActive", "returnType": "bool", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "inputs", "flags": ["const"], "returnType": "QList<Qt3DInput::QAbstractActionInput*>", "parameters": [] },
+        { "name": "isActive", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "removeInput", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractActionInput*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -129,19 +121,17 @@
       "cppName": "Qt3DInput::QActionInput",
       "header": "Qt3DInput/qactioninput.h",
       "bases": ["Qt3DInput::QAbstractActionInput"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "buttons", "returnType": "QList<int>", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "buttons", "flags": ["const"], "returnType": "QList<int>", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setButtons", "returnType": "void", "parameters": [{ "name": "buttons", "type": "QList<int>" }] },
         { "name": "setSourceDevice", "returnType": "void", "parameters": [{ "name": "sourceDevice", "type": "Qt3DInput::QAbstractPhysicalDevice*" }] },
-        { "name": "sourceDevice", "returnType": "Qt3DInput::QAbstractPhysicalDevice*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "sourceDevice", "flags": ["const"], "returnType": "Qt3DInput::QAbstractPhysicalDevice*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -160,17 +150,15 @@
       "cppName": "Qt3DInput::QAnalogAxisInput",
       "header": "Qt3DInput/qanalogaxisinput.h",
       "bases": ["Qt3DInput::QAbstractAxisInput"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "axis", "returnType": "int", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "axis", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setAxis", "returnType": "void", "parameters": [{ "name": "axis", "type": "int" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -187,19 +175,17 @@
       "cppName": "Qt3DInput::QAxis",
       "header": "Qt3DInput/qaxis.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
         { "name": "addInput", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractAxisInput*" }] },
-        { "name": "inputs", "returnType": "QList<Qt3DInput::QAbstractAxisInput*>", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "inputs", "flags": ["const"], "returnType": "QList<Qt3DInput::QAbstractAxisInput*>", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "removeInput", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractAxisInput*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "value", "returnType": "float", "parameters": [] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
+        { "name": "value", "flags": ["const"], "returnType": "float", "parameters": [] }
       ],
       "virtuals": [
       ],
@@ -216,23 +202,21 @@
       "cppName": "Qt3DInput::QAxisAccumulator",
       "header": "Qt3DInput/qaxisaccumulator.h",
       "bases": ["Qt3DCore::QComponent"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "scale", "returnType": "float", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "scale", "flags": ["const"], "returnType": "float", "parameters": [] },
         { "name": "setScale", "returnType": "void", "parameters": [{ "name": "scale", "type": "float" }] },
         { "name": "setSourceAxis", "returnType": "void", "parameters": [{ "name": "sourceAxis", "type": "Qt3DInput::QAxis*" }] },
         { "name": "setSourceAxisType", "returnType": "void", "parameters": [{ "name": "sourceAxisType", "type": "QAxisAccumulator::SourceAxisType" }] },
-        { "name": "sourceAxis", "returnType": "Qt3DInput::QAxis*", "parameters": [] },
-        { "name": "sourceAxisType", "returnType": "QAxisAccumulator::SourceAxisType", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "value", "returnType": "float", "parameters": [] },
-        { "name": "velocity", "returnType": "float", "parameters": [] }
+        { "name": "sourceAxis", "flags": ["const"], "returnType": "Qt3DInput::QAxis*", "parameters": [] },
+        { "name": "sourceAxisType", "flags": ["const"], "returnType": "QAxisAccumulator::SourceAxisType", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
+        { "name": "value", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "velocity", "flags": ["const"], "returnType": "float", "parameters": [] }
       ],
       "virtuals": [
       ],
@@ -257,21 +241,19 @@
       "cppName": "Qt3DInput::QAxisSetting",
       "header": "Qt3DInput/qaxissetting.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "axes", "returnType": "QList<int>", "parameters": [] },
-        { "name": "deadZoneRadius", "returnType": "float", "parameters": [] },
-        { "name": "isSmoothEnabled", "returnType": "bool", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "axes", "flags": ["const"], "returnType": "QList<int>", "parameters": [] },
+        { "name": "deadZoneRadius", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "isSmoothEnabled", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setAxes", "returnType": "void", "parameters": [{ "name": "axes", "type": "QList<int>" }] },
         { "name": "setDeadZoneRadius", "returnType": "void", "parameters": [{ "name": "deadZoneRadius", "type": "float" }] },
         { "name": "setSmoothEnabled", "returnType": "void", "parameters": [{ "name": "enabled", "type": "bool" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -292,23 +274,21 @@
       "cppName": "Qt3DInput::QButtonAxisInput",
       "header": "Qt3DInput/qbuttonaxisinput.h",
       "bases": ["Qt3DInput::QAbstractAxisInput"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "acceleration", "returnType": "float", "parameters": [] },
-        { "name": "buttons", "returnType": "QList<int>", "parameters": [] },
-        { "name": "deceleration", "returnType": "float", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "scale", "returnType": "float", "parameters": [] },
+        { "name": "acceleration", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "buttons", "flags": ["const"], "returnType": "QList<int>", "parameters": [] },
+        { "name": "deceleration", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "scale", "flags": ["const"], "returnType": "float", "parameters": [] },
         { "name": "setAcceleration", "returnType": "void", "parameters": [{ "name": "acceleration", "type": "float" }] },
         { "name": "setButtons", "returnType": "void", "parameters": [{ "name": "buttons", "type": "QList<int>" }] },
         { "name": "setDeceleration", "returnType": "void", "parameters": [{ "name": "deceleration", "type": "float" }] },
         { "name": "setScale", "returnType": "void", "parameters": [{ "name": "scale", "type": "float" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -331,19 +311,21 @@
       "cppName": "Qt3DInput::QInputAspect",
       "header": "Qt3DInput/qinputaspect.h",
       "bases": ["Qt3DCore::QAbstractAspect"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "availablePhysicalDevices", "returnType": "QStringList", "parameters": [] },
+        { "name": "availablePhysicalDevices", "flags": ["const"], "returnType": "QStringList", "parameters": [] },
         { "name": "createPhysicalDevice", "returnType": "Qt3DInput::QAbstractPhysicalDevice*", "parameters": [{ "name": "name", "type": "QString" }] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
+        { "name": "jobsDone", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] },
+        { "name": "onEngineStartup", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] },
+        { "name": "onRegistered", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] },
+        { "name": "onUnregistered", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] }
       ],
       "signals": [
       ]
@@ -354,20 +336,18 @@
       "cppName": "Qt3DInput::QInputChord",
       "header": "Qt3DInput/qinputchord.h",
       "bases": ["Qt3DInput::QAbstractActionInput"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
         { "name": "addChord", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractActionInput*" }] },
-        { "name": "chords", "returnType": "QList<Qt3DInput::QAbstractActionInput*>", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "chords", "flags": ["const"], "returnType": "QList<Qt3DInput::QAbstractActionInput*>", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "removeChord", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractActionInput*" }] },
         { "name": "setTimeout", "returnType": "void", "parameters": [{ "name": "timeout", "type": "int" }] },
-        { "name": "timeout", "returnType": "int", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "timeout", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -384,22 +364,20 @@
       "cppName": "Qt3DInput::QInputSequence",
       "header": "Qt3DInput/qinputsequence.h",
       "bases": ["Qt3DInput::QAbstractActionInput"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
         { "name": "addSequence", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractActionInput*" }] },
-        { "name": "buttonInterval", "returnType": "int", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "buttonInterval", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "removeSequence", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractActionInput*" }] },
-        { "name": "sequences", "returnType": "QList<Qt3DInput::QAbstractActionInput*>", "parameters": [] },
+        { "name": "sequences", "flags": ["const"], "returnType": "QList<Qt3DInput::QAbstractActionInput*>", "parameters": [] },
         { "name": "setButtonInterval", "returnType": "void", "parameters": [{ "name": "buttonInterval", "type": "int" }] },
         { "name": "setTimeout", "returnType": "void", "parameters": [{ "name": "timeout", "type": "int" }] },
-        { "name": "timeout", "returnType": "int", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "timeout", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -418,17 +396,15 @@
       "cppName": "Qt3DInput::QInputSettings",
       "header": "Qt3DInput/qinputsettings.h",
       "bases": ["Qt3DCore::QComponent"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "eventSource", "returnType": "QObject*", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "eventSource", "flags": ["const"], "returnType": "QObject*", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setEventSource", "returnType": "void", "parameters": [{ "name": "eventSource", "type": "QObject*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -445,24 +421,22 @@
       "cppName": "Qt3DInput::QKeyEvent",
       "header": "Qt3DInput/qkeyevent.h",
       "bases": ["QObject"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": false,
+      "flags": ["subclassable"],
       "constructors": [
       ],
       "methods": [
-        { "name": "count", "returnType": "int", "parameters": [] },
-        { "name": "isAccepted", "returnType": "bool", "parameters": [] },
-        { "name": "isAutoRepeat", "returnType": "bool", "parameters": [] },
-        { "name": "key", "returnType": "int", "parameters": [] },
-        { "name": "matches", "returnType": "bool", "parameters": [{ "name": "key_", "type": "QKeySequence::StandardKey" }] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "modifiers", "returnType": "int", "parameters": [] },
-        { "name": "nativeScanCode", "returnType": "unsigned int", "parameters": [] },
+        { "name": "count", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "isAccepted", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "isAutoRepeat", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "key", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "matches", "flags": ["const"], "returnType": "bool", "parameters": [{ "name": "key_", "type": "QKeySequence::StandardKey" }] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "modifiers", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "nativeScanCode", "flags": ["const"], "returnType": "unsigned int", "parameters": [] },
         { "name": "setAccepted", "returnType": "void", "parameters": [{ "name": "accepted", "type": "bool" }] },
-        { "name": "text", "returnType": "QString", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QEvent::Type", "parameters": [] }
+        { "name": "text", "flags": ["const"], "returnType": "QString", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
+        { "name": "type", "flags": ["const"], "returnType": "QEvent::Type", "parameters": [] }
       ],
       "virtuals": [
       ],
@@ -484,24 +458,28 @@
       "cppName": "Qt3DInput::QKeyboardDevice",
       "header": "Qt3DInput/qkeyboarddevice.h",
       "bases": ["Qt3DInput::QAbstractPhysicalDevice"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "activeInput", "returnType": "Qt3DInput::QKeyboardHandler*", "parameters": [] },
-        { "name": "axisCount", "returnType": "int", "parameters": [] },
-        { "name": "axisIdentifier", "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
-        { "name": "axisNames", "returnType": "QStringList", "parameters": [] },
-        { "name": "buttonCount", "returnType": "int", "parameters": [] },
-        { "name": "buttonIdentifier", "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
-        { "name": "buttonNames", "returnType": "QStringList", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "activeInput", "flags": ["const"], "returnType": "Qt3DInput::QKeyboardHandler*", "parameters": [] },
+        { "name": "axisCount", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "axisIdentifier", "flags": ["const"], "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "axisNames", "flags": ["const"], "returnType": "QStringList", "parameters": [] },
+        { "name": "buttonCount", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "buttonIdentifier", "flags": ["const"], "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "buttonNames", "flags": ["const"], "returnType": "QStringList", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
+        { "name": "axisCount", "flags": ["const", "final"], "returnType": "int", "returnCpp": "int", "parameters": [] },
+        { "name": "axisIdentifier", "flags": ["const", "final"], "returnType": "int", "returnCpp": "int", "parameters": [{ "name": "name", "type": "QString", "cpp": "const QString &" }] },
+        { "name": "axisNames", "flags": ["const", "final"], "returnType": "QStringList", "returnCpp": "QStringList", "parameters": [] },
+        { "name": "buttonCount", "flags": ["const", "final"], "returnType": "int", "returnCpp": "int", "parameters": [] },
+        { "name": "buttonIdentifier", "flags": ["const", "final"], "returnType": "int", "returnCpp": "int", "parameters": [{ "name": "name", "type": "QString", "cpp": "const QString &" }] },
+        { "name": "buttonNames", "flags": ["const", "final"], "returnType": "QStringList", "returnCpp": "QStringList", "parameters": [] }
       ],
       "properties": [
         { "name": "activeInput", "type": "Qt3DInput::QKeyboardHandler*", "getter": "activeInput" }
@@ -516,19 +494,17 @@
       "cppName": "Qt3DInput::QKeyboardHandler",
       "header": "Qt3DInput/qkeyboardhandler.h",
       "bases": ["Qt3DCore::QComponent"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "focus", "returnType": "bool", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "focus", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setFocus", "returnType": "void", "parameters": [{ "name": "focus", "type": "bool" }] },
         { "name": "setSourceDevice", "returnType": "void", "parameters": [{ "name": "keyboardDevice", "type": "Qt3DInput::QKeyboardDevice*" }] },
-        { "name": "sourceDevice", "returnType": "Qt3DInput::QKeyboardDevice*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "sourceDevice", "flags": ["const"], "returnType": "Qt3DInput::QKeyboardDevice*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -587,21 +563,19 @@
       "cppName": "Qt3DInput::QLogicalDevice",
       "header": "Qt3DInput/qlogicaldevice.h",
       "bases": ["Qt3DCore::QComponent"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "actions", "returnType": "QList<Qt3DInput::QAction*>", "parameters": [] },
+        { "name": "actions", "flags": ["const"], "returnType": "QList<Qt3DInput::QAction*>", "parameters": [] },
         { "name": "addAction", "returnType": "void", "parameters": [{ "name": "action", "type": "Qt3DInput::QAction*" }] },
         { "name": "addAxis", "returnType": "void", "parameters": [{ "name": "axis", "type": "Qt3DInput::QAxis*" }] },
-        { "name": "axes", "returnType": "QList<Qt3DInput::QAxis*>", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "axes", "flags": ["const"], "returnType": "QList<Qt3DInput::QAxis*>", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "removeAction", "returnType": "void", "parameters": [{ "name": "action", "type": "Qt3DInput::QAction*" }] },
         { "name": "removeAxis", "returnType": "void", "parameters": [{ "name": "axis", "type": "Qt3DInput::QAxis*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -614,27 +588,31 @@
       "cppName": "Qt3DInput::QMouseDevice",
       "header": "Qt3DInput/qmousedevice.h",
       "bases": ["Qt3DInput::QAbstractPhysicalDevice"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "axisCount", "returnType": "int", "parameters": [] },
-        { "name": "axisIdentifier", "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
-        { "name": "axisNames", "returnType": "QStringList", "parameters": [] },
-        { "name": "buttonCount", "returnType": "int", "parameters": [] },
-        { "name": "buttonIdentifier", "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
-        { "name": "buttonNames", "returnType": "QStringList", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "sensitivity", "returnType": "float", "parameters": [] },
+        { "name": "axisCount", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "axisIdentifier", "flags": ["const"], "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "axisNames", "flags": ["const"], "returnType": "QStringList", "parameters": [] },
+        { "name": "buttonCount", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "buttonIdentifier", "flags": ["const"], "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "buttonNames", "flags": ["const"], "returnType": "QStringList", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "sensitivity", "flags": ["const"], "returnType": "float", "parameters": [] },
         { "name": "setSensitivity", "returnType": "void", "parameters": [{ "name": "value", "type": "float" }] },
         { "name": "setUpdateAxesContinuously", "returnType": "void", "parameters": [{ "name": "updateAxesContinuously", "type": "bool" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "updateAxesContinuously", "returnType": "bool", "parameters": [] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
+        { "name": "updateAxesContinuously", "flags": ["const"], "returnType": "bool", "parameters": [] }
       ],
       "virtuals": [
+        { "name": "axisCount", "flags": ["const", "final"], "returnType": "int", "returnCpp": "int", "parameters": [] },
+        { "name": "axisIdentifier", "flags": ["const", "final"], "returnType": "int", "returnCpp": "int", "parameters": [{ "name": "name", "type": "QString", "cpp": "const QString &" }] },
+        { "name": "axisNames", "flags": ["const", "final"], "returnType": "QStringList", "returnCpp": "QStringList", "parameters": [] },
+        { "name": "buttonCount", "flags": ["const", "final"], "returnType": "int", "returnCpp": "int", "parameters": [] },
+        { "name": "buttonIdentifier", "flags": ["const", "final"], "returnType": "int", "returnCpp": "int", "parameters": [{ "name": "name", "type": "QString", "cpp": "const QString &" }] },
+        { "name": "buttonNames", "flags": ["const", "final"], "returnType": "QStringList", "returnCpp": "QStringList", "parameters": [] }
       ],
       "properties": [
         { "name": "sensitivity", "type": "float", "getter": "sensitivity", "setter": "setSensitivity" },
@@ -651,23 +629,21 @@
       "cppName": "Qt3DInput::QMouseEvent",
       "header": "Qt3DInput/qmouseevent.h",
       "bases": ["QObject"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": false,
+      "flags": ["subclassable"],
       "constructors": [
       ],
       "methods": [
-        { "name": "button", "returnType": "QMouseEvent::Buttons", "parameters": [] },
-        { "name": "buttons", "returnType": "int", "parameters": [] },
-        { "name": "isAccepted", "returnType": "bool", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "modifiers", "returnType": "QMouseEvent::Modifiers", "parameters": [] },
+        { "name": "button", "flags": ["const"], "returnType": "QMouseEvent::Buttons", "parameters": [] },
+        { "name": "buttons", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "isAccepted", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "modifiers", "flags": ["const"], "returnType": "QMouseEvent::Modifiers", "parameters": [] },
         { "name": "setAccepted", "returnType": "void", "parameters": [{ "name": "accepted", "type": "bool" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QEvent::Type", "parameters": [] },
-        { "name": "wasHeld", "returnType": "bool", "parameters": [] },
-        { "name": "x", "returnType": "int", "parameters": [] },
-        { "name": "y", "returnType": "int", "parameters": [] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
+        { "name": "type", "flags": ["const"], "returnType": "QEvent::Type", "parameters": [] },
+        { "name": "wasHeld", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "x", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "y", "flags": ["const"], "returnType": "int", "parameters": [] }
       ],
       "virtuals": [
       ],
@@ -689,18 +665,16 @@
       "cppName": "Qt3DInput::QMouseHandler",
       "header": "Qt3DInput/qmousehandler.h",
       "bases": ["Qt3DCore::QComponent"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "containsMouse", "returnType": "bool", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "containsMouse", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setSourceDevice", "returnType": "void", "parameters": [{ "name": "mouseDevice", "type": "Qt3DInput::QMouseDevice*" }] },
-        { "name": "sourceDevice", "returnType": "Qt3DInput::QMouseDevice*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "sourceDevice", "flags": ["const"], "returnType": "Qt3DInput::QMouseDevice*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -728,22 +702,20 @@
       "cppName": "Qt3DInput::QWheelEvent",
       "header": "Qt3DInput/qmouseevent.h",
       "bases": ["QObject"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": false,
+      "flags": ["subclassable"],
       "constructors": [
       ],
       "methods": [
-        { "name": "angleDelta", "returnType": "QPoint", "parameters": [] },
-        { "name": "buttons", "returnType": "int", "parameters": [] },
-        { "name": "isAccepted", "returnType": "bool", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "modifiers", "returnType": "QWheelEvent::Modifiers", "parameters": [] },
+        { "name": "angleDelta", "flags": ["const"], "returnType": "QPoint", "parameters": [] },
+        { "name": "buttons", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "isAccepted", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "modifiers", "flags": ["const"], "returnType": "QWheelEvent::Modifiers", "parameters": [] },
         { "name": "setAccepted", "returnType": "void", "parameters": [{ "name": "accepted", "type": "bool" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] },
-        { "name": "type", "returnType": "QEvent::Type", "parameters": [] },
-        { "name": "x", "returnType": "int", "parameters": [] },
-        { "name": "y", "returnType": "int", "parameters": [] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
+        { "name": "type", "flags": ["const"], "returnType": "QEvent::Type", "parameters": [] },
+        { "name": "x", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "y", "flags": ["const"], "returnType": "int", "parameters": [] }
       ],
       "virtuals": [
       ],

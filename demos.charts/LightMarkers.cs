@@ -126,9 +126,11 @@ public static class LightMarkers
             series.ClickedSignal.Emit(points[2]);
             check.Check(series.SelectedPoints().Length == 0, "clicking it again deselects it");
 
-            // The line colour combo box in the gallery goes through setColor().
+            // The line colour combo box in the gallery goes through setColor(); the Q_PROPERTY
+            // (Color) and the virtual accessor (color()) both see the new value.
             series.SetColor(new QColor(70, 203, 155));
-            check.Check(series.Color.Green() == 203, $"the line colour round-trips (got {series.Color.Green()})");
+            check.Check(series.Color.Green() == 203 && series.color().Green() == 203,
+                $"the line colour round-trips through the property and color() (got {series.Color.Green()}/{series.color().Green()})");
 
             using var rendered = view.Grab();
             check.Check(rendered != null && rendered.Width() > 0,

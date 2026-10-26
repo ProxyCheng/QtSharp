@@ -41,10 +41,10 @@ tests/QtSharp.BindingTests.csproj           ← binding-specific tests (test-*)
    testbind/testapp                         ← the one entry point: demos + tests, one name table
 ```
 
-Current coverage: **482 classes / 10340 methods / 1187 virtuals / 510 enums / 834 Q_PROPERTY
+Current coverage: **483 classes / 9938 methods / 1901 virtuals / 516 enums / 834 Q_PROPERTY
 properties / 475 signals / 68 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg,
-QtSvgWidgets, QtPrintSupport, QtOpenGL, QtOpenGLWidgets). The gate runs 31 official Qt
-examples (**925 assertions**), 17 binding-specific tests (**478 assertions**), the 38 official Qt
+QtSvgWidgets, QtPrintSupport, QtOpenGL, QtOpenGLWidgets). The gate runs 32 official Qt
+examples (**936 assertions**), 17 binding-specific tests (**478 assertions**), the 38 official Qt
 Charts examples (**570 assertions**) and the three official Qt3D examples (**37 assertions**).
 
 Extension modules are separate assemblies and packages against the same runtime:
@@ -403,9 +403,12 @@ static class Program
 * **The application object** is created and run like PyQt does it: `new QApplication(args)`,
   `app.Exec()`, `app.Quit()`, `app.Exit(code)`. From code that has no application reference (a menu
   action), use `QCoreApplication.Instance().Quit()`.
-* **Subclassing**: `override` the virtuals the model publishes — `SizeHint`, `PaintEvent`,
-  `MousePressEvent`, `KeyPressEvent`, model/delegate virtuals (`RowCount`, `Data`, `Paint`,
-  `CreateEditor`), `Runnable.Run`, `FilterAcceptsRow`, … The native side forwards to your override.
+* **Subclassing**: `override` the virtuals the model publishes — `sizeHint` (the `SizeHint`
+  property reads it, the same way Qt's Q_PROPERTY does), `PaintEvent`, `MousePressEvent`,
+  `KeyPressEvent`, model/delegate virtuals (`RowCount`, `Data`, `Paint`, `CreateEditor`),
+  `Runnable.Run`, `FilterAcceptsRow`, `QGraphicsItem::boundingRect`/`paint`/`advance`, … The
+  native side forwards to your override. A virtual is an override point whenever its signature is
+  expressible; private and `final` ones stay callable only.
 * **Declaring your own signal or property** (PyQt's `pyqtSignal`/`pyqtProperty`): put the
   attribute on the member, and the member is the declaration:
   ```csharp
@@ -573,11 +576,11 @@ Replace the local source path with your checkout's `out/packages` directory.
   their names with core classes; each lives in its Qt module namespace (`QtSharp.Qt3DCore`,
   `QtSharp.Qt3DInput`), so a file that imports both aliases the one it means (`using
   QTransform3D = QtSharp.Qt3DCore.QTransform;`).
-* **Qt3D-specific virtuals are not override points yet.** The override whitelist is the core's
-  widget/event/model set, so a managed subclass of a Qt3D class can use its API but cannot replace
-  `QAbstractAspect::onEngineStartup`-style hooks (or `executeCommand`/`jobsToExecute`). Signals,
-  properties, enums and flags are bound normally (including class-scoped enums in signal
-  signatures).
+* **Qt3D-specific virtuals are override points too.** There is no name whitelist: a managed
+  subclass of a Qt3D class can replace `QAbstractAspect::onEngineStartup`-style hooks and
+  `executeCommand`/`jobsToExecute`. A private or `final` virtual, and a signature the glue cannot
+  reproduce, stays callable only. Signals, properties, enums and flags are bound normally
+  (including class-scoped enums in signal signatures).
 * **Not ported**: the RHI examples (they need `QRhi` and prebuilt shaders) and Window Embedding.
   PDF *output* works through `QPrinter` (see `test-docformats`); PDF *reading* needs the QtPdf
   module, which is not bound.

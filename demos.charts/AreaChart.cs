@@ -52,8 +52,8 @@ public static class AreaChart
             check.Check(series.UpperSeries.Handle == series0.Handle, "the area knows its upper series");
             check.Check(series.LowerSeries.Handle == series1.Handle, "the area knows its lower series");
             check.Check(series.Name == "Batman", $"the area keeps its name (got '{series.Name}')");
-            check.Check(series.Type() == QAbstractSeries.SeriesType.SeriesTypeArea,
-                $"the series reports itself as an area (got {series.Type()})");
+            check.Check(series.type() == QAbstractSeries.SeriesType.SeriesTypeArea,
+                $"the series reports itself as an area (got {series.type()})");
             check.Check(Math4.Nearly(series.Pen().Width(), 3.0, 0.001),
                 $"the outline is three pixels wide (got {series.Pen().Width()})");
             check.Check(series.Pen().Color().Green() == 0x96,

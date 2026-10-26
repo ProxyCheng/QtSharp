@@ -22,20 +22,18 @@
       "cppName": "Qt3DAnimation::QAbstractAnimation",
       "header": "Qt3DAnimation/qabstractanimation.h",
       "bases": ["QObject"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
       ],
       "methods": [
-        { "name": "animationName", "returnType": "QString", "parameters": [] },
-        { "name": "animationType", "returnType": "QAbstractAnimation::AnimationType", "parameters": [] },
-        { "name": "duration", "returnType": "float", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "position", "returnType": "float", "parameters": [] },
+        { "name": "animationName", "flags": ["const"], "returnType": "QString", "parameters": [] },
+        { "name": "animationType", "flags": ["const"], "returnType": "QAbstractAnimation::AnimationType", "parameters": [] },
+        { "name": "duration", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "position", "flags": ["const"], "returnType": "float", "parameters": [] },
         { "name": "setAnimationName", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] },
         { "name": "setPosition", "returnType": "void", "parameters": [{ "name": "position", "type": "float" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -57,15 +55,13 @@
       "cppName": "Qt3DAnimation::QAbstractAnimationClip",
       "header": "Qt3DAnimation/qabstractanimationclip.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
       ],
       "methods": [
-        { "name": "duration", "returnType": "float", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "duration", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -82,14 +78,12 @@
       "cppName": "Qt3DAnimation::QAbstractChannelMapping",
       "header": "Qt3DAnimation/qabstractchannelmapping.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
       ],
       "methods": [
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -102,18 +96,16 @@
       "cppName": "Qt3DAnimation::QAbstractClipAnimator",
       "header": "Qt3DAnimation/qabstractclipanimator.h",
       "bases": ["Qt3DCore::QComponent"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
       ],
       "methods": [
-        { "name": "channelMapper", "returnType": "Qt3DAnimation::QChannelMapper*", "parameters": [] },
-        { "name": "clock", "returnType": "Qt3DAnimation::QClock*", "parameters": [] },
-        { "name": "isRunning", "returnType": "bool", "parameters": [] },
-        { "name": "loopCount", "returnType": "int", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "normalizedTime", "returnType": "float", "parameters": [] },
+        { "name": "channelMapper", "flags": ["const"], "returnType": "Qt3DAnimation::QChannelMapper*", "parameters": [] },
+        { "name": "clock", "flags": ["const"], "returnType": "Qt3DAnimation::QClock*", "parameters": [] },
+        { "name": "isRunning", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "loopCount", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "normalizedTime", "flags": ["const"], "returnType": "float", "parameters": [] },
         { "name": "setChannelMapper", "returnType": "void", "parameters": [{ "name": "channelMapper", "type": "Qt3DAnimation::QChannelMapper*" }] },
         { "name": "setClock", "returnType": "void", "parameters": [{ "name": "clock", "type": "Qt3DAnimation::QClock*" }] },
         { "name": "setLoopCount", "returnType": "void", "parameters": [{ "name": "loops", "type": "int" }] },
@@ -121,7 +113,7 @@
         { "name": "setRunning", "returnType": "void", "parameters": [{ "name": "running", "type": "bool" }] },
         { "name": "start", "returnType": "void", "parameters": [] },
         { "name": "stop", "returnType": "void", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -146,14 +138,12 @@
       "cppName": "Qt3DAnimation::QAbstractClipBlendNode",
       "header": "Qt3DAnimation/qabstractclipblendnode.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
       ],
       "methods": [
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -166,21 +156,19 @@
       "cppName": "Qt3DAnimation::QAdditiveClipBlend",
       "header": "Qt3DAnimation/qadditiveclipblend.h",
       "bases": ["Qt3DAnimation::QAbstractClipBlendNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "additiveClip", "returnType": "Qt3DAnimation::QAbstractClipBlendNode*", "parameters": [] },
-        { "name": "additiveFactor", "returnType": "float", "parameters": [] },
-        { "name": "baseClip", "returnType": "Qt3DAnimation::QAbstractClipBlendNode*", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "additiveClip", "flags": ["const"], "returnType": "Qt3DAnimation::QAbstractClipBlendNode*", "parameters": [] },
+        { "name": "additiveFactor", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "baseClip", "flags": ["const"], "returnType": "Qt3DAnimation::QAbstractClipBlendNode*", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setAdditiveClip", "returnType": "void", "parameters": [{ "name": "additiveClip", "type": "Qt3DAnimation::QAbstractClipBlendNode*" }] },
         { "name": "setAdditiveFactor", "returnType": "void", "parameters": [{ "name": "additiveFactor", "type": "float" }] },
         { "name": "setBaseClip", "returnType": "void", "parameters": [{ "name": "baseClip", "type": "Qt3DAnimation::QAbstractClipBlendNode*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -201,15 +189,13 @@
       "cppName": "Qt3DAnimation::QAnimationAspect",
       "header": "Qt3DAnimation/qanimationaspect.h",
       "bases": ["Qt3DCore::QAbstractAspect"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -222,17 +208,15 @@
       "cppName": "Qt3DAnimation::QAnimationClip",
       "header": "Qt3DAnimation/qanimationclip.h",
       "bases": ["Qt3DAnimation::QAbstractAnimationClip"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "clipData", "returnType": "Qt3DAnimation::QAnimationClipData", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "clipData", "flags": ["const"], "returnType": "Qt3DAnimation::QAnimationClipData", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setClipData", "returnType": "void", "parameters": [{ "name": "clipData", "type": "Qt3DAnimation::QAnimationClipData" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -249,24 +233,22 @@
       "cppName": "Qt3DAnimation::QAnimationClipData",
       "header": "Qt3DAnimation/qanimationclipdata.h",
       "bases": [],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "arg0", "type": "Qt3DAnimation::QAnimationClipData" }] }
       ],
       "methods": [
         { "name": "appendChannel", "returnType": "void", "parameters": [{ "name": "c", "type": "Qt3DAnimation::QChannel" }] },
-        { "name": "begin", "returnType": "Qt3DAnimation::QChannel*", "parameters": [] },
-        { "name": "cbegin", "returnType": "Qt3DAnimation::QChannel*", "parameters": [] },
-        { "name": "cend", "returnType": "Qt3DAnimation::QChannel*", "parameters": [] },
-        { "name": "channelCount", "returnType": "int", "parameters": [] },
+        { "name": "begin", "flags": ["const"], "returnType": "Qt3DAnimation::QChannel*", "parameters": [] },
+        { "name": "cbegin", "flags": ["const"], "returnType": "Qt3DAnimation::QChannel*", "parameters": [] },
+        { "name": "cend", "flags": ["const"], "returnType": "Qt3DAnimation::QChannel*", "parameters": [] },
+        { "name": "channelCount", "flags": ["const"], "returnType": "int", "parameters": [] },
         { "name": "clearChannels", "returnType": "void", "parameters": [] },
-        { "name": "end", "returnType": "Qt3DAnimation::QChannel*", "parameters": [] },
+        { "name": "end", "flags": ["const"], "returnType": "Qt3DAnimation::QChannel*", "parameters": [] },
         { "name": "insertChannel", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "c", "type": "Qt3DAnimation::QChannel" }] },
-        { "name": "isValid", "returnType": "bool", "parameters": [] },
-        { "name": "name", "returnType": "QString", "parameters": [] },
+        { "name": "isValid", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "name", "flags": ["const"], "returnType": "QString", "parameters": [] },
         { "name": "removeChannel", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "setName", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] }
       ],
@@ -281,19 +263,17 @@
       "cppName": "Qt3DAnimation::QAnimationClipLoader",
       "header": "Qt3DAnimation/qanimationcliploader.h",
       "bases": ["Qt3DAnimation::QAbstractAnimationClip"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] },
-        { "parameters": [{ "name": "source", "type": "QUrl" }, { "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] },
+        { "parameters": [{ "name": "source", "type": "QUrl" }, { "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setSource", "returnType": "void", "parameters": [{ "name": "source", "type": "QUrl" }] },
-        { "name": "source", "returnType": "QUrl", "parameters": [] },
-        { "name": "status", "returnType": "QAnimationClipLoader::Status", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "source", "flags": ["const"], "returnType": "QUrl", "parameters": [] },
+        { "name": "status", "flags": ["const"], "returnType": "QAnimationClipLoader::Status", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -312,24 +292,22 @@
       "cppName": "Qt3DAnimation::QAnimationController",
       "header": "Qt3DAnimation/qanimationcontroller.h",
       "bases": ["QObject"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "activeAnimationGroup", "returnType": "int", "parameters": [] },
+        { "name": "activeAnimationGroup", "flags": ["const"], "returnType": "int", "parameters": [] },
         { "name": "addAnimationGroup", "returnType": "void", "parameters": [{ "name": "animationGroups", "type": "Qt3DAnimation::QAnimationGroup*" }] },
         { "name": "animationGroupList", "returnType": "QList<Qt3DAnimation::QAnimationGroup*>", "parameters": [] },
-        { "name": "entity", "returnType": "Qt3DCore::QEntity*", "parameters": [] },
-        { "name": "getAnimationIndex", "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
-        { "name": "getGroup", "returnType": "Qt3DAnimation::QAnimationGroup*", "parameters": [{ "name": "index", "type": "int" }] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "position", "returnType": "float", "parameters": [] },
-        { "name": "positionOffset", "returnType": "float", "parameters": [] },
-        { "name": "positionScale", "returnType": "float", "parameters": [] },
-        { "name": "recursive", "returnType": "bool", "parameters": [] },
+        { "name": "entity", "flags": ["const"], "returnType": "Qt3DCore::QEntity*", "parameters": [] },
+        { "name": "getAnimationIndex", "flags": ["const"], "returnType": "int", "parameters": [{ "name": "name", "type": "QString" }] },
+        { "name": "getGroup", "flags": ["const"], "returnType": "Qt3DAnimation::QAnimationGroup*", "parameters": [{ "name": "index", "type": "int" }] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "position", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "positionOffset", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "positionScale", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "recursive", "flags": ["const"], "returnType": "bool", "parameters": [] },
         { "name": "removeAnimationGroup", "returnType": "void", "parameters": [{ "name": "animationGroups", "type": "Qt3DAnimation::QAnimationGroup*" }] },
         { "name": "setActiveAnimationGroup", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "setAnimationGroups", "returnType": "void", "parameters": [{ "name": "animationGroups", "type": "QList<Qt3DAnimation::QAnimationGroup*>" }] },
@@ -338,7 +316,7 @@
         { "name": "setPositionOffset", "returnType": "void", "parameters": [{ "name": "offset", "type": "float" }] },
         { "name": "setPositionScale", "returnType": "void", "parameters": [{ "name": "scale", "type": "float" }] },
         { "name": "setRecursive", "returnType": "void", "parameters": [{ "name": "recursive", "type": "bool" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -365,24 +343,22 @@
       "cppName": "Qt3DAnimation::QAnimationGroup",
       "header": "Qt3DAnimation/qanimationgroup.h",
       "bases": ["QObject"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
         { "name": "addAnimation", "returnType": "void", "parameters": [{ "name": "animation", "type": "Qt3DAnimation::QAbstractAnimation*" }] },
         { "name": "animationList", "returnType": "QList<Qt3DAnimation::QAbstractAnimation*>", "parameters": [] },
-        { "name": "duration", "returnType": "float", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "name", "returnType": "QString", "parameters": [] },
-        { "name": "position", "returnType": "float", "parameters": [] },
+        { "name": "duration", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "name", "flags": ["const"], "returnType": "QString", "parameters": [] },
+        { "name": "position", "flags": ["const"], "returnType": "float", "parameters": [] },
         { "name": "removeAnimation", "returnType": "void", "parameters": [{ "name": "animation", "type": "Qt3DAnimation::QAbstractAnimation*" }] },
         { "name": "setAnimations", "returnType": "void", "parameters": [{ "name": "animations", "type": "QList<Qt3DAnimation::QAbstractAnimation*>" }] },
         { "name": "setName", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] },
         { "name": "setPosition", "returnType": "void", "parameters": [{ "name": "position", "type": "float" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -403,17 +379,15 @@
       "cppName": "Qt3DAnimation::QBlendedClipAnimator",
       "header": "Qt3DAnimation/qblendedclipanimator.h",
       "bases": ["Qt3DAnimation::QAbstractClipAnimator"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "blendTree", "returnType": "Qt3DAnimation::QAbstractClipBlendNode*", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "blendTree", "flags": ["const"], "returnType": "Qt3DAnimation::QAbstractClipBlendNode*", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setBlendTree", "returnType": "void", "parameters": [{ "name": "blendTree", "type": "Qt3DAnimation::QAbstractClipBlendNode*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -430,17 +404,15 @@
       "cppName": "Qt3DAnimation::QCallbackMapping",
       "header": "Qt3DAnimation/qcallbackmapping.h",
       "bases": ["Qt3DAnimation::QAbstractChannelMapping"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "channelName", "returnType": "QString", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "channelName", "flags": ["const"], "returnType": "QString", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setChannelName", "returnType": "void", "parameters": [{ "name": "channelName", "type": "QString" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -457,9 +429,7 @@
       "cppName": "Qt3DAnimation::QChannel",
       "header": "Qt3DAnimation/qchannel.h",
       "bases": [],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "name", "type": "QString" }] },
@@ -467,15 +437,15 @@
       ],
       "methods": [
         { "name": "appendChannelComponent", "returnType": "void", "parameters": [{ "name": "component", "type": "Qt3DAnimation::QChannelComponent" }] },
-        { "name": "begin", "returnType": "Qt3DAnimation::QChannelComponent*", "parameters": [] },
-        { "name": "cbegin", "returnType": "Qt3DAnimation::QChannelComponent*", "parameters": [] },
-        { "name": "cend", "returnType": "Qt3DAnimation::QChannelComponent*", "parameters": [] },
-        { "name": "channelComponentCount", "returnType": "int", "parameters": [] },
+        { "name": "begin", "flags": ["const"], "returnType": "Qt3DAnimation::QChannelComponent*", "parameters": [] },
+        { "name": "cbegin", "flags": ["const"], "returnType": "Qt3DAnimation::QChannelComponent*", "parameters": [] },
+        { "name": "cend", "flags": ["const"], "returnType": "Qt3DAnimation::QChannelComponent*", "parameters": [] },
+        { "name": "channelComponentCount", "flags": ["const"], "returnType": "int", "parameters": [] },
         { "name": "clearChannelComponents", "returnType": "void", "parameters": [] },
-        { "name": "end", "returnType": "Qt3DAnimation::QChannelComponent*", "parameters": [] },
+        { "name": "end", "flags": ["const"], "returnType": "Qt3DAnimation::QChannelComponent*", "parameters": [] },
         { "name": "insertChannelComponent", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "component", "type": "Qt3DAnimation::QChannelComponent" }] },
-        { "name": "jointIndex", "returnType": "int", "parameters": [] },
-        { "name": "name", "returnType": "QString", "parameters": [] },
+        { "name": "jointIndex", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "name", "flags": ["const"], "returnType": "QString", "parameters": [] },
         { "name": "removeChannelComponent", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "setJointIndex", "returnType": "void", "parameters": [{ "name": "jointIndex", "type": "int" }] },
         { "name": "setName", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] }
@@ -491,9 +461,7 @@
       "cppName": "Qt3DAnimation::QChannelComponent",
       "header": "Qt3DAnimation/qchannelcomponent.h",
       "bases": [],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "name", "type": "QString" }] },
@@ -501,14 +469,14 @@
       ],
       "methods": [
         { "name": "appendKeyFrame", "returnType": "void", "parameters": [{ "name": "kf", "type": "Qt3DAnimation::QKeyFrame" }] },
-        { "name": "begin", "returnType": "Qt3DAnimation::QKeyFrame*", "parameters": [] },
-        { "name": "cbegin", "returnType": "Qt3DAnimation::QKeyFrame*", "parameters": [] },
-        { "name": "cend", "returnType": "Qt3DAnimation::QKeyFrame*", "parameters": [] },
+        { "name": "begin", "flags": ["const"], "returnType": "Qt3DAnimation::QKeyFrame*", "parameters": [] },
+        { "name": "cbegin", "flags": ["const"], "returnType": "Qt3DAnimation::QKeyFrame*", "parameters": [] },
+        { "name": "cend", "flags": ["const"], "returnType": "Qt3DAnimation::QKeyFrame*", "parameters": [] },
         { "name": "clearKeyFrames", "returnType": "void", "parameters": [] },
-        { "name": "end", "returnType": "Qt3DAnimation::QKeyFrame*", "parameters": [] },
+        { "name": "end", "flags": ["const"], "returnType": "Qt3DAnimation::QKeyFrame*", "parameters": [] },
         { "name": "insertKeyFrame", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "kf", "type": "Qt3DAnimation::QKeyFrame" }] },
-        { "name": "keyFrameCount", "returnType": "int", "parameters": [] },
-        { "name": "name", "returnType": "QString", "parameters": [] },
+        { "name": "keyFrameCount", "flags": ["const"], "returnType": "int", "parameters": [] },
+        { "name": "name", "flags": ["const"], "returnType": "QString", "parameters": [] },
         { "name": "removeKeyFrame", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "setName", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] }
       ],
@@ -523,18 +491,16 @@
       "cppName": "Qt3DAnimation::QChannelMapper",
       "header": "Qt3DAnimation/qchannelmapper.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
         { "name": "addMapping", "returnType": "void", "parameters": [{ "name": "mapping", "type": "Qt3DAnimation::QAbstractChannelMapping*" }] },
-        { "name": "mappings", "returnType": "QList<Qt3DAnimation::QAbstractChannelMapping*>", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "mappings", "flags": ["const"], "returnType": "QList<Qt3DAnimation::QAbstractChannelMapping*>", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "removeMapping", "returnType": "void", "parameters": [{ "name": "mapping", "type": "Qt3DAnimation::QAbstractChannelMapping*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -547,21 +513,19 @@
       "cppName": "Qt3DAnimation::QChannelMapping",
       "header": "Qt3DAnimation/qchannelmapping.h",
       "bases": ["Qt3DAnimation::QAbstractChannelMapping"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "channelName", "returnType": "QString", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "property", "returnType": "QString", "parameters": [] },
+        { "name": "channelName", "flags": ["const"], "returnType": "QString", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "property", "flags": ["const"], "returnType": "QString", "parameters": [] },
         { "name": "setChannelName", "returnType": "void", "parameters": [{ "name": "channelName", "type": "QString" }] },
         { "name": "setProperty", "returnType": "void", "parameters": [{ "name": "property", "type": "QString" }] },
         { "name": "setTarget", "returnType": "void", "parameters": [{ "name": "target", "type": "Qt3DCore::QNode*" }] },
-        { "name": "target", "returnType": "Qt3DCore::QNode*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "target", "flags": ["const"], "returnType": "Qt3DCore::QNode*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -582,17 +546,15 @@
       "cppName": "Qt3DAnimation::QClipAnimator",
       "header": "Qt3DAnimation/qclipanimator.h",
       "bases": ["Qt3DAnimation::QAbstractClipAnimator"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "clip", "returnType": "Qt3DAnimation::QAbstractAnimationClip*", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "clip", "flags": ["const"], "returnType": "Qt3DAnimation::QAbstractAnimationClip*", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setClip", "returnType": "void", "parameters": [{ "name": "clip", "type": "Qt3DAnimation::QAbstractAnimationClip*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -609,18 +571,16 @@
       "cppName": "Qt3DAnimation::QClipBlendValue",
       "header": "Qt3DAnimation/qclipblendvalue.h",
       "bases": ["Qt3DAnimation::QAbstractClipBlendNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] },
-        { "parameters": [{ "name": "clip", "type": "Qt3DAnimation::QAbstractAnimationClip*" }, { "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] },
+        { "parameters": [{ "name": "clip", "type": "Qt3DAnimation::QAbstractAnimationClip*" }, { "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "clip", "returnType": "Qt3DAnimation::QAbstractAnimationClip*", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "clip", "flags": ["const"], "returnType": "Qt3DAnimation::QAbstractAnimationClip*", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setClip", "returnType": "void", "parameters": [{ "name": "clip", "type": "Qt3DAnimation::QAbstractAnimationClip*" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -637,17 +597,15 @@
       "cppName": "Qt3DAnimation::QClock",
       "header": "Qt3DAnimation/qclock.h",
       "bases": ["Qt3DCore::QNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "playbackRate", "returnType": "double", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "playbackRate", "flags": ["const"], "returnType": "double", "parameters": [] },
         { "name": "setPlaybackRate", "returnType": "void", "parameters": [{ "name": "playbackRate", "type": "double" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -664,19 +622,17 @@
       "cppName": "Qt3DAnimation::QKeyFrame",
       "header": "Qt3DAnimation/qkeyframe.h",
       "bases": [],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "coords", "type": "QVector2D" }] },
         { "parameters": [{ "name": "coords", "type": "QVector2D" }, { "name": "lh", "type": "QVector2D" }, { "name": "rh", "type": "QVector2D" }] }
       ],
       "methods": [
-        { "name": "coordinates", "returnType": "QVector2D", "parameters": [] },
-        { "name": "interpolationType", "returnType": "QKeyFrame::InterpolationType", "parameters": [] },
-        { "name": "leftControlPoint", "returnType": "QVector2D", "parameters": [] },
-        { "name": "rightControlPoint", "returnType": "QVector2D", "parameters": [] },
+        { "name": "coordinates", "flags": ["const"], "returnType": "QVector2D", "parameters": [] },
+        { "name": "interpolationType", "flags": ["const"], "returnType": "QKeyFrame::InterpolationType", "parameters": [] },
+        { "name": "leftControlPoint", "flags": ["const"], "returnType": "QVector2D", "parameters": [] },
+        { "name": "rightControlPoint", "flags": ["const"], "returnType": "QVector2D", "parameters": [] },
         { "name": "setCoordinates", "returnType": "void", "parameters": [{ "name": "coords", "type": "QVector2D" }] },
         { "name": "setInterpolationType", "returnType": "void", "parameters": [{ "name": "interp", "type": "QKeyFrame::InterpolationType" }] },
         { "name": "setLeftControlPoint", "returnType": "void", "parameters": [{ "name": "lh", "type": "QVector2D" }] },
@@ -693,19 +649,17 @@
       "cppName": "Qt3DAnimation::QKeyframeAnimation",
       "header": "Qt3DAnimation/qkeyframeanimation.h",
       "bases": ["Qt3DAnimation::QAbstractAnimation"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
         { "name": "addKeyframe", "returnType": "void", "parameters": [{ "name": "keyframe", "type": "Qt3DCore::QTransform*" }] },
-        { "name": "easing", "returnType": "QEasingCurve", "parameters": [] },
-        { "name": "endMode", "returnType": "QKeyframeAnimation::RepeatMode", "parameters": [] },
-        { "name": "framePositions", "returnType": "QList<float>", "parameters": [] },
-        { "name": "keyframeList", "returnType": "QList<Qt3DCore::QTransform*>", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "easing", "flags": ["const"], "returnType": "QEasingCurve", "parameters": [] },
+        { "name": "endMode", "flags": ["const"], "returnType": "QKeyframeAnimation::RepeatMode", "parameters": [] },
+        { "name": "framePositions", "flags": ["const"], "returnType": "QList<float>", "parameters": [] },
+        { "name": "keyframeList", "flags": ["const"], "returnType": "QList<Qt3DCore::QTransform*>", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "removeKeyframe", "returnType": "void", "parameters": [{ "name": "keyframe", "type": "Qt3DCore::QTransform*" }] },
         { "name": "setEasing", "returnType": "void", "parameters": [{ "name": "easing", "type": "QEasingCurve" }] },
         { "name": "setEndMode", "returnType": "void", "parameters": [{ "name": "mode", "type": "QKeyframeAnimation::RepeatMode" }] },
@@ -714,10 +668,10 @@
         { "name": "setStartMode", "returnType": "void", "parameters": [{ "name": "mode", "type": "QKeyframeAnimation::RepeatMode" }] },
         { "name": "setTarget", "returnType": "void", "parameters": [{ "name": "target", "type": "Qt3DCore::QTransform*" }] },
         { "name": "setTargetName", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] },
-        { "name": "startMode", "returnType": "QKeyframeAnimation::RepeatMode", "parameters": [] },
-        { "name": "target", "returnType": "Qt3DCore::QTransform*", "parameters": [] },
-        { "name": "targetName", "returnType": "QString", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "startMode", "flags": ["const"], "returnType": "QKeyframeAnimation::RepeatMode", "parameters": [] },
+        { "name": "target", "flags": ["const"], "returnType": "Qt3DCore::QTransform*", "parameters": [] },
+        { "name": "targetName", "flags": ["const"], "returnType": "QString", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -744,21 +698,19 @@
       "cppName": "Qt3DAnimation::QLerpClipBlend",
       "header": "Qt3DAnimation/qlerpclipblend.h",
       "bases": ["Qt3DAnimation::QAbstractClipBlendNode"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "blendFactor", "returnType": "float", "parameters": [] },
-        { "name": "endClip", "returnType": "Qt3DAnimation::QAbstractClipBlendNode*", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "blendFactor", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "endClip", "flags": ["const"], "returnType": "Qt3DAnimation::QAbstractClipBlendNode*", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setBlendFactor", "returnType": "void", "parameters": [{ "name": "blendFactor", "type": "float" }] },
         { "name": "setEndClip", "returnType": "void", "parameters": [{ "name": "endClip", "type": "Qt3DAnimation::QAbstractClipBlendNode*" }] },
         { "name": "setStartClip", "returnType": "void", "parameters": [{ "name": "startClip", "type": "Qt3DAnimation::QAbstractClipBlendNode*" }] },
-        { "name": "startClip", "returnType": "Qt3DAnimation::QAbstractClipBlendNode*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "startClip", "flags": ["const"], "returnType": "Qt3DAnimation::QAbstractClipBlendNode*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -779,21 +731,19 @@
       "cppName": "Qt3DAnimation::QMorphTarget",
       "header": "Qt3DAnimation/qmorphtarget.h",
       "bases": ["QObject"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
         { "name": "addAttribute", "returnType": "void", "parameters": [{ "name": "attribute", "type": "Qt3DCore::QAttribute*" }] },
-        { "name": "attributeList", "returnType": "QList<Qt3DCore::QAttribute*>", "parameters": [] },
-        { "name": "attributeNames", "returnType": "QStringList", "parameters": [] },
-        { "name": "fromGeometry", "static": true, "returnType": "Qt3DAnimation::QMorphTarget*", "parameters": [{ "name": "geometry", "type": "Qt3DCore::QGeometry*" }, { "name": "attributes", "type": "QStringList" }] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "attributeList", "flags": ["const"], "returnType": "QList<Qt3DCore::QAttribute*>", "parameters": [] },
+        { "name": "attributeNames", "flags": ["const"], "returnType": "QStringList", "parameters": [] },
+        { "name": "fromGeometry", "flags": ["static"], "returnType": "Qt3DAnimation::QMorphTarget*", "parameters": [{ "name": "geometry", "type": "Qt3DCore::QGeometry*" }, { "name": "attributes", "type": "QStringList" }] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "removeAttribute", "returnType": "void", "parameters": [{ "name": "attribute", "type": "Qt3DCore::QAttribute*" }] },
         { "name": "setAttributes", "returnType": "void", "parameters": [{ "name": "attributes", "type": "QList<Qt3DCore::QAttribute*>" }] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -810,19 +760,17 @@
       "cppName": "Qt3DAnimation::QMorphingAnimation",
       "header": "Qt3DAnimation/qmorphinganimation.h",
       "bases": ["Qt3DAnimation::QAbstractAnimation"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
         { "name": "addMorphTarget", "returnType": "void", "parameters": [{ "name": "target", "type": "Qt3DAnimation::QMorphTarget*" }] },
-        { "name": "easing", "returnType": "QEasingCurve", "parameters": [] },
+        { "name": "easing", "flags": ["const"], "returnType": "QEasingCurve", "parameters": [] },
         { "name": "getWeights", "returnType": "QList<float>", "parameters": [{ "name": "positionIndex", "type": "int" }] },
-        { "name": "interpolator", "returnType": "float", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "method", "returnType": "QMorphingAnimation::Method", "parameters": [] },
+        { "name": "interpolator", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "method", "flags": ["const"], "returnType": "QMorphingAnimation::Method", "parameters": [] },
         { "name": "morphTargetList", "returnType": "QList<Qt3DAnimation::QMorphTarget*>", "parameters": [] },
         { "name": "removeMorphTarget", "returnType": "void", "parameters": [{ "name": "target", "type": "Qt3DAnimation::QMorphTarget*" }] },
         { "name": "setEasing", "returnType": "void", "parameters": [{ "name": "easing", "type": "QEasingCurve" }] },
@@ -832,10 +780,10 @@
         { "name": "setTargetName", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] },
         { "name": "setTargetPositions", "returnType": "void", "parameters": [{ "name": "targetPositions", "type": "QList<float>" }] },
         { "name": "setWeights", "returnType": "void", "parameters": [{ "name": "positionIndex", "type": "int" }, { "name": "weights", "type": "QList<float>" }] },
-        { "name": "target", "returnType": "Qt3DRender::QGeometryRenderer*", "parameters": [] },
-        { "name": "targetName", "returnType": "QString", "parameters": [] },
-        { "name": "targetPositions", "returnType": "QList<float>", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "target", "flags": ["const"], "returnType": "Qt3DRender::QGeometryRenderer*", "parameters": [] },
+        { "name": "targetName", "flags": ["const"], "returnType": "QString", "parameters": [] },
+        { "name": "targetPositions", "flags": ["const"], "returnType": "QList<float>", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -862,17 +810,15 @@
       "cppName": "Qt3DAnimation::QSkeletonMapping",
       "header": "Qt3DAnimation/qskeletonmapping.h",
       "bases": ["Qt3DAnimation::QAbstractChannelMapping"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setSkeleton", "returnType": "void", "parameters": [{ "name": "skeleton", "type": "Qt3DCore::QAbstractSkeleton*" }] },
-        { "name": "skeleton", "returnType": "Qt3DCore::QAbstractSkeleton*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "skeleton", "flags": ["const"], "returnType": "Qt3DCore::QAbstractSkeleton*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -889,26 +835,24 @@
       "cppName": "Qt3DAnimation::QVertexBlendAnimation",
       "header": "Qt3DAnimation/qvertexblendanimation.h",
       "bases": ["Qt3DAnimation::QAbstractAnimation"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
         { "name": "addMorphTarget", "returnType": "void", "parameters": [{ "name": "target", "type": "Qt3DAnimation::QMorphTarget*" }] },
-        { "name": "interpolator", "returnType": "float", "parameters": [] },
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "interpolator", "flags": ["const"], "returnType": "float", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "morphTargetList", "returnType": "QList<Qt3DAnimation::QMorphTarget*>", "parameters": [] },
         { "name": "removeMorphTarget", "returnType": "void", "parameters": [{ "name": "target", "type": "Qt3DAnimation::QMorphTarget*" }] },
         { "name": "setMorphTargets", "returnType": "void", "parameters": [{ "name": "targets", "type": "QList<Qt3DAnimation::QMorphTarget*>" }] },
         { "name": "setTarget", "returnType": "void", "parameters": [{ "name": "target", "type": "Qt3DRender::QGeometryRenderer*" }] },
         { "name": "setTargetName", "returnType": "void", "parameters": [{ "name": "name", "type": "QString" }] },
         { "name": "setTargetPositions", "returnType": "void", "parameters": [{ "name": "targetPositions", "type": "QList<float>" }] },
-        { "name": "target", "returnType": "Qt3DRender::QGeometryRenderer*", "parameters": [] },
-        { "name": "targetName", "returnType": "QString", "parameters": [] },
-        { "name": "targetPositions", "returnType": "QList<float>", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "target", "flags": ["const"], "returnType": "Qt3DRender::QGeometryRenderer*", "parameters": [] },
+        { "name": "targetName", "flags": ["const"], "returnType": "QString", "parameters": [] },
+        { "name": "targetPositions", "flags": ["const"], "returnType": "QList<float>", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],

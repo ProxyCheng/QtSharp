@@ -33,8 +33,8 @@ public static class HorizontalPercentBarChart
 
             var view = ChartsAssertions.Present(chart);
 
-            check.Check(series.Type() == QAbstractSeries.SeriesType.SeriesTypeHorizontalPercentBar,
-                $"the series reports itself as a horizontal percent bar series (got {series.Type()})");
+            check.Check(series.type() == QAbstractSeries.SeriesType.SeriesTypeHorizontalPercentBar,
+                $"the series reports itself as a horizontal percent bar series (got {series.type()})");
             check.Check(series.Count == 5, $"five sets (got {series.Count})");
 
             ChartsAssertions.Pump();

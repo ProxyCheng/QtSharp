@@ -36,8 +36,8 @@ public static class HorizontalBarChart
 
             var view = ChartsAssertions.Present(chart);
 
-            check.Check(series.Type() == QAbstractSeries.SeriesType.SeriesTypeHorizontalBar,
-                $"the series reports itself as a horizontal bar series (got {series.Type()})");
+            check.Check(series.type() == QAbstractSeries.SeriesType.SeriesTypeHorizontalBar,
+                $"the series reports itself as a horizontal bar series (got {series.type()})");
             check.Check(series.Count == 5, $"five sets (got {series.Count})");
 
             // The axes have swapped sides: the categories are on the left, the values along the

@@ -78,8 +78,8 @@ public static class BoxPlotChart
             check.Check(acmeSeries.Count == 12, $"Acme has twelve months (got {acmeSeries.Count})");
             check.Check(boxWhiskSeries.Count == 12, $"BoxWhisk has twelve (got {boxWhiskSeries.Count})");
             check.Check(acmeSeries.Name == "Acme Ltd", $"the series keeps its name (got '{acmeSeries.Name}')");
-            check.Check(acmeSeries.Type() == QAbstractSeries.SeriesType.SeriesTypeBoxPlot,
-                $"the series reports itself as a box plot series (got {acmeSeries.Type()})");
+            check.Check(acmeSeries.type() == QAbstractSeries.SeriesType.SeriesTypeBoxPlot,
+                $"the series reports itself as a box plot series (got {acmeSeries.type()})");
 
             var sets = acmeSeries.BoxSets();
             check.Check(sets.Length == 12, $"QList<QBoxSet*> came back with twelve sets (got {sets.Length})");

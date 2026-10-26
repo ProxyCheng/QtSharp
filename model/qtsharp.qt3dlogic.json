@@ -16,15 +16,13 @@
       "cppName": "Qt3DLogic::QFrameAction",
       "header": "Qt3DLogic/qframeaction.h",
       "bases": ["Qt3DCore::QComponent"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "Qt3DCore::QNode*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
       ],
@@ -38,17 +36,17 @@
       "cppName": "Qt3DLogic::QLogicAspect",
       "header": "Qt3DLogic/qlogicaspect.h",
       "bases": ["Qt3DCore::QAbstractAspect"],
-      "isAbstract": false,
-      "subclassable": true,
-      "owned": true,
+      "flags": ["subclassable", "owned"],
       "constructors": [
-        { "parameters": [{ "name": "parent", "type": "QObject*", "optional": true, "default": "null" }] }
+        { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "metaObject", "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "tr", "static": true, "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "optional": true }, { "name": "n", "type": "int", "optional": true }] }
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
+        { "name": "onEngineStartup", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] },
+        { "name": "onRegistered", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] }
       ],
       "signals": [
       ]

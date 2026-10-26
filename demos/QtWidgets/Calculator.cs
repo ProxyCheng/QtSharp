@@ -20,9 +20,9 @@ public sealed class CalcButtonApi : QToolButton
 
     // QSize CalcButton::sizeHint() const { QSize s = QToolButton::sizeHint(); s.rheight() += 20;
     //                                         s.rwidth() = qMax(s.width(), s.height()); return s; }
-    public override QSize SizeHint()
+    public override QSize sizeHint()
     {
-        var size = base.SizeHint();
+        var size = base.sizeHint();
         int height = size.Height() + 20;
         int width = Math.Max(size.Width(), height);
         return new QSize(width, height);
@@ -496,8 +496,8 @@ public static class Calculator
         // plain QToolButton gives a shorter button.
         var plain = new QToolButton();
         plain.SetText("7");
-        var managed = calculator.Button("7").SizeHint();
-        var widget = plain.SizeHint();
+        var managed = calculator.Button("7").SizeHint;
+        var widget = plain.SizeHint;
         {
             Check(managed.Height() == widget.Height() + 20 && managed.Width() >= managed.Height(),
                 $"the managed sizeHint reached the layout (managed {managed.Width()}x{managed.Height()}, "

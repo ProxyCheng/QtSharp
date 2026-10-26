@@ -27,7 +27,7 @@ public static class SvgWidget
                 + "<rect width='32' height='32' fill='#0000ff'/></svg>");
 
             using var widget = new QSvgWidget(svgPath);
-            var hint = widget.SizeHint();
+            var hint = widget.SizeHint;
             Check(hint.Width() == 32 && hint.Height() == 32,
                 $"QSvgWidget reports the SVG's size hint ({hint.Width()}x{hint.Height()})");
 

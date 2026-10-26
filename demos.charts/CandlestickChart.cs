@@ -59,8 +59,8 @@ public static class CandlestickChart
             var view = ChartsAssertions.Present(chart);
 
             check.Check(acmeSeries.Count == 22, $"the series holds July's 22 sessions (got {acmeSeries.Count})");
-            check.Check(acmeSeries.Type() == QAbstractSeries.SeriesType.SeriesTypeCandlestick,
-                $"the series reports itself as a candlestick series (got {acmeSeries.Type()})");
+            check.Check(acmeSeries.type() == QAbstractSeries.SeriesType.SeriesTypeCandlestick,
+                $"the series reports itself as a candlestick series (got {acmeSeries.type()})");
             check.Check(acmeSeries.IncreasingColor.Green() == 255 && acmeSeries.IncreasingColor.Red() == 0,
                 "up days are green");
             check.Check(acmeSeries.DecreasingColor.Red() == 255 && acmeSeries.DecreasingColor.Green() == 0,

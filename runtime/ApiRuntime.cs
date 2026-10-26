@@ -1568,6 +1568,17 @@ namespace QtSharp.Runtime
         public static unsafe T ReadStruct<T>(IntPtr storage) where T : unmanaged => *(T*)storage;
 
         /// <summary>
+        /// Copies an array Qt passed to a virtual (a <c>const QPoint *points, int count</c>
+        /// parameter pair) into managed memory. The override owns its copy, so it may keep it
+        /// after the call; writes into it do not reach Qt, which is why only a const input array
+        /// is published as an override point.
+        /// </summary>
+        public static unsafe T[] ReadArray<T>(IntPtr source, int count) where T : unmanaged
+            => source == IntPtr.Zero || count <= 0
+                ? Array.Empty<T>()
+                : new ReadOnlySpan<T>((void*)source, count).ToArray();
+
+        /// <summary>
         /// An exception a user handler threw, caught where native code called into managed code.
         ///
         /// Qt's event loop and its signal machinery are C++ frames: an exception that unwinds into

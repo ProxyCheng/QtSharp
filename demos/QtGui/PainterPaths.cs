@@ -55,8 +55,8 @@ public sealed class ApiPathRenderArea : QWidget
     public static QColor Copy(QColor color)
         => new QColor(color.Red(), color.Green(), color.Blue(), color.Alpha());
 
-    public override QSize MinimumSizeHint() => new QSize(50, 50);
-    public override QSize SizeHint() => new QSize(100, 100);
+    public override QSize minimumSizeHint() => new QSize(50, 50);
+    public override QSize sizeHint() => new QSize(100, 100);
 
     public override void PaintEvent(QPaintEvent e)
     {
@@ -387,8 +387,8 @@ public static class PainterPaths
         }
 
         // The virtual size hints.
-        var hint = areas[0].SizeHint();
-        var minimum = areas[0].MinimumSizeHint();
+        var hint = areas[0].SizeHint;
+        var minimum = areas[0].MinimumSizeHint;
             Check(hint.Width() == 100 && hint.Height() == 100
                   && minimum.Width() == 50 && minimum.Height() == 50,
                 $"sizeHint()/minimumSizeHint() report the official sizes "

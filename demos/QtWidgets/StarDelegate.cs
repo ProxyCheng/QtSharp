@@ -99,7 +99,7 @@ public sealed class ApiStarEditor : QWidget
 
     public int MouseMoveCount;
 
-    public override QSize SizeHint() => rating.SizeHint();
+    public override QSize sizeHint() => rating.SizeHint();
 
     public override void PaintEvent(QPaintEvent e)
     {

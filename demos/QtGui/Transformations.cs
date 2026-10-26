@@ -132,8 +132,8 @@ public sealed class ApiTransformRenderArea : QWidget
 
     public ApiTransformOperation[] Operations() => operations;
 
-    public override QSize MinimumSizeHint() => new QSize(182, 182);
-    public override QSize SizeHint() => new QSize(232, 232);
+    public override QSize minimumSizeHint() => new QSize(182, 182);
+    public override QSize sizeHint() => new QSize(232, 232);
 
     public override void PaintEvent(QPaintEvent e)
     {
@@ -367,8 +367,8 @@ public static class TransformationsDemo
         // The render area's hints and the font metrics it uses to place the axis labels.
         using (var probe = new ApiTransformRenderArea())
         {
-            var hint = probe.SizeHint();
-            var minimum = probe.MinimumSizeHint();
+            var hint = probe.SizeHint;
+            var minimum = probe.MinimumSizeHint;
             Check(hint.Width() == 232 && hint.Height() == 232,
                 $"the render area asks for 232x232 (got {hint.Width()}x{hint.Height()})");
             Check(minimum.Width() == 182 && minimum.Height() == 182,

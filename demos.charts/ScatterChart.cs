@@ -93,8 +93,8 @@ public static class ScatterChart
             check.Check(series0.MarkerSize() == 15.0 && series1.MarkerSize() == 20.0 && series2.MarkerSize() == 30.0,
                 $"the three marker sizes round-trip ({series0.MarkerSize()}/{series1.MarkerSize()}/{series2.MarkerSize()})");
 
-            check.Check(series0.Type() == QAbstractSeries.SeriesType.SeriesTypeScatter,
-                $"a scatter series reports itself as one (got {series0.Type()})");
+            check.Check(series0.type() == QAbstractSeries.SeriesType.SeriesTypeScatter,
+                $"a scatter series reports itself as one (got {series0.type()})");
             check.Check(!chart.IsDropShadowEnabled(), "the drop shadow is off, as the example asks");
             check.Check(chart.Legend().markerShape() == QLegend.MarkerShape.MarkerShapeFromSeries,
                 $"the legend takes its marker shape from the series (got {chart.Legend().markerShape()})");

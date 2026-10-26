@@ -3,15 +3,14 @@ using System;
 // The QIODevice bridge: a C# Stream behind Qt's QIODevice.
 //
 // Qt's IO stack takes a QIODevice*, so a managed implementation has to be a QIODevice subclass
-// whose readData/writeData hooks are overridable from C#. Two things differ from the ordinary
-// rules, and both live here:
+// whose readData/writeData hooks are overridable from C#. Two things live here:
 //
-//   * QIODevice publishes all of its virtuals (the general rule publishes a curated set of event
-//     and model hooks, by name, across the extension trees);
 //   * readData/writeData/readLineData hand the implementation a raw byte buffer. The model keeps
 //     the C++ spelling (the virtual override must repeat Qt's declaration exactly), but the
 //     parameter's model type becomes void* so managed code receives an IntPtr it can copy into or
-//     read from.
+//     read from. Without this the buffer has no model type and the virtual would be inexpressible;
+//   * the override points must not propagate to QIODevice's subclasses (see
+//     PropagatesToSubclasses).
 [VirtualBridge]
 internal sealed class QioDeviceBridge : IVirtualBridge
 {
@@ -21,10 +20,6 @@ internal sealed class QioDeviceBridge : IVirtualBridge
     // members straight into Qt; a native override on them would dispatch back into the managed
     // call that is already running - infinite recursion, found by test-network.
     public bool PropagatesToSubclasses => false;
-
-    public bool Publishes(string className, string name)
-        // The Q_OBJECT scaffolding is not an API (moc generates metaObject/qt_metacast).
-        => name != "metaObject" && !name.StartsWith("qt_", StringComparison.Ordinal);
 
     public void MapParameters(ApiModel.FnFact fn, string declaringClass)
     {
