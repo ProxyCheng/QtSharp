@@ -66,7 +66,10 @@ $addons = @(
     # Qt3DRender's RHI renderer plugin imports Qt6ShaderTools; it is an addon of its own.
     @{ Package = 'qtshadertools'; Marker = 'include\QtShaderTools\qtshadertoolsexports.h'
        Includes = @('QtShaderTools'); Libs = @('Qt6ShaderTools*'); Dlls = @('Qt6ShaderTools.dll')
-       RuntimeModules = @('Qt6ShaderTools'); Plugins = @() }
+       RuntimeModules = @('Qt6ShaderTools'); Plugins = @() },
+    @{ Package = 'qtwebsockets'; Marker = 'include\QtWebSockets\qwebsocket.h'
+       Includes = @('QtWebSockets'); Libs = @('Qt6WebSockets*'); Dlls = @('Qt6WebSockets.dll')
+       RuntimeModules = @('Qt6WebSockets'); Plugins = @() }
 )
 
 # ---- 1. The dev kit ----------------------------------------------------------------

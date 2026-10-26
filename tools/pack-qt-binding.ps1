@@ -1,5 +1,5 @@
 param(
-    [string]$PackageVersion = '0.4.0',
+    [string]$PackageVersion = '0.5.0',
     [string]$QtRuntimeDir = '',
     [switch]$SkipBuild
 )
@@ -14,9 +14,10 @@ Set-Location -LiteralPath $root
 $BindingNative = Join-Path $root 'out\api\QtSharp.Api.dll'
 if (-not $QtRuntimeDir) { $QtRuntimeDir = Join-Path $root 'Qt\6.12.0\runtime' }
 $QtRuntime = $QtRuntimeDir
-$modules = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
+$modules = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsql', 'qtsvg', 'qtsvgwidgets',
              'qtprintsupport', 'qtxml', 'qtopengl', 'qtopenglwidgets',
-             'charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras')
+             'charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras',
+             'qtwebsockets')
 
 if (-not $SkipBuild) {
     $required = @($BindingNative, (Join-Path $QtRuntime 'Qt6Core.dll'))
@@ -35,7 +36,9 @@ $packages = @(
     @{ Name = 'QtSharp.Charts.Qt6';  Args = @("-p:QtChartsRuntimeDir=$QtRuntime") },
     @{ Name = 'QtSharp.Charts';      Args = @() },
     @{ Name = 'QtSharp.Qt3D.Qt6';    Args = @("-p:Qt3DRuntimeDir=$QtRuntime") },
-    @{ Name = 'QtSharp.Qt3D';        Args = @() }
+    @{ Name = 'QtSharp.Qt3D';        Args = @() },
+    @{ Name = 'QtSharp.WebSockets.Qt6'; Args = @("-p:QtWebSocketsRuntimeDir=$QtRuntime") },
+    @{ Name = 'QtSharp.WebSockets';  Args = @() }
 )
 
 $outDir = Join-Path $root 'out\packages'
@@ -69,6 +72,10 @@ $expected = @{
     'QtSharp.Qt3D'       = @('lib/net10.0/QtSharp.Qt3DCore.dll', 'lib/net10.0/QtSharp.Qt3DExtras.dll',
                              'tools/native/QtSharp.Qt3DCore.Native.dll',
                              'tools/native/QtSharp.Qt3DExtras.Native.dll')
+    'QtSharp.WebSockets.Qt6' = @('tools/native/Qt6WebSockets.dll', 'buildTransitive/QtSharp.WebSockets.Qt6.targets')
+    'QtSharp.WebSockets' = @('lib/net10.0/QtSharp.QtWebSockets.dll',
+                             'tools/native/QtSharp.QtWebSockets.Native.dll',
+                             'buildTransitive/QtSharp.WebSockets.targets')
 }
 
 Write-Host "=== Inspect the packages ==="
@@ -89,4 +96,4 @@ foreach ($package in $packages) {
         Write-Host ("  {0,-22} {1,8:N1} KB  {2} entries" -f $file.Name, ($file.Length / 1KB), $zip.Entries.Count)
     } finally { $zip.Dispose() }
 }
-Write-Host "OK: 7 packages in $outDir"
+Write-Host "OK: 9 packages in $outDir"

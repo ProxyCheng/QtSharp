@@ -391,6 +391,10 @@ namespace QtSharp.Runtime
     // An [QtSignal] C# event. A field-like event keeps its subscribers in a compiler-generated
     // delegate field that has the event's name; the native connection installed at attach time
     // reads that field, so a C# emit, a C++ emit and a QML emit all reach the same handlers.
+    //
+    // The field also starts with a trampoline (see SignalTrampoline), so `ValueChanged?.Invoke(v)`
+    // inside the declaring class activates the Qt signal instead of only running the C# side.
+    // EmitSignal stays as the explicit spelling of the same activation.
     sealed class AttributedSignal
     {
         public EventInfo Info;
@@ -398,6 +402,8 @@ namespace QtSharp.Runtime
         public string Signature;
         public Type[] Parameters;
         FieldInfo subscribers;
+        Type trampolineType;
+        MethodInfo trampolineEmit;
 
         public static AttributedSignal Create(EventInfo info, string name)
         {
@@ -405,6 +411,10 @@ namespace QtSharp.Runtime
             if (invoke == null)
                 throw new InvalidOperationException(
                     $"[QtSignal] event '{info.DeclaringType}.{info.Name}' is not a delegate type");
+            if (invoke.ReturnType != typeof(void))
+                throw new InvalidOperationException(
+                    $"[QtSignal] event '{info.DeclaringType}.{info.Name}' returns a value, "
+                    + "but a Qt signal carries no result");
 
             var declared = invoke.GetParameters();
             var parameters = new Type[declared.Length];
@@ -436,6 +446,7 @@ namespace QtSharp.Runtime
             }
             signature.Append(')');
 
+            var trampolineType = TrampolineType(info, parameters);
             return new AttributedSignal
             {
                 Info = info,
@@ -443,18 +454,162 @@ namespace QtSharp.Runtime
                 Signature = signature.ToString(),
                 Parameters = parameters,
                 subscribers = field,
+                trampolineType = trampolineType,
+                trampolineEmit = trampolineType.GetMethod("Emit"),
             };
+        }
+
+        // The arity classes SignalTrampoline<...> publish, the same limit QSignal stops at.
+        static Type TrampolineType(EventInfo info, Type[] parameters)
+        {
+            Type definition;
+            switch (parameters.Length)
+            {
+                case 0: return typeof(SignalTrampoline0);
+                case 1: definition = typeof(SignalTrampoline<>); break;
+                case 2: definition = typeof(SignalTrampoline<,>); break;
+                case 3: definition = typeof(SignalTrampoline<,,>); break;
+                case 4: definition = typeof(SignalTrampoline<,,,>); break;
+                case 5: definition = typeof(SignalTrampoline<,,,,>); break;
+                case 6: definition = typeof(SignalTrampoline<,,,,,>); break;
+                case 7: definition = typeof(SignalTrampoline<,,,,,,>); break;
+                case 8: definition = typeof(SignalTrampoline<,,,,,,,>); break;
+                default:
+                    throw new InvalidOperationException(
+                        $"[QtSignal] event '{info.DeclaringType}.{info.Name}' has {parameters.Length} "
+                        + "parameters; the runtime supports at most 8");
+            }
+            return definition.MakeGenericType(parameters);
+        }
+
+        // Seeds the emit trampoline into the object's event field, in front of whatever handlers
+        // are already there. Called once per object while its meta-object is attached.
+        public void Seed(object target, IQtObject sender)
+        {
+            var current = subscribers.GetValue(target) as Delegate;
+            if (HasTrampoline(current))
+                return;
+            var trampoline = Delegate.CreateDelegate(Info.EventHandlerType,
+                Activator.CreateInstance(trampolineType, this, sender), trampolineEmit);
+            subscribers.SetValue(target, Delegate.Combine(trampoline, current));
+        }
+
+        static bool HasTrampoline(Delegate handlers)
+        {
+            if (handlers == null)
+                return false;
+            foreach (var handler in handlers.GetInvocationList())
+                if (handler.Target is SignalTrampoline)
+                    return true;
+            return false;
+        }
+
+        // What the trampoline calls. The activation marker tells the native connection that this
+        // emission already ran the C# handlers (the delegate chain that invoked the trampoline runs
+        // them next), so it must not deliver them a second time.
+        internal void EmitFromTrampoline(IQtObject sender, object[] args)
+        {
+            if (args.Length != Parameters.Length)
+                throw new ArgumentException(
+                    $"'{sender.GetType().Name}.{Info.Name}' carries {Parameters.Length} argument(s), "
+                    + $"but {args.Length} were emitted", nameof(args));
+            ApiRuntime.ActivateDeclared(sender.Handle, Signature, Parameters, args);
         }
 
         public void Invoke(object target, IntPtr argv)
         {
             if (subscribers.GetValue(target) is not Delegate handlers)
                 return;
+            // The trampoline is the emit side, not a subscriber: a signal Qt activates calls only
+            // the handlers the C# side added.
+            var invocation = handlers.GetInvocationList();
+            if (Array.Exists(invocation, handler => handler.Target is SignalTrampoline))
+            {
+                var subscribed = Array.FindAll(invocation, handler => handler.Target is not SignalTrampoline);
+                if (subscribed.Length == 0)
+                    return;
+                handlers = Delegate.Combine(subscribed);
+            }
             var args = new object[Parameters.Length];
             for (int i = 0; i < args.Length; i++)
                 args[i] = MetaType.ReadArgument(Parameters[i], argv, i);
             handlers.DynamicInvoke(args);
         }
+    }
+
+    // A delegate of an [QtSignal] event's own type, seeded into the event's backing field. The
+    // field is what `ValueChanged?.Invoke(v)` reads, so invoking the event calls this first: it
+    // activates the Qt signal (Qt connections, QML and C++ see it), and the subscribers the C#
+    // side added are the rest of the field's invocation list, invoked after it as usual.
+    internal abstract class SignalTrampoline
+    {
+        readonly AttributedSignal signal;
+        readonly IQtObject sender;
+
+        protected SignalTrampoline(AttributedSignal signal, IQtObject sender)
+        {
+            this.signal = signal;
+            this.sender = sender;
+        }
+
+        protected void EmitSignal(object[] args) => signal.EmitFromTrampoline(sender, args);
+    }
+
+    internal sealed class SignalTrampoline0 : SignalTrampoline
+    {
+        public SignalTrampoline0(AttributedSignal signal, IQtObject sender) : base(signal, sender) { }
+        public void Emit() => EmitSignal(Array.Empty<object>());
+    }
+
+    internal sealed class SignalTrampoline<T1> : SignalTrampoline
+    {
+        public SignalTrampoline(AttributedSignal signal, IQtObject sender) : base(signal, sender) { }
+        public void Emit(T1 a1) => EmitSignal(new object[] { a1 });
+    }
+
+    internal sealed class SignalTrampoline<T1, T2> : SignalTrampoline
+    {
+        public SignalTrampoline(AttributedSignal signal, IQtObject sender) : base(signal, sender) { }
+        public void Emit(T1 a1, T2 a2) => EmitSignal(new object[] { a1, a2 });
+    }
+
+    internal sealed class SignalTrampoline<T1, T2, T3> : SignalTrampoline
+    {
+        public SignalTrampoline(AttributedSignal signal, IQtObject sender) : base(signal, sender) { }
+        public void Emit(T1 a1, T2 a2, T3 a3) => EmitSignal(new object[] { a1, a2, a3 });
+    }
+
+    internal sealed class SignalTrampoline<T1, T2, T3, T4> : SignalTrampoline
+    {
+        public SignalTrampoline(AttributedSignal signal, IQtObject sender) : base(signal, sender) { }
+        public void Emit(T1 a1, T2 a2, T3 a3, T4 a4) => EmitSignal(new object[] { a1, a2, a3, a4 });
+    }
+
+    internal sealed class SignalTrampoline<T1, T2, T3, T4, T5> : SignalTrampoline
+    {
+        public SignalTrampoline(AttributedSignal signal, IQtObject sender) : base(signal, sender) { }
+        public void Emit(T1 a1, T2 a2, T3 a3, T4 a4, T5 a5) => EmitSignal(new object[] { a1, a2, a3, a4, a5 });
+    }
+
+    internal sealed class SignalTrampoline<T1, T2, T3, T4, T5, T6> : SignalTrampoline
+    {
+        public SignalTrampoline(AttributedSignal signal, IQtObject sender) : base(signal, sender) { }
+        public void Emit(T1 a1, T2 a2, T3 a3, T4 a4, T5 a5, T6 a6)
+            => EmitSignal(new object[] { a1, a2, a3, a4, a5, a6 });
+    }
+
+    internal sealed class SignalTrampoline<T1, T2, T3, T4, T5, T6, T7> : SignalTrampoline
+    {
+        public SignalTrampoline(AttributedSignal signal, IQtObject sender) : base(signal, sender) { }
+        public void Emit(T1 a1, T2 a2, T3 a3, T4 a4, T5 a5, T6 a6, T7 a7)
+            => EmitSignal(new object[] { a1, a2, a3, a4, a5, a6, a7 });
+    }
+
+    internal sealed class SignalTrampoline<T1, T2, T3, T4, T5, T6, T7, T8> : SignalTrampoline
+    {
+        public SignalTrampoline(AttributedSignal signal, IQtObject sender) : base(signal, sender) { }
+        public void Emit(T1 a1, T2 a2, T3 a3, T4 a4, T5 a5, T6 a6, T7 a7, T8 a8)
+            => EmitSignal(new object[] { a1, a2, a3, a4, a5, a6, a7, a8 });
     }
 
     // The C# type -> Qt type name map the declared members use, plus the conversions between a
@@ -1002,12 +1157,16 @@ namespace QtSharp.Runtime
                     firstAttach = !metaByHandle.ContainsKey(handle.Handle);
                     metaByHandle[handle.Handle] = spec;
                 }
-                // An attributed event needs a native connection to feed its C# handlers; the
+                // An attributed event needs a native connection to feed its C# handlers and a
+                // trampoline in its field so an Invoke of the event activates the signal; the
                 // generated base constructors each call AttachMetaObject, so only the first one
-                // installs it (the others would double every handler).
+                // installs them (the others would double every handler and every trampoline).
                 if (firstAttach)
                     foreach (var declaredEvent in spec.Events)
+                    {
                         ConnectDeclaredSignal(handle.Handle, declaredEvent);
+                        declaredEvent.Seed(target, handle);
+                    }
             }
         }
 
@@ -1140,6 +1299,10 @@ namespace QtSharp.Runtime
         {
             SignalCallback callback = (userData, argc, argv, typeIds) =>
             {
+                // `ValueChanged?.Invoke(v)` already activated this emission through the seeded
+                // trampoline; the delegate chain that invoked it runs the C# handlers itself.
+                if (ConsumeDeclaredActivation(userData, declared.Signature))
+                    return;
                 var target = LookupWrapper(userData);
                 if (target == null)
                     return;
@@ -1156,7 +1319,11 @@ namespace QtSharp.Runtime
                     ReportCallbackException("a declared signal handler", exception);
                 }
             };
-            var connection = ConnectNative(sender, declared.Signature, callback, sender, 0);
+            // Qt::DirectConnection, not Auto: this connection feeds the event's C# handler list, and
+            // a C# event runs its handlers synchronously on the raising thread. Auto would queue a
+            // raise from another thread and deliver them a second time once the delegate chain has
+            // already called them.
+            var connection = ConnectNative(sender, declared.Signature, callback, sender, DirectConnection);
             if (connection == IntPtr.Zero)
                 return;
             lock (connections)
@@ -1165,6 +1332,51 @@ namespace QtSharp.Runtime
                     Sender = sender, Signature = declared.Signature,
                     Callback = callback, Native = connection,
                 });
+        }
+
+        const int DirectConnection = 1;
+
+        // How many activations of a (sender, signal) pair came from a [QtSignal] event's own
+        // Invoke, and are therefore delivered to the C# handlers by the delegate chain. A count,
+        // not a flag: an emission can nest inside another (a Qt slot that re-emits the signal),
+        // and each activation consumes its own mark. Thread-static because the connection is
+        // direct and Qt dispatches it inside the call that activated it, on the same thread.
+        [ThreadStatic] static Dictionary<(IntPtr Handle, string Signature), int> declaredActivations;
+
+        // Activates a declared signal on behalf of its event trampoline. The mark is consumed by
+        // ConnectDeclaredSignal's callback, so that one activation leaves the C# handler list to
+        // the chain and a nested activation still delivers normally.
+        internal static void ActivateDeclared(IntPtr sender, string signature, Type[] types, object[] args)
+        {
+            var key = (sender, signature);
+            var activations = declaredActivations ??= new Dictionary<(IntPtr, string), int>();
+            activations.TryGetValue(key, out int pending);
+            activations[key] = pending + 1;
+            try
+            {
+                EmitUser(sender, signature, types, args);
+            }
+            finally
+            {
+                // The direct connection runs before EmitUser returns, so a mark left here means the
+                // connection is gone (or the activation never reached it); it must not linger and
+                // swallow a later, unrelated emission.
+                activations.Remove(key);
+            }
+        }
+
+        static bool ConsumeDeclaredActivation(IntPtr sender, string signature)
+        {
+            if (declaredActivations == null)
+                return false;
+            var key = (sender, signature);
+            if (!declaredActivations.TryGetValue(key, out int pending) || pending == 0)
+                return false;
+            if (pending == 1)
+                declaredActivations.Remove(key);
+            else
+                declaredActivations[key] = pending - 1;
+            return true;
         }
 
         /// <summary>

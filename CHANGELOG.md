@@ -4,6 +4,22 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.5.0 - 2026-10-26
+
+- **Invoking an `[QtSignal]` event is now an emit.** `ValueChanged?.Invoke(value)` in the declaring
+  class activates the Qt signal, so `connect()`, QML and C++ see it, instead of only running the
+  C# handlers. The runtime seeds an emit trampoline into the event's handler field and keeps its
+  own connection out of that emission, so every handler still runs exactly once.
+  `EmitSignal(ValueChanged, value)` remains as the explicit spelling. The trampoline makes the
+  event non-null, so `?.Invoke` emits even with no subscriber, and `== null` no longer means
+  "no handlers".
+- **QtWebSockets is bound**, as a separate `QtSharp.WebSockets` package against `QtSharp.Api`:
+  `QWebSocket`, `QWebSocketServer`, the CORS authenticator, the handshake options and the
+  protocol enums. `QtSharp.WebSockets.Qt6` carries `Qt6WebSockets.dll`, the way the Charts and Qt3D
+  packages carry their runtimes.
+- **`qtwebsockets-echo`** runs Qt's WebSockets "echoserver" example against its own client over
+  loopback: connect, text echo, a binary frame and a clean close, all asserted in one process.
+
 ## 0.4.0 - 2026-10-26
 
 - **QtSql is bound**, as the eleventh base module of `QtSharp.Api`: `QSqlDatabase`/`QSqlDriver`,

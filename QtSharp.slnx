@@ -28,6 +28,11 @@
     <Project Path="nuget/QtSharp.Charts.Qt6/QtSharp.Charts.Qt6.csproj" />
   </Folder>
 
+  <Folder Name="/Packages - WebSockets/">
+    <Project Path="nuget/QtSharp.WebSockets/QtSharp.WebSockets.csproj" />
+    <Project Path="nuget/QtSharp.WebSockets.Qt6/QtSharp.WebSockets.Qt6.csproj" />
+  </Folder>
+
   <Folder Name="/Packages - Qt3D/">
     <Project Path="nuget/QtSharp.Qt3D/QtSharp.Qt3D.csproj" />
     <Project Path="nuget/QtSharp.Qt3D.Qt6/QtSharp.Qt3D.Qt6.csproj" />

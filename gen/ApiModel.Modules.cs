@@ -77,6 +77,28 @@ public static partial class ApiModel
         => CoreModule("qtsql", "QtSharp.QtSql", "QtSql",
             new[] { "qtcore" }, new[] { "Qt6Sql", "Qt6Core" }, Array.Empty<string>());
 
+    static ExtensionModule QtWebSocketsModule() => new ExtensionModule
+    {
+        Name = "qtwebsockets",
+        Namespace = "QtSharp.QtWebSockets",
+        Assembly = "QtSharp.QtWebSockets",
+        Package = "QtSharp.WebSockets",
+        NativeLibrary = "QtSharp.QtWebSockets.Native",
+        CppNamespaces = Array.Empty<string>(),
+        QtModules = new[] { "QtWebSockets" },
+        QtDefines = Array.Empty<string>(),
+        QtLibs = new[] { "Qt6WebSockets", "Qt6Network" },
+        DependsOn = new[] { "qtcore", "qtnetwork" },
+        Roots = new[]
+        {
+            R("QMaskGenerator", "qmaskgenerator.h", "QtWebSockets", bindCtors: false),
+            R("QWebSocket", "qwebsocket.h", "QtWebSockets"),
+            R("QWebSocketCorsAuthenticator", "qwebsocketcorsauthenticator.h", "QtWebSockets"),
+            R("QWebSocketHandshakeOptions", "qwebsockethandshakeoptions.h", "QtWebSockets"),
+            R("QWebSocketServer", "qwebsocketserver.h", "QtWebSockets"),
+        },
+    };
+
     static ExtensionModule Qt3DCoreModule() => new ExtensionModule
     {
         Name = "qt3dcore",

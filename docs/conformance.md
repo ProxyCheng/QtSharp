@@ -7,7 +7,7 @@ cannot drift):
 
 | runner | source | windows | assertions |
 |---|---|---|---|
-| `testbind` | `demos/` — the official Qt examples, plus `tests/` — binding-specific tests | 40 | 1307 |
+| `testbind` | `demos/` — the official Qt examples, plus `tests/` — binding-specific tests | 41 | 1323 |
 | `QtSharp.Charts.Demos` | `demos.charts/` — Qt Charts | 38 | 570 |
 | `QtSharp.Qt3D.Demos` | `demos.qt3d/` — Qt 3D | 3 | 37 |
 
@@ -26,6 +26,7 @@ runnable names both name the module the example exercises:
 | QtSvgWidgets | `qtsvgwidgets-svgwidget` — QSvgWidget loading and off-screen rendering |
 | QtXml | `qtxml-dombookmarks` — the DOM bookmarks reader/editor |
 | QtPrintSupport | `qtprintsupport-notepad` — the notepad tutorial's QPrinter path |
+| QtWebSockets | `qtwebsockets-echo` — Qt's echoserver example driven by its own client over loopback |
 | Qt Charts | `qtcharts-*` — 38 official Qt Charts examples (`demos.charts/`) |
 | Qt 3D | `qt3d-simple`, `qt3d-basicshapes`, `qt3d-text` (`demos.qt3d/`) |
 
@@ -63,6 +64,7 @@ run under `test-*` names and stay in the gate:
 | QtSvg | `qtsvg-svgviewer` | |
 | QtSvgWidgets | `qtsvgwidgets-svgwidget` | |
 | QtPrintSupport | `qtprintsupport-notepad` | |
+| QtWebSockets | `qtwebsockets-echo` | the upstream `echoclient`/`simplechat` examples are candidates |
 | QtXml | `qtxml-dombookmarks` | |
 | QtOpenGL | no demo | `QOpenGLFunctions` is not bound, so `hellogl2` cannot be ported as-is |
 | QtOpenGLWidgets | no demo | `QOpenGLWidget` is bound; needs a GPU/software-GL runner |

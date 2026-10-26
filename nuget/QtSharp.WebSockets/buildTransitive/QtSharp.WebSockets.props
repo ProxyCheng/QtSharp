@@ -1,0 +1,10 @@
+<Project>
+
+  <!-- Imported automatically for any project that references the QtSharp.WebSockets package. It
+       only declares where the native payload lives; the copy itself is in the targets. -->
+  <PropertyGroup>
+    <QtSharpWebSocketsNativeDir Condition="'$(QtSharpWebSocketsNativeDir)' == ''">$(MSBuildThisFileDirectory)..\tools\native\</QtSharpWebSocketsNativeDir>
+    <PlatformTarget Condition="'$(PlatformTarget)' == ''">x64</PlatformTarget>
+  </PropertyGroup>
+
+</Project>

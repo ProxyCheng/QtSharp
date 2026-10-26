@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The Qt WebSockets runtime payload (Qt6WebSockets.dll), the companion package a
+       QtSharp.WebSockets consumer gets automatically. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+
+    <PackageId>QtSharp.WebSockets.Qt6</PackageId>
+    <Version>0.5.0</Version>
+    <Authors>ProxyCheng</Authors>
+    <Description>The Qt WebSockets runtime (Qt6WebSockets.dll) loaded by QtSharp.WebSockets.</Description>
+    <PackageTags>Qt;Qt6;QtWebSockets;runtime;native</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ProxyCheng/QtSharp.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <QtWebSocketsRuntimeDir Condition="'$(QtWebSocketsRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.12.0\runtime</QtWebSocketsRuntimeDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="_._" Pack="true" PackagePath="lib/net10.0/" />
+    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="$(QtWebSocketsRuntimeDir)\Qt6WebSockets.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+  </ItemGroup>
+
+  <Target Name="QtSharpWebSocketsQt6PackCheck" BeforeTargets="GenerateNuspec">
+    <Error Condition="!Exists('$(QtWebSocketsRuntimeDir)\Qt6WebSockets.dll')" Text="Qt6WebSockets.dll is missing under '$(QtWebSocketsRuntimeDir)' - see README.md, section Prerequisites." />
+  </Target>
+
+</Project>
