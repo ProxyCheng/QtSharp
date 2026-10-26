@@ -72,8 +72,14 @@ $addons = @(
        RuntimeModules = @('Qt6WebSockets'); Plugins = @() },
     @{ Package = 'qtmultimedia'; Marker = 'include\QtMultimedia\qmediaplayer.h'
        Includes = @('QtMultimedia', 'QtMultimediaWidgets')
-       Libs = @('Qt6Multimedia*'); Dlls = @('Qt6Multimedia*.dll')
+       Libs = @('Qt6Multimedia*')
+       Dlls = @('Qt6Multimedia*.dll', 'avcodec-*.dll', 'avformat-*.dll', 'avutil-*.dll',
+               'swresample-*.dll', 'swscale-*.dll')
        RuntimeModules = @('Qt6Multimedia', 'Qt6MultimediaWidgets')
+       # The ffmpeg backend plugin is a thin shim over these; without them it loads but cannot
+       # decode anything (QMediaPlayer reports ResourceError).
+       RuntimePatterns = @('avcodec-*.dll', 'avformat-*.dll', 'avutil-*.dll',
+                           'swresample-*.dll', 'swscale-*.dll')
        Plugins = @('multimedia') }
 )
 
@@ -194,6 +200,15 @@ foreach ($module in $modules) {
 }
 foreach ($crt in @('msvcp140*.dll', 'vcruntime140*.dll', 'concrt140.dll')) {
     Get-ChildItem -Path (Join-Path $binDir $crt) -File -ErrorAction SilentlyContinue | Copy-Item -Destination $runtimeOut -Force
+}
+# An addon's backend can depend on non-Qt libraries that ship beside it (the ffmpeg backend needs
+# the av*/sw* DLLs); those are patterns, not fixed module names.
+foreach ($addon in $addons) {
+    if (-not $addon.ContainsKey('RuntimePatterns')) { continue }
+    foreach ($pattern in $addon.RuntimePatterns) {
+        Get-ChildItem -Path (Join-Path $binDir $pattern) -File -ErrorAction SilentlyContinue |
+            Copy-Item -Destination $runtimeOut -Force
+    }
 }
 # Qt3DRender resolves its renderer and loader plugins from <exe>\<class>\ directories, so the
 # runtime payload keeps Qt's plugin layout intact (debug builds are not shipped).

@@ -28,12 +28,19 @@
     <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
     <None Include="$(QtMultimediaRuntimeDir)\Qt6Multimedia.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
     <None Include="$(QtMultimediaRuntimeDir)\Qt6MultimediaWidgets.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <!-- The ffmpeg backend's own dependencies; the plugin loads without them but cannot decode. -->
+    <None Include="$(QtMultimediaRuntimeDir)\avcodec-*.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(QtMultimediaRuntimeDir)\avformat-*.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(QtMultimediaRuntimeDir)\avutil-*.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(QtMultimediaRuntimeDir)\swresample-*.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+    <None Include="$(QtMultimediaRuntimeDir)\swscale-*.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
     <None Include="$(QtMultimediaRuntimeDir)\plugins\multimedia\*.dll" Pack="true" PackagePath="tools/native/multimedia/" Visible="false" />
   </ItemGroup>
 
   <Target Name="QtSharpMultimediaQt6PackCheck" BeforeTargets="GenerateNuspec">
     <Error Condition="!Exists('$(QtMultimediaRuntimeDir)\Qt6Multimedia.dll')" Text="Qt6Multimedia.dll is missing under '$(QtMultimediaRuntimeDir)' - see README.md, section Prerequisites." />
     <Error Condition="!Exists('$(QtMultimediaRuntimeDir)\plugins\multimedia')" Text="The multimedia backend plugin is missing under '$(QtMultimediaRuntimeDir)\plugins\multimedia'." />
+    <Error Condition="!Exists('$(QtMultimediaRuntimeDir)\avcodec-*.dll')" Text="The ffmpeg runtime DLLs (avcodec/avformat/avutil/sw*) are missing under '$(QtMultimediaRuntimeDir)' - the backend cannot decode without them." />
   </Target>
 
 </Project>
