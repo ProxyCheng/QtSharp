@@ -539,6 +539,9 @@ Replace the local source path with your checkout's `out/packages` directory.
 
 * **Windows x64 and Qt 6.12.0 only** — the model is extracted from that kit, and the wrapper is
   MSVC-compiled.
+* **`QAudioFormat` has no constructor in the binding.** Qt 6.12 declares none (the implicit default
+  constructor is not in the AST), so `new QAudioFormat()` does not exist; take one from
+  `QAudioDevice.PreferredFormat()` and adjust it with the setters.
 * **The bound modules** are QtCore, QtGui, QtWidgets, QtNetwork (host addressing, local sockets
   `QLocalServer`/`QLocalSocket`, TCP/UDP, the HTTP client), QtSql (`QSqlDatabase`/`QSqlQuery`, the
   record/field classes, `QSqlQueryModel`/`QSqlTableModel`; the SQLite driver ships in
