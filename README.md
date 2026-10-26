@@ -44,7 +44,7 @@ tests/QtSharp.BindingTests.csproj           ← binding-specific tests (test-*)
 Current coverage: **482 classes / 10562 methods / 905 virtuals / 509 enums / 834 Q_PROPERTY
 properties / 475 signals / 68 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg,
 QtSvgWidgets, QtPrintSupport, QtOpenGL, QtOpenGLWidgets). The gate runs 30 official Qt
-examples (**918 assertions**), 14 binding-specific tests (**437 assertions**), the 38 official Qt
+examples (**918 assertions**), 15 binding-specific tests (**448 assertions**), the 38 official Qt
 Charts examples (**570 assertions**) and the three official Qt3D examples (**37 assertions**).
 
 Extension modules are separate assemblies and packages against the same runtime:
@@ -54,6 +54,7 @@ Extension modules are separate assemblies and packages against the same runtime:
 | QtCharts | `QtSharp.Charts` | `QChart`, `QChartView`, the series, bars, pie and axis families |
 | Qt3D | `QtSharp.Qt3D` | **230 classes** from Qt3DCore, Qt3DRender, Qt3DInput, Qt3DLogic, Qt3DAnimation and Qt3DExtras, as six assemblies/namespaces in one package |
 | QtMultimedia | `QtSharp.Multimedia` | playback (`QMediaPlayer`, `QAudioOutput`, `QAudioSink`), capture (`QCamera`, `QMediaCaptureSession`, `QImageCapture`, `QMediaRecorder`), the device/format classes and `QVideoWidget`/`QGraphicsVideoItem` |
+| QtPositioning | `QtSharp.Positioning` | `QGeoCoordinate` and the geo value types (rectangle/circle/path/polygon/shape, address, location), `QGeoPositionInfo`, `QGeoSatelliteInfo` and the position/satellite sources |
 
 ## Install the binding
 
@@ -62,7 +63,7 @@ else to set up. No Qt SDK, no Visual Studio C++ workload, no clone:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.13.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.14.0" />
 </ItemGroup>
 ```
 
@@ -102,8 +103,8 @@ than part of qtbase. It references the core package and adds all six modules:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.13.0" />
-  <PackageReference Include="QtSharp.Qt3D" Version="0.13.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.14.0" />
+  <PackageReference Include="QtSharp.Qt3D" Version="0.14.0" />
 </ItemGroup>
 ```
 
@@ -136,7 +137,7 @@ drop-in replacement for every Qt module or every desktop deployment scenario.
 
 ## Releases
 
-Pushing a semantic-version tag such as `v0.13.0` starts the release workflow. It builds nine
+Pushing a semantic-version tag such as `v0.14.0` starts the release workflow. It builds eleven
 Windows x64 packages and attaches them, with a `SHA256SUMS.txt`, to a GitHub Release:
 
 | package | what it is |
@@ -151,6 +152,8 @@ Windows x64 packages and attaches them, with a `SHA256SUMS.txt`, to a GitHub Rel
 | `QtSharp.Qt3D.Qt6` | the Qt3D runtime and plugins (brought in by `QtSharp.Qt3D`) |
 | `QtSharp.Multimedia` | the optional QtMultimedia extension, against `QtSharp.Api` |
 | `QtSharp.Multimedia.Qt6` | Qt6Multimedia.dll, Qt6MultimediaWidgets.dll and the backend plugin (brought in by `QtSharp.Multimedia`) |
+| `QtSharp.Positioning` | the optional QtPositioning extension, against `QtSharp.Api` |
+| `QtSharp.Positioning.Qt6` | Qt6Positioning.dll (brought in by `QtSharp.Positioning`) |
 
 Everything is built on the runner from the checked-in models: the generator runs without clang, the
 Qt dev files (including the QtCharts, Qt3D, QtMultimedia and Qt Shader Tools addons) are fetched from Qt's own
@@ -294,7 +297,7 @@ module projects directly (the same assemblies the package contains).
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.13.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.14.0" />
 </ItemGroup>
 ```
 
@@ -476,7 +479,7 @@ and matching DLLs (normally a Qt kit's `bin`):
 powershell -File tools\pack-qt-tools.ps1 -QtToolsSource C:\Qt\6.12.0\msvc2022_64\bin
 ```
 
-The result is `out/packages/QtSharp.Tools.0.13.0.nupkg`. `-QtVersion` and `-PackageVersion`
+The result is `out/packages/QtSharp.Tools.0.14.0.nupkg`. `-QtVersion` and `-PackageVersion`
 override the defaults. Put the upstream license texts/notices in a `QtSharp-ThirdPartyNotices`
 subdirectory beside the source tools to include them in the payload. Tools are staged under
 `out/qt-tools`; the script checks QtCore's version and runs captured, time-limited startup checks.
@@ -485,7 +488,7 @@ In a consumer project:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Tools" Version="0.13.0" PrivateAssets="all" />
+  <PackageReference Include="QtSharp.Tools" Version="0.14.0" PrivateAssets="all" />
   <QtResource Include="assets\sample.qrc" />
 </ItemGroup>
 ```

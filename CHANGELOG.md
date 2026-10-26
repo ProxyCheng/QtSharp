@@ -4,6 +4,16 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.14.0 - 2026-10-26
+
+- **QtPositioning is bound**, as the separate `QtSharp.Positioning` package: `QGeoCoordinate` and
+  the geo value types (`QGeoRectangle`, `QGeoCircle`, `QGeoPath`, `QGeoPolygon`, `QGeoShape`,
+  `QGeoAddress`, `QGeoLocation`), `QGeoPositionInfo`, `QGeoSatelliteInfo` and the position/
+  satellite sources. `QtSharp.Positioning.Qt6` carries `Qt6Positioning.dll`.
+- **`test-positioning`** covers the value math (Berlin-Paris distance and azimuth, altitude,
+  rectangle/circle containment, path length), a position info carrying a coordinate, and the
+  source enumeration (which tolerates a machine with no positioning plugin).
+
 ## 0.13.0 - 2026-10-26
 
 - **QtXml, QtSql and QtWebSockets are gone.** .NET covers the same ground (System.Xml,

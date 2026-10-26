@@ -73,6 +73,39 @@ public static partial class ApiModel
             new[] { "qtopengl", "qtwidgets", "qtgui", "qtcore" },
             new[] { "Qt6OpenGLWidgets", "Qt6OpenGL", "Qt6Widgets", "Qt6Gui", "Qt6Core" }, Array.Empty<string>());
 
+    static ExtensionModule QtPositioningModule() => new ExtensionModule
+    {
+        Name = "qtpositioning",
+        Namespace = "QtSharp.QtPositioning",
+        Assembly = "QtSharp.QtPositioning",
+        Package = "QtSharp.Positioning",
+        NativeLibrary = "QtSharp.QtPositioning.Native",
+        CppNamespaces = Array.Empty<string>(),
+        QtModules = new[] { "QtPositioning" },
+        QtDefines = Array.Empty<string>(),
+        QtLibs = new[] { "Qt6Positioning" },
+        DependsOn = new[] { "qtcore" },
+        Roots = new[]
+        {
+            R("QGeoAddress", "qgeoaddress.h", "QtPositioning"),
+            R("QGeoAreaMonitorInfo", "qgeoareamonitorinfo.h", "QtPositioning"),
+            R("QGeoAreaMonitorSource", "qgeoareamonitorsource.h", "QtPositioning", bindCtors: false),
+            R("QGeoCircle", "qgeocircle.h", "QtPositioning"),
+            R("QGeoCoordinate", "qgeocoordinate.h", "QtPositioning"),
+            R("QGeoLocation", "qgeolocation.h", "QtPositioning"),
+            R("QGeoPath", "qgeopath.h", "QtPositioning"),
+            R("QGeoPolygon", "qgeopolygon.h", "QtPositioning"),
+            R("QGeoPositionInfo", "qgeopositioninfo.h", "QtPositioning"),
+            R("QGeoPositionInfoSource", "qgeopositioninfosource.h", "QtPositioning", bindCtors: false),
+            R("QGeoRectangle", "qgeorectangle.h", "QtPositioning"),
+            R("QGeoSatelliteInfo", "qgeosatelliteinfo.h", "QtPositioning"),
+            R("QGeoSatelliteInfoSource", "qgeosatelliteinfosource.h", "QtPositioning", bindCtors: false),
+            R("QGeoShape", "qgeoshape.h", "QtPositioning"),
+            R("QNmeaPositionInfoSource", "qnmeapositioninfosource.h", "QtPositioning"),
+            R("QNmeaSatelliteInfoSource", "qnmeasatelliteinfosource.h", "QtPositioning"),
+        },
+    };
+
     static ExtensionModule QtMultimediaModule() => new ExtensionModule
     {
         Name = "qtmultimedia",

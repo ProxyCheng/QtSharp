@@ -67,7 +67,7 @@ jobs:
           $genBin = Join-Path $root 'gen/bin/Release/net10.0/win-x64'
           $base = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
                     'qtprintsupport', 'qtopengl', 'qtopenglwidgets')
-          $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia')
+          $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia', 'qtpositioning')
           Push-Location $genBin
           try {
             # The combined model is the extraction gate and the shared native glue's input. The ten
@@ -105,7 +105,7 @@ jobs:
         run: |
           cmd /c build_api.bat
           if ($LASTEXITCODE -ne 0) { throw "build_api.bat failed" }
-          foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia')) {
+          foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia', 'qtpositioning')) {
             powershell -NoProfile -File tools\build-native-module.ps1 -Module $module -QtDir "$env:QT_DIR"
             if ($LASTEXITCODE -ne 0) { throw "$module native build failed" }
           }
@@ -159,6 +159,8 @@ jobs:
             out/packages/QtSharp.Qt3D.Qt6.0.0.0-ci.nupkg
             out/packages/QtSharp.Multimedia.0.0.0-ci.nupkg
             out/packages/QtSharp.Multimedia.Qt6.0.0.0-ci.nupkg
+out/packages/QtSharp.Positioning.0.0.0-ci.nupkg
+out/packages/QtSharp.Positioning.Qt6.0.0.0-ci.nupkg
           if-no-files-found: error
 
       # Hand the generated source tree and the native glue to the smoke job so it does not have to
@@ -176,7 +178,7 @@ jobs:
           # native glue travel with the artifact as well.
           foreach ($module in @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
                                 'qtprintsupport', 'qtopengl', 'qtopenglwidgets',
-                                'qtmultimedia')) {
+                                'qtmultimedia', 'qtpositioning')) {
             Copy-Item "out/$module/generated" "$stage/$module/generated" -Recurse
           }
           Copy-Item out/api-modules "$stage/api-modules" -Recurse

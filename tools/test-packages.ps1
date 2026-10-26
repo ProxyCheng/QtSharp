@@ -1,5 +1,5 @@
 param(
-    [string]$PackageVersion = '0.13.0',
+    [string]$PackageVersion = '0.14.0',
     [string]$PackagesDir = '',
     [string]$WorkDir = ''
 )
@@ -41,6 +41,7 @@ New-Item -ItemType Directory -Path $WorkDir | Out-Null
     <PackageReference Include="QtSharp.Charts" Version="$PackageVersion" />
     <PackageReference Include="QtSharp.Qt3D" Version="$PackageVersion" />
     <PackageReference Include="QtSharp.Multimedia" Version="$PackageVersion" />
+    <PackageReference Include="QtSharp.Positioning" Version="$PackageVersion" />
   </ItemGroup>
 </Project>
 "@ | Set-Content -LiteralPath (Join-Path $WorkDir 'PackageConsumer.csproj') -Encoding utf8
@@ -50,6 +51,7 @@ using System;
 using QtSharp.Charts;
 using QtSharp.Qt3DCore;
 using QtSharp.QtMultimedia;
+using QtSharp.QtPositioning;
 using QtSharp.QtWidgets;
 
 static class Program
@@ -64,7 +66,8 @@ static class Program
         chart.Title = "package consumer";
         using var entity = new QEntity();
         using var player = new QMediaPlayer();
-        Console.WriteLine(`$"[PASS] {app.GetType().FullName}, {chart.GetType().FullName}, {entity.GetType().FullName}, {player.GetType().FullName}");
+        using var coordinate = new QGeoCoordinate(52.52, 13.405);
+        Console.WriteLine(`$"[PASS] {app.GetType().FullName}, {chart.GetType().FullName}, {entity.GetType().FullName}, {player.GetType().FullName}, {coordinate.GetType().FullName}");
         return 0;
     }
 }
@@ -82,4 +85,4 @@ try {
 $output | ForEach-Object { Write-Host $_ }
 if ($code -ne 0) { throw "The package consumer failed with exit code $code." }
 if (-not ($output -match '\[PASS\]')) { throw 'The package consumer ran but printed no [PASS] line.' }
-Write-Host "OK: QtSharp.Api + QtSharp.Charts + QtSharp.Qt3D + QtSharp.Multimedia restored from $PackagesDir and ran."
+Write-Host "OK: QtSharp.Api + QtSharp.Charts + QtSharp.Qt3D + QtSharp.Multimedia + QtSharp.Positioning restored from $PackagesDir and ran."

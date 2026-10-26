@@ -9,7 +9,7 @@
     <NoWarn>$(NoWarn);NU5128</NoWarn>
 
     <PackageId>QtSharp.Multimedia.Qt6</PackageId>
-    <Version>0.13.0</Version>
+    <Version>0.14.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>The Qt Multimedia runtime (Qt6Multimedia.dll, Qt6MultimediaWidgets.dll, the multimedia backend plugin) loaded by QtSharp.Multimedia.</Description>
     <PackageTags>Qt;Qt6;QtMultimedia;runtime;native</PackageTags>

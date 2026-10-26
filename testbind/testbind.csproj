@@ -28,8 +28,9 @@
     <ItemGroup>
       <QtMultimediaNative Include="..\out\api-modules\qtmultimedia\QtSharp.QtMultimedia.Native.dll" />
       <QtMultimediaPlugin Include="$(QtRuntimeDir)\plugins\multimedia\*.dll" />
+      <QtPositioningNative Include="..\out\api-modules\qtpositioning\QtSharp.QtPositioning.Native.dll" />
     </ItemGroup>
-    <Copy SourceFiles="@(QtMultimediaNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(QtMultimediaNative);@(QtPositioningNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(QtMultimediaPlugin)" DestinationFolder="$(OutDir)multimedia\" SkipUnchangedFiles="true" />
   </Target>
 

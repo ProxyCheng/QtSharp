@@ -16,7 +16,7 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
 
     <PackageId>QtSharp.Multimedia</PackageId>
-    <Version>0.13.0</Version>
+    <Version>0.14.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>Qt Multimedia for .NET, generated from the Qt 6.12 headers. References QtSharp.Api.</Description>
     <PackageTags>Qt;Qt6;QtMultimedia;CSharp;dotnet;binding;interop;audio;video</PackageTags>

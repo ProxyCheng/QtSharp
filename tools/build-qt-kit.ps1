@@ -77,7 +77,10 @@ $addons = @(
        # decode anything (QMediaPlayer reports ResourceError).
        RuntimePatterns = @('avcodec-*.dll', 'avformat-*.dll', 'avutil-*.dll',
                            'swresample-*.dll', 'swscale-*.dll')
-       Plugins = @('multimedia') }
+       Plugins = @('multimedia') },
+    @{ Package = 'qtpositioning'; Marker = 'include\QtPositioning\qgeocoordinate.h'
+       Includes = @('QtPositioning'); Libs = @('Qt6Positioning*'); Dlls = @('Qt6Positioning*.dll')
+       RuntimeModules = @('Qt6Positioning'); Plugins = @() }
 )
 
 # ---- 1. The dev kit ----------------------------------------------------------------
