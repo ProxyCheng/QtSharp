@@ -118,11 +118,37 @@ jobs:
       - name: Compile the native wrappers
         shell: pwsh
         run: |
-          cmd /c build_api.bat
-          if ($LASTEXITCODE -ne 0) { throw "build_api.bat failed" }
-          foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia', 'qtpositioning')) {
-            powershell -NoProfile -File tools\build-native-module.ps1 -Module $module -QtDir "$env:QT_DIR"
-            if ($LASTEXITCODE -ne 0) { throw "$module native build failed" }
+          # The core wrapper and the extension modules are independent compiles, so they run several
+          # at a time (cl itself is single-threaded). The pool is tools/parallel.ps1, the same helper
+          # the local gate uses.
+          . ./tools/parallel.ps1
+          $root = $env:GITHUB_WORKSPACE
+          $qtDir = $env:QT_DIR
+          $modules = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia', 'qtpositioning')
+          $tasks = @([pscustomobject]@{
+            Name = 'QtSharp.Api'
+            FilePath = $env:ComSpec
+            RawArguments = '/c "' + (Join-Path $root 'build_api.bat') + '"'
+            WorkingDirectory = $root
+            LogPath = Join-Path $root 'out/native-api.log'
+          })
+          foreach ($module in $modules) {
+            $tasks += [pscustomobject]@{
+              Name = $module
+              FilePath = (Get-Command powershell).Source
+              Arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $root 'tools/build-native-module.ps1'), '-Module', $module, '-QtDir', $qtDir)
+              WorkingDirectory = $root
+              LogPath = Join-Path $root "out/native-$module.log"
+            }
+          }
+          $failed = @(Invoke-ProcessPool -Tasks $tasks -Throttle ([Math]::Max(1, [Math]::Min(4, [Environment]::ProcessorCount))) |
+            Where-Object { $_.ExitCode -ne 0 })
+          if ($failed.Count -gt 0) {
+            foreach ($failure in $failed) {
+              Write-Host "--- $($failure.Name) failed"
+              Get-Content $failure.LogPath -ErrorAction SilentlyContinue | Select-Object -Last 20 | Out-Host
+            }
+            throw "native build failed: $($failed.Name -join ', ')"
           }
       # The examples are the binding's own test suite, and a release must not ship a binding that
       # cannot render - which is exactly what the demo gate caught once, after a package had gone
@@ -130,8 +156,7 @@ jobs:
       - name: Build the examples
         shell: pwsh
         run: |
-          dotnet build demos/QtSharp.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
-          if ($LASTEXITCODE -ne 0) { throw "demos build failed" }
+          # testbind references the demos library, so this one build produces both assemblies.
           dotnet build testbind/testbind.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
           if ($LASTEXITCODE -ne 0) { throw "testbind build failed" }
 

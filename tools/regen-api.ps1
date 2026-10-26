@@ -10,6 +10,18 @@ $root = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $root
 $genBin = "$root\gen\bin\Release\net10.0\win-x64"
 
+# A clone (or a fresh worktree) has no out/ yet, and every step below writes its log there.
+New-Item -ItemType Directory -Path "$root\out" -Force | Out-Null
+
+# The steps that do not depend on each other - the addon extractions, the codegen runs and the
+# native compiles - go through one process pool, at most this many at a time. 0 means "pick a
+# sensible number"; -Jobs 1 gives the old one-at-a-time behaviour. (The window tests below get the
+# same -Jobs value and keep their own, smaller default.)
+$buildJobs = if ($Jobs -gt 0) { $Jobs } else { [Math]::Max(1, [Math]::Min(8, [Environment]::ProcessorCount)) }
+$dotnet = (Get-Command dotnet).Source
+$powershell = (Get-Command powershell).Source
+. (Join-Path $PSScriptRoot 'parallel.ps1')
+
 # The binding is one C# file per Qt header, so the determinism gate hashes the generated tree
 # (relative path + bytes, sorted) rather than a single file.
 function Get-GeneratedTreeHash([string]$dir) {
@@ -80,21 +92,27 @@ if (-not $SkipExtract) {
 
 $baseModules = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets', 'qtprintsupport', 'qtopengl', 'qtopenglwidgets')
 $extensionModules = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia', 'qtpositioning')
+$allModules = $baseModules + $extensionModules
 
 if (-not $SkipExtract) {
     Write-Host "=== [2b] Extract the addon models (each is checked in, extracted from its own headers) ==="
     New-Item -ItemType Directory -Path "$root\out\addon-models" -Force | Out-Null
-    Push-Location $genBin
-    foreach ($module in $extensionModules) {
-        & "$genBin\qtgen.exe" extract2 "$root\out\addon-models\qtsharp.$module.json" --module $module *> "$root\out\extract-$module.log"
-        if ($LASTEXITCODE -ne 0) {
-            Pop-Location
-            Write-Host "addon extraction failed: $module"
-            Get-Content "$root\out\extract-$module.log" | Select-Object -Last 10
+    $extractTasks = foreach ($module in $extensionModules) {
+        [pscustomobject]@{
+            Name = $module
+            FilePath = "$genBin\qtgen.exe"
+            Arguments = @('extract2', "$root\out\addon-models\qtsharp.$module.json", '--module', $module)
+            WorkingDirectory = $genBin
+            LogPath = "$root\out\extract-$module.log"
+        }
+    }
+    foreach ($result in @(Invoke-ProcessPool -Tasks @($extractTasks) -Throttle $buildJobs)) {
+        if ($result.ExitCode -ne 0) {
+            Write-Host "addon extraction failed: $($result.Name)"
+            Get-Content $result.LogPath -ErrorAction SilentlyContinue | Select-Object -Last 10 | Out-Host
             exit 1
         }
     }
-    Pop-Location
     # The addon models are extracted rather than derived, so they get the same reproducibility gate
     # as the combined base model: a difference means the Qt kit (or the extractor) changed.
     $addonChanged = @()
@@ -159,19 +177,41 @@ if ($splitChanged.Count -eq 0) {
 }
 
 Write-Host "=== [3b] Codegen (twice, to prove determinism) ==="
-Push-Location $genBin
 # The combined model produces only the shared native glue now: the ten assemblies come from the
-# split models, and the addons from their own models.
-& "$genBin\qtgen.exe" codegen "$root\model\qtsharp.api.json" "$root\out\api" --native-only *> "$root\out\codegen.log"
-if ($LASTEXITCODE -ne 0) { Pop-Location; Write-Host "codegen (native glue) failed"; Get-Content "$root\out\codegen.log" | Select-Object -Last 10; exit 1 }
-$allModules = $baseModules + $extensionModules
+# split models, and the addons from their own models. The second run of every module writes to a
+# separate tree - out\.determinism\<module> - so both runs can go through the pool together.
+$codegenTasks = @(
+    [pscustomobject]@{
+        Name = 'native glue'
+        FilePath = "$genBin\qtgen.exe"
+        Arguments = @('codegen', "$root\model\qtsharp.api.json", "$root\out\api", '--native-only')
+        WorkingDirectory = $genBin
+        LogPath = "$root\out\codegen.log"
+    }
+)
 foreach ($module in $allModules) {
-    & "$genBin\qtgen.exe" codegen "$root\model\qtsharp.$module.json" "$root\out\$module" --module $module *> "$root\out\codegen-$module.log"
-    if ($LASTEXITCODE -ne 0) { Pop-Location; Write-Host "codegen ($module) failed"; Get-Content "$root\out\codegen-$module.log" | Select-Object -Last 10; exit 1 }
-    & "$genBin\qtgen.exe" codegen "$root\model\qtsharp.$module.json" "$root\out\.determinism\$module" --module $module *> "$root\out\codegen-$module-check.log"
-    if ($LASTEXITCODE -ne 0) { Pop-Location; Write-Host "codegen ($module, check run) failed"; exit 1 }
+    $codegenTasks += [pscustomobject]@{
+        Name = $module
+        FilePath = "$genBin\qtgen.exe"
+        Arguments = @('codegen', "$root\model\qtsharp.$module.json", "$root\out\$module", '--module', $module)
+        WorkingDirectory = $genBin
+        LogPath = "$root\out\codegen-$module.log"
+    }
+    $codegenTasks += [pscustomobject]@{
+        Name = "$module (check run)"
+        FilePath = "$genBin\qtgen.exe"
+        Arguments = @('codegen', "$root\model\qtsharp.$module.json", "$root\out\.determinism\$module", '--module', $module)
+        WorkingDirectory = $genBin
+        LogPath = "$root\out\codegen-$module-check.log"
+    }
 }
-Pop-Location
+foreach ($result in @(Invoke-ProcessPool -Tasks $codegenTasks -Throttle $buildJobs)) {
+    if ($result.ExitCode -ne 0) {
+        Write-Host "codegen ($($result.Name)) failed"
+        Get-Content $result.LogPath -ErrorAction SilentlyContinue | Select-Object -Last 10 | Out-Host
+        exit 1
+    }
+}
 foreach ($module in $allModules) {
     $h1 = Get-GeneratedTreeHash "$root\out\$module"
     $h2 = Get-GeneratedTreeHash "$root\out\.determinism\$module"
@@ -180,31 +220,60 @@ foreach ($module in $allModules) {
 Remove-Item "$root\out\.determinism" -Recurse -Force
 Write-Host "codegen is deterministic for all $($allModules.Count) modules (identical trees on two runs)"
 
-Write-Host "=== [4] Build native bindings ==="
-& cmd /c "`"$root\build_api.bat`"" *> "$root\out\api_native.log"
-if ($LASTEXITCODE -ne 0) { Write-Host "native build failed"; Get-Content "$root\out\api_native.log" | Select-String "error" | Select-Object -First 6; exit 1 }
-
-Write-Host "=== [4a] Build the ten base assemblies (QtSharp.Api) ==="
-dotnet build "$root/nuget/QtSharp.Api/QtSharp.Api.csproj" -c Release --nologo *> "$root/out/base_modulesbuild.log"
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "base module build failed"
-    Select-String -Path "$root/out/base_modulesbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }
+Write-Host "=== [4] Build the native bindings and the ten base assemblies (in parallel) ==="
+# Three kinds of independent work: the core wrapper, one wrapper per extension module, and the
+# managed base assemblies. None of them needs another's output, so they share one pool.
+$buildTasks = @(
+    [pscustomobject]@{
+        Name = 'api'
+        FilePath = $env:ComSpec
+        RawArguments = '/c "' + "$root\build_api.bat" + '"'
+        WorkingDirectory = $root
+        LogPath = "$root\out\api_native.log"
+    },
+    [pscustomobject]@{
+        Name = 'QtSharp.Api'
+        FilePath = $dotnet
+        Arguments = @('build', "$root\nuget\QtSharp.Api\QtSharp.Api.csproj", '-c', 'Release', '--nologo')
+        WorkingDirectory = $root
+        LogPath = "$root\out\base_modulesbuild.log"
+    }
+)
+foreach ($module in $extensionModules) {
+    $buildTasks += [pscustomobject]@{
+        Name = $module
+        FilePath = $powershell
+        Arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "$root\tools\build-native-module.ps1", '-Module', $module)
+        WorkingDirectory = $root
+        LogPath = "$root\out\native-$module.log"
+    }
+}
+foreach ($result in @(Invoke-ProcessPool -Tasks $buildTasks -Throttle $buildJobs)) {
+    if ($result.ExitCode -eq 0) { continue }
+    switch ($result.Name) {
+        'QtSharp.Api' {
+            Write-Host "base module build failed"
+            Select-String -Path $result.LogPath -Pattern "error CS" | Select-Object -First 8 |
+                ForEach-Object { Write-Host $_.Line.Trim() }
+        }
+        'api' {
+            Write-Host "native build failed"
+            Get-Content $result.LogPath -ErrorAction SilentlyContinue | Select-String "error" |
+                Select-Object -First 6 | ForEach-Object { Write-Host $_.Line.Trim() }
+        }
+        default {
+            Write-Host "$($result.Name) native build failed"
+            Get-Content $result.LogPath -ErrorAction SilentlyContinue | Select-String "error" |
+                Select-Object -First 6 | ForEach-Object { Write-Host $_.Line.Trim() }
+        }
+    }
     exit 1
 }
 
 # The extension modules are separate assemblies/packages. Their model and codegen ran in [3b];
-# their native glue is built by the parameterized script, and the official Qt3D examples then run
-# as their conformance suite, exactly like the core demos below.
-Write-Host "=== [4b] Extension modules (Charts, Qt3D's six modules) ==="
-foreach ($module in $extensionModules) {
-    & powershell -NoProfile -ExecutionPolicy Bypass -File "$root\tools\build-native-module.ps1" -Module $module *> "$root\out\native-$module.log"
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "$module native build failed"
-        Get-Content "$root\out\native-$module.log" | Select-String "error" | Select-Object -First 6
-        exit 1
-    }
-}
-Write-Host "=== [4c] Build the Charts package assembly ==="
+# their native glue was built with the core above, and the official Qt3D and Qt Charts examples
+# then run as their conformance suite, exactly like the core demos below.
+Write-Host "=== [4a] Build the Charts package assembly ==="
 dotnet build "$root/nuget/QtSharp.Charts/QtSharp.Charts.csproj" -c Release --nologo *> "$root/out/chartsbuild.log"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Charts build failed"
@@ -212,6 +281,7 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+Write-Host "=== [4b] Build and run the official Qt3D examples ==="
 dotnet build "$root\demos.qt3d\QtSharp.Qt3D.Demos.csproj" -c Release --nologo *> "$root\out\qt3d_demosbuild.log"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Qt3D demos build failed"
@@ -223,6 +293,7 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Qt's official Qt Charts examples: the Charts module's conformance suite, built against the
 # separate Charts assembly exactly like a consumer would use it.
+Write-Host "=== [4c] Build and run the official Qt Charts examples ==="
 dotnet build "$root/demos.charts/QtSharp.Charts.Demos.csproj" -c Release --nologo *> "$root/out/charts_demosbuild.log"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Charts demos build failed"
@@ -233,15 +304,10 @@ if ($LASTEXITCODE -ne 0) {
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "=== [5] Build the demos and binding tests, then run them ==="
-# The official demos reference the ten base module assemblies (not a source-compiled binding);
-# the binding tests cover the parts of the API that Qt's examples do not. testbind dispatches both.
-dotnet build "$root\demos\QtSharp.Demos.csproj" -c Release --nologo *> "$root\out\api_demosbuild.log"
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "demos build failed"
-    Select-String -Path "$root\out\api_demosbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }
-    exit 1
-}
-
+# The official demos reference the ten base module assemblies (not a source-compiled binding); the
+# binding tests cover the parts of the API that Qt's examples do not. testbind references both
+# demos\QtSharp.Demos.csproj and tests\QtSharp.BindingTests.csproj, so this one build produces all
+# three assemblies - a separate demos build would only repeat the first half.
 dotnet build "$root\testbind\testbind.csproj" -c Release --nologo *> "$root\out\api_testbuild.log"
 if ($LASTEXITCODE -ne 0) { Write-Host "testbind build failed"; Select-String -Path "$root\out\api_testbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }; exit 1 }
 

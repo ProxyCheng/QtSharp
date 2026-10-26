@@ -232,9 +232,9 @@ translation unit, and every module's demos and tests are built and run at the en
 |---|---|
 | `[1]` | builds the generator (`gen`) |
 | `[2]` | extracts the model from the Qt headers into `out\qtsharp.api.json.new` (**~3 s**) and compares it to the checked-in `model\qtsharp.api.json` — byte for byte |
-| `[2b]` | extracts the seven addon models (Charts, Qt3D) from their own headers and compares them to the checked-in ones — the same gate |
+| `[2b]` | extracts the addon models (Charts, Qt3D, Multimedia, Positioning) from their own headers and compares them to the checked-in ones — the same gate |
 | `[3]` | splits the combined model into the nine base models and runs the code generator **twice** for every module, comparing the trees |
-| `[4]` | compiles the generated C++ wrapper and builds the nine base assemblies |
+| `[4]` | compiles the generated C++ wrappers (the core one and one per extension module) and builds the nine base assemblies, all at once |
 | `[5]` | builds the official demos and the binding tests, then runs all of them with `testapp`, several windows at a time |
 
 Two gates live in the middle of that: **the models must come out identical** (extraction is
@@ -242,13 +242,16 @@ deterministic by construction, so a difference means the Qt version, the clang h
 `Roots` table changed) and **the generator must be reproducible**. If a model legitimately changes,
 review the diff and re-run with `-Adopt` to accept it; `-SkipExtract` skips steps 2, 2b and 3.
 
-Step 5 starts several GUI processes at once (up to `min(6, cores)`; pass `-Jobs 1` for the old
-one-at-a-time run, or `-Jobs 8` on a big machine). Each demo still leaves its window up for about a
-second so it can be looked at. On a machine that is being used at the same time, one of them can
-very occasionally die while Qt tears the process down — a `0xC000041D` exit *after* its own
-`[SELFTEST OK]` line. That is a known flake, not a failed assertion; the gate prints each window's
-result line with its name, retries a nonzero exit once, and a window that fails twice has its own
-output printed, so the failure stays attributable even though the windows overlapped.
+The independent build steps run in a process pool (`tools/parallel.ps1`): the addon extractions,
+the codegen runs (both the real tree and the determinism check tree) and the native compiles, up to
+`min(8, cores)` at a time. Pass `-Jobs 1` for the old one-at-a-time run, or a larger number on a big
+machine. Step 5 starts several GUI processes at once (up to `min(6, cores)`; the same `-Jobs` value
+caps it). Each demo still leaves its window up for about a second so it can be looked at. On a
+machine that is being used at the same time, one of them can very occasionally die while Qt tears
+the process down — a `0xC000041D` exit *after* its own `[SELFTEST OK]` line. That is a known flake,
+not a failed assertion; the gate prints each window's result line with its name, retries a nonzero
+exit once, and a window that fails twice has its own output printed, so the failure stays
+attributable even though the windows overlapped.
 
 The same suite runs in CI on every push — the `Smoke tests` job in `.github/workflows/ci.yml`. It
 takes the binding the `binding` job built from the checked-in model, fetches Qt, builds the examples
@@ -534,6 +537,7 @@ Replace the local source path with your checkout's `out/packages` directory.
 | `nuget/QtSharp.Charts*`, `nuget/QtSharp.Qt3D*`, `nuget/QtSharp.Multimedia*` | the addon packages and their `*.Qt6` runtime companions |
 | `docs/conformance.md` | which Qt examples run against which module, and the remaining coverage gaps |
 | `tools/regen-api.ps1` | the build and the gate |
+| `tools/parallel.ps1` | the process pool the gate and CI use to run independent build steps several at a time |
 | `tools/clangprobe/` | the probe used to validate the libclang front end (not part of the build) |
 | `tools/disasm.py` | capstone-based RVA disassembly helper |
 | `QtSharp.Api.props` | the one import a consumer project needs |
