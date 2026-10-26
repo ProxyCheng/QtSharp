@@ -434,6 +434,7 @@ public static partial class ApiModel
         Qt3DAnimationModule(),
         Qt3DExtrasModule(),
         QtWebSocketsModule(),
+        QtMultimediaModule(),
         // The base binding is the same kind of module family: one assembly per Qt module,
         // grouped into the QtSharp.Api package. Their roots come from the core Roots table.
         QtCoreModule(),

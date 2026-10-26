@@ -18,7 +18,7 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
 
     <PackageId>QtSharp.Runtime</PackageId>
-    <Version>0.6.0</Version>
+    <Version>0.7.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>QtSharp runtime: the managed handle/signal/marshalling layer shared by every QtSharp binding module, plus the native QtSharp.Api glue.</Description>
     <PackageTags>Qt;Qt6;CSharp;dotnet;binding;interop;runtime</PackageTags>

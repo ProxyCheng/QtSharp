@@ -77,6 +77,54 @@ public static partial class ApiModel
         => CoreModule("qtsql", "QtSharp.QtSql", "QtSql",
             new[] { "qtcore" }, new[] { "Qt6Sql", "Qt6Core" }, Array.Empty<string>());
 
+    static ExtensionModule QtMultimediaModule() => new ExtensionModule
+    {
+        Name = "qtmultimedia",
+        Namespace = "QtSharp.QtMultimedia",
+        Assembly = "QtSharp.QtMultimedia",
+        Package = "QtSharp.Multimedia",
+        NativeLibrary = "QtSharp.QtMultimedia.Native",
+        CppNamespaces = Array.Empty<string>(),
+        // The widget half (QVideoWidget, QGraphicsVideoItem) lives in its own Qt include dir, but
+        // it is the same package and the same assembly, so both dirs are listed here.
+        QtModules = new[] { "QtMultimedia", "QtMultimediaWidgets" },
+        QtDefines = Array.Empty<string>(),
+        QtLibs = new[] { "Qt6Multimedia", "Qt6MultimediaWidgets", "Qt6Network" },
+        DependsOn = new[] { "qtcore", "qtgui", "qtwidgets", "qtnetwork" },
+        Roots = new[]
+        {
+            R("QAudioBuffer", "qaudiobuffer.h", "QtMultimedia"),
+            R("QAudioDecoder", "qaudiodecoder.h", "QtMultimedia"),
+            R("QAudioDevice", "qaudiodevice.h", "QtMultimedia"),
+            R("QAudioFormat", "qaudioformat.h", "QtMultimedia"),
+            R("QAudioInput", "qaudioinput.h", "QtMultimedia"),
+            R("QAudioOutput", "qaudiooutput.h", "QtMultimedia"),
+            R("QAudioSink", "qaudiosink.h", "QtMultimedia"),
+            R("QAudioSource", "qaudiosource.h", "QtMultimedia"),
+            R("QCamera", "qcamera.h", "QtMultimedia"),
+            R("QCameraDevice", "qcameradevice.h", "QtMultimedia"),
+            R("QCameraFormat", "qcameradevice.h", "QtMultimedia"),
+            R("QCapturableWindow", "qcapturablewindow.h", "QtMultimedia"),
+            R("QImageCapture", "qimagecapture.h", "QtMultimedia"),
+            R("QMediaCaptureSession", "qmediacapturesession.h", "QtMultimedia"),
+            R("QMediaDevices", "qmediadevices.h", "QtMultimedia"),
+            R("QMediaFormat", "qmediaformat.h", "QtMultimedia"),
+            R("QMediaMetaData", "qmediametadata.h", "QtMultimedia"),
+            R("QMediaPlayer", "qmediaplayer.h", "QtMultimedia"),
+            R("QMediaRecorder", "qmediarecorder.h", "QtMultimedia"),
+            R("QMediaTimeRange", "qmediatimerange.h", "QtMultimedia"),
+            R("QPlaybackOptions", "qplaybackoptions.h", "QtMultimedia"),
+            R("QScreenCapture", "qscreencapture.h", "QtMultimedia"),
+            R("QSoundEffect", "qsoundeffect.h", "QtMultimedia"),
+            R("QVideoFrame", "qvideoframe.h", "QtMultimedia"),
+            R("QVideoFrameFormat", "qvideoframeformat.h", "QtMultimedia"),
+            R("QVideoSink", "qvideosink.h", "QtMultimedia"),
+            R("QWindowCapture", "qwindowcapture.h", "QtMultimedia"),
+            R("QGraphicsVideoItem", "qgraphicsvideoitem.h", "QtMultimediaWidgets"),
+            R("QVideoWidget", "qvideowidget.h", "QtMultimediaWidgets"),
+        },
+    };
+
     static ExtensionModule QtWebSocketsModule() => new ExtensionModule
     {
         Name = "qtwebsockets",

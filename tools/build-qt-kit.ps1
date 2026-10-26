@@ -69,7 +69,12 @@ $addons = @(
        RuntimeModules = @('Qt6ShaderTools'); Plugins = @() },
     @{ Package = 'qtwebsockets'; Marker = 'include\QtWebSockets\qwebsocket.h'
        Includes = @('QtWebSockets'); Libs = @('Qt6WebSockets*'); Dlls = @('Qt6WebSockets.dll')
-       RuntimeModules = @('Qt6WebSockets'); Plugins = @() }
+       RuntimeModules = @('Qt6WebSockets'); Plugins = @() },
+    @{ Package = 'qtmultimedia'; Marker = 'include\QtMultimedia\qmediaplayer.h'
+       Includes = @('QtMultimedia', 'QtMultimediaWidgets')
+       Libs = @('Qt6Multimedia*'); Dlls = @('Qt6Multimedia*.dll')
+       RuntimeModules = @('Qt6Multimedia', 'Qt6MultimediaWidgets')
+       Plugins = @('multimedia') }
 )
 
 # ---- 1. The dev kit ----------------------------------------------------------------

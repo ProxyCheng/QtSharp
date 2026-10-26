@@ -11,7 +11,7 @@
     <NoWarn>$(NoWarn);NU5128</NoWarn>
 
     <PackageId>QtSharp.Qt6</PackageId>
-    <Version>0.6.0</Version>
+    <Version>0.7.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>The Qt 6 runtime that QtSharp.Api and its addons load: Qt6Core/Gui/Widgets/Network/Sql/Svg/PrintSupport/Xml/OpenGL, the SQL driver plugins, the MSVC runtime and the Windows platform plugin.</Description>
     <PackageTags>Qt;Qt6;runtime;native</PackageTags>

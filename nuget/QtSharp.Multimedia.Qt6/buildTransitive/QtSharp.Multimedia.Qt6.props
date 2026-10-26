@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <QtSharpMultimediaQt6NativeDir Condition="'$(QtSharpMultimediaQt6NativeDir)' == ''">$(MSBuildThisFileDirectory)..\tools\native\</QtSharpMultimediaQt6NativeDir>
+    <PlatformTarget Condition="'$(PlatformTarget)' == ''">x64</PlatformTarget>
+  </PropertyGroup>
+</Project>
