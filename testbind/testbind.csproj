@@ -22,11 +22,12 @@
   </ItemGroup>
 
   <!-- The QtWebSockets extension's native glue and Qt runtime DLL, the way the package's
-       buildTransitive would copy them for a consumer. -->
+       buildTransitive would copy them for a consumer. The Qt runtime location comes from
+       QtSharp.Api.props (QT_RUNTIME_DIR in CI), not from a repository-relative guess. -->
   <Target Name="CopyQtWebSocketsNativeDeps" AfterTargets="Build">
     <ItemGroup>
       <QtWebSocketsNative Include="..\out\api-modules\qtwebsockets\QtSharp.QtWebSockets.Native.dll" />
-      <QtWebSocketsRuntime Include="..\Qt\6.12.0\runtime\Qt6WebSockets.dll" />
+      <QtWebSocketsRuntime Include="$(QtRuntimeDir)\Qt6WebSockets.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(QtWebSocketsNative);@(QtWebSocketsRuntime)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
