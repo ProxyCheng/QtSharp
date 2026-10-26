@@ -4,6 +4,16 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.8.0 - 2026-10-26
+
+- **QtCore has official examples in the gate now.** `qtcore-savegame` ports the JSON Save Game
+  example's document model (parse, nested reads, a `toJson` round trip) and `qtcore-regexp` ports
+  the regexp example's global match/capture walk, so the module no longer relies on `test-core`
+  alone for conformance.
+- `QJsonObject` is read-only in the binding for now: `insert` and `operator[]` return an iterator,
+  which the extractor does not publish, so a document is built from text (or replaced wholesale)
+  rather than field by field.
+
 ## 0.7.0 - 2026-10-26
 
 - **QtMultimedia is bound**, as the separate `QtSharp.Multimedia` package: playback
