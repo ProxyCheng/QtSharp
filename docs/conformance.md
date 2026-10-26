@@ -7,7 +7,7 @@ cannot drift):
 
 | runner | source | windows | assertions |
 |---|---|---|---|
-| `testbind` | `demos/` — the official Qt examples, plus `tests/` — binding-specific tests | 45 | 1366 |
+| `testbind` | `demos/` — the official Qt examples, plus `tests/` — binding-specific tests | 46 | 1379 |
 | `QtSharp.Charts.Demos` | `demos.charts/` — Qt Charts | 38 | 570 |
 | `QtSharp.Qt3D.Demos` | `demos.qt3d/` — Qt 3D | 3 | 37 |
 
@@ -51,6 +51,7 @@ run under `test-*` names and stay in the gate:
 | `test-iodevice` | a .NET Stream behind QIODevice: QImage/QXmlStreamReader reading it, write path, leak checks |
 | `test-xmlseam` | System.Xml and QXmlStreamReader/Writer handing documents to each other |
 | `test-positioning` | QtPositioning: coordinate distance/azimuth, shape containment, position info, source enumeration |
+| `test-sqlmodel` | the SQL substitute: an ADO.NET result behind QSqlQueryModel/QSqlTableModel, edits written by SubmitAll |
 
 `tests/WindowFlagsApi.cs` is parked: every assertion passes, but the process dies inside
 `qwindows.dll` during teardown roughly three runs in ten, so it is not in the catalog.

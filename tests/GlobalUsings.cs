@@ -6,6 +6,7 @@ global using QtSharp.QtGui;
 global using QtSharp.QtWidgets;
 global using QtSharp.QtNetwork;
 global using QtSharp.QtPositioning;
+global using QtSharp.QtSql;
 global using QtSharp.QtSvg;
 global using QtSharp.QtSvgWidgets;
 global using QtSharp.QtPrintSupport;

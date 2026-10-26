@@ -1,5 +1,5 @@
 param(
-    [string]$PackageVersion = '0.14.0',
+    [string]$PackageVersion = '0.15.0',
     [string]$QtRuntimeDir = '',
     [switch]$SkipBuild
 )
@@ -40,7 +40,8 @@ $packages = @(
     @{ Name = 'QtSharp.Multimedia.Qt6'; Args = @("-p:QtMultimediaRuntimeDir=$QtRuntime") },
     @{ Name = 'QtSharp.Multimedia';  Args = @() },
     @{ Name = 'QtSharp.Positioning.Qt6'; Args = @("-p:QtPositioningRuntimeDir=$QtRuntime") },
-    @{ Name = 'QtSharp.Positioning';  Args = @() }
+    @{ Name = 'QtSharp.Positioning';  Args = @() },
+    @{ Name = 'QtSharp.Sql';          Args = @() }
 )
 
 $outDir = Join-Path $root 'out\packages'
@@ -82,6 +83,7 @@ $expected = @{
     'QtSharp.Positioning' = @('lib/net10.0/QtSharp.QtPositioning.dll',
                               'tools/native/QtSharp.QtPositioning.Native.dll',
                               'buildTransitive/QtSharp.Positioning.targets')
+    'QtSharp.Sql' = @('lib/net10.0/QtSharp.QtSql.dll')
 }
 
 Write-Host "=== Inspect the packages ==="
@@ -102,4 +104,4 @@ foreach ($package in $packages) {
         Write-Host ("  {0,-22} {1,8:N1} KB  {2} entries" -f $file.Name, ($file.Length / 1KB), $zip.Entries.Count)
     } finally { $zip.Dispose() }
 }
-Write-Host "OK: 11 packages in $outDir"
+Write-Host "OK: 12 packages in $outDir"

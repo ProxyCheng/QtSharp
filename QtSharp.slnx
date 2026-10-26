@@ -26,6 +26,10 @@
     <Project Path="nuget/QtSharp.Charts.Qt6/QtSharp.Charts.Qt6.csproj" />
   </Folder>
 
+  <Folder Name="/Packages - Sql/">
+    <Project Path="nuget/QtSharp.Sql/QtSharp.Sql.csproj" />
+  </Folder>
+
   <Folder Name="/Packages - Multimedia/">
     <Project Path="nuget/QtSharp.Multimedia/QtSharp.Multimedia.csproj" />
     <Project Path="nuget/QtSharp.Multimedia.Qt6/QtSharp.Multimedia.Qt6.csproj" />
