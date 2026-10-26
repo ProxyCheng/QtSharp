@@ -38,9 +38,14 @@
   </ItemGroup>
 
   <Target Name="QtSharpMultimediaQt6PackCheck" BeforeTargets="GenerateNuspec">
+    <!-- Exists() has no wildcard support, so the ffmpeg check collects first and asks the item
+         list; a missing avcodec is the difference between "loads" and "loads but cannot decode". -->
+    <ItemGroup>
+      <_QtSharpMultimediaFfmpeg Include="$(QtMultimediaRuntimeDir)\avcodec-*.dll" />
+    </ItemGroup>
     <Error Condition="!Exists('$(QtMultimediaRuntimeDir)\Qt6Multimedia.dll')" Text="Qt6Multimedia.dll is missing under '$(QtMultimediaRuntimeDir)' - see README.md, section Prerequisites." />
     <Error Condition="!Exists('$(QtMultimediaRuntimeDir)\plugins\multimedia')" Text="The multimedia backend plugin is missing under '$(QtMultimediaRuntimeDir)\plugins\multimedia'." />
-    <Error Condition="!Exists('$(QtMultimediaRuntimeDir)\avcodec-*.dll')" Text="The ffmpeg runtime DLLs (avcodec/avformat/avutil/sw*) are missing under '$(QtMultimediaRuntimeDir)' - the backend cannot decode without them." />
+    <Error Condition="'@(_QtSharpMultimediaFfmpeg)' == ''" Text="The ffmpeg runtime DLLs (avcodec/avformat/avutil/sw*) are missing under '$(QtMultimediaRuntimeDir)' - the backend cannot decode without them." />
   </Target>
 
 </Project>
