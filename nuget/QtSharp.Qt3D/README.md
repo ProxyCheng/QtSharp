@@ -18,8 +18,8 @@ the Qt3D libraries and the renderer/geometry/scene plugins.
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.13.0" />
-  <PackageReference Include="QtSharp.Qt3D" Version="0.13.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.14.0" />
+  <PackageReference Include="QtSharp.Qt3D" Version="0.14.0" />
 </ItemGroup>
 ```
 

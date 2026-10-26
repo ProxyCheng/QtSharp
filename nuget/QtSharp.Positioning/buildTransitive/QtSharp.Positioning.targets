@@ -1,0 +1,18 @@
+<Project>
+
+  <!-- The QtPositioning native glue next to the consumer's executable, on Build and on Publish. -->
+  <Target Name="QtSharpPositioningCopyNativeDeps" AfterTargets="Build">
+    <ItemGroup>
+      <_QtSharpPositioningNative Include="$(QtSharpPositioningNativeDir)*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpPositioningNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="QtSharpPositioningCopyNativeDepsPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <_QtSharpPositioningNativePublish Include="$(QtSharpPositioningNativeDir)*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_QtSharpPositioningNativePublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

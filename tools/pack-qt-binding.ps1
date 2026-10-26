@@ -1,5 +1,5 @@
 param(
-    [string]$PackageVersion = '0.13.0',
+    [string]$PackageVersion = '0.14.0',
     [string]$QtRuntimeDir = '',
     [switch]$SkipBuild
 )
@@ -17,7 +17,7 @@ $QtRuntime = $QtRuntimeDir
 $modules = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
              'qtprintsupport', 'qtopengl', 'qtopenglwidgets',
              'charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras',
-             'qtmultimedia')
+             'qtmultimedia', 'qtpositioning')
 
 if (-not $SkipBuild) {
     $required = @($BindingNative, (Join-Path $QtRuntime 'Qt6Core.dll'))
@@ -38,7 +38,9 @@ $packages = @(
     @{ Name = 'QtSharp.Qt3D.Qt6';    Args = @("-p:Qt3DRuntimeDir=$QtRuntime") },
     @{ Name = 'QtSharp.Qt3D';        Args = @() },
     @{ Name = 'QtSharp.Multimedia.Qt6'; Args = @("-p:QtMultimediaRuntimeDir=$QtRuntime") },
-    @{ Name = 'QtSharp.Multimedia';  Args = @() }
+    @{ Name = 'QtSharp.Multimedia';  Args = @() },
+    @{ Name = 'QtSharp.Positioning.Qt6'; Args = @("-p:QtPositioningRuntimeDir=$QtRuntime") },
+    @{ Name = 'QtSharp.Positioning';  Args = @() }
 )
 
 $outDir = Join-Path $root 'out\packages'
@@ -75,6 +77,11 @@ $expected = @{
     'QtSharp.Multimedia' = @('lib/net10.0/QtSharp.QtMultimedia.dll',
                              'tools/native/QtSharp.QtMultimedia.Native.dll',
                              'buildTransitive/QtSharp.Multimedia.targets')
+    'QtSharp.Positioning.Qt6' = @('tools/native/Qt6Positioning.dll',
+                                  'buildTransitive/QtSharp.Positioning.Qt6.targets')
+    'QtSharp.Positioning' = @('lib/net10.0/QtSharp.QtPositioning.dll',
+                              'tools/native/QtSharp.QtPositioning.Native.dll',
+                              'buildTransitive/QtSharp.Positioning.targets')
 }
 
 Write-Host "=== Inspect the packages ==="
@@ -95,4 +102,4 @@ foreach ($package in $packages) {
         Write-Host ("  {0,-22} {1,8:N1} KB  {2} entries" -f $file.Name, ($file.Length / 1KB), $zip.Entries.Count)
     } finally { $zip.Dispose() }
 }
-Write-Host "OK: 9 packages in $outDir"
+Write-Host "OK: 11 packages in $outDir"

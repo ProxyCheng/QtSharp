@@ -35,6 +35,7 @@
     <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtOpenGL\QtSharp.QtOpenGL.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtOpenGLWidgets\QtSharp.QtOpenGLWidgets.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Multimedia\QtSharp.Multimedia.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Positioning\QtSharp.Positioning.csproj" />
   </ItemGroup>
 
 </Project>

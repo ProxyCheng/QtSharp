@@ -86,7 +86,7 @@ jobs:
           $genBin = Join-Path $root 'gen/bin/Release/net10.0/win-x64'
           $base = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
                     'qtprintsupport', 'qtopengl', 'qtopenglwidgets')
-          $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia')
+          $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia', 'qtpositioning')
           Push-Location $genBin
           try {
             & "./qtgen.exe" split-core (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/split-models')
@@ -120,7 +120,7 @@ jobs:
         run: |
           cmd /c build_api.bat
           if ($LASTEXITCODE -ne 0) { throw "build_api.bat failed" }
-          foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia')) {
+          foreach ($module in @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia', 'qtpositioning')) {
             powershell -NoProfile -File tools\build-native-module.ps1 -Module $module -QtDir "$env:QT_DIR"
             if ($LASTEXITCODE -ne 0) { throw "$module native build failed" }
           }
@@ -188,6 +188,8 @@ jobs:
             out/packages/QtSharp.Qt3D.*.nupkg
             out/packages/QtSharp.Multimedia.*.nupkg
             out/packages/QtSharp.Multimedia.Qt6.*.nupkg
+out/packages/QtSharp.Positioning.*.nupkg
+out/packages/QtSharp.Positioning.Qt6.*.nupkg
           if-no-files-found: error
 
   publish:

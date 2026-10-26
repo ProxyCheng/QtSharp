@@ -31,6 +31,11 @@
     <Project Path="nuget/QtSharp.Multimedia.Qt6/QtSharp.Multimedia.Qt6.csproj" />
   </Folder>
 
+  <Folder Name="/Packages - Positioning/">
+    <Project Path="nuget/QtSharp.Positioning/QtSharp.Positioning.csproj" />
+    <Project Path="nuget/QtSharp.Positioning.Qt6/QtSharp.Positioning.Qt6.csproj" />
+  </Folder>
+
   <Folder Name="/Packages - Qt3D/">
     <Project Path="nuget/QtSharp.Qt3D/QtSharp.Qt3D.csproj" />
     <Project Path="nuget/QtSharp.Qt3D.Qt6/QtSharp.Qt3D.Qt6.csproj" />

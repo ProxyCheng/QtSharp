@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The Qt Positioning runtime payload (Qt6Positioning.dll), the companion package a
+       QtSharp.Positioning consumer gets automatically. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+
+    <PackageId>QtSharp.Positioning.Qt6</PackageId>
+    <Version>0.14.0</Version>
+    <Authors>ProxyCheng</Authors>
+    <Description>The Qt Positioning runtime (Qt6Positioning.dll) loaded by QtSharp.Positioning.</Description>
+    <PackageTags>Qt;Qt6;QtPositioning;runtime;native</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ProxyCheng/QtSharp.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <QtPositioningRuntimeDir Condition="'$(QtPositioningRuntimeDir)' == ''">$(MSBuildThisFileDirectory)..\..\Qt\6.12.0\runtime</QtPositioningRuntimeDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="_._" Pack="true" PackagePath="lib/net10.0/" />
+    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="$(QtPositioningRuntimeDir)\Qt6Positioning.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+  </ItemGroup>
+
+  <Target Name="QtSharpPositioningQt6PackCheck" BeforeTargets="GenerateNuspec">
+    <Error Condition="!Exists('$(QtPositioningRuntimeDir)\Qt6Positioning.dll')" Text="Qt6Positioning.dll is missing under '$(QtPositioningRuntimeDir)' - see README.md, section Prerequisites." />
+  </Target>
+
+</Project>

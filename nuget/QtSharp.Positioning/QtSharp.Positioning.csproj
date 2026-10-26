@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The QtPositioning extension module: the geo value types (QGeoCoordinate, QGeoRectangle,
+       QGeoCircle, QGeoPath, QGeoPolygon, QGeoShape, QGeoAddress, QGeoLocation) and the position/
+       satellite sources. One assembly, one package, against the core binding. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>QtSharp.QtPositioning</AssemblyName>
+    <RootNamespace>QtSharp.QtPositioning</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <PackageId>QtSharp.Positioning</PackageId>
+    <Version>0.14.0</Version>
+    <Authors>ProxyCheng</Authors>
+    <Description>Qt Positioning for .NET, generated from the Qt 6.12 headers. References QtSharp.Api.</Description>
+    <PackageTags>Qt;Qt6;QtPositioning;CSharp;dotnet;binding;interop;geo</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ProxyCheng/QtSharp.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <QtSharpPositioningDir Condition="'$(QtSharpPositioningDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\qtpositioning</QtSharpPositioningDir>
+    <QtSharpPositioningNativeDir Condition="'$(QtSharpPositioningNativeDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\api-modules\qtpositioning</QtSharpPositioningNativeDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(QtSharpPositioningDir)\generated\**\*.cs">
+      <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Runtime\QtSharp.Runtime.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\Modules\QtSharp.QtCore\QtSharp.QtCore.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\QtSharp.Api.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Positioning.Qt6\QtSharp.Positioning.Qt6.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="$(QtSharpPositioningNativeDir)\QtSharp.QtPositioning.Native.dll" Pack="true" PackagePath="tools/native/" Visible="false" />
+  </ItemGroup>
+
+  <Target Name="QtSharpPositioningPackCheck" BeforeTargets="GenerateNuspec">
+    <Error Condition="!Exists('$(QtSharpPositioningDir)\generated')" Text="The QtPositioning binding source is missing - run the code generator for model\qtsharp.qtpositioning.json." />
+    <Error Condition="!Exists('$(QtSharpPositioningNativeDir)\QtSharp.QtPositioning.Native.dll')" Text="The QtPositioning native glue is missing - run: powershell -File tools\build-native-module.ps1 -Module qtpositioning" />
+  </Target>
+
+</Project>
