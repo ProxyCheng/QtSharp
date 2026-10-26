@@ -4,6 +4,14 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.9.0 - 2026-10-26
+
+- **QJsonObject is a C# dictionary now.** It implements `IReadOnlyDictionary<string, object>`, so
+  `foreach`, `TryGetValue` and LINQ work over a document; values go through `QVariant.ToObject()`
+  (nested objects as `Dictionary<string, object>`, arrays as `object[]`), and keys enumerate in
+  Qt's sorted order. `test-json` covers it. The interface is read-only: `insert`/`operator[]`
+  return an iterator the model does not publish, so `IDictionary` waits for that fix.
+
 ## 0.8.0 - 2026-10-26
 
 - **QtCore has official examples in the gate now.** `qtcore-savegame` ports the JSON Save Game
