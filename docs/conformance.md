@@ -7,7 +7,7 @@ cannot drift):
 
 | runner | source | windows | assertions |
 |---|---|---|---|
-| `testbind` | `demos/` — the official Qt examples, plus `tests/` — binding-specific tests | 45 | 1364 |
+| `testbind` | `demos/` — the official Qt examples, plus `tests/` — binding-specific tests | 46 | 1376 |
 | `QtSharp.Charts.Demos` | `demos.charts/` — Qt Charts | 38 | 570 |
 | `QtSharp.Qt3D.Demos` | `demos.qt3d/` — Qt 3D | 3 | 37 |
 
@@ -51,6 +51,7 @@ run under `test-*` names and stay in the gate:
 | `test-graphics` | the graphics-view family (scene, items, off-screen render) |
 | `test-bclinterop` | the BCL conversions: QPoint/QSize/QRect/QColor/vectors/quaternion/URL/GUID/QVariant |
 | `test-qtsql` | QtSql's BCL half: rows as dictionaries, LINQ to Objects, typed reads |
+| `test-json` | QJsonObject's container half: enumeration, IReadOnlyDictionary, LINQ over unwrapped values |
 
 `tests/WindowFlagsApi.cs` is parked: every assertion passes, but the process dies inside
 `qwindows.dll` during teardown roughly three runs in ten, so it is not in the catalog.

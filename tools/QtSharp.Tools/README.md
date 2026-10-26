@@ -5,7 +5,7 @@ installation is needed to run the packaged tools. The initial payload contains Q
 `rcc`, `uic`, `lrelease` and `lupdate`; `moc` is included when present in the source distribution.
 
 ```xml
-<PackageReference Include="QtSharp.Tools" Version="0.8.0" PrivateAssets="all" />
+<PackageReference Include="QtSharp.Tools" Version="0.9.0" PrivateAssets="all" />
 <QtResource Include="assets\sample.qrc" />
 ```
 
