@@ -188,8 +188,8 @@ jobs:
             out/packages/QtSharp.Qt3D.*.nupkg
             out/packages/QtSharp.Multimedia.*.nupkg
             out/packages/QtSharp.Multimedia.Qt6.*.nupkg
-out/packages/QtSharp.Positioning.*.nupkg
-out/packages/QtSharp.Positioning.Qt6.*.nupkg
+            out/packages/QtSharp.Positioning.*.nupkg
+            out/packages/QtSharp.Positioning.Qt6.*.nupkg
           if-no-files-found: error
 
   publish:
