@@ -47,6 +47,22 @@ For a standalone application using release packages, start with
 [Hello World](samples/hello/Hello.csproj). See [conformance coverage](docs/conformance.md)
 for what the examples validate.
 
+## Module scope and .NET integration
+
+QtSharp does not aim to bind every Qt module. Where .NET already has mature libraries that
+fit C# applications well, we prefer those libraries and add adapters when a QtSharp component
+needs to use them.
+
+| Qt module intentionally omitted | .NET alternative | QtSharp integration |
+|---|---|---|
+| QtXml | `System.Xml` | `QXmlStreamReader`/`QXmlStreamWriter` remain available through QtCore. |
+| QtSql | ADO.NET providers | `QtSharp.Sql` exposes query/table models backed by a `DbConnection`. |
+| QtWebSockets | `System.Net.WebSockets.ClientWebSocket` | Use the .NET API directly; no Qt-facing adapter is provided yet. |
+
+`QtSharp.Sql` and `StreamIODevice` (a .NET `Stream` exposed as `QIODevice`) are examples of
+this approach. Further adapters may expose C# libraries through the model, IO or other
+interfaces used by QtSharp components.
+
 ## Install the binding
 
 You need the **.NET 10 SDK**. The packages include the Qt runtime and native binding;
@@ -722,8 +738,9 @@ Replace the local source path with your checkout's `out/packages` directory.
   `QLocalServer`/`QLocalSocket`, TCP/UDP, the HTTP client), QtSvg/QtSvgWidgets, QtPrintSupport
   (`QPrinter`, print dialogs/preview) and QtOpenGL/QtOpenGLWidgets (`QOpenGLWidget`,
   `QOpenGLContext`, shader/buffer classes).
-    **Not bound**: QtXml/QtSql/QtWebSockets (System.Xml, EF Core/Sqlite and ClientWebSocket cover
-    them; QtXml callers keep `QXmlStreamReader/Writer` in QtCore), QtQml/QtQuick, QtPdf, QtWebEngine.
+* **Intentionally omitted**: QtXml, QtSql and QtWebSockets use .NET alternatives; see
+  [module scope and .NET integration](#module-scope-and-net-integration).
+* **Not currently bound**: QtQml/QtQuick, QtPdf and QtWebEngine.
 * **QtCharts and Qt3D are optional packages.** Their Qt libraries have separate licensing
   terms; see [NOTICE.md](NOTICE.md). Qt3D types such as `QTransform` share names with base Qt
   types. Use the module namespace or an alias to distinguish them, for example

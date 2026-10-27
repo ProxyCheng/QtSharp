@@ -65,6 +65,10 @@ Here `HandleEdit` is application code. This is a workaround for the missing `Sen
 
 ## Unsupported requests
 
+QtXml, QtSql and QtWebSockets are intentionally handled with .NET alternatives and adapters;
+see [module scope](../README.md#module-scope-and-net-integration). The unsupported requests
+below are separate coverage gaps.
+
 Qt Quick/QML, QML invocation and type registration are not supported
 ([#40](https://github.com/ddobrev/QtSharp/issues/40),
 [#55](https://github.com/ddobrev/QtSharp/issues/55),

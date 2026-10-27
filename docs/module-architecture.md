@@ -1,7 +1,7 @@
 # Module and package architecture
 
-This document is the layout the binding follows as more Qt modules are added. It mirrors the
-upstream projects rather than inventing a new grouping:
+QtSharp binds selected Qt modules. Bound modules follow Qt's assembly and namespace grouping;
+features already well served by .NET can use managed implementations and adapters instead.
 
 | project | package shape |
 |---|---|
@@ -33,6 +33,26 @@ runtime package. QtQml, QtQuick, QtPdf and QtWebEngine are not currently bound.
 Platform packages have a `.win-x64` or `.linux-x64` suffix; the table uses their base names.
 On Linux the base `QtSharp.Qt6` package deploys the Qt runtime tree, including addon libraries
 and plugins. `QtSharp.Tools` is Windows x64 only and has no platform suffix.
+
+## Module selection and managed adapters
+
+QtXml, QtSql and QtWebSockets are intentionally omitted. XML uses `System.Xml`, database
+access uses ADO.NET providers, and WebSocket clients use `ClientWebSocket`. They are not
+missing bindings waiting to be generated.
+
+When another QtSharp component needs those facilities, a managed adapter can implement the
+Qt-facing interface while using a .NET library internally. Existing examples are:
+
+- [`QtSharp.Sql`](../nuget/QtSharp.Sql/README.md): ADO.NET query results and edits exposed
+  through `QAbstractTableModel`-based query/table models for Qt views.
+- [`StreamIODevice`](../runtime/QtCore/IoDeviceInterop.cs): a .NET `Stream` exposed through
+  `QIODevice`, so Qt image loaders and other IO consumers can use it.
+- [XML interoperability tests](../tests/XmlSeamApi.cs): documents passed between `System.Xml`
+  and QtCore's `QXmlStreamReader`/`QXmlStreamWriter`.
+
+Further adapters can be added as integration needs arise. There is no Qt-facing WebSocket
+adapter at present. QtQml/QtQuick, QtPdf and QtWebEngine are also unbound, but are separate
+coverage gaps rather than the .NET substitutions described here.
 
 ## Assemblies in the base binding
 

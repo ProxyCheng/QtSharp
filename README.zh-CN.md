@@ -32,6 +32,20 @@ QtSharp 将 Qt 6 的 Widgets、绘图、网络，以及可选的图表、3D、�
 
 以上示例通过仓库开发流程构建。只想体验独立应用，可以先运行下面的 Hello World。
 
+## 模块取舍与 .NET 集成
+
+QtSharp 不追求绑定全部 Qt 模块。对于 .NET 已有成熟、适合 C# 使用的库，我们优先使用
+.NET 实现；其他 QtSharp 组件需要这些能力时，再按需提供适配。
+
+| 明确不引入的 Qt 模块 | 使用的 .NET 库 | 与 QtSharp 的衔接 |
+|---|---|---|
+| QtXml | `System.Xml` | QtCore 中的 `QXmlStreamReader`/`QXmlStreamWriter` 仍可使用。 |
+| QtSql | ADO.NET 数据库驱动 | `QtSharp.Sql` 将 `DbConnection` 包装成查询和表格模型。 |
+| QtWebSockets | `ClientWebSocket` | 直接使用 .NET API，目前没有 Qt 接口适配。 |
+
+现有的 `QtSharp.Sql` 和将 .NET `Stream` 包装为 `QIODevice` 的 `StreamIODevice` 已采用
+这种方式。后续也会考虑按需包装 C# 库，让 QtSharp 的模型、IO 等接口及其他组件使用。
+
 ## 运行第一个窗口
 
 1. 安装 **.NET 10 SDK**。
