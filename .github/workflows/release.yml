@@ -396,6 +396,7 @@ jobs:
           ./tools/pack-qt-binding.ps1 -PackageVersion $version `
             -QtRuntimeDir "Qt/6.12.0/runtime" `
             -QtLinuxRuntimeDir "out/linux-payload/qt-kit/runtime" `
+            -Platforms win-x64,linux-x64 `
             -RequireLinuxPayload
           if ($LASTEXITCODE -ne 0) { throw "packaging failed" }
 
@@ -482,8 +483,10 @@ jobs:
           $notes = @"
           ## QtSharp $version
 
-          The packages follow PyQt6's split and carry native assets for **Windows x64 and Linux
-          x64** in the same package; the .NET assemblies are platform-neutral.
+          The packages follow PyQt6's split and are published **per platform**: the package id
+          carries the RID (``QtSharp.Api.win-x64``, ``QtSharp.Api.linux-x64``, ...) and only that
+          platform's Qt runtime and native glue are inside. Add the one matching the machine you
+          build on; the .NET assemblies are identical in both.
 
           * **QtSharp.Api** - the binding as nine module assemblies (QtCore, QtGui, QtWidgets,
             QtNetwork, QtSvg, QtSvgWidgets, QtPrintSupport, QtOpenGL, QtOpenGLWidgets).

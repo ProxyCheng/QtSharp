@@ -1,5 +1,8 @@
 # QtSharp.Positioning
 
+> The package id carries the platform: the snippets below use the `win-x64` variant. On
+> Linux, use the matching `.linux-x64` package (`QtSharp.Api.linux-x64`, ...).
+
 Qt Positioning for .NET, generated from the Qt 6.12 headers the same way `QtSharp.Api` is:
 `QGeoCoordinate` and the geo value types (`QGeoRectangle`, `QGeoCircle`, `QGeoPath`,
 `QGeoPolygon`, `QGeoShape`, `QGeoAddress`, `QGeoLocation`), plus `QGeoPositionInfo`,
@@ -7,8 +10,8 @@ Qt Positioning for .NET, generated from the Qt 6.12 headers the same way `QtShar
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.18.0" />
-  <PackageReference Include="QtSharp.Positioning" Version="0.18.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.19.0" />
+  <PackageReference Include="QtSharp.Positioning.win-x64" Version="0.19.0" />
 </ItemGroup>
 ```
 

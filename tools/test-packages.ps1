@@ -1,13 +1,21 @@
 param(
-    [string]$PackageVersion = '0.18.0',
+    [string]$PackageVersion = '0.19.0',
     [string]$PackagesDir = '',
-    [string]$WorkDir = ''
+    [string]$WorkDir = '',
+    [string]$Platform = ''
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 if (-not $PackagesDir) { $PackagesDir = Join-Path $root 'out\packages' }
 if (-not $WorkDir) { $WorkDir = Join-Path $root 'out\package-consumer' }
 $PackagesDir = (Resolve-Path -LiteralPath $PackagesDir).ProviderPath
+# The packages are platform-specific (QtSharp.Api.win-x64 / QtSharp.Api.linux-x64): a consumer
+# restores the one matching the host it builds and runs on.
+if (-not $Platform) {
+    $isWindowsHost = $PSVersionTable.PSVersion.Major -lt 6 -or $IsWindows
+    $Platform = if ($isWindowsHost) { 'win-x64' } else { 'linux-x64' }
+}
+if ($Platform -notin @('win-x64', 'linux-x64')) { throw "Unknown platform '$Platform'; QtSharp ships win-x64 and linux-x64." }
 
 # The consumer path, not the source path: a throw-away project restores the *packages* from a local
 # feed and uses the base binding, Charts and Qt3D through their public namespaces. This is what
@@ -37,12 +45,12 @@ New-Item -ItemType Directory -Path $WorkDir | Out-Null
     <AssemblyName>PackageConsumer</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="QtSharp.Api" Version="$PackageVersion" />
-    <PackageReference Include="QtSharp.Charts" Version="$PackageVersion" />
-    <PackageReference Include="QtSharp.Qt3D" Version="$PackageVersion" />
-    <PackageReference Include="QtSharp.Multimedia" Version="$PackageVersion" />
-    <PackageReference Include="QtSharp.Positioning" Version="$PackageVersion" />
-    <PackageReference Include="QtSharp.Sql" Version="$PackageVersion" />
+    <PackageReference Include="QtSharp.Api.$Platform" Version="$PackageVersion" />
+    <PackageReference Include="QtSharp.Charts.$Platform" Version="$PackageVersion" />
+    <PackageReference Include="QtSharp.Qt3D.$Platform" Version="$PackageVersion" />
+    <PackageReference Include="QtSharp.Multimedia.$Platform" Version="$PackageVersion" />
+    <PackageReference Include="QtSharp.Positioning.$Platform" Version="$PackageVersion" />
+    <PackageReference Include="QtSharp.Sql.$Platform" Version="$PackageVersion" />
   </ItemGroup>
 </Project>
 "@ | Set-Content -LiteralPath (Join-Path $WorkDir 'PackageConsumer.csproj') -Encoding utf8
@@ -92,4 +100,4 @@ try {
 $output | ForEach-Object { Write-Host $_ }
 if ($code -ne 0) { throw "The package consumer failed with exit code $code." }
 if (-not ($output -match '\[PASS\]')) { throw 'The package consumer ran but printed no [PASS] line.' }
-Write-Host "OK: QtSharp.Api + QtSharp.Charts + QtSharp.Qt3D + QtSharp.Multimedia + QtSharp.Positioning + QtSharp.Sql restored from $PackagesDir and ran."
+Write-Host "OK: QtSharp.Api.$Platform + QtSharp.Charts.$Platform + QtSharp.Qt3D.$Platform + QtSharp.Multimedia.$Platform + QtSharp.Positioning.$Platform + QtSharp.Sql.$Platform restored from $PackagesDir and ran."

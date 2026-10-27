@@ -1,5 +1,8 @@
 # QtSharp.Sql
 
+> The package id carries the platform: the snippets below use the `win-x64` variant. On
+> Linux, use the matching `.linux-x64` package (`QtSharp.Api.linux-x64`, ...).
+
 The two Qt model classes the removed QtSql binding used to provide, implemented over ADO.NET
 (`System.Data.Common`) instead: `QSqlQueryModel` (read-only, a `QAbstractTableModel` over a query)
 and `QSqlTableModel` (editable, staged edits written by `SubmitAll`). They live in the
@@ -10,8 +13,8 @@ works - pass its `DbConnection`:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.18.0" />
-  <PackageReference Include="QtSharp.Sql" Version="0.18.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.19.0" />
+  <PackageReference Include="QtSharp.Sql.win-x64" Version="0.19.0" />
   <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
 </ItemGroup>
 ```

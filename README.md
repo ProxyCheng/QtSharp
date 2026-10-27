@@ -64,7 +64,9 @@ else to set up. No Qt SDK, no Visual Studio C++ workload, no clone:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.18.0" />
+  <!-- win-x64 or linux-x64: the package id carries the platform, and only that platform's
+       Qt runtime is inside. -->
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.19.0" />
 </ItemGroup>
 ```
 
@@ -104,8 +106,8 @@ than part of qtbase. It references the core package and adds all six modules:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.18.0" />
-  <PackageReference Include="QtSharp.Qt3D" Version="0.18.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.19.0" />
+  <PackageReference Include="QtSharp.Qt3D.win-x64" Version="0.19.0" />
 </ItemGroup>
 ```
 
@@ -139,16 +141,20 @@ drop-in replacement for every Qt module or every desktop deployment scenario.
 
 ## Releases
 
-Pushing a semantic-version tag such as `v0.18.0` starts the release workflow. It builds twelve
-packages and attaches them, with a `SHA256SUMS.txt`, to a GitHub Release. Every package that
-carries native code holds both `tools/native/win-x64/` and `tools/native/linux-x64/`; the managed
-assemblies are platform-neutral.
+Pushing a semantic-version tag such as `v0.19.0` starts the release workflow. It builds every
+package below once for `win-x64` and once for `linux-x64` - the id carries the RID
+(`QtSharp.Api.win-x64`, `QtSharp.Api.linux-x64`, ...), and only that platform's Qt runtime and
+native glue are inside - and attaches them, with a `SHA256SUMS.txt`, to a GitHub Release. The
+managed assemblies are identical in both variants; `QtSharp.Tools` is Windows-only.
+
+Every row below is published as `<name>.win-x64` and `<name>.linux-x64`; reference the one that
+matches the machine you build on.
 
 | package | what it is |
 |---|---|
 | `QtSharp.Api` | the binding as nine module assemblies — add it and write Qt applications in C# |
 | `QtSharp.Runtime` | the managed runtime + native glue (brought in by `QtSharp.Api`) |
-| `QtSharp.Qt6` | the Qt 6 runtime — Windows DLLs + `qwindows.dll`; on Linux the `lib/` + `plugins/` prefix and `qt.conf` for both platforms' consumer builds (brought in by `QtSharp.Api`) |
+| `QtSharp.Qt6` | the Qt 6 runtime for that platform — Windows DLLs + `qwindows.dll`, or the `lib/` + `plugins/` prefix and `qt.conf` on Linux (brought in by `QtSharp.Api`) |
 | `QtSharp.Tools` | Qt command-line tools (`rcc`, `uic`, `lrelease`, `lupdate`) + MSBuild `.qrc` support — Windows x64 only |
 | `QtSharp.Charts` | the optional QtCharts extension, against `QtSharp.Api` |
 | `QtSharp.Charts.Qt6` | Qt6Charts.dll (brought in by `QtSharp.Charts`; on Linux the base `QtSharp.Qt6` already deploys the whole Qt tree) |
@@ -346,7 +352,7 @@ module projects directly (the same assemblies the package contains).
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.18.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.19.0" />
 </ItemGroup>
 ```
 
@@ -566,7 +572,7 @@ and matching DLLs (normally a Qt kit's `bin`):
 powershell -File tools\pack-qt-tools.ps1 -QtToolsSource C:\Qt\6.12.0\msvc2022_64\bin
 ```
 
-The result is `out/packages/QtSharp.Tools.0.18.0.nupkg`. `-QtVersion` and `-PackageVersion`
+The result is `out/packages/QtSharp.Tools.0.19.0.nupkg`. `-QtVersion` and `-PackageVersion`
 override the defaults. Put the upstream license texts/notices in a `QtSharp-ThirdPartyNotices`
 subdirectory beside the source tools to include them in the payload. Tools are staged under
 `out/qt-tools`; the script checks QtCore's version and runs captured, time-limited startup checks.
@@ -575,7 +581,7 @@ In a consumer project:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Tools" Version="0.18.0" PrivateAssets="all" />
+  <PackageReference Include="QtSharp.Tools" Version="0.19.0" PrivateAssets="all" />
   <QtResource Include="assets\sample.qrc" />
 </ItemGroup>
 ```

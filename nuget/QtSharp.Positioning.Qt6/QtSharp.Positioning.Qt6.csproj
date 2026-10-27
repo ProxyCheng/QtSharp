@@ -8,8 +8,12 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>$(NoWarn);NU5128</NoWarn>
 
-    <PackageId>QtSharp.Positioning.Qt6</PackageId>
-    <Version>0.18.0</Version>
+  <!-- One package per platform: the release packs this project once with
+       -p:QtSharpPlatform=win-x64 and once with linux-x64. The managed assemblies are
+       identical; the native payload below is the matching half only. -->
+  <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
+    <PackageId>QtSharp.Positioning.Qt6.$(QtSharpPlatform)</PackageId>
+    <Version>0.19.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>The Qt Positioning runtime (Qt6Positioning.dll) loaded by QtSharp.Positioning.</Description>
     <PackageTags>Qt;Qt6;QtPositioning;runtime;native</PackageTags>
@@ -25,8 +29,11 @@
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
     <None Include="_._" Pack="true" PackagePath="lib/net10.0/" />
-    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
-    <None Include="$(QtPositioningRuntimeDir)\Qt6Positioning.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" />
+    <!-- NuGet only imports buildTransitive/<package id>.props and .targets, and the id
+         carries the RID, so the files are packed under the platform-specific name. -->
+    <None Include="buildTransitive\QtSharp.Positioning.Qt6.props" Pack="true" PackagePath="buildTransitive/QtSharp.Positioning.Qt6.$(QtSharpPlatform).props" />
+    <None Include="buildTransitive\QtSharp.Positioning.Qt6.targets" Pack="true" PackagePath="buildTransitive/QtSharp.Positioning.Qt6.$(QtSharpPlatform).targets" />
+    <None Include="$(QtPositioningRuntimeDir)\Qt6Positioning.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false"  Condition="'$(QtSharpPlatform)' == 'win-x64'" />
   </ItemGroup>
 
   <Target Name="QtSharpPositioningQt6PackCheck" BeforeTargets="GenerateNuspec">

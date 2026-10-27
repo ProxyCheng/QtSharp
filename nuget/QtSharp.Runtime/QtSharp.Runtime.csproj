@@ -17,8 +17,12 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
 
-    <PackageId>QtSharp.Runtime</PackageId>
-    <Version>0.18.0</Version>
+  <!-- One package per platform: the release packs this project once with
+       -p:QtSharpPlatform=win-x64 and once with linux-x64. The managed assemblies are
+       identical; the native payload below is the matching half only. -->
+  <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
+    <PackageId>QtSharp.Runtime.$(QtSharpPlatform)</PackageId>
+    <Version>0.19.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>QtSharp runtime: the managed handle/signal/marshalling layer shared by every QtSharp binding module, plus the native QtSharp.Api glue.</Description>
     <PackageTags>Qt;Qt6;CSharp;dotnet;binding;interop;runtime</PackageTags>
@@ -47,9 +51,12 @@
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
-    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
-    <None Include="$(QtSharpApiDir)\QtSharp.Api.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" Condition="Exists('$(QtSharpApiDir)\QtSharp.Api.dll')" />
-    <None Include="$(QtSharpApiLinuxDir)\libQtSharp.Api.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="Exists('$(QtSharpApiLinuxDir)\libQtSharp.Api.so')" />
+    <!-- NuGet only imports buildTransitive/<package id>.props and .targets, and the id
+         carries the RID, so the files are packed under the platform-specific name. -->
+    <None Include="buildTransitive\QtSharp.Runtime.props" Pack="true" PackagePath="buildTransitive/QtSharp.Runtime.$(QtSharpPlatform).props" />
+    <None Include="buildTransitive\QtSharp.Runtime.targets" Pack="true" PackagePath="buildTransitive/QtSharp.Runtime.$(QtSharpPlatform).targets" />
+    <None Include="$(QtSharpApiDir)\QtSharp.Api.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" Condition="'$(QtSharpPlatform)' == 'win-x64' And Exists('$(QtSharpApiDir)\QtSharp.Api.dll')" />
+    <None Include="$(QtSharpApiLinuxDir)\libQtSharp.Api.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="'$(QtSharpPlatform)' == 'linux-x64' And Exists('$(QtSharpApiLinuxDir)\libQtSharp.Api.so')" />
   </ItemGroup>
 
   <Target Name="QtSharpRuntimePackCheck" BeforeTargets="GenerateNuspec">
