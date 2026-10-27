@@ -97,7 +97,15 @@ function Invoke-WindowTests {
         foreach ($job in $failed) {
             Write-Host ("[FAIL] {0} exited with 0x{1:X8}; output:" -f $job.Name, $job.ExitCode)
             if ($job.Stdout) {
-                ($job.Stdout -split "`r?`n") | Select-Object -Last 40 |
+                $lines = $job.Stdout -split "`r?`n"
+                # The tail alone can miss the failing assertion (a long test prints hundreds of
+                # PASS lines after it), so every [FAIL] line is reported up front.
+                $assertionFailures = @($lines | Where-Object { $_ -match '\[FAIL\]' })
+                if ($assertionFailures.Count -gt 0) {
+                    Write-Host "  failed assertion(s):"
+                    $assertionFailures | ForEach-Object { Write-Host ("    " + $_) }
+                }
+                $lines | Select-Object -Last 40 |
                     ForEach-Object { Write-Host $_ }
             }
             if ($job.Stderr) {
