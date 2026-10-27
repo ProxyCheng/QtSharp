@@ -93,13 +93,20 @@ static inline bool QsApiValueEqual(const Pod& a, const Pod& b)
 }
 
 // Hashing is Qt's qHash when the type declares one. Otherwise the generator's fallback hashes the
-// fields the type does have (a field-wise qHashMulti, or qHashBits over opaque words).
+// POD: the fields the type does have (a field-wise qHashMulti) or its opaque words. It has to be
+// the POD, not the Qt value reconstructed from it - that copy's padding is uninitialised, so
+// equal values would hash differently (QTextLine on Linux).
 template <class T, class Pod, class Fallback>
 static inline size_t QsApiValueHash(const Pod& pod, Fallback fallback)
 {
-    T value = QsApiRawFromPod<T>(pod);
     if constexpr (QsApiHasHash<T>::value)
+    {
+        // An lvalue: qHash's overloads are found the same way this always did.
+        T value = QsApiRawFromPod<T>(pod);
         return qHash(value);
+    }
     else
-        return fallback(value);
+    {
+        return fallback(pod);
+    }
 }
