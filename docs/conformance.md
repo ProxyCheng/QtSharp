@@ -1,15 +1,14 @@
 # Conformance coverage
 
-The gate treats Qt's own examples as the test suite, the same way a language binding claims
-compatibility by running upstream programs. Three executables are registered, all driven by
-`tools/run-window-tests.ps1` (each lists its own names with `--list`, so the gate and the tables
-cannot drift):
+The test suite combines C# ports of Qt examples with tests specific to the binding.
+`tools/run-window-tests.ps1` runs the three executables below. Each supports `--list`, which
+reports the registered scenarios; assertion counts are printed by each run.
 
-| runner | source | windows | assertions |
-|---|---|---|---|
-| `testbind` | `demos/` — the official Qt examples, plus `tests/` — binding-specific tests | 46 | 1379 |
-| `QtSharp.Charts.Demos` | `demos.charts/` — Qt Charts | 38 | 570 |
-| `QtSharp.Qt3D.Demos` | `demos.qt3d/` — Qt 3D | 3 | 37 |
+| Runner | Source |
+|---|---|
+| `testbind` | `demos/` and `tests/` |
+| `QtSharp.Charts.Demos` | `demos.charts/` |
+| `QtSharp.Qt3D.Demos` | `demos.qt3d/` |
 
 ## Official demos, by module
 
@@ -47,6 +46,8 @@ run under `test-*` names and stay in the gate:
 | `test-custommodel` | managed item models/delegates and Qt's calls back into them |
 | `test-graphics` | the graphics-view family (scene, items, off-screen render) |
 | `test-bclinterop` | the BCL conversions: QPoint/QSize/QRect/QColor/vectors/quaternion/URL/GUID/QVariant |
+| `test-variantobject` | Qt values, QObject wrappers and opaque managed values through QVariant-backed APIs |
+| `test-variantlifetime` | native QVariant copies and managed-payload lifetime |
 | `test-json` | JSON as C# containers: QJsonObject as a writable dictionary, QJsonArray as a list, unwrapped snapshots, LINQ |
 | `test-iodevice` | a .NET Stream behind QIODevice: QImage/QXmlStreamReader reading it, write path, leak checks |
 | `test-xmlseam` | System.Xml and QXmlStreamReader/Writer handing documents to each other |
