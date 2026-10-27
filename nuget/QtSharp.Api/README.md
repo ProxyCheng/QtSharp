@@ -6,6 +6,9 @@
 Qt for .NET, organized the way PyQt6 is: one install, one assembly and one C# namespace per Qt
 module.
 
+**Pre-1.0:** the API may change substantially between releases. Source and binary compatibility
+are not guaranteed. Pin package versions and test your application before upgrading.
+
 ```xml
 <ItemGroup>
   <PackageReference Include="QtSharp.Api.win-x64" Version="0.19.0" />

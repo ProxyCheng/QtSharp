@@ -19,18 +19,20 @@ namespace per Qt module**.
 |---|---|---|
 | `QtSharp.Runtime` | `QtSharp.Runtime.dll` (handles, signals, attributes, marshalling; no Qt types) and the shared native glue `QtSharp.Api.dll` | — |
 | `QtSharp.Qt6` | the Qt 6 base runtime DLLs (`Qt6Core`, `Qt6Gui`, `Qt6Widgets`, …, `qwindows.dll`) | — |
-| `QtSharp.Api` | eleven assemblies: `QtSharp.QtCore`, `QtSharp.QtGui`, `QtSharp.QtWidgets`, `QtSharp.QtNetwork`, `QtSharp.QtSql`, `QtSharp.QtSvg`, `QtSharp.QtSvgWidgets`, `QtSharp.QtPrintSupport`, `QtSharp.QtXml`, `QtSharp.QtOpenGL`, `QtSharp.QtOpenGLWidgets` | `QtSharp.Runtime`, `QtSharp.Qt6` |
+| `QtSharp.Api` | nine assemblies: `QtSharp.QtCore`, `QtSharp.QtGui`, `QtSharp.QtWidgets`, `QtSharp.QtNetwork`, `QtSharp.QtSvg`, `QtSharp.QtSvgWidgets`, `QtSharp.QtPrintSupport`, `QtSharp.QtOpenGL`, `QtSharp.QtOpenGLWidgets` | `QtSharp.Runtime`, `QtSharp.Qt6` |
 | `QtSharp.Charts` | `QtSharp.Charts` assembly + `QtSharp.Charts.Native.dll` | `QtSharp.Api`, `QtSharp.Charts.Qt6` |
 | `QtSharp.Charts.Qt6` | `Qt6Charts.dll` | — |
 | `QtSharp.Qt3D` | six assemblies: `QtSharp.Qt3DCore`, `QtSharp.Qt3DRender`, `QtSharp.Qt3DInput`, `QtSharp.Qt3DLogic`, `QtSharp.Qt3DAnimation`, `QtSharp.Qt3DExtras`; six native glues | `QtSharp.Api`, `QtSharp.Qt3D.Qt6` |
 | `QtSharp.Qt3D.Qt6` | `Qt63D*.dll`, `Qt6Concurrent`, `Qt6ShaderTools`, renderer/geometry/scene plugins | — |
 | `QtSharp.Tools` | Qt command-line tools and MSBuild `.qrc` support | — |
 
-Future addons follow the same pair: `QtSharp.Sql` + `QtSharp.Sql.Qt6`, `QtSharp.Multimedia` +
-`QtSharp.Multimedia.Qt6`, `QtSharp.Pdf` + `QtSharp.Pdf.Qt6`, `QtSharp.WebEngine` +
-`QtSharp.WebEngine.Qt6`, and so on. A module that lives in the base Qt runtime
-(`QtSql`, `QtQml`, `QtQuick`, `QtTest`, …) is an assembly inside `QtSharp.Api` and needs no
-companion runtime package beyond `QtSharp.Qt6`.
+QtMultimedia and QtPositioning also have binding/runtime package pairs. `QtSharp.Sql` is
+an ADO.NET implementation of the Qt SQL model APIs; it does not bind QtSql or require a Qt SQL
+runtime package. QtQml, QtQuick, QtPdf and QtWebEngine are not currently bound.
+
+Platform packages have a `.win-x64` or `.linux-x64` suffix; the table uses their base names.
+On Linux the base `QtSharp.Qt6` package deploys the Qt runtime tree, including addon libraries
+and plugins. `QtSharp.Tools` is Windows x64 only and has no platform suffix.
 
 ## Assemblies in the base binding
 
@@ -43,7 +45,6 @@ companion runtime package beyond `QtSharp.Qt6`.
 | `QtSharp.QtSvg` | QtSvg | QtGui, QtCore |
 | `QtSharp.QtSvgWidgets` | QtSvgWidgets | QtWidgets, QtGui, QtSvg, QtCore |
 | `QtSharp.QtPrintSupport` | QtPrintSupport | QtWidgets, QtGui, QtCore |
-| `QtSharp.QtXml` | QtXml | QtCore |
 | `QtSharp.QtOpenGL` | QtOpenGL | QtGui, QtCore |
 | `QtSharp.QtOpenGLWidgets` | QtOpenGLWidgets | QtOpenGL, QtWidgets, QtGui, QtCore |
 
@@ -94,7 +95,7 @@ No generator or build-script code is written per module.
 
 * **Base binding.** `model/qtsharp.api.json` remains the checked-in extraction and the
   reproducibility gate. `qtgen split-core` writes one derived model per base module into
-  `out/split-models/`; the ten `model/qtsharp.<module>.json` files are checked in and are what the
+  `out/split-models/`; the nine `model/qtsharp.<module>.json` files are checked in and are what the
   assemblies are generated from. Classes are grouped by their header's module directory, enums by
   the module that *declares* them (recorded by the extractor, which is what distinguishes
   `Qt::BrushStyle` in `QtCore/qnamespace.h` from a class-scoped QtGui enum), and free functions by
@@ -135,14 +136,13 @@ No generator or build-script code is written per module.
 nuget/
   QtSharp.Runtime/                 managed runtime + shared native glue
   QtSharp.Qt6/                     Qt base runtime payload
-  QtSharp.Api/                     pack project for the eleven base assemblies
+  QtSharp.Api/                     pack project for the nine base assemblies
     Modules/QtSharp.QtCore/ …      one csproj per Qt module
   QtSharp.Charts/                  Charts assembly + native glue + pack
   QtSharp.Charts.Qt6/              Qt6Charts.dll
   QtSharp.Qt3D/                    pack project for six assemblies
     Modules/QtSharp.Qt3DCore/ …    one csproj per Qt3D module
   QtSharp.Qt3D.Qt6/                Qt3D runtime + plugins
-  QtSharp.Tools/
 ```
 
 The pack projects only collect `lib/net10.0` assemblies and `tools/native` payloads; the companion
@@ -154,17 +154,17 @@ NuGet dependencies, so a consumer never lists the runtime packages by hand.
 
 `tools/regen-api.ps1` is the full gate: it re-extracts the combined model, checks the split models
 are byte-identical, generates every module twice (determinism), builds the shared and per-addon
-native glues, builds the eleven base assemblies and the Charts assembly, runs the official demos and
+native glues, builds the base and addon assemblies, runs the official demos and
 binding tests (including the Qt Charts and Qt3D conformance suites). `tools/pack-qt-binding.ps1` packs and
-inspects all seven packages; a local feed consumer test then proves the dependency graph and the
+inspects the platform packages; a local feed consumer test then proves the dependency graph and the
 `buildTransitive` payload.
 
-## Migration stages
+## Historical migration stages
 
 | stage | work | acceptance |
 |---|---|---|
 | **M0 (done)** | Qt3D split into six assemblies inside one `QtSharp.Qt3D` package | six assemblies build; official demos pass; package consumer runs and renders |
-| **M1 (done)** | binding-module registry + `qtgen split-core` + ten base models | `qtsharp.api.json` extraction gate; split deterministic and checked in |
-| **M2 (done)** | runtime split (`QtSharp.Runtime`) + ten base assemblies + `QtSharp.Api` pack project | core demos pass; a consumer references `QtSharp.Api` and runs |
+| **M1 (done)** | binding-module registry + `qtgen split-core` + base models | `qtsharp.api.json` extraction gate; split deterministic and checked in |
+| **M2 (done)** | runtime split (`QtSharp.Runtime`) + base assemblies + `QtSharp.Api` pack project | core demos pass; a consumer references `QtSharp.Api` and runs |
 | **M3 (done)** | `QtSharp.Qt6`, `QtSharp.Charts.Qt6`, `QtSharp.Qt3D.Qt6` companion packages | consumers get the right Qt DLLs/plugins; no duplicate payloads |
-| **M4 (done)** | demos/samples/CI/release move to the new namespaces/packages; docs; publish | full gate + CI + release produce all seven packages |
+| **M4 (done)** | demos/samples/CI/release move to the new namespaces/packages; docs; publish | gate, package consumer and release checks |

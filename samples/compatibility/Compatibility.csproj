@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <QtSharpPlatform Condition="$([MSBuild]::IsOSPlatform('Windows'))">win-x64</QtSharpPlatform>
+    <QtSharpPlatform Condition="$([MSBuild]::IsOSPlatform('Linux'))">linux-x64</QtSharpPlatform>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="QtSharp.Api.$(QtSharpPlatform)" Version="0.19.0" />
+  </ItemGroup>
+  <Target Name="CheckQtSharpPlatform" BeforeTargets="CollectPackageReferences" Condition="'$(QtSharpPlatform)' == ''">
+    <Error Text="This sample supports Windows x64 and Linux x64. Build on a supported platform." />
+  </Target>
+</Project>
