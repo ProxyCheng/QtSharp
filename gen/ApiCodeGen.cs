@@ -3042,15 +3042,19 @@ public static class ApiCodeGen
             }
             else if (row.FromPod == null && row.Fields.Length > 0)
             {
-                // A field-shaped value: hash the same accessors Qt's operator== compares.
+                // A field-shaped value: hash the same accessors Qt's operator== compares. The
+                // fallback receives the POD (whose padding ToPod normalises) and rebuilds Qt's
+                // value for the accessors; hashing the value the template already built would
+                // hash that copy's uninitialised padding.
                 string fields = string.Join(", ", row.Fields.Select(f => $"qs_value.{f}()"));
-                sb.AppendLine($"    return int(QsApiValueHash<{cpp}>(value, [](const {cpp}& qs_value) {{ return qHashMulti(0, {fields}); }}));");
+                sb.AppendLine($"    return int(QsApiValueHash<{cpp}>(value, [](const {pod}& qs_pod) {{ {cpp} qs_value = QsApiRawFromPod<{cpp}>(qs_pod); return qHashMulti(0, {fields}); }}));");
             }
             else
             {
-                // Opaque words with no qHash: the bytes are the value (any padding the type has
-                // is normalized by its ToPod conversion).
-                sb.AppendLine($"    return int(QsApiValueHash<{cpp}>(value, [](const {cpp}& qs_value) {{ return qHashBits(&qs_value, sizeof qs_value); }}));");
+                // Opaque words with no qHash: the POD's bytes are the value (ToPod normalises any
+                // padding the type has). Hashing the reconstructed Qt value would hash padding
+                // the conversion does not initialise.
+                sb.AppendLine($"    return int(QsApiValueHash<{cpp}>(value, [](const {pod}& qs_pod) {{ return qHashBits(&qs_pod, sizeof qs_pod); }}));");
             }
             sb.AppendLine("}");
             sb.AppendLine();
