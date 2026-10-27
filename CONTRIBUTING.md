@@ -12,6 +12,12 @@ complete error or crash signature. For native crashes, include the smallest repr
 the generated/native log when possible. Never attach secrets, proprietary Qt files, or customer
 data.
 
+## API design
+
+When designing an API, aim for the ease of use of PyQt/PySide while following C# conventions
+and using .NET libraries where appropriate. Consider the call site, object lifetime and
+interaction with other QtSharp components; API coverage alone is not the goal.
+
 ## Development setup
 
 1. Install the prerequisites listed in `README.md` for your platform.
