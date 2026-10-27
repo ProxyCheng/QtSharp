@@ -35,6 +35,12 @@ QtSharp 将 Qt 6 的 Widgets、绘图、网络，以及可选的图表、3D、�
 
 以上示例通过仓库开发流程构建。只想体验独立应用，可以先运行下面的 Hello World。
 
+## 与 Qt Bridges 的目标差异
+
+Qt 官方的 [Qt Bridges](https://doc.qt.io/qtbridges/) 目前侧重将 C# 等语言编写的应用逻辑
+接入 QML/Qt Quick 界面。QtSharp 则侧重为 Qt Widgets（`QWidget`）及其他选定的 Qt API
+提供通用 C# 绑定，并结合 C# 和 .NET 调整使用方式。两个项目的目标与覆盖范围有所不同。
+
 ## 模块取舍与 .NET 集成
 
 设计时优先考虑：
