@@ -1,12 +1,15 @@
 # QtSharp.Charts
 
+> The package id carries the platform: the snippets below use the `win-x64` variant. On
+> Linux, use the matching `.linux-x64` package (`QtSharp.Api.linux-x64`, ...).
+
 Qt Charts for .NET, generated from the Qt 6.12 headers the same way `QtSharp.Api` is: C# classes,
 properties, signals and virtuals over the native Qt Charts library.
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.18.0" />
-  <PackageReference Include="QtSharp.Charts" Version="0.18.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.19.0" />
+  <PackageReference Include="QtSharp.Charts.win-x64" Version="0.19.0" />
 </ItemGroup>
 ```
 

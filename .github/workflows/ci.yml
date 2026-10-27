@@ -472,6 +472,7 @@ jobs:
           ./tools/pack-qt-binding.ps1 -PackageVersion "0.0.0-ci" `
             -QtRuntimeDir "Qt/6.12.0/runtime" `
             -QtLinuxRuntimeDir "out/linux-payload/qt-kit/runtime" `
+            -Platforms win-x64,linux-x64 `
             -RequireLinuxPayload
           if ($LASTEXITCODE -ne 0) { throw "packaging failed" }
 

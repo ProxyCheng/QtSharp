@@ -10,8 +10,12 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>$(NoWarn);NU5128</NoWarn>
 
-    <PackageId>QtSharp.Qt6</PackageId>
-    <Version>0.18.0</Version>
+  <!-- One package per platform: the release packs this project once with
+       -p:QtSharpPlatform=win-x64 and once with linux-x64. The managed assemblies are
+       identical; the native payload below is the matching half only. -->
+  <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
+    <PackageId>QtSharp.Qt6.$(QtSharpPlatform)</PackageId>
+    <Version>0.19.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>The Qt 6 runtime that QtSharp.Api and its addons load: Qt6Core/Gui/Widgets/Network/Svg/PrintSupport/OpenGL, the MSVC runtime and the Windows platform plugin.</Description>
     <PackageTags>Qt;Qt6;runtime;native</PackageTags>
@@ -30,31 +34,34 @@
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
     <None Include="_._" Pack="true" PackagePath="lib/net10.0/" />
-    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
+    <!-- NuGet only imports buildTransitive/<package id>.props and .targets, and the id
+         carries the RID, so the files are packed under the platform-specific name. -->
+    <None Include="buildTransitive\QtSharp.Qt6.props" Pack="true" PackagePath="buildTransitive/QtSharp.Qt6.$(QtSharpPlatform).props" />
+    <None Include="buildTransitive\QtSharp.Qt6.targets" Pack="true" PackagePath="buildTransitive/QtSharp.Qt6.$(QtSharpPlatform).targets" />
     <!-- win-x64 -->
-    <None Include="$(QtRuntimeDir)\Qt6Core.dll" Pack="true" PackagePath="tools/native/win-x64/" />
-    <None Include="$(QtRuntimeDir)\Qt6Gui.dll" Pack="true" PackagePath="tools/native/win-x64/" />
-    <None Include="$(QtRuntimeDir)\Qt6Widgets.dll" Pack="true" PackagePath="tools/native/win-x64/" />
-    <None Include="$(QtRuntimeDir)\Qt6Network.dll" Pack="true" PackagePath="tools/native/win-x64/" />
-    <None Include="$(QtRuntimeDir)\Qt6Svg.dll" Pack="true" PackagePath="tools/native/win-x64/" />
-    <None Include="$(QtRuntimeDir)\Qt6SvgWidgets.dll" Pack="true" PackagePath="tools/native/win-x64/" />
-    <None Include="$(QtRuntimeDir)\Qt6PrintSupport.dll" Pack="true" PackagePath="tools/native/win-x64/" />
-    <None Include="$(QtRuntimeDir)\Qt6OpenGL.dll" Pack="true" PackagePath="tools/native/win-x64/" />
-    <None Include="$(QtRuntimeDir)\Qt6OpenGLWidgets.dll" Pack="true" PackagePath="tools/native/win-x64/" />
-    <None Include="$(QtRuntimeDir)\msvcp140*.dll" Pack="true" PackagePath="tools/native/win-x64/" />
-    <None Include="$(QtRuntimeDir)\vcruntime140*.dll" Pack="true" PackagePath="tools/native/win-x64/" />
+    <None Include="$(QtRuntimeDir)\Qt6Core.dll" Pack="true" PackagePath="tools/native/win-x64/"  Condition="'$(QtSharpPlatform)' == 'win-x64'" />
+    <None Include="$(QtRuntimeDir)\Qt6Gui.dll" Pack="true" PackagePath="tools/native/win-x64/"  Condition="'$(QtSharpPlatform)' == 'win-x64'" />
+    <None Include="$(QtRuntimeDir)\Qt6Widgets.dll" Pack="true" PackagePath="tools/native/win-x64/"  Condition="'$(QtSharpPlatform)' == 'win-x64'" />
+    <None Include="$(QtRuntimeDir)\Qt6Network.dll" Pack="true" PackagePath="tools/native/win-x64/"  Condition="'$(QtSharpPlatform)' == 'win-x64'" />
+    <None Include="$(QtRuntimeDir)\Qt6Svg.dll" Pack="true" PackagePath="tools/native/win-x64/"  Condition="'$(QtSharpPlatform)' == 'win-x64'" />
+    <None Include="$(QtRuntimeDir)\Qt6SvgWidgets.dll" Pack="true" PackagePath="tools/native/win-x64/"  Condition="'$(QtSharpPlatform)' == 'win-x64'" />
+    <None Include="$(QtRuntimeDir)\Qt6PrintSupport.dll" Pack="true" PackagePath="tools/native/win-x64/"  Condition="'$(QtSharpPlatform)' == 'win-x64'" />
+    <None Include="$(QtRuntimeDir)\Qt6OpenGL.dll" Pack="true" PackagePath="tools/native/win-x64/"  Condition="'$(QtSharpPlatform)' == 'win-x64'" />
+    <None Include="$(QtRuntimeDir)\Qt6OpenGLWidgets.dll" Pack="true" PackagePath="tools/native/win-x64/"  Condition="'$(QtSharpPlatform)' == 'win-x64'" />
+    <None Include="$(QtRuntimeDir)\msvcp140*.dll" Pack="true" PackagePath="tools/native/win-x64/"  Condition="'$(QtSharpPlatform)' == 'win-x64'" />
+    <None Include="$(QtRuntimeDir)\vcruntime140*.dll" Pack="true" PackagePath="tools/native/win-x64/"  Condition="'$(QtSharpPlatform)' == 'win-x64'" />
     <!-- concrt140 is a redistributable, not a Qt module: some kits ship it and some do not. -->
-    <None Include="$(QtRuntimeDir)\concrt140*.dll" Pack="true" PackagePath="tools/native/win-x64/" />
-    <None Include="$(QtRuntimeDir)\platforms\qwindows.dll" Pack="true" PackagePath="tools/native/win-x64/platforms/" />
+    <None Include="$(QtRuntimeDir)\concrt140*.dll" Pack="true" PackagePath="tools/native/win-x64/"  Condition="'$(QtSharpPlatform)' == 'win-x64'" />
+    <None Include="$(QtRuntimeDir)\platforms\qwindows.dll" Pack="true" PackagePath="tools/native/win-x64/platforms/"  Condition="'$(QtSharpPlatform)' == 'win-x64'" />
     <!-- linux-x64: the whole staged prefix (all Qt libraries and plugin trees, including the
          addons). Every addon package depends on QtSharp.Qt6, so keeping the shared tree here - one
          copy instead of the same libraries in four packages - is both smaller and immune to a
          missing plugin directory. The layout is what the libraries' and plugins' rpaths expect. -->
-    <None Include="$(QtLinuxRuntimeDir)\lib\*.so*" Pack="true" PackagePath="tools/native/linux-x64/lib/" Condition="Exists('$(QtLinuxRuntimeDir)\lib')" />
-    <None Include="$(QtLinuxRuntimeDir)\qt.conf" Pack="true" PackagePath="tools/native/linux-x64/" Condition="Exists('$(QtLinuxRuntimeDir)\qt.conf')" />
+    <None Include="$(QtLinuxRuntimeDir)\lib\*.so*" Pack="true" PackagePath="tools/native/linux-x64/lib/" Condition="'$(QtSharpPlatform)' == 'linux-x64' And Exists('$(QtLinuxRuntimeDir)\lib')" />
+    <None Include="$(QtLinuxRuntimeDir)\qt.conf" Pack="true" PackagePath="tools/native/linux-x64/" Condition="'$(QtSharpPlatform)' == 'linux-x64' And Exists('$(QtLinuxRuntimeDir)\qt.conf')" />
     <!-- NuGet appends the path matched by the wildcard (plugins/<class>/<file>) to PackagePath;
          spelling %(RecursiveDir) as well duplicates the first directory. -->
-    <None Include="$(QtLinuxRuntimeDir)\plugins\**\*" Pack="true" PackagePath="tools/native/linux-x64/plugins/" Condition="Exists('$(QtLinuxRuntimeDir)\plugins')" />
+    <None Include="$(QtLinuxRuntimeDir)\plugins\**\*" Pack="true" PackagePath="tools/native/linux-x64/plugins/" Condition="'$(QtSharpPlatform)' == 'linux-x64' And Exists('$(QtLinuxRuntimeDir)\plugins')" />
   </ItemGroup>
 
   <Target Name="QtSharpQt6PackCheck" BeforeTargets="GenerateNuspec">

@@ -41,4 +41,11 @@
            Text="QtSharp ships native assets for win-x64 and linux-x64 only; '$(QtSharpNativeRid)' is not supported." />
   </Target>
 
+  <!-- Each package carries one platform's payload; a project targeting the other platform has to
+       fail here rather than silently deploy nothing. -->
+  <Target Name="QtSharpRuntimeCheckPayload" BeforeTargets="Build;Publish">
+    <Error Condition="!Exists('$(QtSharpRuntimeNativeDir)')"
+           Text="This package has no native payload for '$(QtSharpNativeRid)' - QtSharp ships one package per platform; reference QtSharp.Runtime.$(QtSharpNativeRid)." />
+  </Target>
+
 </Project>

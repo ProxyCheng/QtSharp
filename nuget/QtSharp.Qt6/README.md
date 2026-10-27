@@ -1,5 +1,8 @@
 # QtSharp.Qt6
 
+> The package id carries the platform: the snippets below use the `win-x64` variant. On
+> Linux, use the matching `.linux-x64` package (`QtSharp.Api.linux-x64`, ...).
+
 The Qt 6 runtime the QtSharp bindings load (the `PyQt6-Qt6` slot).
 
 | RID | payload |

@@ -1,5 +1,8 @@
 # QtSharp.Multimedia
 
+> The package id carries the platform: the snippets below use the `win-x64` variant. On
+> Linux, use the matching `.linux-x64` package (`QtSharp.Api.linux-x64`, ...).
+
 Qt Multimedia for .NET, generated from the Qt 6.12 headers the same way `QtSharp.Api` is:
 `QMediaPlayer` with `QAudioOutput`/`QVideoSink`, the capture chain (`QCamera`,
 `QMediaCaptureSession`, `QImageCapture`, `QMediaRecorder`), the audio device/format classes, and
@@ -7,8 +10,8 @@ the two widget classes from QtMultimediaWidgets (`QVideoWidget`, `QGraphicsVideo
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.18.0" />
-  <PackageReference Include="QtSharp.Multimedia" Version="0.18.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.19.0" />
+  <PackageReference Include="QtSharp.Multimedia.win-x64" Version="0.19.0" />
 </ItemGroup>
 ```
 

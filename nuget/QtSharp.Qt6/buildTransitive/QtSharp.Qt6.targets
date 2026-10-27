@@ -50,4 +50,11 @@
           DestinationFiles="@(_QtSharpQt6PluginPublish->'$(PublishDir)plugins/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
+  <!-- Each package carries one platform's payload; a project targeting the other platform has to
+       fail here rather than silently deploy nothing. -->
+  <Target Name="QtSharpQt6CheckPayload" BeforeTargets="Build;Publish">
+    <Error Condition="!Exists('$(QtSharpQt6NativeDir)')"
+           Text="This package has no native payload for '$(QtSharpNativeRid)' - QtSharp ships one package per platform; reference QtSharp.Qt6.$(QtSharpNativeRid)." />
+  </Target>
+
 </Project>

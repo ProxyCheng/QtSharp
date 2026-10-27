@@ -1,5 +1,8 @@
 # QtSharp.Qt3D
 
+> The package id carries the platform: the snippets below use the `win-x64` variant. On
+> Linux, use the matching `.linux-x64` package (`QtSharp.Api.linux-x64`, ...).
+
 Qt 3D for .NET, generated from the Qt 6.12 headers the same way `QtSharp.Api` is. The package
 contains **six assemblies, one per Qt module**, each with its own namespace:
 
@@ -18,8 +21,8 @@ the Qt3D libraries and the renderer/geometry/scene plugins.
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.18.0" />
-  <PackageReference Include="QtSharp.Qt3D" Version="0.18.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.19.0" />
+  <PackageReference Include="QtSharp.Qt3D.win-x64" Version="0.19.0" />
 </ItemGroup>
 ```
 

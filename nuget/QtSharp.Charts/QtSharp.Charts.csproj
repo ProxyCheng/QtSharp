@@ -22,8 +22,12 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
 
-    <PackageId>QtSharp.Charts</PackageId>
-    <Version>0.18.0</Version>
+  <!-- One package per platform: the release packs this project once with
+       -p:QtSharpPlatform=win-x64 and once with linux-x64. The managed assemblies are
+       identical; the native payload below is the matching half only. -->
+  <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
+    <PackageId>QtSharp.Charts.$(QtSharpPlatform)</PackageId>
+    <Version>0.19.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>Qt Charts for .NET, generated from the Qt 6.12 headers. References QtSharp.Api.</Description>
     <PackageTags>Qt;Qt6;QtCharts;CSharp;dotnet;binding;interop;charts</PackageTags>
@@ -62,9 +66,12 @@
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
-    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
-    <None Include="$(QtSharpChartsNativeDir)\QtSharp.Charts.Native.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" Condition="Exists('$(QtSharpChartsNativeDir)\QtSharp.Charts.Native.dll')" />
-    <None Include="$(QtSharpChartsNativeLinuxDir)\libQtSharp.Charts.Native.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="Exists('$(QtSharpChartsNativeLinuxDir)\libQtSharp.Charts.Native.so')" />
+    <!-- NuGet only imports buildTransitive/<package id>.props and .targets, and the id
+         carries the RID, so the files are packed under the platform-specific name. -->
+    <None Include="buildTransitive\QtSharp.Charts.props" Pack="true" PackagePath="buildTransitive/QtSharp.Charts.$(QtSharpPlatform).props" />
+    <None Include="buildTransitive\QtSharp.Charts.targets" Pack="true" PackagePath="buildTransitive/QtSharp.Charts.$(QtSharpPlatform).targets" />
+    <None Include="$(QtSharpChartsNativeDir)\QtSharp.Charts.Native.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" Condition="'$(QtSharpPlatform)' == 'win-x64' And Exists('$(QtSharpChartsNativeDir)\QtSharp.Charts.Native.dll')" />
+    <None Include="$(QtSharpChartsNativeLinuxDir)\libQtSharp.Charts.Native.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="'$(QtSharpPlatform)' == 'linux-x64' And Exists('$(QtSharpChartsNativeLinuxDir)\libQtSharp.Charts.Native.so')" />
   </ItemGroup>
 
   <Target Name="QtSharpChartsPackCheck" BeforeTargets="GenerateNuspec">

@@ -15,8 +15,12 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
 
-    <PackageId>QtSharp.Multimedia</PackageId>
-    <Version>0.18.0</Version>
+  <!-- One package per platform: the release packs this project once with
+       -p:QtSharpPlatform=win-x64 and once with linux-x64. The managed assemblies are
+       identical; the native payload below is the matching half only. -->
+  <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
+    <PackageId>QtSharp.Multimedia.$(QtSharpPlatform)</PackageId>
+    <Version>0.19.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>Qt Multimedia for .NET, generated from the Qt 6.12 headers. References QtSharp.Api.</Description>
     <PackageTags>Qt;Qt6;QtMultimedia;CSharp;dotnet;binding;interop;audio;video</PackageTags>
@@ -49,9 +53,12 @@
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
-    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
-    <None Include="$(QtSharpMultimediaNativeDir)\QtSharp.QtMultimedia.Native.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" Condition="Exists('$(QtSharpMultimediaNativeDir)\QtSharp.QtMultimedia.Native.dll')" />
-    <None Include="$(QtSharpMultimediaNativeLinuxDir)\libQtSharp.QtMultimedia.Native.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="Exists('$(QtSharpMultimediaNativeLinuxDir)\libQtSharp.QtMultimedia.Native.so')" />
+    <!-- NuGet only imports buildTransitive/<package id>.props and .targets, and the id
+         carries the RID, so the files are packed under the platform-specific name. -->
+    <None Include="buildTransitive\QtSharp.Multimedia.props" Pack="true" PackagePath="buildTransitive/QtSharp.Multimedia.$(QtSharpPlatform).props" />
+    <None Include="buildTransitive\QtSharp.Multimedia.targets" Pack="true" PackagePath="buildTransitive/QtSharp.Multimedia.$(QtSharpPlatform).targets" />
+    <None Include="$(QtSharpMultimediaNativeDir)\QtSharp.QtMultimedia.Native.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" Condition="'$(QtSharpPlatform)' == 'win-x64' And Exists('$(QtSharpMultimediaNativeDir)\QtSharp.QtMultimedia.Native.dll')" />
+    <None Include="$(QtSharpMultimediaNativeLinuxDir)\libQtSharp.QtMultimedia.Native.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="'$(QtSharpPlatform)' == 'linux-x64' And Exists('$(QtSharpMultimediaNativeLinuxDir)\libQtSharp.QtMultimedia.Native.so')" />
   </ItemGroup>
 
   <Target Name="QtSharpMultimediaPackCheck" BeforeTargets="GenerateNuspec">

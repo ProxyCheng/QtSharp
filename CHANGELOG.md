@@ -4,6 +4,31 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.19.0 - 2026-10-27
+
+- **One package per platform.** Every binding and Qt-runtime package is now published twice, with
+  the RID in the id: `QtSharp.Api.win-x64` / `QtSharp.Api.linux-x64`, and the same for Runtime,
+  Qt6, Charts, Qt3D, Multimedia, Positioning and Sql. Only the matching platform's Qt runtime and
+  native glue are inside, so a Windows consumer no longer downloads the Linux Qt tree and vice
+  versa (`QtSharp.Qt6` alone carried both and weighed 97 MB). The managed assemblies are identical
+  in both variants; `QtSharp.Tools` stays Windows-only.
+  - A project references the variant for the machine it builds on. The buildTransitive targets
+    deploy that package's payload (flat DLLs + `platforms/` on Windows, `lib/` + `plugins/` +
+    `qt.conf` on Linux), and `pack-qt-binding.ps1` asserts every variant contains its own payload
+    and none of the other platform's.
+  - `tools/test-packages.ps1` picks the variant from the host, so the Windows and Linux package
+    smoke jobs each restore only their own packages.
+
+- **The item roles take the named enum.** Qt declares a role as `int` because roles are an open
+  namespace (a custom role is `Qt.UserRole + n`), so a C# call site needed `(int)` for every
+  standard role. The role-taking members now have overloads for `Qt.ItemDataRole`:
+  `QAbstractItemModel.Data`/`SetData`/`HeaderData`/`SetHeaderData`/`Match`, a
+  `SetItemData` that takes an enum-keyed dictionary plus `ItemDataByRole`, `QModelIndex.Data`,
+  `QPersistentModelIndex.Data`, `QStandardItem.Data`/`SetData`, `QFileSystemModel.MyComputer`,
+  the `QComboBox` item-data accessors, the three widget items, the proxy sort/filter roles, and
+  `QCompleter.SetCompletionRole`. `QTextCharFormat.SetFontWeight` takes `QFont.Weight`. The int
+  overload stays the primary spelling, so custom roles keep working.
+
 ## 0.18.0 - 2026-10-27
 
 - **QVariant is not in the API; values cross as `object`.** Every generated signature that meant a

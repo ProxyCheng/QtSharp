@@ -1,7 +1,8 @@
 param(
-    [string]$PackageVersion = '0.18.0',
+    [string]$PackageVersion = '0.19.0',
     [string]$QtRuntimeDir = '',
     [string]$QtLinuxRuntimeDir = '',
+    [string[]]$Platforms = @('win-x64'),
     [switch]$RequireLinuxPayload,
     [switch]$SkipBuild
 )
@@ -11,13 +12,21 @@ Set-Location -LiteralPath $root
 
 # The binding is shipped in the PyQt6 shape: a binding runtime package, the Qt runtime package,
 # the base binding as one package of ten module assemblies, and an addon package with a companion
-# Qt-runtime package for each addon (Charts, Qt3D, Multimedia, Positioning). This script packs all
-# of them; the generated sources and native glues have to exist already (tools/regen-api.ps1).
+# Qt-runtime package for each addon (Charts, Qt3D, Multimedia, Positioning).
 #
-# Every package that carries native code is multi-RID: tools/native/win-x64/ and
-# tools/native/linux-x64/. The Windows payload comes from a Windows build (Qt\6.12.0\runtime),
-# the Linux one from tools/build-qt-kit.sh plus build_api.sh / build-native-module.sh.
-# -RequireLinuxPayload makes the content check insist on both (the CI/release pack job does).
+# Each of those is packed once per platform: the package id carries the RID
+# (QtSharp.Api.win-x64 / QtSharp.Api.linux-x64), and only that platform's native payload is
+# inside. NuGet selects packages by id, not by RID, so a platform-specific package is the only way
+# to keep the other platform's Qt tree out of a consumer's download. The managed assemblies are
+# the same in both.
+#
+# -Platforms picks the variants to pack (default win-x64). The release and CI pass both; the Linux
+# one needs the Qt kit built by tools/build-qt-kit.sh and the .so glue from build_api.sh.
+# -RequireLinuxPayload is kept for callers that only want to say "both must be present".
+if ($RequireLinuxPayload -and -not ($Platforms -contains 'linux-x64')) {
+    $Platforms += 'linux-x64'
+}
+
 $BindingNative = "$root/out/api/QtSharp.Api.dll"
 $BindingNativeLinux = "$root/out/api/libQtSharp.Api.so"
 if (-not $QtRuntimeDir) { $QtRuntimeDir = "$root/Qt/6.12.0/runtime" }
@@ -61,50 +70,47 @@ $packages = @(
     @{ Name = 'QtSharp.Sql';          Args = @() }
 )
 
-$outDir = "$root/out/packages"
-foreach ($package in $packages) {
-    Write-Host "=== Pack $($package.Name) ==="
-    $arguments = @('pack', "$root/nuget/$($package.Name)/$($package.Name).csproj",
-                   '-c', 'Release', '-o', $outDir, '--nologo', "-p:Version=$PackageVersion") + $package.Args
-    & dotnet @arguments
-    if ($LASTEXITCODE -ne 0) { throw "$($package.Name) pack failed." }
-}
-
-# What each package must contain: the package graph is only useful if the payload actually lands
-# where buildTransitive expects it, so every package is inspected rather than trusted.
-$expected = @{
-    'QtSharp.Runtime'    = @('lib/net10.0/QtSharp.Runtime.dll', 'tools/native/win-x64/QtSharp.Api.dll',
-                             'buildTransitive/QtSharp.Runtime.targets')
-    'QtSharp.Qt6'        = @('tools/native/win-x64/Qt6Core.dll', 'tools/native/win-x64/Qt6Widgets.dll',
-                             'tools/native/win-x64/platforms/qwindows.dll', 'buildTransitive/QtSharp.Qt6.targets')
+# What each package must contain for a platform: the package graph is only useful if the payload
+# actually lands where buildTransitive expects it, so every package is inspected rather than
+# trusted. The common rows are checked on both platforms; each platform adds its native rows.
+$expectedCommon = @{
+    'QtSharp.Runtime'    = @('lib/net10.0/QtSharp.Runtime.dll', 'buildTransitive/QtSharp.Runtime.%rid%.targets')
+    'QtSharp.Qt6'        = @('buildTransitive/QtSharp.Qt6.%rid%.targets')
     'QtSharp.Api'        = @('lib/net10.0/QtSharp.QtCore.dll', 'lib/net10.0/QtSharp.QtGui.dll',
                              'lib/net10.0/QtSharp.QtWidgets.dll', 'lib/net10.0/QtSharp.QtNetwork.dll',
                              'lib/net10.0/QtSharp.QtSvg.dll', 'lib/net10.0/QtSharp.QtSvgWidgets.dll',
                              'lib/net10.0/QtSharp.QtPrintSupport.dll',
                              'lib/net10.0/QtSharp.QtOpenGL.dll', 'lib/net10.0/QtSharp.QtOpenGLWidgets.dll')
-    'QtSharp.Charts.Qt6' = @('tools/native/win-x64/Qt6Charts.dll', 'buildTransitive/QtSharp.Charts.Qt6.targets')
-    'QtSharp.Charts'     = @('lib/net10.0/QtSharp.Charts.dll', 'tools/native/win-x64/QtSharp.Charts.Native.dll',
-                             'buildTransitive/QtSharp.Charts.targets')
-    'QtSharp.Qt3D.Qt6'   = @('tools/native/win-x64/Qt63DCore.dll', 'tools/native/win-x64/Qt6ShaderTools.dll',
-                             'tools/native/win-x64/renderers', 'buildTransitive/QtSharp.Qt3D.Qt6.targets')
-    'QtSharp.Qt3D'       = @('lib/net10.0/QtSharp.Qt3DCore.dll', 'lib/net10.0/QtSharp.Qt3DExtras.dll',
-                             'tools/native/win-x64/QtSharp.Qt3DCore.Native.dll',
-                             'tools/native/win-x64/QtSharp.Qt3DExtras.Native.dll')
-    'QtSharp.Multimedia.Qt6' = @('tools/native/win-x64/Qt6Multimedia.dll', 'tools/native/win-x64/Qt6MultimediaWidgets.dll',
-                                 'tools/native/win-x64/multimedia', 'buildTransitive/QtSharp.Multimedia.Qt6.targets')
-    'QtSharp.Multimedia' = @('lib/net10.0/QtSharp.QtMultimedia.dll',
-                             'tools/native/win-x64/QtSharp.QtMultimedia.Native.dll',
-                             'buildTransitive/QtSharp.Multimedia.targets')
-    'QtSharp.Positioning.Qt6' = @('tools/native/win-x64/Qt6Positioning.dll',
-                                  'buildTransitive/QtSharp.Positioning.Qt6.targets')
-    'QtSharp.Positioning' = @('lib/net10.0/QtSharp.QtPositioning.dll',
-                              'tools/native/win-x64/QtSharp.QtPositioning.Native.dll',
-                              'buildTransitive/QtSharp.Positioning.targets')
+    'QtSharp.Charts.Qt6' = @('buildTransitive/QtSharp.Charts.Qt6.%rid%.targets')
+    'QtSharp.Charts'     = @('lib/net10.0/QtSharp.Charts.dll', 'buildTransitive/QtSharp.Charts.%rid%.targets')
+    'QtSharp.Qt3D.Qt6'   = @('buildTransitive/QtSharp.Qt3D.Qt6.%rid%.targets')
+    'QtSharp.Qt3D'       = @('lib/net10.0/QtSharp.Qt3DCore.dll', 'lib/net10.0/QtSharp.Qt3DExtras.dll')
+    'QtSharp.Multimedia.Qt6' = @('buildTransitive/QtSharp.Multimedia.Qt6.%rid%.targets')
+    'QtSharp.Multimedia' = @('lib/net10.0/QtSharp.QtMultimedia.dll', 'buildTransitive/QtSharp.Multimedia.%rid%.targets')
+    'QtSharp.Positioning.Qt6' = @('buildTransitive/QtSharp.Positioning.Qt6.%rid%.targets')
+    'QtSharp.Positioning' = @('lib/net10.0/QtSharp.QtPositioning.dll', 'buildTransitive/QtSharp.Positioning.%rid%.targets')
     'QtSharp.Sql' = @('lib/net10.0/QtSharp.QtSql.dll')
 }
 
-# The Linux payload each package must carry when -RequireLinuxPayload is set. Addon Qt-runtime
-# packages deliberately have none: the base QtSharp.Qt6 package deploys the whole Qt tree.
+$expectedWin = @{
+    'QtSharp.Runtime'    = @('tools/native/win-x64/QtSharp.Api.dll')
+    'QtSharp.Qt6'        = @('tools/native/win-x64/Qt6Core.dll', 'tools/native/win-x64/Qt6Widgets.dll',
+                             'tools/native/win-x64/platforms/qwindows.dll')
+    'QtSharp.Charts.Qt6' = @('tools/native/win-x64/Qt6Charts.dll')
+    'QtSharp.Charts'     = @('tools/native/win-x64/QtSharp.Charts.Native.dll')
+    'QtSharp.Qt3D.Qt6'   = @('tools/native/win-x64/Qt63DCore.dll', 'tools/native/win-x64/Qt6ShaderTools.dll',
+                             'tools/native/win-x64/renderers')
+    'QtSharp.Qt3D'       = @('tools/native/win-x64/QtSharp.Qt3DCore.Native.dll',
+                             'tools/native/win-x64/QtSharp.Qt3DExtras.Native.dll')
+    'QtSharp.Multimedia.Qt6' = @('tools/native/win-x64/Qt6Multimedia.dll', 'tools/native/win-x64/Qt6MultimediaWidgets.dll',
+                                 'tools/native/win-x64/multimedia')
+    'QtSharp.Multimedia' = @('tools/native/win-x64/QtSharp.QtMultimedia.Native.dll')
+    'QtSharp.Positioning.Qt6' = @('tools/native/win-x64/Qt6Positioning.dll')
+    'QtSharp.Positioning' = @('tools/native/win-x64/QtSharp.QtPositioning.Native.dll')
+}
+
+# Addon Qt-runtime packages deliberately have no Linux payload: the base QtSharp.Qt6 package
+# deploys the whole Qt tree on Linux.
 $expectedLinux = @{
     'QtSharp.Runtime'    = @('tools/native/linux-x64/libQtSharp.Api.so')
     'QtSharp.Qt6'        = @('tools/native/linux-x64/lib/libQt6Core.so.6',
@@ -122,29 +128,61 @@ $expectedLinux = @{
     'QtSharp.Positioning' = @('tools/native/linux-x64/libQtSharp.QtPositioning.Native.so')
 }
 
-Write-Host "=== Inspect the packages ==="
+$outDir = "$root/out/packages"
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-foreach ($package in $packages) {
-    # The version starts with a digit, which keeps QtSharp.Multimedia.* from also matching
-    # QtSharp.Multimedia.Qt6.* (whose name starts with a letter).
-    $file = Get-ChildItem "$outDir/$($package.Name).*.nupkg" |
-        Where-Object { $_.Name -match "^$([regex]::Escape($package.Name))\.\d" } |
-        Sort-Object LastWriteTime | Select-Object -Last 1
-    if (-not $file) { throw "No $($package.Name) package was produced." }
-    $zip = [System.IO.Compression.ZipFile]::OpenRead($file.FullName)
-    try {
-        $names = $zip.Entries | ForEach-Object { $_.FullName }
-        $required = @($expected[$package.Name])
-        if ($RequireLinuxPayload -and $expectedLinux.ContainsKey($package.Name)) {
-            $required += $expectedLinux[$package.Name]
-        }
-        foreach ($entry in $required) {
-            # A directory entry is enough for a plugin folder (renderers/, multimedia/).
-            if (-not ($names | Where-Object { $_ -eq $entry -or $_ -like "$entry/*" })) {
-                throw "$($package.Name) is missing '$entry'."
+$produced = 0
+foreach ($platform in $Platforms) {
+    if ($platform -notin @('win-x64', 'linux-x64')) {
+        throw "Unknown platform '$platform'; QtSharp ships win-x64 and linux-x64."
+    }
+    if ($platform -eq 'linux-x64' -and -not $RequireLinuxPayload -and -not (Test-Path -LiteralPath $QtLinuxRuntimeDir)) {
+        Write-Warning "Skipping linux-x64: '$QtLinuxRuntimeDir' is missing (build the Linux kit first, or pass -RequireLinuxPayload to make this an error)."
+        continue
+    }
+    if ($platform -eq 'linux-x64' -and $RequireLinuxPayload -and -not (Test-Path -LiteralPath $QtLinuxRuntimeDir)) {
+        throw "linux-x64 packaging was required, but '$QtLinuxRuntimeDir' is missing."
+    }
+
+    $payload = if ($platform -eq 'win-x64') { $expectedWin } else { $expectedLinux }
+    $otherRid = if ($platform -eq 'win-x64') { 'linux-x64' } else { 'win-x64' }
+
+    foreach ($package in $packages) {
+        Write-Host "=== Pack $($package.Name).$platform ==="
+        $arguments = @('pack', "$root/nuget/$($package.Name)/$($package.Name).csproj",
+                       '-c', 'Release', '-o', $outDir, '--nologo', "-p:Version=$PackageVersion",
+                       "-p:QtSharpPlatform=$platform") + $package.Args
+        & dotnet @arguments
+        if ($LASTEXITCODE -ne 0) { throw "$($package.Name).$platform pack failed." }
+    }
+
+    Write-Host "=== Inspect the $platform packages ==="
+    foreach ($package in $packages) {
+        # The version starts with a digit, which keeps QtSharp.Multimedia.<rid>.* from also
+        # matching QtSharp.Multimedia.Qt6.<rid>.* (whose name starts with a letter).
+        $pattern = "^$([regex]::Escape($package.Name))\.$([regex]::Escape($platform))\.\d"
+        $file = Get-ChildItem "$outDir/$($package.Name).$platform.*.nupkg" -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -match $pattern } |
+            Sort-Object LastWriteTime | Select-Object -Last 1
+        if (-not $file) { throw "No $($package.Name).$platform package was produced." }
+        $zip = [System.IO.Compression.ZipFile]::OpenRead($file.FullName)
+        try {
+            $names = $zip.Entries | ForEach-Object { $_.FullName }
+            $required = @($expectedCommon[$package.Name] | ForEach-Object { $_ -replace '%rid%', $platform })
+            if ($payload.ContainsKey($package.Name)) { $required += $payload[$package.Name] }
+            foreach ($entry in $required) {
+                # A directory entry is enough for a plugin folder (renderers/, multimedia/).
+                if (-not ($names | Where-Object { $_ -eq $entry -or $_ -like "$entry/*" })) {
+                    throw "$($package.Name).$platform is missing '$entry'."
+                }
             }
-        }
-        Write-Host ("  {0,-22} {1,8:N1} KB  {2} entries" -f $file.Name, ($file.Length / 1KB), $zip.Entries.Count)
-    } finally { $zip.Dispose() }
+            # The other platform's payload must not have leaked in.
+            $leaked = @($names | Where-Object { $_ -like "tools/native/$otherRid/*" })
+            if ($leaked.Count -gt 0) {
+                throw "$($package.Name).$platform carries $($leaked.Count) $otherRid entr(ies), e.g. '$($leaked[0])'."
+            }
+            Write-Host ("  {0,-40} {1,8:N1} KB  {2} entries" -f $file.Name, ($file.Length / 1KB), $zip.Entries.Count)
+        } finally { $zip.Dispose() }
+        $produced++
+    }
 }
-Write-Host "OK: 12 packages in $outDir"
+Write-Host "OK: $produced package(s) in $outDir"

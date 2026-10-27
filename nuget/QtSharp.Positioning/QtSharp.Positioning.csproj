@@ -14,8 +14,12 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
 
-    <PackageId>QtSharp.Positioning</PackageId>
-    <Version>0.18.0</Version>
+  <!-- One package per platform: the release packs this project once with
+       -p:QtSharpPlatform=win-x64 and once with linux-x64. The managed assemblies are
+       identical; the native payload below is the matching half only. -->
+  <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
+    <PackageId>QtSharp.Positioning.$(QtSharpPlatform)</PackageId>
+    <Version>0.19.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>Qt Positioning for .NET, generated from the Qt 6.12 headers. References QtSharp.Api.</Description>
     <PackageTags>Qt;Qt6;QtPositioning;CSharp;dotnet;binding;interop;geo</PackageTags>
@@ -45,9 +49,12 @@
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
-    <None Include="buildTransitive\*" Pack="true" PackagePath="buildTransitive/" />
-    <None Include="$(QtSharpPositioningNativeDir)\QtSharp.QtPositioning.Native.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" Condition="Exists('$(QtSharpPositioningNativeDir)\QtSharp.QtPositioning.Native.dll')" />
-    <None Include="$(QtSharpPositioningNativeLinuxDir)\libQtSharp.QtPositioning.Native.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="Exists('$(QtSharpPositioningNativeLinuxDir)\libQtSharp.QtPositioning.Native.so')" />
+    <!-- NuGet only imports buildTransitive/<package id>.props and .targets, and the id
+         carries the RID, so the files are packed under the platform-specific name. -->
+    <None Include="buildTransitive\QtSharp.Positioning.props" Pack="true" PackagePath="buildTransitive/QtSharp.Positioning.$(QtSharpPlatform).props" />
+    <None Include="buildTransitive\QtSharp.Positioning.targets" Pack="true" PackagePath="buildTransitive/QtSharp.Positioning.$(QtSharpPlatform).targets" />
+    <None Include="$(QtSharpPositioningNativeDir)\QtSharp.QtPositioning.Native.dll" Pack="true" PackagePath="tools/native/win-x64/" Visible="false" Condition="'$(QtSharpPlatform)' == 'win-x64' And Exists('$(QtSharpPositioningNativeDir)\QtSharp.QtPositioning.Native.dll')" />
+    <None Include="$(QtSharpPositioningNativeLinuxDir)\libQtSharp.QtPositioning.Native.so" Pack="true" PackagePath="tools/native/linux-x64/" Visible="false" Condition="'$(QtSharpPlatform)' == 'linux-x64' And Exists('$(QtSharpPositioningNativeLinuxDir)\libQtSharp.QtPositioning.Native.so')" />
   </ItemGroup>
 
   <Target Name="QtSharpPositioningPackCheck" BeforeTargets="GenerateNuspec">

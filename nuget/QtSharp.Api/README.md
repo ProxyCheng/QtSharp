@@ -1,11 +1,14 @@
 # QtSharp.Api
 
+> The package id carries the platform: the snippets below use the `win-x64` variant. On
+> Linux, use the matching `.linux-x64` package (`QtSharp.Api.linux-x64`, ...).
+
 Qt for .NET, organized the way PyQt6 is: one install, one assembly and one C# namespace per Qt
 module.
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.18.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.19.0" />
 </ItemGroup>
 ```
 
