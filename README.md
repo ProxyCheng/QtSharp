@@ -144,8 +144,10 @@ drop-in replacement for every Qt module or every desktop deployment scenario.
 Pushing a semantic-version tag such as `v0.19.0` starts the release workflow. It builds every
 package below once for `win-x64` and once for `linux-x64` - the id carries the RID
 (`QtSharp.Api.win-x64`, `QtSharp.Api.linux-x64`, ...), and only that platform's Qt runtime and
-native glue are inside - and attaches them, with a `SHA256SUMS.txt`, to a GitHub Release. The
-managed assemblies are identical in both variants; `QtSharp.Tools` is Windows-only.
+native glue are inside. A GitHub Release has a flat asset list, so the release attaches one
+archive per platform (`QtSharp-<version>-win-x64.zip`, `QtSharp-<version>-linux-x64.zip`), the
+Windows-only `QtSharp.Tools` package and a `SHA256SUMS.txt`. Extract your platform's archive and
+add the folder as a local NuGet source. The managed assemblies are identical in both variants.
 
 Every row below is published as `<name>.win-x64` and `<name>.linux-x64`; reference the one that
 matches the machine you build on.
