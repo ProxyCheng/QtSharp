@@ -50,6 +50,13 @@ For a standalone application using release packages, start with
 [Hello World](samples/hello/Hello.csproj). See [conformance coverage](docs/conformance.md)
 for what the examples validate.
 
+## QtSharp and Qt Bridges
+
+Qt's [Qt Bridges](https://doc.qt.io/qtbridges/) currently focuses on connecting application
+logic in C# and other supported languages to QML/Qt Quick user interfaces. QtSharp focuses on
+general-purpose C# bindings for Qt Widgets (`QWidget`) and other selected Qt APIs, adapting
+them to C# and .NET. The projects have different goals and scopes.
+
 ## Module scope and .NET integration
 
 The design priorities are straightforward:
