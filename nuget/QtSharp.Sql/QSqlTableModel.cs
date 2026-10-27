@@ -34,22 +34,22 @@ namespace QtSharp.QtSql
             SetQuery($"SELECT * FROM {Quote(tableName)}");
         }
 
-        protected override QVariant CellValue(int row, int column)
+        protected override object CellValue(int row, int column)
         {
             if (pending.TryGetValue((row, column), out object value))
-                return ToVariant(value);
+                return Normalize(value);
             return base.CellValue(row, column);
         }
 
-        public override bool SetData(QModelIndex index, QVariant value, int role = default)
+        public override bool SetData(QModelIndex index, object value, int role = default)
         {
             // Qt::EditRole is 2; other roles are not editable.
-            if (role != 2 || index == null)
+            if (role != 2 || !index.IsValid())
                 return false;
             int row = index.Row(), column = index.Column();
             if (row < 0 || row >= RowCount() || column < 0 || column >= ColumnCount())
                 return false;
-            pending[(row, column)] = value == null ? null : value.ToObject();
+            pending[(row, column)] = value;
             return true;
         }
 

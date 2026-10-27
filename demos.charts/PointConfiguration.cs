@@ -7,11 +7,10 @@ namespace QtSharp.Charts.Demos
     /// Qt's examples/charts PointConfigurationWidget: one point of a line series given a size, a label
     /// visibility and a label format of its own, through QXYSeries' per-point configuration.
     ///
-    /// The example's colour control is left out: a colour reaches the configuration as
-    /// QVariant(QColor), and that constructor is QVariant's *template* one, which the extractor
-    /// cannot materialise per type - the same reason QComboBox::addItem(QString, QVariant) takes only
-    /// the types QVariant has real constructors for. Size (double), label visibility (bool) and the
-    /// label format (QString) all have real ones and are exercised here.
+    /// The example's colour control is represented by setting the configuration's Color entry
+    /// directly: QColor converts to QVariant through the generated implicit operator, so the value
+    /// is a real QColor variant rather than an opaque managed object. Size (double), label
+    /// visibility (bool) and the label format (QString) cross the same way.
     /// </summary>
     [Demo("qtcharts-pointconfiguration")]
 public static class PointConfiguration
@@ -48,33 +47,38 @@ public static class PointConfiguration
 
             // Its configuration starts empty - Qt falls back to the series' own settings.
             var configuration = series.pointConfiguration(4);
-            check.Check(configuration is IDictionary<QXYSeries.PointConfiguration, QVariant>,
+            check.Check(configuration is IDictionary<QXYSeries.PointConfiguration, object>,
                 "pointConfiguration() comes back as a dictionary");
             check.Check(configuration.Count == 0,
                 $"an untouched point has no configuration of its own (got {configuration.Count} entries)");
 
-            // The example's three controls.
-            configuration[QXYSeries.PointConfiguration.Size] = new QVariant(12.0);
-            configuration[QXYSeries.PointConfiguration.LabelVisibility] = new QVariant(true);
-            configuration[QXYSeries.PointConfiguration.LabelFormat] = new QVariant("%.2f");
+            // The example's four controls: colour, size, label visibility and format.
+            configuration[QXYSeries.PointConfiguration.Color] = new QColor(190, 30, 45);
+            configuration[QXYSeries.PointConfiguration.Size] = 12.0;
+            configuration[QXYSeries.PointConfiguration.LabelVisibility] = true;
+            configuration[QXYSeries.PointConfiguration.LabelFormat] = "%.2f";
             series.SetPointConfiguration(4, configuration);
 
             var readBack = series.pointConfiguration(4);
-            check.Check(readBack.Count == 3, $"the configuration sticks (got {readBack.Count} entries)");
+            check.Check(readBack.Count == 4, $"the configuration sticks (got {readBack.Count} entries)");
             check.Check(readBack.ContainsKey(QXYSeries.PointConfiguration.Size),
                 "the size is in there");
-            check.Check(readBack[QXYSeries.PointConfiguration.Size].ToDouble() == 12.0,
-                $"and it reads back as 12 (got {readBack[QXYSeries.PointConfiguration.Size].ToDouble()})");
-            check.Check(readBack[QXYSeries.PointConfiguration.LabelVisibility].ToBool(),
+            var color = readBack[QXYSeries.PointConfiguration.Color];
+            check.Check(color is QColor c && c.Red() == 190 && c.Green() == 30
+                        && c.Blue() == 45,
+                "the colour survives as a real QColor variant");
+            check.Check((double)readBack[QXYSeries.PointConfiguration.Size] == 12.0,
+                $"and it reads back as 12 (got {readBack[QXYSeries.PointConfiguration.Size]})");
+            check.Check((bool)readBack[QXYSeries.PointConfiguration.LabelVisibility],
                 "the label visibility reads back true");
-            check.Check(readBack[QXYSeries.PointConfiguration.LabelFormat].ToString() == "%.2f",
+            check.Check(readBack[QXYSeries.PointConfiguration.LabelFormat] as string == "%.2f",
                 $"the label format round-trips (got '{readBack[QXYSeries.PointConfiguration.LabelFormat]}')");
 
             // Changing one entry keeps the others.
             var update = series.pointConfiguration(4);
-            update[QXYSeries.PointConfiguration.Size] = new QVariant(20.0);
+            update[QXYSeries.PointConfiguration.Size] = 20.0;
             series.SetPointConfiguration(4, update);
-            check.Check(series.pointConfiguration(4)[QXYSeries.PointConfiguration.Size].ToDouble() == 20.0,
+            check.Check((double)series.pointConfiguration(4)[QXYSeries.PointConfiguration.Size] == 20.0,
                 "the size can be changed on its own");
 
             // Clearing it puts the point back to the series' defaults.

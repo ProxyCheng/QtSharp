@@ -55,7 +55,7 @@ public sealed class ApiGradientWidget : QWidget
 
     static void Stop(QGradient gradient, double position, int r, int g, int b)
     {
-        using var color = new QColor(r, g, b);
+         var color = new QColor(r, g, b);
         gradient.SetColorAt(position, color);
     }
 

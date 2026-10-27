@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\demos\QtSharp.Demos.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.Qt3D\Modules\QtSharp.Qt3DExtras\QtSharp.Qt3DExtras.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Sql\QtSharp.Sql.csproj" />
   </ItemGroup>
 

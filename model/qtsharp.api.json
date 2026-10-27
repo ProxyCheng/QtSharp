@@ -1758,7 +1758,7 @@
       "name": "QBitmap",
       "header": "QtGui/qbitmap.h",
       "bases": ["QPixmap"],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "arg0", "type": "QPixmap" }] },
@@ -1835,7 +1835,7 @@
       "name": "QBrush",
       "header": "QtGui/qbrush.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "gradient", "type": "QGradient" }] },
@@ -2591,7 +2591,6 @@
         { "name": "script", "flags": ["static"], "returnType": "QChar::Script", "parameters": [{ "name": "ucs4", "type": "unsigned int" }] },
         { "name": "setCell", "returnType": "void", "parameters": [{ "name": "acell", "type": "unsigned char" }] },
         { "name": "setRow", "returnType": "void", "parameters": [{ "name": "arow", "type": "unsigned char" }] },
-        { "name": "surrogateToUcs4", "flags": ["static"], "returnType": "unsigned int", "parameters": [{ "name": "high", "type": "QChar" }, { "name": "low", "type": "QChar" }] },
         { "name": "surrogateToUcs4", "flags": ["static"], "returnType": "unsigned int", "parameters": [{ "name": "high", "type": "char16_t" }, { "name": "low", "type": "char16_t" }] },
         { "name": "toCaseFolded", "flags": ["const"], "returnType": "QChar", "parameters": [] },
         { "name": "toCaseFolded", "flags": ["static"], "returnType": "unsigned int", "parameters": [{ "name": "ucs4", "type": "unsigned int" }] },
@@ -2790,7 +2789,7 @@
       "name": "QColor",
       "header": "QtGui/qcolor.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "spec", "type": "QColor::Spec" }] },
@@ -2945,7 +2944,7 @@
       "name": "QColorSpace",
       "header": "QtGui/qcolorspace.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "namedColorSpace", "type": "QColorSpace::NamedColorSpace" }] },
@@ -3546,7 +3545,7 @@
       "name": "QCursor",
       "header": "QtGui/qcursor.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "shape", "type": "Qt::CursorShape" }] },
@@ -3950,7 +3949,7 @@
         { "name": "setPreciseRemainingTime", "returnType": "void", "parameters": [{ "name": "secs", "type": "long long" }, { "name": "nsecs", "type": "long long", "flags": ["optional"], "default": "0" }, { "name": "type", "type": "Qt::TimerType", "flags": ["optional"], "default": "Qt.TimerType.CoarseTimer" }] },
         { "name": "setRemainingTime", "returnType": "void", "parameters": [{ "name": "msecs", "type": "long long" }, { "name": "type", "type": "Qt::TimerType", "flags": ["optional"], "default": "Qt.TimerType.CoarseTimer" }] },
         { "name": "setTimerType", "returnType": "void", "parameters": [{ "name": "type", "type": "Qt::TimerType" }] },
-        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QDeadlineTimer" }] },
+        { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QDeadlineTimer", "mode": "ref" }] },
         { "name": "timerType", "flags": ["const"], "returnType": "Qt::TimerType", "parameters": [] }
       ],
       "virtuals": [
@@ -5171,7 +5170,7 @@
       "name": "QFont",
       "header": "QtGui/qfont.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "font", "type": "QFont" }, { "name": "pd", "type": "QPaintDevice*" }] },
@@ -8373,7 +8372,7 @@
       "name": "QIcon",
       "header": "QtGui/qicon.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "pixmap", "type": "QPixmap" }] },
@@ -8482,7 +8481,7 @@
       "name": "QImage",
       "header": "QtGui/qimage.h",
       "bases": ["QPaintDevice"],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "size", "type": "QSize" }, { "name": "format", "type": "QImage::Format" }] },
@@ -9216,7 +9215,8 @@
       "bases": [],
       "flags": ["subclassable", "owned"],
       "fields": [
-        { "name": "error", "type": "QJsonParseError::ParseError" }
+        { "name": "error", "type": "QJsonParseError::ParseError" },
+        { "name": "offset", "type": "int" }
       ],
       "constructors": [
       ],
@@ -9305,7 +9305,7 @@
       "name": "QKeySequence",
       "header": "QtGui/qkeysequence.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "key", "type": "QKeySequence::StandardKey" }] },
@@ -10549,7 +10549,7 @@
       "name": "QMatrix4x4",
       "header": "QtGui/qmatrix4x4.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "transform", "type": "QTransform" }] },
@@ -12786,7 +12786,7 @@
       "name": "QPalette",
       "header": "QtGui/qpalette.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "button", "type": "QColor" }] },
@@ -12878,7 +12878,7 @@
       "name": "QPen",
       "header": "QtGui/qpen.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "color", "type": "QColor" }] },
@@ -13076,7 +13076,7 @@
       "name": "QPixmap",
       "header": "QtGui/qpixmap.h",
       "bases": ["QPaintDevice"],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "arg0", "type": "QSize" }] },
@@ -13528,7 +13528,7 @@
       "name": "QPolygon",
       "header": "QtGui/qpolygon.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "v", "type": "QList<QPoint>" }] },
@@ -13568,7 +13568,7 @@
       "name": "QPolygonF",
       "header": "QtGui/qpolygon.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "v", "type": "QList<QPointF>" }] },
@@ -14107,7 +14107,7 @@
       "name": "QQuaternion",
       "header": "QtGui/qquaternion.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "vector", "type": "QVector4D" }] },
@@ -14550,7 +14550,7 @@
       "name": "QRegion",
       "header": "QtGui/qregion.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "bitmap", "type": "QBitmap" }] },
@@ -15524,7 +15524,7 @@
       "name": "QSizePolicy",
       "header": "QtWidgets/qsizepolicy.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "horizontal", "type": "QSizePolicy::Policy" }, { "name": "vertical", "type": "QSizePolicy::Policy" }, { "name": "type", "type": "QSizePolicy::ControlType", "flags": ["optional"], "default": "QSizePolicy.ControlType.DefaultType" }] }
@@ -18978,7 +18978,7 @@
       "name": "QTextFormat",
       "header": "QtGui/qtextformat.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "type", "type": "int" }] }
@@ -19251,7 +19251,7 @@
       "name": "QTextLength",
       "header": "QtGui/qtextformat.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "type", "type": "QTextLength::Type" }, { "name": "value", "type": "double" }] }
@@ -20147,7 +20147,7 @@
       "name": "QTransform",
       "header": "QtGui/qtransform.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "arg0", "type": "Qt::Initialization" }] },
@@ -20190,8 +20190,8 @@
         { "name": "mapRect", "flags": ["const"], "returnType": "QRect", "parameters": [{ "name": "arg0", "type": "QRect" }] },
         { "name": "mapRect", "flags": ["const"], "returnType": "QRectF", "parameters": [{ "name": "arg0", "type": "QRectF" }] },
         { "name": "mapToPolygon", "flags": ["const"], "returnType": "QPolygon", "parameters": [{ "name": "r", "type": "QRect" }] },
-        { "name": "quadToQuad", "flags": ["static"], "returnType": "bool", "parameters": [{ "name": "one", "type": "QPolygonF" }, { "name": "two", "type": "QPolygonF" }, { "name": "result", "type": "QTransform" }] },
-        { "name": "quadToSquare", "flags": ["static"], "returnType": "bool", "parameters": [{ "name": "quad", "type": "QPolygonF" }, { "name": "result", "type": "QTransform" }] },
+        { "name": "quadToQuad", "flags": ["static"], "returnType": "bool", "parameters": [{ "name": "one", "type": "QPolygonF" }, { "name": "two", "type": "QPolygonF" }, { "name": "result", "type": "QTransform", "mode": "ref" }] },
+        { "name": "quadToSquare", "flags": ["static"], "returnType": "bool", "parameters": [{ "name": "quad", "type": "QPolygonF" }, { "name": "result", "type": "QTransform", "mode": "ref" }] },
         { "name": "reset", "returnType": "void", "parameters": [] },
         { "name": "rotate", "returnType": "QTransform", "parameters": [{ "name": "a", "type": "double" }, { "name": "axis", "type": "Qt::Axis", "flags": ["optional"], "default": "Qt.Axis.ZAxis" }] },
         { "name": "rotate", "returnType": "QTransform", "parameters": [{ "name": "a", "type": "double" }, { "name": "axis", "type": "Qt::Axis" }, { "name": "distanceToPlane", "type": "double" }] },
@@ -20200,7 +20200,7 @@
         { "name": "scale", "returnType": "QTransform", "parameters": [{ "name": "sx", "type": "double" }, { "name": "sy", "type": "double" }] },
         { "name": "setMatrix", "returnType": "void", "parameters": [{ "name": "m11", "type": "double" }, { "name": "m12", "type": "double" }, { "name": "m13", "type": "double" }, { "name": "m21", "type": "double" }, { "name": "m22", "type": "double" }, { "name": "m23", "type": "double" }, { "name": "m31", "type": "double" }, { "name": "m32", "type": "double" }, { "name": "m33", "type": "double" }] },
         { "name": "shear", "returnType": "QTransform", "parameters": [{ "name": "sh", "type": "double" }, { "name": "sv", "type": "double" }] },
-        { "name": "squareToQuad", "flags": ["static"], "returnType": "bool", "parameters": [{ "name": "square", "type": "QPolygonF" }, { "name": "result", "type": "QTransform" }] },
+        { "name": "squareToQuad", "flags": ["static"], "returnType": "bool", "parameters": [{ "name": "square", "type": "QPolygonF" }, { "name": "result", "type": "QTransform", "mode": "ref" }] },
         { "name": "translate", "returnType": "QTransform", "parameters": [{ "name": "dx", "type": "double" }, { "name": "dy", "type": "double" }] },
         { "name": "transposed", "flags": ["const"], "returnType": "QTransform", "parameters": [] },
         { "name": "type", "flags": ["const"], "returnType": "QTransform::TransformationType", "parameters": [] }
@@ -20953,7 +20953,6 @@
         { "parameters": [{ "name": "time", "type": "QTime" }] },
         { "parameters": [{ "name": "url", "type": "QUrl" }] },
         { "parameters": [{ "name": "uuid", "type": "QUuid" }] },
-        { "parameters": [{ "name": "type", "type": "QVariant::Type" }] },
         { "parameters": [{ "name": "b", "type": "bool" }] },
         { "parameters": [{ "name": "d", "type": "double" }] },
         { "parameters": [{ "name": "f", "type": "float" }] },
@@ -21037,7 +21036,7 @@
       "name": "QVector2D",
       "header": "QtGui/qvectornd.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "point", "type": "QPoint" }] },
@@ -21075,7 +21074,7 @@
       "name": "QVector3D",
       "header": "QtGui/qvectornd.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "point", "type": "QPoint" }] },
@@ -21123,7 +21122,7 @@
       "name": "QVector4D",
       "header": "QtGui/qvectornd.h",
       "bases": [],
-      "flags": ["subclassable", "owned"],
+      "flags": ["subclassable", "owned", "toVariant"],
       "constructors": [
         { "parameters": [] },
         { "parameters": [{ "name": "point", "type": "QPoint" }] },

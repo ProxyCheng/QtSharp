@@ -98,7 +98,7 @@ public static class ApiEventsDemo
 
         // QTextLength is a value type Qt passes by const reference: a frame format stores one.
         var frameFormat = new QTextFrameFormat();
-        using (var length = new QTextLength(QTextLength.Type.FixedLength, 120))
+        var length = new QTextLength(QTextLength.Type.FixedLength, 120);
         {
             frameFormat.SetWidth(length);
             Check(frameFormat.Width().RawValue() == 120,

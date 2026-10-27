@@ -11,9 +11,9 @@ namespace QtSharp.QtSql
     /// data survives the reader. Set a <see cref="DbConnection"/>, run a query, and pass the model
     /// to any Qt view - no Qt SQL module is involved.
     ///
-    /// Values cross into Qt through <see cref="QVariant"/>; a NULL is an invalid QVariant, and the
-    /// few ADO.NET types QVariant has no direct mapping for (decimal, DateTimeOffset, TimeSpan)
-    /// are converted.
+    /// Values cross into Qt as <c>object</c> variants (the generated API takes <c>object</c>
+    /// wherever Qt says QVariant); a NULL is an invalid variant, and the few ADO.NET types with no
+    /// direct mapping (decimal, DateTimeOffset, TimeSpan) are converted.
     /// </summary>
     public class QSqlQueryModel : QAbstractTableModel
     {
@@ -104,23 +104,41 @@ namespace QtSharp.QtSql
         // Qt calls rowCount()/columnCount() with a default-constructed (invalid) QModelIndex for
         // the root, not with null; a valid parent means "child of a cell", which this flat model
         // does not have.
-        public override int RowCount(QModelIndex parent = null)
-            => parent == null || !parent.IsValid() ? rows.Count : 0;
+        public override int RowCount(QModelIndex parent = default)
+            => !parent.IsValid() ? rows.Count : 0;
 
-        public override int ColumnCount(QModelIndex parent = null)
-            => parent == null || !parent.IsValid() ? columns.Count : 0;
+        public override int ColumnCount(QModelIndex parent = default)
+            => !parent.IsValid() ? columns.Count : 0;
 
-        public override QVariant Data(QModelIndex index, int role = default)
+        public override object Data(QModelIndex index, int role = default)
         {
             // Qt::DisplayRole is 0; every other role has no data here.
-            if (role != 0 || index == null)
-                return new QVariant();
+            if (role != 0 || !index.IsValid())
+                return null;
             return CellValue(index.Row(), index.Column());
         }
 
         /// <summary>The cell as Qt sees it; a subclass may overlay pending edits.</summary>
-        protected virtual QVariant CellValue(int row, int column)
-            => ToVariant(RawCell(row, column));
+        protected virtual object CellValue(int row, int column)
+            => Normalize(RawCell(row, column));
+
+        /// <summary>
+        /// A database value as a QtNative value: null/DB null is the invalid QVariant, and the
+        /// types Qt has no metatype for take the closest one it does (decimal is a double,
+        /// DateTimeOffset keeps its wall clock, TimeSpan is its string form).
+        /// </summary>
+        protected static object Normalize(object value)
+        {
+            if (value == null || value == DBNull.Value)
+                return null;
+            switch (value)
+            {
+                case decimal decimalValue: return (double)decimalValue;
+                case DateTimeOffset offset: return offset.DateTime;
+                case TimeSpan time: return time.ToString();
+                default: return value;
+            }
+        }
 
         /// <summary>The cell's value as ADO.NET handed it over.</summary>
         protected object RawCell(int row, int column)
@@ -130,15 +148,15 @@ namespace QtSharp.QtSql
             return rows[row][column];
         }
 
-        public override QVariant HeaderData(int section, Qt.Orientation orientation, int role = default)
+        public override object HeaderData(int section, Qt.Orientation orientation, int role = default)
         {
             if (role != 0)
-                return new QVariant();
+                return null;
             if (orientation == Qt.Orientation.Horizontal && section >= 0 && section < columns.Count)
-                return QVariant.From(columns[section]);
+                return columns[section];
             if (orientation == Qt.Orientation.Vertical && section >= 0 && section < rows.Count)
-                return QVariant.From(section + 1);
-            return new QVariant();
+                return section + 1;
+            return null;
         }
 
         /// <summary>The value of one cell, by column name.</summary>
@@ -158,20 +176,5 @@ namespace QtSharp.QtSql
         }
 
         static object Unwrap(object value) => value == DBNull.Value ? null : value;
-
-        internal static QVariant ToVariant(object value)
-        {
-            if (value == null || value == DBNull.Value)
-                return new QVariant();
-            switch (value)
-            {
-                // QVariant has no decimal/DateTimeOffset/TimeSpan mapping; the closest Qt types
-                // are double, DateTime and a string.
-                case decimal decimalValue: return QVariant.From((double)decimalValue);
-                case DateTimeOffset offset: return QVariant.From(offset.DateTime);
-                case TimeSpan time: return QVariant.From(time.ToString());
-                default: return QVariant.From(value);
-            }
-        }
     }
 }

@@ -42,12 +42,11 @@ namespace QtSharp.Tests
             Check(query.RowCount() == 3 && query.ColumnCount() == 3,
                 $"the model reports {query.RowCount()} rows and {query.ColumnCount()} columns");
 
-            using (var index = query.Index(1, 1))
-                Check(query.Data(index).ToObject() as string == "Christine",
+            var index = query.Index(1, 1);
+                Check(query.Data(index) as string == "Christine",
                     "Data(index) reads a cell through QVariant");
-            using (var header = query.HeaderData(1, Qt.Orientation.Horizontal))
-                Check(header.ToObject() as string == "firstname",
-                    "HeaderData names the column");
+            Check(query.HeaderData(1, Qt.Orientation.Horizontal) as string == "firstname",
+                "HeaderData names the column");
             Check(query.Record(0)["city"] as string == "Beach",
                 "Record(row) is the row as a dictionary");
             Check(query.Value(2, "firstname") as string == "Lars",
@@ -71,11 +70,11 @@ namespace QtSharp.Tests
             table.SetTable("person");
             Check(table.RowCount() == 3, "SetTable loads the table");
 
-            using (var cell = table.Index(1, 2))
-                Check(table.SetData(cell, QVariant.From("Lyon"), 2 /* Qt::EditRole */),
+            var cell = table.Index(1, 2);
+                Check(table.SetData(cell, "Lyon", 2 /* Qt::EditRole */),
                     "SetData stages an edit");
-            using (var staged = table.Index(1, 2))
-                Check(table.Data(staged).ToObject() as string == "Lyon",
+            var staged = table.Index(1, 2);
+                Check(table.Data(staged) as string == "Lyon",
                     "the model shows the staged value before it is written");
 
             Check(table.SubmitAll(), "SubmitAll writes the edit");
@@ -83,16 +82,16 @@ namespace QtSharp.Tests
             {
                 verify.SetConnection(connection);
                 verify.SetQuery("SELECT city FROM person WHERE id = 2");
-                using var index = verify.Index(0, 0);
-                Check(verify.Data(index).ToObject() as string == "Lyon",
+                var verifyIndex = verify.Index(0, 0);
+                Check(verify.Data(verifyIndex) as string == "Lyon",
                     "the edit reached SQLite");
             }
 
-            using (var cell = table.Index(2, 2))
-                table.SetData(cell, QVariant.From("nowhere"), 2);
+            var cell2 = table.Index(2, 2);
+                table.SetData(cell2, "nowhere", 2);
             table.RevertAll();
-            using (var reverted = table.Index(2, 2))
-                Check(table.Data(reverted).ToObject() as string == "Stockholm",
+            var reverted = table.Index(2, 2);
+                Check(table.Data(reverted) as string == "Stockholm",
                     "RevertAll discards the staged value");
 
             Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[FAIL] {failures} check(s) failed");

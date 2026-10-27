@@ -108,11 +108,10 @@ public sealed class ApiSystemTrayWindow : QDialog
     // QMessageBox::standardIcon() is no longer needed: QStyle::standardIcon() is modelled.
     static void AddMessageIcon(QComboBox comboBox, QIcon icon, string text, int value)
     {
-        using var data = new QVariant(value);
         if (icon == null)
-            comboBox.AddItem(text, data);
+            comboBox.AddItem(text, value);
         else
-            comboBox.AddItem(icon, text, data);
+            comboBox.AddItem(icon, text, value);
     }
 
     // The official closeEvent(), minus the modal confirmation (see the header comment). Returns
@@ -183,8 +182,8 @@ public sealed class ApiSystemTrayWindow : QDialog
     public void ShowMessage()
     {
         ShowIconCheckBox.Checked = true;
-        int selectedIcon = TypeComboBox
-            .ItemData(TypeComboBox.CurrentIndex, (int)Qt.ItemDataRole.UserRole).ToInt();
+        int selectedIcon = (int)TypeComboBox
+            .ItemData(TypeComboBox.CurrentIndex, (int)Qt.ItemDataRole.UserRole);
 
         LastMessageTitle = TitleEdit.Text;
         LastMessageBody = BodyEdit.PlainText;
@@ -399,7 +398,7 @@ public static class SystemTray
         };
         bool itemDataOk = true;
         for (int i = 0; i < expectedIconData.Length; i++)
-            itemDataOk &= typeCombo.ItemData(i, (int)Qt.ItemDataRole.UserRole).ToInt() == expectedIconData[i];
+            itemDataOk &= (int)typeCombo.ItemData(i, (int)Qt.ItemDataRole.UserRole) == expectedIconData[i];
         Check(itemDataOk, "the type combo carries NoIcon/Information/Warning/Critical/-1 as user-role data");
         Check(typeCombo.CurrentIndex == 1,
             $"the type combo defaults to Information (got index {typeCombo.CurrentIndex})");

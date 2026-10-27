@@ -30,8 +30,16 @@
       <QtMultimediaNative Include="..\out\api-modules\qtmultimedia\$(QtSharpNativePrefix)QtSharp.QtMultimedia.Native$(QtSharpNativeSuffix)" />
       <QtMultimediaPlugin Include="$(QtRuntimeDir)\plugins\multimedia\*.dll" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
       <QtPositioningNative Include="..\out\api-modules\qtpositioning\$(QtSharpNativePrefix)QtSharp.QtPositioning.Native$(QtSharpNativeSuffix)" />
+      <!-- The Qt3D value-type test lives in the binding tests; the six managed Qt3D assemblies
+           come in through the tests project, their native glue has to be copied here. -->
+      <Qt3DNative Include="..\out\api-modules\qt3dcore\$(QtSharpNativePrefix)QtSharp.Qt3DCore.Native$(QtSharpNativeSuffix)" />
+      <Qt3DNative Include="..\out\api-modules\qt3danimation\$(QtSharpNativePrefix)QtSharp.Qt3DAnimation.Native$(QtSharpNativeSuffix)" />
+      <Qt3DNative Include="..\out\api-modules\qt3drender\$(QtSharpNativePrefix)QtSharp.Qt3DRender.Native$(QtSharpNativeSuffix)" />
+      <Qt3DNative Include="..\out\api-modules\qt3dinput\$(QtSharpNativePrefix)QtSharp.Qt3DInput.Native$(QtSharpNativeSuffix)" />
+      <Qt3DNative Include="..\out\api-modules\qt3dlogic\$(QtSharpNativePrefix)QtSharp.Qt3DLogic.Native$(QtSharpNativeSuffix)" />
+      <Qt3DNative Include="..\out\api-modules\qt3dextras\$(QtSharpNativePrefix)QtSharp.Qt3DExtras.Native$(QtSharpNativeSuffix)" />
     </ItemGroup>
-    <Copy SourceFiles="@(QtMultimediaNative);@(QtPositioningNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(QtMultimediaNative);@(QtPositioningNative);@(Qt3DNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(QtMultimediaPlugin)" DestinationFolder="$(OutDir)multimedia\" SkipUnchangedFiles="true" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
   </Target>
 

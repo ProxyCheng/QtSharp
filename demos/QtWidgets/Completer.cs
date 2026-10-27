@@ -22,11 +22,11 @@ public sealed class ApiFullPathFileSystemModel : QFileSystemModel
     // The official FileSystemModel: column 0 shows the whole path instead of the file name. This
     // only works because QFileSystemModel sits in the QAbstractItemModel subtree, so `data` is an
     // extension point even though QFileSystemModel itself is not an extension class.
-    public override QVariant Data(QModelIndex index, int role = default)
+    public override object Data(QModelIndex index, int role = default)
     {
         DataCalls++;
         if (role == (int)Qt.ItemDataRole.DisplayRole && index.Column() == 0)
-            return new QVariant(QDir.ToNativeSeparators(FilePath(index)));
+            return QDir.ToNativeSeparators(FilePath(index));
         return base.Data(index, role);
     }
 }
@@ -364,8 +364,8 @@ public static class Completer
         window.ModelComboBox.SetCurrentIndex(2);
         Check(window.Completer.Model() != null && window.Completer.Model().ColumnCount() == 2,
             $"the country model has two columns (got {window.Completer.Model()?.ColumnCount()})");
-        using (var country = window.Completer.Model().Index(0, 0))
-        using (var symbol = window.Completer.Model().Index(0, 1))
+        var country = window.Completer.Model().Index(0, 0);
+        var symbol = window.Completer.Model().Index(0, 1);
         {
             string countryText = window.Completer.Model().Data(country).ToString();
             string symbolText = window.Completer.Model().Data(symbol).ToString();

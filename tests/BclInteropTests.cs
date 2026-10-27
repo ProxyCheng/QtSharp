@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Globalization;
 using System.Numerics;
 
 namespace QtSharp.Tests
@@ -52,12 +53,12 @@ namespace QtSharp.Tests
                 $"QRectF -> RectangleF ({drawingRectangleF})");
 
             // ---------------------------------------------------------------- QtGui value types
-            using (var color = new QColor(1, 2, 3, 4))
+            var color = new QColor(1, 2, 3, 4);
             {
                 Color drawingColor = (Color)color;
                 Check(drawingColor.A == 4 && drawingColor.R == 1 && drawingColor.G == 2 && drawingColor.B == 3,
                     $"QColor -> Color ({drawingColor})");
-                using (var back = (QColor)Color.FromArgb(9, 8, 7, 6))
+                var back = (QColor)Color.FromArgb(9, 8, 7, 6);
                     Check(back.Alpha() == 9 && back.Red() == 8 && back.Green() == 7 && back.Blue() == 6,
                         "Color -> QColor");
             }
@@ -89,11 +90,98 @@ namespace QtSharp.Tests
                     $"relative Uri round-trip ({relative.ToUri()})");
             }
 
+            // ---------------------------------------------------------------- UUIDs
+            // QUuid is erased to System.Guid - there is no QUuid type, the same way there is no
+            // QString. A Qt signature that takes or returns one surfaces as a Guid and crosses the
+            // ABI as the same 16 bytes; the Qt-only operations are extensions on Guid.
             var guid = Guid.NewGuid();
-            using (var uuid = new QUuid(guid))
-                Check(uuid.ToGuid() == guid, "Guid -> QUuid -> Guid");
-            using (var nullUuid = new QUuid())
-                Check(nullUuid.ToGuid() == Guid.Empty, "null QUuid -> Guid.Empty");
+            Check(guid.Version() == UuidVersion.Random,
+                $"Guid.NewGuid is a version-4 UUID (got {guid.Version()})");
+            Check(guid.Variant() == UuidVariant.RFC4122,
+                $"and carries the RFC 4122 variant (got {guid.Variant()})");
+            Check(Guid.FromRfc4122(guid.ToRfc4122()) == guid, "Guid -> RFC 4122 bytes -> Guid");
+
+            // The two byte orders differ, so a fixed value makes the difference visible instead of
+            // trusting a round-trip that would hide a swap.
+            var ordered = new Guid("00112233-4455-6677-8899-aabbccddeeff");
+            var rfc = ordered.ToRfc4122();
+            Check(rfc.Length == 16 && rfc[0] == 0x00 && rfc[3] == 0x33 && rfc[4] == 0x44 && rfc[15] == 0xff,
+                $"RFC 4122 bytes are network order ({BitConverter.ToString(rfc)})");
+            var microsoft = ordered.ToByteArray();
+            Check(microsoft[0] == 0x33 && microsoft[3] == 0x00 && microsoft[4] == 0x55,
+                $"Guid.ToByteArray keeps the Microsoft order ({BitConverter.ToString(microsoft)})");
+
+            // Qt's four string formats are Guid's B/D/N, and the null UUID is Guid.Empty.
+            Check(default(Guid) == Guid.Empty && Guid.Empty.Version() == UuidVersion.VerUnknown,
+                $"Guid.Empty is the null UUID with no version (got {Guid.Empty.Version()})");
+            Check(ordered.ToString("B") == "{00112233-4455-6677-8899-aabbccddeeff}",
+                $"braced form ({ordered.ToString("B")})");
+            Check(ordered.ToString("D") == "00112233-4455-6677-8899-aabbccddeeff",
+                $"dashed form ({ordered.ToString("D")})");
+            Check(ordered.ToString("N") == "00112233445566778899aabbccddeeff",
+                $"Qt's Id128 form is Guid's N ({ordered.ToString("N")})");
+
+            // Name-based UUIDs are RFC 4122; the DNS namespace and the name are the RFC's example
+            // pair, so a wrong namespace byte order would fail here.
+            var dnsNamespace = new Guid("6ba7b810-9dad-11d1-80b4-00c04fd430c8");
+            Check(Guid.CreateV3(dnsNamespace, "www.widgets.com")
+                  == new Guid("3d813cbb-47fb-32ba-91df-831e1593ac29"),
+                $"v3 UUID matches RFC 4122 (got {Guid.CreateV3(dnsNamespace, "www.widgets.com")})");
+            Check(Guid.CreateV5(dnsNamespace, "www.widgets.com")
+                  == new Guid("21f7f8de-8051-5b89-8680-0195ef798b6a"),
+                $"v5 UUID matches RFC 4122 (got {Guid.CreateV5(dnsNamespace, "www.widgets.com")})");
+
+            // The same value reaches Qt as a real Uuid, and Qt's own signatures are Guid-typed.
+            using (var variant = new QVariant(guid))
+            {
+                Check(variant.type() == (int)QVariant.Type.Uuid,
+                    $"QVariant(Guid) is a Uuid variant (got {variant.type()})");
+                Check((Guid)variant.ToObject() == guid, "and unwraps to the same Guid");
+                Check(variant.ToUuid() == guid, "ToUuid returns the Guid");
+            }
+            using (var cbor = new QCborValue(guid))
+                Check(cbor.ToUuid() == guid, "QCborValue <-> Guid");
+            Check(Qt.QHash(guid) == Qt.QHash(guid), "qHash(Guid) is deterministic");
+
+            // ---------------------------------------------------------------- QChar is char
+            // QChar is one UTF-16 code unit, so it is erased the way QUuid and QString are: the
+            // value is a char and there is no QChar type. Classification comes from the BCL's
+            // Unicode tables; the properties the BCL has no API for call Qt's tables.
+            Check('A'.IsLetter() && !'7'.IsLetter(), "'A' is a letter, '7' is not");
+            Check('7'.IsDigit() && '7'.IsNumber() && !'7'.IsLetter(), "'7' is a digit and a number");
+            Check('A'.IsUpper() && !'A'.IsLower() && 'a'.IsLower(), "upper/lower");
+            Check('a'.ToUpper() == 'A' && 'A'.ToLower() == 'a', "ToUpper/ToLower");
+            Check('A'.ToCaseFolded() == 'a' && 'ß'.ToCaseFolded() == 'ß', "ToCaseFolded");
+            Check('7'.DigitValue() == 7 && 'A'.DigitValue() == -1 && '!'.DigitValue() == -1,
+                "DigitValue: decimal digits only, -1 otherwise (Qt's actual behaviour)");
+            Check('\0'.IsNull() && ' '.IsSpace() && !'A'.IsSpace(), "IsNull/IsSpace");
+            Check('A'.Category() == UnicodeCategory.UppercaseLetter, "Category");
+            Check('A'.Script() == CharScript.Script_Latin, "Script");
+            Check('́'.CombiningClass() == 230, "CombiningClass of a combining acute");
+            Check('א'.Direction() == CharDirection.DirR, "bidi direction of Hebrew alef");
+            Check('('.HasMirrored() && '('.MirroredChar() == ')', "mirroring");
+            Check('﷐'.IsNonCharacter() && !'A'.IsNonCharacter(), "IsNonCharacter");
+            Check('\uD83D'.IsHighSurrogate() && '\uDE00'.IsLowSurrogate()
+                  && !'A'.IsSurrogate(), "surrogate classification");
+            Check(char.SurrogateToUcs4('\uD83D', '\uDE00') == 0x1F600, "surrogate pair -> code point");
+            Check(char.HighSurrogate(0x1F600) == '\uD83D' && char.LowSurrogate(0x1F600) == '\uDE00'
+                  && char.RequiresSurrogates(0x1F600), "code point -> surrogate pair");
+            Check(char.Category(0x41) == UnicodeCategory.UppercaseLetter
+                  && char.Script(0x41) == CharScript.Script_Latin
+                  && char.DigitValue(0x41) == -1
+                  && char.ToUpper(0x61) == 0x41,
+                "the static (code point) overloads");
+            Check(char.CurrentUnicodeVersion() >= UnicodeVersion.Unicode_1_1,
+                $"current Unicode version ({char.CurrentUnicodeVersion()})");
+            Check(QDir.Separator() == System.IO.Path.DirectorySeparatorChar,
+                $"QDir.Separator is the platform separator ({QDir.Separator()})");
+
+            using (var variant = new QVariant('A'))
+            {
+                Check(variant.type() == (int)QVariant.Type.Char,
+                    $"QVariant(char) is a Char variant (got {variant.type()})");
+                Check((char)variant.ToObject() == 'A', "and unwraps to the same char");
+            }
 
             // ---------------------------------------------------------------- QByteArray
             using (var byteArray = (QByteArray)new byte[] { 0, 127, 255 })
@@ -126,10 +214,12 @@ namespace QtSharp.Tests
             Check((Guid)QVariant.From(guid).ToObject() == guid, "QVariant Guid round-trip");
             Check((Point)QVariant.From(new Point(4, 5)).ToObject() == new Point(4, 5), "QVariant Point round-trip");
 
-            bool rejected = false;
-            try { QVariant.From(new object()); }
-            catch (NotSupportedException) { rejected = true; }
-            Check(rejected, "QVariant.From rejects a type without a Qt mapping");
+            // A managed type with no Qt metatype is not rejected any more: it crosses as an opaque
+            // managed value, the PySide PyObjectWrapper contract (see VariantObjectTests).
+            var payload = new object();
+            using (var wrapped = QVariant.From(payload))
+                Check(ReferenceEquals(wrapped.ToObject(), payload),
+                    "QVariant carries a type without a Qt mapping as an opaque value");
 
             Check(QVariant.From(null).ToObject() == null, "an invalid QVariant unwraps to null");
 

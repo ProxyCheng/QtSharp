@@ -102,8 +102,8 @@ public sealed class ApiAnalogClock : QWidget
         int[] minuteHand = { 7, 8, -7, 8, 0, -70 };
 
         // The official colours (the hour hand is fully opaque, the minute hand is not).
-        using var hourColor = new QColor(127, 0, 127);
-        using var minuteColor = new QColor(0, 127, 127, 191);
+         var hourColor = new QColor(127, 0, 127);
+         var minuteColor = new QColor(0, 127, 127, 191);
 
         // The official angles, including the minute carry in the hour hand and the second
         // carry in the minute hand.
@@ -213,7 +213,7 @@ public static class AnalogClock
                 int x = px + dx, y = py + dy;
                 if (x < 0 || y < 0 || x >= w || y >= h)
                     continue;
-                using var c = img.PixelColor(x, y);
+                 var c = img.PixelColor(x, y);
                 int score = magenta
                     ? Math.Min(c.Red() - c.Green(), c.Blue() - c.Green())
                     : Math.Min(c.Green() - c.Red(), c.Blue() - c.Red());
@@ -258,7 +258,7 @@ public static class AnalogClock
         bool IsInk(QImage img, int px, int py)
         {
             var bgPt = PixelAt(img, -70, -70, 0.0);
-            using var bg = img.PixelColor(bgPt.X, bgPt.Y);
+             var bg = img.PixelColor(bgPt.X, bgPt.Y);
             int bgR = bg.Red(), bgG = bg.Green(), bgB = bg.Blue();
             int w = img.Width(), h = img.Height();
             for (int dx = -1; dx <= 1; dx++)
@@ -267,7 +267,7 @@ public static class AnalogClock
                 int x = px + dx, y = py + dy;
                 if (x < 0 || y < 0 || x >= w || y >= h)
                     continue;
-                using var c = img.PixelColor(x, y);
+                 var c = img.PixelColor(x, y);
                 if (Math.Abs(c.Red() - bgR) + Math.Abs(c.Green() - bgG) + Math.Abs(c.Blue() - bgB) > 40)
                     return true;
             }
@@ -420,10 +420,10 @@ public static class AnalogClock
             }
 
             // (12,6) is inside the ellipse but off the red diagonal drawn below it.
-            using (var inside = image2.PixelColor(12, 6))
+            var inside = image2.PixelColor(12, 6);
                 Check(inside.Green() == 255 && inside.Blue() == 0,
                     $"QImage + QPen/QBrush/QPainterPath painted a filled ellipse (got rgb {inside.Red()},{inside.Green()},{inside.Blue()})");
-            using (var outside = image2.PixelColor(30, 1))
+            var outside = image2.PixelColor(30, 1);
                 Check(outside.Red() == 0 && outside.Green() == 0,
                     $"the rest of the image is still the fill colour (got rgb {outside.Red()},{outside.Green()},{outside.Blue()})");
         }

@@ -86,7 +86,7 @@ public sealed class ApiScribbleArea : QWidget
 
     public void SetPenColor(QColor newColor)
     {
-        if (newColor != null && newColor.IsValid())
+        if (newColor.IsValid())
             myPenColor = newColor;
     }
 
@@ -139,7 +139,7 @@ public sealed class ApiScribbleArea : QWidget
                 image = ResizeImage(null, size);
         }
 
-        using (var white = new QColor(Qt.GlobalColor.white))
+        var white = new QColor(Qt.GlobalColor.white);
             image.Fill(white);
 
         modified = true;
@@ -290,7 +290,7 @@ public sealed class ApiScribbleArea : QWidget
         }
 
         var newImage = new QImage(newSize, QImage.Format.Format_RGB32);
-        using (var white = new QColor(Qt.GlobalColor.white))
+        var white = new QColor(Qt.GlobalColor.white);
             newImage.Fill(white);
 
         if (img != null)
@@ -371,7 +371,7 @@ public sealed class ApiScribbleWindow : QMainWindow
 
     public bool ApplyPenColor(QColor newColor)
     {
-        if (newColor == null || !newColor.IsValid())
+        if (!newColor.IsValid())
             return false;
         ScribbleArea.SetPenColor(newColor);
         return true;
@@ -591,7 +591,7 @@ public static class Scribble
         Check(area.PenWidth == 5, $"setPenWidth round-trips (got {area.PenWidth})");
         using (var pen = area.CreatePen())
         {
-            using (var penColor = pen.Color())
+            var penColor = pen.Color();
                 Check(Mask(penColor.Rgb()) == red, $"the pen's colour is red (got #{Mask(penColor.Rgb()):X6})");
             Check(pen.Width() == 5, $"the pen's width is 5 (got {pen.Width()})");
             Check(pen.Style() == Qt.PenStyle.SolidLine, $"the pen's style is SolidLine (got {pen.Style()})");

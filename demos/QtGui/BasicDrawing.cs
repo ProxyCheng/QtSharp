@@ -33,24 +33,24 @@ public sealed class ApiRenderArea : QWidget
 
     public ApiRenderArea(QWidget parent = null) : base(parent)
     {
-        using (var black = new QColor(Qt.GlobalColor.black))
+        var black = new QColor(Qt.GlobalColor.black);
             Pen = new QPen(black);
         Pen.SetWidth(1);
         Pen.SetStyle(Qt.PenStyle.SolidLine);
         Pen.SetCapStyle(Qt.PenCapStyle.RoundCap);
         Pen.SetJoinStyle(Qt.PenJoinStyle.RoundJoin);
 
-        using (var white = new QColor(Qt.GlobalColor.white))
+        var white = new QColor(Qt.GlobalColor.white);
             Brush = new QBrush(white);
 
         using (var image = new QImage(70, 70, QImage.Format.Format_ARGB32))
         {
-            using (var blue = new QColor(0, 90, 200))
+            var blue = new QColor(0, 90, 200);
                 image.Fill(blue);
             using (var p = new QPainter(image))
             {
                 p.SetPen(Qt.PenStyle.NoPen);
-                using var orange = new QColor(230, 120, 0);
+                 var orange = new QColor(230, 120, 0);
                 p.SetBrush(orange);
                 p.DrawEllipse(10, 10, 50, 50);
                 p.End();

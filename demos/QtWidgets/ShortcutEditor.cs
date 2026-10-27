@@ -72,7 +72,7 @@ public sealed class ShortcutTreeModel : QAbstractItemModel
 
     Node NodeAt(QModelIndex index)
     {
-        if (index == null || !index.IsValid())
+        if (!index.IsValid())
             return null;
         ulong id = index.InternalId();
         return id < (ulong)nodes.Count ? nodes[(int)id] : null;
@@ -138,10 +138,10 @@ public sealed class ShortcutTreeModel : QAbstractItemModel
 
         var contextNode = root.Children.Find(n => n.Name == context);
         if (contextNode == null)
-            return null;
+            return default;
         var categoryNode = contextNode.Children.Find(n => n.Name == category);
         if (categoryNode == null)
-            return null;
+            return default;
 
         var parentIndex = CreateIndex(categoryNode.Row, 0, (ulong)categoryNode.Id);
         int row = categoryNode.Children.Count;
@@ -155,12 +155,12 @@ public sealed class ShortcutTreeModel : QAbstractItemModel
     /// <summary>The action a row stands for (null for a context or category row).</summary>
     public QAction ActionAt(QModelIndex index) => NodeAt(index)?.Action;
 
-    public override QModelIndex Index(int row, int column, QModelIndex parent = null)
+    public override QModelIndex Index(int row, int column, QModelIndex parent = default)
     {
         if (row < 0 || column < 0 || column >= ColumnCount(parent))
             return new QModelIndex();
 
-        var parentNode = parent == null || !parent.IsValid() ? root : NodeAt(parent);
+        var parentNode = !parent.IsValid() ? root : NodeAt(parent);
         if (parentNode == null || row < 0 || row >= parentNode.Children.Count)
             return new QModelIndex();
 
@@ -169,7 +169,7 @@ public sealed class ShortcutTreeModel : QAbstractItemModel
 
     public override QModelIndex Parent(QModelIndex child)
     {
-        if (child == null || !child.IsValid())
+        if (!child.IsValid())
             return new QModelIndex();
 
         var parentNode = NodeAt(child)?.ParentNode;
@@ -179,42 +179,42 @@ public sealed class ShortcutTreeModel : QAbstractItemModel
         return CreateIndex(parentNode.Row, 0, (ulong)parentNode.Id);
     }
 
-    public override int RowCount(QModelIndex parent = null)
+    public override int RowCount(QModelIndex parent = default)
     {
-        if (parent != null && parent.IsValid() && parent.Column() > 0)
+        if (parent.IsValid() && parent.Column() > 0)
             return 0;
-        var node = parent == null || !parent.IsValid() ? root : NodeAt(parent);
+        var node = !parent.IsValid() ? root : NodeAt(parent);
         return node?.Children.Count ?? 0;
     }
 
-    public override int ColumnCount(QModelIndex parent = null) => 2;
+    public override int ColumnCount(QModelIndex parent = default) => 2;
 
-    public override QVariant Data(QModelIndex index, int role = DisplayRole)
+    public override object Data(QModelIndex index, int role = DisplayRole)
     {
-        if (index == null || !index.IsValid() || (role != DisplayRole && role != EditRole))
-            return new QVariant();
+        if (!index.IsValid() || (role != DisplayRole && role != EditRole))
+            return null;
 
         var node = NodeAt(index);
         if (node == null)
-            return new QVariant();
+            return null;
 
         if (index.Column() == 0)
-            return new QVariant(node.Name);
+            return node.Name;
         if (index.Column() == 1 && node.Action != null)
-            return new QVariant(node.Action.Shortcut.ToString());
-        return new QVariant();
+            return node.Action.Shortcut.ToString();
+        return null;
     }
 
-    public override QVariant HeaderData(int section, Qt.Orientation orientation, int role = DisplayRole)
+    public override object HeaderData(int section, Qt.Orientation orientation, int role = DisplayRole)
     {
         if (orientation == Qt.Orientation.Horizontal && role == DisplayRole)
-            return new QVariant(section == 0 ? "Name" : "Shortcut");
-        return new QVariant();
+            return section == 0 ? "Name" : "Shortcut";
+        return null;
     }
 
     public override Qt.ItemFlags Flags(QModelIndex index)
     {
-        if (index == null || !index.IsValid())
+        if (!index.IsValid())
             return Qt.ItemFlags.NoItemFlags;
 
         var flags = Qt.ItemFlags.ItemIsEnabled | Qt.ItemFlags.ItemIsSelectable;
@@ -223,16 +223,16 @@ public sealed class ShortcutTreeModel : QAbstractItemModel
         return flags;
     }
 
-    public override bool SetData(QModelIndex index, QVariant value, int role = EditRole)
+    public override bool SetData(QModelIndex index, object value, int role = EditRole)
     {
-        if (index == null || !index.IsValid() || role != EditRole || index.Column() != 1)
+        if (!index.IsValid() || role != EditRole || index.Column() != 1)
             return false;
 
         var action = NodeAt(index)?.Action;
         if (action == null)
             return false;
 
-        string text = value.ToString();
+        string text = value?.ToString();
         if (text == action.Shortcut.ToString())
             return true;
 
@@ -268,18 +268,18 @@ public sealed class ShortcutItemDelegate : QStyledItemDelegate
     {
         SetEditorDataCalls++;
         LastEditor = editor;
-        if (editor == null || index == null || !index.IsValid())
+        if (editor == null || !index.IsValid())
             return;
-        string value = index.Model().Data(index, (int)Qt.ItemDataRole.EditRole).ToString();
+        string value = index.Model().Data(index, (int)Qt.ItemDataRole.EditRole)?.ToString();
         using (var sequence = new QKeySequence(value))
             ((QKeySequenceEdit)editor).SetKeySequence(sequence);
     }
 
     public override void SetModelData(QWidget editor, QAbstractItemModel model, QModelIndex index)
     {
-        if (editor == null || model == null || index == null || !index.IsValid())
+        if (editor == null || model == null || !index.IsValid())
             return;
-        model.SetData(index, new QVariant(((QKeySequenceEdit)editor).KeySequence.ToString()),
+        model.SetData(index, ((QKeySequenceEdit)editor).KeySequence.ToString(),
                       (int)Qt.ItemDataRole.EditRole);
     }
 
@@ -391,9 +391,9 @@ public static class ShortcutEditor
         Check(model.RowCount() == 2 && topIndex.IsValid(),
             $"the root has two contexts (got {model.RowCount()})");
 
-        string firstContext = model.Data(topIndex, 0).ToString();
+        string firstContext = model.Data(topIndex, 0)?.ToString();
         var categoryIndex = model.Index(0, 0, topIndex);
-        Check((firstContext == "bottom" || firstContext == "top") && model.Data(categoryIndex, 0).ToString() == "color",
+        Check((firstContext == "bottom" || firstContext == "top") && model.Data(categoryIndex, 0)?.ToString() == "color",
             $"context row -> category row (got '{firstContext}' -> '{model.Data(categoryIndex, 0)}')");
         Check(model.RowCount(categoryIndex) == 3, $"the category holds three actions (got {model.RowCount(categoryIndex)})");
 
@@ -401,8 +401,8 @@ public static class ShortcutEditor
         var actionIndex = model.Index(0, 1, categoryIndex);
         // Data(index, role): the second argument is the role, so the two columns come from two
         // indexes rather than two roles.
-        string actionName = model.Data(nameIndex, (int)Qt.ItemDataRole.DisplayRole).ToString();
-        string actionShortcut = model.Data(actionIndex, (int)Qt.ItemDataRole.DisplayRole).ToString();
+        string actionName = model.Data(nameIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString();
+        string actionShortcut = model.Data(actionIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString();
         Check(actionName.Length > 0 && actionShortcut.Length > 0,
             $"an action row carries a name and a shortcut ('{actionName}' / '{actionShortcut}')");
 
@@ -427,7 +427,7 @@ public static class ShortcutEditor
                 $"the tree renders with a node expanded (got {rendered.Width()}x{rendered.Height()}, column hint {painted})");
         }
         Check(model.RowCount(categoryIndex) == 3
-              && model.Data(actionIndex, (int)Qt.ItemDataRole.DisplayRole).ToString().Length > 0,
+              && model.Data(actionIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString().Length > 0,
             "the model still answers after the expansion");
 
         // The delegate's contract, driven directly: it has to hand the model's value to the editor
@@ -447,7 +447,7 @@ public static class ShortcutEditor
                 ((QKeySequenceEdit)editor).SetKeySequence(replacement);
             delegateInstance.SetModelData(editor, model, actionIndex);
 
-            string after = model.Data(actionIndex, (int)Qt.ItemDataRole.DisplayRole).ToString();
+            string after = model.Data(actionIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString();
             Check(after == "Ctrl+Shift+R", $"the editor's value reached the model (got '{after}')");
             var editedAction = model.ActionAt(actionIndex);
             Check(editedAction != null && editedAction.Shortcut.ToString() == "Ctrl+Shift+R",
@@ -470,7 +470,7 @@ public static class ShortcutEditor
         // beginInsertRows/endInsertRows the binding now publishes.
         int rowsBefore = model.RowCount(categoryIndex);
         var added = model.AddAction(firstContext, "color", "yellow", "y");
-        Check(added != null && model.RowCount(categoryIndex) == rowsBefore + 1,
+        Check(added.IsValid() && model.RowCount(categoryIndex) == rowsBefore + 1,
             $"inserting a row through beginInsertRows/endInsertRows (got {model.RowCount(categoryIndex)} rows)");
         var addedName = model.Index(rowsBefore, 0, categoryIndex);
         // Qt normalises a single-letter sequence to upper case ("y" comes back as "Y"), which is

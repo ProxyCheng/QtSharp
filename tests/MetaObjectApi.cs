@@ -213,16 +213,16 @@ public static class ApiMetaObjectDemo
 
         // The properties read and write through QObject::property/setProperty, which is how Qt
         // (a binding, a designer, a data mapper) would reach them.
-        counter.SetProperty("value", new QVariant(42));
-        Check(counter.Property("value").ToInt() == 42 && counter.RawValue == 42,
-            $"setProperty reaches the C# setter (property={counter.Property("value").ToInt()}, backing={counter.RawValue})");
+        counter.SetProperty("value", 42);
+        Check((int)counter.Property("value") == 42 && counter.RawValue == 42,
+            $"setProperty reaches the C# setter (property={counter.Property("value")}, backing={counter.RawValue})");
 
-        counter.SetProperty("label", new QVariant("hello"));
-        Check(counter.Property("label").ToString() == "hello" && counter.RawLabel == "hello",
-            $"a string property round-trips (got '{counter.Property("label").ToString()}')");
+        counter.SetProperty("label", "hello");
+        Check(counter.Property("label")?.ToString() == "hello" && counter.RawLabel == "hello",
+            $"a string property round-trips (got '{counter.Property("label")}')");
 
-        counter.SetProperty("caption", new QVariant("attributed-name"));
-        Check(counter.Property("caption").ToString() == "attributed-name" && counter.Name == "attributed-name",
+        counter.SetProperty("caption", "attributed-name");
+        Check(counter.Property("caption")?.ToString() == "attributed-name" && counter.Name == "attributed-name",
             $"a property with an explicit Qt name round-trips (got '{counter.Name}')");
 
         // Q_PROPERTY's NOTIFY, RESET and the rest of its flags are in the table as well.

@@ -39,8 +39,8 @@ public class ApiArthurFrame : QWidget
         // but only lays one colour down, so the pattern goes through a painter.
         using (var painter = new QPainter(Tile))
         {
-            using var white = new QColor(Qt.GlobalColor.white);
-            using var gray = new QColor(230, 230, 230);
+             var white = new QColor(Qt.GlobalColor.white);
+             var gray = new QColor(230, 230, 230);
             var whole = new QRect(0, 0, 128, 128);
             var topLeft = new QRect(0, 0, 64, 64);
             var bottomRight = new QRect(64, 64, 64, 64);
@@ -293,10 +293,10 @@ public sealed class ApiPathStrokeRenderer : ApiArthurFrame
         double centerY = height() / 2.0;
         double rotation = 360.0 / count;
 
-        using var m = new QTransform();
-        using var vm = new QTransform();
-        using (vm.Shear(2.0, -1.0)) { }
-        using (vm.Scale(3.0, 3.0)) { }
+         var m = new QTransform();
+         var vm = new QTransform();
+        vm.Shear(2.0, -1.0); { }
+        vm.Scale(3.0, 3.0); { }
 
         for (int i = 0; i < count; i++)
         {
@@ -309,7 +309,7 @@ public sealed class ApiPathStrokeRenderer : ApiArthurFrame
             var mapped = m.Map(basePoint);
                 points.Add(new QPointF(mapped.X() + centerX, mapped.Y() + centerY));
 
-            using (m.Rotate(rotation)) { }
+            m.Rotate(rotation); { }
         }
     }
 
@@ -708,13 +708,13 @@ public sealed class ApiPathStrokeControls : QWidget
         using (var painter = new QPainter(pixmap))
         {
             painter.SetRenderHint(QPainter.RenderHint.Antialiasing);
-            using (var transparent = new QColor(0, 0, 0, 0))
+            var transparent = new QColor(0, 0, 0, 0);
             {
                 var area = new QRect(0, 0, size.Width(), size.Height());
                 painter.FillRect(area, transparent);
             }
             using var currentPalette = palette();
-            using var color = currentPalette.Color(QPalette.ColorRole.WindowText);
+             var color = currentPalette.Color(QPalette.ColorRole.WindowText);
             using var brush = new QBrush(color);
             using var pen = new QPen(brush, 2.0, style, Qt.PenCapStyle.FlatCap, Qt.PenJoinStyle.BevelJoin);
             painter.SetPen(pen);

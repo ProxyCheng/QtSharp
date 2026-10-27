@@ -53,10 +53,10 @@ public sealed class ApiCompositionRenderer : QWidget
             }
             using (var pen = new QPen(Qt.PenStyle.NoPen))
                 painter.SetPen(pen);
-            using (var white = new QColor(255, 255, 255))
+            var white = new QColor(255, 255, 255);
                 painter.SetBrush(white);
             painter.DrawEllipse(20, 15, 40, 40);
-            using (var dark = new QColor(20, 20, 20))
+            var dark = new QColor(20, 20, 20);
                 painter.SetBrush(dark);
             painter.DrawRect(70, 45, 40, 30);
             painter.End();
@@ -66,7 +66,7 @@ public sealed class ApiCompositionRenderer : QWidget
 
     static void Stop(QGradient gradient, double position, int r, int g, int b, int a = 255)
     {
-        using var color = new QColor(r, g, b, a);
+         var color = new QColor(r, g, b, a);
         gradient.SetColorAt(position, color);
     }
 
@@ -124,7 +124,7 @@ public sealed class ApiCompositionRenderer : QWidget
             buffer = new QImage(width(), height(), QImage.Format.Format_ARGB32_Premultiplied);
             baseBuffer = new QImage(width(), height(), QImage.Format.Format_ARGB32_Premultiplied);
             using var fill = new QImage(width(), height(), QImage.Format.Format_ARGB32_Premultiplied);
-            using (var transparent = new QColor(0, 0, 0, 0))
+            var transparent = new QColor(0, 0, 0, 0);
                 baseBuffer.Fill(transparent);
             using (var p = new QPainter(baseBuffer))
                 DrawBase(p);
@@ -188,14 +188,14 @@ public sealed class ApiCompositionRenderer : QWidget
         p.SetCompositionMode(Mode);
 
         var circleRect = RectangleAround(circleX, circleY);
-        using var color = QColor.FromHsvF(CircleHue / 360.0f, 1.0f, 1.0f, CircleAlpha / 255.0f);
+         var color = QColor.FromHsvF(CircleHue / 360.0f, 1.0f, 1.0f, CircleAlpha / 255.0f);
         using (var gradient = new QLinearGradient(new QPointF(circleRect.Left(), circleRect.Top()),
                                                  new QPointF(circleRect.Right(), circleRect.Bottom())))
         {
-            using (var lighter = color.Lighter())
+            var lighter = color.Lighter();
                 gradient.SetColorAt(0.0, lighter);
             gradient.SetColorAt(0.5, color);
-            using (var darker = color.Darker())
+            var darker = color.Darker();
                 gradient.SetColorAt(1.0, darker);
             using var brush = new QBrush(gradient);
             p.SetBrush(brush);

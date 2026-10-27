@@ -66,7 +66,7 @@ public static class ModelDataChart
                 "the second series reads the third column for y");
 
             // Editing a cell moves both the model and the series.
-            model.SetData(model.Index(2, 1), new QVariant(777.0), (int)Qt.ItemDataRole.EditRole);
+            model.SetData(model.Index(2, 1), 777.0, (int)Qt.ItemDataRole.EditRole);
             check.Check(Math4.Nearly(series1.Points()[2].Y(), 777.0, 0.0001),
                 $"editing the model moved the point (got {series1.Points()[2].Y()})");
 

@@ -82,7 +82,7 @@ public static class MultiAxisChart
 
             // Both vertical axes take their colour from their series' pen, which is the example's way
             // of telling the reader which series belongs to which axis.
-            check.Check(axisY.LinePenColor().Handle == series1.Pen().Color().Handle
+            check.Check(axisY.LinePenColor() == series1.Pen().Color()
                         || axisY.LinePenColor().Red() == series1.Pen().Color().Red(),
                 "the left axis took the first series' colour");
             check.Check(axisY3.LinePenColor().Red() == series2.Pen().Color().Red(),

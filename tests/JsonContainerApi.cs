@@ -66,7 +66,7 @@ namespace QtSharp.Tests
             // ---- the writable typed view ------------------------------------------------
             using (var direct = new QJsonValue("direct"))
             using (var returned = root.Insert("direct", direct))
-                Check(Convert.ToString(returned.ToVariant().ToObject()) == "direct",
+                Check(Convert.ToString(returned.ToVariant()) == "direct",
                     "Insert returns the value the iterator points at");
             Check(root.Contains("direct"), "Insert wrote the key");
 
@@ -75,14 +75,14 @@ namespace QtSharp.Tests
                 writable["added"] = added;
             using (var addedValue = root.Value("added"))
                 Check(root.Contains("added") &&
-                      Convert.ToInt32(addedValue.ToVariant().ToObject()) == 42,
+                      Convert.ToInt32(addedValue.ToVariant()) == 42,
                     "the indexer setter inserts through QJsonObject::insert");
             using (var name = new QJsonValue("Jack"))
                 writable.Add("name", name);
             Check(root.Contains("name"), "Add() inserts another key");
             Check(writable.TryGetValue("added", out var readBack), "the typed TryGetValue finds the key");
             using (readBack)
-                Check(readBack != null && Convert.ToInt32(readBack.ToVariant().ToObject()) == 42,
+                Check(readBack != null && Convert.ToInt32(readBack.ToVariant()) == 42,
                     "the typed TryGetValue reads the inserted value");
             Check(writable.Remove("added") && !root.Contains("added"),
                 "Remove() reports and removes the key");
@@ -104,13 +104,13 @@ namespace QtSharp.Tests
                 using (var z = new QJsonValue("z"))
                     list.Insert(0, z);
                 using (var first = list[0])
-                    Check(list.Count == 3 && (string)first.ToVariant().ToObject() == "z",
+                    Check(list.Count == 3 && (string)first.ToVariant() == "z",
                         "IList.Insert inserts at the index");
 
                 using (var capitalB = new QJsonValue("B"))
                     list[1] = capitalB;
                 using (var replaced = list[1])
-                    Check((string)replaced.ToVariant().ToObject() == "B",
+                    Check((string)replaced.ToVariant() == "B",
                         "the indexer setter replaces the element");
 
                 using (var probe = new QJsonValue("B"))

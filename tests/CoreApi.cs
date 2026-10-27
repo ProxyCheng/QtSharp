@@ -86,14 +86,13 @@ public static class ApiCoreDemo
         Check(QDir.CleanPath("a//b") == "a/b", $"QDir::cleanPath (got '{QDir.CleanPath("a//b")}')");
 
         // ---------------------------------------------------------------- ids, numbers, time
-        var id = QUuid.CreateUuid();
-        Check(!id.IsNull(), "QUuid::createUuid is not null");
-        Check(id.ToString().Length > 0, $"QUuid::toString (got '{id.ToString()}')");
-        // operator== is not bound (the extractor drops operators), so identity is compared the
-        // way Qt prints it.
-        var parsed = new QUuid(id.ToString());
-        Check(parsed.ToString() == id.ToString(),
-            $"QUuid parses back to the same id (got '{parsed}')");
+        // QUuid is Guid: value equality, no disposal, and the Qt-only operations are extensions.
+        var id = Guid.NewGuid();
+        Check(id != Guid.Empty, "Guid.NewGuid is not a null UUID");
+        Check(id.Version() == UuidVersion.Random,
+            $"a fresh Guid is a version-4 UUID (got {id.Version()})");
+        var parsed = Guid.Parse(id.ToString());
+        Check(parsed == id, $"Guid parses back to the same id (got '{parsed}')");
 
         var random = QRandomGenerator.Global();
         Check(random.Generate() != 0 || random.Generate() != 0, "QRandomGenerator::global::generate");
@@ -120,10 +119,10 @@ public static class ApiCoreDemo
             $"QVersionNumber::fromString (got '{parsedVersion.ToString()}')");
 
         // ---------------------------------------------------------------- JSON
-        var json = QJsonObject.FromVariantMap(new Dictionary<string, QVariant>
+        var json = QJsonObject.FromVariantMap(new Dictionary<string, object>
         {
-            ["name"] = new QVariant("qtsharp"),
-            ["count"] = new QVariant(3),
+            ["name"] = "qtsharp",
+            ["count"] = 3,
         });
         Check(json.Count() == 2, $"QJsonObject::fromVariantMap (got {json.Count()} key(s))");
         Check(json.Value("name").ToString() == "qtsharp",
@@ -402,8 +401,8 @@ public static class ApiCoreDemo
         var property = introspected.MetaObject().Property(0);
         Check(property.IsValid() && property.Name() == "objectName",
             $"QMetaProperty read from the meta-object (got '{property.Name()}')");
-        Check(property.Read(introspected).ToString() == "meta",
-            $"QMetaProperty::read through QVariant (got '{property.Read(introspected).ToString()}')");
+        Check(property.Read(introspected)?.ToString() == "meta",
+            $"QMetaProperty::read through QVariant (got '{property.Read(introspected)?.ToString()}')");
         // The enum table a Q_ENUM puts into the meta-object, looked up by name.
         var metaObject = new QLineEdit().MetaObject();
         int enumIndex = metaObject.IndexOfEnumerator("EchoMode");

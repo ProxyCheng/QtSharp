@@ -70,7 +70,7 @@ public static class BarModelMapperChart
             // series, which is the whole point of the example.
             double before = sets[1].At(1);
             var index = model.Index(FirstRow + 1, 2);
-            model.SetData(index, new QVariant(1234.0), (int)Qt.ItemDataRole.EditRole);
+            model.SetData(index, 1234.0, (int)Qt.ItemDataRole.EditRole);
             check.Check(Math4.Nearly(sets[1].At(1), 1234.0, 0.0001),
                 $"editing the model moved the bar ({before} -> {sets[1].At(1)})");
 

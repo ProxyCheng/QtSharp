@@ -8,7 +8,9 @@
 #include <qevent.h>
 #include <qmetaobject.h>
 #include <qmetatype.h>
+#include <qvariant.h>
 #include <qbytearray.h>
+#include <qchar.h>
 #include <qstring.h>
 #include <qcoreapplication.h>
 #include <qguiapplication.h>
@@ -16,6 +18,7 @@
 #include <private/qobject_p.h>
 #include <private/qmetaobject_p.h>
 #include <private/qmetaobjectbuilder_p.h>
+#include <atomic>
 #include <cstring>
 #include <memory>
 #include <string>
@@ -24,6 +27,247 @@
 #include <vector>
 #include "QtSharpApiRuntime.h"
 #include "QtSharpApiExport.h"
+
+// ------------------------------------------------------------------ QChar Unicode properties
+//
+// QChar is erased to System.Char (see ApiCodeGen's IsCharT), so the classification predicates and
+// the category come from the BCL. These are the properties the BCL has no API for; they call Qt's
+// own tables so the answers follow Qt's Unicode version, not the runtime's.
+//
+// A code unit crosses as uint32_t (a code point); the instance methods widen the char first.
+
+extern "C" QS_API_EXPORT uint8_t qs_char_combining_class(uint32_t ucs4)
+{
+    return static_cast<uint8_t>(QChar::combiningClass(ucs4));
+}
+
+extern "C" QS_API_EXPORT void* qs_char_decomposition(uint32_t ucs4)
+{
+    return new QString(QChar::decomposition(ucs4));
+}
+
+extern "C" QS_API_EXPORT int qs_char_decomposition_tag(uint32_t ucs4)
+{
+    return static_cast<int>(QChar::decompositionTag(ucs4));
+}
+
+extern "C" QS_API_EXPORT int qs_char_direction(uint32_t ucs4)
+{
+    return static_cast<int>(QChar::direction(ucs4));
+}
+
+extern "C" QS_API_EXPORT int qs_char_joining_type(uint32_t ucs4)
+{
+    return static_cast<int>(QChar::joiningType(ucs4));
+}
+
+extern "C" QS_API_EXPORT int qs_char_script(uint32_t ucs4)
+{
+    return static_cast<int>(QChar::script(ucs4));
+}
+
+extern "C" QS_API_EXPORT int qs_char_unicode_version(uint32_t ucs4)
+{
+    return static_cast<int>(QChar::unicodeVersion(ucs4));
+}
+
+extern "C" QS_API_EXPORT int qs_char_current_unicode_version()
+{
+    return static_cast<int>(QChar::currentUnicodeVersion());
+}
+
+extern "C" QS_API_EXPORT int qs_char_digit_value(uint32_t ucs4)
+{
+    return QChar::digitValue(ucs4);
+}
+
+extern "C" QS_API_EXPORT bool qs_char_has_mirrored(uint32_t ucs4)
+{
+    return QChar::hasMirrored(ucs4);
+}
+
+extern "C" QS_API_EXPORT uint32_t qs_char_mirrored_char(uint32_t ucs4)
+{
+    return QChar::mirroredChar(ucs4);
+}
+
+extern "C" QS_API_EXPORT uint32_t qs_char_to_case_folded(uint32_t ucs4)
+{
+    return QChar::toCaseFolded(ucs4);
+}
+
+extern "C" QS_API_EXPORT uint32_t qs_char_to_title_case(uint32_t ucs4)
+{
+    return QChar::toTitleCase(ucs4);
+}
+
+// ------------------------------------------------------------------ QVariant managed payload
+//
+// A managed object has no Qt metatype, so a QVariant cannot hold it by value. This is the
+// PySide PyObjectWrapper shape: the QVariant holds a copyable C++ value that points at a
+// ref-counted box carrying an id. The managed side owns the object in a table keyed by that id;
+// when the last QVariant copy is destroyed, the box calls back once and the table entry goes.
+//
+// The copy/destructor are the whole contract. Qt copies QVariant values at will (arguments,
+// model data, item data), so a shallow pointer copy without the refcount would free the managed
+// object while another QVariant still pointed at it.
+typedef void (*QsApiManagedRelease)(long long);
+
+static QsApiManagedRelease s_managedRelease = nullptr;
+
+// Test/diagnostic counter: one per live box. The lifetime test asserts it returns to its
+// baseline after every QVariant copy is destroyed, which is the native half of the leak check
+// (the managed table's count is the other half).
+static std::atomic<long long> s_managedBoxes{0};
+
+struct QsApiManagedBox
+{
+    long long id;
+    std::atomic<int> refs{1};
+
+    explicit QsApiManagedBox(long long value) : id(value)
+    {
+        s_managedBoxes.fetch_add(1, std::memory_order_relaxed);
+    }
+};
+
+struct QsApiManagedValue
+{
+    QsApiManagedBox* box = nullptr;
+
+    QsApiManagedValue() = default;
+    explicit QsApiManagedValue(QsApiManagedBox* value) : box(value) {}
+
+    QsApiManagedValue(const QsApiManagedValue& other) : box(other.box)
+    {
+        if (box)
+            box->refs.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    QsApiManagedValue& operator=(const QsApiManagedValue& other)
+    {
+        if (other.box)
+            other.box->refs.fetch_add(1, std::memory_order_relaxed);
+        release();
+        box = other.box;
+        return *this;
+    }
+
+    QsApiManagedValue(QsApiManagedValue&& other) noexcept : box(other.box)
+    {
+        other.box = nullptr;
+    }
+
+    QsApiManagedValue& operator=(QsApiManagedValue&& other) noexcept
+    {
+        if (this != &other)
+        {
+            release();
+            box = other.box;
+            other.box = nullptr;
+        }
+        return *this;
+    }
+
+    ~QsApiManagedValue() { release(); }
+
+private:
+    void release()
+    {
+        if (!box)
+            return;
+        if (box->refs.fetch_sub(1, std::memory_order_acq_rel) == 1)
+        {
+            long long id = box->id;
+            delete box;
+            box = nullptr;
+            s_managedBoxes.fetch_sub(1, std::memory_order_relaxed);
+            if (s_managedRelease)
+                s_managedRelease(id);
+        }
+        else
+        {
+            box = nullptr;
+        }
+    }
+};
+
+Q_DECLARE_METATYPE(QsApiManagedValue)
+
+// qRegisterMetaType is idempotent; the function-local static runs it once, before the first
+// QVariant that needs the type.
+static int QsApiManagedMetaTypeId()
+{
+    static const int id = qRegisterMetaType<QsApiManagedValue>("QtSharp.ManagedObject");
+    return id;
+}
+
+extern "C" QS_API_EXPORT void qs_api_set_managed_release_callback(QsApiManagedRelease callback)
+{
+    s_managedRelease = callback;
+}
+
+extern "C" QS_API_EXPORT long long qs_api_managed_box_count()
+{
+    return s_managedBoxes.load(std::memory_order_relaxed);
+}
+
+extern "C" QS_API_EXPORT void* qs_api_QVariant_fromManaged(long long id)
+{
+    QsApiManagedMetaTypeId();
+    QsApiManagedValue value(new QsApiManagedBox(id));
+    return new QVariant(QVariant::fromValue(value));
+}
+
+// The metatype-id spelling of QVariant::fromMetaType: the generated table resolved the id when the
+// assembly loaded, so a conversion does not spell the type name or allocate a QMetaType wrapper.
+// `copy` points at a live value of that type; QVariant copies it.
+extern "C" QS_API_EXPORT void* qs_api_QVariant_fromMetaTypeId(int typeId, const void* copy)
+{
+    return new QVariant(QMetaType(typeId), copy);
+}
+
+// A QVariantMap built by the generated QMap helper. QVariant copies the map, so the caller keeps
+// ownership of the one it passed in.
+extern "C" QS_API_EXPORT void* qs_api_QVariant_fromVariantMap(const void* map)
+{
+    return map ? new QVariant(*static_cast<const QVariantMap*>(map)) : new QVariant();
+}
+
+extern "C" QS_API_EXPORT long long qs_api_QVariant_managedId(const void* variant)
+{
+    if (!variant)
+        return -1;
+    QsApiManagedMetaTypeId();
+    const auto* value = static_cast<const QVariant*>(variant);
+    if (value->metaType() != QMetaType::fromType<QsApiManagedValue>())
+        return -1;
+    QsApiManagedValue managed = value->value<QsApiManagedValue>();
+    return managed.box ? managed.box->id : -1;
+}
+
+extern "C" QS_API_EXPORT void* qs_api_QVariant_clone(const void* variant)
+{
+    return variant ? new QVariant(*static_cast<const QVariant*>(variant)) : nullptr;
+}
+
+// QObject values cross as Qt's own QObject* metatype, the way PySide presents them. The pointer
+// is non-owning, exactly as in C++: a variant does not keep a QObject alive.
+extern "C" QS_API_EXPORT void* qs_api_QVariant_fromQObject(void* object)
+{
+    return new QVariant(QVariant::fromValue(static_cast<QObject*>(object)));
+}
+
+extern "C" QS_API_EXPORT void* qs_api_QVariant_toQObject(void* variant)
+{
+    if (!variant)
+        return nullptr;
+    auto* value = static_cast<QVariant*>(variant);
+    if (value->metaType() == QMetaType::fromType<QObject*>())
+        return value->value<QObject*>();
+    return nullptr;
+}
+
 
 // ------------------------------------------------------------------ QString bridge
 extern "C" QS_API_EXPORT void* qs_api_qstring_from_utf16(const char16_t* s)

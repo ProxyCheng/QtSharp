@@ -29,4 +29,12 @@
     <ProjectReference Include="..\..\..\QtSharp.Runtime\QtSharp.Runtime.csproj" PrivateAssets="all" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The lifetime tests assert the QVariant managed-payload table drains; its counters are
+         internal to this assembly. -->
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>QtSharp.BindingTests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
 </Project>
