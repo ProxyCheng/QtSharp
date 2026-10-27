@@ -466,10 +466,24 @@ jobs:
         with:
           path: packages
           merge-multiple: true
+      - name: Bundle the packages per platform
+        shell: pwsh
+        run: |
+          # A GitHub Release has a flat asset list (no folders), so each platform's packages are
+          # one archive: download the bundle, extract it and point a local NuGet source at it.
+          $version = '${{ needs.version.outputs.version }}'
+          $win = @(Get-ChildItem packages\*.nupkg | Where-Object { $_.Name -like "*.win-x64.*" })
+          $linux = @(Get-ChildItem packages\*.nupkg | Where-Object { $_.Name -like "*.linux-x64.*" })
+          if ($win.Count -eq 0) { throw 'No win-x64 packages to bundle.' }
+          if ($linux.Count -eq 0) { throw 'No linux-x64 packages to bundle.' }
+          Compress-Archive -Path $win.FullName -DestinationPath "packages\QtSharp-$version-win-x64.zip" -Force
+          Compress-Archive -Path $linux.FullName -DestinationPath "packages\QtSharp-$version-linux-x64.zip" -Force
+
       - name: Create checksums
         shell: pwsh
         run: |
-          $lines = Get-ChildItem packages\*.nupkg | Sort-Object Name | ForEach-Object {
+          $files = @(Get-ChildItem packages\*.zip) + @(Get-ChildItem packages\QtSharp.Tools.*.nupkg)
+          $lines = $files | Sort-Object Name | ForEach-Object {
             "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant())  $($_.Name)"
           }
           $lines | Set-Content packages\SHA256SUMS.txt -Encoding ascii
@@ -483,10 +497,17 @@ jobs:
           $notes = @"
           ## QtSharp $version
 
-          The packages follow PyQt6's split and are published **per platform**: the package id
-          carries the RID (``QtSharp.Api.win-x64``, ``QtSharp.Api.linux-x64``, ...) and only that
-          platform's Qt runtime and native glue are inside. Add the one matching the machine you
-          build on; the .NET assemblies are identical in both.
+          The packages follow PyQt6's split and are published **per platform**, as two archives:
+
+          * **QtSharp-$version-win-x64.zip** - every ``*.win-x64`` package (QtSharp.Api, Runtime,
+            Qt6, Charts, Qt3D, Multimedia, Positioning, Sql) and their addon Qt runtimes.
+          * **QtSharp-$version-linux-x64.zip** - the same list for ``*.linux-x64``.
+
+          Extract the archive for the machine you build on and add that folder as a local NuGet
+          source (``<add key="local" value="<folder>" />``); the package id carries the RID
+          (``QtSharp.Api.win-x64``, ``QtSharp.Api.linux-x64``) and only that platform's Qt runtime
+          and native glue are inside. The .NET assemblies are identical in both. QtSharp.Tools is
+          Windows-only and is attached on its own.
 
           * **QtSharp.Api** - the binding as nine module assemblies (QtCore, QtGui, QtWidgets,
             QtNetwork, QtSvg, QtSvgWidgets, QtPrintSupport, QtOpenGL, QtOpenGLWidgets).
@@ -521,8 +542,12 @@ jobs:
           [the Charts readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/nuget/QtSharp.Charts/README.md)
           and [the Qt3D readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/nuget/QtSharp.Qt3D/README.md).
           "@
-          $assets = @(Get-ChildItem packages\*.nupkg | ForEach-Object { $_.FullName })
-          $assets += (Resolve-Path packages\SHA256SUMS.txt).Path
+          $assets = @(
+            (Resolve-Path "packages\QtSharp-$version-win-x64.zip").Path,
+            (Resolve-Path "packages\QtSharp-$version-linux-x64.zip").Path,
+            (Resolve-Path "packages\QtSharp.Tools.$version.nupkg").Path,
+            (Resolve-Path packages\SHA256SUMS.txt).Path
+          )
           # Re-running a release is normal - a tag moved, a job retried - so updating an existing
           # release has to work as well as creating a new one.
           gh release view $tag *> $null
