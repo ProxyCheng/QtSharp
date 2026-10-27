@@ -1,5 +1,5 @@
 param(
-    [string]$PackageVersion = '0.17.0',
+    [string]$PackageVersion = '0.18.0',
     [string]$QtRuntimeDir = '',
     [string]$QtLinuxRuntimeDir = '',
     [switch]$RequireLinuxPayload,

@@ -11,9 +11,8 @@ namespace QtSharp.Charts.Demos
     /// it.
     ///
     /// The examples also paint each mapped column through Qt::BackgroundRole, returning a QColor in a
-    /// QVariant. That is left out: QVariant's colour constructor is its *template* one, which the
-    /// binding cannot materialise (the same gap that keeps QComboBox::addItem(QString, QVariant) down
-    /// to the types QVariant has real constructors for). The mapping itself is unaffected.
+    /// QVariant. That path now works - QColor has its Qt metatype, so the model returns a real QColor
+    /// variant. The mapping itself is unaffected.
     /// </summary>
     internal sealed class MapperTableModel : QAbstractTableModel
     {
@@ -35,35 +34,41 @@ namespace QtSharp.Charts.Demos
 
         public int ColumnCountValue { get; set; }
 
-        public override int RowCount(QModelIndex parent = null) => _rows.Count;
+        public override int RowCount(QModelIndex parent = default) => _rows.Count;
 
-        public override int ColumnCount(QModelIndex parent = null)
+        public override int ColumnCount(QModelIndex parent = default)
             => ColumnCountValue > 0 ? ColumnCountValue : (_rows.Count > 0 ? _rows[0].Length : 0);
 
-        public override QVariant HeaderData(int section, Qt.Orientation orientation, int role = default)
+        public override object HeaderData(int section, Qt.Orientation orientation, int role = default)
         {
             if (role != (int)Qt.ItemDataRole.DisplayRole)
-                return new QVariant();
+                return null;
             if (orientation == Qt.Orientation.Horizontal)
-                return new QVariant(_headers != null && section < _headers.Length ? _headers[section] : $"201{section}");
-            return new QVariant((section + 1).ToString());
+                return _headers != null && section < _headers.Length ? _headers[section] : $"201{section}";
+            return (section + 1).ToString();
         }
 
-        public override QVariant Data(QModelIndex index, int role = default)
+        public override object Data(QModelIndex index, int role = default)
         {
             if (index.Row() < 0 || index.Row() >= _rows.Count
                 || index.Column() < 0 || index.Column() >= _rows[index.Row()].Length)
-                return new QVariant();
+                return null;
             if (role == (int)Qt.ItemDataRole.DisplayRole || role == (int)Qt.ItemDataRole.EditRole)
-                return new QVariant(_rows[index.Row()][index.Column()]);
-            return new QVariant();
+                return _rows[index.Row()][index.Column()];
+            // The Qt examples colour the mapped columns through this role. The value crosses as a
+            // real QColor variant, which Qt's delegate uses directly.
+            if (role == (int)Qt.ItemDataRole.BackgroundRole)
+                return index.Column() is 1 or 2
+                    ? new QColor(192, 80, 77)
+                    : new QColor(79, 129, 189);
+            return null;
         }
 
-        public override bool SetData(QModelIndex index, QVariant value, int role = default)
+        public override bool SetData(QModelIndex index, object value, int role = default)
         {
             if (!index.IsValid() || role != (int)Qt.ItemDataRole.EditRole)
                 return false;
-            _rows[index.Row()][index.Column()] = value.ToDouble();
+            _rows[index.Row()][index.Column()] = System.Convert.ToDouble(value);
             // dataChanged is QAbstractItemModel's own emit entry point (its signal carries a
             // QPrivateSignal, so there is no QSignal property for it).
             DataChanged(index, index);

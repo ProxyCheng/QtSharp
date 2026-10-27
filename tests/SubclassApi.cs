@@ -29,7 +29,7 @@ public static class ApiSubclassDemo
         public override void PaintEvent(QPaintEvent e)
         {
             PaintCalls++;
-            using var colour = new QColor(40, 120, 200);
+            var colour = new QColor(40, 120, 200);
             using var painter = new QPainter(AsQPaintDevice());
             painter.FillRect(new QRect(0, 0, width(), height()), colour);
         }
@@ -201,7 +201,7 @@ public static class ApiSubclassDemo
                                     Qt.KeyboardModifiers.NoModifier);
         Check(view.MoveCursorCalls == 1 && view.LastAction == QAbstractItemView.CursorAction.MoveDown,
             $"the managed moveCursor override ran ({view.MoveCursorCalls} call(s), {view.LastAction})");
-        Check(start != null,
+        Check(start.IsValid(),
             "the managed override chained to QListView::moveCursor (the protected enum crossed both ways)");
 
         // ---- by-reference parameters on an override ------------------------------------

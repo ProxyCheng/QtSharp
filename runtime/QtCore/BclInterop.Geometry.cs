@@ -76,18 +76,4 @@ namespace QtSharp.QtCore
             => (value ?? throw new ArgumentNullException(nameof(value))).ToUri();
         public static explicit operator QUrl(Uri value) => new QUrl(value);
     }
-
-    public partial class QUuid
-    {
-        /// <summary>A QUuid with the same 128 bits as the BCL Guid.</summary>
-        public QUuid(Guid value) : this(value.ToString("D")) { }
-
-        /// <summary>The GUID, or Guid.Empty for a null QUuid.</summary>
-        public Guid ToGuid()
-            => IsNull() ? Guid.Empty : Guid.Parse(ToString(QUuid.StringFormat.WithoutBraces));
-
-        public static explicit operator Guid(QUuid value)
-            => (value ?? throw new ArgumentNullException(nameof(value))).ToGuid();
-        public static explicit operator QUuid(Guid value) => new QUuid(value);
-    }
 }

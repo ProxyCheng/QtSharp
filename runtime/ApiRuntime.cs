@@ -176,6 +176,15 @@ namespace QtSharp.Runtime
         IntPtr Handle { get; }
     }
 
+    // Implemented by the generated value types Qt itself converts into a QVariant (QColor, QBrush,
+    // QIcon, ...). The runtime QVariant dispatch asks the value for its C++ type name and hands
+    // the pointer to QMetaType; there is no per-type constructor to bind. The name is the
+    // qualified C++ spelling, because that is what QMetaType::type() resolves.
+    public interface IQtVariantValue : IQtHandle
+    {
+        string QtTypeName { get; }
+    }
+
     // Implemented by QObject and its subclasses (the generated root adds it), not by a plain
     // wrapper such as QGraphicsItem: only the former has a meta-object to extend. It lives in the
     // runtime so the runtime can recognize a QObject without referencing the QtCore binding.
@@ -894,6 +903,27 @@ namespace QtSharp.Runtime
                 // before anything can be watched or owned at this address.
                 Register(handle, created);
                 return created;
+            }
+        }
+
+        /// <summary>
+        /// The live wrapper registered for a native address, whatever its type, or null. This is
+        /// the read side of a QVariant holding a QObject*: the pointer identifies an object the
+        /// program may already wrap, and the caller wants that wrapper back rather than a new
+        /// base-class one.
+        /// </summary>
+        public static object TryGetWrapper(IntPtr handle)
+        {
+            if (handle == IntPtr.Zero)
+                return null;
+            lock (gate)
+            {
+                if (!wrappers.TryGetValue(handle, out var list))
+                    return null;
+                for (int i = list.Count - 1; i >= 0; i--)
+                    if (list[i].Target is object alive && IsUsable(alive))
+                        return alive;
+                return null;
             }
         }
 

@@ -124,10 +124,9 @@ public sealed class ApiCalendarWidgetWindow : QWidget
                 {
                     using (locale)
                     {
-                        using var value = new QVariant(locale);
                         string label = QLocale.LanguageToString((QLocale.Language)lang) + "/"
                                      + QLocale.TerritoryToString(locale.Territory());
-                        LocaleCombo.AddItem(label, value);
+                        LocaleCombo.AddItem(label, locale);
                         if (applicationLocale.language() == locale.language()
                             && applicationLocale.Territory() == locale.Territory())
                             currentLocaleIndex = localeIndex;
@@ -220,8 +219,7 @@ public sealed class ApiCalendarWidgetWindow : QWidget
     {
         if (index < 0)
             return;
-        using var data = LocaleCombo.ItemData(index, (int)Qt.ItemDataRole.UserRole);
-        using var newLocale = data.ToLocale();
+        using var newLocale = (QLocale)LocaleCombo.ItemData(index, (int)Qt.ItemDataRole.UserRole);
         Calendar.SetLocale(newLocale);
         // The combo lists Sunday..Saturday; Qt's DayOfWeek is Monday=1..Sunday=7.
         FirstDayCombo.SetCurrentIndex((int)newLocale.FirstDayOfWeek() % 7);
@@ -375,8 +373,9 @@ public sealed class ApiCalendarWidgetWindow : QWidget
         ReformatCalendarPage();
     }
 
-    // The official stores a QColor in the item data; QVariant has no QColor constructor in the
-    // model, so the Qt::GlobalColor value is stored and read back through the same enum.
+    // The official stores a QColor in the item data; here the Qt::GlobalColor value is stored and
+    // read back through the same enum, which is what the original did before QColor moved through
+    // QVariant.
     QComboBox CreateColorComboBox()
     {
         var comboBox = new QComboBox();
@@ -388,14 +387,11 @@ public sealed class ApiCalendarWidgetWindow : QWidget
     }
 
     static void AddColorItem(QComboBox comboBox, string text, Qt.GlobalColor color)
-    {
-        using var value = new QVariant((int)color);
-        comboBox.AddItem(text, value);
-    }
+        => comboBox.AddItem(text, (int)color);
 
     static QColor ColorFromCombo(QComboBox comboBox)
-        => new QColor((Qt.GlobalColor)comboBox
-            .ItemData(comboBox.CurrentIndex, (int)Qt.ItemDataRole.UserRole).ToInt());
+        => new QColor((Qt.GlobalColor)(int)comboBox
+            .ItemData(comboBox.CurrentIndex, (int)Qt.ItemDataRole.UserRole));
 
     void WeekdayFormatChanged(int index)
     {
@@ -538,8 +534,7 @@ public static class CalendarWidget
         int germanIndex = -1;
         for (int i = 0; i < window.LocaleCombo.Count; i++)
         {
-            using var data = window.LocaleCombo.ItemData(i, (int)Qt.ItemDataRole.UserRole);
-            using var localeAtI = data.ToLocale();
+            using var localeAtI = (QLocale)window.LocaleCombo.ItemData(i, (int)Qt.ItemDataRole.UserRole);
             if (localeAtI.language() == QLocale.Language.German
                 && localeAtI.Territory() == QLocale.Country.Germany)
             {
@@ -647,9 +642,9 @@ public static class CalendarWidget
         Check(window.WeekdayColorCombo.Count == 4, $"the colour combo has four entries (got {window.WeekdayColorCombo.Count})");
 
         // The colour is the combo item's user data, as addItem(text, variant) stores it.
-        Check(window.WeekdayColorCombo.ItemData(0, (int)Qt.ItemDataRole.UserRole).ToInt() == (int)Qt.GlobalColor.red,
+        Check((int)window.WeekdayColorCombo.ItemData(0, (int)Qt.ItemDataRole.UserRole) == (int)Qt.GlobalColor.red,
             "combo item 0 carries the Red colour as Qt::UserRole data");
-        Check(window.WeekdayColorCombo.ItemData(2, (int)Qt.ItemDataRole.UserRole).ToInt() == (int)Qt.GlobalColor.black,
+        Check((int)window.WeekdayColorCombo.ItemData(2, (int)Qt.ItemDataRole.UserRole) == (int)Qt.GlobalColor.black,
             "combo item 2 carries the Black colour as Qt::UserRole data");
 
         // Weekday/weekend formats were applied in the constructor.

@@ -157,9 +157,9 @@ public sealed class ApiShapedClock : QWidget
         int[] secondsHand = { 1, 14, -1, 14, -1, -89, 1, -89 };
 
         using var palette = Palette;
-        using var hourColor = palette.Color(QPalette.ColorRole.Text);
-        using var minuteColor = palette.Color(QPalette.ColorRole.Text);
-        using var secondsColor = palette.Color(QPalette.ColorRole.Accent);
+         var hourColor = palette.Color(QPalette.ColorRole.Text);
+         var minuteColor = palette.Color(QPalette.ColorRole.Text);
+         var secondsColor = palette.Color(QPalette.ColorRole.Accent);
 
         int side = Math.Min(width(), height());
 
@@ -168,7 +168,7 @@ public sealed class ApiShapedClock : QWidget
         painter.Translate(width() / 2.0, height() / 2.0);
         painter.Scale(side / 200.0, side / 200.0);
 
-        using (var windowColor = palette.Color(QPalette.ColorRole.Window))
+        var windowColor = palette.Color(QPalette.ColorRole.Window);
         {
             painter.SetPen(Qt.PenStyle.NoPen);
             painter.SetBrush(windowColor);

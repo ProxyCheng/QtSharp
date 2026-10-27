@@ -29,52 +29,213 @@ public static class ApiTypes
     /// a native allocation, a registration and a finalizer per value, which is what makes
     /// `series.replace(points)` leak a wrapper per sample.
     /// </summary>
-    public static readonly (string Name, string[] Fields, string Scalar, string FromPod, string ToPod)[] RuntimeStructs =
+    public static readonly (string Name, string[] Fields, string[] Types, string FromPod, string ToPod)[] RuntimeStructs =
     {
-        ("QPointF", new[] { "x", "y" }, "double", null, null),
-        ("QPoint", new[] { "x", "y" }, "int", null, null),
-        ("QSize", new[] { "width", "height" }, "int", null, null),
-        ("QSizeF", new[] { "width", "height" }, "double", null, null),
-        ("QMargins", new[] { "left", "top", "right", "bottom" }, "int", null, null),
-        ("QMarginsF", new[] { "left", "top", "right", "bottom" }, "double", null, null),
-        ("QLine", new[] { "x1", "y1", "x2", "y2" }, "int", null, null),
-        ("QLineF", new[] { "x1", "y1", "x2", "y2" }, "double", null, null),
-        ("QRectF", new[] { "x", "y", "width", "height" }, "double", null, null),
+        ("QPointF", new[] { "x", "y" }, new[] { "double", "double" }, null, null),
+        ("QPoint", new[] { "x", "y" }, new[] { "int", "int" }, null, null),
+        ("QSize", new[] { "width", "height" }, new[] { "int", "int" }, null, null),
+        ("QSizeF", new[] { "width", "height" }, new[] { "double", "double" }, null, null),
+        ("QMargins", new[] { "left", "top", "right", "bottom" }, new[] { "int", "int", "int", "int" }, null, null),
+        ("QMarginsF", new[] { "left", "top", "right", "bottom" }, new[] { "double", "double", "double", "double" }, null, null),
+        ("QLine", new[] { "x1", "y1", "x2", "y2" }, new[] { "int", "int", "int", "int" }, null, null),
+        ("QLineF", new[] { "x1", "y1", "x2", "y2" }, new[] { "double", "double", "double", "double" }, null, null),
+        ("QRectF", new[] { "x", "y", "width", "height" }, new[] { "double", "double", "double", "double" }, null, null),
         // QRect keeps its two corners (x1,y1) and (x2,y2), while its accessors spell x,y,width,height
         // and right()/bottom() are inclusive - so the POD has to follow the corners, and the two
         // conversions have to go through them rather than through the accessors.
-        ("QRect", new[] { "x1", "y1", "x2", "y2" }, "int",
+        ("QRect", new[] { "x1", "y1", "x2", "y2" }, new[] { "int", "int", "int", "int" },
             "QRect(QPoint(@pod.x1, @pod.y1), QPoint(@pod.x2, @pod.y2))",
             "QsApiRect{ @qt.left(), @qt.top(), @qt.bottomRight().x(), @qt.bottomRight().y() }"),
         // The rest of the trivially copyable ones: integers and floats, nothing that owns anything.
         // QDate and QTime are one integer each and their accessors are not field-shaped
         // (toJulianDay/msecsSinceStartOfDay), so both conversions are spelled out; the vector family
-        // and QMatrix4x4 are floats with a matching constructor and matching accessors, which is the
-        // default spelling.
-        ("QDate", new[] { "jd" }, "long long",
+        // are floats with a matching constructor and matching accessors, which is the default siding.
+        ("QDate", new[] { "jd" }, new[] { "long long" },
             "QDate::fromJulianDay(@pod.jd)", "QsApiDate{ @qt.toJulianDay() }"),
-        ("QTime", new[] { "mds" }, "int",
+        ("QTime", new[] { "mds" }, new[] { "int" },
             "QTime::fromMSecsSinceStartOfDay(@pod.mds)", "QsApiTime{ @qt.msecsSinceStartOfDay() }"),
-        ("QVector2D", new[] { "x", "y" }, "float", null, null),
-        ("QVector3D", new[] { "x", "y", "z" }, "float", null, null),
-        ("QVector4D", new[] { "x", "y", "z", "w" }, "float", null, null),
-        ("QQuaternion", new[] { "scalar", "x", "y", "z" }, "float", null, null),
+        ("QVector2D", new[] { "x", "y" }, new[] { "float", "float" }, null, null),
+        ("QVector3D", new[] { "x", "y", "z" }, new[] { "float", "float", "float" }, null, null),
+        ("QVector4D", new[] { "x", "y", "z", "w" }, new[] { "float", "float", "float", "float" }, null, null),
+        ("QQuaternion", new[] { "scalar", "x", "y", "z" }, new[] { "float", "float", "float", "float" }, null, null),
+        // QModelIndex is 24 bytes with no ownership: two ints, the internal id and the model pointer
+        // (which is borrowed). Its fields are private and its only constructor is the default one,
+        // so the two conversions are a bit copy of the whole value - the type is standard-layout and
+        // trivially copyable (Q_RELOCATABLE_TYPE), which is exactly the case a memcpy is defined
+        // for. The static_assert on the POD's size is emitted next to the typedef.
+        ("QModelIndex", new[] { "r", "c", "i", "m" },
+            new[] { "int", "int", "unsigned long long", "void*" },
+            "QsApiRawFromPod<QModelIndex>(@pod)",
+            "QsApiRawToPod<QsApiModelIndex>(@qt)"),
+        // The trivially copyable types the pod probe confirmed (std::is_trivially_copyable and
+        // std::is_standard_layout on the Qt 6.12 headers). Their storage is a bit copy; the
+        // managed struct's fields are the raw words, and the generated members are the model's
+        // methods. A type whose operator== is not a field-wise comparison is listed in
+        // NativeEquality below.
+        ("QColor", new[] { "w0", "w1" }, new[] { "unsigned long long", "unsigned long long" },
+            "QsApiRawFromPod<QColor>(@pod)", "QsApiRawToPod<QsApiColor>(@qt)"),
+        ("QSizePolicy", new[] { "bits" }, new[] { "unsigned int" },
+            "QsApiRawFromPod<QSizePolicy>(@pod)", "QsApiRawToPod<QsApiSizePolicy>(@qt)"),
+        ("QTransform",
+            new[] { "m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "bits" },
+            new[] { "double", "double", "double", "double", "double", "double", "double",
+                    "double", "double", "unsigned int" },
+            "QsApiRawFromPod<QTransform>(@pod)", "QsApiRawToPod<QsApiTransform>(@qt)"),
+        ("QDeadlineTimer", new[] { "t1", "t2", "type" },
+            new[] { "long long", "unsigned int", "unsigned int" },
+            "QsApiRawFromPod<QDeadlineTimer>(@pod)", "QsApiRawToPod<QsApiDeadlineTimer>(@qt)"),
+        ("QElapsedTimer", new[] { "t1", "t2" }, new[] { "long long", "long long" },
+            "QsApiRawFromPod<QElapsedTimer>(@pod)", "QsApiRawToPod<QsApiElapsedTimer>(@qt)"),
+        ("QOperatingSystemVersion", new[] { "os", "major", "minor", "micro" },
+            new[] { "int", "int", "int", "int" },
+            "QsApiRawFromPod<QOperatingSystemVersion>(@pod)",
+            "QsApiRawToPod<QsApiOperatingSystemVersion>(@qt)"),
+        // QTextLength stores its Type first and the qreal second, which is not the accessor order
+        // and leaves four bytes of padding after the enum. The POD is the two words, so the managed
+        // struct has no padding for the marshaller to drop on the way to a by-value call.
+        ("QTextLength", new[] { "w0", "w1" }, new[] { "unsigned long long", "unsigned long long" },
+            "QsApiRawFromPod<QTextLength>(@pod)", "QsApiRawToPod<QsApiTextLength>(@qt)"),
+        ("QRgba64", new[] { "rgba" }, new[] { "unsigned long long" },
+            "QsApiRawFromPod<QRgba64>(@pod)", "QsApiRawToPod<QsApiRgba64>(@qt)"),
+        ("QPixelFormat", new[] { "data" }, new[] { "unsigned long long" },
+            "QsApiRawFromPod<QPixelFormat>(@pod)", "QsApiRawToPod<QsApiPixelFormat>(@qt)"),
+        ("QPointingDeviceUniqueId", new[] { "id" }, new[] { "long long" },
+            "QsApiRawFromPod<QPointingDeviceUniqueId>(@pod)",
+            "QsApiRawToPod<QsApiPointingDeviceUniqueId>(@qt)"),
+        ("QMetaMethod", new[] { "mobj", "d0", "d1" }, new[] { "void*", "unsigned int", "unsigned int" },
+            "QsApiRawFromPod<QMetaMethod>(@pod)", "QsApiRawToPod<QsApiMetaMethod>(@qt)"),
+        ("QMetaEnum", new[] { "mobj", "d0", "d1" }, new[] { "void*", "unsigned int", "unsigned int" },
+            "QsApiRawFromPod<QMetaEnum>(@pod)", "QsApiRawToPod<QsApiMetaEnum>(@qt)"),
+        ("QMetaClassInfo", new[] { "mobj", "d0", "d1" }, new[] { "void*", "unsigned int", "unsigned int" },
+            "QsApiRawFromPod<QMetaClassInfo>(@pod)", "QsApiRawToPod<QsApiMetaClassInfo>(@qt)"),
+        // The rest of the trivially copyable types the first probe missed. QMetaType is one
+        // pointer, QCalendar one borrowed backend pointer (the registry owns it), QMetaProperty a
+        // metaobject pointer, a property-data pointer and a QMetaEnum.
+        ("QMetaType", new[] { "d_ptr" }, new[] { "void*" },
+            "QsApiRawFromPod<QMetaType>(@pod)", "QsApiRawToPod<QsApiMetaType>(@qt)"),
+        ("QCalendar", new[] { "d_ptr" }, new[] { "void*" },
+            "QsApiRawFromPod<QCalendar>(@pod)", "QsApiRawToPod<QsApiCalendar>(@qt)"),
+        ("QMetaProperty", new[] { "w0", "w1", "w2", "w3" },
+            new[] { "unsigned long long", "unsigned long long", "unsigned long long", "unsigned long long" },
+            "QsApiRawFromPod<QMetaProperty>(@pod)", "QsApiRawToPod<QsApiMetaProperty>(@qt)"),
+        // Four ints behind private members, with accessors and operator== of their own.
+        ("QTableWidgetSelectionRange", new[] { "top", "left", "bottom", "right" },
+            new[] { "int", "int", "int", "int" },
+            "QTableWidgetSelectionRange(@pod.top, @pod.left, @pod.bottom, @pod.right)",
+            "QsApiTableWidgetSelectionRange{@qt.topRow(), @qt.leftColumn(), @qt.bottomRow(), @qt.rightColumn()}"),
+        // QTextLine and QTextInlineObject are views into a QTextLayout: a private index and a
+        // borrowed engine pointer, with four bytes of padding between them. The POD spells the
+        // padding out so equality has no indeterminate bits to trip over, and the ToPod copy
+        // zeroes it.
+        ("QTextLine", new[] { "index", "pad", "eng" }, new[] { "int", "int", "void*" },
+            "QsApiRawFromPod<QTextLine>(@pod)",
+            "([](const QTextLine& v) { QsApiTextLine p; std::memcpy(&p, &v, sizeof p); p.pad = 0; return p; }(@qt))"),
+        ("QTextInlineObject", new[] { "itm", "pad", "eng" }, new[] { "int", "int", "void*" },
+            "QsApiRawFromPod<QTextInlineObject>(@pod)",
+            "([](const QTextInlineObject& v) { QsApiTextInlineObject p; std::memcpy(&p, &v, sizeof p); p.pad = 0; return p; }(@qt))"),
+        // QAudioFormat is five fields with a reserved tail word; a raw copy carries the bytes and
+        // the native equality below is Qt's (sample rate, channel count, sample format).
+        ("QAudioFormat", new[] { "w0", "w1", "w2" },
+            new[] { "unsigned long long", "unsigned long long", "unsigned long long" },
+            "QsApiRawFromPod<QAudioFormat>(@pod)", "QsApiRawToPod<QsApiAudioFormat>(@qt)"),
+        // The Qt3D value types: a node id is one quint64, and a key frame is three QVector2Ds
+        // (8 bytes each) followed by the interpolation enum (a quint8) and three padding bytes,
+        // 28 bytes in total. Both are namespaced in C++ (see NamespacedStructs), so the
+        // conversions spell the qualified name; the padding is why QKeyFrame's hash is the
+        // semantic expression below rather than qHashBits over the words.
+        ("QNodeId", new[] { "id" }, new[] { "unsigned long long" },
+            "QsApiRawFromPod<Qt3DCore::QNodeId>(@pod)",
+            "QsApiRawToPod<QsApiNodeId>(@qt)"),
+        ("QKeyFrame", new[] { "w0", "w1", "w2", "w3", "w4", "w5", "w6" },
+            new[] { "unsigned int", "unsigned int", "unsigned int", "unsigned int",
+                    "unsigned int", "unsigned int", "unsigned int" },
+            "QsApiRawFromPod<Qt3DAnimation::QKeyFrame>(@pod)",
+            "QsApiRawToPod<QsApiKeyFrame>(@qt)"),
         // QMatrix4x4 stays a handle: Qt 6.11 no longer has the m11()..m44() accessors the POD
         // spelling needs (data() is column-major), and a bulk path through matrices is not a leak
         // risk the way a point list is.
     };
 
-    public static (string Name, string[] Fields, string Scalar, string FromPod, string ToPod)? RuntimeStructOf(string name)
+    /// <summary>
+    /// The structs whose hash is not Qt's own qHash. Equality always goes through Qt: the generated
+    /// glue calls operator== when the type has one and compares the POD bytes when it does not.
+    /// Hashing uses qHash when the type declares one, otherwise the field-wise qHashMulti the
+    /// generator emits, except for these three:
+    ///
+    /// QColor has no qHash (it compares colours stored in different specs by value, so the bytes
+    /// disagree), QAudioFormat ignores its channel config and reserved word, and QKeyFrame ignores
+    /// its control points unless the interpolation is Bezier. @v is the Qt value, and the hash must
+    /// agree with equality.
+    /// </summary>
+    public static readonly Dictionary<string, string> NativeHashStructs =
+        new(StringComparer.Ordinal)
+        {
+            ["QColor"] = "qHash(@v.rgba())",
+            ["QAudioFormat"] = "int(qHashMulti(0, @v.sampleRate(), @v.channelCount(), int(@v.sampleFormat())))",
+            ["QKeyFrame"] = "@v.interpolationType() == Qt3DAnimation::QKeyFrame::BezierInterpolation "
+                + "? int(qHashMulti(0, @v.interpolationType(), @v.coordinates(), @v.leftControlPoint(), @v.rightControlPoint())) "
+                + ": int(qHashMulti(0, @v.interpolationType(), @v.coordinates()))",
+            // QTextLength's POD is 12 bytes of value plus 4 of padding, and Qt declares no qHash.
+            // Its operator== is a qFuzzyCompare of the value, which no value hash can agree with
+            // in every case; the type is the part equality insists on, so hash only that.
+            ["QTextLength"] = "int(qHash(int(@v.type())))",
+            // QMetaMethod compares its data pointer only (the mobj member is not part of
+            // equality), so the hash is the second word of the value, not all sixteen bytes.
+            ["QMetaMethod"] = "int(qHashBits(reinterpret_cast<const char*>(&@v) + sizeof(void*), sizeof(void*)))",
+        };
+
+    public static bool HasNativeHash(string name) => NativeHashStructs.ContainsKey(name);
+
+    /// <summary>
+    /// The structs whose C++ type is not spelled by its simple name. QNodeId and QKeyFrame live in
+    /// a Qt namespace, and the model's name is the simple one; the table's C++ spellings and the
+    /// runtime struct set need the qualified name. The map also tells the struct matcher that these
+    /// are the only namespaced classes a struct row may claim (Qt3DCore::QTransform, for example,
+    /// must never be mistaken for QtGui's QTransform).
+    /// </summary>
+    public static readonly Dictionary<string, string> NamespacedStructs =
+        new(StringComparer.Ordinal)
+        {
+            ["QNodeId"] = "Qt3DCore::QNodeId",
+            ["QKeyFrame"] = "Qt3DAnimation::QKeyFrame",
+        };
+
+    public static string CppStructName(string name)
+    {
+        string simple = StructName(name) ?? name;
+        return NamespacedStructs.TryGetValue(simple, out var cpp) ? cpp : simple;
+    }
+
+    /// <summary>
+    /// The runtime struct a model type string names, or null. A model names a Qt3D value type by
+    /// its qualified C++ spelling (Qt3DAnimation::QKeyFrame) while the struct table uses the simple
+    /// name, so both spellings have to resolve to the same row.
+    /// </summary>
+    public static string StructName(string name)
     {
         if (name == null)
             return null;
         foreach (var candidate in RuntimeStructs)
             if (candidate.Name == name)
+                return name;
+        foreach (var pair in NamespacedStructs)
+            if (pair.Value == name)
+                return pair.Key;
+        return null;
+    }
+
+    public static (string Name, string[] Fields, string[] Types, string FromPod, string ToPod)? RuntimeStructOf(string name)
+    {
+        string simple = StructName(name);
+        if (simple == null)
+            return null;
+        foreach (var candidate in RuntimeStructs)
+            if (candidate.Name == simple)
                 return candidate;
         return null;
     }
 
-    public static bool IsStruct(string name) => RuntimeStructOf(name) != null;
+    public static bool IsStruct(string name) => StructName(name) != null;
 
     // The class set is what distinguishes a real handle ("QPaintDevice*" -> QPaintDevice)
     // from a deliberately opaque pointer ("QEvent*" -> IntPtr).
@@ -95,6 +256,19 @@ public static class ApiTypes
                 return "string";
             case "QStringList":
                 return "string[]";
+            // QUuid is pure 128-bit data, and System.Guid is the same value: it crosses as a Guid
+            // (see the note on IsUuid in ApiCodeGen). The Qt-only operations are extensions on
+            // Guid in runtime/QtCore/Uuid.cs; QUuid itself is not a type in the binding.
+            case "QUuid":
+                return "Guid";
+            // QChar is one UTF-16 code unit, and System.Char is the same value. It is erased the
+            // way QUuid is; the Qt-only Unicode operations are extensions on char in
+            // runtime/QtCore/Char.cs.
+            case "QChar":
+                return "char";
+            // The deprecated Qt5 enum; its members are metatype ids and the class is internal.
+            case "QVariant::Type":
+                return "int";
             case "long long":
                 return "long";
             case "unsigned long long":
@@ -141,6 +315,10 @@ public static class ApiTypes
         // carries its own length.
         if (modelType == "uchar*" || modelType == "QByteArrayView")
             return "byte[]";
+        // A const QChar* buffer is UTF-16 code units, which is what a C# string already is
+        // (QCollator::compare, QRawFont::glyphIndexesForChars, QTextBoundaryFinder).
+        if (modelType == "QChar*")
+            return "string";
         if (modelType.EndsWith("*"))
         {
             var pointee = modelType.Substring(0, modelType.Length - 1);

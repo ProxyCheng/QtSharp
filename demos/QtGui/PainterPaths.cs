@@ -465,8 +465,8 @@ public static class PainterPaths
         using var gradientArea = new ApiPathRenderArea(ApiPainterPathsWindow.BuildPath(0));
         gradientArea.Resize(120, 120);
         gradientArea.Show();
-        using (var color1 = new QColor(Qt.GlobalColor.red))
-        using (var color2 = new QColor(Qt.GlobalColor.blue))
+        var color1 = new QColor(Qt.GlobalColor.red);
+        var color2 = new QColor(Qt.GlobalColor.blue);
             gradientArea.SetFillGradient(color1, color2);
         using (var image = gradientArea.RenderToImage())
         {

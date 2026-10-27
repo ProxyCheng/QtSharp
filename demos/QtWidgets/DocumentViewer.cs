@@ -127,18 +127,18 @@ public sealed class JsonTreeModelApi : QAbstractItemModel
 
     Node NodeAt(QModelIndex index)
     {
-        if (index == null || !index.IsValid())
+        if (!index.IsValid())
             return null;
         ulong id = index.InternalId();
         return id < (ulong)nodes.Count ? nodes[(int)id] : null;
     }
 
-    public override QModelIndex Index(int row, int column, QModelIndex parent = null)
+    public override QModelIndex Index(int row, int column, QModelIndex parent = default)
     {
         if (row < 0 || column < 0 || column >= 2)
             return new QModelIndex();
 
-        var parentNode = parent == null || !parent.IsValid() ? root : NodeAt(parent);
+        var parentNode = !parent.IsValid() ? root : NodeAt(parent);
         if (parentNode == null || row >= parentNode.Children.Count)
             return new QModelIndex();
 
@@ -147,7 +147,7 @@ public sealed class JsonTreeModelApi : QAbstractItemModel
 
     public override QModelIndex Parent(QModelIndex child)
     {
-        if (child == null || !child.IsValid())
+        if (!child.IsValid())
             return new QModelIndex();
 
         var parentNode = NodeAt(child)?.ParentItem;
@@ -157,41 +157,41 @@ public sealed class JsonTreeModelApi : QAbstractItemModel
         return CreateIndex(parentNode.Row, 0, (ulong)parentNode.Id);
     }
 
-    public override int RowCount(QModelIndex parent = null)
+    public override int RowCount(QModelIndex parent = default)
     {
-        if (parent != null && parent.IsValid() && parent.Column() > 0)
+        if (parent.IsValid() && parent.Column() > 0)
             return 0;
-        var node = parent == null || !parent.IsValid() ? root : NodeAt(parent);
+        var node = !parent.IsValid() ? root : NodeAt(parent);
         return node?.Children.Count ?? 0;
     }
 
-    public override int ColumnCount(QModelIndex parent = null) => 2;
+    public override int ColumnCount(QModelIndex parent = default) => 2;
 
-    public override QVariant Data(QModelIndex index, int role = DisplayRole)
+    public override object Data(QModelIndex index, int role = DisplayRole)
     {
-        if (index == null || !index.IsValid() || role != DisplayRole)
-            return new QVariant();
+        if (!index.IsValid() || role != DisplayRole)
+            return null;
 
         var node = NodeAt(index);
         if (node == null)
-            return new QVariant();
+            return null;
 
         if (index.Column() == 0)
-            return new QVariant(node.Key);
-        return node.IsLeaf ? new QVariant(node.Value) : new QVariant();
+            return node.Key;
+        return node.IsLeaf ? node.Value : null;
     }
 
-    public override QVariant HeaderData(int section, Qt.Orientation orientation, int role = DisplayRole)
+    public override object HeaderData(int section, Qt.Orientation orientation, int role = DisplayRole)
     {
         if (orientation == Qt.Orientation.Horizontal && role == DisplayRole
             && section >= 0 && section < Headers.Length)
-            return new QVariant(Headers[section]);
-        return new QVariant();
+            return Headers[section];
+        return null;
     }
 
     public override Qt.ItemFlags Flags(QModelIndex index)
     {
-        if (index == null || !index.IsValid())
+        if (!index.IsValid())
             return Qt.ItemFlags.NoItemFlags;
         return Qt.ItemFlags.ItemIsEnabled | Qt.ItemFlags.ItemIsSelectable;
     }
@@ -214,8 +214,7 @@ public sealed class ApiRecentFiles
     public void Restore(QSettings settings, string key)
     {
         files.Clear();
-        var value = settings.Value(key);
-        var stored = value?.ToStringList();
+        var stored = settings.Value(key) as string[];
         if (stored == null)
             return;
         foreach (string fileName in stored)
@@ -224,7 +223,7 @@ public sealed class ApiRecentFiles
     }
 
     public void Save(QSettings settings, string key)
-        => settings.SetValue(key, new QVariant(files.ToArray()));
+        => settings.SetValue(key, files.ToArray());
 
     public void Add(string fileName)
     {
@@ -388,7 +387,7 @@ public sealed class ApiDocumentViewerWindow : QMainWindow
         using var settings = MakeSettings();
         if (settings.Contains(SettingsWorkingDir))
         {
-            string stored = settings.Value(SettingsWorkingDir).ToString();
+            string stored = settings.Value(SettingsWorkingDir)?.ToString();
             if (!string.IsNullOrEmpty(stored))
                 currentDir = stored;
         }
@@ -398,7 +397,7 @@ public sealed class ApiDocumentViewerWindow : QMainWindow
     public void SaveSettings()
     {
         using var settings = MakeSettings();
-        settings.SetValue(SettingsWorkingDir, new QVariant(currentDir));
+        settings.SetValue(SettingsWorkingDir, currentDir);
         recentFiles.Save(settings, SettingsApiRecentFiles);
         settings.Sync();
     }
@@ -809,10 +808,10 @@ public static class DocumentViewer
         {
             Check(settings.Contains(ApiDocumentViewerWindow.SettingsWorkingDir),
                 "the working directory was written to QSettings");
-            Check(settings.Value(ApiDocumentViewerWindow.SettingsWorkingDir).ToString() == tempDir,
+            Check(settings.Value(ApiDocumentViewerWindow.SettingsWorkingDir)?.ToString() == tempDir,
                 $"the working directory round-trips (got '{settings.Value(ApiDocumentViewerWindow.SettingsWorkingDir)}')");
 
-            var stored = settings.Value(ApiDocumentViewerWindow.SettingsApiRecentFiles).ToStringList();
+            var stored = settings.Value(ApiDocumentViewerWindow.SettingsApiRecentFiles) as string[];
             Check(stored != null && stored.Length == ApiRecentFiles.MaxFiles,
                 $"the recent array round-trips {ApiRecentFiles.MaxFiles} entries (got {stored?.Length ?? 0})");
             Check(stored != null && Path.GetFileName(stored[0]) == "cap11.txt",
@@ -855,24 +854,24 @@ public static class DocumentViewer
 
         var nameKey = model.Index(0, 0);
         var nameValue = model.Index(0, 1);
-        Check(model.Data(nameKey, (int)Qt.ItemDataRole.DisplayRole).ToString() == "name",
+        Check(model.Data(nameKey, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "name",
             $"row 0 column 0 is the key (got '{model.Data(nameKey, 0)}')");
-        Check(model.Data(nameValue, (int)Qt.ItemDataRole.DisplayRole).ToString() == ((char)34 + "qtsharp" + (char)34),
+        Check(model.Data(nameValue, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == ((char)34 + "qtsharp" + (char)34),
             $"row 0 column 1 is the quoted string value (got '{model.Data(nameValue, 0)}')");
 
         var countValue = model.Index(1, 1);
-        Check(model.Data(countValue, (int)Qt.ItemDataRole.DisplayRole).ToString() == "7",
+        Check(model.Data(countValue, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "7",
             $"a number is rendered raw (got '{model.Data(countValue, 0)}')");
 
         var nestedIndex = model.Index(2, 0);
-        Check(model.Data(nestedIndex, (int)Qt.ItemDataRole.DisplayRole).ToString() == "nested",
+        Check(model.Data(nestedIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "nested",
             $"row 2 is the nested object (got '{model.Data(nestedIndex, 0)}')");
-        Check(!model.Data(model.Index(2, 1), (int)Qt.ItemDataRole.DisplayRole).IsValid(),
+        Check(model.Data(model.Index(2, 1), (int)Qt.ItemDataRole.DisplayRole) == null,
             "a non-leaf object has no value in the Value column");
         Check(model.RowCount(nestedIndex) == 2, $"nested holds inner and deep (got {model.RowCount(nestedIndex)})");
 
         var deepIndex = model.Index(1, 0, nestedIndex);
-        Check(model.Data(deepIndex, (int)Qt.ItemDataRole.DisplayRole).ToString() == "deep",
+        Check(model.Data(deepIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "deep",
             $"walking a child index (got '{model.Data(deepIndex, 0)}')");
 
         var deepParent = model.Parent(deepIndex);
@@ -882,24 +881,24 @@ public static class DocumentViewer
 
         var deepChild = model.Index(0, 1, deepIndex);
         Check(model.RowCount(deepIndex) == 1
-              && model.Data(deepChild, (int)Qt.ItemDataRole.DisplayRole).ToString() == "1",
+              && model.Data(deepChild, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "1",
             $"two levels down the value is 1 (got '{model.Data(deepChild, 0)}')");
 
         var itemsIndex = model.Index(3, 0);
-        Check(model.Data(itemsIndex, (int)Qt.ItemDataRole.DisplayRole).ToString() == "items"
+        Check(model.Data(itemsIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "items"
               && model.RowCount(itemsIndex) == 3,
             $"the array has three elements (got {model.RowCount(itemsIndex)})");
-        Check(model.Data(model.Index(0, 0, itemsIndex), (int)Qt.ItemDataRole.DisplayRole).ToString() == "[0]"
-              && model.Data(model.Index(0, 1, itemsIndex), (int)Qt.ItemDataRole.DisplayRole).ToString() == "10"
-              && model.Data(model.Index(2, 1, itemsIndex), (int)Qt.ItemDataRole.DisplayRole).ToString() == "30",
+        Check(model.Data(model.Index(0, 0, itemsIndex), (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "[0]"
+              && model.Data(model.Index(0, 1, itemsIndex), (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "10"
+              && model.Data(model.Index(2, 1, itemsIndex), (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "30",
             "array elements are keyed [0],[1],[2] and carry their values");
 
-        Check(model.HeaderData(0, Qt.Orientation.Horizontal, (int)Qt.ItemDataRole.DisplayRole).ToString() == "Key"
-              && model.HeaderData(1, Qt.Orientation.Horizontal, (int)Qt.ItemDataRole.DisplayRole).ToString() == "Value",
+        Check(model.HeaderData(0, Qt.Orientation.Horizontal, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "Key"
+              && model.HeaderData(1, Qt.Orientation.Horizontal, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "Value",
             "the horizontal headers are Key and Value");
-        Check(!model.HeaderData(0, Qt.Orientation.Vertical, (int)Qt.ItemDataRole.DisplayRole).IsValid(),
+        Check(model.HeaderData(0, Qt.Orientation.Vertical, (int)Qt.ItemDataRole.DisplayRole) == null,
             "a vertical header is not provided");
-        Check(!model.HeaderData(0, Qt.Orientation.Horizontal, (int)Qt.ItemDataRole.ToolTipRole).IsValid(),
+        Check(model.HeaderData(0, Qt.Orientation.Horizontal, (int)Qt.ItemDataRole.ToolTipRole) == null,
             "a non-display role has no header data");
 
         var validFlags = model.Flags(nameKey);
@@ -911,7 +910,7 @@ public static class DocumentViewer
         int rowsBeforeError = model.RowCount();
         model.Load("{ this is not json");
         Check(model.RowCount() == 1
-              && model.Data(model.Index(0, 0), (int)Qt.ItemDataRole.DisplayRole).ToString() == "<parse error>",
+              && model.Data(model.Index(0, 0), (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "<parse error>",
             "a broken document surfaces as a parse-error row");
         model.Load(File.ReadAllText(jsonFile));
         Check(model.RowCount() == rowsBeforeError, "re-loading a valid document restores the tree");

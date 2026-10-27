@@ -535,6 +535,20 @@ public static partial class ApiModel
         if (type.kind == CXTypeKind.CXType_Typedef)
             return ModelName(type.CanonicalType);
 
+        // An alias template is the same shape: std::conditional_t<6 < 7, int, qint64> reaches
+        // here as CXType_Unexposed (Unwrap already stripped the Elaborated layer) and would fall
+        // through to the declaration, which is a TypeAliasTemplateDecl and not a type in the
+        // vocabulary. Its canonical type is the chosen branch - int for Qt 6 - so resolve it the
+        // way a typedef is resolved. A dependent alias (inside a template) stays Unexposed after
+        // canonicalisation and still falls through to null.
+        if (type.kind == CXTypeKind.CXType_Unexposed)
+        {
+            var canonical = type.CanonicalType;
+            if (canonical.kind != CXTypeKind.CXType_Unexposed
+                && canonical.kind != CXTypeKind.CXType_Invalid)
+                return ModelName(canonical);
+        }
+
         var primitive = BuiltinName(type);
         if (primitive != null)
             return primitive;
@@ -1184,7 +1198,12 @@ public static partial class ApiModel
             if (pointee == null)
                 return ParamMode.Invalid;
             if (RootClasses.Contains(pointee))
-                return ParamMode.In;
+                // A runtime struct is a value on the managed side, so a non-const reference to one
+                // has to surface as ref/out: there is no handle whose object the callee could
+                // mutate. A boxed class keeps the older in-shape because the wrapper owns the
+                // object the reference points at (QDeadlineTimer::swap used to rely on this too,
+                // which is how a by-value copy silently lost the result).
+                return ApiTypes.IsStruct(pointee) ? ParamMode.Ref : ParamMode.In;
             // QString is the one non-scalar Qt rewrites in place (QValidator::validate/fixup
             // rewrite the text, QClipboard::text fills in the subtype): the native side gets a
             // local QString and hands the updated copy back. The views are left out - a
@@ -1296,6 +1315,10 @@ public static partial class ApiModel
         // A by-value virtual parameter of this class cannot be cloned (QDataStream); the override
         // receives a transient wrapper instead. Only read from the type's own class entry.
         NonCopyable = 16,
+        // The class declares `operator QVariant() const`, so a value of it can cross into a
+        // QVariant as a real Qt value (QColor, QBrush, QIcon...). The extractor drops conversion
+        // operators from the callable list; this flag is what keeps the conversion reachable.
+        ToVariant = 32,
     }
 
     // The traits a method declaration carries.
@@ -1313,7 +1336,9 @@ public static partial class ApiModel
         Const = 8,
     }
 
-    // The traits a parameter carries; how it crosses (in/out/ref) is a separate mode string.
+    // The independent traits a parameter carries. How it crosses (in/out/ref) is a separate mode:
+    // the two can be combined with each other but a parameter has exactly one mode, so that one is
+    // an enum rather than a third bit that out|ref could set illegally.
     [Flags]
     internal enum ParamFlags
     {
@@ -1389,6 +1414,22 @@ public static partial class ApiModel
         public List<ParamFact> Params = new();
         // The longest marshalable prefix of the declaration: what the model emits.
         public List<ParamFact> Visible = new();
+    }
+
+    // A value type's implicit conversion into QVariant: QColor, QBrush, QIcon and the rest of the
+    // GUI value types declare `operator QVariant() const`. libclang reports it as a conversion
+    // function, which Member() deliberately skips (C# has no member to forward it to); the class
+    // flag is the part the QVariant bridge needs.
+    static bool HasVariantConversion(CXCursor record)
+    {
+        foreach (var child in Children(record))
+        {
+            if (clang.getCursorKind(child) != CXCursorKind.CXCursor_ConversionFunction)
+                continue;
+            if (clang.getCursorSpelling(child).ToString() == "operator QVariant")
+                return true;
+        }
+        return false;
     }
 
     static string ClassJson(CXCursor record, Root root, ClangIndex index,
@@ -1633,6 +1674,11 @@ public static partial class ApiModel
         if ((VirtualValueClasses.Contains(className) || VirtualValueClasses.Contains(root.Class))
             && !CopyableByValue(record))
             classFlags |= ClassFlags.NonCopyable;
+        // `operator QVariant()` is a conversion function, not a callable Member(): it has no
+        // name to forward and no parameter list. The flag is what lets the code generator publish
+        // the conversion as an interface and register the value type with the QVariant bridge.
+        if (HasVariantConversion(record))
+            classFlags |= ClassFlags.ToVariant;
         if (classFlags != ClassFlags.None)
             body.Append("      \"flags\": [")
                 .Append(string.Join(", ", ClassFlagNames(classFlags).Select(Json)))
@@ -2851,6 +2897,8 @@ public static partial class ApiModel
             yield return "owned";
         if ((flags & ClassFlags.NonCopyable) != 0)
             yield return "nonCopyable";
+        if ((flags & ClassFlags.ToVariant) != 0)
+            yield return "toVariant";
     }
 
     static IEnumerable<string> MethodFlagNames(MethodFlags flags)

@@ -4,6 +4,141 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.18.0 - 2026-10-27
+
+- **QVariant is not in the API; values cross as `object`.** Every generated signature that meant a
+  QVariant now says `object`, the way PySide6 exposes it (the class is not part of the API there at
+  all): a model's `Data()` returns the `QColor` itself, a combo's item data comes back as the
+  payload, and Qt's invalid variant is `null`. The wrapper converts at the boundary - it builds a
+  real QVariant for a call and unwraps (and releases) the one a call returns - so a call site no
+  longer holds or disposes a temporary variant. There is no QVariant type in the API at all: the
+  class is internal to QtCore, the implicit `operator QVariant` conversions are gone, the
+  deprecated `QVariant::Type` appears as `int` (`QMetaProperty.Type()`), and the generated code
+  crosses through an internal handle lease rather than a wrapper object.
+  - The type table is generated from qvariant.h: every type QVariant has a constructor for
+    (QPoint, QUrl, QDate, QModelIndex, QJsonValue, ...), plus the trivially copyable types whose
+    only route in is `operator QVariant()` (QVector2D, QQuaternion). `QVariant.From(qpoint)` is a
+    real QPoint variant instead of an opaque payload.
+  - Arrays, `IList` and string-keyed dictionaries recurse into QVariantList/QVariantMap;
+    `ToList`/`ToMap`/`ToHash` hand back the unwrapped `object[]`/`Dictionary<string, object>`.
+    Small integers and enums widen to the Qt type that means the same thing (`byte` -> int, a
+    `Qt.ItemDataRole` -> int), a `char` becomes a QChar variant, and `To<T>()` can ask for the Qt
+    type even where `ToObject()` prefers the BCL one (QUrl -> Uri).
+  - The generator classifies a model type once (`TypeKind`) instead of re-testing the same string
+    through twenty `IsXxx` predicates, and reads the model's `ParamMode` enum for in/out/ref
+    instead of comparing the mode string. The generated trees are byte-identical across that
+    refactor.
+
+- **QUuid is `System.Guid`, and there is no QUuid type** - the same treatment QString gets
+  (`string`). A QUuid is 16 bytes of data that owns nothing, so it was the one trivially copyable
+  type still modelled as a handle: a native allocation, a wrapper-registry entry, a finalizer and
+  reference equality per value. Every Qt signature that takes or returns one now surfaces as
+  `Guid`, which crosses the ABI as the same 16 bytes and gets value equality and no disposal for
+  free.
+  - The Qt-only operations are extensions on `Guid`: `Guid.CreateV3`/`Guid.CreateV5` (RFC 4122,
+    checked against the RFC's DNS example), `Guid.FromRfc4122`, `id.Version()`, `id.Variant()` and
+    `id.ToRfc4122()`. They are C# 14 extension members, so a call site needs the .NET 10 compiler.
+  - The version and variant results are `UuidVersion` and `UuidVariant`. Construction, parsing,
+    v4/v7 and the B/D/N string forms stay the BCL's (`Guid.Parse`, `Guid.NewGuid`,
+    `Guid.CreateVersion7`, `Guid.ToString("N")`).
+  - QUuid is no longer exported as a native class either; the glue keeps only the inline
+    `QsApiGuid` conversion the QVariant/QCborValue/qHash entry points need.
+  - Semantics that changed: a null QUuid is `Guid.Empty` (an indistinguishability the old
+    `ToGuid()` already had), and an unparseable string fails `TryParse` instead of becoming a
+    silent null QUuid. `QUuid` values and the `(Guid)quuid` cast are gone - the value *is* a Guid.
+  - Tests cover the RFC v3/v5 vectors, both byte orders, version/variant, `QVariant.type() == Uuid`,
+    QCborValue and qHash, plus leak checks: 10,000 conversions register no wrappers and watch no
+    objects, and 200 Guid variants leave the managed payload table and the native box counter at
+    zero. The tests also assert that no `QtSharp.QtCore.QUuid` type exists.
+
+- **QChar is `System.Char`, and there is no QChar type** - the same erasure QUuid and QString get.
+  A QChar is one UTF-16 code unit that owns nothing, and it was the other trivially copyable type
+  still modelled as a handle.
+  - The API is extensions on `char` (C# 14 extension members, so a call site needs the .NET 10
+    compiler): `'A'.IsLetter()`, `'a'.ToUpper()`, `'́'.CombiningClass()`, `'('.MirroredChar()`,
+    `'\uD83D'.IsHighSurrogate()`, plus the code-point overloads `char.Category(0x41)`,
+    `char.Script(0x41)`, `char.SurrogateToUcs4(high, low)`.
+  - Classification and `Category()` use the BCL's Unicode tables (`UnicodeCategory`); the
+    properties the BCL has no API for - script, bidi direction, joining type, decomposition,
+    combining class, mirroring, case folding, Unicode version - call Qt's tables so they agree
+    with Qt. Qt's `digitValue` is pinned to its actual behaviour (decimal digits only; letters
+    return -1, unlike its documentation).
+  - A `const QChar*` buffer is a UTF-16 `string` (`QCollator.Compare`,
+    `QRawFont.GlyphIndexesForChars`). The one constructor that retains such a pointer,
+    `QTextBoundaryFinder`, is not published: the string's buffer would not outlive the call.
+  - `setCell`/`setRow` are dropped (a `char` is immutable); three of Qt's enums are published at
+    namespace level (`CharScript`, `CharDirection`, `CharJoiningType`, `CharDecomposition`,
+    `UnicodeVersion`), and `QChar::Category` is the BCL's `UnicodeCategory`.
+  - Tests cover classification, case mapping, script/direction/mirroring, surrogate arithmetic,
+    the code-point overloads, `QVariant`'s Char type, `QDir.Separator`, a 10,000-conversion leak
+    check, and that no `QtSharp.QtCore.QChar` type exists.
+
+- **The rest of the trivially copyable value types are C# structs, not disposable handles.** Each
+  of these is a plain value in Qt (a copy owns nothing), so it now crosses the ABI by value and
+  needs no `using`: `QModelIndex`, `QColor`, `QSizePolicy`, `QTransform`, `QElapsedTimer`,
+  `QDeadlineTimer`, `QOperatingSystemVersion`, `QTextLength`, `QRgba64`, `QPixelFormat`,
+  `QPointingDeviceUniqueId`, `QMetaMethod`/`QMetaEnum`/`QMetaClassInfo` - on top of the geometry,
+  date and vector types that already were.
+  - The struct table describes every field's type; a type whose layout is private (QModelIndex,
+    QColor, QSizePolicy, QTransform, ...) converts by bit copy, and every generated translation
+    unit asserts `sizeof(POD) == sizeof(T)`.
+  - QColor, QTransform and QDeadlineTimer compare through Qt's own `operator==` and a matching
+    hash: their equality is not field-wise (a colour compares across specs, a transform ignores
+    its dirty bits, a deadline only its deadline). QSizePolicy's equality is its data word.
+  - A struct has no inheritance, so a base class's methods are folded in
+    (`QOperatingSystemVersion.MajorVersion()` lives on `QOperatingSystemVersionBase`).
+  - Value-returning in-place mutators (`QTransform.Translate`/`Scale`/`Rotate`/`Shear` return
+    `*this` for chaining) write back through `ref this`; the old handle hid that by mutating the
+    native object.
+  - Optional struct parameters with a non-plain default keep Qt's declared default
+    (`QPixmap.Fill()` fills with `Qt::white`, not an invalid colour).
+  - A non-const reference to a struct surfaces as `ref`/`out` and crosses as a pointer to the
+    caller's POD; the extractor records `mode: ref`, and the model was re-extracted.
+  - `QMatrix4x4` deliberately stays a handle: its non-const `QMatrix4x4*` out parameters
+    (`QGraphicsTransform::applyTo`) collide with the struct-pointer-as-array convention and would
+    demote a pure virtual and drop a constructor.
+  - The `using` statements for these types are gone from the demos and tests, which also assert
+    that they are value types (not disposable) and that a 10,000-colour conversion loop registers
+    no wrappers.
+
+- **The trivially copyable types the first pass missed are structs too.** A full `std::is_trivially_copyable`
+  sweep of every non-`QObject` model class (not the earlier hand-picked list) found nine more:
+  `QMetaType`, `QCalendar`, `QMetaProperty`, `QTableWidgetSelectionRange`, `QTextLine`,
+  `QTextInlineObject`, `QAudioFormat`, and Qt3D's `QNodeId` and `QKeyFrame`. None of them needs a
+  `using` any more, and each crosses the ABI by value.
+  - Two Qt3D types are namespaced in C++ (`Qt3DCore::QNodeId`, `Qt3DAnimation::QKeyFrame`), so the
+    struct table carries their qualified C++ spelling and only that exact class may claim the row -
+    `Qt3DCore::QTransform` is still a class even though QtGui's `QTransform` is a struct.
+  - `QCalendar()` is the Gregorian calendar, not the zero value, and `QKeyFrame()` is
+    `BezierInterpolation`, not `LinearInterpolation`; both parameterless constructors are published
+    so `new QCalendar()` / `new QKeyFrame()` mean what they mean in Qt.
+  - `QTextLine` and `QTextInlineObject` are views into a `QTextLayout`: their four padding bytes are
+    spelled out in the POD and zeroed on the way in, so equality has no indeterminate bits.
+  - `QAudioFormat` ignores its channel config and reserved word in `operator==`, and `QKeyFrame`
+    ignores its control points unless the interpolation is Bezier; both compare and hash through Qt.
+  - `QMetaObject`, `QJsonParseError` and `QOperatingSystemVersionBase`/`Unexported` stay as they
+    are: the first is Qt's static meta-object descriptor returned as a `const QMetaObject*`; the
+    second's public fields are now in the model (`offset` included) but it stays a class because
+    its optional `QJsonParseError*` is an out parameter that would surface as an `IntPtr`; and the
+    last two are the struct's base classes (their fold is a separate decision).
+  - Tests cover the value semantics, Qt's non-field-wise equality (an equal linear pair of key
+    frames hashes equally), `QCalendar()` vs `default(QCalendar)`, writing `objectName` through
+    `QMetaProperty`, and that 10,000 `QKeyFrame` round-trips register no wrappers.
+
+- **A struct's `==`, `Equals` and `GetHashCode` are Qt's.** The generated glue no longer compares
+  the managed fields: it calls `operator==` when the type declares one (the compile-time trait in
+  `QtSharpApiRuntime.h`), compares the POD bytes when it does not, and hashes with `qHash` when the
+  type declares one, otherwise with a generated field-wise `qHashMulti` (or the bytes of an opaque
+  value). That makes the comparison right for the types whose equality is not field-wise without a
+  hand-written expression - `QColor` across specs, `QMetaMethod`'s data pointer, QTextLength's
+  `qFuzzyCompare`, `-0.0` vs `0.0` in QPointF/QLineF/QMarginsF (the hash goes through Qt's
+  `qHash(double)`, which normalizes them). The remaining hand-written hashes are the three types
+  Qt gives no compatible qHash: QColor (`rgba()`), QAudioFormat (the three fields its `==` looks
+  at), QKeyFrame (control points only when Bezier). QTextLength's POD is now its two words: the old
+  field list had the enum and the qreal in accessor order, which put Qt's value in the padding the
+  P/Invoke marshaller does not preserve. The cost is that `==` and `GetHashCode` cross the native
+  boundary once per call; correctness over a per-type C# comparison.
+
 ## 0.17.0 - 2026-10-26
 
 - **Every expressible virtual is an override point.** The curated name whitelist is gone: a managed

@@ -165,8 +165,7 @@ public sealed class ApiStarDelegate : QStyledItemDelegate
 
     static int RatingOf(QModelIndex index)
     {
-        using var data = index.Data();
-        string text = data.ToString();
+        string text = index.Data()?.ToString();
         return int.TryParse(text, out int rating) ? rating : 0;
     }
 
@@ -237,8 +236,7 @@ public sealed class ApiStarDelegate : QStyledItemDelegate
 
         // `model->setData(index, QVariant::fromValue(editor->starRating()))`, with the rating as an
         // int instead of the C++ value type.
-        using var value = new QVariant(starEditor.StarRating.StarCount);
-        model.SetData(index, value);
+        model.SetData(index, starEditor.StarRating.StarCount);
     }
 
     public override void UpdateEditorGeometry(QWidget editor, QStyleOptionViewItem option, QModelIndex index)
@@ -292,8 +290,7 @@ public sealed class ApiStarTable : QTableWidget
             SetItem(row, 1, new QTableWidgetItem(Songs[row].Genre));
             SetItem(row, 2, new QTableWidgetItem(Songs[row].Artist));
             var rating = new QTableWidgetItem();
-            using (var value = new QVariant(Songs[row].Rating))
-                rating.SetData(0, value);
+            rating.SetData(0, Songs[row].Rating);
             SetItem(row, 3, rating);
         }
         SetHorizontalHeaderLabels(new[] { "Title", "Genre", "Artist", "Rating" });
@@ -311,8 +308,7 @@ public sealed class ApiStarTable : QTableWidget
     public int RatingAt(int row)
     {
         var item = Item(row, 3);
-        using var value = item.Data(0);
-        return int.TryParse(value.ToString(), out int rating) ? rating : 0;
+        return int.TryParse(item.Data(0)?.ToString(), out int rating) ? rating : 0;
     }
 }
 
@@ -345,11 +341,14 @@ public static class StarDelegate
         // The regression: QTableWidget's model is a private C++ class, so `table.Model()` hands back
         // a plain QAbstractItemModel wrapper. Its pure virtuals have to reach the real object.
         using (var model = table.Model())
-        using (var index = model.Index(2, 3))
-        using (var value = model.Data(index))
-            Check(index.IsValid() && model.RowCount() == 4 && value.ToString() == "3",
+        {
+            var index = model.Index(2, 3);
+            string value = model.Data(index)?.ToString();
+            Check(index.IsValid() && model.RowCount() == 4 && value == "3",
                 $"table.Model() reaches the real model "
                 + $"(valid={index.IsValid()}, rows={model.RowCount()}, [2,3]='{value}')");
+        }
+
         // The lowercase accessors, because `table.EditTriggers` is ambiguous: QTableWidget inherits
         // the nested enum of that name from QAbstractItemView, and the type wins over the property.
         var triggers = table.editTriggers();
@@ -382,8 +381,8 @@ public static class StarDelegate
         // the generated base methods answer `default`. The delegate
         // never has this problem: the indexes Qt hands it are the real ones.
         using (var option = new QStyleOptionViewItem())
-        using (var index = table.Model().Index(0, 3))
         {
+            var index = table.Model().Index(0, 3);
             var hint = table.StarDelegate.SizeHint(option, index);
             Check(index.IsValid() && hint.Width() == ApiStarRating.PaintingScaleFactor * ApiStarDelegate.MaxStarCount
                   && hint.Height() == ApiStarRating.PaintingScaleFactor,
@@ -392,8 +391,10 @@ public static class StarDelegate
         }
 
         using (var option = new QStyleOptionViewItem())
-        using (var index = table.Model().Index(0, 0))
+
         {
+
+            var index = table.Model().Index(0, 0);
             var hint = table.StarDelegate.SizeHint(option, index);
             Check(hint.Width() > 0 && hint.Height() > 0,
                 $"a text cell falls through to QStyledItemDelegate::sizeHint ({hint.Width()}x{hint.Height()})");
@@ -401,8 +402,8 @@ public static class StarDelegate
 
         // The editor: created by the delegate, filled from the model, committed back into it.
         using (var option = new QStyleOptionViewItem())
-        using (var index = table.Model().Index(1, 3))
         {
+            var index = table.Model().Index(1, 3);
             using var editor = table.StarDelegate.CreateEditor(table, option, index);
             Check(table.StarDelegate.CreateEditorCalls == 1 && editor is ApiStarEditor,
                 $"createEditor() returns the managed star editor ({editor?.GetType().Name})");

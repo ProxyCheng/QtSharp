@@ -117,17 +117,7 @@ namespace QtSharp.QtCore
 
         /// <summary>The BCL value behind a QJsonValue, the same unwrapping ToObjectDictionary uses.</summary>
         internal static object ToObject(QJsonValue json)
-        {
-            if (json == null)
-                return null;
-            var variant = json.ToVariant();
-            object value = variant.ToObject();
-            // ToObject returns the QVariant itself for a type with no BCL equivalent; that wrapper
-            // is the result, so it must stay alive.
-            if (!ReferenceEquals(value, variant))
-                variant.Dispose();
-            return value;
-        }
+            => json?.ToVariant();
     }
 
     /// <summary>

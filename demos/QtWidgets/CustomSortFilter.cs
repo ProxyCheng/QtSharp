@@ -46,17 +46,17 @@ public sealed class ApiSortFilterProxyModel : QSortFilterProxyModel
         FilterAcceptsRowCalls++;
 
         var model = SourceModel;
-        using var index0 = model.Index(sourceRow, 0, sourceParent);
-        using var index1 = model.Index(sourceRow, 1, sourceParent);
-        using var index2 = model.Index(sourceRow, 2, sourceParent);
-        using var data0 = model.Data(index0);
-        using var data1 = model.Data(index1);
-        using var data2 = model.Data(index2);
+        var index0 = model.Index(sourceRow, 0, sourceParent);
+        var index1 = model.Index(sourceRow, 1, sourceParent);
+        var index2 = model.Index(sourceRow, 2, sourceParent);
+        var data0 = model.Data(index0);
+        var data1 = model.Data(index1);
+        var data2 = model.Data(index2);
 
         // `sourceModel()->data(index).toString().contains(FilterRegularExpression)` - the
         // pattern is a regular expression, so this is a match and not a substring test.
-        return (Matches(data0.ToString()) || Matches(data1.ToString()))
-               && DateInRange(data2.ToString());
+        return (Matches(data0?.ToString()) || Matches(data1?.ToString()))
+               && DateInRange(data2?.ToString());
     }
 
     bool Matches(string text)
@@ -74,10 +74,8 @@ public sealed class ApiSortFilterProxyModel : QSortFilterProxyModel
         LessThanCalls++;
 
         var model = SourceModel;
-        using var leftData = model.Data(left);
-        using var rightData = model.Data(right);
-        string leftString = leftData.ToString();
-        string rightString = rightData.ToString();
+        string leftString = model.Data(left)?.ToString();
+        string rightString = model.Data(right)?.ToString();
 
         // The date column: the official compares QDateTime values, the port compares the same
         // strings (ISO-8601 sorts correctly as text).
@@ -253,18 +251,17 @@ public sealed class ApiCustomSortFilterWindow : QWidget
         var rows = new (string, string, string)[ProxyModel.RowCount()];
         for (int i = 0; i < rows.Length; i++)
         {
-            using var index = ProxyModel.Index(i, 0);
-            using var name = ProxyModel.Data(index);
-            rows[i] = (name.ToString(), Column(i, 1), Column(i, 2));
+            var index = ProxyModel.Index(i, 0);
+            string name = ProxyModel.Data(index)?.ToString();
+            rows[i] = (name, Column(i, 1), Column(i, 2));
         }
         return rows;
     }
 
     string Column(int row, int column)
     {
-        using var index = ProxyModel.Index(row, column);
-        using var value = ProxyModel.Data(index);
-        return value.ToString();
+        var index = ProxyModel.Index(row, column);
+        return ProxyModel.Data(index)?.ToString();
     }
 }
 
@@ -360,11 +357,11 @@ public static class CustomSortFilter
         Check(window.ProxyModel.ColumnCount() == 3 && window.ProxyModel.RowCount() == 2,
             $"the proxy reports three columns and its filtered row count "
             + $"({window.ProxyModel.ColumnCount()}x{window.ProxyModel.RowCount()})");
-        using (var proxyIndex = window.ProxyModel.Index(0, 0))
-        using (var sourceIndex = window.ProxyModel.MapToSource(proxyIndex))
+        var proxyIndex = window.ProxyModel.Index(0, 0);
+        var sourceIndex = window.ProxyModel.MapToSource(proxyIndex);
         {
-            using var sourceValue = window.SourceModel.Data(sourceIndex);
-            Check(sourceIndex.IsValid() && sourceValue.ToString() == rows[0].Name,
+            string sourceValue = window.SourceModel.Data(sourceIndex)?.ToString();
+            Check(sourceIndex.IsValid() && sourceValue == rows[0].Name,
                 $"mapToSource turns the first proxy index into the matching source row "
                 + $"(row {sourceIndex.Row}, '{sourceValue}' vs proxy '{rows[0].Name}')");
         }

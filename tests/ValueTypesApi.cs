@@ -1,4 +1,5 @@
 using System;
+using QtSharp.QtMultimedia;
 
     /// <summary>
     /// The Qt value types are values, and this is the test that keeps them that way.
@@ -99,6 +100,221 @@ public static class ValueTypesApi
             Check(polygon.Point(0).X() == 0 && polygon.Point(1).X() == 1,
                 $"a point reads back as a value ({polygon.Point(1).X()})");
             polygon.Dispose();
+
+            // --- 3b. a UUID is a Guid: converting one registers no wrapper at all
+            // QUuid was the last trivially copyable value type still modelled as a handle. Erasing
+            // it to Guid means these 10000 conversions touch neither the wrapper registry nor the
+            // native watch table, where the handle model allocated a native QUuid and a registry
+            // entry per value - the same leak this file exists to catch for the geometry family.
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            long uuidHeapBefore = GC.GetTotalMemory(true);
+            long uuidRegisteredBefore = ApiRuntime.WrappersRegistered;
+            int uuidWatchedBefore = ApiRuntime.WatchedObjects;
+            var dns = new Guid("6ba7b810-9dad-11d1-80b4-00c04fd430c8");
+            for (int i = 0; i < 10000; i++)
+            {
+                var id = Guid.CreateV5(dns, "www.widgets.com");
+                var back = Guid.FromRfc4122(id.ToRfc4122());
+                if (back.Version() != UuidVersion.Sha1 || back.Variant() != UuidVariant.RFC4122)
+                {
+                    Check(false, $"UUID conversion failed in round {i}");
+                    break;
+                }
+            }
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            long uuidHeapAfter = GC.GetTotalMemory(true);
+            Info($"10000 UUID conversions: wrappers +{ApiRuntime.WrappersRegistered - uuidRegisteredBefore}, "
+                 + $"watched +{ApiRuntime.WatchedObjects - uuidWatchedBefore}, "
+                 + $"heap {uuidHeapBefore / 1024} -> {uuidHeapAfter / 1024} KB");
+            Check(ApiRuntime.WrappersRegistered == uuidRegisteredBefore,
+                $"UUID conversions register no wrappers (+{ApiRuntime.WrappersRegistered - uuidRegisteredBefore})");
+            Check(ApiRuntime.WatchedObjects == uuidWatchedBefore,
+                $"and watch nothing (+{ApiRuntime.WatchedObjects - uuidWatchedBefore})");
+            Check(uuidHeapAfter - uuidHeapBefore < 8 * 1024 * 1024,
+                $"and the managed heap stayed put ({(uuidHeapAfter - uuidHeapBefore) / 1024} KB)");
+            Check(typeof(UuidExtensions).Assembly.GetType("QtSharp.QtCore.QUuid") == null,
+                "there is no QUuid type (a UUID is a Guid, the way QString is a string)");
+            Check(!typeof(IDisposable).IsAssignableFrom(typeof(Guid)),
+                "and a Guid has nothing to dispose");
+
+            // --- 3c. a QChar is a char: it was the other trivially copyable handle
+            long charRegisteredBefore = ApiRuntime.WrappersRegistered;
+            for (int i = 0; i < 10000; i++)
+            {
+                char c = (char)('A' + i % 26);
+                if (!c.IsLetter() || c.ToUpper() != c || c.DigitValue() != -1)
+                {
+                    Check(false, $"char conversion failed in round {i}");
+                    break;
+                }
+                _ = c.Script();
+            }
+            Check(ApiRuntime.WrappersRegistered == charRegisteredBefore,
+                $"10000 char conversions register no wrappers (+{ApiRuntime.WrappersRegistered - charRegisteredBefore})");
+            Check(typeof(CharExtensions).Assembly.GetType("QtSharp.QtCore.QChar") == null,
+                "there is no QChar type (a QChar is a char, the way QUuid is a Guid)");
+
+            // --- 3d. the other trivially copyable value types are structs, not handles
+            // Each of these was a disposable wrapper before: a native allocation, a registry entry
+            // and a finalizer per value. A copy owns nothing, so the value itself is the storage.
+            var valueStructs = new[]
+            {
+                typeof(QModelIndex), typeof(QColor), typeof(QSizePolicy), typeof(QTransform),
+                typeof(QElapsedTimer), typeof(QDeadlineTimer), typeof(QOperatingSystemVersion),
+                typeof(QTextLength), typeof(QRgba64), typeof(QPixelFormat),
+                typeof(QPointingDeviceUniqueId), typeof(QMetaMethod), typeof(QMetaEnum),
+                typeof(QMetaClassInfo),
+                // The second pass: types the first probe did not ask about.
+                typeof(QMetaType), typeof(QCalendar), typeof(QMetaProperty),
+                typeof(QTableWidgetSelectionRange), typeof(QTextLine), typeof(QTextInlineObject),
+                typeof(QAudioFormat),
+            };
+            foreach (var t in valueStructs)
+            {
+                Check(t.IsValueType, $"{t.Name} is a value type");
+                Check(!typeof(IDisposable).IsAssignableFrom(t), $"{t.Name} is not disposable");
+            }
+
+            var policy = new QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred);
+            policy.SetHorizontalStretch(3);
+            Check(policy.HorizontalPolicy() == QSizePolicy.Policy.Expanding && policy.HorizontalStretch() == 3,
+                "QSizePolicy is a value: the setter changes the struct");
+
+            var chained = new QTransform();
+            chained.Scale(2, 2);
+            chained.Translate(10, 0);
+            // translate() post-multiplies, so after scaling by 2 the origin moves to (20, 0).
+            Check(chained.M11() == 2 && chained.M31() == 20,
+                $"QTransform's chaining mutators write back (m11={chained.M11()}, m31={chained.M31()})");
+
+            long colorRegisteredBefore = ApiRuntime.WrappersRegistered;
+            for (int i = 0; i < 10000; i++)
+            {
+                var color = new QColor(i % 256, 0, 0);
+                if (!color.IsValid() || color.Red() != i % 256)
+                {
+                    Check(false, $"QColor conversion failed in round {i}");
+                    break;
+                }
+                _ = color.Lighter();
+            }
+            Check(ApiRuntime.WrappersRegistered == colorRegisteredBefore,
+                $"10000 QColor conversions register no wrappers (+{ApiRuntime.WrappersRegistered - colorRegisteredBefore})");
+
+            // --- 3e. the second-pass structs answer like Qt's values
+            var metaType = new QMetaType(2);              // QMetaType::Int
+            Check(metaType.IsValid() && metaType.Name() == "int",
+                $"QMetaType is a value over the id (name '{metaType.Name()}')");
+            Check(metaType == new QMetaType(2) && metaType != new QMetaType(43),
+                "two QMetaTypes with the same id compare equal (43 is Void)");
+
+            var gregorian = new QCalendar();
+            Check(gregorian.IsValid() && gregorian.IsGregorian(),
+                "new QCalendar() is Qt's Gregorian calendar (the zero value is the null backend)");
+            var julian = new QCalendar(QCalendar.System.Julian);
+            Check(julian.IsValid() && !julian.IsGregorian() && julian != gregorian,
+                "a Julian calendar is a different value");
+            var calendarLeapDay = gregorian.DateFromParts(2024, 2, 29);
+            Check(calendarLeapDay.Year() == 2024 && calendarLeapDay.Month() == 2 && calendarLeapDay.Day() == 29,
+                "and it answers dates through the struct");
+            Check(QCalendar.AvailableCalendars().Length > 0, "the static members work on the value type");
+
+            {
+                var probe = new QObject();
+                var metaObject = probe.MetaObject();
+                var metaProperty = metaObject.Property(metaObject.IndexOfProperty("objectName"));
+                Check(metaProperty.IsValid() && metaProperty.IsReadable(),
+                    "QMetaProperty is a value returned by QMetaObject.property()");
+                Check(metaProperty.Write(probe, "typed"), "and writing through it works");
+                Check((string)metaProperty.Read(probe) == "typed",
+                    $"the value came back through the meta-property ('{metaProperty.Read(probe)}')");
+            }
+
+            var selection = new QTableWidgetSelectionRange(1, 2, 3, 4);
+            Check(selection.TopRow() == 1 && selection.LeftColumn() == 2
+                  && selection.BottomRow() == 3 && selection.RightColumn() == 4,
+                "QTableWidgetSelectionRange carries four ints");
+            Check(selection.RowCount() == 3 && selection.ColumnCount() == 3,
+                "and its accessors see them");
+            var selectionCopy = selection;
+            selectionCopy = new QTableWidgetSelectionRange(0, 0, 0, 0);
+            Check(selection == new QTableWidgetSelectionRange(1, 2, 3, 4) && selectionCopy.TopRow() == 0,
+                "equality is the four ints, and assignment copies");
+            using (var table = new QTableWidget(4, 4))
+            {
+                for (int r = 0; r < 4; r++)
+                    for (int c = 0; c < 4; c++)
+                        table.SetItem(r, c, new QTableWidgetItem("x"));
+                table.SelectAll();
+                var ranges = table.SelectedRanges();
+                var all = new QTableWidgetSelectionRange(0, 0, 3, 3);
+                Check(ranges.Length == 1 && ranges[0] == all,
+                    $"a QList<QTableWidgetSelectionRange> crosses as an array of the struct ({ranges.Length} range)");
+            }
+
+            using (var textLayout = new QTextLayout("hello"))
+            {
+                textLayout.BeginLayout();
+                var textLine = textLayout.CreateLine();
+                textLine.SetLineWidth(100);
+                textLine.SetPosition(new QPointF(0, 0));
+                textLayout.EndLayout();
+                Check(textLine.IsValid() && textLine.Width() > 0,
+                    $"QTextLine is a value view into the layout (width {textLine.Width()})");
+                Check(textLine == textLayout.LineAt(0),
+                    "the same line obtained twice compares equal (the padding is not part of the value)");
+                Check(textLine.GetHashCode() == textLayout.LineAt(0).GetHashCode(),
+                    "and hashes equally");
+            }
+
+            var audioFormat = default(QAudioFormat);
+            audioFormat.SetSampleRate(44100);
+            audioFormat.SetChannelCount(2);
+            audioFormat.SetSampleFormat(QAudioFormat.SampleFormat.Int16);
+            Check(audioFormat.SampleRate() == 44100 && audioFormat.ChannelCount() == 2
+                  && audioFormat.sampleFormat() == QAudioFormat.SampleFormat.Int16,
+                "QAudioFormat's setters write back through the struct");
+            var audioFormatCopy = audioFormat;
+            audioFormatCopy.SetSampleRate(48000);
+            Check(audioFormat.SampleRate() == 44100 && audioFormatCopy != audioFormat,
+                "a QAudioFormat copy is independent");
+            Check(audioFormat != default(QAudioFormat),
+                "QAudioFormat equality is Qt's (the default format is a different value)");
+
+            // --- 3f. equality and hashing are Qt's, including the cases a field-wise hash gets wrong
+            var positiveZero = new QPointF(0.0, 0.0);
+            var negativeZero = new QPointF(-0.0, -0.0);
+            Check(positiveZero == negativeZero,
+                "QPointF compares -0.0 and 0.0 as equal, as Qt's operator== does");
+            Check(positiveZero.GetHashCode() == negativeZero.GetHashCode(),
+                "and hashes them equally (qHash(double), not the bytes), so it works as a hash key");
+
+            var red = new QColor(10, 20, 30);
+            var redAgain = red.ToRgb();
+            Check(red == redAgain, "QColor equality is Qt's (same spec and components)");
+            Check(red.GetHashCode() == redAgain.GetHashCode(),
+                "and equal colours hash equally (rgba())");
+
+            var fixedLength = new QTextLength(QTextLength.Type.FixedLength, 10.0);
+            var almostFixed = new QTextLength(QTextLength.Type.FixedLength, 10.0 + 1e-15);
+            Check(fixedLength.RawValue() == 10.0 && fixedLength.type() == QTextLength.Type.FixedLength,
+                "QTextLength round-trips its value and type through the two-word POD");
+            Check(fixedLength == almostFixed,
+                "QTextLength equality is Qt's qFuzzyCompare");
+            Check(fixedLength.GetHashCode() == almostFixed.GetHashCode(),
+                "and its hash follows the type only, so fuzzy-equal lengths hash equally");
+
+            {
+                var probe = new QObject();
+                var metaObject = probe.MetaObject();
+                var method = metaObject.Method(0);
+                Check(method == metaObject.Method(0) && method.GetHashCode() == metaObject.Method(0).GetHashCode(),
+                    "QMetaMethod compares and hashes by its data pointer, as Qt's operator== does");
+            }
 
             // --- 4. repeating the same work does not accumulate
             GC.Collect();

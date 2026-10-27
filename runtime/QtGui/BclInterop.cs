@@ -6,7 +6,7 @@ using System.Numerics;
 // (constructors and To* methods), not implicit operators.
 namespace QtSharp.QtGui
 {
-    public partial class QColor
+    public partial struct QColor
     {
         /// <summary>The same ARGB color as a System.Drawing.Color.</summary>
         public QColor(Color color) : this(color.R, color.G, color.B, color.A) { }
@@ -15,8 +15,7 @@ namespace QtSharp.QtGui
         public Color ToColor()
             => IsValid() ? Color.FromArgb(Alpha(), Red(), Green(), Blue()) : Color.Empty;
 
-        public static explicit operator Color(QColor value)
-            => (value ?? throw new System.ArgumentNullException(nameof(value))).ToColor();
+        public static explicit operator Color(QColor value) => value.ToColor();
         public static explicit operator QColor(Color value) => new QColor(value);
     }
 

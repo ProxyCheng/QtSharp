@@ -64,7 +64,7 @@ else to set up. No Qt SDK, no Visual Studio C++ workload, no clone:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.17.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.18.0" />
 </ItemGroup>
 ```
 
@@ -104,8 +104,8 @@ than part of qtbase. It references the core package and adds all six modules:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.17.0" />
-  <PackageReference Include="QtSharp.Qt3D" Version="0.17.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.18.0" />
+  <PackageReference Include="QtSharp.Qt3D" Version="0.18.0" />
 </ItemGroup>
 ```
 
@@ -139,7 +139,7 @@ drop-in replacement for every Qt module or every desktop deployment scenario.
 
 ## Releases
 
-Pushing a semantic-version tag such as `v0.17.0` starts the release workflow. It builds twelve
+Pushing a semantic-version tag such as `v0.18.0` starts the release workflow. It builds twelve
 packages and attaches them, with a `SHA256SUMS.txt`, to a GitHub Release. Every package that
 carries native code holds both `tools/native/win-x64/` and `tools/native/linux-x64/`; the managed
 assemblies are platform-neutral.
@@ -346,7 +346,7 @@ module projects directly (the same assemblies the package contains).
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api" Version="0.17.0" />
+  <PackageReference Include="QtSharp.Api" Version="0.18.0" />
 </ItemGroup>
 ```
 
@@ -426,18 +426,53 @@ static class Program
   Vector3 v = (Vector3)qvector;             // QVector2D/3D/4D <-> System.Numerics
   Quaternion q = (Quaternion)qquaternion;   // QQuaternion <-> System.Numerics.Quaternion
   Uri uri = (Uri)qurl;                      // QUrl <-> System.Uri
-  Guid id = (Guid)quuid;                    // QUuid <-> System.Guid
-  object value = qvariant.ToObject();       // PyQt's QVariant.value(): int, string, DateTime, ...
-  var variant = QVariant.From(value);       // and back
+  Guid id = Guid.CreateV5(ns, name);        // QUuid is a Guid; v3/v5 are extensions on it
+  char upper = 'a'.ToUpper();               // QChar is a char; Unicode extras are extensions
+  object value = model.Data(index);         // a QVariant signature is object: QColor, int, string, ...
+  model.SetData(index, value);              // and back, without naming a variant type
   ```
   There are no implicit operators on purpose: `==` on a handle class compares wrapper identity, so
   an implicit conversion would let `qdt == dateTime` compile and silently be false. Invalid or
   out-of-range Qt values throw `InvalidOperationException` instead of wrapping.
+
+  One type goes the other way: **QUuid is `System.Guid`** - there is no QUuid type, the same way
+  there is no QString. It is 16 bytes of data, so every Qt signature that takes or returns one
+  surfaces as a `Guid` (value equality, no disposal), and Qt stores the same 16 bytes in a
+  QVariant's Uuid type. The Qt-only operations are C# 14 extensions on `Guid`
+  (`Guid.CreateV3`/`Guid.CreateV5`, `Guid.FromRfc4122`, `id.Version()`, `id.Variant()`,
+  `id.ToRfc4122()`), so a call site needs the .NET 10 compiler. A null QUuid is `Guid.Empty`;
+  parsing is `Guid.Parse`/`Guid.TryParse`; v4 and v7 ids are `Guid.NewGuid`/`Guid.CreateVersion7`;
+  Qt's string formats are Guid's "B"/"D"/"N".
+
+  QChar gets the same treatment: it is one UTF-16 code unit, so it is `char` and there is no QChar
+  type. The classification and case methods are extensions (`'A'.IsLetter()`, `'a'.ToUpper()`,
+  `'́'.CombiningClass()`), `Category()` returns the BCL's `System.Globalization.UnicodeCategory`,
+  and the properties the BCL has no API for (script, bidi direction, joining type, decomposition,
+  mirroring, case folding, Unicode version) call Qt's own tables. The static code-point overloads
+  are extensions too: `char.Category(0x41)`, `char.Script(0x41)`. A `QChar*` buffer is a `string`
+  (`QCollator.Compare`, `QRawFont.GlyphIndexesForChars`).
+
+  The same rule covers every other trivially copyable Qt value: **QModelIndex, QColor, QSizePolicy,
+  QTransform, QElapsedTimer, QDeadlineTimer, QOperatingSystemVersion, QTextLength, QRgba64,
+  QPixelFormat, QPointingDeviceUniqueId, QMetaMethod/QMetaEnum/QMetaClassInfo, QMetaType,
+  QCalendar, QMetaProperty, QTableWidgetSelectionRange, QTextLine, QTextInlineObject, QAudioFormat
+  and Qt3D's QNodeId/QKeyFrame are C# structs**, not handles - no `using`, no finalizer, value
+  equality. A parameter Qt passes as `const T&` crosses as the value, a `T&` as `ref`/`out`, and a
+  method that mutates in place writes back. `QCalendar()` (Gregorian) and `QKeyFrame()` (Bezier)
+  keep their parameterless constructors because their zero values are not Qt's defaults.
+  Equality and hashing are Qt's: the generated struct calls `operator==`/`qHash` when Qt declares
+  them and falls back to the value's fields (or bytes) when it does not, so `-0.0` vs `0.0`,
+  `QTextLength`'s fuzzy comparison and `QColor`'s spec rules are exactly Qt's. The comparison
+  crosses the native boundary once per call.
+  QMatrix4x4 is the one deliberate hold-out: its non-const `QMatrix4x4*` out parameters need a
+  dedicated rule before it can stop being a handle. `QMetaObject` stays a handle too: Qt returns it
+  as a `const QMetaObject*` to static data, and the struct-pointer convention would surface that as
+  an `IntPtr` instead.
 * **JSON objects are dictionaries, arrays are lists.** `QJsonObject` implements
   `IDictionary<string, QJsonValue>` (a writable view over the Qt object; `Insert` returns the value
   the C++ iterator points at) and `QJsonArray` implements `IList<QJsonValue>`. The LINQ-friendly
-  snapshots are `ToObjectDictionary()` and `ToObjectList()`, with values unwrapped the way
-  `QVariant.ToObject()` does (nested objects as `Dictionary<string, object>`, arrays as
+  snapshots are `ToObjectDictionary()` and `ToObjectList()`, with values unwrapped the way a
+  variant's `ToObject()` unwraps them (nested objects as `Dictionary<string, object>`, arrays as
   `object[]`). Object keys enumerate in Qt's sorted order.
 * **A .NET Stream can be a Qt IO device.** `StreamIODevice` (in `QtSharp.QtCore`) implements
   `QIODevice`'s virtuals (`readData`/`writeData`/`seek`/`size`/...), so `QImage.Load`,
@@ -531,7 +566,7 @@ and matching DLLs (normally a Qt kit's `bin`):
 powershell -File tools\pack-qt-tools.ps1 -QtToolsSource C:\Qt\6.12.0\msvc2022_64\bin
 ```
 
-The result is `out/packages/QtSharp.Tools.0.17.0.nupkg`. `-QtVersion` and `-PackageVersion`
+The result is `out/packages/QtSharp.Tools.0.18.0.nupkg`. `-QtVersion` and `-PackageVersion`
 override the defaults. Put the upstream license texts/notices in a `QtSharp-ThirdPartyNotices`
 subdirectory beside the source tools to include them in the payload. Tools are staged under
 `out/qt-tools`; the script checks QtCore's version and runs captured, time-limited startup checks.
@@ -540,7 +575,7 @@ In a consumer project:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Tools" Version="0.17.0" PrivateAssets="all" />
+  <PackageReference Include="QtSharp.Tools" Version="0.18.0" PrivateAssets="all" />
   <QtResource Include="assets\sample.qrc" />
 </ItemGroup>
 ```
@@ -622,9 +657,10 @@ Replace the local source path with your checkout's `out/packages` directory.
 * **`QtSharp.Sql` materializes a whole result set.** Qt's `QSqlTableModel` fetches in 256-row
   batches; the substitute loads everything up front, so page very large tables with `WHERE`/`LIMIT`.
   Its per-cell `Data()` also crosses the managed/native boundary (a constant cost per visible cell).
-* **`QAudioFormat` has no constructor in the binding.** Qt 6.12 declares none (the implicit default
-  constructor is not in the AST), so `new QAudioFormat()` does not exist; take one from
-  `QAudioDevice.PreferredFormat()` and adjust it with the setters.
+* **`QAudioFormat` has no constructor overloads in the binding.** Qt 6.12 declares none beyond the
+  implicit default (the AST does not list it), so there is no `QAudioFormat(...)`; as a struct its
+  default (`new QAudioFormat()` / `default`) is Qt's default format, and the setters fill it in.
+  `QAudioDevice.PreferredFormat()` is still the useful starting point.
 * **The bound modules** are QtCore, QtGui, QtWidgets, QtNetwork (host addressing, local sockets
   `QLocalServer`/`QLocalSocket`, TCP/UDP, the HTTP client), QtSvg/QtSvgWidgets, QtPrintSupport
   (`QPrinter`, print dialogs/preview) and QtOpenGL/QtOpenGLWidgets (`QOpenGLWidget`,

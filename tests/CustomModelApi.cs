@@ -27,37 +27,37 @@ public static class ApiCustomModelDemo
         public int SetDataCalls;
         public string LastRole;
 
-        public override int RowCount(QModelIndex parent = null)
+        public override int RowCount(QModelIndex parent = default)
         {
             RowCountCalls++;
             return rows.Count;
         }
 
-        public override int ColumnCount(QModelIndex parent = null) => 2;
+        public override int ColumnCount(QModelIndex parent = default) => 2;
 
-        public override QVariant Data(QModelIndex index, int role = default)
+        public override object Data(QModelIndex index, int role = default)
         {
             DataCalls++;
             // 0 is Qt::DisplayRole; anything else has no data here.
-            if (role != 0 || index == null || !index.IsValid())
-                return new QVariant();
-            return new QVariant(rows[index.Row()][index.Column()]);
+            if (role != 0 || !index.IsValid())
+                return null;
+            return rows[index.Row()][index.Column()];
         }
 
-        public override QVariant HeaderData(int section, Qt.Orientation orientation, int role = default)
+        public override object HeaderData(int section, Qt.Orientation orientation, int role = default)
         {
             HeaderDataCalls++;
-            return role == 0 ? new QVariant($"col {section}") : new QVariant();
+            return role == 0 ? $"col {section}" : null;
         }
 
         public override Qt.ItemFlags Flags(QModelIndex index)
             => Qt.ItemFlags.ItemIsEnabled | Qt.ItemFlags.ItemIsSelectable | Qt.ItemFlags.ItemIsEditable;
 
-        public override bool SetData(QModelIndex index, QVariant value, int role = default)
+        public override bool SetData(QModelIndex index, object value, int role = default)
         {
             SetDataCalls++;
             LastRole = value?.ToString();
-            if (index == null || !index.IsValid() || role != 2)      // 2 is Qt::EditRole
+            if (!index.IsValid() || role != 2)      // 2 is Qt::EditRole
                 return false;
             rows[index.Row()][index.Column()] = LastRole;
             return true;
@@ -95,7 +95,7 @@ public static class ApiCustomModelDemo
         {
             PaintCalls++;
             painter.FillRect(option.Rect, new QBrush(new QColor(210, 225, 255)));
-            painter.DrawText(option.Rect, 0, index.Data() == null ? "" : index.Data().ToString());
+            painter.DrawText(option.Rect, 0, index.Data()?.ToString() ?? "");
         }
 
         public override QSize SizeHint(QStyleOptionViewItem option, QModelIndex index)
@@ -128,9 +128,9 @@ public static class ApiCustomModelDemo
         Check(throughQt != null && throughQt.RowCount() == 3,
             $"the view sees the managed model's row count (got {throughQt?.RowCount()})");
         Check(throughQt.ColumnCount() == 2, "column count through the view");
-        Check(throughQt.Data(throughQt.Index(1, 0)).ToString() == "beta",
+        Check(throughQt.Data(throughQt.Index(1, 0))?.ToString() == "beta",
             $"the managed model supplied the data (got '{throughQt.Data(throughQt.Index(1, 0))}')");
-        Check(throughQt.HeaderData(1, Qt.Orientation.Horizontal) .ToString() == "col 1",
+        Check(throughQt.HeaderData(1, Qt.Orientation.Horizontal)?.ToString() == "col 1",
             $"the managed model supplied the header (got '{throughQt.HeaderData(1, Qt.Orientation.Horizontal)}')");
         Check(model.RowCountCalls >= 2 && model.DataCalls > 0,
             $"Qt called the managed overrides ({model.RowCountCalls} rowCount, {model.DataCalls} data)");
@@ -161,11 +161,11 @@ public static class ApiCustomModelDemo
             $"the managed roleNames() returned (got {roleNames.Count} role(s))");
 
         // Editing goes through the model: Qt asks flags(), then calls setData().
-        Check(throughQt.SetData(throughQt.Index(0, 0), new QVariant("renamed"), 2),
+        Check(throughQt.SetData(throughQt.Index(0, 0), "renamed", 2),
             "setData reached the managed model");
         Check(model.SetDataCalls == 1 && model.LastRole == "renamed",
             $"the managed model recorded the edit (got '{model.LastRole}')");
-        Check(throughQt.Data(throughQt.Index(0, 0)).ToString() == "renamed",
+        Check(throughQt.Data(throughQt.Index(0, 0))?.ToString() == "renamed",
             "and the model really changed");
 
         // The real proof for the delegate: render the view and count the managed paint() calls.
@@ -194,7 +194,7 @@ public static class ApiCustomModelDemo
             GC.Collect();
             GC.WaitForPendingFinalizers();
         }
-        Check(view.Model().RowCount() == 3 && throughQt.Data(throughQt.Index(2, 0)).ToString() == "gamma",
+        Check(view.Model().RowCount() == 3 && throughQt.Data(throughQt.Index(2, 0))?.ToString() == "gamma",
             "the managed model still works after a full GC");
         using (var again = view.Grab())
             Check(DemoCatalog.GrabCovers(again, 320, 200), "and the view still renders");
