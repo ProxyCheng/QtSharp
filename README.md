@@ -9,6 +9,9 @@
 
 **Build Qt desktop applications in C# on Windows and Linux.**
 
+QtSharp aims to make Qt as convenient to use from C# as PyQt/PySide are from Python, adapting
+the API and module design to C# language features and the .NET ecosystem.
+
 QtSharp brings Qt 6 Widgets, painting, networking and optional Charts, 3D and multimedia
 modules to .NET. Use familiar Qt classes with C# properties, signals as events and managed
 virtual overrides. Release packages include the Qt runtime and native binding:
@@ -48,6 +51,12 @@ For a standalone application using release packages, start with
 for what the examples validate.
 
 ## Module scope and .NET integration
+
+The design priorities are straightforward:
+
+- Make everyday Qt tasks easy to write, including signals, properties, subclassing and object lifetime.
+- Use C# properties, events, generics, collections and delegates where they make the API easier to use.
+- Reuse .NET libraries and infrastructure, with adapters for QtSharp components where needed.
 
 QtSharp does not aim to bind every Qt module. Where .NET already has mature libraries that
 fit C# applications well, we prefer those libraries and add adapters when a QtSharp component
