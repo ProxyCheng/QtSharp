@@ -10,101 +10,45 @@
 **Build Qt desktop applications in C# on Windows and Linux.**
 
 QtSharp aims to make Qt as convenient to use from C# as PyQt/PySide are from Python, adapting
-the API and module design to C# language features and the .NET ecosystem.
+the API and module design to C# and the .NET ecosystem. It provides bindings for Qt Widgets,
+painting, networking and optional modules such as Charts, Qt3D and Multimedia.
 
-QtSharp brings Qt 6 Widgets, painting, networking and optional Charts, 3D and multimedia
-modules to .NET. Use familiar Qt classes with C# properties, signals as events and managed
-virtual overrides. Release packages include the Qt runtime and native binding:
-application users do not need to install a Qt SDK or C++ build tools.
+**Pre-1.0:** the API may change substantially between releases. Source and binary compatibility
+are not guaranteed. Pin package versions and read the [changelog](CHANGELOG.md) before upgrading.
 
-**Pre-1.0:** the API is still evolving and may change substantially between releases.
-Source and binary compatibility are not guaranteed. Pin package versions and review the
-[changelog](CHANGELOG.md) before upgrading.
+Current targets: **.NET 10, Qt 6.12.0, Windows x64 and Linux x64 (glibc)**.
 
-Targets .NET 10, Qt 6.12.0, Windows x64 and Linux x64 (glibc).
-Qt Quick/QML, macOS and ARM64 are not currently supported.
-
-[Get started](#install-the-binding) · [Explore examples](#what-can-i-build) ·
-[Download packages](https://github.com/ProxyCheng/QtSharp/releases) ·
-[Report a problem](https://github.com/ProxyCheng/QtSharp/issues)
-
-For an application using QtSharp, see **[PolyMount](https://github.com/ProxyCheng/PolyMount)**,
-also maintained by ProxyCheng.
-
-## What can I build?
-
-Start with a C# port of an official Qt example:
-
-| Use case | Example source |
-|---|---|
-| Desktop forms, controls and item views | [Widgets Gallery](demos/QtWidgets/WidgetsGallery.cs) |
-| A text editor with printing | [Notepad](demos/QtPrintSupport/Notepad.cs) |
-| Custom drawing and mouse input | [Scribble](demos/QtWidgets/Scribble.cs) |
-| Sortable and filterable data views | [Custom Sort/Filter](demos/QtWidgets/CustomSortFilter.cs) |
-| Charts and data visualization | [Charts examples](demos.charts) (optional module) |
-| 3D scenes | [Basic Shapes](demos.qt3d/BasicShapesDemo.cs) (optional module) |
-| Media playback | [Player](demos/QtMultimedia/Player.cs) (optional module) |
-
-These are source examples built by the repository's development workflow.
-For a standalone application using release packages, start with
-[Hello World](samples/hello/Hello.csproj). See [conformance coverage](docs/conformance.md)
-for what the examples validate.
-
-## QtSharp and Qt Bridges
-
-Qt's [Qt Bridges](https://doc.qt.io/qtbridges/) currently focuses on connecting application
-logic in C# and other supported languages to QML/Qt Quick user interfaces. QtSharp focuses on
-general-purpose C# bindings for Qt Widgets (`QWidget`) and other selected Qt APIs, adapting
-them to C# and .NET. The projects have different goals and scopes.
-
-## Module scope and .NET integration
-
-The design priorities are straightforward:
-
-- Make everyday Qt tasks easy to write, including signals, properties, subclassing and object lifetime.
-- Use C# properties, events, generics, collections and delegates where they make the API easier to use.
-- Reuse .NET libraries and infrastructure, with adapters for QtSharp components where needed.
-
-QtSharp does not aim to bind every Qt module. Where .NET already has mature libraries that
-fit C# applications well, we prefer those libraries and add adapters when a QtSharp component
-needs to use them.
-
-| Qt module intentionally omitted | .NET alternative | QtSharp integration |
-|---|---|---|
-| QtXml | `System.Xml` | `QXmlStreamReader`/`QXmlStreamWriter` remain available through QtCore. |
-| QtSql | ADO.NET providers | `QtSharp.Sql` exposes query/table models backed by a `DbConnection`. |
-| QtWebSockets | `System.Net.WebSockets.ClientWebSocket` | Use the .NET API directly; no Qt-facing adapter is provided yet. |
-
-`QtSharp.Sql` and `StreamIODevice` (a .NET `Stream` exposed as `QIODevice`) are examples of
-this approach. Further adapters may expose C# libraries through the model, IO or other
-interfaces used by QtSharp components.
+[Get started](#run-your-first-application) · [Examples](#examples) ·
+[API guide](docs/api-guide.md) · [Releases](https://github.com/ProxyCheng/QtSharp/releases)
 
 ## Install the binding
 
-You need the **.NET 10 SDK**. The packages include the Qt runtime and native binding;
-you do not need a Qt SDK or C++ compiler to build an application.
+Install the **.NET 10 SDK**, then download **QtSharp-0.19.0-win-x64.zip** or
+**QtSharp-0.19.0-linux-x64.zip** from [v0.19.0](https://github.com/ProxyCheng/QtSharp/releases/tag/v0.19.0).
+Extract the archive into a local NuGet source folder, keeping all its packages together.
+The packages include the native binding and Qt runtime; application developers do not need
+a Qt SDK or C++ compiler.
 
 ### Run your first application
 
-1. Download **QtSharp-0.19.0-win-x64.zip** or **QtSharp-0.19.0-linux-x64.zip** from
-   [Releases](https://github.com/ProxyCheng/QtSharp/releases/tag/v0.19.0).
-2. Extract the archive into a folder containing the NuGet packages.
-3. Create a console application and install the package for your build platform.
-   Replace the local source path below with the folder you extracted.
+Create a console application:
+
+```text
+dotnet new console -n HelloQt --framework net10.0
+cd HelloQt
+```
+
+Add the package for your build platform, replacing the source path with your extracted folder.
 
 Windows / PowerShell:
 
 ```powershell
-dotnet new console -n HelloQt --framework net10.0
-cd HelloQt
 dotnet add package QtSharp.Api.win-x64 --version 0.19.0 --source C:/Downloads/QtSharp-packages
 ```
 
 Linux:
 
 ```bash
-dotnet new console -n HelloQt --framework net10.0
-cd HelloQt
 dotnet add package QtSharp.Api.linux-x64 --version 0.19.0 --source /home/you/Downloads/QtSharp-packages
 ```
 
@@ -129,664 +73,116 @@ static class Program
 }
 ```
 
-Run `dotnet run` to open the window. Linux also needs system X11/OpenGL libraries and a
-graphical desktop; see [Linux prerequisites](#getting-the-pieces).
+Run `dotnet run` to open the window. Linux also needs the system
+[X11/OpenGL dependencies](docs/development.md#linux) and a working graphical desktop.
 
-If you have cloned this repository, the same program is in
-[samples/hello](samples/hello/Hello.csproj):
+If you have cloned this repository, the same program is in [samples/hello](samples/hello/Hello.csproj):
 
 ```powershell
 dotnet restore samples/hello/Hello.csproj --source C:/Downloads/QtSharp-packages
 dotnet run --project samples/hello/Hello.csproj --no-restore
 ```
 
-On Linux, replace the local source path with your extracted package directory.
-The sample selects the platform package from the build host.
+On Linux, replace the local source path. The sample selects the package from the build host.
 
-Packages are distributed through **GitHub Releases**, not nuget.org. Keep all packages from
-the platform archive in the same folder so NuGet can resolve their dependencies.
-The `QtSharp` package on nuget.org belongs to a different project.
+Packages are distributed through **GitHub Releases**, not nuget.org. The `QtSharp` package
+on nuget.org belongs to a different project.
 
-### Optional modules
+## Examples
 
-Qt 3D is a separate package, because it is an optional addon family of six Qt libraries rather
-than part of qtbase. It references the core package and adds all six modules:
+For an application using QtSharp, see [PolyMount](https://github.com/ProxyCheng/PolyMount),
+also maintained by ProxyCheng.
 
-```xml
-<ItemGroup>
-  <PackageReference Include="QtSharp.Api.win-x64" Version="0.19.0" />
-  <PackageReference Include="QtSharp.Qt3D.win-x64" Version="0.19.0" />
-</ItemGroup>
-```
+The repository includes C# ports of official Qt examples:
 
-Add these imports to your application, then create the scene before calling `app.Exec()`:
-
-```csharp
-using QtSharp.QtGui;
-using QtSharp.Qt3DCore;
-using QtSharp.Qt3DRender;
-using QtSharp.Qt3DExtras;
-
-var view = new Qt3DWindow();
-var root = new QEntity();
-var cube = new QEntity(root);
-cube.AddComponent(new QCuboidMesh());
-cube.AddComponent(new QPhongMaterial());
-view.SetRootEntity(root);
-view.Show();
-```
-
-See `demos.qt3d` for the official Qt3D examples, which run without a display.
-
-## Project status
-
-QtSharp is under active development. Before 1.0, API names, signatures and behavior may
-change substantially as the binding is refined. Releases do not guarantee source or binary
-compatibility; applications may need changes when upgrading.
-
-Bug reports, contributions and additional Qt example ports are welcome. See
-[CONTRIBUTING.md](CONTRIBUTING.md) for development and contribution instructions.
-
-### Coming from ddobrev/QtSharp?
-
-This is an independent implementation, with no affiliation to
-[ddobrev/QtSharp](https://github.com/ddobrev/QtSharp). It uses a different generator and runtime,
-and is not a drop-in replacement. The [migration notes](docs/legacy-issues.md) cover string
-lists, object-valued APIs, layout ownership and APIs that are still missing.
-
-## Releases
-
-Pushing a semantic-version tag such as `v0.19.0` starts the release workflow. It builds every
-package below once for `win-x64` and once for `linux-x64` - the id carries the RID
-(`QtSharp.Api.win-x64`, `QtSharp.Api.linux-x64`, ...), and only that platform's Qt runtime and
-native glue are inside. A GitHub Release has a flat asset list, so the release attaches one
-archive per platform (`QtSharp-<version>-win-x64.zip`, `QtSharp-<version>-linux-x64.zip`), the
-Windows-only `QtSharp.Tools` package and a `SHA256SUMS.txt`. Extract your platform's archive and
-add the folder as a local NuGet source. The managed assemblies are identical in both variants.
-
-Platform packages use the suffix `.win-x64` or `.linux-x64`; reference the one matching your
-build host. `QtSharp.Tools` has no platform suffix and is Windows x64 only.
-
-| package | what it is |
+| Use case | Source |
 |---|---|
-| `QtSharp.Api` | the binding as nine module assemblies — add it and write Qt applications in C# |
-| `QtSharp.Runtime` | the managed runtime + native glue (brought in by `QtSharp.Api`) |
-| `QtSharp.Qt6` | the Qt 6 runtime for that platform — Windows DLLs + `qwindows.dll`, or the `lib/` + `plugins/` prefix and `qt.conf` on Linux (brought in by `QtSharp.Api`) |
-| `QtSharp.Tools` | Qt command-line tools (`rcc`, `uic`, `lrelease`, `lupdate`) + MSBuild `.qrc` support — Windows x64 only |
-| `QtSharp.Charts` | the optional QtCharts extension, against `QtSharp.Api` |
-| `QtSharp.Charts.Qt6` | Qt6Charts.dll (brought in by `QtSharp.Charts`; on Linux the base `QtSharp.Qt6` already deploys the whole Qt tree) |
-| `QtSharp.Qt3D` | the optional Qt3D extension (six modules), against `QtSharp.Api` |
-| `QtSharp.Qt3D.Qt6` | the Qt3D runtime and plugins (brought in by `QtSharp.Qt3D`; Windows payload) |
-| `QtSharp.Multimedia` | the optional QtMultimedia extension, against `QtSharp.Api` |
-| `QtSharp.Multimedia.Qt6` | Qt6Multimedia.dll, Qt6MultimediaWidgets.dll and the backend plugin (brought in by `QtSharp.Multimedia`; Windows payload) |
-| `QtSharp.Positioning` | the optional QtPositioning extension, against `QtSharp.Api` |
-| `QtSharp.Positioning.Qt6` | Qt6Positioning.dll (brought in by `QtSharp.Positioning`; Windows payload) |
-| `QtSharp.Sql` | the Qt model classes QtSql used to bind (`QSqlQueryModel`, `QSqlTableModel`) over ADO.NET — no Qt SQL module involved |
+| Desktop controls and item views | [Widgets Gallery](demos/QtWidgets/WidgetsGallery.cs) |
+| Text editing and printing | [Notepad](demos/QtPrintSupport/Notepad.cs) |
+| Custom drawing and mouse input | [Scribble](demos/QtWidgets/Scribble.cs) |
+| Sorting and filtering data | [Custom Sort/Filter](demos/QtWidgets/CustomSortFilter.cs) |
+| Charts | [Charts examples](demos.charts) |
+| 3D scenes | [Basic Shapes](demos.qt3d/BasicShapesDemo.cs) |
+| Media playback | [Player](demos/QtMultimedia/Player.cs) |
 
-Everything is built on the runners from the checked-in models: the generator runs without clang,
-the Qt dev files (including the QtCharts, Qt3D, QtMultimedia and Qt Shader Tools addons) are
-fetched from Qt's own repository, and the native wrappers are compiled with the platform's
-toolchain — MSVC on Windows, g++ on Linux. CI runs the same steps on every push: a Windows job and
-a Linux job build and test their own payload, a pack job creates separate platform
-packages, and consumer jobs restore and run them on both platforms. The official Qt3D examples are part of
-the Windows gate, so the extension's conformance suite runs continuously.
+These examples use the repository's [development build](docs/development.md).
+See [conformance coverage](docs/conformance.md) for the scenarios they check.
 
-The packages are distributed through GitHub Releases. Publishing to nuget.org is kept as a separate
-future step so a public NuGet API key is never required for ordinary repository builds.
+## Module scope and .NET integration
 
----
+The design priorities are:
 
-## How the binding works
+- Make signals, properties, subclassing and object lifetime straightforward to use.
+- Use C# properties, events, generics, collections and delegates where they improve the API.
+- Reuse .NET libraries and infrastructure, with adapters for QtSharp components where needed.
 
-The generator reads Qt headers through ClangSharp/libclang and writes a checked-in JSON API
-model. Code generation produces C# wrappers and C++ glue from that model. The handwritten
-runtime handles signals, virtual callbacks, marshalling and object ownership.
+QtSharp does not aim to bind every Qt module. Where .NET has mature libraries that fit C#
+applications well, we prefer those libraries:
 
-```text
-Qt headers -> libclang -> model/qtsharp.*.json
-                              | code generation
-                              +-> C# module assemblies
-                              +-> C++ wrappers -> native binding libraries
-```
-
-Applications reference one C# assembly and namespace per Qt module. The nine base modules are
-QtCore, QtGui, QtWidgets, QtNetwork, QtSvg, QtSvgWidgets, QtPrintSupport, QtOpenGL and
-QtOpenGLWidgets. See [conformance coverage](docs/conformance.md) for the examples and tests.
-
-Extension modules are separate assemblies and packages against the same runtime:
-
-| module | package | contents |
+| Qt module intentionally omitted | .NET alternative | QtSharp integration |
 |---|---|---|
-| QtCharts | `QtSharp.Charts` | `QChart`, `QChartView`, the series, bars, pie and axis families |
-| Qt3D | `QtSharp.Qt3D` | Types from Qt3DCore, Qt3DRender, Qt3DInput, Qt3DLogic, Qt3DAnimation and Qt3DExtras, as six assemblies/namespaces in one package |
-| QtMultimedia | `QtSharp.Multimedia` | playback (`QMediaPlayer`, `QAudioOutput`, `QAudioSink`), capture (`QCamera`, `QMediaCaptureSession`, `QImageCapture`, `QMediaRecorder`), the device/format classes and `QVideoWidget`/`QGraphicsVideoItem` |
-| QtPositioning | `QtSharp.Positioning` | `QGeoCoordinate` and the geo value types (rectangle/circle/path/polygon/shape, address, location), `QGeoPositionInfo`, `QGeoSatelliteInfo` and the position/satellite sources |
-| QtSql (substitute) | `QtSharp.Sql` | `QSqlQueryModel`/`QSqlTableModel` re-implemented over ADO.NET; pass any `DbConnection` |
+| QtXml | `System.Xml` | QtCore's `QXmlStreamReader`/`QXmlStreamWriter` remain available. |
+| QtSql | ADO.NET providers | `QtSharp.Sql` exposes query/table models backed by a `DbConnection`. |
+| QtWebSockets | `ClientWebSocket` | Use the .NET API directly; no Qt-facing adapter is provided yet. |
 
-## Prerequisites
+`QtSharp.Sql` and [`StreamIODevice`](runtime/QtCore/IoDeviceInterop.cs), which exposes a .NET
+`Stream` as `QIODevice`, already use this approach. Further adapters may make C# libraries
+available through the model, IO or other interfaces used by QtSharp components.
 
-| | needed for | notes |
+## Comparison with similar projects
+
+| Project | Focus | Relationship to QtSharp |
 |---|---|---|
-| **Windows x64** | the Windows build | the generated wrapper is MSVC C++ |
-| **Linux x64 (glibc)** | the Linux build | the same wrapper compiled with g++; X11/GL system libraries to run |
-| **.NET SDK 10** | everything | the projects target `net10.0` |
-| **Visual Studio with the C++ workload** | `build_api.bat` | `cl.exe` and `vcvarsall.bat` |
-| **g++ (or clang++)** | `build_api.sh` | `$CXX` selects the compiler; C++17 |
-| **Qt 6.12.0** | native build + running | Windows: MSVC 2022 64-bit dev files **and** runtime DLLs; Linux: the `gcc_64` kit. The repository's fetchers download the QtCharts, Qt3D, QtMultimedia, QtPositioning and Qt Shader Tools addons too |
-| **clang builtin headers** | extract only (Windows) | any clang version; the checked-in model used clang 19 |
-| **patchelf, 7z** | the Linux build | `p7zip-full` for the Qt archives, `patchelf` for the deployment rpaths |
-| **NuGet reachable** | first build | restores `ClangSharp` + `libClangSharp.runtime.<host>` |
+| [ddobrev/QtSharp](https://github.com/ddobrev/QtSharp) | Earlier C# Qt bindings generated with CppSharp. | This project is an independent implementation with a different generator and runtime. See the [migration notes](docs/legacy-issues.md). |
+| [Qt Bridges](https://doc.qt.io/qtbridges/) | Connecting application logic in C# and other languages to QML/Qt Quick interfaces. | QtSharp focuses on general-purpose C# bindings for Qt Widgets (`QWidget`) and other selected Qt APIs. |
 
-Nothing Qt- or clang-shaped is committed (it is all in `.gitignore`), so a clone has to put those
-three pieces somewhere. The defaults are the layout this repository was developed in; every one of
-them can be pointed elsewhere instead:
+QtSharp is not affiliated with ddobrev/QtSharp and does not preserve its source or binary API.
+QtSharp does not currently bind QtQml/QtQuick. For a QML/Qt Quick UI with application logic
+written in C#, you can use the official [Qt Bridge for C#](https://github.com/qt/qtbridge-csharp).
 
-| piece | default | override |
-|---|---|---|
-| Qt dev files (headers + lib) | Windows `<repo>\Qt\6.12.0\msvc2022_64`; Linux `<repo>/out/qt-kit/kit` | `QT_DIR`, `QTSHARP_QT_INCLUDE` (generator) |
-| Qt runtime | Windows `<repo>\Qt\6.12.0\runtime` (DLLs + `platforms\qwindows.dll`); Linux `<repo>/out/qt-kit/runtime` (`lib/` + `plugins/` + `qt.conf`) | `QtRuntimeDir` in `QtSharp.Api.props` (a Linux runtime dir must include `qt.conf`, or set `QT_PLUGIN_PATH`) |
-| clang builtin headers | `<repo>\lib\lib\clang\<version>\include` | `QTSHARP_CLANG_RESOURCE_DIR` |
-| Visual Studio | found among the 2022 / 2019 / 18.x installs | `VCVARS` (a `vcvarsall.bat`), `VCVARS_VER` (pin a toolset) |
+## Packages
 
-### Getting the pieces
+Platform package names end in `.win-x64` or `.linux-x64`. The table uses their base names.
+The sample projects and package examples use v0.19.0.
 
-* **Qt**: the repository's own fetcher does this — `tools\build-qt-kit.ps1 -QtVersion 6.12.0 -Dest <dir>`
-  downloads the `msvc2022_64` archives from Qt's online repository (qtbase, qtsvg and the addons),
-  merges the addon pieces into one kit and stages the runtime DLLs. Put the kit at
-  `<repo>\Qt\6.12.0\msvc2022_64` and the runtime DLLs at `<repo>\Qt\6.12.0\runtime`, or set
-  `QT_DIR`/`QTSHARP_QT_INCLUDE`/`QtRuntimeDir` to wherever they are. A kit from the official
-  installer (`C:\Qt\6.12.0\msvc2022_64`) works too. The kit must contain the **private** headers
-  (`include\QtCore\6.12.0\QtCore\private\...`) — the official binaries ship them.
-
-  `aqt install-qt` has been unreliable for this repository: Qt's repository no longer serves the
-  top-level `desktop/Updates.xml` that aqt reads the archive folder name out of, so it looks for
-  `qt6_6120/qt6_6120/` instead of the real `qt6_6120/qt6_6120_msvc2022_64/`. Downloading
-  `qtbase-…-X86_64.7z` (plus `d3dcompiler_47-x64.7z`) from
-  `…/desktop/qt6_6120/qt6_6120_msvc2022_64/qt.qt6.6120.win64_msvc2022_64/` and unpacking it at the
-  kit root gives the same result. `qtbase` covers QtCore/QtGui/QtWidgets/QtNetwork/QtPrintSupport/
-  QtOpenGL; QtSvg and QtSvgWidgets come from the separate `qtsvg` module (add its
-  `include`/`lib` the same way).
-* **Qt runtime DLLs**: `<repo>\Qt\6.12.0\runtime` needs the modules the binding links —
-  `Qt6Core.dll`, `Qt6Gui.dll`, `Qt6Widgets.dll`, `Qt6Network.dll`, `Qt6Svg.dll`,
-  `Qt6SvgWidgets.dll`, `Qt6PrintSupport.dll`, `Qt6OpenGL.dll`,
-  `Qt6OpenGLWidgets.dll` — plus the MSVC runtime DLLs (`msvcp140*.dll`, `vcruntime140*.dll`) and
-  `platforms\qwindows.dll`. The easy way is to build any Qt widget app and run `windeployqt` on it.
-  All of them must be the *same* Qt version (6.12.x) — they share `Qt6Core`.
-* **Qt on Linux**: `tools/build-qt-kit.sh` does the same job for the `gcc_64` kit — it downloads
-  the qtbase, qtsvg, ICU and addon archives from Qt's own repository (the same HTML-listing and
-  7z mechanism the Windows fetcher uses; `aqt` cannot be used for the reason above), merges the
-  addons into `<repo>/out/qt-kit/kit` and stages the deployment tree:
-
-  ```
-  out/qt-kit/kit       include/ + lib/ + plugins/       (QT_DIR)
-  out/qt-kit/runtime   lib/*.so.6 + plugins/ + qt.conf  (QT_RUNTIME_DIR)
-  ```
-
-  It pins the deployment rpaths with `patchelf` (`$ORIGIN` on the libraries,
-  `$ORIGIN/../../lib` on the plugins), so an application directory needs no `LD_LIBRARY_PATH`.
-  `--kit-dir` points at an existing kit instead of downloading one. The script needs `curl`, `7z`
-  (`p7zip-full`) and `patchelf`; the built application additionally needs the system X11/GL
-  libraries Qt itself needs (`libxcb-*`, `libxkbcommon-x11-0`, `libgl1`/`libegl1`, `libdbus-1-3`,
-  fonts). The staged runtime includes QtDeclarative (Qt6Qml/Qt6Quick, which QtMultimedia's ffmpeg
-  backend links); for playback the machine also needs the distribution's FFmpeg runtime libraries
-  (`libavcodec`, `libavformat`, `libavutil`, `libswresample`, `libswscale`).
-* **clang builtin headers**: `<repo>\lib\lib\clang\<version>\include` (with `stddef.h` in it) — copy
-  them out of an LLVM installation (`C:\Program Files\LLVM\lib\clang\19\include`) or from the
-  `libclang.runtime.win-x64` NuGet package. Any version works; a different version from clang 19 may
-  change a fact or two in the extracted model, which the model diff gate below will show you.
-  Extraction is Windows-only by design: the model is the MSVC kit's, and a Linux checkout rebuilds
-  everything from the checked-in model (`regen-api.ps1` skips the extraction steps off Windows).
-
----
-
-## Build and verify
-
-```
-# Windows
-powershell -File tools\regen-api.ps1
-
-# Linux (PowerShell 7)
-pwsh ./tools/regen-api.ps1
-```
-
-The script generates the binding, builds the native libraries and runs the examples and tests.
-On Linux the extraction steps are skipped (the model is the Windows one); everything else runs, including the
-determinism gate, the g++ build and the demo/test suite. For a bare native build without the gate,
-`./build_api.sh` and `tools/build-native-module.sh <module>` compile the glue directly. It runs, in order:
-
-| step | what it does |
+| Package | Contents |
 |---|---|
-| `[1]` | builds the generator (`gen`) |
-| `[2]` | extracts the model from the Qt headers into `out\qtsharp.api.json.new` (**~3 s**) and compares it to the checked-in `model\qtsharp.api.json` — byte for byte |
-| `[2b]` | extracts the addon models (Charts, Qt3D, Multimedia, Positioning) from their own headers and compares them to the checked-in ones — the same gate |
-| `[3]` | splits the combined model into the nine base models and runs the code generator **twice** for every module, comparing the trees |
-| `[4]` | compiles the generated C++ wrappers (the core one and one per extension module) and builds the nine base assemblies, all at once |
-| `[5]` | builds the official demos and the binding tests, then runs all of them with `testapp`, several windows at a time |
+| `QtSharp.Api` | The nine base module assemblies: Core, Gui, Widgets, Network, Svg, SvgWidgets, PrintSupport, OpenGL and OpenGLWidgets. |
+| `QtSharp.Runtime`, `QtSharp.Qt6` | Binding and Qt runtime dependencies, installed automatically. |
+| `QtSharp.Charts` | Charts and data visualization. |
+| `QtSharp.Qt3D` | Qt3DCore, Render, Input, Logic, Animation and Extras. |
+| `QtSharp.Multimedia` | Media playback, capture and device APIs. |
+| `QtSharp.Positioning` | Coordinates, shapes, positioning and satellite APIs. |
+| `QtSharp.Sql` | ADO.NET-backed query and table models. |
 
-Two gates live in the middle of that: **the models must come out identical** (extraction is
-deterministic by construction, so a difference means the Qt version, the clang headers or the
-`Roots` table changed) and **the generator must be reproducible**. If a model legitimately changes,
-review the diff and re-run with `-Adopt` to accept it. Use `-SkipExtract` to build from the
-checked-in models without re-extracting the headers.
-
-The independent build steps run in a process pool (`tools/parallel.ps1`): the addon extractions,
-the codegen runs (both the real tree and the determinism check tree) and the native compiles, up to
-`min(8, cores)` at a time. Pass `-Jobs 1` for the old one-at-a-time run, or a larger number on a big
-machine. Step 5 starts several GUI processes at once (up to `min(6, cores)`; the same `-Jobs` value
-caps it). Each demo still leaves its window up for about a second so it can be looked at. On a
-machine that is being used at the same time, one of them can very occasionally die while Qt tears
-the process down — a `0xC000041D` exit *after* its own `[SELFTEST OK]` line. That is a known flake,
-not a failed assertion; the gate prints each window's result line with its name, retries a nonzero
-exit once, and a window that fails twice has its own output printed, so the failure stays
-attributable even though the windows overlapped.
-
-The same suite runs in CI on every push — the `Smoke tests` job in `.github/workflows/ci.yml` on
-Windows and the `linux-bind` job on Ubuntu. The Windows job takes the binding the `binding` job
-built from the checked-in model, fetches Qt, builds the examples and the binding tests, then runs
-all of them through the same `tools/run-window-tests.ps1` pool, so it gets the same parallelism and
-the same one retry for the teardown flake above. The Linux job does the same with g++ and runs the
-suite under `xvfb-run` (a real platform plugin, because several examples assert on rendered
-pixels); `LIBGL_ALWAYS_SOFTWARE=1` supplies OpenGL for the Qt3D examples. Note that the examples
-need a real Qt platform on Windows as well: `QT_QPA_PLATFORM=offscreen` is *not* an option, because
-several of them assert on rendered pixels and one crashes without `qwindows`. The package consumer
-check on Linux uses the offscreen platform (`tools/test-packages.ps1` selects it when there is no
-display).
-
-Once that has succeeded, the ordinary `dotnet build` of any project works too:
-
-```
-dotnet build demos\QtSharp.Demos.csproj -c Release
-dotnet build testbind\testbind.csproj -c Release
-dotnet build samples\resources\Resources.csproj -c Release
-```
-
----
-
-## Run the examples
-
-```
-testapp                          # the list (official demos + binding tests)
-testapp qtwidgets-calculator     # an official example
-testapp qtgui-pathstroke         # QTSHARP_DEMO_MS=8000 keeps it on screen longer
-testapp test-metaobject          # a binding test
-```
-
-On Linux the executable has no extension: `testbind/bin/Release/net10.0/testapp qtwidgets-calculator`
-(or `xvfb-run -a` when there is no display; `QT_QPA_PLATFORM=offscreen` works for the non-rendering
-tests).
-
-The official demos are named after the module they exercise (`qtcore-*`, `qtgui-*`, `qtwidgets-*`, plus
-`qtsvg-*`, `qtsvgwidgets-*`, `qtprintsupport-*`, `qtnetwork-*`, `qtcharts-*`,
-`qtmultimedia-*` and `qt3d-*`); the binding tests use `test-*` and cover
-ownership, exceptions, C#-declared signals/properties, value types, the BCL conversions and the
-modules whose upstream examples are not ported yet. `docs/conformance.md` has the full matrix.
-Registration is discovery, not a list: a class carries `[Demo("qtwidgets-analogclock")]` and each
-catalog finds it in its own assembly.
-
-Every example is also a self-test: it drives the generated API, checks what it sees and prints
-`[PASS]`/`[FAIL]` lines, ending in `[SELFTEST OK]`. That is what the gate reads, so CI checks the examples alongside the binding.
-
----
-
-## Write your own UI
-
-A consumer project is a package reference and a program. The in-repository demos reference the
-module projects directly (the same assemblies the package contains).
-
-```xml
-<ItemGroup>
-  <PackageReference Include="QtSharp.Api.win-x64" Version="0.19.0" />
-</ItemGroup>
-```
-
-A project that does not use the package can compile the binding from source by importing
-`QtSharp.Api.props`:
-
-```xml
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-    <!-- Only when you reference QtSharp.Demos: the binding is compiled in there, and compiling it
-         twice defines every binding type in two assemblies (CS0433). Drop this line (and the
-         ProjectReference) to compile the binding into your own project instead. -->
-    <QtSharpCompileBinding>false</QtSharpCompileBinding>
-  </PropertyGroup>
-
-  <Import Project="..\..\QtSharp.Api.props" />   <!-- binding + runtime + the native/Qt DLL copies -->
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\demos\QtSharp.Demos.csproj" />
-  </ItemGroup>
-</Project>
-```
-
-```csharp
-using QtSharp.QtWidgets;
-
-static class Program
-{
-    [STAThread]
-    static int Main(string[] args)
-    {
-        var app = new QApplication(args);      // the one application object, the PyQt line
-
-        var window = new QWidget();
-        var layout = new QVBoxLayout(window);
-        var label = new QLabel("Hello, QtSharp");
-        var button = new QPushButton("Count");
-        int clicks = 0;
-        button.Clicked += _ => label.SetText($"clicked {++clicks} time(s)");   // a signal is an event
-
-        layout.AddWidget(label);
-        layout.AddWidget(button);
-        window.WindowTitle = "Hello";
-        window.Show();
-
-        return app.Exec();                     // app.Quit() ends it
-    }
-}
-```
-
-### The API in one page
-
-* **Properties are properties.** `Q_PROPERTY` becomes a C# property with the PascalCase name, and
-  the accessors keep their C++ spelling: `edit.Text`, `edit.text()`, `edit.SetText("...")`;
-  `timer.Interval`, `timer.interval()`. A property whose name would collide with a nested enum, a
-  virtual or a field is skipped and the accessors stay.
-* **Signals are events**, and also a `QSignal` — both spellings work:
-  ```csharp
-  button.Clicked += handler;          // C# event: -= really disconnects (QObject::disconnect)
-  button.ClickedSignal.Connect(handler);
-  button.ClickedSignal.Emit(false);   // manual emit; only QSignal has it
-  ```
-  `Q_SIGNAL`s with more than one overload get the 2,3,… suffix (`Activated2Signal`/`Activated2`).
-* **Qt value types convert to the BCL explicitly.** PyQt's `toPyDateTime()`/`QDateTime(datetime)`
-  idea in C#:
-  ```csharp
-  var qdt = new QDateTime(dateTime);        // Utc -> Qt::UTC, Local/Unspecified -> Qt::LocalTime
-  DateTime back = qdt.ToDateTime();         // qdt.ToDateTimeOffset() keeps the offset
-  var qd = new QDate(dateOnly);             // qdate.ToDateOnly()
-  var qt = new QTime(timeOnly);             // qtime.ToTimeOnly()
-  byte[] data = qba.ToArray();              // new QByteArray(data) is binary-safe
-
-  Point pt = (Point)qpoint;                 // QPoint/QSize/QRect <-> System.Drawing
-  Color c = (Color)qcolor;                  // QColor <-> System.Drawing.Color
-  Vector3 v = (Vector3)qvector;             // QVector2D/3D/4D <-> System.Numerics
-  Quaternion q = (Quaternion)qquaternion;   // QQuaternion <-> System.Numerics.Quaternion
-  Uri uri = (Uri)qurl;                      // QUrl <-> System.Uri
-  Guid id = Guid.CreateV5(ns, name);        // QUuid is a Guid; v3/v5 are extensions on it
-  char upper = 'a'.ToUpper();               // QChar is a char; Unicode extras are extensions
-  object value = model.Data(index);         // a QVariant signature is object: QColor, int, string, ...
-  model.SetData(index, value);              // and back, without naming a variant type
-  ```
-  There are no implicit operators on purpose: `==` on a handle class compares wrapper identity, so
-  an implicit conversion would let `qdt == dateTime` compile and silently be false. Invalid or
-  out-of-range Qt values throw `InvalidOperationException` instead of wrapping.
-
-  One type goes the other way: **QUuid is `System.Guid`** - there is no QUuid type, the same way
-  there is no QString. It is 16 bytes of data, so every Qt signature that takes or returns one
-  surfaces as a `Guid` (value equality, no disposal), and Qt stores the same 16 bytes in a
-  QVariant's Uuid type. The Qt-only operations are C# 14 extensions on `Guid`
-  (`Guid.CreateV3`/`Guid.CreateV5`, `Guid.FromRfc4122`, `id.Version()`, `id.Variant()`,
-  `id.ToRfc4122()`), so a call site needs the .NET 10 compiler. A null QUuid is `Guid.Empty`;
-  parsing is `Guid.Parse`/`Guid.TryParse`; v4 and v7 ids are `Guid.NewGuid`/`Guid.CreateVersion7`;
-  Qt's string formats are Guid's "B"/"D"/"N".
-
-  QChar gets the same treatment: it is one UTF-16 code unit, so it is `char` and there is no QChar
-  type. The classification and case methods are extensions (`'A'.IsLetter()`, `'a'.ToUpper()`,
-  `'́'.CombiningClass()`), `Category()` returns the BCL's `System.Globalization.UnicodeCategory`,
-  and the properties the BCL has no API for (script, bidi direction, joining type, decomposition,
-  mirroring, case folding, Unicode version) call Qt's own tables. The static code-point overloads
-  are extensions too: `char.Category(0x41)`, `char.Script(0x41)`. A `QChar*` buffer is a `string`
-  (`QCollator.Compare`, `QRawFont.GlyphIndexesForChars`).
-
-  The same rule covers every other trivially copyable Qt value: **QModelIndex, QColor, QSizePolicy,
-  QTransform, QElapsedTimer, QDeadlineTimer, QOperatingSystemVersion, QTextLength, QRgba64,
-  QPixelFormat, QPointingDeviceUniqueId, QMetaMethod/QMetaEnum/QMetaClassInfo, QMetaType,
-  QCalendar, QMetaProperty, QTableWidgetSelectionRange, QTextLine, QTextInlineObject, QAudioFormat
-  and Qt3D's QNodeId/QKeyFrame are C# structs**, not handles - no `using`, no finalizer, value
-  equality. A parameter Qt passes as `const T&` crosses as the value, a `T&` as `ref`/`out`, and a
-  method that mutates in place writes back. `QCalendar()` (Gregorian) and `QKeyFrame()` (Bezier)
-  keep their parameterless constructors because their zero values are not Qt's defaults.
-  Equality and hashing are Qt's: the generated struct calls `operator==`/`qHash` when Qt declares
-  them and falls back to the value's fields (or bytes) when it does not, so `-0.0` vs `0.0`,
-  `QTextLength`'s fuzzy comparison and `QColor`'s spec rules are exactly Qt's. The comparison
-  crosses the native boundary once per call.
-  QMatrix4x4 is the one deliberate hold-out: its non-const `QMatrix4x4*` out parameters need a
-  dedicated rule before it can stop being a handle. `QMetaObject` stays a handle too: Qt returns it
-  as a `const QMetaObject*` to static data, and the struct-pointer convention would surface that as
-  an `IntPtr` instead.
-* **JSON objects are dictionaries, arrays are lists.** `QJsonObject` implements
-  `IDictionary<string, QJsonValue>` (a writable view over the Qt object; `Insert` returns the value
-  the C++ iterator points at) and `QJsonArray` implements `IList<QJsonValue>`. The LINQ-friendly
-  snapshots are `ToObjectDictionary()` and `ToObjectList()`, with values unwrapped the way a
-  variant's `ToObject()` unwraps them (nested objects as `Dictionary<string, object>`, arrays as
-  `object[]`). Object keys enumerate in Qt's sorted order.
-* **A .NET Stream can be a Qt IO device.** `StreamIODevice` (in `QtSharp.QtCore`) implements
-  `QIODevice`'s virtuals (`readData`/`writeData`/`seek`/`size`/...), so `QImage.Load`,
-  `QXmlStreamReader`, `QDataStream` and anything else taking a `QIODevice*` reads from or writes to
-  managed IO. The generator publishes QIODevice's virtuals through a small bridge registry
-  (`gen/Bridges.cs`), which is also where future bridges belong.
-* **The application object** is created and run like PyQt does it: `new QApplication(args)`,
-  `app.Exec()`, `app.Quit()`, `app.Exit(code)`. From code that has no application reference (a menu
-  action), use `QCoreApplication.Instance().Quit()`.
-* **Subclassing**: `override` the virtuals the model publishes — `sizeHint` (the `SizeHint`
-  property reads it, the same way Qt's Q_PROPERTY does), `PaintEvent`, `MousePressEvent`,
-  `KeyPressEvent`, model/delegate virtuals (`RowCount`, `Data`, `Paint`, `CreateEditor`),
-  `Runnable.Run`, `FilterAcceptsRow`, `QGraphicsItem::boundingRect`/`paint`/`advance`, … The
-  native side forwards to your override. A virtual is an override point whenever its signature is
-  expressible; private and `final` ones stay callable only.
-* **Declaring your own signal or property** (PyQt's `pyqtSignal`/`pyqtProperty`): put the
-  attribute on the member, and the member is the declaration:
-  ```csharp
-  [QtSignal] public event Action<int> ValueChanged;          // the Qt signal valueChanged(int)
-  [QtProperty] public int Value { get; set; }                // readable and writable
-  [QtProperty("caption")] public string Text { get; set; }   // an explicit Qt name
-  [QtProperty] public string Label => "read-only";           // get-only: a read-only property
-
-  void SetValue(int value)
-  {
-      Value = value;
-      ValueChanged?.Invoke(value);              // the pyqtSignal emit: Qt sees it, then the handlers
-  }
-  ```
-  Raising the signal is invoking the event, the way PyQt's `signal.emit()` is: the runtime keeps
-  an emit trampoline in the event's handler field, so `?.Invoke` calls `QMetaObject::activate` and
-  a QML/C++ `connect` sees it too. `EmitSignal(ValueChanged, value)` is the explicit spelling of
-  the same emit. The trampoline is always there, so the event is never null and `?.Invoke` emits
-  even with no C# subscriber; `ValueChanged == null` is not a "has subscribers" test. Only
-  `+=`/`-=` the event: assigning it (`ValueChanged = null`) also drops the trampoline, and the
-  Invoke spellings stop reaching Qt.
-  The Qt name is the member's name with a lower-case first letter. The C# event, a QML/C++ handler
-  and a Qt `connect()` all reach the same handlers, and Qt reaches a property through
-  `QObject::setProperty`/`property`, just like a moc-generated one.
-  `[QtSignal]` needs a field-like event (the compiler's handler list is what the runtime reads).
-  The rest of `Q_PROPERTY` maps to `QtProperty`'s properties: `Notify` (the signal named by its
-  C# member or Qt name; `<Property>Changed` is used when omitted), `Reset` (a parameterless
-  method; `Reset<Property>` by convention), `Constant`, `Final`, `Required`, `Designable`,
-  `Scriptable`, `Stored`, `User` and `Revision`. `BINDABLE` is not exposed: it needs binding
-  support in the native runtime, not just a flag.
-  `tests/MetaObjectApi.cs` is the same declaration under test.
-  The generated Qt classes are deliberately different: their properties and signals already exist
-  in moc's meta-object, so they do not carry these attributes. Their types are marked
-  `[GeneratedCode("qtgen", …)]`, and the XML docs say what a member is — for example
-  `The windowTitle property (Q_PROPERTY, QString, read/write)` and
-  `The windowTitleChanged(QString) signal as a C# event`. `[QtProperty]`/`[QtSignal]` are only for
-  members *you* declare on a C# subclass. A generated member instead carries the read-side
-  `[QtNativeProperty(name, type, writable)]` or `[QtNativeSignal(mocSignature)]`, so reflection
-  and tooling can tell the two apart without guessing from the type. Only the types the
-  hand-written runtime extends (the application classes, `QObject`, and the date/time/byte-array
-  types) are `partial`; every other
-  wrapper is a whole declaration, and `unsafe` sits on the few constructors that pass a function
-  pointer rather than on the class.
-* **Ownership**: an object you `new` is yours — `Dispose()` (or the finalizer) deletes it, unless you
-  handed it to Qt (a parent, a layout, a scene, a view), in which case the generated destructor asks
-  `parent()` first and leaves it alone. Objects Qt owns are never deleted by the GC, and once Qt has
-  destroyed one, touching its wrapper throws `ObjectDisposedException` instead of crashing.
-* **A destroyed object reads as null.** A wrapper whose Qt object is gone compares equal to null the
-  way a destroyed `UnityEngine.Object` does, so `if (w != null) w.Use();` is the guard to write, and
-  `w.IsAlive` asks the same question by name (PyQt's `sip.isValid`). Only the operator is
-  liveness-aware — `w?.Use()`, `w ?? fallback` and `w is null` test the reference itself, exactly as
-  they do in Unity.
-* **An exception in a handler is reported, not fatal.** A signal handler or a virtual override runs
-  inside Qt's C++ frames, where an exception has nowhere to land — PyQt answers that by printing the
-  traceback and calling `qFatal()`, PySide by printing and carrying on. The runtime catches it at the
-  boundary, writes it to stderr and raises `ApiRuntime.UnhandledCallbackException`; subscribe to that
-  to fail loudly instead of quietly.
-* **Events** that Qt hands to a handler are read-only wrappers (`e.Position()`, `e.Key()`,
-  `e.Buttons()`, `e.TimerId()`); they are transient — do not keep them.
-* **The example classes are `sealed`** on purpose (they are meant to be read, not inherited); the one
-  exception is `ApiArthurFrame`, the small base widget with a `virtual Paint(QPainter)` hook.
-
----
-
-## Qt development tools
-
-`QtSharp.Tools` is a Windows x64 development package containing `rcc`, `uic`, `lrelease`,
-`lupdate` and their native dependencies; `moc` is included when present in the source kit.
-It is a separate download on the [release page](https://github.com/ProxyCheng/QtSharp/releases).
-Consumers do not need to install a Qt SDK or Python.
-
-To produce the package, point the staging script at a directory containing these executables
-and matching DLLs (normally a Qt kit's `bin`):
-
-```powershell
-powershell -File tools\pack-qt-tools.ps1 -QtToolsSource C:\Qt\6.12.0\msvc2022_64\bin
-```
-
-The result is `out/packages/QtSharp.Tools.0.19.0.nupkg`. `-QtVersion` and `-PackageVersion`
-override the defaults. Put the upstream license texts/notices in a `QtSharp-ThirdPartyNotices`
-subdirectory beside the source tools to include them in the payload. Tools are staged under
-`out/qt-tools`; the script checks QtCore's version and runs captured, time-limited startup checks.
-
-In a consumer project:
-
-```xml
-<ItemGroup>
-  <PackageReference Include="QtSharp.Tools" Version="0.19.0" PrivateAssets="all" />
-  <QtResource Include="assets\sample.qrc" />
-</ItemGroup>
-```
-
-Building automatically compiles to `assets/sample.rcc` in the output/publish directory.
-Register it with `QResource.RegisterResource(path)` to use its `:/` paths. The compiler runs
-on each build to pick up changes to referenced assets as well as the `.qrc` file itself.
-
-The executable directory is exposed as `$(QtSharpToolsDir)`. A captured command-line entry:
-
-```text
-dotnet msbuild MyApp.csproj -t:QtSharpRunTool -p:QtSharpTool=rcc -p:QtSharpToolArguments=--help
-```
-
-`uic` generates native C++, not C#; a C# `.ui` compiler is not implemented yet. Designer,
-Linguist GUI and deployment tools are not included in this first payload.
-
-The resource integration sample checks the complete package-to-resource-read path:
-
-```powershell
-dotnet restore samples\resources\Resources.csproj --source D:\QtSharp\out\packages
-dotnet run --project samples\resources\Resources.csproj -c Release --no-restore
-```
-
-Replace the local source path with your checkout's `out/packages` directory.
-
-## Repository layout
-
-| path | what |
-|---|---|
-| `model/qtsharp.api.json` | the checked-in combined API model — the extraction gate and the shared native glue's input |
-| `model/qtsharp.<module>.json` | the nine checked-in base models (`split-core`) and the addon models (`charts`, six Qt3D modules) the assemblies are generated from |
-| `gen/` | the generator: `ApiModel.cs` (model shape, vocabulary), `ApiModel.Modules.cs` (the module registry), `CoreSplit.cs` (combined → per-module models), `ClangExtractor.cs` (the libclang front end), `ApiCodeGen.cs` (model → C# + C++) |
-| `native/` | the hand-written runtime (`QtSharpApiRuntime.cpp`: moc signal forwarder, probes) and the crash tracer |
-| `runtime/` | the managed runtime: `ApiRuntime.cs` (`QtSharp.Runtime`) and the per-module halves under `QtCore/`, `QtGui/`, `QtWidgets/` |
-| `demos/` | `QtSharp.Demos.csproj` — the binding, the runtime and the official Qt examples, grouped as `QtGui/` and `QtWidgets/`; each class is registered with `[Demo("qtwidgets-...")]` and `DemoCatalog` discovers it |
-| `tests/` | `QtSharp.BindingTests.csproj` — the binding-specific tests (`test-*`), registered the same way and discovered by `BindingTests` |
-| `testbind/` | `testapp`, the one entry point: it dispatches both catalogs |
-| `demos.qt3d/` | the official Qt3D C++ examples (`simple-cpp`, `basicshapes-cpp`, `3d-text`) as the extension's conformance tests |
-| `demos.charts/` | the official Qt Charts examples (38 windows) as the Charts module's conformance tests |
-| `nuget/QtSharp.Api/`, `nuget/QtSharp.Runtime/`, `nuget/QtSharp.Qt6/` | the base binding and its runtime packages (nine module assemblies inside `QtSharp.Api`) |
-| `nuget/QtSharp.Charts*`, `nuget/QtSharp.Qt3D*`, `nuget/QtSharp.Multimedia*` | the addon packages and their `*.Qt6` runtime companions |
-| `docs/conformance.md` | which Qt examples run against which module, and the remaining coverage gaps |
-| `tools/regen-api.ps1` | the build and the gate |
-| `tools/parallel.ps1` | the process pool the gate and CI use to run independent build steps several at a time |
-| `tools/clangprobe/` | the probe used to validate the libclang front end (not part of the build) |
-| `tools/disasm.py` | capstone-based RVA disassembly helper |
-| `QtSharp.Api.props` | the one import a consumer project needs |
-
----
+Optional binding packages pull in their runtime dependencies. `QtSharp.Tools` is a separate
+Windows x64 package, without a platform suffix, containing Qt command-line tools and MSBuild
+resource support. See the [tools guide](tools/QtSharp.Tools/README.md) and
+[package architecture](docs/module-architecture.md) for details.
 
 ## Known limitations
 
-* **Windows x64 and Linux x64 (glibc), Qt 6.12.0 only** — the model is extracted from the MSVC
-  kit, and the Linux build compiles the same generated C++ with g++. ARM64 and musl are not
-  packaged.
-* **`long`-typed Qt APIs stay 32-bit on Linux.** The model comes from the MSVC headers, where
-  `long` is 32 bits, so the C ABI pins it to `int`/`uint` on both platforms and the wrapper
-  converts at the Qt call. That keeps one C# API across platforms, but `QByteArray.toLong`,
-  `QLocale.toLong`, the `QEventPoint` timestamps and the `QThread`/`QWaitCondition` timeout
-  parameters truncate to 32 bits on Linux (the timestamps wrap after ~49.7 days of uptime). Use the
-  `QByteArray::toLongLong` / `QLocale::toLongLong` overloads when the full range matters.
-* **Windows-only Qt members are not bound.** `QProcess.nativeArguments`/`setNativeArguments` are
-  declared by Qt only on Windows; the generator filters them out so one API surface compiles on
-  both platforms. Use `ProcessStartInfo.Arguments` instead.
-* **The addon `.Qt6` packages have no separate Linux payload.** On Linux the base
-  `QtSharp.Qt6` package deploys the whole Qt tree (`lib/` + `plugins/` + `qt.conf`, addon modules
-  included), because every addon package depends on it anyway; the addon packages still carry the
-  addon's native glue for both RIDs.
-* **Single-file publish is not supported on Linux.** The deployment relies on `$ORIGIN` rpaths
-  between the application directory, `lib/` and `plugins/`; a single-file bundle extracts the
-  native libraries elsewhere and breaks that layout.
-* **`QtSharp.Tools` is Windows x64 only** — its `rcc`/`uic`/`lrelease`/`lupdate` payload is the
-  MSVC build. On Linux use the tools from the Qt kit directly.
-* **QtMultimedia on Linux needs the distribution's FFmpeg runtime.** Qt's ffmpeg backend plugin
-  links `libavcodec`/`libavformat`/`libavutil`/`libswresample`/`libswscale`; install the ffmpeg
-  runtime packages that match the kit's build (on Ubuntu 24.04, the `libavcodec60` family). The
-  binding and the plugin load without them, but `QMediaPlayer` reports no media.
-* **`QtSharp.Sql` materializes a whole result set.** Qt's `QSqlTableModel` fetches in 256-row
-  batches; the substitute loads everything up front, so page very large tables with `WHERE`/`LIMIT`.
-  Its per-cell `Data()` also crosses the managed/native boundary (a constant cost per visible cell).
-* **`QAudioFormat` has no constructor overloads in the binding.** Qt 6.12 declares none beyond the
-  implicit default (the AST does not list it), so there is no `QAudioFormat(...)`; as a struct its
-  default (`new QAudioFormat()` / `default`) is Qt's default format, and the setters fill it in.
-  `QAudioDevice.PreferredFormat()` is still the useful starting point.
-* **The bound modules** are QtCore, QtGui, QtWidgets, QtNetwork (host addressing, local sockets
-  `QLocalServer`/`QLocalSocket`, TCP/UDP, the HTTP client), QtSvg/QtSvgWidgets, QtPrintSupport
-  (`QPrinter`, print dialogs/preview) and QtOpenGL/QtOpenGLWidgets (`QOpenGLWidget`,
-  `QOpenGLContext`, shader/buffer classes).
-* **Intentionally omitted**: QtXml, QtSql and QtWebSockets use .NET alternatives; see
-  [module scope and .NET integration](#module-scope-and-net-integration).
-* **Not currently bound**: QtQml/QtQuick, QtPdf and QtWebEngine.
-* **QtCharts and Qt3D are optional packages.** Their Qt libraries have separate licensing
-  terms; see [NOTICE.md](NOTICE.md). Qt3D types such as `QTransform` share names with base Qt
-  types. Use the module namespace or an alias to distinguish them, for example
-  `using QTransform3D = QtSharp.Qt3DCore.QTransform;`.
-* **Qt3D-specific virtuals are override points too.** There is no name whitelist: a managed
-  subclass of a Qt3D class can replace `QAbstractAspect::onEngineStartup`-style hooks and
-  `executeCommand`/`jobsToExecute`. A private or `final` virtual, and a signature the glue cannot
-  reproduce, stays callable only. Signals, properties, enums and flags are bound normally
-  (including class-scoped enums in signal signatures).
-* **Not ported**: the RHI examples (they need `QRhi` and prebuilt shaders) and Window Embedding.
-  PDF *output* works through `QPrinter` (see `test-docformats`); PDF *reading* needs the QtPdf
-  module, which is not bound.
-* `tests/WindowFlagsApi.cs` is written and passes all 115 assertions, but it dies about three runs in ten
-  while Qt tears the process down (a native message pump reaching a destroyed window), so it is
-  deliberately not wired into the dispatcher.
-* An optional parameter whose C++ default is a *bare enumerator that is not an enumerator of the
-  parameter's type* still truncates the overload (the C# default would be 0, which Qt often
-  reserves for "invalid"). A boxed-value default is fine now: the parameter defaults to `null` and
-  the native glue substitutes the declared expression, which is what unlocked
-  `QPixmap.fill(QColor)`, `QWidget.grab(QRect)`, `QComboBox.addItem(QString, QVariant)` and
-  `QTcpServer.listen(address, port)`.
-* A `const uchar *` *return* is dropped (there is no length to go with it), so `QResource.data()`
-  and `QImage.bits()` are absent; `QResource.uncompressedData()`, `QByteArray` and the `byte[]`
-  parameters cover the same ground. Nested classes (`QFont::Tag`, `QTextOption::Tab`) are not
-  bound either — the model publishes top-level classes and enums only.
-* Hand-written code inside a bound class is not preserved by a regeneration: the binding lives in
-  `out/api` (gitignored), and everything hand-written lives in `runtime/`.
+- Supported platforms are Windows x64 and Linux x64/glibc. macOS, ARM64 and musl are not packaged.
+- QtQml/QtQuick, QtPdf and QtWebEngine are not bound. PDF output through `QPrinter` is supported.
+- Single-file publishing is not supported on Linux.
+- APIs using C++ `long` retain 32-bit values on Linux; use the corresponding 64-bit APIs where needed.
+- Some native window teardown scenarios remain unstable.
+
+See [detailed limitations](docs/limitations.md) before choosing a deployment approach.
+
+## Prerequisites
+
+Applications need the .NET 10 SDK and the runtime dependencies described above.
+Building QtSharp itself also needs a Qt development kit and a native compiler. See the
+[development guide](docs/development.md) for setup, generation, testing and example commands.
+
+## Contributing
+
+Bug reports, fixes and additional example ports are welcome. Please include a minimal
+reproduction with [bug reports](https://github.com/ProxyCheng/QtSharp/issues), and read
+[CONTRIBUTING.md](CONTRIBUTING.md) before working on the binding.
 
 ## License and third-party notices
 
-QtSharp's original source code is available under the [MIT License](LICENSE). Qt, ClangSharp,
-the Qt command-line tools, and other bundled or restored dependencies remain under their own
-licenses. See [NOTICE.md](NOTICE.md) before redistributing binaries or the `QtSharp.Tools` package.
+QtSharp's original source code is available under the [MIT License](LICENSE). Qt and other
+dependencies have their own licenses. See [NOTICE.md](NOTICE.md) before redistributing binaries.
