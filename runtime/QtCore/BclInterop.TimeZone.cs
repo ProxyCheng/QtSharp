@@ -21,8 +21,10 @@ using QtSharp.Runtime;
 // zones throw InvalidOperationException. A zone that cannot be represented - a fixed offset with
 // sub-minute seconds, a custom TimeZoneInfo whose adjustment rules have no Qt id, a zone missing
 // from this host's database - throws NotSupportedException rather than silently becoming a
-// different zone with the same-looking clock. Qt's tzdata and this host's database can still be
-// different versions; the ids and rules are copied, not translated or merged.
+// different zone with the same-looking clock. A named .NET zone is only accepted when its rules
+// match the host zone with that id. In the other direction, the id is looked up in this host's
+// database, so Qt's tzdata and the host's database may be different versions and the transition
+// rules can differ even though the id is the same.
 namespace QtSharp.QtCore
 {
     public partial class QTimeZone
@@ -66,7 +68,8 @@ namespace QtSharp.QtCore
         }
 
         /// <summary>
-        /// The zone as a BCL <see cref="TimeZoneInfo"/> with the same id and rules.
+        /// The zone as a BCL <see cref="TimeZoneInfo"/> with the same id. The rules come from this
+        /// host's time-zone database, which may be a different tzdata version than Qt's.
         /// </summary>
         /// <exception cref="InvalidOperationException">
         /// The QTimeZone is null/invalid, has no id, or has a fixed offset outside
