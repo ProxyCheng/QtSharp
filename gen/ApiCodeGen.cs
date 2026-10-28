@@ -1315,8 +1315,17 @@ public static class ApiCodeGen
         : IsCharT(e) ? $"(char){expr}"
         : IsStruct(e) ? expr
         : IsQVariantType(e) ? $"{VariantMarshalling}.ToManaged({expr})"
-        : IsPointerElem(e) ? $"{CsTypeName(e.Substring(0, e.Length - 1))}.FromTransientHandle({expr})"
+        : IsPointerElem(e) ? PointerElemRead(e, expr)
         : IsOwned(e) ? $"{CsTypeName(e)}.FromOwnedHandle({expr})" : $"{CsTypeName(e)}.FromTransientHandle({expr})";
+    // Reading a pointer element. A QObject goes through FromHandle, so a QList<QObject*> element
+    // (QObject::children()) is the object's actual bound class and keeps its identity, exactly
+    // like a QObject* return value. Any other pointer keeps the transient wrapper: a
+    // QGraphicsItem has no meta-object and no lifetime the identity cache could track.
+    static string PointerElemRead(string e, string expr)
+    {
+        string pointee = e.Substring(0, e.Length - 1);
+        return $"{CsTypeName(pointee)}.{(DerivesFromQObject(pointee) ? "FromHandle" : "FromTransientHandle")}({expr})";
+    }
     // Managed value -> ABI. A QVariant has no one-line spelling: converting an object makes a
     // temporary that has to be disposed, which the callers that can emit statements do themselves.
     static string ElemArg(string e, string expr) => IsScalarElem(e) || IsStringT(e) || IsStruct(e) || IsUuid(e) ? expr
@@ -1473,6 +1482,35 @@ public static class ApiCodeGen
         var callbackSpellings = CallbackSpellings();
         if (callbackSpellings.Count > 0)
             WriteCallbackThunks(CSharpFile(PlainFileKey(ns + ".Callbacks")), callbackSpellings);
+
+        // The QObject type table: every wrapper this module publishes registers itself at assembly
+        // load, so resolving an object's actual type never depends on which class the program
+        // happened to touch first. It is a generated initializer rather than a reflection scan: that
+        // is trimming-safe, and `Classes` order keeps the emitted registrations deterministic.
+        var qobjectClasses = Classes.Where(c => DerivesFromQObject(Ref(c))).ToList();
+        if (qobjectClasses.Count > 0)
+        {
+            var registrations = CSharpFile(PlainFileKey(ns + ".QObjectRegistrations"));
+            registrations.AppendLine("    internal static class QObjectRegistrations");
+            registrations.AppendLine("    {");
+            registrations.AppendLine("        [ModuleInitializer]");
+            registrations.AppendLine("        internal static void Register()");
+            registrations.AppendLine("        {");
+            foreach (var cls in qobjectClasses)
+            {
+                string name = Name(cls);
+                // The key is Qt's own name, which for an addon class is qualified
+                // (Qt3DCore::QEntity). The simple alias covers a meta-object that spells only
+                // the unqualified name.
+                string cpp = Ref(cls);
+                string alias = cpp == name ? "null" : Quoted(name);
+                registrations.AppendLine(
+                    $"            QtSharp.QtCore.QObjectTypeRegistry.Register(typeof({name}), {Quoted(cpp)}, {alias}, {name}.__WrapBorrowed_{name}, {name}.__WrapOwned_{name}, {name}.__WrapTransient_{name});");
+            }
+            registrations.AppendLine("        }");
+            registrations.AppendLine("    }");
+            registrations.AppendLine();
+        }
 
         // The QVariant bridge's type table. Two kinds of value type register here:
         //   * the ones Qt converts with `operator QVariant()` (QColor, QBrush, ...): the metatype
@@ -1990,7 +2028,7 @@ public static class ApiCodeGen
         if (IsQVariantType(elem))
             return $"{VariantMarshalling}.ToManaged({call})";
         if (IsPointerElem(elem))
-            return $"{CsTypeName(elem.Substring(0, elem.Length - 1))}.FromTransientHandle({call})";
+            return PointerElemRead(elem, call);
         // A boxed value comes back as a fresh copy that the wrapper owns.
         return IsOwned(elem) ? $"{CsTypeName(elem)}.FromOwnedHandle({call})" : $"{CsTypeName(elem)}.FromTransientHandle({call})";
     }
@@ -3585,26 +3623,68 @@ public static class ApiCodeGen
             sb.AppendLine();
         }
 
-        sb.AppendLine($"        public {NewMethod(inherited, "FromHandle", "IntPtr")}static {name} FromHandle(IntPtr handle)");
-        sb.AppendLine($"            => handle == IntPtr.Zero ? null : ApiRuntime.Wrap(handle, h => new {name}(h));");
-        // Arguments handed to a virtual come from an object with a very short life (an event
-        // lives on the caller's stack), so they must not enter the identity cache: the next
-        // event would reuse the same address and get the previous wrapper back.
-        sb.AppendLine();
-            sb.AppendLine($"        public {NewMethod(inherited, "FromTransientHandle", "IntPtr")}static {name} FromTransientHandle(IntPtr handle)");
-        sb.AppendLine($"            => handle == IntPtr.Zero ? null : new {name}(handle);");
-        if (owned)
+        // The factories the actual-type registry calls. They live inside the class because the
+        // wrapping constructor is protected and __ownsNative is a protected member: nothing outside
+        // the class may set the ownership flag. All three are emitted for every QObject-derived
+        // class - not only the ones that dispose themselves - because the object's actual class can
+        // be any class below this one in the hierarchy, and that is the class whose flag matters.
+        bool qobjectClass = DerivesFromQObject(Ref(cls));
+        if (qobjectClass)
         {
+            sb.AppendLine($"        internal static QtSharp.QtCore.QObject __WrapBorrowed_{name}(IntPtr handle)");
+            sb.AppendLine($"            => ApiRuntime.Wrap(handle, static h => new {name}(h));");
             sb.AppendLine();
-            // Qt handed over a copy it allocated for us, so this wrapper owns it.
-            sb.AppendLine($"        public {NewMethod(inherited, "FromOwnedHandle", "IntPtr")}static {name} FromOwnedHandle(IntPtr handle)");
+            sb.AppendLine($"        internal static QtSharp.QtCore.QObject __WrapTransient_{name}(IntPtr handle)");
+            sb.AppendLine($"            => new {name}(handle);");
+            sb.AppendLine();
+            sb.AppendLine($"        internal static QtSharp.QtCore.QObject __WrapOwned_{name}(IntPtr handle)");
             sb.AppendLine("        {");
-            sb.AppendLine("            if (handle == IntPtr.Zero)");
-            sb.AppendLine("                return null;");
             sb.AppendLine($"            var wrapper = new {name}(handle);");
             sb.AppendLine("            wrapper.__ownsNative = true;");
             sb.AppendLine("            return wrapper;");
             sb.AppendLine("        }");
+            sb.AppendLine();
+        }
+
+        // A QObject returned as a base type (parent(), window(), a QList<QObject*> element) is
+        // created as the object's actual bound class: the native meta-object is read once, when the
+        // wrapper is made. That is what makes `is`/`as` work on a QObject*-typed value. The declared
+        // class is still the fallback when the object is an internal Qt class (QComboBox's view) or
+        // its module is not loaded.
+        sb.AppendLine($"        public {NewMethod(inherited, "FromHandle", "IntPtr")}static {name} FromHandle(IntPtr handle)");
+        sb.AppendLine(qobjectClass
+            ? $"            => ({name})QtSharp.QtCore.QObjectTypeRegistry.Wrap(handle, typeof({name}), __WrapBorrowed_{name});"
+            : $"            => handle == IntPtr.Zero ? null : ApiRuntime.Wrap(handle, h => new {name}(h));");
+        // Arguments handed to a virtual come from an object with a very short life (an event
+        // lives on the caller's stack), so they must not enter the identity cache: the next
+        // event would reuse the same address and get the previous wrapper back. A QObject is not
+        // such an object, so it may return the wrapper the program already holds.
+        sb.AppendLine();
+            sb.AppendLine($"        public {NewMethod(inherited, "FromTransientHandle", "IntPtr")}static {name} FromTransientHandle(IntPtr handle)");
+        sb.AppendLine(qobjectClass
+            ? $"            => ({name})QtSharp.QtCore.QObjectTypeRegistry.WrapTransient(handle, typeof({name}), __WrapTransient_{name});"
+            : $"            => handle == IntPtr.Zero ? null : new {name}(handle);");
+        if (owned)
+        {
+            sb.AppendLine();
+            // Qt handed over a copy it allocated for us, so this wrapper owns it. The identity cache
+            // is deliberately not consulted: whoever takes ownership must be the only wrapper that
+            // can release the object, so an existing borrowed wrapper is never adopted here.
+            sb.AppendLine($"        public {NewMethod(inherited, "FromOwnedHandle", "IntPtr")}static {name} FromOwnedHandle(IntPtr handle)");
+            if (qobjectClass)
+            {
+                sb.AppendLine($"            => ({name})QtSharp.QtCore.QObjectTypeRegistry.WrapOwned(handle, typeof({name}), __WrapOwned_{name});");
+            }
+            else
+            {
+                sb.AppendLine("        {");
+                sb.AppendLine("            if (handle == IntPtr.Zero)");
+                sb.AppendLine("                return null;");
+                sb.AppendLine($"            var wrapper = new {name}(handle);");
+                sb.AppendLine("            wrapper.__ownsNative = true;");
+                sb.AppendLine("            return wrapper;");
+                sb.AppendLine("        }");
+            }
             sb.AppendLine();
             sb.AppendLine($"        public {NewMethod(inherited, "Dispose", "")}void Dispose()");
             sb.AppendLine("        {");
