@@ -46,6 +46,12 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   `BitArray`, `QVersionNumber` ↔ `Version`, `QMatrix4x4` ↔ `System.Numerics.Matrix4x4`, and
   `QCollator` implementing `IComparer<string>`. The README lists every mapping and its exception
   policy; the QNetwork conversions live in `runtime/QtNetwork/`.
+- **C# methods as real Qt slots.** `[QtSlot]` registers a public instance method in the class's
+  dynamic meta-object, so Qt can reach it by name (`QMetaObject.InvokeMethod`, `QMetaMethod.Invoke`)
+  and `QMetaObject.ConnectSlotsByName` finds the `on_<objectName>_<signal>` spelling. Overloads are
+  told apart by their normalized signature, `[QtSlot("name")]` renames the slot, a declaration that
+  cannot be a slot throws at construction, and a throwing slot is reported through
+  `UnhandledCallbackException` instead of unwinding into C++.
 
 ## 0.19.0 - 2026-10-27
 
