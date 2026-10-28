@@ -203,6 +203,17 @@ namespace QtSharp.Tests
                 context.Check(!rejected.IsValid(), "Qt rejects the .NET-only balancing group");
                 qtError = rejected.ErrorString();
                 qtOffset = rejected.PatternErrorOffset();
+
+                try
+                {
+                    rejected.ToRegex();
+                    context.Check(false, "an invalid QRegularExpression should not convert to Regex");
+                }
+                catch (InvalidOperationException)
+                {
+                    context.Check(true,
+                        "an invalid QRegularExpression makes ToRegex throw InvalidOperationException");
+                }
             }
             context.Check(!string.IsNullOrEmpty(qtError) && qtOffset > 0,
                 $"Qt reports an error and a non-zero offset ('{qtError}' at {qtOffset})");

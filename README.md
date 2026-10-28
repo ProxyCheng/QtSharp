@@ -5,6 +5,19 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Target: Windows x64 · Linux x64](https://img.shields.io/badge/target-Windows%20x64%20%C2%B7%20Linux%20x64-0078D4.svg)](#prerequisites)
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
+QtSharp aims to make Qt as convenient to use from C# as PyQt/PySide are from Python, adapting
+the API and module design to C# and the .NET ecosystem.
+
+**Pre-1.0:** the API may change substantially between releases. Source and binary compatibility
+are not guaranteed. Pin package versions and read the [changelog](CHANGELOG.md) before upgrading.
+
+Current targets: **.NET 10, Qt 6.12.0, Windows x64 and Linux x64 (glibc)**.
+
+[Get started](#install-the-binding) · [Run the examples](#run-the-examples) ·
+[API guide](docs/api-guide.md) · [Releases](https://github.com/ProxyCheng/QtSharp/releases)
+
 Qt for .NET, **generated from Qt's own headers** — no hand-written bindings, no runtime reflection
 over Qt.
 
@@ -60,6 +73,21 @@ Extension modules are separate assemblies and packages against the same runtime:
 | QtPositioning | `QtSharp.Positioning` | `QGeoCoordinate` and the geo value types (rectangle/circle/path/polygon/shape, address, location), `QGeoPositionInfo`, `QGeoSatelliteInfo` and the position/satellite sources |
 | QtSql (substitute) | `QtSharp.Sql` | `QSqlQueryModel`/`QSqlTableModel` re-implemented over ADO.NET; pass any `DbConnection` |
 
+### Module scope and .NET integration
+
+QtSharp does not aim to bind every Qt module. Where .NET has mature libraries that fit C#
+applications well, we prefer those libraries and adapt at the component boundary:
+
+| Qt module intentionally omitted | .NET alternative | QtSharp integration |
+|---|---|---|
+| QtXml | `System.Xml` | QtCore's `QXmlStreamReader`/`QXmlStreamWriter` remain available. |
+| QtSql | ADO.NET providers | `QtSharp.Sql` exposes query/table models backed by a `DbConnection`. |
+| QtWebSockets | `ClientWebSocket` | Use the .NET API directly; no Qt-facing adapter is provided yet. |
+
+`QtSharp.Sql` and [`StreamIODevice`](runtime/QtCore/IoDeviceInterop.cs), which exposes a .NET
+`Stream` as `QIODevice`, already use this approach. Further adapters may make C# libraries
+available through the model, IO or other interfaces used by QtSharp components.
+
 ## Install the binding
 
 If you just want to write Qt applications in C#, install the release package — there is nothing
@@ -90,6 +118,22 @@ static class Program
     }
 }
 ```
+
+### Run your first application
+
+Create a console application and add the package for your build platform (replace the source path
+with the extracted release folder):
+
+```text
+dotnet new console -n HelloQt --framework net10.0
+cd HelloQt
+dotnet add package QtSharp.Api.win-x64 --version 0.20.0 --source C:/Downloads/QtSharp-packages
+```
+
+On Linux use `QtSharp.Api.linux-x64` and the matching source path. Replace `Program.cs` with the
+code above and run `dotnet run`; Linux also needs the X11/OpenGL dependencies described in the
+[development guide](docs/development.md#linux). If you have cloned the repository, the same
+program is in [samples/hello](samples/hello/Hello.csproj).
 
 The package carries the nine module assemblies and depends on `QtSharp.Runtime` (the managed
 runtime and native wrapper) and `QtSharp.Qt6` (the Qt runtime); all three copy their payload next
@@ -745,6 +789,17 @@ Replace the local source path with your checkout's `out/packages` directory.
 | `QtSharp.Api.props` | the one import a consumer project needs |
 
 ---
+
+## Comparison with similar projects
+
+| Project | Focus | Relationship to QtSharp |
+|---|---|---|
+| [ddobrev/QtSharp](https://github.com/ddobrev/QtSharp) | Earlier C# Qt bindings generated with CppSharp. | This project is an independent implementation with a different generator and runtime. See the [migration notes](docs/legacy-issues.md). |
+| [Qt Bridges](https://doc.qt.io/qtbridges/) | Connecting application logic in C# and other languages to QML/Qt Quick interfaces. | QtSharp focuses on general-purpose C# bindings for Qt Widgets (`QWidget`) and other selected Qt APIs. |
+
+QtSharp is not affiliated with ddobrev/QtSharp and does not preserve its source or binary API.
+QtSharp does not currently bind QtQml/QtQuick. For a QML/Qt Quick UI with application logic
+written in C#, you can use the official [Qt Bridge for C#](https://github.com/qt/qtbridge-csharp).
 
 ## Known limitations
 

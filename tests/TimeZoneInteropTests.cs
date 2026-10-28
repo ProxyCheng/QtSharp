@@ -63,6 +63,20 @@ namespace QtSharp.Tests
                 }
             }
 
+            // ------------------------------------------------------- a reused id keeps its rules
+            // A custom TimeZoneInfo may carry a system id while its offset/rules differ (this is
+            // legal in .NET). The id must not silently turn it into the system zone with that id.
+            TimeZoneInfo customUtc = TimeZoneInfo.CreateCustomTimeZone(
+                TimeZoneInfo.Utc.Id, TimeSpan.FromHours(5), "Custom UTC+5", "Custom UTC+5");
+            using (var converted = new QTimeZone(customUtc))
+            {
+                context.Check(converted.IsValid(),
+                    "a custom zone reusing the UTC id converts");
+                context.Check(converted.IsUtcOrFixedOffset()
+                        && converted.FixedSecondsAheadOfUtc() == 5 * 3600,
+                    $"and keeps its offset instead of becoming UTC ({converted.FixedSecondsAheadOfUtc()} s)");
+            }
+
             // ------------------------------------------------------- the system zone round-trips
             using (var zone = QTimeZone.SystemTimeZone())
             {

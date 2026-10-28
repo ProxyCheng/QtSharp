@@ -74,9 +74,15 @@ namespace QtSharp.QtCore
         /// <see cref="RegexOptions"/> equivalent (<c>InvertedGreedinessOption</c>,
         /// <c>UseUnicodePropertiesOption</c>, or a value this binding does not know).
         /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// The source expression is not valid in Qt's PCRE2 (its pattern did not compile), so it
+        /// is not a pattern that can be carried anywhere. The message includes Qt's
+        /// <see cref="QRegularExpression.ErrorString"/> and
+        /// <see cref="QRegularExpression.PatternErrorOffset"/>.
+        /// </exception>
         /// <exception cref="RegexParseException">
-        /// The pattern is not valid in the .NET dialect. The exception is the constructor's own;
-        /// this conversion does not catch or rephrase it.
+        /// The pattern is valid in PCRE2 but not in the .NET dialect. The exception is the
+        /// constructor's own; this conversion does not catch or rephrase it.
         /// </exception>
         /// <remarks>
         /// This is not a dialect translation: the pattern is handed to the .NET engine unchanged,
@@ -90,6 +96,17 @@ namespace QtSharp.QtCore
         {
             if (expression is null)
                 throw new ArgumentNullException(nameof(expression));
+
+            // An invalid Qt expression would otherwise cross as long as the .NET engine happens
+            // to accept the same text (a .NET-only construct, for example). That is a silent
+            // conversion of a pattern Qt rejected, so refuse it at the source.
+            if (!expression.IsValid())
+            {
+                long offset = expression.PatternErrorOffset();
+                string error = expression.ErrorString();
+                throw new InvalidOperationException(
+                    $"The QRegularExpression is invalid in PCRE2 at offset {offset}: {error}");
+            }
 
             QRegularExpression.PatternOptions options = expression.patternOptions();
             QRegularExpression.PatternOptions unsupported = options & ~MappableOptions;

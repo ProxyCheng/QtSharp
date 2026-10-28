@@ -138,7 +138,12 @@ namespace QtSharp.QtCore
         /// <summary>Creates the owned Qt zone for a <see cref="TimeZoneInfo"/>; the caller adopts it.</summary>
         static QTimeZone CreateTimeZone(TimeZoneInfo timeZone)
         {
-            if (string.Equals(timeZone.Id, TimeZoneInfo.Utc.Id, StringComparison.Ordinal))
+            // The id alone is not enough: CreateCustomTimeZone can reuse "UTC" (or any other
+            // system id) for a zone whose offset or rules differ. Only an object whose rules
+            // really are UTC may become QTimeZone.Utc(); otherwise it takes the fixed-offset
+            // path below (or throws if it has custom DST rules).
+            if (string.Equals(timeZone.Id, TimeZoneInfo.Utc.Id, StringComparison.Ordinal)
+                && timeZone.HasSameRules(TimeZoneInfo.Utc))
                 return QTimeZone.Utc();
 
             string id = timeZone.Id ?? string.Empty;
@@ -150,7 +155,10 @@ namespace QtSharp.QtCore
             // named zone, and is handled by the fixed-offset branch below.
             if (id.Length > 0 && !IsUtcOffsetId(id))
             {
-                if (QTimeZone.IsTimeZoneIdAvailable(Encoding.UTF8.GetBytes(id)))
+                // An id is only reusable when this TimeZoneInfo has the same rules as the host's
+                // zone of that name; a custom zone may reuse a system id with different rules.
+                if (QTimeZone.IsTimeZoneIdAvailable(Encoding.UTF8.GetBytes(id))
+                    && MatchesHostZone(timeZone, id))
                 {
                     ianaId = id;
                 }
@@ -158,7 +166,8 @@ namespace QtSharp.QtCore
                 {
                     string mapped = WindowsToDefaultIana(id);
                     if (mapped.Length > 0
-                        && QTimeZone.IsTimeZoneIdAvailable(Encoding.UTF8.GetBytes(mapped)))
+                        && QTimeZone.IsTimeZoneIdAvailable(Encoding.UTF8.GetBytes(mapped))
+                        && MatchesHostZone(timeZone, mapped))
                         ianaId = mapped;
                 }
             }
@@ -208,6 +217,15 @@ namespace QtSharp.QtCore
         static bool IsUtcOffsetId(string id)
             => id.StartsWith("UTC+", StringComparison.Ordinal)
             || id.StartsWith("UTC-", StringComparison.Ordinal);
+
+        /// <summary>
+        /// Whether <paramref name="timeZone"/> carries the same rules as the host zone named by
+        /// <paramref name="id"/>. A custom zone may reuse a system id with different rules; using
+        /// that id would silently replace its rules with the system zone's.
+        /// </summary>
+        static bool MatchesHostZone(TimeZoneInfo timeZone, string id)
+            => TimeZoneInfo.TryFindSystemTimeZoneById(id, out TimeZoneInfo host)
+               && timeZone.HasSameRules(host);
 
         /// <summary>Qt's Windows id for an IANA id, or the empty string when there is none.</summary>
         static string IanaIdToWindows(string ianaId)

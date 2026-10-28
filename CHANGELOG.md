@@ -33,7 +33,12 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   `[info]` line where the headless platform cannot provide one.
 - **Explicit regex interop.** `QRegularExpressionInterop` converts a `QRegularExpression` to a
   `Regex` and back, carrying the five options both engines spell the same way and throwing for the
-  rest. See the README for the mapping and the engine caveat.
+  rest. See the README for the mapping and the engine caveat. `ToRegex` rejects a source expression
+  that PCRE2 itself considers invalid instead of carrying its text to .NET.
+- **Time-zone ids are checked against their rules.** `QTimeZone(TimeZoneInfo)` only reuses a
+  zone id when the argument has the same rules as the host zone of that name, so a custom zone
+  that reuses `"UTC"` (or another system id) keeps its own offset instead of silently becoming the
+  system zone.
 - **One C#-to-Qt type-name mapper.** `MetaType.QtName` is used by declared members and by the new
   `QMetaType.FromType<T>()`, with a generated per-module table that preserves Qt's spelling
   (`Qt3DCore::QEntity*`) and distinguishes value classes from QObject pointers.
