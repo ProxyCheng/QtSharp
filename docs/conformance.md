@@ -16,7 +16,7 @@ each holds exactly one `Main`, one `QApplication` and the module's reflected `[E
 | `QtSharp.Examples.QtMultimedia` | `examples/QtMultimedia/` | 1 | 12 |
 | `QtSharp.Charts.Examples` | `examples/Charts/` | 38 | 571 |
 | `QtSharp.Qt3D.Examples` | `examples/Qt3D/` | 3 | 37 |
-| `testapp` (the binding tests) | `tests/testapp/` | 34 | 930 |
+| `testapp` (the binding tests) | `tests/testapp/` | 36 | 945 |
 
 `tools/run-examples.ps1` builds all ten example executables and hands each to
 `tools/run-window-tests.ps1`; the gate, CI and the release build all use that one table. A runner
@@ -79,7 +79,9 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 | `test-iodevice` | a .NET Stream behind QIODevice: QImage/QXmlStreamReader reading it, write path, leak checks |
 | `test-json` | JSON as C# containers: QJsonObject as a writable dictionary, QJsonArray as a list, unwrapped snapshots, LINQ |
 | `test-metaobject` | C#-declared signals/properties (`[QtSignal]`/`[QtProperty]`) |
+| `test-metaobjectcache` | the native meta-object cache identity: base class, class name and member list |
 | `test-metatype` | the C# → Qt type-name map: value classes, namespaced bound classes, unsupported types |
+| `test-nativeslot` | the read-side `[QtNativeSlot]` marker on generated slots and `Q_INVOKABLE` methods |
 | `test-network` | QtNetwork transport beyond the fortune example: host addresses, local-socket handoff, TCP |
 | `test-ownership` | who may delete a native object; liveness and generation counters |
 | `test-positioning` | QtPositioning: coordinate distance/azimuth, shape containment, position info, source enumeration |
