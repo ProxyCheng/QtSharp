@@ -33,7 +33,7 @@ jobs:
         run: |
           $errors = $null
           $tokens = $null
-          foreach ($path in @('tools/regen-api.ps1', 'tools/parallel.ps1', 'tools/run-window-tests.ps1', 'tools/pack-qt-tools.ps1', 'tools/pack-qt-binding.ps1', 'tools/test-packages.ps1', 'tools/build-qt-kit.ps1', 'tools/build-native-module.ps1')) {
+          foreach ($path in @('tools/regen-api.ps1', 'tools/run-demos.ps1', 'tools/parallel.ps1', 'tools/run-window-tests.ps1', 'tools/pack-qt-tools.ps1', 'tools/pack-qt-binding.ps1', 'tools/test-packages.ps1', 'tools/build-qt-kit.ps1', 'tools/build-native-module.ps1')) {
             [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $path), [ref]$tokens, [ref]$errors) | Out-Null
 
             if ($errors.Count -gt 0) { $errors | Format-List | Out-Host; throw "PowerShell parse failed: $path" }
@@ -144,24 +144,13 @@ jobs:
             throw "native build failed: $($failed.Name -join ', ')"
           }
 
-      # The official Qt3D examples as the extension's conformance suite. They build the scene and
-      # assert on it without opening a render loop, so they run on a runner without a GPU.
-      - name: Build and run the official Qt3D examples
+      # Every module's demos are the binding's conformance suite. The executable owns its single
+      # QApplication and runs offscreen, so a runner with no GPU still renders and asserts.
+      - name: Build and run every demo executable
         shell: pwsh
         run: |
-          dotnet build demos.qt3d/QtSharp.Qt3D.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
-          if ($LASTEXITCODE -ne 0) { throw "Qt3D demos build failed" }
-          ./tools/run-window-tests.ps1 -Exe "demos.qt3d/bin/Release/net10.0/QtSharp.Qt3D.Demos.exe" -Label "qt3d-demos"
-          if ($LASTEXITCODE -ne 0) { throw "some Qt3D demos failed" }
-
-      # The official Qt Charts examples, against the separate Charts assembly.
-      - name: Build and run the official Qt Charts examples
-        shell: pwsh
-        run: |
-          dotnet build demos.charts/QtSharp.Charts.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
-          if ($LASTEXITCODE -ne 0) { throw "Charts demos build failed" }
-          ./tools/run-window-tests.ps1 -Exe "demos.charts/bin/Release/net10.0/QtSharp.Charts.Demos.exe" -Label "charts-demos"
-          if ($LASTEXITCODE -ne 0) { throw "some Qt Charts demos failed" }
+          ./tools/run-demos.ps1 -QtRuntimeDir $env:QT_RUNTIME_DIR
+          if ($LASTEXITCODE -ne 0) { throw "some demos failed" }
 
       # Hand the generated source tree and the native glue to the smoke/pack jobs so they do not
       # have to regenerate them. The staging directory makes the artifact's layout explicit:
@@ -320,21 +309,13 @@ jobs:
           done
           echo "native libraries carry the \$ORIGIN/lib deployment rpath"
 
-      # The official Qt3D and Qt Charts examples, exactly like the Windows binding job.
-      - name: Build the official Qt3D and Qt Charts examples
-        shell: bash
+      # The Smoke hosts pick the offscreen platform before constructing their QApplication, so the
+      # demos render without an X display; the Qt3D scene checks need no GL context either.
+      - name: Build and run every demo executable
+        shell: pwsh
         run: |
-          dotnet build demos.charts/QtSharp.Charts.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$QT_RUNTIME_DIR"
-          dotnet build demos.qt3d/QtSharp.Qt3D.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$QT_RUNTIME_DIR"
-
-      # Xvfb supplies the X display (a real platform plugin is required - the suite asserts on
-      # rendered output); llvmpipe supplies OpenGL for the Qt3D/RHI examples.
-      - name: Run the official Qt3D and Qt Charts examples
-        shell: bash
-        run: |
-          export LIBGL_ALWAYS_SOFTWARE=1
-          xvfb-run -a --server-args="-screen 0 1280x1024x24" pwsh ./tools/run-window-tests.ps1 -Exe "demos.charts/bin/Release/net10.0/QtSharp.Charts.Demos" -Label "charts-linux"
-          xvfb-run -a --server-args="-screen 0 1280x1024x24" pwsh ./tools/run-window-tests.ps1 -Exe "demos.qt3d/bin/Release/net10.0/QtSharp.Qt3D.Demos" -Label "qt3d-linux"
+          ./tools/run-demos.ps1 -QtRuntimeDir $env:QT_RUNTIME_DIR
+          if ($LASTEXITCODE -ne 0) { throw "some demos failed" }
 
       # The Linux half of the Windows binding artifact: the generated C# tree plus the .so glue,
       # for the Linux smoke job. The Windows job stages the same layout with the DLL glue.
@@ -407,16 +388,15 @@ jobs:
           name: linux-payload
           path: out/linux-payload
 
-      - name: Build the binding tests and demos
+      - name: Build the binding tests
         shell: bash
         run: |
-          dotnet build testbind/testbind.csproj -c Release --nologo "-p:QtRuntimeDir=$PWD/out/linux-payload/qt-kit/runtime"
+          dotnet build tests/testapp/testapp.csproj -c Release --nologo "-p:QtRuntimeDir=$PWD/out/linux-payload/qt-kit/runtime"
 
-      - name: Run the core suite
+      - name: Run the binding tests
         shell: bash
         run: |
-          export LIBGL_ALWAYS_SOFTWARE=1
-          xvfb-run -a --server-args="-screen 0 1280x1024x24" pwsh ./tools/run-window-tests.ps1 -Exe "testbind/bin/Release/net10.0/testapp" -Label "demos-linux"
+          pwsh ./tools/run-window-tests.ps1 -Exe "tests/testapp/bin/Release/net10.0/testapp" -Label "binding tests"
 
   # One set of packages with both RIDs. The Windows job supplies the managed assemblies, the
   # Windows native glue and the MSVC runtime; the Linux job supplies the .so glue and the gcc_64
@@ -516,21 +496,21 @@ jobs:
         shell: pwsh
         run: ./tools/build-qt-kit.ps1
 
-      - name: Build the examples and the binding tests
+      - name: Build the binding tests
         shell: pwsh
         run: |
-          # The examples load the Qt runtime, so point them at the kit the build job assembled.
-          # testbind references the demos library, so this one build produces both assemblies.
-          dotnet build testbind/testbind.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
-          if ($LASTEXITCODE -ne 0) { throw "testbind build failed" }
+          # The demos are the exported binding's conformance suite; this job additionally runs the
+          # tests under test-* through the one test executable.
+          dotnet build tests/testapp/testapp.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "binding test build failed" }
 
-      - name: Run every example
+      - name: Run the binding tests
         shell: pwsh
         run: |
-          # The runner takes the list from the demo library itself, starts the windows a few at a
-          # time, retries a teardown race once and prints a failing window's own output.
-          ./tools/run-window-tests.ps1 -Exe "testbind/bin/Release/net10.0/testapp.exe" -Label "demos"
-          if ($LASTEXITCODE -ne 0) { throw "some demos failed (see the output above)" }
+          # The runner takes the list from the test assembly itself, starts the tests a few at a
+          # time, retries a teardown race once and prints a failing test's own output.
+          ./tools/run-window-tests.ps1 -Exe "tests/testapp/bin/Release/net10.0/testapp.exe" -Label "binding tests"
+          if ($LASTEXITCODE -ne 0) { throw "some binding tests failed (see the output above)" }
 
   # The consumer path on Linux: restore the packages from the local feed, let buildTransitive
   # deploy the .so glue, the Qt lib/ tree and the plugins, and run a QApplication on the

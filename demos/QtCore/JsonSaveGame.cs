@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 // Qt's JSON Save Game example (examples/corelib/serialization/savegame): the same document model,
@@ -106,15 +106,8 @@ public sealed class SaveGameGameApi
 [Demo("qtcore-savegame")]
 public static class JsonSaveGame
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         // ---- the game state the example saves ------------------------------------------------
         var game = new SaveGameGameApi
@@ -130,45 +123,68 @@ public static class JsonSaveGame
 
         // ---- construction, field by field ---------------------------------------------------
         using var gameObject = game.ToJson();
-        Check(gameObject.Contains("player") && gameObject.Contains("levels"),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(gameObject.Contains("player") && gameObject.Contains("levels"),
             "the game object has the player and the levels");
+        #endif
         using var player = gameObject.Value("player").ToObject();
-        Check(player.Value("name").ToString("") == "Jack" &&
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(player.Value("name").ToString("") == "Jack" &&
               player.Value("level").ToInt() == 10 &&
               player.Value("classType").ToInt() == (int)SaveGameCharacterApi.ClassType.Mage,
             "the player was written field by field");
+        #endif
         using var levels = gameObject.Value("levels").ToArray();
-        Check(levels.Count() == 2, $"the level array has both levels ({levels.Count()})");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(levels.Count() == 2, $"the level array has both levels ({levels.Count()})");
+        #endif
         using var firstLevel = levels.At(0).ToObject();
-        Check(firstLevel.Value("name").ToString("") == "level1", "the first level keeps its name");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(firstLevel.Value("name").ToString("") == "level1", "the first level keeps its name");
+        #endif
         using var npcs = firstLevel.Value("npcs").ToArray();
-        Check(npcs.Count() == 2 && npcs.At(1).ToObject().Value("name").ToString("") == "wizard",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(npcs.Count() == 2 && npcs.At(1).ToObject().Value("name").ToString("") == "wizard",
             $"the npc array keeps its order and fields ({npcs.Count()} npc(s))");
+        #endif
 
         // ---- save and load through a document, exactly like the example ----------------------
         using var document = new QJsonDocument(gameObject);
         using var saved = document.ToJson(QJsonDocument.JsonFormat.Compact);
         using var reloaded = QJsonDocument.FromJson(saved);
-        Check(!reloaded.IsNull(), "the written document parses again");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!reloaded.IsNull(), "the written document parses again");
+        #endif
 
         using var root = reloaded.Object();
         using var loadedPlayer = root.Value("player").ToObject();
-        Check(SaveGameCharacterApi.FromJson(loadedPlayer, out var playerFromDisk) &&
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(SaveGameCharacterApi.FromJson(loadedPlayer, out var playerFromDisk) &&
               playerFromDisk.Name == "Jack" && playerFromDisk.Level == 10 &&
               playerFromDisk.CharacterClass == SaveGameCharacterApi.ClassType.Mage,
             "the player came back through fromJson");
+        #endif
 
         using var loadedLevels = root.Value("levels").ToArray();
-        Check(loadedLevels.Count() == 2 &&
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(loadedLevels.Count() == 2 &&
               loadedLevels.At(0).ToObject().Value("name").ToString("") == "level1",
             "the levels came back through the document");
+        #endif
 
         // The exact bytes are a stable, readable JSON document (keys sorted by QJsonObject).
         string text = saved.Data();
-        Check(text.Contains("\"player\"") && text.Contains("\"levels\"") && text.Contains("\"npcs\""),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(text.Contains("\"player\"") && text.Contains("\"levels\"") && text.Contains("\"npcs\""),
             $"the saved document is the example's JSON shape ({text.Length} byte(s))");
+        #endif
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[FAIL] {failures} check(s) failed");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        // What the example writes to disk, for a human; Smoke asserts on the same bytes.
+        Console.WriteLine(text);
+        return 0;
+        #endif
     }
 }

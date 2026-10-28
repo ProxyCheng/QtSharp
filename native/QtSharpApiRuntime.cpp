@@ -403,8 +403,15 @@ private:
 // Connects a managed callback to a signal. The returned handle is the QMetaObject::Connection kept
 // on the heap: the C# side needs it back to disconnect (the `-=` of a signal exposed as a C# event),
 // and QObject::disconnect(connection) is the public way to drop exactly that one connection.
+//
+// `context` is the QObject whose lifetime and thread affinity the connection follows - Qt's
+// QObject::connect(sender, signal, context, functor, type) shape. A queued connection is delivered
+// on the context's thread (which must run an event loop), and destroying the context drops the
+// connection before any later emission. A null context keeps the historical behaviour: the sender
+// itself is the receiver, so the connection lives with the sender and Auto runs it on the emitting
+// thread when both live in the same thread.
 extern "C" QS_API_EXPORT void* qs_api_connect(void* sender, const char* signature,
-    QsApiSignalCallback callback, void* userData, int connectionType)
+    QsApiSignalCallback callback, void* userData, void* context, int connectionType)
 {
     if (!sender || !signature || !callback)
         return nullptr;
@@ -424,8 +431,9 @@ extern "C" QS_API_EXPORT void* qs_api_connect(void* sender, const char* signatur
         typeIds.push_back(signal.parameterMetaType(i).id());
 
     auto* slot = new QsApiSlotObject(callback, userData, std::move(typeIds));
+    auto* receiver = context ? static_cast<QObject*>(context) : object;
     const QMetaObject::Connection connection =
-        QObjectPrivate::connect(object, index, slot, Qt::ConnectionType(connectionType));
+        QObjectPrivate::connect(object, index, receiver, slot, Qt::ConnectionType(connectionType));
     if (!connection)
     {
         slot->destroyIfLastRef();

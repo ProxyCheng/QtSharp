@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>testapp</AssemblyName>
+    <!-- The binding is compiled inside QtSharp.BindingTests; this app only dispatches to it. -->
+    <QtSharpCompileBinding>false</QtSharpCompileBinding>
+  </PropertyGroup>
+
+  <!-- The native QtSharp.Api.dll, the Qt runtime DLLs and the platform plugin. -->
+  <Import Project="..\..\QtSharp.Api.props" />
+
+  <!-- The binding tests, and through them the base modules and the hosting library. There are no
+       demos here: the official examples have their own executable per module under demos/. -->
+  <ItemGroup>
+    <ProjectReference Include="..\QtSharp.BindingTests.csproj" />
+  </ItemGroup>
+
+  <!-- The addon native glue the tests need, and the Qt runtime plugins, the way the packages'
+       buildTransitive would copy them for a consumer. The Qt runtime location comes from
+       QtSharp.Api.props (QT_RUNTIME_DIR in CI), not from a repository-relative guess. On Linux the
+       props already stages the whole plugins/ tree, so only the glue libraries are copied. -->
+  <Target Name="CopyAddonNativeDeps" AfterTargets="Build">
+    <ItemGroup>
+      <AddonNative Include="..\..\out\api-modules\qtmultimedia\$(QtSharpNativePrefix)QtSharp.QtMultimedia.Native$(QtSharpNativeSuffix)" />
+      <AddonNative Include="..\..\out\api-modules\qtpositioning\$(QtSharpNativePrefix)QtSharp.QtPositioning.Native$(QtSharpNativeSuffix)" />
+      <AddonNative Include="..\..\out\api-modules\qt3dcore\$(QtSharpNativePrefix)QtSharp.Qt3DCore.Native$(QtSharpNativeSuffix)" />
+      <AddonNative Include="..\..\out\api-modules\qt3danimation\$(QtSharpNativePrefix)QtSharp.Qt3DAnimation.Native$(QtSharpNativeSuffix)" />
+      <AddonNative Include="..\..\out\api-modules\qt3drender\$(QtSharpNativePrefix)QtSharp.Qt3DRender.Native$(QtSharpNativeSuffix)" />
+      <AddonNative Include="..\..\out\api-modules\qt3dinput\$(QtSharpNativePrefix)QtSharp.Qt3DInput.Native$(QtSharpNativeSuffix)" />
+      <AddonNative Include="..\..\out\api-modules\qt3dlogic\$(QtSharpNativePrefix)QtSharp.Qt3DLogic.Native$(QtSharpNativeSuffix)" />
+      <AddonNative Include="..\..\out\api-modules\qt3dextras\$(QtSharpNativePrefix)QtSharp.Qt3DExtras.Native$(QtSharpNativeSuffix)" />
+      <MultimediaPlugin Include="$(QtRuntimeDir)\plugins\multimedia\*.dll" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AddonNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(MultimediaPlugin)" DestinationFolder="$(OutDir)multimedia\" SkipUnchangedFiles="true" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+  </Target>
+
+</Project>

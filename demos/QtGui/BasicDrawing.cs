@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 // Port of examples/widgets/painting/basicdrawing on the new pipeline.
 //
@@ -368,15 +368,8 @@ public sealed class ApiBasicDrawingWindow : QWidget
 [Demo("qtgui-basicdrawing")]
 public static class BasicDrawing
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         // Ink counters. The background painted by ApiRenderArea::paintEvent is light grey
         // (192,192,192); "dark" is the black pen, "white" the white brush, and everything else
@@ -404,7 +397,11 @@ public static class BasicDrawing
         }
 
         using var area = new ApiRenderArea();
-        area.Show();
+        #if QTSHARP_DEMO_SMOKE
+            area.Show();
+        #else
+            demo.Show(area);
+        #endif
 
         // Every shape of the official enum has to reach QPainter and leave ink behind.
         foreach (ApiRenderArea.ShapeKind shape in Enum.GetValues(typeof(ApiRenderArea.ShapeKind)))
@@ -412,20 +409,27 @@ public static class BasicDrawing
             area.SetShape(shape);
             using var image = area.RenderToImage();
             var ink = Scan(image);
-            Check(ink.Dark + ink.White + ink.Other > 0,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(ink.Dark + ink.White + ink.Other > 0,
                 $"shape {shape} paints something (dark={ink.Dark}, white={ink.White}, other={ink.Other})");
+            #endif
         }
 
-        Check(area.PaintCount >= 13,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(area.PaintCount >= 13,
             $"each setShape() repainted ({area.PaintCount} paintEvent calls reached C#)");
+#endif
 
         // The virtual overrides, read back through the generated accessors.
         var hint = area.SizeHint;
         var minimum = area.MinimumSizeHint;
-            Check(hint.Width() == 400 && hint.Height() == 200
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(hint.Width() == 400 && hint.Height() == 200
                   && minimum.Width() == 100 && minimum.Height() == 100,
                 $"sizeHint()/minimumSizeHint() report the official sizes "
                 + $"({hint.Width()}x{hint.Height()} / {minimum.Width()}x{minimum.Height()})");
+            #endif
 
         // Pen width: an 8px line covers far more pixels than a 1px one.
         area.SetShape(ApiRenderArea.ShapeKind.Line);
@@ -437,16 +441,20 @@ public static class BasicDrawing
         int thick;
         using (var image = area.RenderToImage())
             thick = Scan(image).Dark;
-        Check(thin > 0 && thick > thin,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(thin > 0 && thick > thin,
             $"pen width reaches QPainter (1px={thin} dark pixels, 8px={thick})");
+        #endif
 
         // Pen style: NoPen draws nothing at all.
         area.Pen.SetStyle(Qt.PenStyle.NoPen);
         using (var image = area.RenderToImage())
         {
             var ink = Scan(image);
-            Check(ink.Dark == 0 && ink.White == 0 && ink.Other == 0,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(ink.Dark == 0 && ink.White == 0 && ink.Other == 0,
                 $"PenStyle::NoPen leaves the widget untouched (dark={ink.Dark}, white={ink.White}, other={ink.Other})");
+            #endif
         }
 
         // Pen style: a dashed line covers fewer pixels than a solid one of the same width.
@@ -459,8 +467,10 @@ public static class BasicDrawing
         int dashed;
         using (var image = area.RenderToImage())
             dashed = Scan(image).Dark;
-        Check(dashed > 0 && dashed < solid,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(dashed > 0 && dashed < solid,
             $"pen style reaches QPainter (solid={solid} dark pixels, dashed={dashed})");
+        #endif
 
         // Brush: the polygon is filled when the brush is solid and empty when it is NoBrush.
         area.Pen.SetStyle(Qt.PenStyle.SolidLine);
@@ -473,8 +483,10 @@ public static class BasicDrawing
         int unfilled;
         using (var image = area.RenderToImage())
             unfilled = Scan(image).White;
-        Check(filled > 0 && unfilled == 0,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(filled > 0 && unfilled == 0,
             $"brush style reaches QPainter (solid={filled} white pixels, NoBrush={unfilled})");
+        #endif
 
         // Antialiasing: the oblique line gets blended edge pixels that an aliased one does not have.
         area.Brush.SetStyle(Qt.BrushStyle.SolidPattern);
@@ -487,8 +499,10 @@ public static class BasicDrawing
         int antialiased;
         using (var image = area.RenderToImage())
             antialiased = Scan(image).Other;
-        Check(antialiased > 0 && aliased == 0,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(antialiased > 0 && aliased == 0,
             $"Antialiasing reaches QPainter (blended pixels: off={aliased}, on={antialiased})");
+        #endif
         area.SetAntialiased(false);
 
         // The composed transformation moves the ink: the same shape renders somewhere else.
@@ -501,8 +515,10 @@ public static class BasicDrawing
         int afterInk;
         using (var transformed = area.RenderToImage())
             afterInk = Scan(transformed).White;
-        Check(beforeInk != afterInk,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(beforeInk != afterInk,
             $"the translate/rotate/scale composition changes the render ({beforeInk} -> {afterInk} white pixels)");
+        #endif
         area.SetTransformed(false);
 
         // Rounded rectangle: the corner is cut away. Rect fills it, RoundedRect (with a 25%
@@ -514,7 +530,9 @@ public static class BasicDrawing
             int y = (int)Math.Round(21.0 * image.Height() / 200.0);
             return image.Pixel(Math.Min(x, image.Width() - 1), Math.Min(y, image.Height() - 1));
         }
+        #if QTSHARP_DEMO_SMOKE
         bool IsWhite(uint p) => ((p >> 16) & 0xFF) > 240 && ((p >> 8) & 0xFF) > 240 && (p & 0xFF) > 240;
+        #endif
 
         area.SetShape(ApiRenderArea.ShapeKind.Rect);
         int rectInk;
@@ -532,69 +550,93 @@ public static class BasicDrawing
             roundedInk = Scan(image).White;
             roundedCorner = CornerPixel(image);
         }
-        Check(IsWhite(rectCorner) && !IsWhite(roundedCorner),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(IsWhite(rectCorner) && !IsWhite(roundedCorner),
             $"the rounded rect cuts its corner away (rect 0x{rectCorner:X8}, rounded 0x{roundedCorner:X8})");
-        Check(roundedInk < rectInk,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(roundedInk < rectInk,
             $"the rounded rect fills less of the widget than the plain one ({roundedInk} < {rectInk} white pixels)");
+        #endif
 
         // Text and the pixmap render their own kinds of ink.
         area.SetShape(ApiRenderArea.ShapeKind.Text);
+        #if QTSHARP_DEMO_SMOKE
         using (var image = area.RenderToImage())
-            Check(Scan(image).Dark > 0, "drawText() puts glyphs on the widget");
+            demo.Check(Scan(image).Dark > 0, "drawText() puts glyphs on the widget");
+        #endif
 
         area.SetShape(ApiRenderArea.ShapeKind.Pixmap);
+        #if QTSHARP_DEMO_SMOKE
         using (var image = area.RenderToImage())
-            Check(Scan(image).Other > 0, "drawPixmap() puts the pixmap on the widget");
+            demo.Check(Scan(image).Other > 0, "drawPixmap() puts the pixmap on the widget");
+        #endif
 
         // The control window: the official groups and combo boxes exist, and driving a control
         // really reaches the render area (the signal -> slot wiring of the example).
         using var window = new ApiBasicDrawingWindow();
-        window.Show();
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
 
-        Check(window.ShapeComboBox.count() == 13,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.ShapeComboBox.count() == 13,
             $"the shape combo box lists all 13 shapes (got {window.ShapeComboBox.count()})");
-        Check(window.PenStyleComboBox.count() == 6 && window.PenCapComboBox.count() == 3
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.PenStyleComboBox.count() == 6 && window.PenCapComboBox.count() == 3
               && window.PenJoinComboBox.count() == 3,
             $"the pen combos list 6 styles / 3 caps / 3 joins "
             + $"({window.PenStyleComboBox.count()}/{window.PenCapComboBox.count()}/{window.PenJoinComboBox.count()})");
-        Check(window.BrushStyleComboBox.count() == 15,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.BrushStyleComboBox.count() == 15,
             $"the brush combo lists 15 styles (got {window.BrushStyleComboBox.count()})");
-        Check(window.PenWidthSpinBox.minimum() == 0 && window.PenWidthSpinBox.maximum() == 20
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.PenWidthSpinBox.minimum() == 0 && window.PenWidthSpinBox.maximum() == 20
               && window.PenWidthSpinBox.value() == 1,
             $"the pen width spin box has the official range and default "
             + $"({window.PenWidthSpinBox.minimum()}..{window.PenWidthSpinBox.maximum()}, value {window.PenWidthSpinBox.value()})");
+        #endif
 
         window.ShapeComboBox.SetCurrentIndex(4);
-        Check(window.RenderArea.Shape == ApiRenderArea.ShapeKind.Arc,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.RenderArea.Shape == ApiRenderArea.ShapeKind.Arc,
             $"the shape combo box drives the render area (index 4 -> {window.RenderArea.Shape})");
+        #endif
 
         window.PenWidthSpinBox.SetValue(7);
-        Check(Math.Abs(window.RenderArea.Pen.Width() - 7.0) < 0.001,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(Math.Abs(window.RenderArea.Pen.Width() - 7.0) < 0.001,
             $"the pen width spin box drives the pen (got {window.RenderArea.Pen.Width()})");
+        #endif
 
         window.PenStyleComboBox.SetCurrentIndex(1);
-        Check(window.RenderArea.Pen.Style() == Qt.PenStyle.DashLine,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.RenderArea.Pen.Style() == Qt.PenStyle.DashLine,
             $"the pen style combo box drives the pen (got {window.RenderArea.Pen.Style()})");
+        #endif
 
         window.AntialiasingCheckBox.SetChecked(true);
-        Check(window.RenderArea.Antialiased,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.RenderArea.Antialiased,
             "the antialiasing check box drives the render area");
+        #endif
 
         window.TransformationsCheckBox.SetChecked(true);
-        Check(window.RenderArea.Transformed,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.RenderArea.Transformed,
             "the transformations check box drives the render area");
+        #endif
 
-        // The window is left on screen for a moment if asked, but nothing needs the event loop.
-        if (int.TryParse(Environment.GetEnvironmentVariable("QTSHARP_DEMO_MS"), out var ms) && ms > 0)
-        {
-            var stop = new QTimer();
-            stop.SetSingleShot(true);
-            stop.TimeoutSignal.Connect(() => app.Quit());
-            stop.Start(ms);
-            app.Exec();
-        }
-
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

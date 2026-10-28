@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 // Port of examples/widgets/itemviews/stardelegate on the new pipeline.
@@ -315,27 +315,29 @@ public sealed class ApiStarTable : QTableWidget
 [Demo("qtwidgets-stardelegate")]
 public static class StarDelegate
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         using var table = new ApiStarTable();
-        table.Show();
+        #if QTSHARP_DEMO_SMOKE
+            table.Show();
+        #else
+            demo.Show(table);
+        #endif
 
-        Check(table.RowCount == 4 && table.ColumnCount == 4,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(table.RowCount == 4 && table.ColumnCount == 4,
             $"the table has four songs and four columns ({table.RowCount}x{table.ColumnCount})");
+#endif
         {
             var titleHeader = table.HorizontalHeaderItem(0);
             var ratingHeader = table.HorizontalHeaderItem(3);
-            Check(titleHeader.Text() == "Title" && ratingHeader.Text() == "Rating",
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(titleHeader.Text() == "Title" && ratingHeader.Text() == "Rating",
                 $"the header carries the official labels "
                 + $"('{titleHeader.Text()}', '{ratingHeader.Text()}')");
+            #endif
         }
 
         // The regression: QTableWidget's model is a private C++ class, so `table.Model()` hands back
@@ -344,34 +346,50 @@ public static class StarDelegate
         {
             var index = model.Index(2, 3);
             string value = model.Data(index)?.ToString();
-            Check(index.IsValid() && model.RowCount() == 4 && value == "3",
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(index.IsValid() && model.RowCount() == 4 && value == "3",
                 $"table.Model() reaches the real model "
                 + $"(valid={index.IsValid()}, rows={model.RowCount()}, [2,3]='{value}')");
+            #endif
         }
 
         // The lowercase accessors, because `table.EditTriggers` is ambiguous: QTableWidget inherits
         // the nested enum of that name from QAbstractItemView, and the type wins over the property.
         var triggers = table.editTriggers();
-        Check(triggers.HasFlag(QAbstractItemView.EditTriggers.DoubleClicked)
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(triggers.HasFlag(QAbstractItemView.EditTriggers.DoubleClicked)
               && triggers.HasFlag(QAbstractItemView.EditTriggers.SelectedClicked),
             $"the edit triggers are the official ones (got {triggers})");
-        Check(table.selectionBehavior() == QAbstractItemView.SelectionBehavior.SelectRows,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(table.selectionBehavior() == QAbstractItemView.SelectionBehavior.SelectRows,
             $"whole rows are selected (got {table.selectionBehavior()})");
+        #endif
 
         // The ratings travelled from C# into the table's items.
-        Check(table.RatingAt(0) == 5 && table.RatingAt(1) == 4 && table.RatingAt(2) == 3
+#if QTSHARP_DEMO_SMOKE
+
+        // The ratings travelled from C# into the table's items.
+        demo.Check(table.RatingAt(0) == 5 && table.RatingAt(1) == 4 && table.RatingAt(2) == 3
               && table.RatingAt(3) == 5,
             $"the four ratings are 5/4/3/5 (got {table.RatingAt(0)}/{table.RatingAt(1)}/"
             + $"{table.RatingAt(2)}/{table.RatingAt(3)})");
+#endif
 
         // Rendering the table is what makes Qt ask the managed delegate to paint.
+        #if QTSHARP_DEMO_SMOKE
         using (var rendered = table.Grab())
-            Check(rendered != null && !rendered.IsNull() && table.StarDelegate.PaintCalls > 0,
+            demo.Check(rendered != null && !rendered.IsNull() && table.StarDelegate.PaintCalls > 0,
                 $"Qt asked the managed delegate to paint ({table.StarDelegate.PaintCalls} times)");
+        #endif
 
         // QStyledItemDelegate::sizeHint is reached for every cell.
-        Check(table.StarDelegate.SizeHintCalls > 0,
+#if QTSHARP_DEMO_SMOKE
+
+        // QStyledItemDelegate::sizeHint is reached for every cell.
+        demo.Check(table.StarDelegate.SizeHintCalls > 0,
             $"Qt asked the managed delegate for size hints ({table.StarDelegate.SizeHintCalls} times)");
+#endif
 
         // The rating column's size hint is the official 20 * maxStarCount x 20.
         //
@@ -384,10 +402,12 @@ public static class StarDelegate
         {
             var index = table.Model().Index(0, 3);
             var hint = table.StarDelegate.SizeHint(option, index);
-            Check(index.IsValid() && hint.Width() == ApiStarRating.PaintingScaleFactor * ApiStarDelegate.MaxStarCount
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(index.IsValid() && hint.Width() == ApiStarRating.PaintingScaleFactor * ApiStarDelegate.MaxStarCount
                   && hint.Height() == ApiStarRating.PaintingScaleFactor,
                 $"the rating cell asks for {ApiStarRating.PaintingScaleFactor * ApiStarDelegate.MaxStarCount}x"
                 + $"{ApiStarRating.PaintingScaleFactor} (got {hint.Width()}x{hint.Height()})");
+            #endif
         }
 
         using (var option = new QStyleOptionViewItem())
@@ -396,8 +416,10 @@ public static class StarDelegate
 
             var index = table.Model().Index(0, 0);
             var hint = table.StarDelegate.SizeHint(option, index);
-            Check(hint.Width() > 0 && hint.Height() > 0,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(hint.Width() > 0 && hint.Height() > 0,
                 $"a text cell falls through to QStyledItemDelegate::sizeHint ({hint.Width()}x{hint.Height()})");
+            #endif
         }
 
         // The editor: created by the delegate, filled from the model, committed back into it.
@@ -405,25 +427,35 @@ public static class StarDelegate
         {
             var index = table.Model().Index(1, 3);
             using var editor = table.StarDelegate.CreateEditor(table, option, index);
-            Check(table.StarDelegate.CreateEditorCalls == 1 && editor is ApiStarEditor,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(table.StarDelegate.CreateEditorCalls == 1 && editor is ApiStarEditor,
                 $"createEditor() returns the managed star editor ({editor?.GetType().Name})");
+            #endif
 
             table.StarDelegate.SetEditorData(editor, index);
             var starEditor = (ApiStarEditor)editor;
-            Check(table.StarDelegate.SetEditorDataCalls == 1 && starEditor.StarRating.StarCount == 4,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(table.StarDelegate.SetEditorDataCalls == 1 && starEditor.StarRating.StarCount == 4,
                 $"setEditorData() handed the row's rating to the editor "
                 + $"(got {starEditor.StarRating.StarCount})");
+            #endif
 
             // The official StarEditor turns a mouse position into a star index.
-            Check(starEditor.StarAtPosition(0) == 1 && starEditor.StarAtPosition(99) == 5
+#if QTSHARP_DEMO_SMOKE
+
+            // The official StarEditor turns a mouse position into a star index.
+            demo.Check(starEditor.StarAtPosition(0) == 1 && starEditor.StarAtPosition(99) == 5
                   && starEditor.StarAtPosition(100) == -1,
                 "starAtPosition() maps x to the 1..5 stars and rejects x beyond the widget");
+#endif
 
             // Releasing in the editor reports "editing finished".
+            #if QTSHARP_DEMO_SMOKE
             bool finished = false;
             starEditor.EditingFinished = () => finished = true;
             starEditor.ReleaseEditing();
-            Check(finished, "the editor raises editingFinished on release");
+            demo.Check(finished, "the editor raises editingFinished on release");
+            #endif
 
             // The editor paints the rating itself (2 stars and 3 diamonds, all in the editable
             // colour): the same ApiStarRating::Paint the delegate calls for a cell.
@@ -437,7 +469,9 @@ public static class StarDelegate
                     for (int x = 0; x < image.Width(); x++)
                         if (image.Pixel(x, y) != background)
                             ink++;
-                Check(ink > 0, $"the editor paints its stars ({ink} pixels differ from the background)");
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(ink > 0, $"the editor paints its stars ({ink} pixels differ from the background)");
+                #endif
             }
 
             // updateEditorGeometry: the editor takes the cell's rectangle.
@@ -447,16 +481,20 @@ public static class StarDelegate
                 table.StarDelegate.UpdateEditorGeometry(editor, option, index);
             }
             var geometry = editor.Geometry;
-                Check(table.StarDelegate.UpdateEditorGeometryCalls == 1
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(table.StarDelegate.UpdateEditorGeometryCalls == 1
                       && geometry.Width() == 100 && geometry.Height() == 20,
                     $"updateEditorGeometry() gives the editor the cell's rectangle "
                     + $"({geometry.Width()}x{geometry.Height()})");
+                #endif
 
             // Committing: the editor's rating goes back into the model through setModelData().
             starEditor.SetStarRating(new ApiStarRating(2, ApiStarDelegate.MaxStarCount));
             table.StarDelegate.SetModelData(editor, table.Model(), index);
-            Check(table.StarDelegate.SetModelDataCalls == 1 && table.RatingAt(1) == 2,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(table.StarDelegate.SetModelDataCalls == 1 && table.RatingAt(1) == 2,
                 $"setModelData() wrote the editor's rating back into the model (row 1 now {table.RatingAt(1)})");
+            #endif
         }
 
         // The commit/close signals of QAbstractItemDelegate are what a view listens to; here they
@@ -468,12 +506,17 @@ public static class StarDelegate
         using (var editor2 = new ApiStarEditor())
         {
             table.StarDelegate.CommitAndCloseEditor(editor2);
-            Check(committed != null && committed.Handle == editor2.Handle && closed == 1,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(committed != null && committed.Handle == editor2.Handle && closed == 1,
                 "commitData/closeEditor carry the editor (the commitAndCloseEditor pair)");
+            #endif
         }
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }
 

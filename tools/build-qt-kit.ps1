@@ -231,6 +231,11 @@ if (-not $plugin) {
 if (-not $plugin) { throw "qwindows.dll was not found under $kitRoot - the built app cannot show a window without it." }
 New-Item -ItemType Directory -Path (Join-Path $runtimeOut 'platforms') -Force | Out-Null
 Copy-Item -LiteralPath $plugin.FullName -Destination (Join-Path $runtimeOut 'platforms') -Force
+# The headless plugins the Smoke demo/test runs select with QT_QPA_PLATFORM=offscreen.
+foreach ($headless in @('qoffscreen.dll', 'qminimal.dll')) {
+    $extra = Get-ChildItem -Path (Join-Path $kitRoot 'plugins\platforms') -Filter $headless -File -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($extra) { Copy-Item -LiteralPath $extra.FullName -Destination (Join-Path $runtimeOut 'platforms') -Force }
+}
 
 # ---- 3. What the caller needs ------------------------------------------------------
 $core = (Get-Item (Join-Path $runtimeOut 'Qt6Core.dll')).VersionInfo.FileVersion

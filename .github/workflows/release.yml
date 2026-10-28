@@ -154,37 +154,19 @@ jobs:
       # The examples are the binding's own test suite, and a release must not ship a binding that
       # cannot render - which is exactly what the demo gate caught once, after a package had gone
       # out. They run before the pack, so a failing example stops the job before any package exists.
-      - name: Build the examples
+      - name: Build and run every demo executable
         shell: pwsh
         run: |
-          # testbind references the demos library, so this one build produces both assemblies.
-          dotnet build testbind/testbind.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
-          if ($LASTEXITCODE -ne 0) { throw "testbind build failed" }
-
-      - name: Run every example
-        shell: pwsh
-        run: |
-          ./tools/run-window-tests.ps1 -Exe "testbind/bin/Release/net10.0/testapp.exe" -Label "demos"
+          ./tools/run-demos.ps1 -QtRuntimeDir $env:QT_RUNTIME_DIR
           if ($LASTEXITCODE -ne 0) { throw "some demos failed (see the output above)" }
 
-      # The official Qt3D examples are the extension's conformance suite; like the core demos,
-      # they run before anything is packed.
-      - name: Build and run the official Qt3D examples
+      - name: Build and run the binding tests
         shell: pwsh
         run: |
-          dotnet build demos.qt3d/QtSharp.Qt3D.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
-          if ($LASTEXITCODE -ne 0) { throw "Qt3D demos build failed" }
-          ./tools/run-window-tests.ps1 -Exe "demos.qt3d/bin/Release/net10.0/QtSharp.Qt3D.Demos.exe" -Label "qt3d-demos"
-          if ($LASTEXITCODE -ne 0) { throw "some Qt3D demos failed (see the output above)" }
-
-      # The official Qt Charts examples: the Charts module's conformance suite.
-      - name: Build and run the official Qt Charts examples
-        shell: pwsh
-        run: |
-          dotnet build demos.charts/QtSharp.Charts.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
-          if ($LASTEXITCODE -ne 0) { throw "Charts demos build failed" }
-          ./tools/run-window-tests.ps1 -Exe "demos.charts/bin/Release/net10.0/QtSharp.Charts.Demos.exe" -Label "charts-demos"
-          if ($LASTEXITCODE -ne 0) { throw "some Qt Charts demos failed (see the output above)" }
+          dotnet build tests/testapp/testapp.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
+          if ($LASTEXITCODE -ne 0) { throw "binding test build failed" }
+          ./tools/run-window-tests.ps1 -Exe "tests/testapp/bin/Release/net10.0/testapp.exe" -Label "binding tests"
+          if ($LASTEXITCODE -ne 0) { throw "some binding tests failed (see the output above)" }
 
       - name: Stage the Windows payload
         shell: pwsh
@@ -316,21 +298,16 @@ jobs:
           done
           echo "native libraries carry the \$ORIGIN/lib deployment rpath"
 
-      - name: Build the examples and the binding tests
+      - name: Build and run every demo executable
         shell: bash
         run: |
-          dotnet build demos/QtSharp.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$QT_RUNTIME_DIR"
-          dotnet build demos.charts/QtSharp.Charts.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$QT_RUNTIME_DIR"
-          dotnet build demos.qt3d/QtSharp.Qt3D.Demos.csproj -c Release --nologo "-p:QtRuntimeDir=$QT_RUNTIME_DIR"
-          dotnet build testbind/testbind.csproj -c Release --nologo "-p:QtRuntimeDir=$QT_RUNTIME_DIR"
+          pwsh ./tools/run-demos.ps1 -QtRuntimeDir "$QT_RUNTIME_DIR"
 
-      - name: Run the conformance suite
+      - name: Build and run the binding tests
         shell: bash
         run: |
-          export LIBGL_ALWAYS_SOFTWARE=1
-          xvfb-run -a --server-args="-screen 0 1280x1024x24" pwsh ./tools/run-window-tests.ps1 -Exe "testbind/bin/Release/net10.0/testapp" -Label "demos-linux"
-          xvfb-run -a --server-args="-screen 0 1280x1024x24" pwsh ./tools/run-window-tests.ps1 -Exe "demos.charts/bin/Release/net10.0/QtSharp.Charts.Demos" -Label "charts-linux"
-          xvfb-run -a --server-args="-screen 0 1280x1024x24" pwsh ./tools/run-window-tests.ps1 -Exe "demos.qt3d/bin/Release/net10.0/QtSharp.Qt3D.Demos" -Label "qt3d-linux"
+          dotnet build tests/testapp/testapp.csproj -c Release --nologo "-p:QtRuntimeDir=$QT_RUNTIME_DIR"
+          pwsh ./tools/run-window-tests.ps1 -Exe "tests/testapp/bin/Release/net10.0/testapp" -Label "binding tests"
 
       - name: Stage the Linux payload
         shell: bash

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-// PARKED - ported but deliberately NOT wired into testbind/Program.cs or the gate yet.
+// PARKED - ported but deliberately NOT wired into tests/testapp or the gate yet.
 //
 // All 115 assertions pass, but the process then exits with 0xC000041D about 3 times in 10: the
 // faulting instruction is inside qwindows.dll, reached from PeekMessageW -> CallWindowProcW ->
@@ -275,15 +275,6 @@ public sealed class WindowFlagsDemoWindow : QWidget
 // layer, reads the typed flags back from the native QWidget and checks the preview text.
 public static class WindowFlagsApi
 {
-    static int failures;
-
-    static void Check(bool ok, string what)
-    {
-        Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-        if (!ok)
-            failures++;
-    }
-
     static string HintText(Qt.WindowFlags hint)
     {
         if (hint == Qt.WindowFlags.MSWindowsFixedSizeDialogHint) return "Qt::MSWindowsFixedSizeDialogHint";
@@ -305,22 +296,21 @@ public static class WindowFlagsApi
 
     static int TypeBits(Qt.WindowFlags flags) => (int)flags & (int)Qt.WindowType.WindowType_Mask;
 
-    public static int Run(QApplication app)
+    public static int Run(TestContext context)
     {
-        failures = 0;
         var window = new WindowFlagsDemoWindow();
         var preview = window.Preview;
 
-        Check(window.TypeButtons.Count == 12, $"the Type group has 12 radio buttons (got {window.TypeButtons.Count})");
-        Check(window.HintBoxes.Count == 14, $"the Hints group has 14 check boxes (got {window.HintBoxes.Count})");
+        context.Check(window.TypeButtons.Count == 12, $"the Type group has 12 radio buttons (got {window.TypeButtons.Count})");
+        context.Check(window.HintBoxes.Count == 14, $"the Hints group has 14 check boxes (got {window.HintBoxes.Count})");
 
         // The official default: the Window radio button is checked and the preview describes it.
-        Check(window.TypeButton(Qt.WindowType.Window).IsChecked(), "Window is the default type");
-        Check(TypeBits(preview.WindowFlags()) == (int)Qt.WindowType.Window,
+        context.Check(window.TypeButton(Qt.WindowType.Window).IsChecked(), "Window is the default type");
+        context.Check(TypeBits(preview.WindowFlags()) == (int)Qt.WindowType.Window,
             $"default flags carry Qt::Window (got 0x{TypeBits(preview.WindowFlags()):X})");
-        Check(preview.WindowFlags().HasFlag(Qt.WindowFlags.Window),
+        context.Check(preview.WindowFlags().HasFlag(Qt.WindowFlags.Window),
             "the Window flag bit is set on the default flags");
-        Check(preview.PlainText == "Qt::Window", $"the preview describes Qt::Window (got '{preview.PlainText}')");
+        context.Check(preview.PlainText == "Qt::Window", $"the preview describes Qt::Window (got '{preview.PlainText}')");
 
         // Every type radio button: clicking it must make exactly that type appear, and the
         // mutually exclusive type nibble must equal the chosen value (no bit from another type).
@@ -343,9 +333,9 @@ public static class WindowFlagsApi
                 : type == Qt.WindowType.SubWindow
                     ? (int)Qt.WindowType.SubWindow | (int)Qt.WindowType.Window
                     : (int)type;
-            Check(got == expectedNibble,
+            context.Check(got == expectedNibble,
                 $"selecting {WindowFlagsPreviewWindow.TypeName((int)type)} yields type nibble 0x{expectedNibble:X} (got 0x{got:X})");
-            Check(preview.PlainText == WindowFlagsPreviewWindow.TypeName((int)type),
+            context.Check(preview.PlainText == WindowFlagsPreviewWindow.TypeName((int)type),
                 $"the preview records the requested {WindowFlagsPreviewWindow.TypeName((int)type)} (got '{preview.PlainText}')");
         }
 
@@ -353,7 +343,7 @@ public static class WindowFlagsApi
         // hands back for a plain Qt::Window is the baseline every "off" toggle must restore.
         window.TypeButton(Qt.WindowType.Window).Click();
         int baseline = (int)preview.WindowFlags();
-        Check(baseline != 0, $"the platform gives a plain Qt::Window a non-empty flag set (0x{baseline:X8})");
+        context.Check(baseline != 0, $"the platform gives a plain Qt::Window a non-empty flag set (0x{baseline:X8})");
 
         // Each hint toggles its own bit in the native QWidget and its own line in the preview.
         // Note that Windows injects a default set of hints for a window, so "toggled off" means
@@ -374,18 +364,18 @@ public static class WindowFlagsApi
             var box = window.HintBox(hint);
             box.Click();
             int on = (int)preview.WindowFlags();
-            Check(preview.WindowFlags().HasFlag(hint),
+            context.Check(preview.WindowFlags().HasFlag(hint),
                 $"{HintText(hint)} is set after toggling the check box on");
-            Check(on != baseline,
+            context.Check(on != baseline,
                 $"{HintText(hint)} changes the native flags (0x{baseline:X8} -> 0x{on:X8})");
-            Check(preview.PlainText.Contains("| " + HintText(hint)),
+            context.Check(preview.PlainText.Contains("| " + HintText(hint)),
                 $"{HintText(hint)} appears in the preview text");
 
             box.Click();
             int off = (int)preview.WindowFlags();
-            Check(off == baseline,
+            context.Check(off == baseline,
                 $"{HintText(hint)} returns the native flags to the baseline (got 0x{off:X8})");
-            Check(!preview.PlainText.Contains("| " + HintText(hint)),
+            context.Check(!preview.PlainText.Contains("| " + HintText(hint)),
                 $"{HintText(hint)} disappears from the preview text");
         }
 
@@ -400,13 +390,13 @@ public static class WindowFlagsApi
             | Qt.WindowFlags.WindowStaysOnTopHint
             | Qt.WindowFlags.NoDropShadowWindowHint;
         var combined = preview.WindowFlags();
-        Check(TypeBits(combined) == (int)Qt.WindowType.Dialog, "the combined flags keep exactly Qt::Dialog");
-        Check(combined.HasFlag(Qt.WindowFlags.FramelessWindowHint), "the combined flags carry FramelessWindowHint");
-        Check(combined.HasFlag(Qt.WindowFlags.WindowStaysOnTopHint), "the combined flags carry WindowStaysOnTopHint");
-        Check(combined.HasFlag(Qt.WindowFlags.NoDropShadowWindowHint), "the combined flags carry NoDropShadowWindowHint");
-        Check((int)combined == (int)expected, $"the combined value is exactly the OR of the chosen bits (got 0x{(int)combined:X})");
-        Check(combined.HasFlag(Qt.WindowFlags.Window), "Dialog still reports the Window bit (Qt::Dialog includes it)");
-        Check(preview.PlainText ==
+        context.Check(TypeBits(combined) == (int)Qt.WindowType.Dialog, "the combined flags keep exactly Qt::Dialog");
+        context.Check(combined.HasFlag(Qt.WindowFlags.FramelessWindowHint), "the combined flags carry FramelessWindowHint");
+        context.Check(combined.HasFlag(Qt.WindowFlags.WindowStaysOnTopHint), "the combined flags carry WindowStaysOnTopHint");
+        context.Check(combined.HasFlag(Qt.WindowFlags.NoDropShadowWindowHint), "the combined flags carry NoDropShadowWindowHint");
+        context.Check((int)combined == (int)expected, $"the combined value is exactly the OR of the chosen bits (got 0x{(int)combined:X})");
+        context.Check(combined.HasFlag(Qt.WindowFlags.Window), "Dialog still reports the Window bit (Qt::Dialog includes it)");
+        context.Check(preview.PlainText ==
               "Qt::Dialog\n| Qt::FramelessWindowHint\n| Qt::NoDropShadowWindowHint\n| Qt::WindowStaysOnTopHint",
             "the preview lists the type and every hint in order");
 
@@ -416,20 +406,19 @@ public static class WindowFlagsApi
         window.HintBox(Qt.WindowFlags.NoDropShadowWindowHint).Click();
 
         // The Show/Hide button toggles the preview and relabels itself, exactly like the official.
-        Check(preview.IsVisible(), "the preview is shown after updatePreview()");
-        Check(window.ShowButton.Text == "Hide", $"the Show/Hide button starts as Hide (got '{window.ShowButton.Text}')");
+        context.Check(preview.IsVisible(), "the preview is shown after updatePreview()");
+        context.Check(window.ShowButton.Text == "Hide", $"the Show/Hide button starts as Hide (got '{window.ShowButton.Text}')");
         window.ShowButton.Click();
-        Check(!preview.IsVisible(), "clicking Show/Hide hides the preview");
-        Check(window.ShowButton.Text == "Show", $"the button relabels to Show (got '{window.ShowButton.Text}')");
+        context.Check(!preview.IsVisible(), "clicking Show/Hide hides the preview");
+        context.Check(window.ShowButton.Text == "Show", $"the button relabels to Show (got '{window.ShowButton.Text}')");
         window.ShowButton.Click();
-        Check(preview.IsVisible(), "clicking Show/Hide again shows the preview");
-        Check(window.ShowButton.Text == "Hide", $"the button relabels back to Hide (got '{window.ShowButton.Text}')");
+        context.Check(preview.IsVisible(), "clicking Show/Hide again shows the preview");
+        context.Check(window.ShowButton.Text == "Hide", $"the button relabels back to Hide (got '{window.ShowButton.Text}')");
 
         // Quit stays wired to the runtime; the self test does not click it.
-        Check(window.QuitButton.Text == "&Quit" && window.QuitButton.IsEnabled(),
+        context.Check(window.QuitButton.Text == "&Quit" && window.QuitButton.IsEnabled(),
             "the Quit button is present and enabled");
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        return context.ExitCode;
     }
 }

@@ -47,6 +47,11 @@
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>QtSharp.BindingTests</_Parameter1>
     </AssemblyAttribute>
+    <!-- The QObject/Qt::ConnectionType Connect overloads live next to the generated QtCore
+         classes (runtime/QtCore/QSignalConnections.cs) and forward to the internal primitive. -->
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>QtSharp.QtCore</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
   <ItemGroup>

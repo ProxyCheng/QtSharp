@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 // The official widgets/sliders example, ported onto the *new* pipeline. The structure mirrors
 // examples/widgets/widgets/sliders/{window,slidersgroup}.cpp exactly: a reusable SlidersGroup
@@ -230,15 +230,8 @@ public sealed class ApiSlidersWindow : QWidget
 [Demo("qtwidgets-sliders")]
 public static class Sliders
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         var window = new ApiSlidersWindow();
         var group = window.Group;
@@ -246,128 +239,214 @@ public static class Sliders
         var bar = group.Bar;
         var dial = group.Dial;
 
-        window.Show();
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
 
         // The spin boxes in the window constructor must have propagated through the signals.
-        Check(slider.Value == 5, $"valueSpinBox(5) drove the slider's value (got {slider.Value})");
-        Check(bar.Value == 5, $"valueSpinBox(5) drove the scroll bar's value (got {bar.Value})");
-        Check(dial.Value == 5, $"valueSpinBox(5) drove the dial's value (got {dial.Value})");
+#if QTSHARP_DEMO_SMOKE
 
-        Check(slider.Minimum == 0 && slider.Maximum == 20,
+        // The spin boxes in the window constructor must have propagated through the signals.
+        demo.Check(slider.Value == 5, $"valueSpinBox(5) drove the slider's value (got {slider.Value})");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(bar.Value == 5, $"valueSpinBox(5) drove the scroll bar's value (got {bar.Value})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(dial.Value == 5, $"valueSpinBox(5) drove the dial's value (got {dial.Value})");
+        #endif
+
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(slider.Minimum == 0 && slider.Maximum == 20,
             $"minimumSpinBox/maximumSpinBox set the slider's range (got {slider.Minimum}..{slider.Maximum})");
-        Check(bar.Minimum == 0 && bar.Maximum == 20,
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(bar.Minimum == 0 && bar.Maximum == 20,
             $"the scroll bar's range followed (got {bar.Minimum}..{bar.Maximum})");
-        Check(dial.Minimum == 0 && dial.Maximum == 20,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(dial.Minimum == 0 && dial.Maximum == 20,
             $"the dial's range followed (got {dial.Minimum}..{dial.Maximum})");
+        #endif
 
         // The group's tick / step configuration, as in the constructor.
-        Check(slider.tickPosition() == QSlider.TickPosition.TicksBothSides,
+#if QTSHARP_DEMO_SMOKE
+
+        // The group's tick / step configuration, as in the constructor.
+        demo.Check(slider.tickPosition() == QSlider.TickPosition.TicksBothSides,
             $"tick position is TicksBothSides (got {slider.tickPosition()})");
-        Check(slider.TickInterval == 10, $"tick interval is 10 (got {slider.TickInterval})");
-        Check(slider.SingleStep == 1, $"single step is 1 (got {slider.SingleStep})");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(slider.TickInterval == 10, $"tick interval is 10 (got {slider.TickInterval})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(slider.SingleStep == 1, $"single step is 1 (got {slider.SingleStep})");
+        #endif
 
         // Focus policy of all three widgets.
-        Check(slider.FocusPolicy == Qt.FocusPolicy.StrongFocus,
+#if QTSHARP_DEMO_SMOKE
+
+        // Focus policy of all three widgets.
+        demo.Check(slider.FocusPolicy == Qt.FocusPolicy.StrongFocus,
             $"slider keeps StrongFocus (got {slider.FocusPolicy})");
-        Check(bar.FocusPolicy == Qt.FocusPolicy.StrongFocus,
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(bar.FocusPolicy == Qt.FocusPolicy.StrongFocus,
             $"scroll bar has StrongFocus (got {bar.FocusPolicy})");
-        Check(dial.FocusPolicy == Qt.FocusPolicy.StrongFocus,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(dial.FocusPolicy == Qt.FocusPolicy.StrongFocus,
             $"dial has StrongFocus (got {dial.FocusPolicy})");
+        #endif
 
         // Dial-specific state.
-        Check(!dial.Wrapping, "dial wrapping defaults to off");
+#if QTSHARP_DEMO_SMOKE
+
+        // Dial-specific state.
+        demo.Check(!dial.Wrapping, "dial wrapping defaults to off");
+#endif
         dial.Wrapping = true;
-        Check(dial.Wrapping, "dial wrapping round-trips (set true)");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(dial.Wrapping, "dial wrapping round-trips (set true)");
+        #endif
         dial.Wrapping = false;
-        Check(!dial.Wrapping, "dial wrapping round-trips (set false)");
-        Check(!dial.NotchesVisible, "dial notches default to hidden");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!dial.Wrapping, "dial wrapping round-trips (set false)");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!dial.NotchesVisible, "dial notches default to hidden");
+        #endif
         dial.NotchesVisible = true;
-        Check(dial.NotchesVisible, "dial notches round-trip (set visible)");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(dial.NotchesVisible, "dial notches round-trip (set visible)");
+        #endif
 
         // The slider -> scroll bar -> dial -> (group) valueChanged chain, and the echo label.
         slider.Value = 13;
-        Check(bar.Value == 13, $"slider valueChanged reached the scroll bar (got {bar.Value})");
-        Check(dial.Value == 13, $"scroll bar valueChanged reached the dial (got {dial.Value})");
-        Check(window.ValueSpin.Value == 13, $"the window's value spin box followed the dial (got {window.ValueSpin.Value})");
-        Check(window.ValueEcho.text() == "Current value: 13",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(bar.Value == 13, $"slider valueChanged reached the scroll bar (got {bar.Value})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(dial.Value == 13, $"scroll bar valueChanged reached the dial (got {dial.Value})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ValueSpin.Value == 13, $"the window's value spin box followed the dial (got {window.ValueSpin.Value})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ValueEcho.text() == "Current value: 13",
             $"the echo label followed the dial (got '{window.ValueEcho.text()}')");
+        #endif
 
         // ...and the other direction: the dial drives the slider.
         dial.Value = 17;
-        Check(slider.Value == 17, $"dial valueChanged reached the slider (got {slider.Value})");
-        Check(window.ValueEcho.text() == "Current value: 17",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(slider.Value == 17, $"dial valueChanged reached the slider (got {slider.Value})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ValueEcho.text() == "Current value: 17",
             $"the echo label followed the dial upwards (got '{window.ValueEcho.text()}')");
+        #endif
 
         // Value spin box drives the group.
         window.ValueSpin.Value = 7;
-        Check(slider.Value == 7, $"valueSpinBox drove the slider (got {slider.Value})");
-        Check(dial.Value == 7, $"valueSpinBox drove the dial through the chain (got {dial.Value})");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(slider.Value == 7, $"valueSpinBox drove the slider (got {slider.Value})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(dial.Value == 7, $"valueSpinBox drove the dial through the chain (got {dial.Value})");
+        #endif
 
         // Inverted appearance / key bindings through the check boxes.
         window.InvertedAppearance.SetChecked(true);
-        Check(slider.InvertedAppearance && bar.InvertedAppearance && dial.InvertedAppearance,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(slider.InvertedAppearance && bar.InvertedAppearance && dial.InvertedAppearance,
             "invertedAppearance check box inverted all three widgets");
+        #endif
         window.InvertedAppearance.SetChecked(false);
-        Check(!slider.InvertedAppearance && !bar.InvertedAppearance && !dial.InvertedAppearance,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!slider.InvertedAppearance && !bar.InvertedAppearance && !dial.InvertedAppearance,
             "invertedAppearance check box restored all three widgets");
+        #endif
 
         window.InvertedKeyBindings.SetChecked(true);
-        Check(slider.InvertedControls && bar.InvertedControls && dial.InvertedControls,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(slider.InvertedControls && bar.InvertedControls && dial.InvertedControls,
             "invertedKeyBindings check box inverted the controls of all three widgets");
+        #endif
         window.InvertedKeyBindings.SetChecked(false);
-        Check(!slider.InvertedControls && !bar.InvertedControls && !dial.InvertedControls,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!slider.InvertedControls && !bar.InvertedControls && !dial.InvertedControls,
             "invertedKeyBindings check box restored the controls of all three widgets");
+        #endif
 
         // Minimum / maximum spin boxes drive all three widgets.
         window.MinimumSpin.Value = -5;
-        Check(slider.Minimum == -5 && bar.Minimum == -5 && dial.Minimum == -5,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(slider.Minimum == -5 && bar.Minimum == -5 && dial.Minimum == -5,
             $"minimumSpinBox(-5) reached all three widgets (got {slider.Minimum}/{bar.Minimum}/{dial.Minimum})");
+        #endif
         window.MaximumSpin.Value = 50;
-        Check(slider.Maximum == 50 && bar.Maximum == 50 && dial.Maximum == 50,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(slider.Maximum == 50 && bar.Maximum == 50 && dial.Maximum == 50,
             $"maximumSpinBox(50) reached all three widgets (got {slider.Maximum}/{bar.Maximum}/{dial.Maximum})");
+        #endif
 
         // Tick position / interval round-trips on the slider.
         slider.SetTickPosition(QSlider.TickPosition.TicksBelow);
-        Check(slider.tickPosition() == QSlider.TickPosition.TicksBelow,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(slider.tickPosition() == QSlider.TickPosition.TicksBelow,
             $"tick position round-trips (got {slider.tickPosition()})");
+        #endif
         slider.TickInterval = 25;
-        Check(slider.TickInterval == 25, $"tick interval round-trips (got {slider.TickInterval})");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(slider.TickInterval == 25, $"tick interval round-trips (got {slider.TickInterval})");
+        #endif
 
         // resizeEvent flips the outer layout (and the group's inner layout + orientation).
         int before = window.ResizeEventCount;
         window.Resize(300, 700);            // aspect < 1  =>  TopToBottom / Horizontal
         if (window.ResizeEventCount == before)
+            #if QTSHARP_DEMO_SMOKE
             window.ResizeEvent(null);       // no event loop: drive the override directly
-        Check(window.OuterLayout.direction() == QBoxLayout.Direction.TopToBottom,
+        demo.Check(window.OuterLayout.direction() == QBoxLayout.Direction.TopToBottom,
             $"a tall window flips the outer layout to TopToBottom (got {window.OuterLayout.direction()})");
-        Check(group.InnerLayout.direction() == QBoxLayout.Direction.TopToBottom,
+            #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(group.InnerLayout.direction() == QBoxLayout.Direction.TopToBottom,
             $"a tall window flips the group layout to TopToBottom (got {group.InnerLayout.direction()})");
-        Check(slider.Orientation == Qt.Orientation.Horizontal,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(slider.Orientation == Qt.Orientation.Horizontal,
             $"a tall window makes the slider horizontal (got {slider.Orientation})");
+        #endif
 
         before = window.ResizeEventCount;
         window.Resize(1000, 150);           // aspect > 1  =>  LeftToRight / Vertical
         if (window.ResizeEventCount == before)
             window.ResizeEvent(null);
-        Check(window.OuterLayout.direction() == QBoxLayout.Direction.LeftToRight,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.OuterLayout.direction() == QBoxLayout.Direction.LeftToRight,
             $"a wide window flips the outer layout to LeftToRight (got {window.OuterLayout.direction()})");
-        Check(group.InnerLayout.direction() == QBoxLayout.Direction.LeftToRight,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(group.InnerLayout.direction() == QBoxLayout.Direction.LeftToRight,
             $"a wide window flips the group layout to LeftToRight (got {group.InnerLayout.direction()})");
-        Check(slider.Orientation == Qt.Orientation.Vertical,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(slider.Orientation == Qt.Orientation.Vertical,
             $"a wide window makes the slider vertical (got {slider.Orientation})");
-        Check(window.ResizeEventCount > 0, $"resizeEvent ran at least once ({window.ResizeEventCount})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ResizeEventCount > 0, $"resizeEvent ran at least once ({window.ResizeEventCount})");
+        #endif
 
-        // The window is left on screen for a moment if asked, but nothing needs the event loop.
-        if (int.TryParse(Environment.GetEnvironmentVariable("QTSHARP_DEMO_MS"), out var ms) && ms > 0)
-        {
-            var stop = new QTimer();
-            stop.SetSingleShot(true);
-            stop.TimeoutSignal.Connect(() => app.Quit());
-            stop.Start(ms);
-            app.Exec();
-        }
-
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

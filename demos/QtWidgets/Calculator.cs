@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 
@@ -421,25 +421,24 @@ public sealed class CalculatorApi : QWidget
 [Demo("qtwidgets-calculator")]
 public static class Calculator
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         var calculator = new CalculatorApi();
-        calculator.Show();
+        #if QTSHARP_DEMO_SMOKE
+            calculator.Show();
+        #else
+            demo.Show(calculator);
+        #endif
 
         // 1 + 2 = 3, driven by clicking the buttons and reading the display back.
         calculator.Click("1");
         calculator.Click("+");
         calculator.Click("2");
         calculator.Click("=");
-        Check(calculator.Display == "3", $"1 + 2 through the buttons (display '{calculator.Display}')");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(calculator.Display == "3", $"1 + 2 through the buttons (display '{calculator.Display}')");
+        #endif
 
         // The operator precedence the official calculator implements: 2 + 3 x 4 = 14.
         calculator.Click("Clear All");
@@ -449,7 +448,9 @@ public static class Calculator
         calculator.Click("\u00d7");
         calculator.Click("4");
         calculator.Click("=");
-        Check(calculator.Display == "14", $"2 + 3 x 4 honours precedence (display '{calculator.Display}')");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(calculator.Display == "14", $"2 + 3 x 4 honours precedence (display '{calculator.Display}')");
+        #endif
 
         // Division by zero aborts the operation instead of producing infinity.
         calculator.Click("Clear");
@@ -457,40 +458,54 @@ public static class Calculator
         calculator.Click("\u00f7");
         calculator.Click("0");
         calculator.Click("=");
-        Check(calculator.Display == "####", $"division by zero aborts (display '{calculator.Display}')");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(calculator.Display == "####", $"division by zero aborts (display '{calculator.Display}')");
+        #endif
 
         // The unary operators, and the memory keys.
         calculator.Click("Clear All");
         calculator.Click("8");
         calculator.Click("1/x");
-        Check(calculator.Display == "0.125", $"1/x (display '{calculator.Display}')");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(calculator.Display == "0.125", $"1/x (display '{calculator.Display}')");
+        #endif
 
         calculator.Click("Clear All");
         calculator.Click("9");
         calculator.Click("MS");
         calculator.Click("Clear All");
         calculator.Click("MR");
-        Check(calculator.Display == "9", $"memory store/read (display '{calculator.Display}')");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(calculator.Display == "9", $"memory store/read (display '{calculator.Display}')");
+        #endif
 
         // The keyboard: Qt sends a key event, the managed keyPressEvent reads the code out of the
         // bound QKeyEvent and clicks the matching button.
         calculator.Click("Clear All");
         ApiRuntime.SendKeyPress(calculator.Handle, (int)Qt.Key.Key_7);
         ApiRuntime.SendKeyPress(calculator.Handle, (int)Qt.Key.Key_8);
-        Check(calculator.Display == "78", $"the keyboard reached the calculator (display '{calculator.Display}')");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(calculator.Display == "78", $"the keyboard reached the calculator (display '{calculator.Display}')");
+        #endif
 
         ApiRuntime.SendKeyPress(calculator.Handle, (int)Qt.Key.Key_Backspace);
-        Check(calculator.Display == "7", $"backspace (display '{calculator.Display}')");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(calculator.Display == "7", $"backspace (display '{calculator.Display}')");
+        #endif
 
         ApiRuntime.SendKeyPress(calculator.Handle, (int)Qt.Key.Key_Escape);
         ApiRuntime.SendKeyPress(calculator.Handle, (int)Qt.Key.Key_5);
         ApiRuntime.SendKeyPress(calculator.Handle, (int)Qt.Key.Key_Plus);
         ApiRuntime.SendKeyPress(calculator.Handle, (int)Qt.Key.Key_7);
         ApiRuntime.SendKeyPress(calculator.Handle, (int)Qt.Key.Key_Return);
-        Check(calculator.Display == "12", $"5 + 7 = 12 through the keyboard (display '{calculator.Display}')");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(calculator.Display == "12", $"5 + 7 = 12 through the keyboard (display '{calculator.Display}')");
+        #endif
 
         ApiRuntime.SendKeyPress(calculator.Handle, (int)Qt.Key.Key_Escape);
-        Check(calculator.Display == "0", $"escape clears (display '{calculator.Display}')");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(calculator.Display == "0", $"escape clears (display '{calculator.Display}')");
+        #endif
 
         // The managed sizeHint override is what Qt lays the button out with: the same text on a
         // plain QToolButton gives a shorter button.
@@ -499,21 +514,30 @@ public static class Calculator
         var managed = calculator.Button("7").SizeHint;
         var widget = plain.SizeHint;
         {
-            Check(managed.Height() == widget.Height() + 20 && managed.Width() >= managed.Height(),
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(managed.Height() == widget.Height() + 20 && managed.Width() >= managed.Height(),
                 $"the managed sizeHint reached the layout (managed {managed.Width()}x{managed.Height()}, "
                 + $"plain {widget.Width()}x{widget.Height()})");
+            #endif
         }
-        Check(calculator.Height > 0 && calculator.Width > 0,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(calculator.Height > 0 && calculator.Width > 0,
             $"Qt sized the calculator from the managed buttons ({calculator.Width}x{calculator.Height})");
+        #endif
 
         // And it really draws: an off-screen render of the whole window.
         using (var rendered = calculator.Grab())
         {
-            Check(DemoCatalog.GrabCovers(rendered, calculator.Width, calculator.Height),
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(DemoPixels.GrabCovers(rendered, calculator.Width, calculator.Height),
                 $"the calculator rendered off-screen (got {rendered.Width()}x{rendered.Height()})");
+            #endif
         }
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

@@ -56,13 +56,21 @@
   </Folder>
 
   <Folder Name="/Demos/">
-    <Project Path="demos/QtSharp.Demos.csproj" />
-    <Project Path="demos.charts/QtSharp.Charts.Demos.csproj" />
-    <Project Path="demos.qt3d/QtSharp.Qt3D.Demos.csproj" />
+    <Project Path="demos/hosting/QtSharp.Demos.Hosting.csproj" />
+    <Project Path="demos/QtCore/QtSharp.Demos.QtCore.csproj" />
+    <Project Path="demos/QtGui/QtSharp.Demos.QtGui.csproj" />
+    <Project Path="demos/QtWidgets/QtSharp.Demos.QtWidgets.csproj" />
+    <Project Path="demos/QtNetwork/QtSharp.Demos.QtNetwork.csproj" />
+    <Project Path="demos/QtSvg/QtSharp.Demos.QtSvg.csproj" />
+    <Project Path="demos/QtSvgWidgets/QtSharp.Demos.QtSvgWidgets.csproj" />
+    <Project Path="demos/QtPrintSupport/QtSharp.Demos.QtPrintSupport.csproj" />
+    <Project Path="demos/QtMultimedia/QtSharp.Demos.QtMultimedia.csproj" />
+    <Project Path="demos/Charts/QtSharp.Charts.Demos.csproj" />
+    <Project Path="demos/Qt3D/QtSharp.Qt3D.Demos.csproj" />
   </Folder>
 
   <Folder Name="/Tests/">
     <Project Path="tests/QtSharp.BindingTests.csproj" />
-    <Project Path="testbind/testbind.csproj" />
+    <Project Path="tests/testapp/testapp.csproj" />
   </Folder>
 </Solution>
