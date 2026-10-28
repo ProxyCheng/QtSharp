@@ -60,7 +60,7 @@ Current coverage: **483 classes / 9947 methods / 1901 virtuals / 517 enums / 834
 properties / 475 signals / 72 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg,
 QtSvgWidgets, QtPrintSupport, QtOpenGL, QtOpenGLWidgets). The gate runs 73 examples (**1544
 assertions**) in ten executables — 32 official base-module examples plus the tours, 38 official Qt
-Charts examples and the three official Qt3D examples — and 39 binding-specific tests (**1009
+Charts examples and the three official Qt3D examples — and 39 binding-specific tests (**1024
 assertions**).
 
 Extension modules are separate assemblies and packages against the same runtime:
@@ -496,6 +496,15 @@ static class Program
   C#-declared `[QtSignal]` event invoked directly (`ValueChanged?.Invoke(v)`) runs its handlers
   from the event's delegate after the trampoline has returned from Qt, so that path has no sender
   frame of its own; raise it with `EmitSignal(ValueChanged, v)` or from Qt to get one.
+* **A QObject wrapper is the object's actual bound type.** A `QObject*` return, a
+  `QList<QObject*>` element, a signal argument and a parent/child accessor all resolve the
+  most-derived class the binding publishes, so `is`/`as`/`OfType<T>` work the way they do in
+  PyQt/PySide. An unpublished internal class resolves to its nearest bound base; a C# subclass
+  keeps its own type. Tree search uses the same types:
+  ```csharp
+  QPushButton ok = dialog.FindChild<QPushButton>("okButton");
+  QWidget[] editors = dialog.FindChildren<QWidget>(new QRegularExpression("Edit$"));
+  ```
 * **Qt value types convert to the BCL explicitly.** PyQt's `toPyDateTime()`/`QDateTime(datetime)`
   idea in C#:
   ```csharp

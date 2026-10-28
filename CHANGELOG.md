@@ -6,6 +6,10 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 
 ## Unreleased
 
+- **`QObject.FindChild<T>`/`FindChildren<T>`.** The lookup is Qt's tree walk on the wrappers'
+  actual bound types, so the type test is the ordinary `is`/`IsInstanceOfType`; there is no
+  separate type table or `qobject_cast` helper. The `Type`/`Type[]` and `QRegularExpression`
+  overloads are included, and `FindDirectChildrenOnly`/the null-versus-empty name rules match Qt.
 - **The documentation from master is merged into the examples branch.** The quick start, API
   guide, development, limitations and legacy-issue notes, the Chinese README and the
   `samples/hello` / `samples/compatibility` consumer examples now describe the `examples/`
