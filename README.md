@@ -47,7 +47,7 @@ Current coverage: **483 classes / 9947 methods / 1901 virtuals / 517 enums / 834
 properties / 475 signals / 72 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg,
 QtSvgWidgets, QtPrintSupport, QtOpenGL, QtOpenGLWidgets). The gate runs 73 examples (**1544
 assertions**) in ten executables — 32 official base-module examples plus the tours, 38 official Qt
-Charts examples and the three official Qt3D examples — and 38 binding-specific tests (**979
+Charts examples and the three official Qt3D examples — and 39 binding-specific tests (**1006
 assertions**).
 
 Extension modules are separate assemblies and packages against the same runtime:
