@@ -8,7 +8,7 @@ module.
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api.win-x64" Version="0.19.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.20.0" />
 </ItemGroup>
 ```
 

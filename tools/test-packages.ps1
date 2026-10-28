@@ -1,5 +1,5 @@
 param(
-    [string]$PackageVersion = '0.19.0',
+    [string]$PackageVersion = '0.20.0',
     [string]$PackagesDir = '',
     [string]$WorkDir = '',
     [string]$Platform = ''

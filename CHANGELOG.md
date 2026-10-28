@@ -4,7 +4,7 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
-## Unreleased
+## 0.20.0 - 2026-10-28
 
 - **Generated methods are marked as Qt slots.** A method Qt declares in a `Q_SLOTS`/`Q_SLOT`
   section or with `Q_INVOKABLE` now carries `[QtNativeSlot(signature, invokable)]`, the read-side
