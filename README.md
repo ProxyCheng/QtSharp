@@ -435,6 +435,23 @@ static class Program
   button.ClickedSignal.Emit(false);   // manual emit; only QSignal has it
   ```
   `Q_SIGNAL`s with more than one overload get the 2,3,… suffix (`Activated2Signal`/`Activated2`).
+* **A handler can ask who sent the signal.** `QObject.Sender` and `QObject.SenderSignal` are
+  PyQt's `sender()`/`senderSignalIndex()`: inside a signal handler they name the emitting object
+  (the same wrapper instance, resolved through the wrapper cache) and the moc signature the
+  connection was made with:
+  ```csharp
+  button.Clicked += checkedState =>
+  {
+      if (button.Sender == someButton) { ... }   // the wrapper itself, not a duplicate
+      Log(button.SenderSignal);                  // "clicked(bool)"
+  };
+  ```
+  They are per thread and per callback: a nested emission sees the inner sender while the inner
+  handler runs and restores the outer one when it returns, and a queued connection sees them on
+  the thread that runs the slot. Outside a callback both are null. One boundary: a
+  C#-declared `[QtSignal]` event invoked directly (`ValueChanged?.Invoke(v)`) runs its handlers
+  from the event's delegate after the trampoline has returned from Qt, so that path has no sender
+  frame of its own; raise it with `EmitSignal(ValueChanged, v)` or from Qt to get one.
 * **Qt value types convert to the BCL explicitly.** PyQt's `toPyDateTime()`/`QDateTime(datetime)`
   idea in C#:
   ```csharp
