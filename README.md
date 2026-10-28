@@ -69,7 +69,7 @@ else to set up. No Qt SDK, no Visual Studio C++ workload, no clone:
 <ItemGroup>
   <!-- win-x64 or linux-x64: the package id carries the platform, and only that platform's
        Qt runtime is inside. -->
-  <PackageReference Include="QtSharp.Api.win-x64" Version="0.19.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.20.0" />
 </ItemGroup>
 ```
 
@@ -109,8 +109,8 @@ than part of qtbase. It references the core package and adds all six modules:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api.win-x64" Version="0.19.0" />
-  <PackageReference Include="QtSharp.Qt3D.win-x64" Version="0.19.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.20.0" />
+  <PackageReference Include="QtSharp.Qt3D.win-x64" Version="0.20.0" />
 </ItemGroup>
 ```
 
@@ -144,7 +144,7 @@ drop-in replacement for every Qt module or every desktop deployment scenario.
 
 ## Releases
 
-Pushing a semantic-version tag such as `v0.19.0` starts the release workflow. It builds every
+Pushing a semantic-version tag such as `v0.20.0` starts the release workflow. It builds every
 package below once for `win-x64` and once for `linux-x64` - the id carries the RID
 (`QtSharp.Api.win-x64`, `QtSharp.Api.linux-x64`, ...), and only that platform's Qt runtime and
 native glue are inside. A GitHub Release has a flat asset list, so the release attaches one
@@ -369,7 +369,7 @@ module projects directly (the same assemblies the package contains).
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api.win-x64" Version="0.19.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.20.0" />
 </ItemGroup>
 ```
 
@@ -683,7 +683,7 @@ and matching DLLs (normally a Qt kit's `bin`):
 powershell -File tools\pack-qt-tools.ps1 -QtToolsSource C:\Qt\6.12.0\msvc2022_64\bin
 ```
 
-The result is `out/packages/QtSharp.Tools.0.19.0.nupkg`. `-QtVersion` and `-PackageVersion`
+The result is `out/packages/QtSharp.Tools.0.20.0.nupkg`. `-QtVersion` and `-PackageVersion`
 override the defaults. Put the upstream license texts/notices in a `QtSharp-ThirdPartyNotices`
 subdirectory beside the source tools to include them in the payload. Tools are staged under
 `out/qt-tools`; the script checks QtCore's version and runs captured, time-limited startup checks.
@@ -692,7 +692,7 @@ In a consumer project:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Tools" Version="0.19.0" PrivateAssets="all" />
+  <PackageReference Include="QtSharp.Tools" Version="0.20.0" PrivateAssets="all" />
   <QtResource Include="assets\sample.qrc" />
 </ItemGroup>
 ```

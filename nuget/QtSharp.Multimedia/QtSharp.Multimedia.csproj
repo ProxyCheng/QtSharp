@@ -20,7 +20,7 @@
        identical; the native payload below is the matching half only. -->
   <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
     <PackageId>QtSharp.Multimedia.$(QtSharpPlatform)</PackageId>
-    <Version>0.19.0</Version>
+    <Version>0.20.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>Qt Multimedia for .NET, generated from the Qt 6.12 headers. References QtSharp.Api.</Description>
     <PackageTags>Qt;Qt6;QtMultimedia;CSharp;dotnet;binding;interop;audio;video</PackageTags>
