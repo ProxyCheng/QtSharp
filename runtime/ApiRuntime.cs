@@ -1445,6 +1445,11 @@ namespace QtSharp.Runtime
                 var target = LookupWrapper(userData);
                 if (target == null)
                     return;
+                // The event's C# handlers are about to run, so this is their callback: the sender
+                // and the declared signal's signature are visible for the duration. The mark
+                // consumed above is the *other* path - a direct event Invoke runs its handlers
+                // from the delegate chain after this callback has returned, with no frame.
+                PushSender(sender, declared.Signature);
                 try
                 {
                     declared.Invoke(target, argv);
@@ -1456,6 +1461,10 @@ namespace QtSharp.Runtime
                 catch (Exception exception)
                 {
                     ReportCallbackException("a declared signal handler", exception);
+                }
+                finally
+                {
+                    PopSender();
                 }
             };
             // Qt::DirectConnection, not Auto: this connection feeds the event's C# handler list, and
@@ -1753,6 +1762,50 @@ namespace QtSharp.Runtime
         internal const int AutoConnection = 0;
         internal const int DirectConnection = 1;
 
+        // ------------------------------------------------------------------ sender context
+        // PyQt's/PySide's sender(): while Qt is delivering a signal to a managed handler, the
+        // sender handle and the moc signature the connection was made with are on a per-thread
+        // stack. It is a stack, not a single slot, because a handler may emit another signal -
+        // the inner handler must see the inner sender, and when it returns the outer one is
+        // visible again. Thread-static because a queued connection is delivered on the
+        // receiver's thread, so each thread has its own view.
+        [ThreadStatic] static IntPtr[] senderHandles;
+        [ThreadStatic] static string[] senderSignals;
+        [ThreadStatic] static int senderDepth;
+
+        /// <summary>The sender handle of the signal being delivered on this thread, or zero.</summary>
+        internal static IntPtr CurrentSender
+            => senderDepth > 0 ? senderHandles[senderDepth - 1] : IntPtr.Zero;
+
+        /// <summary>The moc signature of the signal being delivered on this thread, or null.</summary>
+        internal static string CurrentSenderSignal
+            => senderDepth > 0 ? senderSignals[senderDepth - 1] : null;
+
+        static void PushSender(IntPtr sender, string signature)
+        {
+            var handles = senderHandles;
+            int depth = senderDepth;
+            if (handles == null || depth == handles.Length)
+            {
+                int capacity = handles == null ? 4 : handles.Length * 2;
+                Array.Resize(ref senderHandles, capacity);
+                Array.Resize(ref senderSignals, capacity);
+            }
+            senderHandles[depth] = sender;
+            senderSignals[depth] = signature;
+            senderDepth = depth + 1;
+        }
+
+        static void PopSender()
+        {
+            int depth = senderDepth - 1;
+            if (depth < 0)
+                return;
+            senderHandles[depth] = IntPtr.Zero;
+            senderSignals[depth] = null;
+            senderDepth = depth;
+        }
+
         /// <summary>
         /// Connects a managed handler to a signal without a key: the connection lives until its
         /// sender dies, and Dispose of the returned handle drops it earlier. This is the shape a
@@ -1783,9 +1836,13 @@ namespace QtSharp.Runtime
         {
             SignalCallback callback = (userData, argc, argv, typeIds) =>
             {
+                // The handler is the slot's own C# code, so the emitting object and the signal it
+                // was connected to are visible through QObject.Sender/SenderSignal while it runs.
+                PushSender(sender, signature);
                 // Qt called this from inside its C++ frames; see ReportCallbackException.
                 try { handler(argv, typeIds); }
                 catch (Exception exception) { ReportCallbackException("a signal handler", exception); }
+                finally { PopSender(); }
             };
             var connection = ConnectNative(sender, signature, callback, IntPtr.Zero, context, connectionType);
             if (connection == IntPtr.Zero)
