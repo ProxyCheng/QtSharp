@@ -8,8 +8,14 @@ cannot drift):
 | runner | source | windows | assertions |
 |---|---|---|---|
 | `testbind` | `demos/` — the official Qt examples, plus `tests/` — binding-specific tests | 56 | 1715 |
-| `QtSharp.Charts.Demos` | `demos.charts/` — Qt Charts | 38 | 571 |
+| `QtSharp.Charts.Demos` | `demos.charts/` — Qt Charts | 38 | 570 |
 | `QtSharp.Qt3D.Demos` | `demos.qt3d/` — Qt 3D | 3 | 37 |
+
+The gate runs the suites with `QT_QPA_PLATFORM=offscreen`, so an automated run does not map any
+window. Where a check depends on the real font engine or on a visible widget's geometry (for
+example `QRawFont`'s family name or the text-path centring in the transformations demo), the
+headless platform reports an `[info]` line instead of asserting a capability it does not have; the
+binding call and the remaining assertions still run.
 
 ## Official demos, by module
 

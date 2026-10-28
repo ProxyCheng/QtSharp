@@ -344,7 +344,6 @@
       ],
       "methods": [
         { "name": "availableSources", "flags": ["static"], "returnType": "QStringList", "parameters": [] },
-        { "name": "bindableUpdateInterval", "returnType": "QBindable<int>", "parameters": [] },
         { "name": "createDefaultSource", "flags": ["static"], "returnType": "QGeoPositionInfoSource*", "parameters": [{ "name": "parent", "type": "QObject*" }] },
         { "name": "createDefaultSource", "flags": ["static"], "returnType": "QGeoPositionInfoSource*", "parameters": [{ "name": "parameters", "type": "QMap<QString,QVariant>" }, { "name": "parent", "type": "QObject*" }] },
         { "name": "createSource", "flags": ["static"], "returnType": "QGeoPositionInfoSource*", "parameters": [{ "name": "sourceName", "type": "QString" }, { "name": "parent", "type": "QObject*" }] },
@@ -473,7 +472,6 @@
       ],
       "methods": [
         { "name": "availableSources", "flags": ["static"], "returnType": "QStringList", "parameters": [] },
-        { "name": "bindableUpdateInterval", "returnType": "QBindable<int>", "parameters": [] },
         { "name": "createDefaultSource", "flags": ["static"], "returnType": "QGeoSatelliteInfoSource*", "parameters": [{ "name": "parent", "type": "QObject*" }] },
         { "name": "createDefaultSource", "flags": ["static"], "returnType": "QGeoSatelliteInfoSource*", "parameters": [{ "name": "parameters", "type": "QMap<QString,QVariant>" }, { "name": "parent", "type": "QObject*" }] },
         { "name": "createSource", "flags": ["static"], "returnType": "QGeoSatelliteInfoSource*", "parameters": [{ "name": "sourceName", "type": "QString" }, { "name": "parent", "type": "QObject*" }] },

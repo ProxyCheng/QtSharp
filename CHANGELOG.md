@@ -4,6 +4,30 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## Unreleased
+
+- **`QBindable<T>` is removed from the public API.** The generated `bindableFoo()` handles exposed
+  only `Value` (get/set) and `Dispose`, which the normal property accessors already provide, while
+  the members that make a bindable distinct (`setBinding`, `onValueChanged`, `hasBinding`, …) were
+  not bound. Use the property accessor and its NOTIFY signal. The properties without a NOTIFY
+  signal (`QTimer.active`/`interval`/`singleShot`/`timerType`, `QMovie.cacheMode`/`speed`,
+  `QGeoPositionInfoSource.updateInterval`) are consequently unobservable until dependency-tracked
+  bindings or per-class signals are added. The model vocabulary and the rule for extending it are
+  documented in `docs/model-vocabulary.md`.
+- **Automated runs are headless.** `qoffscreen.dll` / `qminimal.dll` are staged by the Qt kit and
+  copied next to every built app, and the demo/test gate runs with `QT_QPA_PLATFORM=offscreen`, so
+  the conformance suite no longer maps windows on the desktop. Checks that need a real font engine
+  report an `[info]` line where the headless platform cannot provide one.
+- **Explicit regex interop.** `QRegularExpressionInterop` converts a `QRegularExpression` to a
+  `Regex` and back, carrying the five options both engines spell the same way and throwing for the
+  rest. See the README for the mapping and the engine caveat.
+- **One C#-to-Qt type-name mapper.** `MetaType.QtName` is used by declared members and by the new
+  `QMetaType.FromType<T>()`, with a generated per-module table that preserves Qt's spelling
+  (`Qt3DCore::QEntity*`) and distinguishes value classes from QObject pointers.
+- **Disposable signal connections.** `QSignal.Connect` returns a `QtConnection`; `Dispose`
+  disconnects exactly that connection, and overloads take a `Qt.ConnectionType` and a context
+  `QObject`.
+
 ## 0.19.0 - 2026-10-27
 
 - **One package per platform.** Every binding and Qt-runtime package is now published twice, with

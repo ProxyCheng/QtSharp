@@ -97,12 +97,16 @@
     </Compile>
   </ItemGroup>
 
-  <!-- Windows: the DLLs and qwindows.dll go flat next to the executable, as Qt expects there. -->
+  <!-- Windows: the DLLs and the platform plugins go flat next to the executable, as Qt expects
+       there. qwindows is what an application shows windows with; qoffscreen/qminimal are the
+       headless plugins the Smoke demo/test runs use. -->
   <Target Name="CopyQtSharpNativeDeps" AfterTargets="Build" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
     <ItemGroup>
       <QtSharpApiNative Include="$(QtSharpApiDir)/QtSharp.Api.dll" />
       <QtRuntimeDll Include="$(QtRuntimeDir)/*.dll" />
       <QtPlatformPlugin Include="$(QtRuntimeDir)/platforms/qwindows.dll" />
+      <QtPlatformPlugin Include="$(QtRuntimeDir)/platforms/qoffscreen.dll" Condition="Exists('$(QtRuntimeDir)/platforms/qoffscreen.dll')" />
+      <QtPlatformPlugin Include="$(QtRuntimeDir)/platforms/qminimal.dll" Condition="Exists('$(QtRuntimeDir)/platforms/qminimal.dll')" />
     </ItemGroup>
     <Copy SourceFiles="@(QtSharpApiNative)" DestinationFolder="$(OutDir)" />
     <Copy SourceFiles="@(QtRuntimeDll)" DestinationFolder="$(OutDir)" />
@@ -139,6 +143,8 @@
     </ItemGroup>
     <Copy SourceFiles="@(_QtSharpPublishNative)" DestinationFolder="$(PublishDir)" />
     <Copy SourceFiles="$(QtRuntimeDir)/platforms/qwindows.dll" DestinationFolder="$(PublishDir)platforms/" />
+    <Copy SourceFiles="$(QtRuntimeDir)/platforms/qoffscreen.dll" DestinationFolder="$(PublishDir)platforms/" Condition="Exists('$(QtRuntimeDir)/platforms/qoffscreen.dll')" />
+    <Copy SourceFiles="$(QtRuntimeDir)/platforms/qminimal.dll" DestinationFolder="$(PublishDir)platforms/" Condition="Exists('$(QtRuntimeDir)/platforms/qminimal.dll')" />
   </Target>
 
   <Target Name="PublishQtSharpNativeDepsLinux" AfterTargets="Publish" Condition="$([MSBuild]::IsOSPlatform('Linux'))">

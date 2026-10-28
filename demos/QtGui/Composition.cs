@@ -343,7 +343,11 @@ public static class Composition
         }
 
         using var window = new ApiCompositionWindow();
+        // The pixel assertions below use coordinates inside the render area; make the window big
+        // enough that the layout gives the renderer that area on every platform.
+        window.Resize(900, 600);
         window.Show();
+        QCoreApplication.ProcessEvents();
 
         Check(ApiCompositionWindow.Modes.Length == 24 && window.ModeComboBox.count() == 24,
             $"the mode list is the 24 blend modes of the example ({ApiCompositionWindow.Modes.Length} modes)");
@@ -403,6 +407,7 @@ public static class Composition
         using (var buffer = window.Renderer.BufferImage())
             baseOnly = Signature(buffer);
         window.Renderer.SetCirclePos(160, 120);
+        window.Renderer.Repaint();
         window.SelectMode(QPainter.CompositionMode.CompositionMode_Destination);
         using (var buffer = window.Renderer.BufferImage())
             Check(Signature(buffer) == baseOnly,
