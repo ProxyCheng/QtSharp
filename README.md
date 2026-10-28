@@ -43,11 +43,11 @@ tests/QtSharp.BindingTests.csproj             ← binding-specific tests (test-*
 tests/testapp/testapp.csproj                  ← the one test entry point
 ```
 
-Current coverage: **483 classes / 9938 methods / 1901 virtuals / 516 enums / 834 Q_PROPERTY
-properties / 475 signals / 68 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg,
+Current coverage: **483 classes / 9947 methods / 1901 virtuals / 517 enums / 834 Q_PROPERTY
+properties / 475 signals / 72 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg,
 QtSvgWidgets, QtPrintSupport, QtOpenGL, QtOpenGLWidgets). The gate runs 73 examples (**1544
 assertions**) in ten executables — 32 official base-module examples plus the tours, 38 official Qt
-Charts examples and the three official Qt3D examples — and 37 binding-specific tests (**948
+Charts examples and the three official Qt3D examples — and 38 binding-specific tests (**979
 assertions**).
 
 Extension modules are separate assemblies and packages against the same runtime:
