@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿﻿using System;
 using System.Collections.Generic;
 
 // PARKED - ported but deliberately NOT wired into tests/testapp or the gate yet.
@@ -7,9 +7,9 @@ using System.Collections.Generic;
 // faulting instruction is inside qwindows.dll, reached from PeekMessageW -> CallWindowProcW ->
 // KiUserCallbackDispatcher while the runtime tears the application down, i.e. Windows is still
 // pumping a message for a window whose Qt-side data is already gone. It only shows up for this
-// demo, which walks the preview window through every Qt::WindowType (including the ones the
+// example, which walks the preview window through every Qt::WindowType (including the ones the
 // official example leaves out: Desktop, SubWindow, ForeignWindow, CoverWindow) and shows/hides it.
-// Re-wire it once that teardown hazard is understood; a demo that fails a third of the time must
+// Re-wire it once that teardown hazard is understood; an example that fails a third of the time must
 // not sit in the gate.
 //
 // The official widgets/windowflags example, ported onto the *new* pipeline. Everything
@@ -26,7 +26,7 @@ using System.Collections.Generic;
 //     values that are valid to set on an ordinary widget (Desktop/SubWindow/ForeignWindow/
 //     CoverWindow are included as the task asked; Qt may normalise some of them, which the
 //     self test accounts for).
-//   * no event loop: the demo builds and drives the whole window synchronously. Show/Hide is
+//   * no event loop: the example builds and drives the whole window synchronously. Show/Hide is
 //     exercised with QWidget.SetVisible / IsVisible, Quit is only wired (not clicked).
 public sealed class WindowFlagsPreviewWindow : QWidget
 {

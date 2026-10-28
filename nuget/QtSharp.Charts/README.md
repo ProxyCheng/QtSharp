@@ -42,7 +42,7 @@ that carries `Qt6Charts.dll`; neither is repeated here.
 `QPieSlice`, box plots and candlesticks); the axes (`QValueAxis`, `QCategoryAxis`,
 `QBarCategoryAxis`, `QDateTimeAxis`, `QLogValueAxis`); and the legend with its markers. The list is
 `model/qtsharp.charts.json` in the repository, and the 38 ported official examples under
-`demos/Charts/` exercise it (571 assertions) in the gate, CI and release.
+`examples/Charts/` exercise it (571 assertions) in the gate, CI and release.
 
 ## Why it is a separate package
 

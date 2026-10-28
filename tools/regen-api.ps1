@@ -316,7 +316,7 @@ foreach ($result in @(Invoke-ProcessPool -Tasks $buildTasks -Throttle $buildJobs
 
 # The extension modules are separate assemblies/packages. Their model and codegen ran in [3b];
 # their native glue was built with the core above, and the official Qt3D and Qt Charts examples
-# then run as their conformance suite, exactly like the core demos below.
+# then run as their conformance suite, exactly like the core examples below.
 Write-Host "=== [4a] Build the Charts package assembly ==="
 dotnet build "$root/nuget/QtSharp.Charts/QtSharp.Charts.csproj" -c Release --nologo *> "$root/out/chartsbuild.log"
 if ($LASTEXITCODE -ne 0) {
@@ -325,10 +325,10 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-Write-Host "=== [4b] Build and run the demo executables (Smoke) ==="
-# One executable per module; tools/run-demos.ps1 builds and runs the same table CI and the release
+Write-Host "=== [4b] Build and run the example executables (Smoke) ==="
+# One executable per module; tools/run-examples.ps1 builds and runs the same table CI and the release
 # build use. Release selects the Smoke product, whose host picks the offscreen platform.
-& "$root/tools/run-demos.ps1" -Configuration Release -Jobs $Jobs
+& "$root/tools/run-examples.ps1" -Configuration Release -Jobs $Jobs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "=== [5] Build and run the binding tests ==="

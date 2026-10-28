@@ -11,8 +11,8 @@ over Qt.
 One libclang parse of the Qt headers produces a normalized API model (checked in, byte for byte
 reproducible). A pure-function code generator turns that model into C# plus a C++ wrapper, and a
 small runtime makes signals, virtual overrides and object ownership behave the way a C# program
-expects. On top of that, 73 runnable demos — Qt's official examples plus tours of QtCore, QtNetwork
-and the document modules — have been rewritten in C#, one executable per demo module, and run by
+expects. On top of that, 73 runnable examples — Qt's official examples plus tours of QtCore, QtNetwork
+and the document modules — have been rewritten in C#, one executable per example module, and run by
 the repository's own gate.
 
 ```
@@ -36,18 +36,18 @@ runtime/ApiRuntime.cs (QtSharp.Runtime)     ← QSignal, attributes, ownership, 
 runtime/QtCore, QtGui, QtWidgets            ← the QObject/app halves that belong to those modules
         │
         ▼
-demos/<Module>/QtSharp.Demos.<Module>.csproj ← one executable per module: the official demos
-demos/Charts/, demos/Qt3D/                    ← the extension modules' demo executables
-demos/hosting/                                ← [Demo] discovery, DemoContext and DemoHost
+examples/<Module>/QtSharp.Examples.<Module>.csproj ← one executable per module: the official examples
+examples/Charts/, examples/Qt3D/                    ← the extension modules' example executables
+examples/hosting/                                ← [Example] discovery, ExampleContext and ExampleHost
 tests/QtSharp.BindingTests.csproj             ← binding-specific tests (test-*)
 tests/testapp/testapp.csproj                  ← the one test entry point
 ```
 
 Current coverage: **483 classes / 9938 methods / 1901 virtuals / 516 enums / 834 Q_PROPERTY
 properties / 475 signals / 68 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg,
-QtSvgWidgets, QtPrintSupport, QtOpenGL, QtOpenGLWidgets). The gate runs 73 demos (**1544
+QtSvgWidgets, QtPrintSupport, QtOpenGL, QtOpenGLWidgets). The gate runs 73 examples (**1544
 assertions**) in ten executables — 32 official base-module examples plus the tours, 38 official Qt
-Charts examples and the three official Qt3D examples — and 24 binding-specific tests (**779
+Charts examples and the three official Qt3D examples — and 24 binding-specific tests (**780
 assertions**).
 
 Extension modules are separate assemblies and packages against the same runtime:
@@ -129,14 +129,14 @@ view.SetRootEntity(root);
 view.Show();
 ```
 
-See `demos/Qt3D` for the official Qt3D examples, which run windowless in the gate.
+See `examples/Qt3D` for the official Qt3D examples, which run windowless in the gate.
 
 ## Project status
 
 QtSharp is an active pre-1.0 project. The supported targets are Windows x64 and Linux x64 (glibc),
 with Qt 6.12.x and .NET 10. The generated model, native wrapper, and runtime are under active
 development, so binary and source compatibility can change between releases. Contributions,
-reproducible bug reports, and new conformance demos are welcome; see
+reproducible bug reports, and new conformance examples are welcome; see
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
 The repository's own generated binding is the primary validation surface. It is not yet a stable
@@ -271,9 +271,9 @@ pwsh ./tools/regen-api.ps1
 ```
 
 That is the whole thing (a clone's first run takes a few minutes — the native glue is a big
-translation unit, and every module's demos and tests are built and run at the end). On Linux the
+translation unit, and every module's examples and tests are built and run at the end). On Linux the
 extraction steps are skipped (the model is the Windows one); everything else runs, including the
-determinism gate, the g++ build and the demo/test suite. For a bare native build without the gate,
+determinism gate, the g++ build and the example/test suite. For a bare native build without the gate,
 `./build_api.sh` and `tools/build-native-module.sh <module>` compile the glue directly. It runs, in order:
 
 | step | what it does |
@@ -283,7 +283,7 @@ determinism gate, the g++ build and the demo/test suite. For a bare native build
 | `[2b]` | extracts the addon models (Charts, Qt3D, Multimedia, Positioning) from their own headers and compares them to the checked-in ones — the same gate |
 | `[3]` | splits the combined model into the nine base models and runs the code generator **twice** for every module, comparing the trees |
 | `[4]` | compiles the generated C++ wrappers (the core one and one per extension module) and builds the nine base assemblies, all at once |
-| `[5]` | builds the ten demo executables (Smoke) and the binding-test executable, then runs them several at a time |
+| `[5]` | builds the ten example executables (Smoke) and the binding-test executable, then runs them several at a time |
 
 Two gates live in the middle of that: **the models must come out identical** (extraction is
 deterministic by construction, so a difference means the Qt version, the clang headers or the
@@ -294,7 +294,7 @@ The independent build steps run in a process pool (`tools/parallel.ps1`): the ad
 the codegen runs (both the real tree and the determinism check tree) and the native compiles, up to
 `min(8, cores)` at a time. Pass `-Jobs 1` for the old one-at-a-time run, or a larger number on a big
 machine. Step 5 starts several processes at once (up to `min(6, cores)`; the same `-Jobs` value
-caps it). Each demo leaves its window up for about a second so it can be looked at, but the Smoke
+caps it). Each example leaves its window up for about a second so it can be looked at, but the Smoke
 host selects the offscreen QPA platform before constructing the `QApplication`, so nothing is
 mapped on the desktop. On a machine that is being used at the same time, one of them can very
 occasionally die while Qt tears the process down — a `0xC000041D` exit *after* its own last
@@ -303,8 +303,8 @@ line with its name, retries a nonzero exit once, and a process that fails twice 
 printed, so the failure stays attributable even though the windows overlapped.
 
 The same suite runs in CI on every push — the `Smoke tests` job in `.github/workflows/ci.yml` on
-Windows and the `linux-bind` job on Ubuntu. Both build the ten demo executables and the test
-executable with `tools/run-demos.ps1` and `tools/run-window-tests.ps1`, so they get the same
+Windows and the `linux-bind` job on Ubuntu. Both build the ten example executables and the test
+executable with `tools/run-examples.ps1` and `tools/run-window-tests.ps1`, so they get the same
 parallelism and the same one retry for the teardown flake above. No Xvfb and no real display are
 needed: the Smoke and test hosts choose `offscreen` themselves (and point Qt at the system font
 directory on Windows, which the offscreen plugin does not discover). The Qt3D examples never show
@@ -315,10 +315,10 @@ real display. The package consumer check on Linux uses the offscreen platform
 Once that has succeeded, the ordinary `dotnet build` of any project works too:
 
 ```
-dotnet build demos\QtWidgets\QtSharp.Demos.QtWidgets.csproj -c Release
-dotnet build demos\Charts\QtSharp.Charts.Demos.csproj -c Release
+dotnet build examples\QtWidgets\QtSharp.Examples.QtWidgets.csproj -c Release
+dotnet build examples\Charts\QtSharp.Charts.Examples.csproj -c Release
 dotnet build tests\testapp\testapp.csproj -c Release
-dotnet build samples\resources\Resources.csproj -c Release
+dotnet build packaging\resources\Resources.csproj -c Release
 ```
 
 ---
@@ -328,32 +328,32 @@ dotnet build samples\resources\Resources.csproj -c Release
 Release builds the Smoke product and Debug (or `-c View`) the interactive one:
 
 ```
-# Release (Smoke): --list prints the module's demos; <name> runs one and returns its exit code.
-demos\QtWidgets\bin\Release\net10.0\QtSharp.Demos.QtWidgets
-demos\QtWidgets\bin\Release\net10.0\QtSharp.Demos.QtWidgets qtwidgets-calculator
-demos\QtGui\bin\Release\net10.0\QtSharp.Demos.QtGui qtgui-pathstroke
+# Release (Smoke): --list prints the module's examples; <name> runs one and returns its exit code.
+examples\QtWidgets\bin\Release\net10.0\QtSharp.Examples.QtWidgets
+examples\QtWidgets\bin\Release\net10.0\QtSharp.Examples.QtWidgets qtwidgets-calculator
+examples\QtGui\bin\Release\net10.0\QtSharp.Examples.QtGui qtgui-pathstroke
 tests\testapp\bin\Release\net10.0\testapp test-metaobject
 
 # View: the same names, with the window on screen; --seconds N closes it after N seconds.
-dotnet build demos\QtWidgets\QtSharp.Demos.QtWidgets.csproj -c Debug
-demos\QtWidgets\bin\Debug\net10.0\QtSharp.Demos.QtWidgets --list
-demos\QtWidgets\bin\Debug\net10.0\QtSharp.Demos.QtWidgets qtwidgets-calculator --seconds 8
+dotnet build examples\QtWidgets\QtSharp.Examples.QtWidgets.csproj -c Debug
+examples\QtWidgets\bin\Debug\net10.0\QtSharp.Examples.QtWidgets --list
+examples\QtWidgets\bin\Debug\net10.0\QtSharp.Examples.QtWidgets qtwidgets-calculator --seconds 8
 ```
 
-The ten executables are `QtSharp.Demos.{QtCore,QtGui,QtWidgets,QtNetwork,QtSvg,QtSvgWidgets,QtPrintSupport,QtMultimedia}`
-and `QtSharp.{Charts,Qt3D}.Demos`, each under `demos/<module>/bin/<Configuration>/net10.0/`. On
-Linux the executable has no extension (`demos/QtWidgets/bin/Release/net10.0/QtSharp.Demos.QtWidgets`).
+The ten executables are `QtSharp.Examples.{QtCore,QtGui,QtWidgets,QtNetwork,QtSvg,QtSvgWidgets,QtPrintSupport,QtMultimedia}`
+and `QtSharp.{Charts,Qt3D}.Examples`, each under `examples/<module>/bin/<Configuration>/net10.0/`. On
+Linux the executable has no extension (`examples/QtWidgets/bin/Release/net10.0/QtSharp.Examples.QtWidgets`).
 The Smoke host and the test host choose the offscreen platform automatically (and the system font
-directory, which the offscreen plugin needs for real layout); set `QTSHARP_DEMO_PLATFORM=windows`
+directory, which the offscreen plugin needs for real layout); set `QTSHARP_EXAMPLE_PLATFORM=windows`
 or `QT_QPA_PLATFORM=windows` for a real display. View runs need a real display for Qt3D, which
 renders through OpenGL.
 
-The official demos are named after the module they exercise (`qtcore-*`, `qtgui-*`, `qtwidgets-*`, plus
+The official examples are named after the module they exercise (`qtcore-*`, `qtgui-*`, `qtwidgets-*`, plus
 `qtsvg-*`, `qtsvgwidgets-*`, `qtprintsupport-*`, `qtnetwork-*`, `qtcharts-*`,
 `qtmultimedia-*` and `qt3d-*`); the binding tests use `test-*` and cover
 ownership, exceptions, C#-declared signals/properties, value types, the BCL conversions and the
 modules whose upstream examples are not ported yet. `docs/conformance.md` has the full matrix.
-Registration is discovery, not a list: a class carries `[Demo("qtwidgets-analogclock")]` and each
+Registration is discovery, not a list: a class carries `[Example("qtwidgets-analogclock")]` and each
 executable finds the names in its own assembly.
 
 Every Smoke example is also a self-test: it drives the generated API, checks what it sees and
@@ -364,7 +364,7 @@ the gate reads, so the examples do not rot.
 
 ## Write your own UI
 
-A consumer project is a package reference and a program. The in-repository demos reference the
+A consumer project is a package reference and a program. The in-repository examples reference the
 module projects directly (the same assemblies the package contains).
 
 ```xml
@@ -381,7 +381,7 @@ A project that does not use the package can compile the binding from source by i
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
-    <!-- Only when you reference a demo executable: the binding is compiled in there, and compiling
+    <!-- Only when you reference an example executable: the binding is compiled in there, and compiling
          it twice defines every binding type in two assemblies (CS0433). Drop this line (and the
          ProjectReference) to compile the binding into your own project instead. -->
     <QtSharpCompileBinding>false</QtSharpCompileBinding>
@@ -390,7 +390,7 @@ A project that does not use the package can compile the binding from source by i
   <Import Project="..\..\QtSharp.Api.props" />   <!-- binding + runtime + the native/Qt DLL copies -->
 
   <ItemGroup>
-    <ProjectReference Include="..\..\demos\QtWidgets\QtSharp.Demos.QtWidgets.csproj" />
+    <ProjectReference Include="..\..\examples\QtWidgets\QtSharp.Examples.QtWidgets.csproj" />
   </ItemGroup>
 </Project>
 ```
@@ -656,8 +656,8 @@ Linguist GUI and deployment tools are not included in this first payload.
 The resource integration sample checks the complete package-to-resource-read path:
 
 ```powershell
-dotnet restore samples\resources\Resources.csproj --source D:\QtSharp\out\packages
-dotnet run --project samples\resources\Resources.csproj -c Release --no-restore
+dotnet restore packaging\resources\Resources.csproj --source D:\QtSharp\out\packages
+dotnet run --project packaging\resources\Resources.csproj -c Release --no-restore
 ```
 
 Replace the local source path with your checkout's `out/packages` directory.
@@ -671,16 +671,16 @@ Replace the local source path with your checkout's `out/packages` directory.
 | `gen/` | the generator: `ApiModel.cs` (model shape, vocabulary), `ApiModel.Modules.cs` (the module registry), `CoreSplit.cs` (combined → per-module models), `ClangExtractor.cs` (the libclang front end), `ApiCodeGen.cs` (model → C# + C++) |
 | `native/` | the hand-written runtime (`QtSharpApiRuntime.cpp`: moc signal forwarder, probes) and the crash tracer |
 | `runtime/` | the managed runtime: `ApiRuntime.cs` (`QtSharp.Runtime`) and the per-module halves under `QtCore/`, `QtGui/`, `QtWidgets/` |
-| `demos/hosting/` | the shared demo host: `[Demo]` discovery, `DemoContext` (Smoke's `Check`/`ExitCode` or View's `Show`) and `DemoHost` (the one `QApplication`, `--list`, `--seconds`) |
-| `demos/<module>/` | one executable per module — `QtCore`, `QtGui`, `QtWidgets`, `QtNetwork`, `QtSvg`, `QtSvgWidgets`, `QtPrintSupport`, `QtMultimedia`, `Charts`, `Qt3D`; the classes carry `[Demo("qtwidgets-...")]` and `DemoDiscovery` finds them in the executable's own assembly |
-| `demos/DemoMode.props` | the Smoke/View configuration aliases (`Release`/`Debug`) and the `QTSHARP_DEMO_*` constants |
+| `examples/hosting/` | the shared example host: `[Example]` discovery, `ExampleContext` (Smoke's `Check`/`ExitCode` or View's `Show`) and `ExampleHost` (the one `QApplication`, `--list`, `--seconds`) |
+| `examples/<module>/` | one executable per module — `QtCore`, `QtGui`, `QtWidgets`, `QtNetwork`, `QtSvg`, `QtSvgWidgets`, `QtPrintSupport`, `QtMultimedia`, `Charts`, `Qt3D`; the classes carry `[Example("qtwidgets-...")]` and `ExampleDiscovery` finds them in the executable's own assembly |
+| `examples/ExampleMode.props` | the Smoke/View configuration aliases (`Release`/`Debug`) and the `QTSHARP_EXAMPLE_*` constants |
 | `tests/` | `QtSharp.BindingTests.csproj` — the binding-specific tests (`test-*`), registered the same way; `tests/testapp/` is the one test executable and dispatches them |
 | `nuget/QtSharp.Api/`, `nuget/QtSharp.Runtime/`, `nuget/QtSharp.Qt6/` | the base binding and its runtime packages (nine module assemblies inside `QtSharp.Api`) |
 | `nuget/QtSharp.Charts*`, `nuget/QtSharp.Qt3D*`, `nuget/QtSharp.Multimedia*` | the addon packages and their `*.Qt6` runtime companions |
 | `docs/conformance.md` | which Qt examples run against which module, and the remaining coverage gaps |
 | `docs/model-vocabulary.md` | the Qt-to-C# type vocabulary, the rule for adding a missing spelling, and the spellings it still leaves out |
 | `tools/regen-api.ps1` | the build and the gate |
-| `tools/run-demos.ps1` | builds and runs the ten demo executables (the gate, CI and release share this table) |
+| `tools/run-examples.ps1` | builds and runs the ten example executables (the gate, CI and release share this table) |
 | `tools/run-window-tests.ps1` | the process pool and result counter for one executable (`--list`, one run per name, one retry) |
 | `tools/parallel.ps1` | the process pool the gate and CI use to run independent build steps several at a time |
 | `tools/clangprobe/` | the probe used to validate the libclang front end (not part of the build) |

@@ -8,7 +8,7 @@ contract.
 
 Search existing issues and read the relevant section of `README.md`. Include the
 Qt version, .NET SDK version, platform, compiler/toolset, architecture, command used, and the
-complete error or crash signature. For native crashes, include the smallest reproducible demo and
+complete error or crash signature. For native crashes, include the smallest reproducible example and
 the generated/native log when possible. Never attach secrets, proprietary Qt files, or customer
 data.
 
@@ -36,7 +36,7 @@ roots, or the handwritten runtime, followed by a fresh gate run.
 ## Pull requests
 
 - Keep each pull request focused and explain the user-visible or binding-level effect.
-- Add or update a conformance demo when a change adds or fixes supported Qt behavior.
+- Add or update a conformance example when a change adds or fixes supported Qt behavior.
 - Update `README.md` or `NOTICE.md` when setup, licensing, or architecture changes.
 - Run the narrowest meaningful check locally, and report checks that could not run because the
   required Qt kit or toolchain was unavailable.

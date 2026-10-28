@@ -15,7 +15,7 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   bindings or per-class signals are added. The model vocabulary and the rule for extending it are
   documented in `docs/model-vocabulary.md`.
 - **Automated runs are headless.** `qoffscreen.dll` / `qminimal.dll` are staged by the Qt kit and
-  copied next to every built app, and the demo/test gate runs with `QT_QPA_PLATFORM=offscreen`, so
+  copied next to every built app, and the example/test gate runs with `QT_QPA_PLATFORM=offscreen`, so
   the conformance suite no longer maps windows on the desktop. Checks that need a real font engine
   report an `[info]` line where the headless platform cannot provide one.
 - **Explicit regex interop.** `QRegularExpressionInterop` converts a `QRegularExpression` to a

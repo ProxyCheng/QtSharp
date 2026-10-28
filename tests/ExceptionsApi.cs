@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 
 // The exception policy at the native boundary, plus the liveness guard that goes with it.
 //
@@ -11,7 +11,7 @@
 //
 // The guard that keeps the exception from being thrown at all is `!= null`: a wrapper whose Qt
 // object is gone compares equal to null (IsAlive / operator == on the generated classes), which is
-// what this demo's first half exercises - the report that started it was a handler calling
+// what this example's first half exercises - the report that started it was a handler calling
 // DeleteLater() on an object Qt had already destroyed, clicked twice.
 [Test("test-exceptions")]
 public static class ApiExceptionsDemo

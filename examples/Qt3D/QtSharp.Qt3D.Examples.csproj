@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Ports of Qt's official Qt3D examples, as one executable. Each example is a static class
+       registered with [Example("qt3d-...")] and discovered by ExampleHost; this project holds the only
+       Main and the only QApplication. The binding is compiled in nuget/QtSharp.Qt3D, so the
+       props are imported with compilation off. ExampleMode.props selects Smoke or View. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>QtSharp.Qt3D.Examples</AssemblyName>
+    <RootNamespace>QtSharp.Qt3D.Examples</RootNamespace>
+    <QtSharpCompileBinding>false</QtSharpCompileBinding>
+  </PropertyGroup>
+
+  <Import Project="..\..\QtSharp.Api.props" />
+  <Import Project="..\ExampleMode.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\hosting\QtSharp.Examples.Hosting.csproj" />
+    <ProjectReference Include="..\..\nuget\QtSharp.Qt3D\Modules\QtSharp.Qt3DExtras\QtSharp.Qt3DExtras.csproj" />
+  </ItemGroup>
+
+  <!-- The Qt3D native glue and the renderer/loader plugins. The Qt3D runtime DLLs themselves are
+       copied by QtSharp.Api.props (they live in QtRuntimeDir). On Linux the runtime staging already
+       carries the plugin tree under plugins/ and Qt discovers it through QT_PLUGIN_PATH, so only
+       the glue libraries are copied here. -->
+  <Target Name="CopyQt3DTestDeps" AfterTargets="Build">
+    <ItemGroup>
+      <Qt3DTestNative Include="..\..\out\api-modules\qt3dcore\$(QtSharpNativePrefix)QtSharp.Qt3DCore.Native$(QtSharpNativeSuffix)" />
+      <Qt3DTestNative Include="..\..\out\api-modules\qt3drender\$(QtSharpNativePrefix)QtSharp.Qt3DRender.Native$(QtSharpNativeSuffix)" />
+      <Qt3DTestNative Include="..\..\out\api-modules\qt3dinput\$(QtSharpNativePrefix)QtSharp.Qt3DInput.Native$(QtSharpNativeSuffix)" />
+      <Qt3DTestNative Include="..\..\out\api-modules\qt3dlogic\$(QtSharpNativePrefix)QtSharp.Qt3DLogic.Native$(QtSharpNativeSuffix)" />
+      <Qt3DTestNative Include="..\..\out\api-modules\qt3danimation\$(QtSharpNativePrefix)QtSharp.Qt3DAnimation.Native$(QtSharpNativeSuffix)" />
+      <Qt3DTestNative Include="..\..\out\api-modules\qt3dextras\$(QtSharpNativePrefix)QtSharp.Qt3DExtras.Native$(QtSharpNativeSuffix)" />
+      <Qt3DTestRenderer Include="$(QtRuntimeDir)\plugins\renderers\*.dll" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+      <Qt3DTestGeometryLoader Include="$(QtRuntimeDir)\plugins\geometryloaders\*.dll" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+      <Qt3DTestSceneParser Include="$(QtRuntimeDir)\plugins\sceneparsers\*.dll" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+    </ItemGroup>
+    <Copy SourceFiles="@(Qt3DTestNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(Qt3DTestRenderer)" DestinationFolder="$(OutDir)renderers\" SkipUnchangedFiles="true" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+    <Copy SourceFiles="@(Qt3DTestGeometryLoader)" DestinationFolder="$(OutDir)geometryloaders\" SkipUnchangedFiles="true" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+    <Copy SourceFiles="@(Qt3DTestSceneParser)" DestinationFolder="$(OutDir)sceneparsers\" SkipUnchangedFiles="true" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+  </Target>
+
+</Project>

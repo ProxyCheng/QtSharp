@@ -154,7 +154,7 @@ NuGet dependencies, so a consumer never lists the runtime packages by hand.
 
 `tools/regen-api.ps1` is the full gate: it re-extracts the combined model, checks the split models
 are byte-identical, generates every module twice (determinism), builds the shared and per-addon
-native glues, builds the eleven base assemblies and the Charts assembly, runs the official demos and
+native glues, builds the eleven base assemblies and the Charts assembly, runs the official examples and
 binding tests (including the Qt Charts and Qt3D conformance suites). `tools/pack-qt-binding.ps1` packs and
 inspects all seven packages; a local feed consumer test then proves the dependency graph and the
 `buildTransitive` payload.
@@ -163,8 +163,8 @@ inspects all seven packages; a local feed consumer test then proves the dependen
 
 | stage | work | acceptance |
 |---|---|---|
-| **M0 (done)** | Qt3D split into six assemblies inside one `QtSharp.Qt3D` package | six assemblies build; official demos pass; package consumer runs and renders |
+| **M0 (done)** | Qt3D split into six assemblies inside one `QtSharp.Qt3D` package | six assemblies build; official examples pass; package consumer runs and renders |
 | **M1 (done)** | binding-module registry + `qtgen split-core` + ten base models | `qtsharp.api.json` extraction gate; split deterministic and checked in |
-| **M2 (done)** | runtime split (`QtSharp.Runtime`) + ten base assemblies + `QtSharp.Api` pack project | core demos pass; a consumer references `QtSharp.Api` and runs |
+| **M2 (done)** | runtime split (`QtSharp.Runtime`) + ten base assemblies + `QtSharp.Api` pack project | core examples pass; a consumer references `QtSharp.Api` and runs |
 | **M3 (done)** | `QtSharp.Qt6`, `QtSharp.Charts.Qt6`, `QtSharp.Qt3D.Qt6` companion packages | consumers get the right Qt DLLs/plugins; no duplicate payloads |
-| **M4 (done)** | demos/samples/CI/release move to the new namespaces/packages; docs; publish | full gate + CI + release produce all seven packages |
+| **M4 (done)** | examples/packaging/CI/release move to the new namespaces/packages; docs; publish | full gate + CI + release produce all seven packages |

@@ -17,8 +17,8 @@
     Override QtSharpRoot / QtSharpApiDir / QtSharpOutDir / QtRuntimeDir if the pieces live
     elsewhere.
 
-    A project that *references* the binding assemblies (a demo executable such as
-    QtSharp.Demos.QtWidgets, or the QtSharp.Api package) must set QtSharpCompileBinding=false
+    A project that *references* the binding assemblies (an example executable such as
+    QtSharp.Examples.QtWidgets, or the QtSharp.Api package) must set QtSharpCompileBinding=false
     first - compiling the binding
     again defines every QtSharp.QtCore/QtGui/... type twice, which is CS0433 everywhere. The import still
     brings the native DLLs and the Qt runtime, so such a project needs no further setup:
@@ -28,7 +28,7 @@
         </PropertyGroup>
         <Import Project="..\..\QtSharp.Api.props" />
         <ItemGroup>
-          <ProjectReference Include="..\..\demos\QtWidgets\QtSharp.Demos.QtWidgets.csproj" />
+          <ProjectReference Include="..\..\examples\QtWidgets\QtSharp.Examples.QtWidgets.csproj" />
         </ItemGroup>
   -->
   <PropertyGroup>
@@ -100,7 +100,7 @@
 
   <!-- Windows: the DLLs and the platform plugins go flat next to the executable, as Qt expects
        there. qwindows is what an application shows windows with; qoffscreen/qminimal are the
-       headless plugins the Smoke demo/test runs use. -->
+       headless plugins the Smoke example/test runs use. -->
   <Target Name="CopyQtSharpNativeDeps" AfterTargets="Build" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
     <ItemGroup>
       <QtSharpApiNative Include="$(QtSharpApiDir)/QtSharp.Api.dll" />

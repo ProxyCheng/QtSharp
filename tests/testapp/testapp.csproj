@@ -16,7 +16,7 @@
   <Import Project="..\..\QtSharp.Api.props" />
 
   <!-- The binding tests, and through them the base modules and the hosting library. There are no
-       demos here: the official examples have their own executable per module under demos/. -->
+       examples here: the official examples have their own executable per module under examples/. -->
   <ItemGroup>
     <ProjectReference Include="..\QtSharp.BindingTests.csproj" />
   </ItemGroup>
