@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -10,18 +10,11 @@ namespace QtSharp.Tests
     /// Covers the read path (QImage.Load, QXmlStreamReader), the write path, seek/position, and a
     /// leak check over many create/dispose cycles (managed and native memory both bounded).
     /// </summary>
-    [Demo("test-iodevice")]
+    [Test("test-iodevice")]
     public static class IoDeviceTests
     {
-        public static int Run(QApplication app)
+        public static int Run(TestContext context)
         {
-            int failures = 0;
-            void Check(bool ok, string what)
-            {
-                Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-                if (!ok)
-                    failures++;
-            }
 
             // A PNG made by Qt itself, so the test does not depend on System.Drawing.
             string tempPath = Path.Combine(Path.GetTempPath(),
@@ -30,7 +23,7 @@ namespace QtSharp.Tests
             using (var source = new QImage(8, 6, QImage.Format.Format_RGB32))
             {
                 source.Fill(new QColor(255, 0, 0));
-                Check(source.Save(tempPath, "PNG"), "the test PNG is written");
+                context.Check(source.Save(tempPath, "PNG"), "the test PNG is written");
             }
             png = File.ReadAllBytes(tempPath);
             try { File.Delete(tempPath); } catch { /* temp files are harmless */ }
@@ -40,21 +33,21 @@ namespace QtSharp.Tests
             using (var device = new StreamIODevice(memory))
             using (var image = new QImage())
             {
-                Check(image.Load(device, null), "QImage.load reads a PNG from the StreamIODevice");
-                Check(image.Width() == 8 && image.Height() == 6,
+                context.Check(image.Load(device, null), "QImage.load reads a PNG from the StreamIODevice");
+                context.Check(image.Width() == 8 && image.Height() == 6,
                     $"the image has the stream's dimensions ({image.Width()}x{image.Height()})");
-                Check(device.Size() == png.Length, "Size() reports the stream length");
-                Check(device.IsSequential() == false, "a MemoryStream is a random-access device");
+                context.Check(device.Size() == png.Length, "Size() reports the stream length");
+                context.Check(device.IsSequential() == false, "a MemoryStream is a random-access device");
             }
 
             // ---- seek/position ---------------------------------------------------------
             using (var memory = new MemoryStream(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }))
             using (var device = new StreamIODevice(memory))
             {
-                Check(device.Seek(4) && device.Pos() == 4, "Seek/Pos round-trip through the Stream");
-                Check(!device.AtEnd(), "the device is not at the end after a partial seek");
-                Check(device.Seek(8) && device.AtEnd(), "AtEnd() follows the stream position");
-                Check(device.Reset() && device.Pos() == 0, "Reset() rewinds the stream");
+                context.Check(device.Seek(4) && device.Pos() == 4, "Seek/Pos round-trip through the Stream");
+                context.Check(!device.AtEnd(), "the device is not at the end after a partial seek");
+                context.Check(device.Seek(8) && device.AtEnd(), "AtEnd() follows the stream position");
+                context.Check(device.Reset() && device.Pos() == 0, "Reset() rewinds the stream");
             }
 
             // ---- write path ------------------------------------------------------------
@@ -62,8 +55,8 @@ namespace QtSharp.Tests
             using (var device = new StreamIODevice(sink))
             using (var payload = new QByteArray(new byte[] { 9, 8, 7, 6 }))
             {
-                Check(device.Write(payload) == 4, "QIODevice.write reaches the Stream");
-                Check(sink.ToArray().Length == 4 && sink.ToArray()[0] == 9,
+                context.Check(device.Write(payload) == 4, "QIODevice.write reaches the Stream");
+                context.Check(sink.ToArray().Length == 4 && sink.ToArray()[0] == 9,
                     "the bytes arrive in the .NET stream");
             }
 
@@ -83,7 +76,7 @@ namespace QtSharp.Tests
                         break;
                     }
                 }
-                Check(sawRoot, "QXmlStreamReader parses the XML from the .NET stream");
+                context.Check(sawRoot, "QXmlStreamReader parses the XML from the .NET stream");
             }
 
             // ---- leak checks -----------------------------------------------------------
@@ -110,10 +103,10 @@ namespace QtSharp.Tests
             long managedAfter = GC.GetTotalMemory(true);
             long nativeAfter = process.PrivateMemorySize64;
 
-            Check(loaded == 1000, $"every dispose cycle loaded the image ({loaded}/1000)");
-            Check(managedAfter - managedBefore < 4L * 1024 * 1024,
+            context.Check(loaded == 1000, $"every dispose cycle loaded the image ({loaded}/1000)");
+            context.Check(managedAfter - managedBefore < 4L * 1024 * 1024,
                 $"managed memory stays bounded ({(managedAfter - managedBefore) / 1024} KB)");
-            Check(nativeAfter - nativeBefore < 64L * 1024 * 1024,
+            context.Check(nativeAfter - nativeBefore < 64L * 1024 * 1024,
                 $"native memory stays bounded ({(nativeAfter - nativeBefore) / 1024 / 1024} MB)");
 
             // Abandoned wrappers: the finalizer has to delete the native QIODevice.
@@ -130,11 +123,10 @@ namespace QtSharp.Tests
             GC.Collect();
             process.Refresh();
             long nativeAfterAbandoned = process.PrivateMemorySize64;
-            Check(nativeAfterAbandoned - nativeBeforeAbandoned < 64L * 1024 * 1024,
+            context.Check(nativeAfterAbandoned - nativeBeforeAbandoned < 64L * 1024 * 1024,
                 $"abandoned devices are finalized ({(nativeAfterAbandoned - nativeBeforeAbandoned) / 1024 / 1024} MB)");
 
-            Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[FAIL] {failures} check(s) failed");
-            return failures == 0 ? 0 : 1;
+            return context.ExitCode;
         }
     }
 }

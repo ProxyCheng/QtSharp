@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 // Port of examples/widgets/painting/composition on the new pipeline.
 //
@@ -309,15 +309,8 @@ public sealed class ApiCompositionWindow : QWidget
 [Demo("qtgui-composition")]
 public static class Composition
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         // A cheap signature of an image: enough to tell two blends apart.
         uint Signature(QImage image)
@@ -343,14 +336,23 @@ public static class Composition
         }
 
         using var window = new ApiCompositionWindow();
-        window.Show();
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
 
-        Check(ApiCompositionWindow.Modes.Length == 24 && window.ModeComboBox.count() == 24,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(ApiCompositionWindow.Modes.Length == 24 && window.ModeComboBox.count() == 24,
             $"the mode list is the 24 blend modes of the example ({ApiCompositionWindow.Modes.Length} modes)");
-        Check(window.CircleColorSlider.minimum() == 0 && window.CircleColorSlider.maximum() == 359
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.CircleColorSlider.minimum() == 0 && window.CircleColorSlider.maximum() == 359
               && window.CircleAlphaSlider.maximum() == 255,
             $"the hue and alpha sliders have the official ranges "
             + $"({window.CircleColorSlider.minimum()}..{window.CircleColorSlider.maximum()}, alpha ..{window.CircleAlphaSlider.maximum()})");
+        #endif
 
         window.Renderer.SetCirclePos(-1000, -1000); // park the circle away from the sampled pixels
         // Grab before asserting the paint count (same reason as the renderer's ForcePaint): grab()
@@ -358,9 +360,13 @@ public static class Composition
         // exposed - a machine with no display, which is what CI is.
         using (var rendered = window.Renderer.Grab())
         {
-            Check(window.Renderer.PaintCount > 0, $"paintEvent reached C# ({window.Renderer.PaintCount} times)");
-            Check(rendered != null && !rendered.IsNull() && rendered.Width() > 0 && rendered.Height() > 0,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(window.Renderer.PaintCount > 0, $"paintEvent reached C# ({window.Renderer.PaintCount} times)");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(rendered != null && !rendered.IsNull() && rendered.Width() > 0 && rendered.Height() > 0,
                 $"the renderer grabs off-screen ({rendered?.Width()}x{rendered?.Height()})");
+            #endif
         }
 
         // The base: the hue ramp on the right half and the generated photo over the whole widget.
@@ -368,7 +374,9 @@ public static class Composition
         {
             uint left = buffer.Pixel(20, 120);
             uint right = buffer.Pixel(300, 120);
-            Check(left != right, $"the base mixes the photo and the hue ramp (0x{left:X8} vs 0x{right:X8})");
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(left != right, $"the base mixes the photo and the hue ramp (0x{left:X8} vs 0x{right:X8})");
+            #endif
         }
 
         // Park the circle in a known place and blend it in with each mode.
@@ -380,20 +388,30 @@ public static class Composition
         {
             sourceOver = Signature(buffer);
             sourceOverOpaque = buffer.Width() * buffer.Height() - TransparentPixels(buffer);
-            Check(buffer.Pixel(160, 120) != 0,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(buffer.Pixel(160, 120) != 0,
                 $"the source circle is blended in at its centre (0x{buffer.Pixel(160, 120):X8})");
+            #endif
         }
-        Check(window.Renderer.Mode == QPainter.CompositionMode.CompositionMode_SourceOver,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Renderer.Mode == QPainter.CompositionMode.CompositionMode_SourceOver,
             $"selecting a mode reaches the renderer (got {window.Renderer.Mode})");
-        Check(sourceOverOpaque > 0, $"the buffer is mostly opaque under SourceOver ({sourceOverOpaque} pixels)");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(sourceOverOpaque > 0, $"the buffer is mostly opaque under SourceOver ({sourceOverOpaque} pixels)");
+        #endif
 
         // Clear: what the source covers is left transparent.
         window.SelectMode(QPainter.CompositionMode.CompositionMode_Clear);
         using (var buffer = window.Renderer.BufferImage())
         {
-            Check(((buffer.Pixel(160, 120) >> 24) & 0xFF) == 0,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(((buffer.Pixel(160, 120) >> 24) & 0xFF) == 0,
                 $"CompositionMode_Clear leaves the circle transparent (alpha {(buffer.Pixel(160, 120) >> 24) & 0xFF})");
-            Check(Signature(buffer) != sourceOver, "Clear differs from SourceOver");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(Signature(buffer) != sourceOver, "Clear differs from SourceOver");
+            #endif
         }
 
         // Destination: the source is ignored, so the buffer is the base again.
@@ -404,9 +422,11 @@ public static class Composition
             baseOnly = Signature(buffer);
         window.Renderer.SetCirclePos(160, 120);
         window.SelectMode(QPainter.CompositionMode.CompositionMode_Destination);
+        #if QTSHARP_DEMO_SMOKE
         using (var buffer = window.Renderer.BufferImage())
-            Check(Signature(buffer) == baseOnly,
+            demo.Check(Signature(buffer) == baseOnly,
                 "CompositionMode_Destination ignores the source and keeps the base");
+        #endif
 
         // A handful of the other modes each produce their own blend.
         var signatures = new System.Collections.Generic.Dictionary<QPainter.CompositionMode, uint>();
@@ -426,22 +446,28 @@ public static class Composition
             using var buffer = window.Renderer.BufferImage();
             signatures[mode] = Signature(buffer);
         }
+        #if QTSHARP_DEMO_SMOKE
         bool allDistinct = true;
         foreach (var a in signatures)
             foreach (var b in signatures)
                 if (a.Key != b.Key && a.Value == b.Value)
                     allDistinct = false;
-        Check(allDistinct,
+        demo.Check(allDistinct,
             $"eight different composition modes give eight different blends ({signatures.Count} signatures)");
+        #endif
 
         // The alpha slider: a fully transparent source changes nothing.
         window.SelectMode(QPainter.CompositionMode.CompositionMode_SourceOver);
         window.CircleAlphaSlider.SetValue(0);
-        Check(window.Renderer.CircleAlpha == 0,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Renderer.CircleAlpha == 0,
             $"the alpha slider drives the renderer (got {window.Renderer.CircleAlpha})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
         using (var buffer = window.Renderer.BufferImage())
-            Check(Signature(buffer) == baseOnly,
+            demo.Check(Signature(buffer) == baseOnly,
                 "a fully transparent source leaves the buffer untouched");
+        #endif
         window.CircleAlphaSlider.SetValue(255);
 
         // The hue slider: the circle's colour follows it.
@@ -452,10 +478,15 @@ public static class Composition
         window.CircleColorSlider.SetValue(0);
         using (var buffer = window.Renderer.BufferImage())
             hue0 = buffer.Pixel(160, 120);
-        Check(hue270 != hue0,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(hue270 != hue0,
             $"the hue slider changes the source colour (0x{hue270:X8} vs 0x{hue0:X8})");
+        #endif
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The demo hosting library: [Demo]/discovery, DemoContext, DemoHost and the pixel helper.
+       It is compiled twice by configuration - QTSHARP_DEMO_SMOKE or QTSHARP_DEMO_VIEW from
+       demos/DemoMode.props - so the DemoContext surface a demo sees is the surface that build
+       has. Every module executable references this project, not a copy of its files. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>QtSharp.Demos.Hosting</AssemblyName>
+    <QtSharpCompileBinding>false</QtSharpCompileBinding>
+  </PropertyGroup>
+
+  <Import Project="..\..\QtSharp.Api.props" />
+  <Import Project="..\DemoMode.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\nuget\QtSharp.Runtime\QtSharp.Runtime.csproj" />
+    <ProjectReference Include="..\..\nuget\QtSharp.Api\Modules\QtSharp.QtCore\QtSharp.QtCore.csproj" />
+    <ProjectReference Include="..\..\nuget\QtSharp.Api\Modules\QtSharp.QtGui\QtSharp.QtGui.csproj" />
+    <ProjectReference Include="..\..\nuget\QtSharp.Api\Modules\QtSharp.QtWidgets\QtSharp.QtWidgets.csproj" />
+  </ItemGroup>
+
+</Project>

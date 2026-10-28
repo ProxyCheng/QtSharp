@@ -20,8 +20,7 @@ call "%VCVARS%" x64 -vcvars_ver=%VCVARS_VER%
 if errorlevel 1 exit /b 1
 
 if not exist "out\native" mkdir "out\native"
-if not exist "testbind\bin\Release\net10.0" mkdir "testbind\bin\Release\net10.0"
-
-cl /nologo /LD /EHsc /O2 /MD /Fe"testbind\bin\Release\net10.0\CrashTracer.dll" /Fo"out\native\CrashTracer.obj" native\CrashTracer.cpp /link dbghelp.lib
+if not exist "tests\testapp\bin\Release\net10.0" mkdir "tests\testapp\bin\Release\net10.0"
+cl /nologo /LD /EHsc /O2 /MD /Fe"tests\testapp\bin\Release\net10.0\CrashTracer.dll" /Fo"out\native\CrashTracer.obj" native\CrashTracer.cpp /link dbghelp.lib
 
 exit /b %errorlevel%

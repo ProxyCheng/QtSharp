@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 
 // A port of Qt's examples/svg/svgviewer: load an SVG through QSvgRenderer, render it into an
@@ -7,15 +7,8 @@ using System.IO;
 [Demo("qtsvg-svgviewer")]
 public static class SvgViewer
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         string dir = Path.Combine(Path.GetTempPath(), "qtsharp-svg-" + Guid.NewGuid().ToString("N").Substring(0, 8));
         Directory.CreateDirectory(dir);
@@ -29,9 +22,13 @@ public static class SvgViewer
             File.WriteAllText(svgPath, svg);
 
             using var renderer = new QSvgRenderer(new QByteArray(svg));
-            Check(renderer.IsValid(), "QSvgRenderer accepts the svgviewer document");
-            Check(renderer.DefaultSize().Width() == 32 && renderer.DefaultSize().Height() == 32,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(renderer.IsValid(), "QSvgRenderer accepts the svgviewer document");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(renderer.DefaultSize().Width() == 32 && renderer.DefaultSize().Height() == 32,
                 $"the SVG's default size is 32x32 (got {renderer.DefaultSize().Width()}x{renderer.DefaultSize().Height()})");
+            #endif
 
             // SvgView::renderAsImage in the official example.
             var image = new QImage(64, 64, QImage.Format.Format_ARGB32);
@@ -41,15 +38,37 @@ public static class SvgViewer
             painter.Dispose();
             var centre = image.PixelColor(32, 32);
             var corner = image.PixelColor(1, 1);
-            Check(centre.Green() == 255 && centre.Red() == 0 && centre.Blue() == 0,
+
+#if QTSHARP_DEMO_VIEW
+            // The SVG Viewer window, reduced to what the example shows: the rendered document.
+            var shownImage = new QImage(256, 256, QImage.Format.Format_ARGB32);
+            var shownPainter = new QPainter(shownImage);
+            renderer.Render(shownPainter, new QRectF(new QPointF(0, 0), new QSizeF(256, 256)));
+            shownPainter.End();
+            shownPainter.Dispose();
+
+            var viewer = new QLabel();
+            viewer.SetWindowTitle("SVG Viewer");
+            viewer.Pixmap = QPixmap.FromImage(shownImage);
+            demo.Show(viewer);
+#endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(centre.Green() == 255 && centre.Red() == 0 && centre.Blue() == 0,
                 $"the green square rendered at the centre ({centre.Red()},{centre.Green()},{centre.Blue()})");
-            Check(corner.Red() == 0 && corner.Green() == 0 && corner.Blue() == 0,
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(corner.Red() == 0 && corner.Green() == 0 && corner.Blue() == 0,
                 "the canvas stays black outside the square");
+            #endif
 
             string pngPath = Path.Combine(dir, "viewer.png");
-            Check(image.Save(pngPath), "the rendered image exports as PNG");
-            Check(File.Exists(pngPath) && new FileInfo(pngPath).Length > 0,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(image.Save(pngPath), "the rendered image exports as PNG");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(File.Exists(pngPath) && new FileInfo(pngPath).Length > 0,
                 "the PNG file exists and is not empty");
+            #endif
 
             // ExportDialog's SVG path: QSvgGenerator writes the document back to disk.
             string exportedSvg = Path.Combine(dir, "export.svg");
@@ -62,19 +81,26 @@ public static class SvgViewer
             exportPainter.End();
             exportPainter.Dispose();
             generator.Dispose();
-            Check(File.Exists(exportedSvg) && File.ReadAllText(exportedSvg).Contains("<svg"),
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(File.Exists(exportedSvg) && File.ReadAllText(exportedSvg).Contains("<svg"),
                 "QSvgGenerator exports an SVG file");
+            #endif
 
             // The SVG Viewer's file load path (SvgView::load).
             using var fromFile = new QSvgRenderer(svgPath);
-            Check(fromFile.IsValid(), "QSvgRenderer loads the saved SVG by file name");
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(fromFile.IsValid(), "QSvgRenderer loads the saved SVG by file name");
+            #endif
         }
         finally
         {
             try { Directory.Delete(dir, true); } catch { /* temp files are harmless */ }
         }
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[FAIL] {failures} check(s) failed");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

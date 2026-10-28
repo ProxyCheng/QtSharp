@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 // Port of examples/widgets/painting/painterpaths on the new pipeline.
@@ -312,15 +312,8 @@ public sealed class ApiPainterPathsWindow : QWidget
 [Demo("qtgui-painterpaths")]
 public static class PainterPaths
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         // "Ink" is any pixel that differs from the widget's (auto-filled) background at (1,1).
         (int Ink, int Total) InkOf(QImage image)
@@ -363,43 +356,55 @@ public static class PainterPaths
             var ink = InkOf(image);
             // The text path is outline glyphs and is comparatively thin, so the bar is a small
             // fraction of the widget rather than an absolute count.
-            Check(ink.Ink > 40,
+            #if QTSHARP_DEMO_SMOKE
+            // The text path is outline glyphs and is comparatively thin, so the bar is a small
+            // fraction of the widget rather than an absolute count.
+            demo.Check(ink.Ink > 40,
                 $"path {names[i]} renders into its area ({ink.Ink}/{ink.Total} pixels carry ink)");
+            #endif
         }
 
         // The paths themselves: bounding rectangles computed by Qt from the geometry.
         using (var rectPath = ApiPainterPathsWindow.BuildPath(0))
         {
             var bounds = rectPath.BoundingRect();
-            Check(Math.Abs(bounds.Left() - 20.0) < 0.01 && Math.Abs(bounds.Top() - 30.0) < 0.01
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(Math.Abs(bounds.Left() - 20.0) < 0.01 && Math.Abs(bounds.Top() - 30.0) < 0.01
                   && Math.Abs(bounds.Width() - 60.0) < 0.01 && Math.Abs(bounds.Height() - 40.0) < 0.01,
                 $"the rectangle path's bounding rect is (20,30,60,40) (got "
                 + $"({bounds.Left()},{bounds.Top()},{bounds.Width()},{bounds.Height()}))");
+            #endif
         }
 
         using (var ellipsePath = ApiPainterPathsWindow.BuildPath(2))
         {
             var bounds = ellipsePath.BoundingRect();
-            Check(Math.Abs(bounds.Left() - 20.0) < 0.01 && Math.Abs(bounds.Top() - 30.0) < 0.01
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(Math.Abs(bounds.Left() - 20.0) < 0.01 && Math.Abs(bounds.Top() - 30.0) < 0.01
                   && Math.Abs(bounds.Width() - 60.0) < 0.01 && Math.Abs(bounds.Height() - 40.0) < 0.01,
                 $"the ellipse path's bounding rect is (20,30,60,40) (got "
                 + $"({bounds.Left()},{bounds.Top()},{bounds.Width()},{bounds.Height()}))");
+            #endif
         }
 
         // The virtual size hints.
         var hint = areas[0].SizeHint;
         var minimum = areas[0].MinimumSizeHint;
-            Check(hint.Width() == 100 && hint.Height() == 100
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(hint.Width() == 100 && hint.Height() == 100
                   && minimum.Width() == 50 && minimum.Height() == 50,
                 $"sizeHint()/minimumSizeHint() report the official sizes "
                 + $"({hint.Width()}x{hint.Height()} / {minimum.Width()}x{minimum.Height()})");
+            #endif
 
         // Fill rules: setFillRule reaches the path, and winding vs odd-even change what is filled.
         // The star path is the one that shows it - it is a pentagram, so its centre is crossed
         // twice and only WindingFill paints it (that is what the combo box in the example is for).
         areas[8].SetFillRule(Qt.FillRule.OddEvenFill);
-        Check(areas[8].Path.FillRule() == Qt.FillRule.OddEvenFill,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(areas[8].Path.FillRule() == Qt.FillRule.OddEvenFill,
             $"setFillRule reached the path (got {areas[8].Path.FillRule()})");
+        #endif
 
         // QPainterPath::contains() answers "is this point inside?" under the path's own fill rule,
         // so the pentagram's twice-crossed centre is the direct way to see the rule take effect.
@@ -415,24 +420,41 @@ public static class PainterPaths
             windingPath.SetFillRule(Qt.FillRule.WindingFill);
             bool windingCentre = windingPath.Contains(centre);
 
-            Check(!oddEvenCentre && windingCentre,
+#if QTSHARP_DEMO_SMOKE
+
+            demo.Check(!oddEvenCentre && windingCentre,
                 $"the star's centre is crossed twice, so only WindingFill contains it "
                 + $"(oddEven={oddEvenCentre}, winding={windingCentre})");
-            Check(!oddEvenOutside,
+#endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(!oddEvenOutside,
                 $"a point outside the star is outside under OddEvenFill too (got {oddEvenOutside})");
+            #endif
         }
 
         using var windingArea = new ApiPathRenderArea(ApiPainterPathsWindow.BuildPath(8));
         windingArea.Resize(120, 120);
-        windingArea.Show();
+        #if QTSHARP_DEMO_SMOKE
+            windingArea.Show();
+        #else
+            demo.Show(windingArea);
+        #endif
+
         windingArea.SetFillRule(Qt.FillRule.WindingFill);
-        Check(windingArea.Path.FillRule() == Qt.FillRule.WindingFill,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(windingArea.Path.FillRule() == Qt.FillRule.WindingFill,
             $"the winding fill rule round-trips (got {windingArea.Path.FillRule()})");
+        #endif
 
         // Pen width: the slider of the example, 0..20.
         using var widthArea = new ApiPathRenderArea(ApiPainterPathsWindow.BuildPath(0));
         widthArea.Resize(120, 120);
-        widthArea.Show();
+        #if QTSHARP_DEMO_SMOKE
+            widthArea.Show();
+        #else
+            demo.Show(widthArea);
+        #endif
+
         widthArea.SetPenWidth(0);
         int thinInk;
         using (var image = widthArea.RenderToImage())
@@ -441,30 +463,46 @@ public static class PainterPaths
         int thickInk;
         using (var image = widthArea.RenderToImage())
             thickInk = InkOf(image).Ink;
-        Check(widthArea.PenWidth == 9 && thickInk > thinInk,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(widthArea.PenWidth == 9 && thickInk > thinInk,
             $"the pen width reaches the pen ({thinInk} ink pixels at width 0, {thickInk} at width 9)");
+        #endif
 
         // Rotation: the same area, turned by 45 degrees.
         using var rotationArea = new ApiPathRenderArea(ApiPainterPathsWindow.BuildPath(4));
         rotationArea.Resize(120, 120);
-        rotationArea.Show();
+        #if QTSHARP_DEMO_SMOKE
+            rotationArea.Show();
+        #else
+            demo.Show(rotationArea);
+        #endif
+
         byte[] before = null;
         rotationArea.SetRotationAngle(0);
         using (var image = rotationArea.RenderToImage())
             before = Row(image, 45);
         rotationArea.SetRotationAngle(45);
-        Check(rotationArea.RotationAngle == 45,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(rotationArea.RotationAngle == 45,
             $"the rotation angle is stored (got {rotationArea.RotationAngle})");
+        #endif
         byte[] after = null;
         using (var image = rotationArea.RenderToImage())
             after = Row(image, 45);
-        Check(!Same(before, after),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!Same(before, after),
             "rotating by 45 degrees changes the rendered scanline");
+        #endif
 
         // The fill gradient: the two colours are painted at the top and the bottom of the widget.
         using var gradientArea = new ApiPathRenderArea(ApiPainterPathsWindow.BuildPath(0));
         gradientArea.Resize(120, 120);
-        gradientArea.Show();
+        #if QTSHARP_DEMO_SMOKE
+            gradientArea.Show();
+        #else
+            demo.Show(gradientArea);
+        #endif
+
         var color1 = new QColor(Qt.GlobalColor.red);
         var color2 = new QColor(Qt.GlobalColor.blue);
             gradientArea.SetFillGradient(color1, color2);
@@ -474,59 +512,89 @@ public static class PainterPaths
             // and y=66 land at device y=48 and y=79 - both inside the rectangle path (y 36..84).
             uint top = image.Pixel(image.Width() / 2, (int)Math.Round(48.0 * image.Height() / 120.0));
             uint bottom = image.Pixel(image.Width() / 2, (int)Math.Round(79.0 * image.Height() / 120.0));
-            Check(((top >> 16) & 0xFF) > ((bottom >> 16) & 0xFF)
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(((top >> 16) & 0xFF) > ((bottom >> 16) & 0xFF)
                   && (bottom & 0xFF) > (top & 0xFF),
                 $"the fill gradient runs from the first colour to the second "
                 + $"(top 0x{top:X8}, bottom 0x{bottom:X8})");
+            #endif
         }
 
         // The window: nine areas, the official controls and their ranges.
         using var window = new ApiPainterPathsWindow();
-        window.Show();
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
 
-        Check(window.Areas.Length == 9, $"the window has nine render areas (got {window.Areas.Length})");
-        Check(window.FillRuleComboBox.count() == 2,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.Areas.Length == 9, $"the window has nine render areas (got {window.Areas.Length})");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.FillRuleComboBox.count() == 2,
             $"the fill rule combo box has Odd Even and Winding (got {window.FillRuleComboBox.count()})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
         foreach (var combo in new[] { window.FillColor1ComboBox, window.FillColor2ComboBox, window.PenColorComboBox })
-            Check(combo.count() > 100, $"a colour combo box is filled from QColor::colorNames() (got {combo.count()})");
-        Check(window.FillColor1ComboBox.currentText() == "mediumslateblue"
+            demo.Check(combo.count() > 100, $"a colour combo box is filled from QColor::colorNames() (got {combo.count()})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.FillColor1ComboBox.currentText() == "mediumslateblue"
               && window.FillColor2ComboBox.currentText() == "cornsilk"
               && window.PenColorComboBox.currentText() == "darkslateblue",
             $"the official default colours were selected "
             + $"({window.FillColor1ComboBox.currentText()}/{window.FillColor2ComboBox.currentText()}/"
             + $"{window.PenColorComboBox.currentText()})");
-        Check(window.PenWidthSpinBox.minimum() == 0 && window.PenWidthSpinBox.maximum() == 20
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.PenWidthSpinBox.minimum() == 0 && window.PenWidthSpinBox.maximum() == 20
               && window.PenWidthSpinBox.value() == 2,
             $"the pen width spin box has the official range and default "
             + $"({window.PenWidthSpinBox.minimum()}..{window.PenWidthSpinBox.maximum()}, value {window.PenWidthSpinBox.value()})");
-        Check(window.RotationAngleSpinBox.minimum() == 0 && window.RotationAngleSpinBox.maximum() == 359
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.RotationAngleSpinBox.minimum() == 0 && window.RotationAngleSpinBox.maximum() == 359
               && window.RotationAngleSpinBox.Wrapping,
             $"the rotation spin box wraps 0..359 "
             + $"({window.RotationAngleSpinBox.minimum()}..{window.RotationAngleSpinBox.maximum()}, "
             + $"wrapping={window.RotationAngleSpinBox.Wrapping})");
-        Check(window.RotationAngleSpinBox.suffix() == "\u00b0",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.RotationAngleSpinBox.suffix() == "\u00b0",
             $"the rotation spin box carries the degree suffix (got '{window.RotationAngleSpinBox.suffix()}')");
+        #endif
 
         // Driving a control reaches every area, the way the official connect()s do.
         window.PenWidthSpinBox.SetValue(7);
         bool allAreas = true;
         foreach (var area in window.Areas)
             allAreas &= area.PenWidth == 7;
-        Check(allAreas, "the pen width spin box drives all nine render areas");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(allAreas, "the pen width spin box drives all nine render areas");
+        #endif
 
         window.RotationAngleSpinBox.SetValue(30);
         allAreas = true;
         foreach (var area in window.Areas)
             allAreas &= area.RotationAngle == 30;
-        Check(allAreas, "the rotation spin box drives all nine render areas");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(allAreas, "the rotation spin box drives all nine render areas");
+        #endif
 
         window.FillRuleComboBox.SetCurrentIndex((int)Qt.FillRule.WindingFill);
         allAreas = window.Areas[0].Path.FillRule() == Qt.FillRule.WindingFill
                    && window.Areas[8].Path.FillRule() == Qt.FillRule.WindingFill;
-        Check(allAreas, "the fill rule combo box drives all nine paths");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(allAreas, "the fill rule combo box drives all nine paths");
+        #endif
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 
     /// <summary>One scanline, given in the painter's 100-unit path space.</summary>

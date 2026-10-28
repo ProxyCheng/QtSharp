@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 // The exception policy at the native boundary, plus the liveness guard that goes with it.
 //
@@ -13,18 +13,11 @@ using System;
 // object is gone compares equal to null (IsAlive / operator == on the generated classes), which is
 // what this demo's first half exercises - the report that started it was a handler calling
 // DeleteLater() on an object Qt had already destroyed, clicked twice.
-[Demo("test-exceptions")]
+[Test("test-exceptions")]
 public static class ApiExceptionsDemo
 {
-    public static int Run(QApplication app)
+    public static int Run(TestContext context)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         int reported = 0;
         string lastWhat = null;
@@ -61,11 +54,11 @@ public static class ApiExceptionsDemo
                 QCoreApplication.ProcessEvents();
             }
 
-            Check(clicks == 3, $"the handler ran for every click (got {clicks})");
-            Check(reported == 2, $"the two later throws were reported, not fatal (got {reported})");
-            Check(lastWhat == "a signal handler", $"and they are attributed to the handler (got '{lastWhat}')");
-            Check(window != null && window.IsAlive, "the window is still alive after the throws");
-            Check(editor == null && !editor.IsAlive,
+            context.Check(clicks == 3, $"the handler ran for every click (got {clicks})");
+            context.Check(reported == 2, $"the two later throws were reported, not fatal (got {reported})");
+            context.Check(lastWhat == "a signal handler", $"and they are attributed to the handler (got '{lastWhat}')");
+            context.Check(window != null && window.IsAlive, "the window is still alive after the throws");
+            context.Check(editor == null && !editor.IsAlive,
                 "and the destroyed line edit reads as null (the guard that was missing)");
 
             // ------------------------------------------------------------------ guarded: it does not
@@ -87,9 +80,9 @@ public static class ApiExceptionsDemo
                 QCoreApplication.ProcessEvents();
             }
 
-            Check(reported == 0, $"the guard means nothing is thrown at all (got {reported})");
-            Check(guarded == null, "and the deleted object still reads as null");
-            Check(guardedButton != null && guardedButton.IsAlive, "while the button stays alive");
+            context.Check(reported == 0, $"the guard means nothing is thrown at all (got {reported})");
+            context.Check(guarded == null, "and the deleted object still reads as null");
+            context.Check(guardedButton != null && guardedButton.IsAlive, "while the button stays alive");
 
             // ---------------------------------------------------- a virtual override goes the same way
             reported = 0;
@@ -98,9 +91,9 @@ public static class ApiExceptionsDemo
                 thrower.Show();
                 QCoreApplication.ProcessEvents();
                 thrower.Repaint();
-                Check(reported >= 1, $"an exception in a virtual override is reported too (got {reported})");
-                Check(lastWhat == "a virtual override", $"and attributed to the override (got '{lastWhat}')");
-                Check(thrower.IsAlive, "the widget that threw is still usable");
+                context.Check(reported >= 1, $"an exception in a virtual override is reported too (got {reported})");
+                context.Check(lastWhat == "a virtual override", $"and attributed to the override (got '{lastWhat}')");
+                context.Check(thrower.IsAlive, "the widget that threw is still usable");
             }
         }
         finally
@@ -108,8 +101,7 @@ public static class ApiExceptionsDemo
             ApiRuntime.UnhandledCallbackException -= hook;
         }
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        return context.ExitCode;
     }
 }
 

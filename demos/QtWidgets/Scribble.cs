@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -409,6 +409,14 @@ public sealed class ApiScribbleWindow : QMainWindow
 
     public override void CloseEvent(QCloseEvent e)
     {
+        // The upstream example only asks when there is something to lose. Asking unconditionally
+        // would put a modal dialog in the way of the host's --seconds quit as well.
+        if (!ScribbleArea.IsModified)
+        {
+            e.Accept();
+            return;
+        }
+
         var decision = PromptSaveDecision();
         string path = decision == SaveDecision.Save ? AskSavePath("png") : null;
         if (MaybeSave(decision, path))
@@ -544,86 +552,141 @@ public sealed class ApiScribbleWindow : QMainWindow
 [Demo("qtwidgets-scribble")]
 public static class Scribble
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         uint Mask(uint rgb) => rgb & 0x00FFFFFFu;
+        #if QTSHARP_DEMO_SMOKE
         uint PixelRgb(ApiScribbleArea a, int x, int y) => Mask(a.ImagePixel(x, y));
+        #endif
 
         uint blue = Mask(new QColor(Qt.GlobalColor.blue).Rgb());
         uint red = Mask(new QColor(Qt.GlobalColor.red).Rgb());
         uint green = Mask(new QColor(Qt.GlobalColor.green).Rgb());
         uint white = Mask(new QColor(Qt.GlobalColor.white).Rgb());
 
+#if QTSHARP_DEMO_VIEW
+        // The window as the user sees it. The scenario below drives the area, the actions and the
+        // save/open round-trip directly, which is the automated half.
+        demo.Show(new ApiScribbleWindow());
+        return 0;
+#else
+
         // ------------------------------------------------------------------ area: construction
         var area = new ApiScribbleArea();
-        Check(!area.HasImage, "the backing image is created lazily (none before show)");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!area.HasImage, "the backing image is created lazily (none before show)");
+        #endif
         area.Resize(420, 320);
         area.Show();
 
-        Check(area.TestAttribute(Qt.WidgetAttribute.WA_StaticContents),
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(area.TestAttribute(Qt.WidgetAttribute.WA_StaticContents),
             "the area sets WA_StaticContents (the original's constructor)");
-        Check(Mask(area.PenColor.Rgb()) == blue, $"the pen starts blue (got #{Mask(area.PenColor.Rgb()):X6})");
-        Check(area.PenWidth == 1, $"the pen width starts at 1 (got {area.PenWidth})");
-        Check(!area.IsModified, "a fresh area is not modified");
-        Check(area.HasImage, "showing the area allocated the image through resizeEvent");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(Mask(area.PenColor.Rgb()) == blue, $"the pen starts blue (got #{Mask(area.PenColor.Rgb()):X6})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(area.PenWidth == 1, $"the pen width starts at 1 (got {area.PenWidth})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!area.IsModified, "a fresh area is not modified");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(area.HasImage, "showing the area allocated the image through resizeEvent");
+        #endif
 
         // ------------------------------------------------------------------ ClearImage allocates
         area.ClearImage();
         int expectedWidth = Math.Max(area.Width + 128, 128);
         int expectedHeight = Math.Max(area.Height + 128, 128);
-        Check(area.HasImage && area.ImageWidth() == expectedWidth && area.ImageHeight() == expectedHeight,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(area.HasImage && area.ImageWidth() == expectedWidth && area.ImageHeight() == expectedHeight,
             $"clearImage allocated a {expectedWidth}x{expectedHeight} image (got {area.ImageWidth()}x{area.ImageHeight()})");
-        Check(area.IsModified, "clearImage marks the image modified (the original does)");
-        Check(PixelRgb(area, 5, 5) == white, $"clearImage filled the image white (got #{PixelRgb(area, 5, 5):X6})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(area.IsModified, "clearImage marks the image modified (the original does)");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(PixelRgb(area, 5, 5) == white, $"clearImage filled the image white (got #{PixelRgb(area, 5, 5):X6})");
+        #endif
 
         // ------------------------------------------------------------------ pen round-trip
         area.SetPenColor(new QColor(Qt.GlobalColor.red));
         area.SetPenWidth(5);
-        Check(Mask(area.PenColor.Rgb()) == red, $"setPenColor round-trips (got #{Mask(area.PenColor.Rgb()):X6})");
-        Check(area.PenWidth == 5, $"setPenWidth round-trips (got {area.PenWidth})");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(Mask(area.PenColor.Rgb()) == red, $"setPenColor round-trips (got #{Mask(area.PenColor.Rgb()):X6})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(area.PenWidth == 5, $"setPenWidth round-trips (got {area.PenWidth})");
+        #endif
         using (var pen = area.CreatePen())
         {
             var penColor = pen.Color();
-                Check(Mask(penColor.Rgb()) == red, $"the pen's colour is red (got #{Mask(penColor.Rgb()):X6})");
-            Check(pen.Width() == 5, $"the pen's width is 5 (got {pen.Width()})");
-            Check(pen.Style() == Qt.PenStyle.SolidLine, $"the pen's style is SolidLine (got {pen.Style()})");
-            Check(pen.CapStyle() == Qt.PenCapStyle.RoundCap, $"the pen's cap is RoundCap (got {pen.CapStyle()})");
-            Check(pen.JoinStyle() == Qt.PenJoinStyle.RoundJoin, $"the pen's join is RoundJoin (got {pen.JoinStyle()})");
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(Mask(penColor.Rgb()) == red, $"the pen's colour is red (got #{Mask(penColor.Rgb()):X6})");
+                #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(pen.Width() == 5, $"the pen's width is 5 (got {pen.Width()})");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(pen.Style() == Qt.PenStyle.SolidLine, $"the pen's style is SolidLine (got {pen.Style()})");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(pen.CapStyle() == Qt.PenCapStyle.RoundCap, $"the pen's cap is RoundCap (got {pen.CapStyle()})");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(pen.JoinStyle() == Qt.PenJoinStyle.RoundJoin, $"the pen's join is RoundJoin (got {pen.JoinStyle()})");
+            #endif
         }
 
         // ------------------------------------------------------------------ a real press, then a stroke
         bool pressed = ApiRuntime.SendMousePress(area.Handle, 10, 10);
-        Check(pressed && area.PressCount == 1 && area.LastButton == Qt.MouseButton.LeftButton,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(pressed && area.PressCount == 1 && area.LastButton == Qt.MouseButton.LeftButton,
             $"a Qt mouse press reached MousePressEvent (delivered={pressed}, count={area.PressCount}, button={area.LastButton})");
-        Check((area.LastButtons & Qt.MouseButtons.LeftButton) != 0,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check((area.LastButtons & Qt.MouseButtons.LeftButton) != 0,
             $"QMouseEvent::buttons() is bound and reports the held button (got {area.LastButtons})");
-        Check(area.LastPointX == 10 && area.LastPointY == 10,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(area.LastPointX == 10 && area.LastPointY == 10,
             $"the press stored the last point (got {area.LastPointX},{area.LastPointY})");
-        Check(area.IsScribbling && area.PointCount == 0, "the press started a stroke without drawing yet");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(area.IsScribbling && area.PointCount == 0, "the press started a stroke without drawing yet");
+        #endif
 
         area.SimulateMouseMove(60, 10);
-        Check(area.PointCount == 1 && area.StrokeCount == 1,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(area.PointCount == 1 && area.StrokeCount == 1,
             $"the move drew the first segment (points={area.PointCount}, strokes={area.StrokeCount})");
-        Check(area.IsModified, "drawing marks the image modified");
-        Check(PixelRgb(area, 35, 10) == red,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(area.IsModified, "drawing marks the image modified");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(PixelRgb(area, 35, 10) == red,
             $"the segment was painted in the pen colour (got #{PixelRgb(area, 35, 10):X6})");
-        Check(PixelRgb(area, 35, 20) == white,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(PixelRgb(area, 35, 20) == white,
             $"pixels off the pen path stay white (got #{PixelRgb(area, 35, 20):X6})");
+        #endif
 
         area.SimulateMouseRelease(60, 10);
-        Check(area.PointCount == 2 && !area.IsScribbling,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(area.PointCount == 2 && !area.IsScribbling,
             $"the release drew the final dot and ended the stroke (points={area.PointCount})");
+        #endif
         area.SimulateMouseMove(90, 10);
-        Check(area.PointCount == 2 && area.MoveCount == 1,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(area.PointCount == 2 && area.MoveCount == 1,
             "a move after the release no longer draws (the buttons() guard)");
+        #endif
 
         // ------------------------------------------------------------------ paint / render
         // Grab before asserting the paint count: grab() renders the widget, which is what delivers
@@ -631,19 +694,27 @@ public static class Scribble
         // system never exposed (a machine with no display - CI found it).
         using (var rendered = area.Grab())
         {
-            Check(area.PaintCount > 0,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(area.PaintCount > 0,
                 $"paintEvent reached C# {area.PaintCount} time(s) through the generated dispatch");
-            Check(DemoCatalog.GrabCovers(rendered, area.Width, area.Height),
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(DemoPixels.GrabCovers(rendered, area.Width, area.Height),
                 $"grab() rendered the area off-screen (got {rendered?.Width()}x{rendered?.Height()})");
+            #endif
         }
 
         // ------------------------------------------------------------------ resizeEvent grows the image
         int beforeResize = area.ImageWidth();
         area.Resize(600, 600);
-        Check(area.ImageWidth() > beforeResize,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(area.ImageWidth() > beforeResize,
             $"resizeEvent grew the backing image ({beforeResize} -> {area.ImageWidth()})");
-        Check(area.ImageWidth() == Math.Max(area.Width + 128, beforeResize),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(area.ImageWidth() == Math.Max(area.Width + 128, beforeResize),
             $"the grown image covers the widget plus the 128px margin (got {area.ImageWidth()})");
+        #endif
 
         // ------------------------------------------------------------------ save / open round-trip
         string dir = Path.Combine(Path.GetTempPath(), "qtsharp_scribble_api");
@@ -652,124 +723,208 @@ public static class Scribble
         if (File.Exists(saved))
             File.Delete(saved);
 
-        Check(area.SaveImage(saved, "png") && File.Exists(saved),
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(area.SaveImage(saved, "png") && File.Exists(saved),
             $"saveImage wrote a PNG to a temp file (exists={File.Exists(saved)})");
+#endif
 
         var reopened = new ApiScribbleArea();
         reopened.Resize(600, 600);
         reopened.Show();
-        Check(reopened.OpenImage(saved),
+
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(reopened.OpenImage(saved),
             "openImage loaded the file back");
-        Check(reopened.ImageWidth() == 600 && reopened.ImageHeight() == 600,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(reopened.ImageWidth() == 600 && reopened.ImageHeight() == 600,
             $"the loaded image has the saved size (got {reopened.ImageWidth()}x{reopened.ImageHeight()})");
-        Check(PixelRgb(reopened, 35, 10) == red,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(PixelRgb(reopened, 35, 10) == red,
             $"the saved stroke survives the round-trip (got #{PixelRgb(reopened, 35, 10):X6})");
-        Check(!reopened.IsModified, "opening a file clears the modified flag");
-        Check(!reopened.OpenImage(Path.Combine(dir, "does-not-exist.png")),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!reopened.IsModified, "opening a file clears the modified flag");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!reopened.OpenImage(Path.Combine(dir, "does-not-exist.png")),
             "opening a missing file returns false");
+        #endif
 
         // ------------------------------------------------------------------ window: menus and actions
         var window = new ApiScribbleWindow();
         window.Show();
 
-        Check(window.CentralWidget() != null
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.CentralWidget() != null
               && window.CentralWidget().Handle == window.ScribbleArea.Handle,
             "the scribble area is the central widget");
-        Check(window.WindowTitle == "Scribble", $"the window title is Scribble (got '{window.WindowTitle}')");
-        Check(window.Width == 500 && window.Height == 500,
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.WindowTitle == "Scribble", $"the window title is Scribble (got '{window.WindowTitle}')");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Width == 500 && window.Height == 500,
             $"the window was resized to 500x500 (got {window.Width}x{window.Height})");
+        #endif
 
         var topMenus = window.MenuBar().Actions();
-        Check(topMenus.Length == 3, $"the menu bar has three menus (got {topMenus.Length})");
-        Check(QMenu.MenuInAction(topMenus[0]).title() == "&File"
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(topMenus.Length == 3, $"the menu bar has three menus (got {topMenus.Length})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(QMenu.MenuInAction(topMenus[0]).title() == "&File"
               && QMenu.MenuInAction(topMenus[1]).title() == "&Options"
               && QMenu.MenuInAction(topMenus[2]).title() == "&Help",
             "the menus are File / Options / Help in order");
+        #endif
 
         var fileActions = window.FileMenu.Actions();
-        Check(fileActions.Length == 5, $"File has five entries (got {fileActions.Length})");
-        Check(fileActions[0].text() == "&Open..." && fileActions[2].text() == "&Print..."
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(fileActions.Length == 5, $"File has five entries (got {fileActions.Length})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(fileActions[0].text() == "&Open..." && fileActions[2].text() == "&Print..."
               && fileActions[4].text() == "E&xit",
             "File holds Open, the Save As submenu, Print and Exit in order");
-        Check(fileActions[1].text() == "&Save As" && fileActions[3].IsSeparator(),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(fileActions[1].text() == "&Save As" && fileActions[3].IsSeparator(),
             "the second File entry is the Save As submenu and the fourth is a separator");
+        #endif
 
         var optionActions = window.OptionMenu.Actions();
-        Check(optionActions.Length == 4, $"Options has four entries (got {optionActions.Length})");
-        Check(optionActions[0].text() == "&Pen Color..." && optionActions[1].text() == "Pen &Width..."
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(optionActions.Length == 4, $"Options has four entries (got {optionActions.Length})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(optionActions[0].text() == "&Pen Color..." && optionActions[1].text() == "Pen &Width..."
               && optionActions[3].text() == "&Clear Screen" && optionActions[2].IsSeparator(),
             "Options holds Pen Color, Pen Width, a separator and Clear Screen");
+        #endif
 
         var helpActions = window.HelpMenu.Actions();
-        Check(helpActions.Length == 2 && helpActions[0].text() == "&About"
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(helpActions.Length == 2 && helpActions[0].text() == "&About"
               && helpActions[1].text() == "About &Qt",
             "Help holds About and About Qt");
+        #endif
 
-        Check(window.SaveAsActs.Length == window.ImageFormats.Length,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.SaveAsActs.Length == window.ImageFormats.Length,
             $"the Save As menu has one action per writable format ({window.SaveAsActs.Length} actions, "
             + $"{window.ImageFormats.Length} formats from QImageWriter)");
+#endif
         bool hasPng = Array.Exists(window.ImageFormats, f => f == "png");
-        Check(hasPng, "QImageWriter advertises PNG");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(hasPng, "QImageWriter advertises PNG");
+        #endif
         QAction pngAct = null;
         foreach (var action in window.SaveAsActs)
             if (action.text() == "PNG...")
                 pngAct = action;
-        Check(pngAct != null, "the Save As menu carries the PNG action with the upstream text");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(pngAct != null, "the Save As menu carries the PNG action with the upstream text");
+        #endif
 
         // ------------------------------------------------------------------ action wiring
+        #if QTSHARP_DEMO_SMOKE
         using (var actual = window.OpenAct.shortcut())
         using (var expected = new QKeySequence(QKeySequence.StandardKey.Open))
-            Check(actual.ToString() == expected.ToString(),
+            demo.Check(actual.ToString() == expected.ToString(),
                 $"Open carries StandardKey.Open (got '{actual.ToString()}', platform = '{expected.ToString()}')");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
         using (var actual = window.ExitAct.shortcut())
         using (var expected = new QKeySequence(QKeySequence.StandardKey.Quit))
-            Check(actual.ToString() == expected.ToString(),
+            demo.Check(actual.ToString() == expected.ToString(),
                 $"Exit carries StandardKey.Quit (got '{actual.ToString()}', platform = '{expected.ToString()}')");
-        Check(window.AboutAct.IsEnabled() && window.AboutQtAct.IsEnabled(),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.AboutAct.IsEnabled() && window.AboutQtAct.IsEnabled(),
             "About / About Qt are enabled (not triggered: they would block)");
+        #endif
 
         window.PrintAct.Trigger();
-        Check(window.ScribbleArea.PrintCount == 1,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ScribbleArea.PrintCount == 1,
             $"triggering Print reached the handler (got {window.ScribbleArea.PrintCount})");
+        #endif
 
         // ------------------------------------------------------------------ pen width clamps to 1..50
-        Check(window.ApplyPenWidth(0) == 1 && window.ScribbleArea.PenWidth == 1,
+#if QTSHARP_DEMO_SMOKE
+
+        // ------------------------------------------------------------------ pen width clamps to 1..50
+        demo.Check(window.ApplyPenWidth(0) == 1 && window.ScribbleArea.PenWidth == 1,
             $"pen width 0 clamps up to 1 (got {window.ScribbleArea.PenWidth})");
-        Check(window.ApplyPenWidth(60) == 50 && window.ScribbleArea.PenWidth == 50,
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ApplyPenWidth(60) == 50 && window.ScribbleArea.PenWidth == 50,
             $"pen width 60 clamps down to 50 (got {window.ScribbleArea.PenWidth})");
-        Check(window.ApplyPenWidth(7) == 7 && window.ScribbleArea.PenWidth == 7,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ApplyPenWidth(7) == 7 && window.ScribbleArea.PenWidth == 7,
             $"pen width 7 applies unchanged (got {window.ScribbleArea.PenWidth})");
+        #endif
 
         window.ApplyPenColor(new QColor(Qt.GlobalColor.green));
-        Check(Mask(window.ScribbleArea.PenColor.Rgb()) == green,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(Mask(window.ScribbleArea.PenColor.Rgb()) == green,
             $"applying a colour reaches the area (got #{Mask(window.ScribbleArea.PenColor.Rgb()):X6})");
+        #endif
 
         // ------------------------------------------------------------------ clear screen action
         window.ClearScreenAct.Trigger();
-        Check(window.ScribbleArea.HasImage && window.ScribbleArea.IsModified,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ScribbleArea.HasImage && window.ScribbleArea.IsModified,
             "triggering Clear Screen allocated the image and marked it modified");
-        Check(PixelRgb(window.ScribbleArea, 5, 5) == white,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(PixelRgb(window.ScribbleArea, 5, 5) == white,
             $"Clear Screen filled the image white (got #{PixelRgb(window.ScribbleArea, 5, 5):X6})");
+        #endif
 
         // ------------------------------------------------------------------ closeEvent decision logic
-        Check(window.MaybeSave(ApiScribbleWindow.SaveDecision.Cancel, null) == false,
+#if QTSHARP_DEMO_SMOKE
+
+        // ------------------------------------------------------------------ closeEvent decision logic
+        demo.Check(window.MaybeSave(ApiScribbleWindow.SaveDecision.Cancel, null) == false,
             "a modified image + Cancel keeps the window open");
-        Check(window.MaybeSave(ApiScribbleWindow.SaveDecision.Discard, null)
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MaybeSave(ApiScribbleWindow.SaveDecision.Discard, null)
               && window.ScribbleArea.IsModified,
             "a modified image + Discard closes and leaves the image as it was");
-        Check(window.MaybeSave(ApiScribbleWindow.SaveDecision.Save, null) == false,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MaybeSave(ApiScribbleWindow.SaveDecision.Save, null) == false,
             "Save with no chosen path is like cancelling the file dialog (stays open)");
+        #endif
 
         string windowSave = Path.Combine(dir, "window.png");
         if (File.Exists(windowSave))
             File.Delete(windowSave);
-        Check(window.MaybeSave(ApiScribbleWindow.SaveDecision.Save, windowSave) && File.Exists(windowSave),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MaybeSave(ApiScribbleWindow.SaveDecision.Save, windowSave) && File.Exists(windowSave),
             "Save with a path writes the file and lets the close through");
-        Check(!window.ScribbleArea.IsModified, "saving clears the modified flag so a second close is silent");
-        Check(window.MaybeSave(ApiScribbleWindow.SaveDecision.Cancel, null),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.ScribbleArea.IsModified, "saving clears the modified flag so a second close is silent");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MaybeSave(ApiScribbleWindow.SaveDecision.Cancel, null),
             "an unmodified image closes without any prompt");
+        #endif
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
+#endif
     }
 }

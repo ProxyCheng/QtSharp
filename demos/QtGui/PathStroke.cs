@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 // Port of examples/widgets/painting/pathstroke on the new pipeline.
@@ -765,29 +765,30 @@ public static class PathStroke
         return count;
     }
 
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         // The stroke is red; the frame's tile is white/grey; the control handles are a pale blue.
         static bool Red(int r, int g, int b) => r > 140 && g < 110 && b < 110;
 
         using var renderer = new ApiPathStrokeRenderer();
-        renderer.Show();
+        #if QTSHARP_DEMO_SMOKE
+            renderer.Show();
+        #else
+            demo.Show(renderer);
+        #endif
 
         // --- the control points -------------------------------------------------------------
         using (var image = renderer.Grab().ToImage())
         {
-            Check(renderer.PaintCount >= 1, $"the renderer painted (PaintCount {renderer.PaintCount})");
-            Check(renderer.Points.Count == 7 && renderer.Vectors.Count == 7,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(renderer.PaintCount >= 1, $"the renderer painted (PaintCount {renderer.PaintCount})");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(renderer.Points.Count == 7 && renderer.Vectors.Count == 7,
                 $"initializePoints builds seven points and seven vectors "
                 + $"({renderer.Points.Count}/{renderer.Vectors.Count})");
+            #endif
 
             double cx = renderer.width() / 2.0, cy = renderer.height() / 2.0;
             double minRadius = double.MaxValue, maxRadius = 0;
@@ -797,26 +798,38 @@ public static class PathStroke
                 minRadius = Math.Min(minRadius, radius);
                 maxRadius = Math.Max(maxRadius, radius);
             }
-            Check(Math.Abs(minRadius - 100) < 0.01 && Math.Abs(maxRadius - 100) < 0.01,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(Math.Abs(minRadius - 100) < 0.01 && Math.Abs(maxRadius - 100) < 0.01,
                 $"the seven points sit on a circle of radius 100 around the centre "
                 + $"(radius {minRadius:F2}..{maxRadius:F2})");
+            #endif
 
             // The pale control-point handles and the light grey polyline are painted too.
-            Check(CountInk(image, (r, g, b) => r > 180 && b > 190 && g > 180) > 300,
+#if QTSHARP_DEMO_SMOKE
+
+            // The pale control-point handles and the light grey polyline are painted too.
+            demo.Check(CountInk(image, (r, g, b) => r > 180 && b > 190 && g > 180) > 300,
                 "the control-point handles are painted");
+#endif
         }
 
         // initializePoints only runs while the point list is empty.
         renderer.Repaint();
         renderer.Repaint();
-        Check(renderer.Points.Count == 7, "initializePoints is not run twice");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(renderer.Points.Count == 7, "initializePoints is not run twice");
+        #endif
 
         // --- the animation ------------------------------------------------------------------
         var first = new QPointF(renderer.Points[0].X(), renderer.Points[0].Y());
-        Check(!renderer.TimerActive(), "the timer starts stopped");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!renderer.TimerActive(), "the timer starts stopped");
+        #endif
         renderer.SetAnimation(true);
-        Check(renderer.TimerActive() && renderer.TimerId() != 0,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(renderer.TimerActive() && renderer.TimerId() != 0,
             $"setAnimation(true) starts a single timer (TimerId {renderer.TimerId()})");
+        #endif
 
         int updatesBefore = renderer.UpdatePointsCalls;
         var loop = new QEventLoop();
@@ -828,31 +841,44 @@ public static class PathStroke
         loop.Dispose();
         loopTimer.Dispose();
 
-        Check(renderer.UpdatePointsCalls > updatesBefore,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(renderer.UpdatePointsCalls > updatesBefore,
             $"the timer drives updatePoints through timerEvent "
             + $"({updatesBefore} -> {renderer.UpdatePointsCalls} calls)");
-        Check(Math.Abs(renderer.Points[0].X() - first.X()) + Math.Abs(renderer.Points[0].Y() - first.Y()) > 0.001,
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(Math.Abs(renderer.Points[0].X() - first.X()) + Math.Abs(renderer.Points[0].Y() - first.Y()) > 0.001,
             "the animated point moved");
+        #endif
 
         // The bouncing keeps every point inside the padded widget.
+        #if QTSHARP_DEMO_SMOKE
         double pad = 10;
         bool inside = true;
         foreach (var point in renderer.Points)
             if (point.X() < pad - 0.01 || point.X() > renderer.width() - pad + 0.01
                 || point.Y() < pad - 0.01 || point.Y() > renderer.height() - pad + 0.01)
                 inside = false;
-        Check(inside,
+        demo.Check(inside,
             $"updatePoints keeps every point inside the 10px padding "
             + $"({renderer.width()}x{renderer.height()} widget)");
+        #endif
 
         renderer.SetAnimation(false);
-        Check(!renderer.TimerActive(), "setAnimation(false) stops the timer");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!renderer.TimerActive(), "setAnimation(false) stops the timer");
+        #endif
 
         // --- the pen surface ----------------------------------------------------------------
         // A fresh renderer: its seven control points are still the deterministic initial circle,
         // so the pixel counts below do not depend on how long the animation above ran.
         using var penArea = new ApiPathStrokeRenderer();
-        penArea.Show();
+        #if QTSHARP_DEMO_SMOKE
+            penArea.Show();
+        #else
+            demo.Show(penArea);
+        #endif
 
         QImage Shot(double width, Qt.PenStyle style, Qt.PenCapStyle cap, Qt.PenJoinStyle join,
                     ApiPathStrokeRenderer.PathMode mode)
@@ -886,28 +912,38 @@ public static class PathStroke
 
         int solid = Stroke(5.0, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap,
                            Qt.PenJoinStyle.BevelJoin, ApiPathStrokeRenderer.PathMode.CurveMode);
-        Check(solid > 0, $"the solid pen strokes the path ({solid} red pixels)");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(solid > 0, $"the solid pen strokes the path ({solid} red pixels)");
+        #endif
 
         int thin = Stroke(1.0, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap,
                           Qt.PenJoinStyle.BevelJoin, ApiPathStrokeRenderer.PathMode.CurveMode);
-        Check(solid > thin * 2,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(solid > thin * 2,
             $"a wider pen puts down more ink ({thin} at width 1 -> {solid} at width 5)");
+        #endif
 
         int dashed = Stroke(5.0, Qt.PenStyle.DashLine, Qt.PenCapStyle.FlatCap,
                             Qt.PenJoinStyle.BevelJoin, ApiPathStrokeRenderer.PathMode.CurveMode);
-        Check(dashed < solid && dashed > 0,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(dashed < solid && dashed > 0,
             $"a dashed pen leaves gaps ({solid} -> {dashed} red pixels)");
+        #endif
 
         int dots = Stroke(5.0, Qt.PenStyle.DotLine, Qt.PenCapStyle.FlatCap,
                           Qt.PenJoinStyle.BevelJoin, ApiPathStrokeRenderer.PathMode.CurveMode);
-        Check(dots < dashed,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(dots < dashed,
             $"dots leave more gaps than dashes ({dashed} -> {dots} red pixels)");
+        #endif
 
         // The "Custom" style goes through QPainterPathStroker::createStroke + fillPath instead.
         int custom = Stroke(5.0, Qt.PenStyle.NoPen, Qt.PenCapStyle.FlatCap,
                             Qt.PenJoinStyle.BevelJoin, ApiPathStrokeRenderer.PathMode.CurveMode);
-        Check(custom > 0 && custom != solid,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(custom > 0 && custom != solid,
             $"the custom dash pattern is stroked through QPainterPathStroker ({custom} red pixels)");
+        #endif
 
         // Cap and join styles really change the stroke. The joins are compared by the pixels they
         // differ in rather than by an ink count: a bevel cuts a corner where a miter extends it,
@@ -919,8 +955,10 @@ public static class PathStroke
                                   Qt.PenJoinStyle.BevelJoin, ApiPathStrokeRenderer.PathMode.CurveMode);
             int squareCap = Stroke(15.0, Qt.PenStyle.SolidLine, Qt.PenCapStyle.SquareCap,
                                    Qt.PenJoinStyle.BevelJoin, ApiPathStrokeRenderer.PathMode.CurveMode);
-            Check(roundCap > flatCap && squareCap > flatCap,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(roundCap > flatCap && squareCap > flatCap,
                 $"round and square caps extend past the flat one ({flatCap}/{squareCap}/{roundCap})");
+            #endif
 
             using var bevel = Shot(15.0, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap,
                                    Qt.PenJoinStyle.BevelJoin, ApiPathStrokeRenderer.PathMode.LineMode);
@@ -931,9 +969,11 @@ public static class PathStroke
             int bevelMiter = Differences(bevel, miter);
             int bevelRound = Differences(bevel, round);
             int miterRound = Differences(miter, round);
-            Check(bevelMiter > 50 && bevelRound > 50 && miterRound > 50,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(bevelMiter > 50 && bevelRound > 50 && miterRound > 50,
                 $"the join style changes the corners of the polyline "
                 + $"(bevel/miter {bevelMiter}, bevel/round {bevelRound}, miter/round {miterRound} differing pixels)");
+            #endif
         }
 
         // CurveMode joins the points with cubics, LineMode with straight lines.
@@ -941,8 +981,10 @@ public static class PathStroke
                             Qt.PenJoinStyle.BevelJoin, ApiPathStrokeRenderer.PathMode.CurveMode);
         int lines = Stroke(5.0, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap,
                            Qt.PenJoinStyle.BevelJoin, ApiPathStrokeRenderer.PathMode.LineMode);
-        Check(lines != curves && lines > 0,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(lines != curves && lines > 0,
             $"LineMode draws straight segments instead of cubics ({curves} -> {lines} red pixels)");
+        #endif
 
         // --- the tiled ArthurFrame background -------------------------------------------------
         {
@@ -955,16 +997,25 @@ public static class PathStroke
             // background colour instead.
             int light = CountInk(image, (r, g, b) => r == 230 && g == 230 && b == 230);
             uint corner = image.Pixel(0, 0);
-            Check(light > 1000,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(light > 1000,
                 $"the ArthurFrame tile is drawn behind the path ({light} tile pixels at (230,230,230))");
-            Check(corner != 0xFFFFFFFFu && corner != 0xFFE6E6E6u,
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(corner != 0xFFFFFFFFu && corner != 0xFFE6E6E6u,
                 $"the rounded corner is clipped out of the tiled background (corner 0x{corner:X8})");
+            #endif
         }
 
         // --- the mouse ------------------------------------------------------------------------
         {
             using var area = new ApiPathStrokeRenderer();
-            area.Show();
+            #if QTSHARP_DEMO_SMOKE
+                area.Show();
+            #else
+                demo.Show(area);
+            #endif
+
             area.Resize(400, 400);
             // Grab rather than repaint: a widget that has just been shown is not mapped yet, and
             // paintEvent is what builds the control points.
@@ -974,159 +1025,235 @@ public static class PathStroke
             var target = new QPointF(area.Points[3].X(), area.Points[3].Y());
             int pressX = (int)target.X();
             int pressY = (int)target.Y();
-            Check(area.ActivePoint == -1, "no control point is active before a press");
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(area.ActivePoint == -1, "no control point is active before a press");
+            #endif
 
             // A managed widget cannot construct a QMouseEvent, so the drag is driven through the
             // runtime's press/move/release probes - Qt delivers a real event each time.
             ApiRuntime.SendMousePress(area.Handle, pressX, pressY);
-            Check(area.ActivePoint == 3,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(area.ActivePoint == 3,
                 $"a press near a control point selects it (ActivePoint {area.ActivePoint})");
-            Check(!area.TimerActive(), "selecting a point stops the animation while dragging");
-            Check(area.MouseDrag, "a desktop press always arms the drag");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(!area.TimerActive(), "selecting a point stops the animation while dragging");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(area.MouseDrag, "a desktop press always arms the drag");
+            #endif
             // The official calls mouseMoveEvent() from mousePressEvent() while m_mouseDrag is
             // still false, but the press position is compared against a default QPoint(0,0) -
             // far more than 25 pixels away - so the point lands on the cursor immediately.
-            Check(Math.Abs(area.Points[3].X() - pressX) < 0.01
+            #if QTSHARP_DEMO_SMOKE
+            // The official calls mouseMoveEvent() from mousePressEvent() while m_mouseDrag is
+            // still false, but the press position is compared against a default QPoint(0,0) -
+            // far more than 25 pixels away - so the point lands on the cursor immediately.
+            demo.Check(Math.Abs(area.Points[3].X() - pressX) < 0.01
                   && Math.Abs(area.Points[3].Y() - pressY) < 0.01,
                 $"the press pulls the control point onto the cursor "
                 + $"({area.Points[3].X():F0},{area.Points[3].Y():F0})");
+            #endif
 
             ApiRuntime.SendMouseMove(area.Handle, pressX + 40, pressY + 20);
-            Check(Math.Abs(area.Points[3].X() - (pressX + 40)) < 0.01
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(Math.Abs(area.Points[3].X() - (pressX + 40)) < 0.01
                   && Math.Abs(area.Points[3].Y() - (pressY + 20)) < 0.01,
                 $"dragging moves the selected point to {area.Points[3].X():F0},{area.Points[3].Y():F0}");
+            #endif
 
             // A second press-and-move more than 25 pixels away is what arms the drag in the
             // official code; moving without a press must not touch the points.
             var untouched = new QPointF(area.Points[5].X(), area.Points[5].Y());
             ApiRuntime.SendMouseRelease(area.Handle, pressX + 40, pressY + 20);
-            Check(area.ActivePoint == -1, "the release clears the active point");
-            Check(area.TimerActive(), "the release restores the animation");
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(area.ActivePoint == -1, "the release clears the active point");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(area.TimerActive(), "the release restores the animation");
+            #endif
             area.SetAnimation(false);
 
             ApiRuntime.SendMouseMove(area.Handle, 5, 5);
-            Check(Math.Abs(area.Points[5].X() - untouched.X()) < 0.01
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(Math.Abs(area.Points[5].X() - untouched.X()) < 0.01
                   && Math.Abs(area.Points[5].Y() - untouched.Y()) < 0.01,
                 "a move without an active point leaves the points alone");
+            #endif
 
         }
 
         // --- the touch half of event() --------------------------------------------------------
         {
             using var area = new ApiPathStrokeRenderer();
-            area.Show();
+            #if QTSHARP_DEMO_SMOKE
+                area.Show();
+            #else
+                demo.Show(area);
+            #endif
+
             area.Resize(400, 400);
             using (var forced = area.Grab()) { }
             area.SetAnimation(true);
 
             double x = area.Points[2].X(), y = area.Points[2].Y();
             var begin = new ApiPathStrokeRenderer.TouchPoint(7, QEventPoint.State.Pressed, x, y);
-            Check(area.HandleTouchPoints(QEvent.Type.TouchBegin, new[] { begin }),
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(area.HandleTouchPoints(QEvent.Type.TouchBegin, new[] { begin }),
                 "a touch press that lands on a control point is handled");
-            Check(area.MappedFingerCount() == 1, "the finger is mapped to a control point");
-            Check(!area.TimerActive(), "the first touch press pauses the animation");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(area.MappedFingerCount() == 1, "the finger is mapped to a control point");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(!area.TimerActive(), "the first touch press pauses the animation");
+            #endif
 
             double x2 = x + 30, y2 = y + 30;
             var moved2 = new ApiPathStrokeRenderer.TouchPoint(7, QEventPoint.State.Updated, x2, y2);
             area.HandleTouchPoints(QEvent.Type.TouchUpdate, new[] { moved2 });
-            Check(Math.Abs(area.Points[2].X() - x2) < 0.01 && Math.Abs(area.Points[2].Y() - y2) < 0.01,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(Math.Abs(area.Points[2].X() - x2) < 0.01 && Math.Abs(area.Points[2].Y() - y2) < 0.01,
                 $"the touch update drags the point to {area.Points[2].X():F0},{area.Points[2].Y():F0}");
+            #endif
 
             // A second finger takes the next free point, not the one already held.
             double x3 = area.Points[6].X(), y3 = area.Points[6].Y();
             var second = new ApiPathStrokeRenderer.TouchPoint(8, QEventPoint.State.Pressed, x3, y3);
             area.HandleTouchPoints(QEvent.Type.TouchUpdate, new[] { second });
-            Check(area.MappedFingerCount() == 2,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(area.MappedFingerCount() == 2,
                 $"a second finger grabs another point ({area.MappedFingerCount()} mapped)");
+            #endif
 
             var released = new ApiPathStrokeRenderer.TouchPoint(7, QEventPoint.State.Released, x2, y2);
             var released2 = new ApiPathStrokeRenderer.TouchPoint(8, QEventPoint.State.Released, x3, y3);
-            Check(area.HandleTouchPoints(QEvent.Type.TouchUpdate, new[] { released }),
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(area.HandleTouchPoints(QEvent.Type.TouchUpdate, new[] { released }),
                 "a touch release is handled while points are still held");
-            Check(area.MappedFingerCount() == 1 && area.TimerActive() == false,
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(area.MappedFingerCount() == 1 && area.TimerActive() == false,
                 $"the animation stays paused while a finger remains ({area.MappedFingerCount()} mapped)");
-            Check(area.HandleTouchPoints(QEvent.Type.TouchEnd, new[] { released2 }),
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(area.HandleTouchPoints(QEvent.Type.TouchEnd, new[] { released2 }),
                 "the touch end is handled while a finger is mapped");
-            Check(area.MappedFingerCount() == 0, "the finger mapping is cleared");
-            Check(area.TimerActive(), "releasing the last finger restores the animation");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(area.MappedFingerCount() == 0, "the finger mapping is cleared");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(area.TimerActive(), "releasing the last finger restores the animation");
+            #endif
             area.SetAnimation(false);
 
             var unrelated = new ApiPathStrokeRenderer.TouchPoint(9, QEventPoint.State.Pressed, 1, 1);
-            Check(!area.HandleTouchPoints(QEvent.Type.TouchUpdate, new[] { unrelated }),
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(!area.HandleTouchPoints(QEvent.Type.TouchUpdate, new[] { unrelated }),
                 "a touch that lands nowhere is ignored (the official e->ignore())");
-            Check(!area.HandleTouchPoints(QEvent.Type.TouchEnd, Array.Empty<ApiPathStrokeRenderer.TouchPoint>()),
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(!area.HandleTouchPoints(QEvent.Type.TouchEnd, Array.Empty<ApiPathStrokeRenderer.TouchPoint>()),
                 "a touch end with nothing mapped is ignored");
+            #endif
         }
 
         // --- the controls ---------------------------------------------------------------------
         {
             using var widget = new ApiPathStrokeWidget();
-            widget.Show();
+            #if QTSHARP_DEMO_SMOKE
+                widget.Show();
+            #else
+                demo.Show(widget);
+            #endif
+
             QCoreApplication.ProcessEvents();
 
             var controls = widget.Controls;
-            Check(controls.CapButtons.Length == 3 && controls.JoinButtons.Length == 4
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(controls.CapButtons.Length == 3 && controls.JoinButtons.Length == 4
                   && controls.StyleButtons.Length == 6 && controls.PathModeButtons.Length == 2,
                 "the four radio-button groups are built "
                 + $"({controls.CapGroup.title()}, {controls.JoinGroup.title()}, "
                 + $"{controls.StyleGroup.title()}, {controls.PathModeGroup.title()})");
-            Check(controls.AnimatedButton.IsChecked(), "the Animate button starts checked");
-            Check(controls.PenWidthSlider.minimum() == 0 && controls.PenWidthSlider.maximum() == 500
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(controls.AnimatedButton.IsChecked(), "the Animate button starts checked");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(controls.PenWidthSlider.minimum() == 0 && controls.PenWidthSlider.maximum() == 500
                   && controls.PenWidthSlider.value() == 50,
                 $"the pen width slider runs 0..500 and starts at 50 "
                 + $"({controls.PenWidthSlider.value()})");
-            Check(controls.CapButtons[0].IsChecked() && controls.JoinButtons[0].IsChecked()
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(controls.CapButtons[0].IsChecked() && controls.JoinButtons[0].IsChecked()
                   && controls.PathModeButtons[0].IsChecked() && controls.StyleButtons[0].IsChecked(),
                 "the official defaults are checked (flat cap, bevel join, curves, solid)");
+            #endif
 
-            Check(widget.Renderer.TimerActive(), "the controls started the animation through the button");
+#if QTSHARP_DEMO_SMOKE
+
+            demo.Check(widget.Renderer.TimerActive(), "the controls started the animation through the button");
+#endif
 
             // The slider drives setPenWidth(int) -> penWidth/10.
             controls.PenWidthSlider.SetValue(120);
-            Check(Math.Abs(widget.Renderer.PenWidth - 12.0) < 0.001,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(Math.Abs(widget.Renderer.PenWidth - 12.0) < 0.001,
                 $"the pen width slider sets penWidth/10 (got {widget.Renderer.PenWidth})");
+            #endif
 
             // A radio button click runs the slot the official connects it to.
             controls.JoinButtons[3].ClickedSignal.Emit(true);
-            Check(widget.Renderer.JoinStyle == Qt.PenJoinStyle.RoundJoin,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(widget.Renderer.JoinStyle == Qt.PenJoinStyle.RoundJoin,
                 $"the Round join radio button reaches the renderer ({widget.Renderer.JoinStyle})");
+            #endif
 
             controls.StyleButtons[5].ClickedSignal.Emit(true);
-            Check(widget.Renderer.PenStyle == Qt.PenStyle.NoPen,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(widget.Renderer.PenStyle == Qt.PenStyle.NoPen,
                 $"the Custom style radio button selects the stroker path ({widget.Renderer.PenStyle})");
+            #endif
 
             controls.PathModeButtons[1].ClickedSignal.Emit(true);
-            Check(widget.Renderer.Mode == ApiPathStrokeRenderer.PathMode.LineMode,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(widget.Renderer.Mode == ApiPathStrokeRenderer.PathMode.LineMode,
                 "the Lines radio button switches the path mode");
+            #endif
 
             controls.CapButtons[2].ClickedSignal.Emit(true);
-            Check(widget.Renderer.CapStyle == Qt.PenCapStyle.RoundCap,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(widget.Renderer.CapStyle == Qt.PenCapStyle.RoundCap,
                 "the Round cap radio button reaches the renderer");
+            #endif
 
             // The Animate button toggles the timer.
             controls.AnimatedButton.SetChecked(false);
-            Check(!widget.Renderer.TimerActive(), "unchecking Animate stops the timer");
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(!widget.Renderer.TimerActive(), "unchecking Animate stops the timer");
+            #endif
             controls.AnimatedButton.SetChecked(true);
-            Check(widget.Renderer.TimerActive(), "checking Animate starts it again");
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(widget.Renderer.TimerActive(), "checking Animate starts it again");
+            #endif
             widget.Renderer.SetAnimation(false);
 
-            Check(controls.PenWidthSlider.width() > 0 && widget.Renderer.width() > 0,
+#if QTSHARP_DEMO_SMOKE
+
+            demo.Check(controls.PenWidthSlider.width() > 0 && widget.Renderer.width() > 0,
                 $"the layout sized the renderer and the controls "
                 + $"({widget.Renderer.width()}x{widget.Renderer.height()} and "
                 + $"{controls.PenWidthSlider.width()}px slider)");
+#endif
         }
 
-        // The window is left on screen for a moment if asked, but nothing needs the event loop.
-        if (int.TryParse(Environment.GetEnvironmentVariable("QTSHARP_DEMO_MS"), out var ms) && ms > 0)
-        {
-            var stop = new QTimer();
-            stop.SetSingleShot(true);
-            stop.TimeoutSignal.Connect(() => app.Quit());
-            stop.Start(ms);
-            app.Exec();
-        }
-
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

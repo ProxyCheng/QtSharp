@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 
 // Port of examples/widgets/widgets/calendarwidget/{window.h,window.cpp} onto the *new* pipeline.
 // Everything (group boxes, grid/hbox layouts, labels, combo boxes, date edits, the calendar and
 // the rich-text formats) comes from model/qtsharp.api.json - nothing here is hand-written glue.
 //
-// Fidelity improvements over the legacy C# port (testbind/CalendarWidget.cs):
+// Fidelity improvements over the legacy C# port:
 //   * QDateTimeEdit::dateChanged / timeChanged / dateTimeChanged are modelled now, so the date
 //     edits drive the calendar through the *real* signal instead of the editingFinished()
 //     substitute the legacy binding had to use (see CreateDatesGroupBox);
@@ -476,17 +476,12 @@ public sealed class ApiCalendarWidgetWindow : QWidget
 [Demo("qtwidgets-calendarwidget")]
 public static class CalendarWidget
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
+        #if QTSHARP_DEMO_SMOKE
         uint RgbOf(QTextCharFormat format) => format.Foreground().Color().Rgb();
+        #endif
         QDate FirstFridayOf(int year, int month)
         {
             var d = new QDate(year, month, 1);
@@ -497,7 +492,11 @@ public static class CalendarWidget
 
         var window = new ApiCalendarWidgetWindow();
         var cal = window.Calendar;
-        window.Show();
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
 
         uint black = new QColor(Qt.GlobalColor.black).Rgb();
         uint red = new QColor(Qt.GlobalColor.red).Rgb();
@@ -506,27 +505,53 @@ public static class CalendarWidget
         int plainWeight = new QTextCharFormat().FontWeight();
 
         // ---------------------------------------------------------------- Preview group
-        Check(window.PreviewGroupBox.Title == "Preview", $"the preview group box is titled \"Preview\" (got '{window.PreviewGroupBox.Title}')");
-        Check(cal.MinimumDate.ToJulianDay() == new QDate(1900, 1, 1).ToJulianDay(),
+#if QTSHARP_DEMO_SMOKE
+
+        // ---------------------------------------------------------------- Preview group
+        demo.Check(window.PreviewGroupBox.Title == "Preview", $"the preview group box is titled \"Preview\" (got '{window.PreviewGroupBox.Title}')");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.MinimumDate.ToJulianDay() == new QDate(1900, 1, 1).ToJulianDay(),
             $"the calendar minimum date is 1900-01-01 (got {cal.MinimumDate.ToString("yyyy-MM-dd")})");
-        Check(cal.MaximumDate.ToJulianDay() == new QDate(3000, 1, 1).ToJulianDay(),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.MaximumDate.ToJulianDay() == new QDate(3000, 1, 1).ToJulianDay(),
             $"the calendar maximum date is 3000-01-01 (got {cal.MaximumDate.ToString("yyyy-MM-dd")})");
-        Check(cal.GridVisible, "the grid starts visible");
-        Check(cal.NavigationBarVisible, "the navigation bar starts visible");
-        Check(window.PreviewLayout.RowMinimumHeight(0) > 0 && window.PreviewLayout.ColumnMinimumWidth(0) > 0,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.GridVisible, "the grid starts visible");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.NavigationBarVisible, "the navigation bar starts visible");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.PreviewLayout.RowMinimumHeight(0) > 0 && window.PreviewLayout.ColumnMinimumWidth(0) > 0,
             $"the preview layout was sized from the calendar's size hint ({cal.SizeHint.Width()}x{cal.SizeHint.Height()})");
-        Check(window.OuterLayout.sizeConstraint() == QLayout.SizeConstraint.SetFixedSize,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.OuterLayout.sizeConstraint() == QLayout.SizeConstraint.SetFixedSize,
             $"the outer layout is fixed-size (got {window.OuterLayout.sizeConstraint()})");
+        #endif
 
         // ---------------------------------------------------------------- Dates group (initial)
-        Check(window.MinimumDateEdit.Date.ToJulianDay() == cal.MinimumDate.ToJulianDay(),
+#if QTSHARP_DEMO_SMOKE
+
+        // ---------------------------------------------------------------- Dates group (initial)
+        demo.Check(window.MinimumDateEdit.Date.ToJulianDay() == cal.MinimumDate.ToJulianDay(),
             "the minimum date edit mirrors the calendar minimum");
-        Check(window.MaximumDateEdit.Date.ToJulianDay() == cal.MaximumDate.ToJulianDay(),
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MaximumDateEdit.Date.ToJulianDay() == cal.MaximumDate.ToJulianDay(),
             "the maximum date edit mirrors the calendar maximum");
-        Check(window.CurrentDateEdit.Date.ToJulianDay() == cal.SelectedDate.ToJulianDay(),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.CurrentDateEdit.Date.ToJulianDay() == cal.SelectedDate.ToJulianDay(),
             "the current date edit mirrors the selection");
-        Check(window.MinimumDateEdit.DisplayFormat == "MMM d yyyy",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MinimumDateEdit.DisplayFormat == "MMM d yyyy",
             $"the date edit display format round-trips (got '{window.MinimumDateEdit.DisplayFormat}')");
+        #endif
 
         // ---------------------------------------------------------------- General Options group
         // The official Locale row: the item data carries the QLocale, and choosing one sets the
@@ -542,171 +567,284 @@ public static class CalendarWidget
                 break;
             }
         }
-        Check(germanIndex >= 0,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(germanIndex >= 0,
             $"the locale combo lists German/Germany among Qt's locales ({window.LocaleCombo.Count})");
+        #endif
         window.LocaleCombo.SetCurrentIndex(germanIndex);
         using var german = new QLocale(QLocale.Language.German, QLocale.Country.Germany);
         using var calendarLocale = cal.Locale;
-        Check(calendarLocale.language() == QLocale.Language.German,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(calendarLocale.language() == QLocale.Language.German,
             $"the locale combo sets the calendar's locale (got {calendarLocale.language()})");
-        Check(window.FirstDayCombo.CurrentIndex == (int)german.FirstDayOfWeek() % 7,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.FirstDayCombo.CurrentIndex == (int)german.FirstDayOfWeek() % 7,
             $"the locale's first day follows (combo {window.FirstDayCombo.CurrentIndex}, expected {(int)german.FirstDayOfWeek() % 7})");
+        #endif
 
-        Check(window.FirstDayCombo.Count == 7, $"the first-day combo has the seven weekdays (got {window.FirstDayCombo.Count})");
-        Check(window.SelectionModeCombo.Count == 2, $"the selection-mode combo has two entries (got {window.SelectionModeCombo.Count})");
-        Check(window.HorizontalHeaderCombo.Count == 3, $"the horizontal-header combo has three entries (got {window.HorizontalHeaderCombo.Count})");
-        Check(window.VerticalHeaderCombo.Count == 2, $"the vertical-header combo has two entries (got {window.VerticalHeaderCombo.Count})");
+#if QTSHARP_DEMO_SMOKE
 
+        demo.Check(window.FirstDayCombo.Count == 7, $"the first-day combo has the seven weekdays (got {window.FirstDayCombo.Count})");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.SelectionModeCombo.Count == 2, $"the selection-mode combo has two entries (got {window.SelectionModeCombo.Count})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.HorizontalHeaderCombo.Count == 3, $"the horizontal-header combo has three entries (got {window.HorizontalHeaderCombo.Count})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.VerticalHeaderCombo.Count == 2, $"the vertical-header combo has two entries (got {window.VerticalHeaderCombo.Count})");
+        #endif
+
+        #if QTSHARP_DEMO_SMOKE
         window.FirstDayCombo.SetCurrentIndex(3);        // Wednesday
-        Check(cal.FirstDayOfWeek == Qt.DayOfWeek.Wednesday,
+        demo.Check(cal.FirstDayOfWeek == Qt.DayOfWeek.Wednesday,
             $"the first-day combo drives firstDayOfWeek (got {cal.FirstDayOfWeek})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
         window.FirstDayCombo.SetCurrentIndex(0);        // Sunday
-        Check(cal.FirstDayOfWeek == Qt.DayOfWeek.Sunday, "the first day of the week round-trips");
+        demo.Check(cal.FirstDayOfWeek == Qt.DayOfWeek.Sunday, "the first day of the week round-trips");
+        #endif
 
         window.SelectionModeCombo.SetCurrentIndex(1);
-        Check(cal.selectionMode() == QCalendarWidget.SelectionMode.NoSelection,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.selectionMode() == QCalendarWidget.SelectionMode.NoSelection,
             $"the selection-mode combo selects NoSelection (got {cal.selectionMode()})");
+        #endif
         window.SelectionModeCombo.SetCurrentIndex(0);
-        Check(cal.selectionMode() == QCalendarWidget.SelectionMode.SingleSelection,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.selectionMode() == QCalendarWidget.SelectionMode.SingleSelection,
             $"the selection-mode combo selects SingleSelection (got {cal.selectionMode()})");
+        #endif
 
         window.GridCheckBox.SetChecked(false);
-        Check(!cal.GridVisible, "unchecking Grid hides the grid");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!cal.GridVisible, "unchecking Grid hides the grid");
+        #endif
         window.GridCheckBox.SetChecked(true);
-        Check(cal.GridVisible, "checking Grid shows the grid again");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.GridVisible, "checking Grid shows the grid again");
+        #endif
 
         window.NavigationCheckBox.SetChecked(false);
-        Check(!cal.NavigationBarVisible, "unchecking Navigation bar hides the bar");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!cal.NavigationBarVisible, "unchecking Navigation bar hides the bar");
+        #endif
         window.NavigationCheckBox.SetChecked(true);
-        Check(cal.NavigationBarVisible, "checking Navigation bar shows the bar again");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.NavigationBarVisible, "checking Navigation bar shows the bar again");
+        #endif
 
         window.HorizontalHeaderCombo.SetCurrentIndex(0);
-        Check(cal.horizontalHeaderFormat() == QCalendarWidget.HorizontalHeaderFormat.SingleLetterDayNames,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.horizontalHeaderFormat() == QCalendarWidget.HorizontalHeaderFormat.SingleLetterDayNames,
             $"horizontal header 0 = single letters (got {cal.horizontalHeaderFormat()})");
+        #endif
         window.HorizontalHeaderCombo.SetCurrentIndex(1);
-        Check(cal.horizontalHeaderFormat() == QCalendarWidget.HorizontalHeaderFormat.ShortDayNames,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.horizontalHeaderFormat() == QCalendarWidget.HorizontalHeaderFormat.ShortDayNames,
             $"horizontal header 1 = short names (got {cal.horizontalHeaderFormat()})");
+        #endif
         window.HorizontalHeaderCombo.SetCurrentIndex(2);
-        Check(cal.horizontalHeaderFormat() == QCalendarWidget.HorizontalHeaderFormat.NoHorizontalHeader,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.horizontalHeaderFormat() == QCalendarWidget.HorizontalHeaderFormat.NoHorizontalHeader,
             $"horizontal header 2 = none (got {cal.horizontalHeaderFormat()})");
+        #endif
 
         window.VerticalHeaderCombo.SetCurrentIndex(0);
-        Check(cal.verticalHeaderFormat() == QCalendarWidget.VerticalHeaderFormat.ISOWeekNumbers,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.verticalHeaderFormat() == QCalendarWidget.VerticalHeaderFormat.ISOWeekNumbers,
             $"vertical header 0 = ISO week numbers (got {cal.verticalHeaderFormat()})");
+        #endif
         window.VerticalHeaderCombo.SetCurrentIndex(1);
-        Check(cal.verticalHeaderFormat() == QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.verticalHeaderFormat() == QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader,
             $"vertical header 1 = none (got {cal.verticalHeaderFormat()})");
+        #endif
 
-        Check(window.FirstDayLabel.Buddy().Handle == window.FirstDayCombo.Handle, "the first-day label's buddy is the combo box");
-        Check(window.HorizontalHeaderLabel.Buddy().Handle == window.HorizontalHeaderCombo.Handle, "the horizontal-header label's buddy is the combo box");
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.FirstDayLabel.Buddy().Handle == window.FirstDayCombo.Handle, "the first-day label's buddy is the combo box");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.HorizontalHeaderLabel.Buddy().Handle == window.HorizontalHeaderCombo.Handle, "the horizontal-header label's buddy is the combo box");
+        #endif
 
         // ---------------------------------------------------------------- Dates group (signals)
         // Real dateChanged drives the calendar selection (the legacy port used editingFinished).
         window.CurrentDateEdit.SetDate(new QDate(2025, 6, 15));
-        Check(cal.SelectedDate.ToJulianDay() == new QDate(2025, 6, 15).ToJulianDay(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.SelectedDate.ToJulianDay() == new QDate(2025, 6, 15).ToJulianDay(),
             $"editing the current date edit moves the selection through dateChanged (got {cal.SelectedDate.ToString("yyyy-MM-dd")})");
+        #endif
 
         // ...and selectionChanged drives the date edit.
         cal.SetSelectedDate(new QDate(2025, 7, 20));
-        Check(window.CurrentDateEdit.Date.ToJulianDay() == new QDate(2025, 7, 20).ToJulianDay(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.CurrentDateEdit.Date.ToJulianDay() == new QDate(2025, 7, 20).ToJulianDay(),
             "selectionChanged moves the current date edit");
-        Check(window.PreviewLabel.text() == "Selected: 2025-07-20",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.PreviewLabel.text() == "Selected: 2025-07-20",
             $"the preview label follows selectionChanged (got '{window.PreviewLabel.text()}')");
+        #endif
 
         // Raising the minimum through the date edit clamps the calendar selection.
         cal.SetSelectedDate(new QDate(2000, 1, 1));
         window.MinimumDateEdit.SetDate(new QDate(2020, 1, 1));
-        Check(cal.MinimumDate.ToJulianDay() == new QDate(2020, 1, 1).ToJulianDay(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.MinimumDate.ToJulianDay() == new QDate(2020, 1, 1).ToJulianDay(),
             "the minimum date edit sets the calendar minimum");
-        Check(cal.SelectedDate.ToJulianDay() >= new QDate(2020, 1, 1).ToJulianDay(),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.SelectedDate.ToJulianDay() >= new QDate(2020, 1, 1).ToJulianDay(),
             $"the calendar clamps the selection to the new minimum (got {cal.SelectedDate.ToString("yyyy-MM-dd")})");
-        Check(window.CurrentDateEdit.Date.ToJulianDay() == cal.SelectedDate.ToJulianDay(),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.CurrentDateEdit.Date.ToJulianDay() == cal.SelectedDate.ToJulianDay(),
             "the current date edit followed the clamp");
+        #endif
 
         window.MaximumDateEdit.SetDate(new QDate(2100, 12, 31));
-        Check(cal.MaximumDate.ToJulianDay() == new QDate(2100, 12, 31).ToJulianDay(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.MaximumDate.ToJulianDay() == new QDate(2100, 12, 31).ToJulianDay(),
             "the maximum date edit sets the calendar maximum");
+        #endif
 
         // Restore the wide range for the remaining checks.
         window.MinimumDateEdit.SetDate(new QDate(1900, 1, 1));
         window.MaximumDateEdit.SetDate(new QDate(3000, 1, 1));
-        Check(cal.MinimumDate.ToJulianDay() == new QDate(1900, 1, 1).ToJulianDay()
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.MinimumDate.ToJulianDay() == new QDate(1900, 1, 1).ToJulianDay()
               && cal.MaximumDate.ToJulianDay() == new QDate(3000, 1, 1).ToJulianDay(),
             "the date range restores to 1900..3000");
+        #endif
 
         // ---------------------------------------------------------------- Text Formats group
-        Check(window.WeekdayColorCombo.CurrentIndex == window.WeekdayColorCombo.FindText("Black"),
+#if QTSHARP_DEMO_SMOKE
+
+        // ---------------------------------------------------------------- Text Formats group
+        demo.Check(window.WeekdayColorCombo.CurrentIndex == window.WeekdayColorCombo.FindText("Black"),
             "the weekday colour defaults to Black");
-        Check(window.WeekendColorCombo.CurrentIndex == window.WeekendColorCombo.FindText("Red"),
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.WeekendColorCombo.CurrentIndex == window.WeekendColorCombo.FindText("Red"),
             "the weekend colour defaults to Red");
-        Check(window.WeekdayColorCombo.Count == 4, $"the colour combo has four entries (got {window.WeekdayColorCombo.Count})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.WeekdayColorCombo.Count == 4, $"the colour combo has four entries (got {window.WeekdayColorCombo.Count})");
+        #endif
 
         // The colour is the combo item's user data, as addItem(text, variant) stores it.
-        Check((int)window.WeekdayColorCombo.ItemData(0, (int)Qt.ItemDataRole.UserRole) == (int)Qt.GlobalColor.red,
+#if QTSHARP_DEMO_SMOKE
+
+        // The colour is the combo item's user data, as addItem(text, variant) stores it.
+        demo.Check((int)window.WeekdayColorCombo.ItemData(0, (int)Qt.ItemDataRole.UserRole) == (int)Qt.GlobalColor.red,
             "combo item 0 carries the Red colour as Qt::UserRole data");
-        Check((int)window.WeekdayColorCombo.ItemData(2, (int)Qt.ItemDataRole.UserRole) == (int)Qt.GlobalColor.black,
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check((int)window.WeekdayColorCombo.ItemData(2, (int)Qt.ItemDataRole.UserRole) == (int)Qt.GlobalColor.black,
             "combo item 2 carries the Black colour as Qt::UserRole data");
+        #endif
 
         // Weekday/weekend formats were applied in the constructor.
-        Check(RgbOf(cal.WeekdayTextFormat(Qt.DayOfWeek.Monday)) == black,
+#if QTSHARP_DEMO_SMOKE
+
+        // Weekday/weekend formats were applied in the constructor.
+        demo.Check(RgbOf(cal.WeekdayTextFormat(Qt.DayOfWeek.Monday)) == black,
             $"Monday uses the weekday colour (got {RgbOf(cal.WeekdayTextFormat(Qt.DayOfWeek.Monday)):X8})");
-        Check(RgbOf(cal.WeekdayTextFormat(Qt.DayOfWeek.Sunday)) == red,
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(RgbOf(cal.WeekdayTextFormat(Qt.DayOfWeek.Sunday)) == red,
             $"Sunday uses the weekend colour (got {RgbOf(cal.WeekdayTextFormat(Qt.DayOfWeek.Sunday)):X8})");
+        #endif
 
         // Changing the colour combo reformats the whole week.
         window.WeekdayColorCombo.SetCurrentIndex(window.WeekdayColorCombo.FindText("Blue"));
-        Check(RgbOf(cal.WeekdayTextFormat(Qt.DayOfWeek.Tuesday)) == blue,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(RgbOf(cal.WeekdayTextFormat(Qt.DayOfWeek.Tuesday)) == blue,
             $"changing the weekday colour reformats Tuesday (got {RgbOf(cal.WeekdayTextFormat(Qt.DayOfWeek.Tuesday)):X8})");
+        #endif
         window.WeekendColorCombo.SetCurrentIndex(window.WeekendColorCombo.FindText("Magenta"));
-        Check(RgbOf(cal.WeekdayTextFormat(Qt.DayOfWeek.Saturday)) == magenta,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(RgbOf(cal.WeekdayTextFormat(Qt.DayOfWeek.Saturday)) == magenta,
             $"changing the weekend colour reformats Saturday (got {RgbOf(cal.WeekdayTextFormat(Qt.DayOfWeek.Saturday)):X8})");
+        #endif
 
         // Header text format.
         window.HeaderTextFormatCombo.SetCurrentIndex(0);
-        Check(cal.HeaderTextFormat().FontWeight() == (int)QFont.Weight.Bold,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.HeaderTextFormat().FontWeight() == (int)QFont.Weight.Bold,
             $"Bold sets the header weight (got {cal.HeaderTextFormat().FontWeight()})");
+        #endif
         window.HeaderTextFormatCombo.SetCurrentIndex(1);
-        Check(cal.HeaderTextFormat().FontItalic() && cal.HeaderTextFormat().FontWeight() != (int)QFont.Weight.Bold,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.HeaderTextFormat().FontItalic() && cal.HeaderTextFormat().FontWeight() != (int)QFont.Weight.Bold,
             "Italic sets the header italic flag and clears the weight");
+        #endif
         window.HeaderTextFormatCombo.SetCurrentIndex(2);
-        Check(!cal.HeaderTextFormat().FontItalic() && cal.HeaderTextFormat().FontWeight() == plainWeight,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!cal.HeaderTextFormat().FontItalic() && cal.HeaderTextFormat().FontWeight() == plainWeight,
             $"Plain clears the header formatting (weight {cal.HeaderTextFormat().FontWeight()} vs the default {plainWeight})");
+        #endif
 
         // First Friday / May 1, on a page where they fall on different days.
         window.WeekdayColorCombo.SetCurrentIndex(window.WeekdayColorCombo.FindText("Black"));
         window.WeekendColorCombo.SetCurrentIndex(window.WeekendColorCombo.FindText("Red"));
         cal.SetCurrentPage(2026, 6);
-        Check(cal.YearShown() == 2026 && cal.MonthShown() == 6,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.YearShown() == 2026 && cal.MonthShown() == 6,
             $"setCurrentPage round-trips (got {cal.YearShown()}-{cal.MonthShown():D2})");
+        #endif
 
         var juneFirstFriday = FirstFridayOf(2026, 6);
-        Check(juneFirstFriday.ToJulianDay() == new QDate(2026, 6, 5).ToJulianDay(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(juneFirstFriday.ToJulianDay() == new QDate(2026, 6, 5).ToJulianDay(),
             $"the first Friday of June 2026 is the 5th (got {juneFirstFriday.ToString("yyyy-MM-dd")})");
-        Check(RgbOf(cal.DateTextFormat(juneFirstFriday)) == black,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(RgbOf(cal.DateTextFormat(juneFirstFriday)) == black,
             $"the first Friday keeps the weekday colour when unchecked (got {RgbOf(cal.DateTextFormat(juneFirstFriday)):X8})");
+        #endif
 
         window.FirstFridayCheckBox.SetChecked(true);
-        Check(RgbOf(cal.DateTextFormat(juneFirstFriday)) == blue,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(RgbOf(cal.DateTextFormat(juneFirstFriday)) == blue,
             $"checking \"First Friday in blue\" turns it blue (got {RgbOf(cal.DateTextFormat(juneFirstFriday)):X8})");
+        #endif
 
         window.MayFirstCheckBox.SetChecked(true);
-        Check(RgbOf(cal.DateTextFormat(new QDate(2026, 5, 1))) == red,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(RgbOf(cal.DateTextFormat(new QDate(2026, 5, 1))) == red,
             "checking \"May 1 in red\" turns May 1 red");
-        Check(RgbOf(cal.DateTextFormat(juneFirstFriday)) == blue,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(RgbOf(cal.DateTextFormat(juneFirstFriday)) == blue,
             "the first Friday stays blue when May 1 is a different day");
+        #endif
 
         // Colliding case: May 1st 2026 is itself a Friday, so red must win.
         cal.SetCurrentPage(2026, 5);
-        Check(FirstFridayOf(2026, 5).ToJulianDay() == new QDate(2026, 5, 1).ToJulianDay(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(FirstFridayOf(2026, 5).ToJulianDay() == new QDate(2026, 5, 1).ToJulianDay(),
             "May 1st 2026 is a Friday, so first-Friday and May-1 collide");
-        Check(RgbOf(cal.DateTextFormat(new QDate(2026, 5, 1))) == red,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(RgbOf(cal.DateTextFormat(new QDate(2026, 5, 1))) == red,
             $"on a colliding day May 1 in red wins over first Friday in blue (got {RgbOf(cal.DateTextFormat(new QDate(2026, 5, 1))):X8})");
+        #endif
 
         window.MayFirstCheckBox.SetChecked(false);
-        Check(cal.DateTextFormat(new QDate(2026, 5, 1)).Foreground().Style() == Qt.BrushStyle.NoBrush,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(cal.DateTextFormat(new QDate(2026, 5, 1)).Foreground().Style() == Qt.BrushStyle.NoBrush,
             "unchecking the red override on a colliding day clears the date format (upstream behaviour)");
+        #endif
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

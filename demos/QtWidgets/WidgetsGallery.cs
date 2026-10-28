@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 
 // The official examples/widgets/gallery (Qt Widget Gallery) ported onto the *new* pipeline.
-// The legacy adapter (testbind/WidgetsGallery.cs) is the structural reference: a QDialog with a
+// The legacy adapter is the structural reference: a QDialog with a
 // Help/Close button box at the bottom, a top row with the style combo box + "Disable widgets"
 // check box + help label, and the Buttons / Item Views / Simple Input Widgets / Text Controls /
 // Progress Bar panels the legacy version assembled.
@@ -319,201 +319,384 @@ public sealed class ApiWidgetsGalleryWindow : QDialog
 [Demo("qtwidgets-gallery")]
 public static class WidgetsGallery
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         var window = new ApiWidgetsGalleryWindow();
-        window.Show();
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
 
         // ---------------------------------------------------------------- style selection
         var styleNames = ApiWidgetsGalleryWindow.StyleNames();
-        Check(window.StyleCombo.count() == styleNames.Length,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.StyleCombo.count() == styleNames.Length,
             $"style combo is QStyleFactory's list (got {window.StyleCombo.count()} item(s))");
+        #endif
         string activeStyle = QApplication.Style()?.ObjectName ?? "";
-        Check(string.Equals(window.StyleCombo.ItemText(0), activeStyle, StringComparison.OrdinalIgnoreCase),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(string.Equals(window.StyleCombo.ItemText(0), activeStyle, StringComparison.OrdinalIgnoreCase),
             $"the active style is first (got '{window.StyleCombo.ItemText(0)}', active '{activeStyle}')");
+        #endif
         int fusionIndex = window.StyleCombo.FindText("Fusion");
-        Check(fusionIndex >= 0, "style combo lists Fusion");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(fusionIndex >= 0, "style combo lists Fusion");
+        #endif
 
         // Selecting "Fusion" walks the combo -> currentTextChanged -> QStyleFactory::create.
         window.StyleCombo.SetCurrentIndex(fusionIndex);
-        Check(window.StyleCombo.CurrentText == "Fusion",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.StyleCombo.CurrentText == "Fusion",
             $"combo current text (got '{window.StyleCombo.CurrentText}')");
+        #endif
         var style = QApplication.Style();
-        Check(style != null, "QApplication.Style() returns a style");
-        Check(style != null && string.Equals(style.ObjectName, "fusion", StringComparison.OrdinalIgnoreCase),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(style != null, "QApplication.Style() returns a style");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(style != null && string.Equals(style.ObjectName, "fusion", StringComparison.OrdinalIgnoreCase),
             $"the combo switched the application style (got '{style?.ObjectName}')");
+        #endif
 
         // ...and the direct call round-trips too.
         var returned = QApplication.SetStyle("Fusion");
-        Check(returned != null && string.Equals(returned.ObjectName, "fusion", StringComparison.OrdinalIgnoreCase),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(returned != null && string.Equals(returned.ObjectName, "fusion", StringComparison.OrdinalIgnoreCase),
             $"SetStyle returns the applied style (got '{returned?.ObjectName}')");
+        #endif
 
         // ---------------------------------------------------------------- disable check box
-        Check(!window.DisableCheck.IsChecked(), "the disable check box starts unchecked");
-        Check(window.DisableCheck.IsEnabled(), "the disable check box itself stays enabled");
+#if QTSHARP_DEMO_SMOKE
+
+        // ---------------------------------------------------------------- disable check box
+        demo.Check(!window.DisableCheck.IsChecked(), "the disable check box starts unchecked");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.DisableCheck.IsEnabled(), "the disable check box itself stays enabled");
+        #endif
         window.DisableCheck.SetChecked(true);
-        Check(!window.ButtonsGroup.IsEnabled(), "disable disables the Buttons group");
-        Check(!window.SimpleInput.IsEnabled(), "disable disables the Simple Input group");
-        Check(!window.ItemViews.IsEnabled(), "disable disables the Item Views tabs");
-        Check(!window.TextToolBox.IsEnabled(), "disable disables the Text Controls toolbox");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.ButtonsGroup.IsEnabled(), "disable disables the Buttons group");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.SimpleInput.IsEnabled(), "disable disables the Simple Input group");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.ItemViews.IsEnabled(), "disable disables the Item Views tabs");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.TextToolBox.IsEnabled(), "disable disables the Text Controls toolbox");
+        #endif
         window.DisableCheck.SetChecked(false);
-        Check(window.ButtonsGroup.IsEnabled(), "re-enable enables the Buttons group");
-        Check(window.SimpleInput.IsEnabled(), "re-enable enables the Simple Input group");
-        Check(window.ItemViews.IsEnabled(), "re-enable enables the Item Views tabs");
-        Check(window.TextToolBox.IsEnabled(), "re-enable enables the Text Controls toolbox");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ButtonsGroup.IsEnabled(), "re-enable enables the Buttons group");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.SimpleInput.IsEnabled(), "re-enable enables the Simple Input group");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ItemViews.IsEnabled(), "re-enable enables the Item Views tabs");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TextToolBox.IsEnabled(), "re-enable enables the Text Controls toolbox");
+        #endif
 
         // ---------------------------------------------------------------- buttons panel
-        Check(window.ButtonsGroup.Title == "Buttons", "the Buttons group keeps its title");
-        Check(window.DefaultPush.IsDefault(), "the default push button is the default");
-        Check(!window.DefaultPush.IsCheckable(), "the default push button is not checkable");
-        Check(window.TogglePush.IsCheckable() && window.TogglePush.IsChecked(),
+#if QTSHARP_DEMO_SMOKE
+
+        // ---------------------------------------------------------------- buttons panel
+        demo.Check(window.ButtonsGroup.Title == "Buttons", "the Buttons group keeps its title");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.DefaultPush.IsDefault(), "the default push button is the default");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.DefaultPush.IsCheckable(), "the default push button is not checkable");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TogglePush.IsCheckable() && window.TogglePush.IsChecked(),
             "the toggle push button is checkable and checked");
-        Check(window.FlatPush.IsFlat(), "the flat push button is flat");
-        Check(window.ToolButton.Text == "Tool Button",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.FlatPush.IsFlat(), "the flat push button is flat");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ToolButton.Text == "Tool Button",
             $"the tool button text (got '{window.ToolButton.Text}')");
-        Check(window.MenuToolButton.Text == "Menu Button",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MenuToolButton.Text == "Menu Button",
             $"the menu button text (got '{window.MenuToolButton.Text}')");
-        Check(window.MenuToolButton.PopupMode == QToolButton.ToolButtonPopupMode.InstantPopup,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MenuToolButton.PopupMode == QToolButton.ToolButtonPopupMode.InstantPopup,
             "the menu button pops up instantly");
-        Check(window.MenuToolButton.Menu() != null && window.ToolMenu.Actions().Length == 3,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MenuToolButton.Menu() != null && window.ToolMenu.Actions().Length == 3,
             $"the menu button carries a three-entry menu (got {window.ToolMenu.Actions().Length})");
-        Check(window.CommandLink.Text == "Command Link Button",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.CommandLink.Text == "Command Link Button",
             $"the command link button is part of the gallery (got '{window.CommandLink.Text}')");
+        #endif
 
-        Check(window.Radio1.IsChecked() && !window.Radio2.IsChecked() && !window.Radio3.IsChecked(),
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.Radio1.IsChecked() && !window.Radio2.IsChecked() && !window.Radio3.IsChecked(),
             "radio button 1 starts selected");
+#endif
         window.Radio2.SetChecked(true);
-        Check(window.Radio2.IsChecked() && !window.Radio1.IsChecked(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Radio2.IsChecked() && !window.Radio1.IsChecked(),
             "selecting radio button 2 clears radio button 1");
+        #endif
 
-        Check(window.TriState.IsTristate(), "the check box is tri-state");
-        Check(window.TriState.CheckState() == Qt.CheckState.PartiallyChecked,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.TriState.IsTristate(), "the check box is tri-state");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TriState.CheckState() == Qt.CheckState.PartiallyChecked,
             $"the tri-state box starts partially checked (got {window.TriState.CheckState()})");
+        #endif
         window.TriState.SetCheckState(Qt.CheckState.Unchecked);
-        Check(window.TriState.CheckState() == Qt.CheckState.Unchecked,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TriState.CheckState() == Qt.CheckState.Unchecked,
             "tri-state walks to Unchecked");
+        #endif
         window.TriState.SetCheckState(Qt.CheckState.PartiallyChecked);
-        Check(window.TriState.CheckState() == Qt.CheckState.PartiallyChecked,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TriState.CheckState() == Qt.CheckState.PartiallyChecked,
             "tri-state walks to PartiallyChecked");
+        #endif
         window.TriState.SetCheckState(Qt.CheckState.Checked);
-        Check(window.TriState.CheckState() == Qt.CheckState.Checked,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TriState.CheckState() == Qt.CheckState.Checked,
             "tri-state walks to Checked");
+        #endif
 
         // ---------------------------------------------------------------- item views
-        Check(window.ItemViews.count() == 4, $"tab count (got {window.ItemViews.count()})");
-        Check(window.ItemViews.TabText(0) == "&Tree View",
+#if QTSHARP_DEMO_SMOKE
+
+        // ---------------------------------------------------------------- item views
+        demo.Check(window.ItemViews.count() == 4, $"tab count (got {window.ItemViews.count()})");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ItemViews.TabText(0) == "&Tree View",
             $"tab 0 text (got '{window.ItemViews.TabText(0)}')");
-        Check(window.ItemViews.TabText(1) == "T&able",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ItemViews.TabText(1) == "T&able",
             $"tab 1 text (got '{window.ItemViews.TabText(1)}')");
-        Check(window.ItemViews.TabText(2) == "&List",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ItemViews.TabText(2) == "&List",
             $"tab 2 text (got '{window.ItemViews.TabText(2)}')");
-        Check(window.ItemViews.TabText(3) == "&Icon Mode List",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ItemViews.TabText(3) == "&Icon Mode List",
             $"tab 3 text (got '{window.ItemViews.TabText(3)}')");
+        #endif
 
-        Check(window.Tree.topLevelItemCount() == 1,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.Tree.topLevelItemCount() == 1,
             $"tree top level items (got {window.Tree.topLevelItemCount()})");
-        Check(window.TreeRoot.Text(0) == "Root", $"tree root text (got '{window.TreeRoot.Text(0)}')");
-        Check(window.TreeRoot.ChildCount() == 2,
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TreeRoot.Text(0) == "Root", $"tree root text (got '{window.TreeRoot.Text(0)}')");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TreeRoot.ChildCount() == 2,
             $"tree root children (got {window.TreeRoot.ChildCount()})");
-        Check(window.TreeRoot.Child(0).Text(0) == "Child 1",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TreeRoot.Child(0).Text(0) == "Child 1",
             $"first tree child (got '{window.TreeRoot.Child(0).Text(0)}')");
-        Check(window.Tree.columnCount() == 1,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Tree.columnCount() == 1,
             $"tree column count from SetHeaderLabels (got {window.Tree.columnCount()})");
+        #endif
 
-        Check(window.Table.RowCount == 10 && window.Table.ColumnCount == 10,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.Table.RowCount == 10 && window.Table.ColumnCount == 10,
             $"table dimensions (got {window.Table.RowCount}x{window.Table.ColumnCount})");
+#endif
 
-        Check(window.List.count() == 3, $"list view item count (got {window.List.count()})");
-        Check(window.List.Item(1).Text() == "Computer",
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.List.count() == 3, $"list view item count (got {window.List.count()})");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.List.Item(1).Text() == "Computer",
             $"list item text (got '{window.List.Item(1).Text()}')");
-        Check(window.IconList.viewMode() == QListView.ViewMode.IconMode,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.IconList.viewMode() == QListView.ViewMode.IconMode,
             $"icon mode list uses IconMode (got {window.IconList.viewMode()})");
-        Check(window.IconList.count() == 3,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.IconList.count() == 3,
             $"icon mode list item count (got {window.IconList.count()})");
+        #endif
 
         // ---------------------------------------------------------------- simple input
-        Check(window.SimpleInput.IsCheckable() && window.SimpleInput.IsChecked(),
+#if QTSHARP_DEMO_SMOKE
+
+        // ---------------------------------------------------------------- simple input
+        demo.Check(window.SimpleInput.IsCheckable() && window.SimpleInput.IsChecked(),
             "the Simple Input group is checkable and checked");
-        Check(window.PasswordEdit.text() == "s3cRe7",
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.PasswordEdit.text() == "s3cRe7",
             $"password edit text (got '{window.PasswordEdit.text()}')");
-        Check(window.PasswordEdit.echoMode() == QLineEdit.EchoMode.Password,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.PasswordEdit.echoMode() == QLineEdit.EchoMode.Password,
             $"password edit echo mode (got {window.PasswordEdit.echoMode()})");
-        Check(window.PasswordEdit.IsClearButtonEnabled(), "password edit has a clear button");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.PasswordEdit.IsClearButtonEnabled(), "password edit has a clear button");
+        #endif
 
-        Check(window.Spin.value() == 50, $"spin box value (got {window.Spin.value()})");
-        Check(window.Spin.minimum() == 0 && window.Spin.maximum() == 100,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.Spin.value() == 50, $"spin box value (got {window.Spin.value()})");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Spin.minimum() == 0 && window.Spin.maximum() == 100,
             $"spin box range (got {window.Spin.minimum()}..{window.Spin.maximum()})");
+        #endif
 
-        Check(window.DateTimeEdit.displayFormat() == "yyyy-MM-dd HH:mm:ss",
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.DateTimeEdit.displayFormat() == "yyyy-MM-dd HH:mm:ss",
             $"date/time edit format (got '{window.DateTimeEdit.displayFormat()}')");
-        Check(window.DateTimeEdit.dateTime().IsValid(), "date/time edit holds a valid date-time");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.DateTimeEdit.dateTime().IsValid(), "date/time edit holds a valid date-time");
+        #endif
 
-        Check(window.Slider.value() == 40, $"slider value (got {window.Slider.value()})");
-        Check(window.ScrollBar.value() == 60, $"scroll bar value (got {window.ScrollBar.value()})");
-        Check(window.Dial.value() == 30, $"dial value (got {window.Dial.value()})");
-        Check(window.Dial.NotchesVisible, "the dial shows its notches");
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.Slider.value() == 40, $"slider value (got {window.Slider.value()})");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ScrollBar.value() == 60, $"scroll bar value (got {window.ScrollBar.value()})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Dial.value() == 30, $"dial value (got {window.Dial.value()})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Dial.NotchesVisible, "the dial shows its notches");
+        #endif
 
         // ---------------------------------------------------------------- text controls
-        Check(window.TextToolBox.count() == 3, $"toolbox page count (got {window.TextToolBox.count()})");
-        Check(window.TextToolBox.currentIndex() == 0,
+#if QTSHARP_DEMO_SMOKE
+
+        // ---------------------------------------------------------------- text controls
+        demo.Check(window.TextToolBox.count() == 3, $"toolbox page count (got {window.TextToolBox.count()})");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TextToolBox.currentIndex() == 0,
             $"toolbox current index (got {window.TextToolBox.currentIndex()})");
-        Check(window.TextToolBox.ItemText(0) == "Text Edit" && window.TextToolBox.ItemText(1) == "Plain Text Edit"
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TextToolBox.ItemText(0) == "Text Edit" && window.TextToolBox.ItemText(1) == "Plain Text Edit"
               && window.TextToolBox.ItemText(2) == "Text Browser",
             "toolbox page labels");
+        #endif
 
         window.TextToolBox.SetCurrentIndex(1);
-        Check(window.TextToolBox.currentIndex() == 1, "toolbox page selection");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TextToolBox.currentIndex() == 1, "toolbox page selection");
+        #endif
 
-        Check(window.TextEdit.ToHtml().Contains("Twinkle"),
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.TextEdit.ToHtml().Contains("Twinkle"),
             "the text edit keeps the rich text it was built from");
-        Check(window.TextEdit.ToPlainText().Contains("Twinkle"),
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TextEdit.ToPlainText().Contains("Twinkle"),
             "the text edit's plain text round-trips");
-        Check(window.PlainEdit.ToPlainText().Contains("Twinkle"),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.PlainEdit.ToPlainText().Contains("Twinkle"),
             "the plain text edit round-trips");
-        Check(window.Browser.ToPlainText().Contains("System Info"),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Browser.ToPlainText().Contains("System Info"),
             "the text browser renders its HTML");
-        Check(!window.TextEdit.IsReadOnly(), "the text edit starts editable");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.TextEdit.IsReadOnly(), "the text edit starts editable");
+        #endif
         window.PlainEdit.SetReadOnly(true);
-        Check(window.PlainEdit.IsReadOnly(), "the plain text edit can be made read-only");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.PlainEdit.IsReadOnly(), "the plain text edit can be made read-only");
+        #endif
 
         // ---------------------------------------------------------------- progress bar
-        Check(window.Progress.value() == 0 && window.Progress.maximum() == 10000
+#if QTSHARP_DEMO_SMOKE
+
+        // ---------------------------------------------------------------- progress bar
+        demo.Check(window.Progress.value() == 0 && window.Progress.maximum() == 10000
               && window.Progress.minimum() == 0,
             $"progress bar starts at range 0..10000 (got {window.Progress.value()})");
+#endif
         window.StepProgress();
-        Check(window.Progress.value() == 100,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Progress.value() == 100,
             $"stepping the progress animation advances it (got {window.Progress.value()})");
+        #endif
         window.StepProgress();
-        Check(window.Progress.value() == 199,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Progress.value() == 199,
             $"the second step advances again (got {window.Progress.value()})");
+        #endif
 
         // ---------------------------------------------------------------- dialog button box
-        Check(window.ButtonBox.Buttons().Length == 2,
+#if QTSHARP_DEMO_SMOKE
+
+        // ---------------------------------------------------------------- dialog button box
+        demo.Check(window.ButtonBox.Buttons().Length == 2,
             $"button box has Help and Close (got {window.ButtonBox.Buttons().Length})");
-        Check(window.ButtonBox.Button(QDialogButtonBox.StandardButton.Help) != null, "Help button exists");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ButtonBox.Button(QDialogButtonBox.StandardButton.Help) != null, "Help button exists");
+        #endif
         var closeButton = window.ButtonBox.Button(QDialogButtonBox.StandardButton.Close);
-        Check(closeButton != null, "Close button exists");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(closeButton != null, "Close button exists");
+        #endif
         if (closeButton != null)
         {
             closeButton.Click();
-            Check(window.RejectedCount == 1,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(window.RejectedCount == 1,
                 $"clicking Close emitted rejected (got {window.RejectedCount})");
+            #endif
         }
 
         // ---------------------------------------------------------------- it really renders
         window.Grab();
-        Check(window.PaintCount > 0, $"the dialog rendered ({window.PaintCount} paint(s))");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.PaintCount > 0, $"the dialog rendered ({window.PaintCount} paint(s))");
+        #endif
 
+        #if QTSHARP_DEMO_SMOKE
         window.Close();
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

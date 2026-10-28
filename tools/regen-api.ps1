@@ -325,47 +325,24 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-Write-Host "=== [4b] Build and run the official Qt3D examples ==="
-dotnet build "$root/demos.qt3d/QtSharp.Qt3D.Demos.csproj" -c Release --nologo *> "$root/out/qt3d_demosbuild.log"
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Qt3D demos build failed"
-    Select-String -Path "$root/out/qt3d_demosbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }
-    exit 1
-}
-& "$root/tools/run-window-tests.ps1" -Exe "$root/demos.qt3d/bin/Release/net10.0/QtSharp.Qt3D.Demos$exeSuffix" -Label "qt3d-demos" -Jobs $Jobs
+Write-Host "=== [4b] Build and run the demo executables (Smoke) ==="
+# One executable per module; tools/run-demos.ps1 builds and runs the same table CI and the release
+# build use. Release selects the Smoke product, whose host picks the offscreen platform.
+& "$root/tools/run-demos.ps1" -Configuration Release -Jobs $Jobs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-# Qt's official Qt Charts examples: the Charts module's conformance suite, built against the
-# separate Charts assembly exactly like a consumer would use it.
-Write-Host "=== [4c] Build and run the official Qt Charts examples ==="
-dotnet build "$root/demos.charts/QtSharp.Charts.Demos.csproj" -c Release --nologo *> "$root/out/charts_demosbuild.log"
+Write-Host "=== [5] Build and run the binding tests ==="
+# The tests under test-* are the parts of the API Qt's examples do not exercise. testapp is the
+# one executable that hosts them - it references the test library, so this build produces both.
+dotnet build "$root/tests/testapp/testapp.csproj" -c Release --nologo *> "$root/out/api_testbuild.log"
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Charts demos build failed"
-    Select-String -Path "$root/out/charts_demosbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }
+    Write-Host "binding test build failed"
+    Select-String -Path "$root/out/api_testbuild.log" -Pattern "error CS" |
+        Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }
     exit 1
 }
-& "$root/tools/run-window-tests.ps1" -Exe "$root/demos.charts/bin/Release/net10.0/QtSharp.Charts.Demos$exeSuffix" -Label "charts-demos" -Jobs $Jobs
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-Write-Host "=== [5] Build the demos and binding tests, then run them ==="
-# The official demos reference the ten base module assemblies (not a source-compiled binding); the
-# binding tests cover the parts of the API that Qt's examples do not. testbind references both
-# demos/QtSharp.Demos.csproj and tests/QtSharp.BindingTests.csproj, so this one build produces all
-# three assemblies - a separate demos build would only repeat the first half.
-dotnet build "$root/testbind/testbind.csproj" -c Release --nologo *> "$root/out/api_testbuild.log"
-if ($LASTEXITCODE -ne 0) { Write-Host "testbind build failed"; Select-String -Path "$root/out/api_testbuild.log" -Pattern "error CS" | Select-Object -First 8 | ForEach-Object { Write-Host $_.Line.Trim() }; exit 1 }
-
-# What is covered, in the order the libraries list it: the official Qt examples
-# (qtgui-*, qtwidgets-*) and the binding tests under test-* (core, events, exceptions,
-# meta-object, ownership, value types, network, document formats, managed models, graphics view).
-# Each one drives the generated API, checks what it sees and ends in [SELFTEST OK].
-#
-# The list comes from the two catalogs (DemoCatalog.Names and BindingTests.Names), so a new example
-# is covered by the gate as soon as it is registered. The windows are independent processes, so
-# tools/run-window-tests.ps1 runs several at a time; each result line names the window, and a
-# failure prints that window's own output.
-& "$root/tools/run-window-tests.ps1" -Exe "$root/testbind/bin/Release/net10.0/testapp$exeSuffix" `
-    -Label "demos" -Jobs $Jobs
+& "$root/tools/run-window-tests.ps1" -Exe "$root/tests/testapp/bin/Release/net10.0/testapp$exeSuffix" `
+    -Label "binding tests" -Jobs $Jobs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 exit 0

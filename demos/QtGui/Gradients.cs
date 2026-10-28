@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 // Port of examples/widgets/painting/gradients on the new pipeline.
 //
@@ -136,18 +136,15 @@ public sealed class ApiGradientWindow : QWidget
 [Demo("qtgui-gradients")]
 public static class Gradients
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         using var widget = new ApiGradientWidget();
-        widget.Show();
+        #if QTSHARP_DEMO_SMOKE
+            widget.Show();
+        #else
+            demo.Show(widget);
+        #endif
 
         // Logical (x,y) -> device pixel, since grab() renders at the device pixel ratio.
         uint Px(QImage image, int x, int y)
@@ -160,32 +157,46 @@ public static class Gradients
         }
 
         static (int R, int G, int B) Rgb(uint p) => ((int)((p >> 16) & 0xFF), (int)((p >> 8) & 0xFF), (int)(p & 0xFF));
+        #if QTSHARP_DEMO_SMOKE
         static bool Near((int R, int G, int B) c, int r, int g, int b, int tolerance = 60)
             => Math.Abs(c.R - r) <= tolerance && Math.Abs(c.G - g) <= tolerance && Math.Abs(c.B - b) <= tolerance;
+        #endif
 
         // The gradient objects themselves: QGradient::type() is right, and the accessors
         // round-trip what the constructors were given.
-        Check(widget.Linear.type() == QGradient.Type.LinearGradient
+#if QTSHARP_DEMO_SMOKE
+
+        // The gradient objects themselves: QGradient::type() is right, and the accessors
+        // round-trip what the constructors were given.
+        demo.Check(widget.Linear.type() == QGradient.Type.LinearGradient
               && widget.Radial.type() == QGradient.Type.RadialGradient
               && widget.Conical.type() == QGradient.Type.ConicalGradient,
             $"the three gradients report their type "
             + $"({widget.Linear.type()}, {widget.Radial.type()}, {widget.Conical.type()})");
+#endif
 
         var start = widget.Linear.Start();
         var stop = widget.Linear.FinalStop();
-            Check(Math.Abs(start.X() - 0.0) < 1e-6 && Math.Abs(start.Y() - 0.0) < 1e-6
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(Math.Abs(start.X() - 0.0) < 1e-6 && Math.Abs(start.Y() - 0.0) < 1e-6
                   && Math.Abs(stop.X() - 1.0) < 1e-6 && Math.Abs(stop.Y() - 1.0) < 1e-6,
                 $"QLinearGradient::start()/finalStop() round-trip "
                 + $"(({start.X()},{start.Y()}) -> ({stop.X()},{stop.Y()}))");
+            #endif
 
         var center = widget.Radial.Center();
-            Check(Math.Abs(center.X() - 0.5) < 1e-6 && Math.Abs(center.Y() - 0.5) < 1e-6
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(Math.Abs(center.X() - 0.5) < 1e-6 && Math.Abs(center.Y() - 0.5) < 1e-6
                   && Math.Abs(widget.Radial.Radius() - 0.25) < 1e-6,
                 $"QRadialGradient::center()/radius() round-trip "
                 + $"(({center.X()},{center.Y()}), r={widget.Radial.Radius()})");
+            #endif
 
-        Check(Math.Abs(widget.Conical.Angle() - 0.0) < 1e-6,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(Math.Abs(widget.Conical.Angle() - 0.0) < 1e-6,
             $"QConicalGradient::angle() round-trip (got {widget.Conical.Angle()})");
+#endif
 
         // A focal point that is not the centre really reaches the object.
         using (var focal = new QRadialGradient(0.5, 0.5, 0.5, 0.25, 0.25))
@@ -193,10 +204,12 @@ public static class Gradients
             // A QPointF is a struct now, so the point comes back by value and owns nothing.
             var focalCenter = focal.Center();
             var focalPoint = focal.FocalPoint();
-            Check(Math.Abs(focalPoint.X() - 0.25) < 1e-6 && Math.Abs(focalPoint.Y() - 0.25) < 1e-6
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(Math.Abs(focalPoint.X() - 0.25) < 1e-6 && Math.Abs(focalPoint.Y() - 0.25) < 1e-6
                   && focalPoint.X() != focalCenter.X(),
                 $"a QRadialGradient with a focal point keeps it "
                 + $"(centre {focalCenter.X()},{focalCenter.Y()} vs focal {focalPoint.X()},{focalPoint.Y()})");
+            #endif
         }
 
         // The linear gradient runs along the diagonal: red at the top-left, blue at the bottom-right.
@@ -206,12 +219,18 @@ public static class Gradients
             var topLeft = Rgb(Px(image, 2, 2));
             var middle = Rgb(Px(image, 100, 100));
             var bottomRight = Rgb(Px(image, 197, 197));
-            Check(topLeft.R > 200 && topLeft.B < 80,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(topLeft.R > 200 && topLeft.B < 80,
                 $"the linear gradient starts red (got {topLeft})");
-            Check(bottomRight.B > 200 && bottomRight.R < 80,
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(bottomRight.B > 200 && bottomRight.R < 80,
                 $"the linear gradient ends blue (got {bottomRight})");
-            Check(middle.G > 150 && middle.R < 120 && middle.B < 120,
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(middle.G > 150 && middle.R < 120 && middle.B < 120,
                 $"the mid stop is green (got {middle})");
+            #endif
         }
 
         // The radial gradient: yellow where the centre is, and - with PadSpread, the default - the
@@ -224,16 +243,22 @@ public static class Gradients
             padCenter = Rgb(Px(image, 100, 100));
             padCorner = Rgb(Px(image, 2, 2));
         }
-        Check(Near(padCenter, 255, 255, 0), $"the radial gradient is yellow at its centre (got {padCenter})");
-        Check(Near(padCorner, 0, 0, 255), $"PadSpread clamps to the rim colour outside the radius (got {padCorner})");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(Near(padCenter, 255, 255, 0), $"the radial gradient is yellow at its centre (got {padCenter})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(Near(padCorner, 0, 0, 255), $"PadSpread clamps to the rim colour outside the radius (got {padCorner})");
+        #endif
 
         // RepeatSpread makes the ramp start over, so the corner is no longer the rim colour.
         widget.Radial.SetSpread(QGradient.Spread.RepeatSpread);
         (int R, int G, int B) repeatCorner;
         using (var image = widget.RenderToImage())
             repeatCorner = Rgb(Px(image, 2, 2));
-        Check(repeatCorner != padCorner,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(repeatCorner != padCorner,
             $"RepeatSpread changes what is painted outside the radius ({padCorner} -> {repeatCorner})");
+        #endif
 
         // ReflectSpread is a third mode; rather than betting on one sample point (the corner can
         // coincide under reflection) the whole image is compared against the repeating one.
@@ -247,8 +272,10 @@ public static class Gradients
                 for (int x = 0; x < repeatImage.Width(); x++)
                     if (repeatImage.Pixel(x, y) != reflectImage.Pixel(x, y))
                         different++;
-            Check(different > 0,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(different > 0,
                 $"ReflectSpread renders differently from RepeatSpread ({different} pixels differ)");
+            #endif
         }
         widget.Radial.SetSpread(QGradient.Spread.PadSpread);
 
@@ -258,10 +285,14 @@ public static class Gradients
         {
             var right = Rgb(Px(image, 190, 100));
             var left = Rgb(Px(image, 10, 100));
-            Check(right.R > 200 && right.B < 80,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(right.R > 200 && right.B < 80,
                 $"the conical gradient is red on its 0-degree ray (got {right})");
-            Check(left.B > 200 && left.R < 80,
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(left.B > 200 && left.R < 80,
                 $"the conical gradient is blue on its 180-degree ray (got {left})");
+            #endif
         }
 
         // Rotating the conical gradient moves the red ray.
@@ -270,8 +301,10 @@ public static class Gradients
         {
             var right = Rgb(Px(image, 190, 100));
             var left = Rgb(Px(image, 10, 100));
-            Check(right.B > 200 && left.R > 200,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(right.B > 200 && left.R > 200,
                 $"QConicalGradient::setAngle moves the ramp (right {right}, left {left})");
+            #endif
         }
         widget.Conical.SetAngle(0.0);
 
@@ -283,29 +316,44 @@ public static class Gradients
             var b = Rgb(Px(image, 190, 10));
             var c = Rgb(Px(image, 10, 190));
             int distinct = (a != b ? 1 : 0) + (b != c ? 1 : 0) + (a != c ? 1 : 0);
-            Check(distinct >= 2,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(distinct >= 2,
                 $"QGradient::Preset paints a multi-colour gradient ({a}, {b}, {c})");
+            #endif
         }
 
         // The window and its combo box: index -> mode -> repaint, the official wiring.
         using var window = new ApiGradientWindow();
-        window.Show();
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
+
         // No event loop here, so let Qt run the layout out before painting the child.
         QCoreApplication.ProcessEvents();
 
-        Check(window.ModeComboBox.count() == 4,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.ModeComboBox.count() == 4,
             $"the mode combo box is populated (got {window.ModeComboBox.count()})");
+#endif
         window.GradientWidget.Repaint();
         int paintsBefore = window.GradientWidget.PaintCount;
         window.ModeComboBox.SetCurrentIndex((int)ApiGradientWidget.GradientMode.Conical);
         window.GradientWidget.Repaint();
-        Check(window.GradientWidget.Mode == ApiGradientWidget.GradientMode.Conical
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.GradientWidget.Mode == ApiGradientWidget.GradientMode.Conical
               && window.GradientWidget.PaintCount > paintsBefore,
             $"the combo box switches the gradient and repaints "
             + $"(mode {window.GradientWidget.Mode}, paints {paintsBefore} -> {window.GradientWidget.PaintCount}, "
             + $"area {window.GradientWidget.width()}x{window.GradientWidget.height()})");
+        #endif
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

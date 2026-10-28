@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -11,15 +11,8 @@ using System.Threading;
 [Demo("qtmultimedia-player")]
 public static class Player
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         string path = Path.Combine(Path.GetTempPath(),
             "qtsharp-player-" + Guid.NewGuid().ToString("N").Substring(0, 8) + ".wav");
@@ -35,50 +28,84 @@ public static class Player
                 player.mediaStatus() == QMediaPlayer.MediaStatus.LoadedMedia ||
                 player.mediaStatus() == QMediaPlayer.MediaStatus.BufferedMedia ||
                 player.mediaStatus() == QMediaPlayer.MediaStatus.InvalidMedia, 8000);
-            Check(settled, "QMediaPlayer reaches a settled media status");
-            Check(player.mediaStatus() == QMediaPlayer.MediaStatus.LoadedMedia,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(settled, "QMediaPlayer reaches a settled media status");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(player.mediaStatus() == QMediaPlayer.MediaStatus.LoadedMedia,
                 $"the WAV file loads (status {player.mediaStatus()})");
-            Check(player.error() == QMediaPlayer.Error.NoError,
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(player.error() == QMediaPlayer.Error.NoError,
                 $"loading reports no error ({player.error()})");
-            Check(Math.Abs(player.duration() - 1000) < 100,
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(Math.Abs(player.duration() - 1000) < 100,
                 $"the duration is the file's one second ({player.duration()} ms)");
-            Check(player.HasAudio, "the player reports an audio track");
-            Check(player.playbackState() == QMediaPlayer.PlaybackState.StoppedState,
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(player.HasAudio, "the player reports an audio track");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(player.playbackState() == QMediaPlayer.PlaybackState.StoppedState,
                 "a freshly loaded player is stopped");
+            #endif
 
             // QAudioFormat has no declared constructor in Qt 6.12 (it is implicitly default
             // constructible), so the binding cannot offer `new QAudioFormat()` yet; the supported
             // route is the device's preferred format, which is what applications use anyway.
             var mediaFormat = new QMediaFormat(QMediaFormat.FileFormat.Wave);
-            Check(mediaFormat.fileFormat() == QMediaFormat.FileFormat.Wave,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(mediaFormat.fileFormat() == QMediaFormat.FileFormat.Wave,
                 "QMediaFormat keeps its file format");
+            #endif
 
-            Check(QMediaDevices.audioOutputs() != null,
+#if QTSHARP_DEMO_SMOKE
+
+            demo.Check(QMediaDevices.audioOutputs() != null,
                 "QMediaDevices enumerates the audio outputs");
+#endif
             using var defaultOutput = QMediaDevices.defaultAudioOutput();
-            Check(defaultOutput != null,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(defaultOutput != null,
                 $"a default audio output object is available (null device: {defaultOutput.IsNull()})");
+            #endif
             if (defaultOutput != null && !defaultOutput.IsNull())
             {
                 var preferred = defaultOutput.PreferredFormat();
-                Check(preferred.SampleRate() > 0,
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(preferred.SampleRate() > 0,
                     $"the preferred format reports a sample rate ({preferred.SampleRate()})");
+                #endif
             }
 
             using var video = new QVideoWidget();
+            #if QTSHARP_DEMO_SMOKE
             using (var sink = video.VideoSink())
-                Check(sink != null, "QVideoWidget exposes its QVideoSink");
+                demo.Check(sink != null, "QVideoWidget exposes its QVideoSink");
+            #endif
             video.SetAspectRatioMode(Qt.AspectRatioMode.KeepAspectRatio);
-            Check(video.AspectRatioMode == Qt.AspectRatioMode.KeepAspectRatio,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(video.AspectRatioMode == Qt.AspectRatioMode.KeepAspectRatio,
                 "QVideoWidget keeps the aspect-ratio mode");
+            #else
+            // The player is a headless port: the generated file has no video track and there are
+            // no controls, so View reports what the backend made of it instead of opening a window.
+            Console.WriteLine($"[player] {Path.GetFileName(path)}: {player.mediaStatus()}, "
+                + $"{player.duration()} ms, {player.error()}, default audio output present: "
+                + (!defaultOutput.IsNull()));
+            #endif
         }
         finally
         {
             try { File.Delete(path); } catch { /* temp files are harmless */ }
         }
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[FAIL] {failures} check(s) failed");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 
     static bool PumpUntil(Func<bool> condition, int timeoutMs)

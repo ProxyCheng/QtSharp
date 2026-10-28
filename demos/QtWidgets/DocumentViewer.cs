@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -626,15 +626,8 @@ public sealed class ApiDocumentViewerWindow : QMainWindow
 [Demo("qtwidgets-documentviewer")]
 public static class DocumentViewer
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         string tempDir = Path.Combine(Path.GetTempPath(), "qtsharp-docviewer-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempDir);
@@ -642,112 +635,222 @@ public static class DocumentViewer
 
         var window = new ApiDocumentViewerWindow(settingsFile);
 
+#if QTSHARP_DEMO_VIEW
+        // The window as the user sees it, with the welcome text. The scenario below drives it
+        // through files, scroll positions and the settings round-trip, which is the automated half.
+        demo.Show(window);
+        return 0;
+#else
+
         // ---------------------------------------------------------------- the main window skeleton
-        Check(window.WindowTitle == "Document Viewer Demo",
+#if QTSHARP_DEMO_SMOKE
+
+        // ---------------------------------------------------------------- the main window skeleton
+        demo.Check(window.WindowTitle == "Document Viewer Demo",
             $"the window title is the demo's (got '{window.WindowTitle}')");
-        Check(window.size().Width() == 983 && window.size().Height() == 602,
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.size().Width() == 983 && window.size().Height() == 602,
             $"the window starts at 983x602 (got {window.size().Width()}x{window.size().Height()})");
-        Check(window.CentralWidget() != null, "the central widget is installed");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.CentralWidget() != null, "the central widget is installed");
+        #endif
 
-        Check(window.MenuBar().Actions().Length == 3, $"the menu bar has three menus (got {window.MenuBar().Actions().Length})");
-        Check(window.FileMenu.title() == "&File", $"File menu title (got '{window.FileMenu.title()}')");
-        Check(window.EditMenu.title() == "&Edit", $"Edit menu title (got '{window.EditMenu.title()}')");
-        Check(window.HelpMenu.title() == "Help", $"Help menu title (got '{window.HelpMenu.title()}')");
-        Check(window.RecentMenu.title() == "&Recently opened...", $"Recently opened submenu title (got '{window.RecentMenu.title()}')");
+#if QTSHARP_DEMO_SMOKE
 
-        Check(window.FileMenu.Actions().Length == 4,
+        demo.Check(window.MenuBar().Actions().Length == 3, $"the menu bar has three menus (got {window.MenuBar().Actions().Length})");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.FileMenu.title() == "&File", $"File menu title (got '{window.FileMenu.title()}')");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.EditMenu.title() == "&Edit", $"Edit menu title (got '{window.EditMenu.title()}')");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.HelpMenu.title() == "Help", $"Help menu title (got '{window.HelpMenu.title()}')");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.RecentMenu.title() == "&Recently opened...", $"Recently opened submenu title (got '{window.RecentMenu.title()}')");
+        #endif
+
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.FileMenu.Actions().Length == 4,
             $"File holds Open / Recently opened / Print / Exit (got {window.FileMenu.Actions().Length})");
-        Check(window.EditMenu.Actions().Length == 3, $"Edit holds Cut / Copy / Paste (got {window.EditMenu.Actions().Length})");
-        Check(window.HelpMenu.Actions().Length == 2, $"Help holds About / About Qt (got {window.HelpMenu.Actions().Length})");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.EditMenu.Actions().Length == 3, $"Edit holds Cut / Copy / Paste (got {window.EditMenu.Actions().Length})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.HelpMenu.Actions().Length == 2, $"Help holds About / About Qt (got {window.HelpMenu.Actions().Length})");
+        #endif
 
-        Check(window.OpenAction.text() == "&Open" && window.OpenAction.Shortcut.ToString() == "Ctrl+O",
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.OpenAction.text() == "&Open" && window.OpenAction.Shortcut.ToString() == "Ctrl+O",
             $"Open action text + shortcut (got '{window.OpenAction.text()}' / '{window.OpenAction.Shortcut.ToString()}')");
-        Check(window.PrintAction.text() == "&Print" && window.PrintAction.Shortcut.ToString() == "Ctrl+P"
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.PrintAction.text() == "&Print" && window.PrintAction.Shortcut.ToString() == "Ctrl+P"
               && !window.PrintAction.IsEnabled(),
             $"Print action is present but disabled (enabled={window.PrintAction.IsEnabled()})");
-        Check(window.ExitAction.text() == "E&xit" && window.ExitAction.Shortcut.ToString() == "Ctrl+Q",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ExitAction.text() == "E&xit" && window.ExitAction.Shortcut.ToString() == "Ctrl+Q",
             $"Exit action text + shortcut (got '{window.ExitAction.Shortcut.ToString()}')");
-        Check(window.BackAction.text() == "Back" && window.BackAction.Shortcut.ToString() == "Left",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.BackAction.text() == "Back" && window.BackAction.Shortcut.ToString() == "Left",
             $"Back action shortcut (got '{window.BackAction.Shortcut.ToString()}')");
-        Check(window.ForwardAction.text() == "Forward" && window.ForwardAction.Shortcut.ToString() == "Right",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ForwardAction.text() == "Forward" && window.ForwardAction.Shortcut.ToString() == "Right",
             $"Forward action shortcut (got '{window.ForwardAction.Shortcut.ToString()}')");
-        Check(window.AboutAction.text() == "About Document Viewer" && window.AboutAction.Shortcut.ToString() == "Ctrl+H",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.AboutAction.text() == "About Document Viewer" && window.AboutAction.Shortcut.ToString() == "Ctrl+H",
             $"About action (got '{window.AboutAction.text()}')");
-        Check(window.AboutQtAction.text() == "About Qt" && window.AboutQtAction.Shortcut.ToString() == "Ctrl+I",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.AboutQtAction.text() == "About Qt" && window.AboutQtAction.Shortcut.ToString() == "Ctrl+I",
             $"About Qt action (got '{window.AboutQtAction.text()}')");
-        Check(window.CutAction.text() == "Cu&t" && window.CutAction.Shortcut.ToString() == "Ctrl+X"
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.CutAction.text() == "Cu&t" && window.CutAction.Shortcut.ToString() == "Ctrl+X"
               && window.CopyAction.text() == "&Copy" && window.CopyAction.Shortcut.ToString() == "Ctrl+C"
               && window.PasteAction.text() == "&Paste" && window.PasteAction.Shortcut.ToString() == "Ctrl+V",
             "Cut / Copy / Paste texts and shortcuts");
+        #endif
 
         var toolActions = window.ToolBar.Actions();
-        Check(window.ToolBar.windowTitle() == "ToolBar", $"the tool bar is named (got '{window.ToolBar.windowTitle()}')");
-        Check(toolActions.Length == 5, $"the tool bar holds Open/Print/separator/Back/Forward (got {toolActions.Length})");
-        Check(toolActions[0].text() == "&Open" && toolActions[1].text() == "&Print" && toolActions[2].IsSeparator()
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ToolBar.windowTitle() == "ToolBar", $"the tool bar is named (got '{window.ToolBar.windowTitle()}')");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(toolActions.Length == 5, $"the tool bar holds Open/Print/separator/Back/Forward (got {toolActions.Length})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(toolActions[0].text() == "&Open" && toolActions[1].text() == "&Print" && toolActions[2].IsSeparator()
               && toolActions[3].text() == "Back" && toolActions[4].text() == "Forward",
             "the tool bar action order and the separator");
+        #endif
 
-        Check(window.StatusBar().CurrentMessage() == "Ready",
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.StatusBar().CurrentMessage() == "Ready",
             $"the status bar shows Ready (got '{window.StatusBar().CurrentMessage()}')");
+#endif
 
         // ---------------------------------------------------------------- splitter / tabs / scroll
-        Check(window.Splitter.orientation() == Qt.Orientation.Horizontal, "the splitter is horizontal");
-        Check(window.Splitter.Count() == 2, $"the splitter holds two panes (got {window.Splitter.Count()})");
-        Check(window.Splitter.Widget(0) is QTabWidget && window.Splitter.Widget(1) is QScrollArea,
+#if QTSHARP_DEMO_SMOKE
+
+        // ---------------------------------------------------------------- splitter / tabs / scroll
+        demo.Check(window.Splitter.orientation() == Qt.Orientation.Horizontal, "the splitter is horizontal");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Splitter.Count() == 2, $"the splitter holds two panes (got {window.Splitter.Count()})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Splitter.Widget(0) is QTabWidget && window.Splitter.Widget(1) is QScrollArea,
             "the splitter's west pane is the tab widget and its east pane the scroll area");
-        Check(window.TabWidget.count() == 2 && window.TabWidget.TabText(0) == "Pages"
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TabWidget.count() == 2 && window.TabWidget.TabText(0) == "Pages"
               && window.TabWidget.TabText(1) == "Bookmarks",
             $"the tab widget shows Pages and Bookmarks (got {window.TabWidget.count()})");
-        Check(window.ScrollArea.WidgetResizable && window.ScrollArea.widgetResizable(),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ScrollArea.WidgetResizable && window.ScrollArea.widgetResizable(),
             "the scroll area is widget-resizable");
-        Check(window.ScrollArea.Widget() is QPlainTextEdit,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ScrollArea.Widget() is QPlainTextEdit,
             "the initial viewer in the scroll area is the text viewer");
-        Check(window.TextViewer != null && window.TextViewer.ToPlainText().Contains("Open a text"),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TextViewer != null && window.TextViewer.ToPlainText().Contains("Open a text"),
             "the text viewer holds the welcome text");
+        #endif
 
         // ---------------------------------------------------------------- QSettings basics
         using (var settings = new QSettings(settingsFile, QSettings.Format.IniFormat))
         {
-            Check(settings.FileName().ToLowerInvariant().EndsWith("docviewer.ini"),
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(settings.FileName().ToLowerInvariant().EndsWith("docviewer.ini"),
                 $"an ini-file QSettings targets the temporary file (got '{settings.FileName()}')");
-            Check(settings.format() == QSettings.Format.IniFormat, "the settings object reports the ini format");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(settings.format() == QSettings.Format.IniFormat, "the settings object reports the ini format");
+            #endif
         }
 
         using (var scoped = new QSettings(QSettings.Scope.UserScope, ApiDocumentViewerWindow.OrganizationName,
                                           ApiDocumentViewerWindow.ApplicationName))
         {
-            Check(scoped.OrganizationName() == ApiDocumentViewerWindow.OrganizationName
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(scoped.OrganizationName() == ApiDocumentViewerWindow.OrganizationName
                   && scoped.ApplicationName() == ApiDocumentViewerWindow.ApplicationName
                   && scoped.scope() == QSettings.Scope.UserScope,
                 "the user-scope organization/application constructor works");
+            #endif
         }
 
-        Check(window.CurrentDirectory == Environment.CurrentDirectory,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.CurrentDirectory == Environment.CurrentDirectory,
             "a fresh ini leaves the working directory alone");
-        Check(window.Recent.Files.Count == 0, "no recent files on a fresh install");
-        Check(!window.RecentMenu.Enabled, "the Recently opened submenu is disabled while empty");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Recent.Files.Count == 0, "no recent files on a fresh install");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.RecentMenu.Enabled, "the Recently opened submenu is disabled while empty");
+        #endif
 
         // ---------------------------------------------------------------- open a text document
         string textFile = Path.Combine(tempDir, "sample.txt");
         File.WriteAllText(textFile, "hello document viewer");
-        Check(window.OpenFile(textFile), "opening a temporary text file succeeds");
-        Check(window.TextViewer != null && window.TextViewer.ToPlainText() == "hello document viewer",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.OpenFile(textFile), "opening a temporary text file succeeds");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TextViewer != null && window.TextViewer.ToPlainText() == "hello document viewer",
             "the text viewer shows the file's contents");
-        Check(window.ScrollArea.Widget() is QPlainTextEdit, "the scroll area was switched to the text viewer");
-        Check(window.WindowTitle == "sample.txt", $"the window title follows the file (got '{window.WindowTitle}')");
-        Check(window.StatusBar().CurrentMessage().Contains("loaded"),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ScrollArea.Widget() is QPlainTextEdit, "the scroll area was switched to the text viewer");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.WindowTitle == "sample.txt", $"the window title follows the file (got '{window.WindowTitle}')");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.StatusBar().CurrentMessage().Contains("loaded"),
             $"the status bar reports the load (got '{window.StatusBar().CurrentMessage()}')");
-        Check(window.CurrentDirectory == tempDir, $"the working directory follows the file (got '{window.CurrentDirectory}')");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.CurrentDirectory == tempDir, $"the working directory follows the file (got '{window.CurrentDirectory}')");
+        #endif
 
-        Check(!window.OpenFile(Path.Combine(tempDir, "missing.txt")),
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(!window.OpenFile(Path.Combine(tempDir, "missing.txt")),
             "opening a missing file is refused");
-        Check(window.StatusBar().CurrentMessage().Contains("could not be opened"),
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.StatusBar().CurrentMessage().Contains("could not be opened"),
             "the status bar reports the refusal");
+        #endif
 
-        Check(window.Recent.Files.Count == 1 && window.Recent.Files[0] == textFile,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.Recent.Files.Count == 1 && window.Recent.Files[0] == textFile,
             $"the opened file entered the recent list (got {window.Recent.Files.Count})");
-        Check(window.RecentMenu.Enabled && window.RecentMenu.Actions().Length == 1,
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.RecentMenu.Enabled && window.RecentMenu.Actions().Length == 1,
             "the Recently opened submenu was rebuilt and enabled");
+        #endif
 
         // ---------------------------------------------------------------- back / forward enablement
         string longFile = Path.Combine(tempDir, "long.txt");
@@ -755,38 +858,54 @@ public static class DocumentViewer
         for (int i = 0; i < 400; i++)
             longText.Append("line ").Append(i).Append(Environment.NewLine);
         File.WriteAllText(longFile, longText.ToString());
-        Check(window.OpenFile(longFile), "a 400-line document opens");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.OpenFile(longFile), "a 400-line document opens");
+        #endif
 
         var scrollBar = window.TextViewer.VerticalScrollBar();
-        Check(scrollBar.maximum() > 0,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(scrollBar.maximum() > 0,
             $"the long document gives the text viewer a scroll range (max={scrollBar.maximum()})");
+        #endif
 
         scrollBar.SetValue(scrollBar.maximum());
         window.UpdateNavigation();
-        Check(window.BackAction.IsEnabled() && !window.ForwardAction.IsEnabled(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.BackAction.IsEnabled() && !window.ForwardAction.IsEnabled(),
             "scrolled to the bottom: Back is enabled, Forward is not");
+        #endif
 
         int beforeBack = scrollBar.value();
         window.BackAction.Trigger();
-        Check(scrollBar.value() == beforeBack - 1 && window.ForwardAction.IsEnabled(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(scrollBar.value() == beforeBack - 1 && window.ForwardAction.IsEnabled(),
             $"the Back action's real handler stepped one line up (got {scrollBar.value()})");
+        #endif
 
         scrollBar.SetValue(scrollBar.minimum());
         window.UpdateNavigation();
-        Check(!window.BackAction.IsEnabled() && window.ForwardAction.IsEnabled(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.BackAction.IsEnabled() && window.ForwardAction.IsEnabled(),
             "scrolled to the top: Forward is enabled, Back is not");
+        #endif
 
         int beforeForward = scrollBar.value();
         window.ForwardAction.Trigger();
-        Check(scrollBar.value() == beforeForward + 1 && window.BackAction.IsEnabled(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(scrollBar.value() == beforeForward + 1 && window.BackAction.IsEnabled(),
             $"the Forward action's real handler stepped one line down (got {scrollBar.value()})");
+        #endif
 
         // A recent-file action drives the real OpenFile handler too.
         var newest = window.RecentActions[0];
-        Check(newest.text() == "long.txt", $"the newest recent action is labelled with the file name (got '{newest.text()}')");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(newest.text() == "long.txt", $"the newest recent action is labelled with the file name (got '{newest.text()}')");
+        #endif
         newest.Trigger();
-        Check(window.TextViewer.ToPlainText().Contains("line 399"),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TextViewer.ToPlainText().Contains("line 399"),
             "triggering the recent action reloaded the document through OpenFile");
+        #endif
 
         // ---------------------------------------------------------------- the cap on recent entries
         for (int i = 0; i < 12; i++)
@@ -795,42 +914,64 @@ public static class DocumentViewer
             File.WriteAllText(capFile, "cap " + i);
             window.OpenFile(capFile);
         }
-        Check(window.Recent.Files.Count == ApiRecentFiles.MaxFiles,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Recent.Files.Count == ApiRecentFiles.MaxFiles,
             $"the recent list is capped at {ApiRecentFiles.MaxFiles} (got {window.Recent.Files.Count})");
-        Check(Path.GetFileName(window.Recent.Files[0]) == "cap11.txt",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(Path.GetFileName(window.Recent.Files[0]) == "cap11.txt",
             $"the newest file is first (got '{Path.GetFileName(window.Recent.Files[0])}')");
-        Check(Path.GetFileName(window.Recent.Files[ApiRecentFiles.MaxFiles - 1]) == "cap2.txt",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(Path.GetFileName(window.Recent.Files[ApiRecentFiles.MaxFiles - 1]) == "cap2.txt",
             $"the oldest file kept is cap2.txt (got '{Path.GetFileName(window.Recent.Files[ApiRecentFiles.MaxFiles - 1])}')");
+        #endif
 
         // ---------------------------------------------------------------- persistence round-trip
         window.SaveSettings();
         using (var settings = new QSettings(settingsFile, QSettings.Format.IniFormat))
         {
-            Check(settings.Contains(ApiDocumentViewerWindow.SettingsWorkingDir),
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(settings.Contains(ApiDocumentViewerWindow.SettingsWorkingDir),
                 "the working directory was written to QSettings");
-            Check(settings.Value(ApiDocumentViewerWindow.SettingsWorkingDir)?.ToString() == tempDir,
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(settings.Value(ApiDocumentViewerWindow.SettingsWorkingDir)?.ToString() == tempDir,
                 $"the working directory round-trips (got '{settings.Value(ApiDocumentViewerWindow.SettingsWorkingDir)}')");
+            #endif
 
             var stored = settings.Value(ApiDocumentViewerWindow.SettingsApiRecentFiles) as string[];
-            Check(stored != null && stored.Length == ApiRecentFiles.MaxFiles,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(stored != null && stored.Length == ApiRecentFiles.MaxFiles,
                 $"the recent array round-trips {ApiRecentFiles.MaxFiles} entries (got {stored?.Length ?? 0})");
-            Check(stored != null && Path.GetFileName(stored[0]) == "cap11.txt",
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(stored != null && Path.GetFileName(stored[0]) == "cap11.txt",
                 $"the persisted list keeps the order (got '{Path.GetFileName(stored?[0])}')");
+            #endif
         }
 
         var restoredWindow = new ApiDocumentViewerWindow(settingsFile);
-        Check(restoredWindow.CurrentDirectory == tempDir,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(restoredWindow.CurrentDirectory == tempDir,
             $"a second window restores the working directory (got '{restoredWindow.CurrentDirectory}')");
-        Check(restoredWindow.Recent.Files.Count == ApiRecentFiles.MaxFiles,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(restoredWindow.Recent.Files.Count == ApiRecentFiles.MaxFiles,
             $"a second window restores the recent list (got {restoredWindow.Recent.Files.Count})");
-        Check(restoredWindow.RecentMenu.Enabled && restoredWindow.RecentMenu.Actions().Length == ApiRecentFiles.MaxFiles,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(restoredWindow.RecentMenu.Enabled && restoredWindow.RecentMenu.Actions().Length == ApiRecentFiles.MaxFiles,
             "the restored window rebuilds an enabled Recently opened submenu");
+        #endif
 
         // A file that no longer exists is filtered out during restore (the official ApiRecentFiles).
         File.Delete(Path.Combine(tempDir, "cap3.txt"));
         var thirdWindow = new ApiDocumentViewerWindow(settingsFile);
-        Check(thirdWindow.Recent.Files.Count == ApiRecentFiles.MaxFiles - 1,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(thirdWindow.Recent.Files.Count == ApiRecentFiles.MaxFiles - 1,
             $"a deleted file is dropped on restore (got {thirdWindow.Recent.Files.Count})");
+        #endif
 
         // ---------------------------------------------------------------- the JSON viewer
         string jsonFile = Path.Combine(tempDir, "doc.json");
@@ -841,79 +982,128 @@ public static class DocumentViewer
             "  \"nested\": { \"inner\": true, \"deep\": { \"x\": 1 } }," + Environment.NewLine +
             "  \"items\": [10, 20, 30]" + Environment.NewLine +
             "}");
-        Check(window.OpenFile(jsonFile), "opening a JSON document succeeds");
-        Check(window.JsonViewer is QTreeView && window.ScrollArea.Widget() is QTreeView,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.OpenFile(jsonFile), "opening a JSON document succeeds");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.JsonViewer is QTreeView && window.ScrollArea.Widget() is QTreeView,
             "the scroll area switched to the tree view");
-        Check(window.JsonModel != null, "the tree view is driven by the managed JSON model");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.JsonModel != null, "the tree view is driven by the managed JSON model");
+        #endif
 
         var model = window.JsonModel;
-        Check(model.RowCount() == 4, $"the root has the four top-level keys (got {model.RowCount()})");
-        Check(model.ColumnCount() == 2, "the JSON model has the Key/Value columns");
-        Check(model.NodeCount == 1 + 4 + 2 + 1 + 3,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.RowCount() == 4, $"the root has the four top-level keys (got {model.RowCount()})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.ColumnCount() == 2, "the JSON model has the Key/Value columns");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.NodeCount == 1 + 4 + 2 + 1 + 3,
             $"the model allocated one node per JSON value (got {model.NodeCount})");
+        #endif
 
         var nameKey = model.Index(0, 0);
         var nameValue = model.Index(0, 1);
-        Check(model.Data(nameKey, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "name",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.Data(nameKey, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "name",
             $"row 0 column 0 is the key (got '{model.Data(nameKey, 0)}')");
-        Check(model.Data(nameValue, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == ((char)34 + "qtsharp" + (char)34),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.Data(nameValue, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == ((char)34 + "qtsharp" + (char)34),
             $"row 0 column 1 is the quoted string value (got '{model.Data(nameValue, 0)}')");
+        #endif
 
         var countValue = model.Index(1, 1);
-        Check(model.Data(countValue, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "7",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.Data(countValue, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "7",
             $"a number is rendered raw (got '{model.Data(countValue, 0)}')");
+        #endif
 
         var nestedIndex = model.Index(2, 0);
-        Check(model.Data(nestedIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "nested",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.Data(nestedIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "nested",
             $"row 2 is the nested object (got '{model.Data(nestedIndex, 0)}')");
-        Check(model.Data(model.Index(2, 1), (int)Qt.ItemDataRole.DisplayRole) == null,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.Data(model.Index(2, 1), (int)Qt.ItemDataRole.DisplayRole) == null,
             "a non-leaf object has no value in the Value column");
-        Check(model.RowCount(nestedIndex) == 2, $"nested holds inner and deep (got {model.RowCount(nestedIndex)})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.RowCount(nestedIndex) == 2, $"nested holds inner and deep (got {model.RowCount(nestedIndex)})");
+        #endif
 
         var deepIndex = model.Index(1, 0, nestedIndex);
-        Check(model.Data(deepIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "deep",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.Data(deepIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "deep",
             $"walking a child index (got '{model.Data(deepIndex, 0)}')");
+        #endif
 
         var deepParent = model.Parent(deepIndex);
-        Check(deepParent.IsValid() && deepParent.Row() == nestedIndex.Row()
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(deepParent.IsValid() && deepParent.Row() == nestedIndex.Row()
               && deepParent.InternalId() == nestedIndex.InternalId(),
             $"an index walks back to its parent through the stored id (row {deepParent.Row()}, id {deepParent.InternalId()})");
+        #endif
 
         var deepChild = model.Index(0, 1, deepIndex);
-        Check(model.RowCount(deepIndex) == 1
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.RowCount(deepIndex) == 1
               && model.Data(deepChild, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "1",
             $"two levels down the value is 1 (got '{model.Data(deepChild, 0)}')");
+        #endif
 
         var itemsIndex = model.Index(3, 0);
-        Check(model.Data(itemsIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "items"
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.Data(itemsIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "items"
               && model.RowCount(itemsIndex) == 3,
             $"the array has three elements (got {model.RowCount(itemsIndex)})");
-        Check(model.Data(model.Index(0, 0, itemsIndex), (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "[0]"
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.Data(model.Index(0, 0, itemsIndex), (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "[0]"
               && model.Data(model.Index(0, 1, itemsIndex), (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "10"
               && model.Data(model.Index(2, 1, itemsIndex), (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "30",
             "array elements are keyed [0],[1],[2] and carry their values");
+        #endif
 
-        Check(model.HeaderData(0, Qt.Orientation.Horizontal, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "Key"
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(model.HeaderData(0, Qt.Orientation.Horizontal, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "Key"
               && model.HeaderData(1, Qt.Orientation.Horizontal, (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "Value",
             "the horizontal headers are Key and Value");
-        Check(model.HeaderData(0, Qt.Orientation.Vertical, (int)Qt.ItemDataRole.DisplayRole) == null,
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.HeaderData(0, Qt.Orientation.Vertical, (int)Qt.ItemDataRole.DisplayRole) == null,
             "a vertical header is not provided");
-        Check(model.HeaderData(0, Qt.Orientation.Horizontal, (int)Qt.ItemDataRole.ToolTipRole) == null,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.HeaderData(0, Qt.Orientation.Horizontal, (int)Qt.ItemDataRole.ToolTipRole) == null,
             "a non-display role has no header data");
+        #endif
 
         var validFlags = model.Flags(nameKey);
-        Check(validFlags == (Qt.ItemFlags.ItemIsEnabled | Qt.ItemFlags.ItemIsSelectable),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(validFlags == (Qt.ItemFlags.ItemIsEnabled | Qt.ItemFlags.ItemIsSelectable),
             $"a value row is enabled and selectable (got {validFlags})");
-        Check(model.Flags(new QModelIndex()) == Qt.ItemFlags.NoItemFlags,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.Flags(new QModelIndex()) == Qt.ItemFlags.NoItemFlags,
             "an invalid index carries no flags");
+        #endif
 
         int rowsBeforeError = model.RowCount();
         model.Load("{ this is not json");
-        Check(model.RowCount() == 1
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.RowCount() == 1
               && model.Data(model.Index(0, 0), (int)Qt.ItemDataRole.DisplayRole)?.ToString() == "<parse error>",
             "a broken document surfaces as a parse-error row");
+        #endif
         model.Load(File.ReadAllText(jsonFile));
-        Check(model.RowCount() == rowsBeforeError, "re-loading a valid document restores the tree");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.RowCount() == rowsBeforeError, "re-loading a valid document restores the tree");
+        #endif
 
         // ---------------------------------------------------------------- the image viewer
         string imageFile = Path.Combine(tempDir, "pixels.png");
@@ -923,35 +1113,65 @@ public static class DocumentViewer
             image.Fill(new QColor(10, 120, 200));
             saved = image.Save(imageFile);
         }
-        Check(saved && File.Exists(imageFile), "a 4x3 PNG was generated on disk");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(saved && File.Exists(imageFile), "a 4x3 PNG was generated on disk");
+        #endif
 
-        Check(window.OpenFile(imageFile), "opening the PNG succeeds");
-        Check(window.ImageLabel != null && window.ScrollArea.Widget() is QLabel,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.OpenFile(imageFile), "opening the PNG succeeds");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ImageLabel != null && window.ScrollArea.Widget() is QLabel,
             "the scroll area switched to the image label");
-        Check(window.ImagePixmap != null && !window.ImagePixmap.IsNull()
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ImagePixmap != null && !window.ImagePixmap.IsNull()
               && window.ImageWidth == 4 && window.ImageHeight == 3,
             $"the pixmap carries the image dimensions ({window.ImageWidth}x{window.ImageHeight})");
-        Check(window.ScaledPixmap != null && window.ScaledPixmap.Width() == 4 && window.ScaledPixmap.Height() == 3,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ScaledPixmap != null && window.ScaledPixmap.Width() == 4 && window.ScaledPixmap.Height() == 3,
             "at 100 percent the scaled pixmap is the original size");
-        Check(window.Zoom == 1.0, $"the viewer starts at 100 percent (got {window.Zoom})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Zoom == 1.0, $"the viewer starts at 100 percent (got {window.Zoom})");
+        #endif
 
         window.ZoomIn();
-        Check(window.Zoom == 2.0 && window.ScaledPixmap.Width() == 8 && window.ScaledPixmap.Height() == 6,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Zoom == 2.0 && window.ScaledPixmap.Width() == 8 && window.ScaledPixmap.Height() == 6,
             $"zoom-in doubles through QPixmap::scaled (got {window.ScaledPixmap.Width()}x{window.ScaledPixmap.Height()})");
+        #endif
         window.ZoomOut();
-        Check(window.Zoom == 1.0 && window.ScaledPixmap.Width() == 4,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Zoom == 1.0 && window.ScaledPixmap.Width() == 4,
             "zoom-out returns to the original size");
-        Check(window.ImageLabel.Pixmap != null && !window.ImageLabel.Pixmap.IsNull(),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ImageLabel.Pixmap != null && !window.ImageLabel.Pixmap.IsNull(),
             "the label actually holds the scaled pixmap");
+        #endif
 
-        Check(window.StatusBar().CurrentMessage().Contains("loaded (4x3)"),
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.StatusBar().CurrentMessage().Contains("loaded (4x3)"),
             $"the status bar reports the image size (got '{window.StatusBar().CurrentMessage()}')");
+#endif
 
         // Back/forward only apply to the text viewer, so an image disables both.
-        Check(!window.BackAction.IsEnabled() && !window.ForwardAction.IsEnabled(),
-            "back and forward are disabled while an image is shown");
+#if QTSHARP_DEMO_SMOKE
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        // Back/forward only apply to the text viewer, so an image disables both.
+        demo.Check(!window.BackAction.IsEnabled() && !window.ForwardAction.IsEnabled(),
+            "back and forward are disabled while an image is shown");
+#endif
+
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
+#endif
     }
 }
