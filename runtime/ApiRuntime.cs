@@ -387,8 +387,8 @@ namespace QtSharp.Runtime
 
     // The *generated* members already exist in moc's meta-object, so they are not declarations and
     // must not be passed to AttachMetaObject. These attributes are the read side of that: tooling,
-    // documentation and a caller reflecting over a generated wrapper can tell a native Q_PROPERTY
-    // or signal from one a C# subclass declared with [QtProperty]/[QtSignal].
+    // documentation and a caller reflecting over a generated wrapper can tell a native Q_PROPERTY,
+    // signal or slot from one a C# subclass declared with [QtProperty]/[QtSignal]/[QtSlot].
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
     public sealed class QtNativePropertyAttribute : Attribute
     {
@@ -416,6 +416,30 @@ namespace QtSharp.Runtime
 
         /// <summary>The moc signature (clicked(bool), valueChanged(QString)).</summary>
         public string Signature { get; }
+    }
+
+    // The method counterpart of the two attributes above: a generated method Qt itself declares as
+    // a slot (Q_SLOTS/Q_SLOT) or as Q_INVOKABLE, so moc already put it in the meta-object. Like the
+    // native signal and property markers it is a read-side annotation - the member needs no
+    // AttachMetaObject call and the attribute is never consulted by the runtime. [QtSlot] is the
+    // declaration side, for a C# method that has to be added to a subclass's meta-object.
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+    public sealed class QtNativeSlotAttribute : Attribute
+    {
+        public QtNativeSlotAttribute(string signature, bool invokable = false)
+        {
+            Signature = signature;
+            Invokable = invokable;
+        }
+
+        /// <summary>The normalized Qt signature (setText(QString), grab(QRect)) as moc stores it.</summary>
+        public string Signature { get; }
+
+        /// <summary>
+        /// True for Q_INVOKABLE (QMetaMethod::Method), false for a Q_SLOTS/Q_SLOT slot
+        /// (QMetaMethod::Slot) - the distinction Qt itself makes.
+        /// </summary>
+        public bool Invokable { get; }
     }
 
     // An [QtProperty] C# property: the PropertyInfo is the accessor pair, so an auto-property and

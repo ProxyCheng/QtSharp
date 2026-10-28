@@ -81,6 +81,19 @@ class Program
         public string ModuleDir;
     }
 
+    // One declaration moc registers in the meta-object: a method inside a Q_SLOTS/slots block, one
+    // prefixed with the singular Q_SLOT, or one prefixed Q_INVOKABLE. The last is Qt's "method"
+    // (QMetaMethod::Method) rather than a slot (QMetaMethod::Slot), which is why the flag is kept.
+    public class SlotInfo
+    {
+        public string ClassName;
+        public string Name;
+        public int Arity;
+        public bool Invokable;
+        public string HeaderFile;
+        public string ModuleDir;
+    }
+
     // Q_PROPERTY(Type name READ getter WRITE setter NOTIFY signal ...) is scanned out of the
     // header text, like the signals: the declaration can span several lines and Qt's own metadata
     // is not visible to the model at this point. The scan is a pure function of the header.
@@ -396,6 +409,246 @@ class Program
             }
         }
         return info;
+    }
+
+    /// <summary>
+    /// The declarations moc registers as slots or Q_INVOKABLE methods, scanned out of the header
+    /// text like the signals: <c>Q_SLOTS</c>/<c>slots</c> expands to an annotation clang's AST does
+    /// not distinguish, and <c>Q_SLOT</c>/<c>Q_INVOKABLE</c> are per-declaration markers that leave
+    /// no cursor behind either. What is recorded is the class, the method name, its parameter count
+    /// and whether Qt published it as an invokable (QMetaMethod::Method) or a slot
+    /// (QMetaMethod::Slot); the AST supplies the parameter types, matched by name and arity.
+    /// </summary>
+    internal static List<SlotInfo> ScanSlots(string dir, string header)
+    {
+        var result = new List<SlotInfo>();
+        var path = Path.Combine(QtLibrary.QtIncludeRoot, dir, header);
+        if (File.Exists(path))
+            ScanSlotsInFile(path, dir, header, result);
+        return result;
+    }
+
+    // The exact access-specifier spellings Qt uses: "Q_SLOTS:" or "slots:" alone, and whichever of
+    // the three access specifiers precedes them (public/protected/private). Every one of these is
+    // in the bound headers; the closed set keeps a stray member name from opening a block.
+    static bool IsSlotBlockStart(string line)
+        => System.Text.RegularExpressions.Regex.IsMatch(line,
+            @"^(?:(?:public|protected|private)\s+)?(?:Q_SLOTS|slots)\s*:$");
+
+    // A slot block ends at the next access specifier, at a signals block, or at the end of the
+    // class body - the same boundaries the signal scanner uses.
+    static bool IsSlotBlockEnd(string line)
+        => line == "};"
+           || System.Text.RegularExpressions.Regex.IsMatch(line,
+               @"^(?:public|protected|private)\s*:$")
+           || System.Text.RegularExpressions.Regex.IsMatch(line,
+               @"^(?:(?:public|protected|private)\s+)?(?:Q_SIGNALS|signals)\s*:$");
+
+    static void ScanSlotsInFile(string path, string dir, string header, List<SlotInfo> result)
+    {
+        var text = UnwrapQtVersionMacros(File.ReadAllText(path));
+        var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+        string currentClass = null;
+        bool inSlots = false;
+        for (int i = 0; i < lines.Length; i++)
+        {
+            var line = lines[i].Trim();
+            var cm = System.Text.RegularExpressions.Regex.Match(line, @"^class\s+(?:[A-Za-z_][A-Za-z0-9_]*_EXPORT\s+)?([A-Za-z_]\w*)");
+            if (cm.Success)
+                currentClass = cm.Groups[1].Value;
+
+            if (IsSlotBlockStart(line))
+            {
+                inSlots = true;
+                continue;
+            }
+            if (inSlots && IsSlotBlockEnd(line))
+            {
+                inSlots = false;
+                continue;
+            }
+            if (currentClass == null || line.Length == 0 || line[0] == '#' ||
+                line.StartsWith("//", StringComparison.Ordinal) || line.StartsWith("/*", StringComparison.Ordinal))
+                continue;
+
+            // Q_SLOT/Q_INVOKABLE can precede the return type, possibly after another annotation
+            // such as Q_REVISION(2, 9). Strip them all; remember whether one of the two was there.
+            var declaration = StripSlotAnnotations(line, out bool annotated, out bool invokable);
+            if (!inSlots && !annotated)
+                continue;
+
+            // A declaration may wrap onto the next line (qsceneloader.h's component()), so keep
+            // appending while the parameter list is still open.
+            while (ParenBalance(declaration) > 0 && i + 1 < lines.Length)
+            {
+                i++;
+                declaration += " " + lines[i].Trim();
+            }
+
+            if (!TryParseSlotDeclaration(declaration, out var name, out int arity))
+                continue;
+            result.Add(new SlotInfo
+            {
+                ClassName = currentClass,
+                Name = name,
+                // A declaration Q_INVOKABLE marks stays an invokable even inside a slots block:
+                // that is the flag Qt itself uses (QMetaMethod::Method, not ::Slot).
+                Invokable = invokable,
+                Arity = arity,
+                HeaderFile = header,
+                ModuleDir = dir,
+            });
+        }
+    }
+
+    /// <summary>
+    /// Strips the all-caps macros a declaration may start with (<c>Q_REVISION(2, 9) Q_INVOKABLE</c>,
+    /// <c>Q_SLOT</c>) and reports whether <c>Q_SLOT</c> or <c>Q_INVOKABLE</c> was among them. The
+    /// all-caps test is the same guard StripLeadingAnnotations uses, so a declaration that starts
+    /// with a type (QRect, QVariant) is left alone.
+    /// </summary>
+    static string StripSlotAnnotations(string line, out bool slotAnnotation, out bool invokable)
+    {
+        slotAnnotation = false;
+        invokable = false;
+        var text = line.TrimStart();
+        while (true)
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(text, @"^([A-Za-z_][A-Za-z0-9_]*)\s*");
+            if (!m.Success)
+                return text;
+            var name = m.Groups[1].Value;
+            if (name != name.ToUpperInvariant())
+                return text;
+            int end = m.Length;
+            // An annotation may take arguments (Q_REVISION(2, 9)); balance them like the scanner
+            // above balances a parameter list.
+            if (end < text.Length && text[end] == '(')
+            {
+                int depth = 0, i = end;
+                for (; i < text.Length; i++)
+                {
+                    if (text[i] == '(')
+                        depth++;
+                    else if (text[i] == ')')
+                    {
+                        depth--;
+                        if (depth == 0)
+                        {
+                            i++;
+                            break;
+                        }
+                    }
+                }
+                if (depth != 0)
+                    return text;
+                end = i;
+            }
+            if (name == "Q_SLOT" || name == "Q_INVOKABLE")
+                slotAnnotation = true;
+            if (name == "Q_INVOKABLE")
+                invokable = true;
+            text = text.Substring(end).TrimStart();
+        }
+    }
+
+    // The open parenthesis count of a declaration; a wrapped declaration has not closed its
+    // parameter list yet.
+    static int ParenBalance(string text)
+    {
+        int depth = 0;
+        foreach (char c in text)
+        {
+            if (c == '(')
+                depth++;
+            else if (c == ')' && depth > 0)
+                depth--;
+        }
+        return depth;
+    }
+
+    // The method name and parameter count of a declaration. The name is the identifier before the
+    // first top-level '(', and the count splits the list on top-level commas only, so a default
+    // argument (QRect(QPoint(0, 0), QSize(-1, -1))) and a template (QMap<QString, int>) each
+    // contribute one parameter.
+    static bool TryParseSlotDeclaration(string line, out string name, out int arity)
+    {
+        name = null;
+        arity = 0;
+        int angle = 0, open = -1;
+        for (int i = 0; i < line.Length; i++)
+        {
+            char c = line[i];
+            if (c == '<')
+                angle++;
+            else if (c == '>')
+            {
+                if (angle > 0)
+                    angle--;
+            }
+            else if (c == '(' && angle == 0)
+            {
+                open = i;
+                break;
+            }
+            else if (c == ';' || c == '{' || c == '}')
+                return false;
+        }
+        if (open < 0)
+            return false;
+        int end = open - 1;
+        while (end >= 0 && char.IsWhiteSpace(line[end]))
+            end--;
+        int start = end;
+        while (start >= 0 && (char.IsLetterOrDigit(line[start]) || line[start] == '_'))
+            start--;
+        if (start == end)
+            return false;
+        name = line.Substring(start + 1, end - start);
+
+        int depth = 0, close = -1;
+        for (int i = open; i < line.Length; i++)
+        {
+            if (line[i] == '(')
+                depth++;
+            else if (line[i] == ')')
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    close = i;
+                    break;
+                }
+            }
+        }
+        if (close < 0)
+            return false;
+        var body = line.Substring(open + 1, close - open - 1).Trim();
+        if (body.Length == 0)
+            return true;
+        arity = 1;
+        depth = 0;
+        angle = 0;
+        foreach (char c in body)
+        {
+            if (c == '(' || c == '[' || c == '{')
+                depth++;
+            else if (c == ')' || c == ']' || c == '}')
+            {
+                if (depth > 0)
+                    depth--;
+            }
+            else if (c == '<')
+                angle++;
+            else if (c == '>')
+            {
+                if (angle > 0)
+                    angle--;
+            }
+            else if (c == ',' && depth == 0 && angle == 0)
+                arity++;
+        }
+        return true;
     }
 
         const string Usage =

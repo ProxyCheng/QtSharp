@@ -6,6 +6,12 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 
 ## Unreleased
 
+- **Generated methods are marked as Qt slots.** A method Qt declares in a `Q_SLOTS`/`Q_SLOT`
+  section or with `Q_INVOKABLE` now carries `[QtNativeSlot(signature, invokable)]`, the read-side
+  counterpart of `[QtNativeSignal]`/`[QtNativeProperty]` (`invokable: true` is Qt's
+  `QMetaMethod::Method`, the default is a `QMetaMethod::Slot`). The extractor records the new
+  `slot`/`invokable` method flags; `test-nativeslot` checks that the signatures resolve through
+  `QMetaObject::indexOfMethod`.
 - **`QBindable<T>` is removed from the public API.** The generated `bindableFoo()` handles exposed
   only `Value` (get/set) and `Dispose`, which the normal property accessors already provide, while
   the members that make a bindable distinct (`setBinding`, `onValueChanged`, `hasBinding`, …) were
