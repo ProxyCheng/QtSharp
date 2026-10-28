@@ -444,6 +444,15 @@ static class Program
   var qt = new QTime(timeOnly);             // qtime.ToTimeOnly()
   byte[] data = qba.ToArray();              // new QByteArray(data) is binary-safe
 
+  var qaddr = new QHostAddress(ipAddress);  // qaddr.ToIPAddress() <-> System.Net.IPAddress
+  var qtz = new QTimeZone(zoneInfo);        // qtz.ToTimeZoneInfo() <-> System.TimeZoneInfo
+  var qenv = new QProcessEnvironment(dict); // qenv.ToDictionary() is a snapshot; InheritsFromParent is not representable
+  var qlocale = new QLocale(culture);       // qlocale.ToCultureInfo() is identity only (Qt CLDR, .NET ICU)
+  var qbits = new QBitArray(bitArray);      // qbits.ToBitArray() keeps the bit order
+  var qver = new QVersionNumber(version);   // qver.ToVersion(); 1-4 segments, Build/Revision -1 means omitted
+  var qmat = new QMatrix4x4(matrix4x4);     // qmat.ToMatrix4x4() transposes column-vector <-> row-vector
+  Array.Sort(words, collator);              // QCollator implements IComparer<string>
+
   Point pt = (Point)qpoint;                 // QPoint/QSize/QRect <-> System.Drawing
   Color c = (Color)qcolor;                  // QColor <-> System.Drawing.Color
   Vector3 v = (Vector3)qvector;             // QVector2D/3D/4D <-> System.Numerics
