@@ -493,6 +493,17 @@ public static partial class ApiModel
             type.kind == CXTypeKind.CXType_RValueReference)
             return ModelName(type.PointeeType);
 
+        // A function pointer is a type of its own in the vocabulary, including the typedefs Qt
+        // writes for one (EasingFunction, QtMessageHandler). QFunctionPointer is the exception:
+        // Qt documents it as "a pointer to a function" with no signature, and the APIs that use
+        // it (QLibrary::resolve, QGuiApplication::platformFunction) hand back an address the
+        // binding cannot call. It therefore keeps its own name, the way a named QFlags typedef
+        // does, and the model says "opaque address" instead of inventing void(*)().
+        if (IsQFunctionPointerTypedef(type))
+            return "QFunctionPointer";
+        if (IsFunctionPointer(type))
+            return CallbackModelName(type);
+
         // A named QFlags typedef is the one typedef whose own name is published.
         var flags = FlagsName(type);
         if (flags != null)
@@ -595,6 +606,143 @@ public static partial class ApiModel
             return FullQualifiedName(declaration);
         }
         return null;
+    }
+
+    // A C function pointer, including the typedefs Qt uses for one: clang reports a typedef as
+    // CXType_Typedef here and only its canonical type is the pointer to the function prototype.
+    static bool IsQFunctionPointerTypedef(CXType type)
+        => type.kind == CXTypeKind.CXType_Typedef
+           && clang.getCursorSpelling(type.Declaration).ToString() == "QFunctionPointer";
+
+    static bool IsFunctionPointer(CXType type)
+    {
+        type = Unwrap(type);
+        while (type.kind == CXTypeKind.CXType_LValueReference ||
+               type.kind == CXTypeKind.CXType_RValueReference)
+            type = Unwrap(type.PointeeType);
+        var canonical = type.CanonicalType;
+        if (canonical.kind != CXTypeKind.CXType_Pointer)
+            return false;
+        var pointee = Unwrap(canonical.PointeeType).CanonicalType;
+        return pointee.kind == CXTypeKind.CXType_FunctionProto;
+    }
+
+    // The model spelling of a function type: ret(*)(T1,T2), "void(*)()" for the no-argument
+    // form. Everything is spelled the way the rest of the vocabulary is, with one deliberate
+    // exception: an argument that is a pointer/reference to a class the binding does not publish
+    // (const QMessageLogContext&) crosses as void*. It has no managed type of its own, and inside
+    // a callback it is only an opaque pass-through value.
+    static string CallbackModelName(CXType type)
+    {
+        var canonical = Unwrap(type).CanonicalType;
+        if (canonical.kind != CXTypeKind.CXType_Pointer)
+            return null;
+        var prototype = Unwrap(canonical.PointeeType).CanonicalType;
+        // A variadic callback cannot be called from managed code (there is no fixed managed
+        // signature to marshal), and an unprototyped one has no argument types to read.
+        if (prototype.kind != CXTypeKind.CXType_FunctionProto || prototype.IsFunctionTypeVariadic)
+            return null;
+        var result = CallbackReturnModelName(prototype.ResultType);
+        if (result == null)
+            return null;
+        var arguments = new List<string>();
+        for (uint i = 0; i < (uint)prototype.NumArgTypes; i++)
+        {
+            var argument = CallbackArgumentModelName(prototype.GetArgType(i));
+            if (argument == null)
+                return null;
+            arguments.Add(argument);
+        }
+        return result + "(*)" + "(" + string.Join(",", arguments) + ")";
+    }
+
+    // A callback may hand back only what the managed thunk can turn into a C ABI return value:
+    // nothing, a scalar, an enum/flags value, or a pointer. A QString/QList/class-by-value return
+    // would have to allocate into a caller that does not know how to release it.
+    static string CallbackReturnModelName(CXType type)
+    {
+        type = Unwrap(type);
+        if (type.kind == CXTypeKind.CXType_LValueReference ||
+            type.kind == CXTypeKind.CXType_RValueReference)
+            return null;
+        var name = ModelName(type);
+        if (name == null)
+            return null;
+        if (name == "void" || ScalarNames.Contains(name))
+            return name;
+        if (name.EndsWith("*", StringComparison.Ordinal))
+            return name;
+        return CallbackEnumName(type);
+    }
+
+    static string CallbackArgumentModelName(CXType type)
+    {
+        var bare = Unwrap(type);
+        // The one type that is accepted only here: a pointer/reference to a class the model does
+        // not bind has no spelling anywhere else, but in a callback it is an opaque address.
+        if (bare.kind == CXTypeKind.CXType_Pointer ||
+            bare.kind == CXTypeKind.CXType_LValueReference ||
+            bare.kind == CXTypeKind.CXType_RValueReference)
+        {
+            var pointee = Unwrap(bare.PointeeType);
+            var declaration = pointee.CanonicalType.Declaration;
+            var kind = clang.getCursorKind(declaration);
+            // SupportedTypes covers both the root classes and the special vocabulary entries
+            // (QString is a class declaration but has no generated wrapper), so a class it knows
+            // keeps its normal spelling and only the genuinely unbound one becomes void*.
+            var pointeeName = ModelName(pointee);
+            if ((kind == CXCursorKind.CXCursor_ClassDecl || kind == CXCursorKind.CXCursor_StructDecl)
+                && (pointeeName == null || !SupportedTypes.Contains(pointeeName)))
+                return "void*";
+        }
+
+        var name = ModelName(type);
+        if (name == null)
+            return null;
+        // A pointer is an address on both sides of the thunk; a bound class pointer is not
+        // wrapped because the callback does not own the object and its lifetime is the call.
+        if (name.EndsWith("*", StringComparison.Ordinal))
+            return name;
+        // QString is the only by-reference class the thunks read, through ToManagedTransient:
+        // Qt lends the callback the string for the duration of the call.
+        if (name == "QString")
+            return name;
+        if (ScalarNames.Contains(name))
+            return name;
+        return CallbackEnumName(type);
+    }
+
+    // An enum or flag set a callback may carry. Its C# type has to exist, which is exactly the
+    // scope rule the rest of the vocabulary uses.
+    static string CallbackEnumName(CXType type)
+    {
+        var flags = FlagsName(type);
+        if (flags != null)
+            return ScopeIsPublishable(ScopeOfQualified(flags)) ? flags : null;
+        var declaration = NoRef(type).CanonicalType.Declaration;
+        if (clang.getCursorKind(declaration) != CXCursorKind.CXCursor_EnumDecl)
+            return null;
+        var name = EnumTypeName(declaration);
+        return ScopeIsPublishable(ScopeOfQualified(name)) ? name : null;
+    }
+
+    // The C++ spelling the native glue has to name when it casts the ABI void* back to the
+    // function type. The typedef's own name is only valid where it is visible, and the glue is
+    // at global scope, so a typedef inside a class carries the class
+    // (QEasingCurve::EasingFunction); a raw pointer-to-function has no name and uses the
+    // canonical prototype.
+    static string ParamCppSpelling(CXType type)
+    {
+        if (!IsFunctionPointer(type))
+            return Spelling(type);
+        var bare = Unwrap(type);
+        if (bare.kind == CXTypeKind.CXType_Typedef)
+        {
+            var qualified = FullQualifiedName(bare.Declaration);
+            if (!string.IsNullOrEmpty(qualified))
+                return qualified;
+        }
+        return Spelling(Unwrap(type).CanonicalType);
     }
 
     static CXType Unwrap(CXType type)
@@ -951,6 +1099,10 @@ public static partial class ApiModel
         if (Unwrap(fn.ReturnClangType).kind == CXTypeKind.CXType_LValueReference
             || Unwrap(fn.ReturnClangType).kind == CXTypeKind.CXType_RValueReference)
             return false;
+        // The override dispatcher marshals values in and out of the managed virtual; a function
+        // pointer has no dispatch slot there (nothing in the bound set declares such a virtual).
+        if (IsFunctionPointer(fn.ReturnClangType))
+            return false;
         if (!fn.ReturnDropped && !SupportedType(fn.ReturnClangType, isReturn: true))
             return false;
         // A pointer written as a *buffer* has no length in the signature, so the ABI cannot carry
@@ -965,6 +1117,10 @@ public static partial class ApiModel
             if (p.Buffer)
                 continue;
             if (p.Type == null || !SupportedType(p.ClangType, isParameter: true))
+                return false;
+            // The dispatch stub has no calling convention for a function pointer argument: a
+            // managed override cannot be handed one, and Qt has no virtual like that in scope.
+            if (ApiTypes.IsCallback(p.Type))
                 return false;
             // A pointer to a runtime value type is an array on the managed side. Qt spells the
             // length as the parameter after it (`const QPoint *points, int count`); without one
@@ -1224,6 +1380,12 @@ public static partial class ApiModel
         var name = ModelName(type);
         if (name == null)
             return false;
+        // A function type is part of the vocabulary in both directions: a callback parameter is
+        // a managed Action/Func, and a concrete callback return is the same delegate again.
+        // QFunctionPointer, the signature-less typedef, is supported in both positions too; it
+        // maps to the hand-written carrier struct.
+        if (ApiTypes.IsCallback(name))
+            return true;
         if (name.EndsWith("*"))
         {
             // A raw scalar pointer in return position has no length and no owner, so managed
@@ -1634,6 +1796,10 @@ public static partial class ApiModel
         // A signal is exposed as a property named after it, so two of the same name cannot
         // coexist.
         var classSignals = signalFacts
+            // A signal is emitted through the meta-object, whose argument marshalling has no
+            // function-pointer slot; no signal in the bound set has one, so the type is kept out
+            // of the signal surface rather than half-supported.
+            .Where(f => f.Params.All(p => p.Type == null || !ApiTypes.IsCallback(p.Type)))
             .GroupBy(f => f.Name + "(" + string.Join(",", f.Params.Select(p => p.Type)) + ")")
             .Select(g => g.First())
             .OrderBy(f => f.Name, StringComparer.Ordinal)
@@ -2009,7 +2175,7 @@ public static partial class ApiModel
                     Name = spelled ?? "arg" + i,
                     Type = ModelName(type),
                     ClangType = type,
-                    CppType = Spelling(type),
+                    CppType = ParamCppSpelling(type),
                 });
             }
         }
@@ -2025,7 +2191,7 @@ public static partial class ApiModel
                     Name = spelled.Length > 0 ? spelled : "arg" + i,
                     Type = ModelName(type),
                     ClangType = type,
-                    CppType = Spelling(type),
+                    CppType = ParamCppSpelling(type),
                 };
                 // libclang has no "has default argument" query: the default argument shows up as
                 // the expression child of the ParmDecl cursor. An array declarator also has
@@ -2092,7 +2258,7 @@ public static partial class ApiModel
                 Name = spelled.Length > 0 ? spelled : "arg" + i,
                 Type = ModelName(type),
                 ClangType = type,
-                CppType = Spelling(type),
+                CppType = ParamCppSpelling(type),
             };
             var probe = new FirstExpr();
             arg.VisitChildren(probe.Visit, default);
@@ -2550,7 +2716,11 @@ public static partial class ApiModel
         if (text.Length == 0)
             return null;
         if (text is "nullptr" or "NULL" or "0")
-            return type != null && (type.EndsWith("*") || type == "QString" || RootClasses.Contains(type)) ? "null" : "0";
+            // A function pointer's zero is the null delegate, not the integer 0 (a C# default
+            // argument of 0 is not convertible to Action/Func).
+            return type != null && (ApiTypes.IsCallback(type) || type.EndsWith("*") || type == "QString" || RootClasses.Contains(type))
+                ? "null"
+                : "0";
         if (text is "true" or "false")
             return text;
         // A value-initialised default: `{}`, `Type()` or `Type{}`. An empty pair of braces is the
@@ -2750,6 +2920,20 @@ public static partial class ApiModel
 
         void Visit(CXType type)
         {
+            // An enum inside a callback's signature (QtMsgType in qInstallMessageHandler) is only
+            // reachable through the function prototype; the pointer-level spelling says nothing
+            // about it.
+            if (IsFunctionPointer(type))
+            {
+                var prototype = Unwrap(type).CanonicalType.PointeeType.CanonicalType;
+                if (prototype.kind == CXTypeKind.CXType_FunctionProto)
+                {
+                    Visit(prototype.ResultType);
+                    for (uint i = 0; i < (uint)prototype.NumArgTypes; i++)
+                        Visit(prototype.GetArgType(i));
+                }
+                return;
+            }
             var flags = FlagsName(type);
             if (flags != null)
             {
@@ -3001,8 +3185,12 @@ public static partial class ApiModel
         sb.Append(", \"type\": ").Append(Json(p.Type));
         // A virtual override has to repeat Qt's declaration exactly, so its parameters carry the
         // spelling clang printed. A duration needs it too: which unit it is decides the C++
-        // conversion (std::chrono::duration_cast<std::chrono::milliseconds>).
-        if ((withCpp || p.Type == "TimeSpan") && p.CppType != null)
+        // conversion (std::chrono::duration_cast<std::chrono::milliseconds>). A function type
+        // needs it so the native glue can cast the ABI void* back to exactly the pointer Qt
+        // declared (QEasingCurve::EasingFunction, QtMessageHandler, QFunctionPointer).
+        if ((withCpp || p.Type == "TimeSpan" || p.Type == "QFunctionPointer"
+             || (p.Type != null && ApiTypes.IsCallback(p.Type)))
+            && p.CppType != null)
             sb.Append(", \"cpp\": ").Append(Json(p.CppType));
         // How the parameter crosses is one mode; the traits are one flag list.
         if (p.Mode == ParamMode.Out)

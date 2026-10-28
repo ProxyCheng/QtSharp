@@ -244,6 +244,12 @@ public static class ApiTypes
         if (modelType == null)
             return "IntPtr";
 
+        // A function type is a delegate in both positions (Action/Func), which is also the shape
+        // this method answers; the code generator does the position-specific work - it builds the
+        // thunk from a parameter and wraps the returned address back into the delegate.
+        if (IsCallback(modelType))
+            return CallbackDelegate(modelType, classes);
+
         // The special cases come first: "char*" also ends in '*', but it is a string rather
         // than a handle, and the scalar typedefs would otherwise keep their C++ spelling.
         switch (modelType)
@@ -290,6 +296,10 @@ public static class ApiTypes
                 return "byte";
             case "char16_t":
                 return "char";
+            // Qt's signature-less function pointer. The hand-written QtSharp.QtCore struct is a
+            // one-field carrier for the address, with an opt-in As<TDelegate> at the call site.
+            case "QFunctionPointer":
+                return "QFunctionPointer";
         }
 
         // A generic container: the managed surface is an array of the managed element type
@@ -355,6 +365,86 @@ public static class ApiTypes
     {
         int i = modelType.LastIndexOf("::", StringComparison.Ordinal);
         return i < 0 ? modelType : modelType.Substring(i + 2);
+    }
+
+    // A function type in the model vocabulary is spelled "ret(*)(T1,T2)" - no spaces and no
+    // parameter names, so the spelling alone is enough to map it. It is deliberately the C type
+    // syntax rather than a typedef name: the model must not depend on a typedef being visible
+    // where the native glue names it, and the module models then all spell the same type the
+    // same way (EasingFunction and a raw pointer-to-function are one entry).
+    public static bool IsCallback(string modelType)
+        => modelType != null && modelType.IndexOf("(*)", StringComparison.Ordinal) > 0;
+
+    /// <summary>
+    /// Splits a callback spelling into its return type and argument types. Returns false for a
+    /// string that only looks like one (the extractor never writes those, but the code generator
+    /// reads checked-in models).
+    /// </summary>
+    public static bool TryParseCallback(string modelType, out string returnType, out string[] arguments)
+    {
+        returnType = null;
+        arguments = null;
+        if (modelType == null)
+            return false;
+        int marker = modelType.IndexOf("(*)", StringComparison.Ordinal);
+        if (marker <= 0)
+            return false;
+        int open = marker + 3;
+        if (open >= modelType.Length || modelType[open] != '(' || modelType[modelType.Length - 1] != ')')
+            return false;
+        returnType = modelType.Substring(0, marker);
+        string inner = modelType.Substring(open + 1, modelType.Length - open - 2);
+        arguments = inner.Length == 0 ? Array.Empty<string>() : SplitCallbackArguments(inner);
+        return arguments != null;
+    }
+
+    // Callback arguments are scalars, enums, QString and pointers, so a comma only separates
+    // arguments; the angle-bracket depth is kept anyway so a spelling that grows a container
+    // argument is not split in the wrong place before it is rejected.
+    static string[] SplitCallbackArguments(string inner)
+    {
+        var parts = new List<string>();
+        int depth = 0, start = 0;
+        for (int i = 0; i < inner.Length; i++)
+        {
+            char c = inner[i];
+            if (c == '<') depth++;
+            else if (c == '>') depth--;
+            else if (c == ',' && depth == 0)
+            {
+                parts.Add(inner.Substring(start, i - start));
+                start = i + 1;
+            }
+            if (depth < 0)
+                return null;
+        }
+        if (depth != 0)
+            return null;
+        parts.Add(inner.Substring(start));
+        return parts.All(p => p.Length > 0) ? parts.ToArray() : null;
+    }
+
+    // The managed shape of a callback in *parameter* position. A pointer argument is only an
+    // address Qt lends us, never a wrapper the callback owns, so it stays IntPtr; QString becomes
+    // the string copy the thunk reads out of Qt's reference; enums keep their generated type.
+    static string CallbackDelegate(string modelType, ICollection<string> classes)
+    {
+        if (!TryParseCallback(modelType, out string ret, out string[] arguments))
+            return "IntPtr";
+        var parts = new List<string>(arguments.Select(a => CallbackPart(a, classes)));
+        if (ret == "void")
+            return parts.Count == 0 ? "Action" : $"Action<{string.Join(", ", parts)}>";
+        parts.Add(CallbackPart(ret, classes));
+        return $"Func<{string.Join(", ", parts)}>";
+    }
+
+    static string CallbackPart(string modelType, ICollection<string> classes)
+    {
+        if (modelType.EndsWith("*", StringComparison.Ordinal))
+            return "IntPtr";
+        if (modelType == "QString")
+            return "string";
+        return Managed(modelType, classes);
     }
 
     // The scalar vocabulary of the model, which is what tells an array of values apart from a
@@ -1339,6 +1429,9 @@ public static partial class ApiModel
             // A std::chrono duration (QTimer::setInterval, QThread::sleep, QDeadlineTimer):
             // managed code sees a TimeSpan, the C ABI carries nanoseconds.
             "TimeSpan",
+            // Qt's "pointer to a function" typedef. It has no signature, so it is always an
+            // address (QLibrary::resolve, QGuiApplication::platformFunction).
+            "QFunctionPointer",
         };
         foreach (var root in ActiveRoots)
         {
