@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Qt's official Qt Charts examples, ported onto the binding, as one executable. Each example
+       is a static class registered with [Demo("qtcharts-...")] and discovered by DemoHost; the
+       Charts assembly is a project reference while both live in this repository, a consumer
+       references the QtSharp.Charts package instead. DemoMode.props selects Smoke or View. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>QtSharp.Charts.Demos</AssemblyName>
+    <RootNamespace>QtSharp.Charts.Demos</RootNamespace>
+    <QtSharpCompileBinding>false</QtSharpCompileBinding>
+  </PropertyGroup>
+
+  <Import Project="..\..\QtSharp.Api.props" />
+  <Import Project="..\DemoMode.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\hosting\QtSharp.Demos.Hosting.csproj" />
+    <ProjectReference Include="..\..\nuget\QtSharp.Charts\QtSharp.Charts.csproj" />
+    <ProjectReference Include="..\..\nuget\QtSharp.Runtime\QtSharp.Runtime.csproj" />
+    <ProjectReference Include="..\..\nuget\QtSharp.Api\Modules\QtSharp.QtCore\QtSharp.QtCore.csproj" />
+    <ProjectReference Include="..\..\nuget\QtSharp.Api\Modules\QtSharp.QtGui\QtSharp.QtGui.csproj" />
+    <ProjectReference Include="..\..\nuget\QtSharp.Api\Modules\QtSharp.QtWidgets\QtSharp.QtWidgets.csproj" />
+  </ItemGroup>
+
+  <!-- The QtCharts native glue. The QtCharts runtime DLL is copied by QtSharp.Api.props with the
+       rest of the Qt runtime. -->
+  <Target Name="CopyChartsNative" AfterTargets="Build">
+    <ItemGroup>
+      <_ChartsNative Include="..\..\out\api-modules\charts\$(QtSharpNativePrefix)QtSharp.Charts.Native$(QtSharpNativeSuffix)" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_ChartsNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

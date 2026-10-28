@@ -222,92 +222,157 @@ public sealed class SpinBoxesApi : QWidget
 [Demo("qtwidgets-spinboxes")]
 public static class SpinBoxes
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         var window = new SpinBoxesApi();
-        window.Show();
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
 
         // The integer group: a range, a step, and the text Qt renders for a value.
-        Check(window.IntegerSpinBox.Minimum == -20 && window.IntegerSpinBox.Maximum == 20,
+#if QTSHARP_DEMO_SMOKE
+
+        // The integer group: a range, a step, and the text Qt renders for a value.
+        demo.Check(window.IntegerSpinBox.Minimum == -20 && window.IntegerSpinBox.Maximum == 20,
             "QSpinBox range");
+#endif
         window.IntegerSpinBox.Value = 25;
-        Check(window.IntegerSpinBox.Value == 20, $"the range clamps the value (got {window.IntegerSpinBox.Value})");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.IntegerSpinBox.Value == 20, $"the range clamps the value (got {window.IntegerSpinBox.Value})");
+        #endif
         window.IntegerSpinBox.Value = 7;
-        Check(window.IntegerSpinBox.Text == "7", $"QSpinBox::text (got '{window.IntegerSpinBox.Text}')");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.IntegerSpinBox.Text == "7", $"QSpinBox::text (got '{window.IntegerSpinBox.Text}')");
+        #endif
 
         // A suffix and a special value: the display text is what the user sees.
-        Check(window.ZoomSpinBox.Suffix == "%" && window.ZoomSpinBox.Value == 100,
+#if QTSHARP_DEMO_SMOKE
+
+        // A suffix and a special value: the display text is what the user sees.
+        demo.Check(window.ZoomSpinBox.Suffix == "%" && window.ZoomSpinBox.Value == 100,
             "QSpinBox suffix");
-        Check(window.ZoomSpinBox.Text == "100%", $"the suffix is in the text (got '{window.ZoomSpinBox.Text}')");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ZoomSpinBox.Text == "100%", $"the suffix is in the text (got '{window.ZoomSpinBox.Text}')");
+        #endif
         window.ZoomSpinBox.Value = 0;
-        Check(window.ZoomSpinBox.Text == "Automatic",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ZoomSpinBox.Text == "Automatic",
             $"the special value text replaced the number (got '{window.ZoomSpinBox.Text}')");
+        #endif
         window.ZoomSpinBox.Value = 100;
 
-        Check(window.IntPriceSpinBox.Prefix == "$" && window.IntPriceSpinBox.Text == "$99",
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.IntPriceSpinBox.Prefix == "$" && window.IntPriceSpinBox.Text == "$99",
             $"QSpinBox prefix (got '{window.IntPriceSpinBox.Text}')");
+#endif
 
         // The integer base: the same value, rendered in hex.
         window.HexSpinBox.Value = 31;
-        Check(window.HexSpinBox.Text == "1f", $"displayIntegerBase 16 (got '{window.HexSpinBox.Text}')");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.HexSpinBox.Text == "1f", $"displayIntegerBase 16 (got '{window.HexSpinBox.Text}')");
+        #endif
         window.HexSpinBox.DisplayIntegerBase = 10;
-        Check(window.HexSpinBox.Text == "31", $"displayIntegerBase 10 (got '{window.HexSpinBox.Text}')");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.HexSpinBox.Text == "31", $"displayIntegerBase 10 (got '{window.HexSpinBox.Text}')");
+        #endif
 
         // A check box driving a spin box through its signal.
-        Check(window.GroupSeparatorSpinBox.ShowGroupSeparator, "the group separator starts shown");
+#if QTSHARP_DEMO_SMOKE
+
+        // A check box driving a spin box through its signal.
+        demo.Check(window.GroupSeparatorSpinBox.ShowGroupSeparator, "the group separator starts shown");
+#endif
         window.GroupSeparatorCheckBox.Checked = false;
-        Check(!window.GroupSeparatorSpinBox.ShowGroupSeparator,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.GroupSeparatorSpinBox.ShowGroupSeparator,
             "unchecking the box turned the group separator off");
+        #endif
 
         // The date and the time edits, and the label the format string writes into.
-        Check(window.DateEdit.MinimumDate.ToString(Qt.DateFormat.ISODate) == "2005-01-01",
+#if QTSHARP_DEMO_SMOKE
+
+        // The date and the time edits, and the label the format string writes into.
+        demo.Check(window.DateEdit.MinimumDate.ToString(Qt.DateFormat.ISODate) == "2005-01-01",
             $"QDateEdit minimum date (got {window.DateEdit.MinimumDate.ToString(Qt.DateFormat.ISODate)})");
+#endif
         var newDate = new QDate(2006, 5, 4);
         window.DateEdit.Date = newDate;
-        Check(window.DateEdit.Date.ToString(Qt.DateFormat.ISODate) == "2006-05-04",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.DateEdit.Date.ToString(Qt.DateFormat.ISODate) == "2006-05-04",
             $"QDateEdit round-trip (got {window.DateEdit.Date.ToString(Qt.DateFormat.ISODate)})");
+        #endif
 
-        Check(window.TimeEdit.MinimumTime.ToString(Qt.DateFormat.ISODate) == "09:00:00",
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.TimeEdit.MinimumTime.ToString(Qt.DateFormat.ISODate) == "09:00:00",
             $"QTimeEdit minimum time (got {window.TimeEdit.MinimumTime.ToString(Qt.DateFormat.ISODate)})");
+#endif
         window.TimeEdit.Time = new QTime(14, 30, 0, 0);
-        Check(window.TimeEdit.Time.Hour() == 14, $"QTimeEdit round-trip (got {window.TimeEdit.Time.Hour()})");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.TimeEdit.Time.Hour() == 14, $"QTimeEdit round-trip (got {window.TimeEdit.Time.Hour()})");
+        #endif
 
         // The format string decides whether the range is a date range or a time range.
-        Check(window.FormatComboBox.Count == 5, $"the format combo box holds 5 entries (got {window.FormatComboBox.Count})");
-        Check(window.MeetingEdit.MinimumDate.ToString(Qt.DateFormat.ISODate) == "2004-11-01",
+#if QTSHARP_DEMO_SMOKE
+
+        // The format string decides whether the range is a date range or a time range.
+        demo.Check(window.FormatComboBox.Count == 5, $"the format combo box holds 5 entries (got {window.FormatComboBox.Count})");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MeetingEdit.MinimumDate.ToString(Qt.DateFormat.ISODate) == "2004-11-01",
             "the date format installed a date range");
+        #endif
         window.FormatComboBox.SetCurrentIndex(4);
-        Check(window.FormatComboBox.CurrentText == "hh:mm ap",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.FormatComboBox.CurrentText == "hh:mm ap",
             $"QComboBox::currentText (got '{window.FormatComboBox.CurrentText}')");
-        Check(window.MeetingEdit.DisplayFormat == "hh:mm ap",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MeetingEdit.DisplayFormat == "hh:mm ap",
             $"QComboBox::textActivated changed the format (got '{window.MeetingEdit.DisplayFormat}')");
-        Check(window.MeetingEdit.MinimumTime.ToString(Qt.DateFormat.ISODate) == "00:07:20",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MeetingEdit.MinimumTime.ToString(Qt.DateFormat.ISODate) == "00:07:20",
             "a time-only format installed a time range");
-        Check(window.MeetingLabel.Text.StartsWith("Meeting time"),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MeetingLabel.Text.StartsWith("Meeting time"),
             $"the label followed the format (got '{window.MeetingLabel.Text}')");
+        #endif
 
         // The double precision group: decimals, prefix/suffix and the precision spin box that
         // drives all three.
-        Check(window.DoubleSpinBox.Decimals == 0, $"the initial precision call took effect (got {window.DoubleSpinBox.Decimals})");
-        window.PrecisionSpinBox.Value = 3;
-        Check(window.DoubleSpinBox.Decimals == 3 && window.ScaleSpinBox.Decimals == 3 && window.PriceSpinBox.Decimals == 3,
-            "the precision spin box changed all three double spin boxes");
-        window.PriceSpinBox.Value = 12.5;
-        Check(window.PriceSpinBox.Text == "$12.500",
-            $"QDoubleSpinBox prefix + decimals (got '{window.PriceSpinBox.Text}')");
-        window.ScaleSpinBox.Value = 0;
-        Check(window.ScaleSpinBox.Text == "No scaling",
-            $"the double special value text (got '{window.ScaleSpinBox.Text}')");
+#if QTSHARP_DEMO_SMOKE
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        // The double precision group: decimals, prefix/suffix and the precision spin box that
+        // drives all three.
+        demo.Check(window.DoubleSpinBox.Decimals == 0, $"the initial precision call took effect (got {window.DoubleSpinBox.Decimals})");
+#endif
+        window.PrecisionSpinBox.Value = 3;
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.DoubleSpinBox.Decimals == 3 && window.ScaleSpinBox.Decimals == 3 && window.PriceSpinBox.Decimals == 3,
+            "the precision spin box changed all three double spin boxes");
+        #endif
+        window.PriceSpinBox.Value = 12.5;
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.PriceSpinBox.Text == "$12.500",
+            $"QDoubleSpinBox prefix + decimals (got '{window.PriceSpinBox.Text}')");
+        #endif
+        window.ScaleSpinBox.Value = 0;
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ScaleSpinBox.Text == "No scaling",
+            $"the double special value text (got '{window.ScaleSpinBox.Text}')");
+        #endif
+
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

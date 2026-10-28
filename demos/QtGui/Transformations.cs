@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 // Port of examples/widgets/painting/transformations on the new pipeline.
@@ -357,30 +357,29 @@ public static class TransformationsDemo
         return match((int)((p >> 16) & 0xFF), (int)((p >> 8) & 0xFF), (int)(p & 0xFF));
     }
 
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         // The render area's hints and the font metrics it uses to place the axis labels.
         using (var probe = new ApiTransformRenderArea())
         {
             var hint = probe.SizeHint;
             var minimum = probe.MinimumSizeHint;
-            Check(hint.Width() == 232 && hint.Height() == 232,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(hint.Width() == 232 && hint.Height() == 232,
                 $"the render area asks for 232x232 (got {hint.Width()}x{hint.Height()})");
-            Check(minimum.Width() == 182 && minimum.Height() == 182,
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(minimum.Width() == 182 && minimum.Height() == 182,
                 $"the render area accepts 182x182 (got {minimum.Width()}x{minimum.Height()})");
-            Check(probe.XBoundingRect.Width() > 0 && probe.XBoundingRect.Height() > 0
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(probe.XBoundingRect.Width() > 0 && probe.XBoundingRect.Height() > 0
                   && probe.YBoundingRect.Width() > 0 && probe.YBoundingRect.Height() > 0,
                 $"QFontMetrics::boundingRect sizes the \"x\"/\"y\" labels "
                 + $"({probe.XBoundingRect.Width()}x{probe.XBoundingRect.Height()}, "
                 + $"{probe.YBoundingRect.Width()}x{probe.YBoundingRect.Height()})");
+            #endif
         }
 
         // The four shapes really are the ones the official setupShapes() builds.
@@ -390,16 +389,22 @@ public static class TransformationsDemo
         using (var truck = Transformations.Truck())
         {
             var bounds = clock.BoundingRect();
-                Check(Math.Abs(bounds.Width() - 100) <= 1 && Math.Abs(bounds.Height() - 100) <= 1,
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(Math.Abs(bounds.Width() - 100) <= 1 && Math.Abs(bounds.Height() - 100) <= 1,
                     $"the clock path spans 100x100 (got {bounds.Width()}x{bounds.Height()})");
+                #endif
 
             var houseBounds = house.BoundingRect();
-                Check(Math.Abs(houseBounds.Width() - 90) <= 1 && Math.Abs(houseBounds.Height() - 90) <= 1,
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(Math.Abs(houseBounds.Width() - 90) <= 1 && Math.Abs(houseBounds.Height() - 90) <= 1,
                     $"the house path spans 90x90 (got {houseBounds.Width()}x{houseBounds.Height()})");
+                #endif
 
             var truckBounds = truck.BoundingRect();
-                Check(Math.Abs(truckBounds.Width() - 100) <= 1 && Math.Abs(truckBounds.Height() - 65) <= 1,
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(Math.Abs(truckBounds.Width() - 100) <= 1 && Math.Abs(truckBounds.Height() - 65) <= 1,
                     $"the truck path spans 100x65 (got {truckBounds.Width()}x{truckBounds.Height()})");
+                #endif
 
             var textBounds = text.BoundingRect();
             {
@@ -407,35 +412,58 @@ public static class TransformationsDemo
                 // The tolerance is a font one rather than a geometry one: the outlines are centred by
                 // construction, but which font "Qt" resolves to - and so the exact ink bounds -
                 // differs between machines (CI's differs by a couple of pixels).
-                Check(textBounds.Width() > 20 && textBounds.Height() > 20
+                #if QTSHARP_DEMO_SMOKE
+                // The tolerance is a font one rather than a geometry one: the outlines are centred by
+                // construction, but which font "Qt" resolves to - and so the exact ink bounds -
+                // differs between machines (CI's differs by a couple of pixels).
+                demo.Check(textBounds.Width() > 20 && textBounds.Height() > 20
                       && Math.Abs(center.X()) <= 8 && Math.Abs(center.Y()) <= 8,
                     $"the text path holds \"Qt\" outlines centred on the origin "
                     + $"(got {textBounds.Width():F1}x{textBounds.Height():F1} at {center.X():F1},{center.Y():F1})");
+                #endif
             }
         }
 
         // Rendering the clock: a ring, because the default OddEvenFill leaves the inner disc empty.
         using (var area = new ApiTransformRenderArea())
         {
-            area.Show();
+            #if QTSHARP_DEMO_SMOKE
+                area.Show();
+            #else
+                demo.Show(area);
+            #endif
+
             using (var clock = Transformations.Clock())
                 area.SetShape(clock);
 
             using var image = area.RenderToImage();
-            Check(area.PaintCount >= 1, $"the render area painted (PaintCount {area.PaintCount})");
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(area.PaintCount >= 1, $"the render area painted (PaintCount {area.PaintCount})");
+            #endif
 
-            Check(Px(image, 66, 17, IsBlue),
+#if QTSHARP_DEMO_SMOKE
+
+            demo.Check(Px(image, 66, 17, IsBlue),
                 "the clock ring is filled on the -y radius (blue at 66,17)");
-            Check(Px(image, 41, 91, IsWhite),
+#endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(Px(image, 41, 91, IsWhite),
                 "OddEvenFill leaves the inner disc empty (white at 41,91)");
-            Check(Px(image, 1, 1, IsWhite), "the widget background is white outside the shape");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(Px(image, 1, 1, IsWhite), "the widget background is white outside the shape");
+            #endif
 
             var outline = Sample(image, IsOutline);
             var axes = Sample(image, IsRed);
-            Check(outline.Count > 100,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(outline.Count > 100,
                 $"the dashed outline is painted on top ({outline.Count} grey pixels)");
-            Check(axes.Count > 100,
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(axes.Count > 100,
                 $"the coordinate axes are painted ({axes.Count} red pixels)");
+            #endif
         }
 
         // The transformations, on a standalone area sized by its own sizeHint so the pixel
@@ -443,20 +471,33 @@ public static class TransformationsDemo
         // which is what makes each transformation observable.
         using (var area = new ApiTransformRenderArea())
         {
-            area.Show();
+            #if QTSHARP_DEMO_SMOKE
+                area.Show();
+            #else
+                demo.Show(area);
+            #endif
+
             using (var truck = Transformations.Truck())
                 area.SetShape(truck);
 
             (int Count, int MinX, int MinY, int MaxX, int MaxY) identity, rotated, rotatedScaled, moved;
+            #if QTSHARP_DEMO_SMOKE
             (int MinX, int MinY) outlineAtIdentity;
+            #endif
             using (var image = area.RenderToImage())
             {
                 identity = Sample(image, IsBlue);
+                #if QTSHARP_DEMO_SMOKE
                 outlineAtIdentity = (Sample(image, IsOutline).MinX, Sample(image, IsOutline).MinY);
-                Check(identity.Count > 3500,
+                #endif
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(identity.Count > 3500,
                     $"the identity truck fills the unit square ({identity.Count} blue pixels)");
-                Check(identity.MinX <= 68 && identity.MaxX >= 162,
+                #endif
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(identity.MinX <= 68 && identity.MaxX >= 162,
                     $"the truck spans the unit square in x ({identity.MinX}-{identity.MaxX})");
+                #endif
             }
 
             area.SetOperations(new[] { ApiTransformOperation.Rotate });
@@ -464,25 +505,33 @@ public static class TransformationsDemo
             {
                 rotated = Sample(image, IsBlue);
                 var outline = Sample(image, IsOutline);
-                Check(area.Operations().Length == 1,
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(area.Operations().Length == 1,
                     "the area records a single operation");
-                Check(Math.Abs(outline.MinX - outlineAtIdentity.MinX) <= 1
+                #endif
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(Math.Abs(outline.MinX - outlineAtIdentity.MinX) <= 1
                       && Math.Abs(outline.MinY - outlineAtIdentity.MinY) <= 1,
                     $"the outline is painted outside save()/restore(), so it stays put "
                     + $"(outline {outline.MinX},{outline.MinY} vs {outlineAtIdentity.MinX},{outlineAtIdentity.MinY})");
-                Check(Math.Abs(rotated.MinX - identity.MinX) + Math.Abs(rotated.MaxY - identity.MaxY) > 10,
+                #endif
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(Math.Abs(rotated.MinX - identity.MinX) + Math.Abs(rotated.MaxY - identity.MaxY) > 10,
                     $"rotating by 60 degrees moves the truck "
                     + $"({identity.MinX}-{identity.MaxX},{identity.MinY}-{identity.MaxY} -> "
                     + $"{rotated.MinX}-{rotated.MaxX},{rotated.MinY}-{rotated.MaxY})");
+                #endif
             }
 
             area.SetOperations(new[] { ApiTransformOperation.Rotate, ApiTransformOperation.Scale });
             using (var image = area.RenderToImage())
             {
                 rotatedScaled = Sample(image, IsBlue);
-                Check(rotatedScaled.Count < rotated.Count * 0.8,
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(rotatedScaled.Count < rotated.Count * 0.8,
                     $"scaling to 75% shrinks the painted shape "
                     + $"({rotated.Count} -> {rotatedScaled.Count} blue pixels)");
+                #endif
             }
 
             area.SetOperations(new[]
@@ -494,30 +543,43 @@ public static class TransformationsDemo
                 moved = Sample(image, IsBlue);
                 int shift = Math.Abs(moved.MinX - rotatedScaled.MinX) + Math.Abs(moved.MinY - rotatedScaled.MinY)
                             + Math.Abs(moved.MaxX - rotatedScaled.MaxX) + Math.Abs(moved.MaxY - rotatedScaled.MaxY);
-                Check(shift > 10,
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(shift > 10,
                     $"translating by (50,50) moves the shape "
                     + $"({rotatedScaled.MinX}-{rotatedScaled.MaxX},{rotatedScaled.MinY}-{rotatedScaled.MaxY} -> "
                     + $"{moved.MinX}-{moved.MaxX},{moved.MinY}-{moved.MaxY})");
+                #endif
             }
         }
 
         // The window: four areas over a grid of combo boxes, the official wiring.
         using var window = new ApiTransformWindow();
-        window.Show();
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
+
         QCoreApplication.ProcessEvents();
 
-        Check(window.ShapeComboBox.count() == 4
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.ShapeComboBox.count() == 4
               && window.OperationComboBoxes[0].count() == 4
               && window.OperationComboBoxes[1].count() == 4
               && window.OperationComboBoxes[2].count() == 4,
             "the shape and operation combo boxes are populated "
             + $"({window.ShapeComboBox.count()} shapes, {window.OperationComboBoxes[0].count()} operations)");
+#endif
 
-        Check(window.Shapes.Length == 4 && window.TransformedRenderAreas.Length == 3
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.Shapes.Length == 4 && window.TransformedRenderAreas.Length == 3
               && window.ShapeComboBox.currentIndex() == 0
               && window.TransformedRenderAreas[2].Operations().Length == 0,
             $"the window starts on the clock, with no transformation applied "
             + $"(shape index {window.ShapeComboBox.currentIndex()})");
+#endif
 
         // The combo boxes drive the areas: each area gets the prefix of the operation table up to
         // and including its own index.
@@ -529,12 +591,14 @@ public static class TransformationsDemo
         var ops0 = window.TransformedRenderAreas[0].Operations();
         var ops1 = window.TransformedRenderAreas[1].Operations();
         var ops2 = window.TransformedRenderAreas[2].Operations();
-        Check(ops0.Length == 1 && ops0[0] == ApiTransformOperation.Rotate
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(ops0.Length == 1 && ops0[0] == ApiTransformOperation.Rotate
               && ops1.Length == 2 && ops1[1] == ApiTransformOperation.Scale
               && ops2.Length == 3 && ops2[2] == ApiTransformOperation.Translate,
             "the operation combo boxes accumulate into the three areas, in order "
             + $"(area 0: [{string.Join(",", ops0)}], area 1: [{string.Join(",", ops1)}], "
             + $"area 2: [{string.Join(",", ops2)}])");
+        #endif
 
         // Switching the shape reaches all four areas.
         int paintBefore = window.OriginalRenderArea.PaintCount;
@@ -544,10 +608,14 @@ public static class TransformationsDemo
         using (var original = window.OriginalRenderArea.RenderToImage())
         {
             var truck = Sample(original, IsBlue);
-            Check(truck.Count > 3500 && truck.MinX <= 68,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(truck.Count > 3500 && truck.MinX <= 68,
                 $"the original area switched to the truck ({truck.Count} blue pixels, x from {truck.MinX})");
-            Check(window.OriginalRenderArea.PaintCount > paintBefore,
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(window.OriginalRenderArea.PaintCount > paintBefore,
                 "the shape switch repainted the original area");
+            #endif
         }
 
         foreach (var area in window.TransformedRenderAreas)
@@ -555,11 +623,16 @@ public static class TransformationsDemo
         using (var area2 = window.TransformedRenderAreas[2].RenderToImage())
         {
             var truck = Sample(area2, IsBlue);
-            Check(truck.Count > 0,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(truck.Count > 0,
                 $"the transformed areas switched to the truck too ({truck.Count} blue pixels)");
+            #endif
         }
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

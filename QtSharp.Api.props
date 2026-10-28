@@ -17,8 +17,9 @@
     Override QtSharpRoot / QtSharpApiDir / QtSharpOutDir / QtRuntimeDir if the pieces live
     elsewhere.
 
-    A project that *references* the binding assemblies (the demos library, QtSharp.Demos.dll, or
-    the QtSharp.Api package) must set QtSharpCompileBinding=false first - compiling the binding
+    A project that *references* the binding assemblies (a demo executable such as
+    QtSharp.Demos.QtWidgets, or the QtSharp.Api package) must set QtSharpCompileBinding=false
+    first - compiling the binding
     again defines every QtSharp.QtCore/QtGui/... type twice, which is CS0433 everywhere. The import still
     brings the native DLLs and the Qt runtime, so such a project needs no further setup:
 
@@ -27,7 +28,7 @@
         </PropertyGroup>
         <Import Project="..\..\QtSharp.Api.props" />
         <ItemGroup>
-          <ProjectReference Include="..\..\demos\QtSharp.Demos.csproj" />
+          <ProjectReference Include="..\..\demos\QtWidgets\QtSharp.Demos.QtWidgets.csproj" />
         </ItemGroup>
   -->
   <PropertyGroup>

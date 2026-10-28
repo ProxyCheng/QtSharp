@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 // The official examples/widgets/graphicsview/collidingmice example, ported onto the generated
 // binding. It is the conformance case for writing a *QGraphicsItem* in C#: MouseItem derives from
@@ -152,15 +152,8 @@ public static class CollidingMice
         }
     }
 
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         var scene = new QGraphicsScene();
         scene.SetSceneRect(new QRectF(-300, -300, 600, 600));
@@ -187,10 +180,17 @@ public static class CollidingMice
         using (var background = new QBrush(new QColor(250, 245, 235)))
             view.SetBackgroundBrush(background);
         view.Resize(400, 400);
-        view.Show();
+        #if QTSHARP_DEMO_SMOKE
+            view.Show();
+        #else
+            demo.Show(view);
+        #endif
 
-        Check(scene.Items().Length == mouseCount,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(scene.Items().Length == mouseCount,
             $"the scene holds the seven mice ({scene.Items().Length})");
+#endif
 
         // Qt's scene advance calls every item's advance(1) through the vtable.
         var before = ((MouseItem)mice[0]).Pos();
@@ -201,33 +201,48 @@ public static class CollidingMice
         for (int i = 0; i < mouseCount; i++)
             if (mice[i].AdvanceCalls >= 10)
                 advanced++;
-        Check(advanced == mouseCount,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(advanced == mouseCount,
             $"Qt advanced every managed mouse ({advanced}/{mouseCount} reached ten frames)");
+        #endif
 
         var after = ((MouseItem)mice[0]).Pos();
-        Check(Math.Abs(after.X() - before.X()) + Math.Abs(after.Y() - before.Y()) > 0.01,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(Math.Abs(after.X() - before.X()) + Math.Abs(after.Y() - before.Y()) > 0.01,
             $"the managed advance() moved the mouse ({before.X():F1},{before.Y():F1} -> {after.X():F1},{after.Y():F1})");
+        #endif
 
         // ItemsBoundingRect asks each item for boundingRect(); grabbing the view paints every item.
         var bounds = scene.ItemsBoundingRect();
-        Check(bounds.Width() > 0 && bounds.Height() > 0,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(bounds.Width() > 0 && bounds.Height() > 0,
             $"Qt asked the managed items for their bounding rectangles ({bounds.Width():F0}x{bounds.Height():F0})");
+        #endif
 
         using var shot = view.Grab();
         int painted = 0;
         for (int i = 0; i < mouseCount; i++)
             if (mice[i].PaintCalls > 0)
                 painted++;
-        Check(painted == mouseCount,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(painted == mouseCount,
             $"Qt asked every managed mouse to paint ({painted}/{mouseCount})");
-        Check(DemoCatalog.GrabCovers(shot, 400, 400),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(DemoPixels.GrabCovers(shot, 400, 400),
             $"the scene rendered off-screen ({shot.Width()}x{shot.Height()})");
+        #endif
 
+        #if QTSHARP_DEMO_SMOKE
         view.Close();
         scene.Dispose();
         view.Dispose();
+        #endif
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

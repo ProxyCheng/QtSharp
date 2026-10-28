@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
@@ -9,19 +9,11 @@ namespace QtSharp.Tests
     /// QRegularExpression: the pattern and the options both engines spell the same way cross;
     /// everything else is a documented failure rather than a silent semantic change.
     /// </summary>
-    [Demo("test-regexinterop")]
+    [Test("test-regexinterop")]
     public static class RegexInteropTests
     {
-        public static int Run(QApplication app)
+        public static int Run(TestContext context)
         {
-            int failures = 0;
-            void Check(bool ok, string what)
-            {
-                Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-                if (!ok)
-                    failures++;
-            }
-
             // ------------------------------------------------------- round trip, both ways
             // Named and numbered captures, so a conversion that lost the pattern or a capture is
             // visible in both engines' own match APIs.
@@ -29,21 +21,21 @@ namespace QtSharp.Tests
             var regex = new Regex(Pattern, RegexOptions.Multiline);
             using (var expression = regex.ToQRegularExpression())
             {
-                Check(expression.IsValid(), "Regex -> QRegularExpression is a valid expression");
-                Check(expression.Pattern() == Pattern, $"the pattern is carried ('{expression.Pattern()}')");
-                Check(expression.patternOptions() == QRegularExpression.PatternOptions.MultilineOption,
+                context.Check(expression.IsValid(), "Regex -> QRegularExpression is a valid expression");
+                context.Check(expression.Pattern() == Pattern, $"the pattern is carried ('{expression.Pattern()}')");
+                context.Check(expression.patternOptions() == QRegularExpression.PatternOptions.MultilineOption,
                     $"and the options are carried ({expression.patternOptions()})");
 
                 // Qt evaluates it with PCRE2: the named and numbered groups are all there.
                 using (var qtMatch = expression.Match("2026-10-28"))
                 {
-                    Check(qtMatch.HasMatch()
+                    context.Check(qtMatch.HasMatch()
                           && qtMatch.Captured("year") == "2026"
                           && qtMatch.Captured(2) == "10"
                           && qtMatch.Captured(3) == "28",
                         "Qt's PCRE2 match sees the named and numbered captures");
                 }
-                Check(Array.IndexOf(expression.NamedCaptureGroups(), "year") >= 0,
+                context.Check(Array.IndexOf(expression.NamedCaptureGroups(), "year") >= 0,
                     "NamedCaptureGroups carries the named group");
 
                 // A real Qt consumer: the validator compiles and evaluates the converted
@@ -52,26 +44,26 @@ namespace QtSharp.Tests
                 {
                     string accepted = "2026-10-28";
                     int acceptedPos = 0;
-                    Check(validator.Validate(ref accepted, ref acceptedPos) == QValidator.State.Acceptable,
+                    context.Check(validator.Validate(ref accepted, ref acceptedPos) == QValidator.State.Acceptable,
                         "QRegularExpressionValidator accepts a matching input");
 
                     string rejected = "2026-1";
                     int rejectedPos = 0;
-                    Check(validator.Validate(ref rejected, ref rejectedPos) != QValidator.State.Acceptable,
+                    context.Check(validator.Validate(ref rejected, ref rejectedPos) != QValidator.State.Acceptable,
                         "and rejects a non-matching one");
                 }
 
                 // ... and back: the .NET engine gets the same pattern and options.
                 var roundTripped = expression.ToRegex();
-                Check(roundTripped.ToString() == Pattern, "QRegularExpression -> Regex keeps the pattern");
-                Check(roundTripped.Options == RegexOptions.Multiline,
+                context.Check(roundTripped.ToString() == Pattern, "QRegularExpression -> Regex keeps the pattern");
+                context.Check(roundTripped.Options == RegexOptions.Multiline,
                     $"and the options ({roundTripped.Options})");
                 var match = roundTripped.Match("2026-10-28");
                 // .NET numbers unnamed groups before named ones, so the month is group 1 here
                 // while PCRE2 (above) numbers the named group first. The captures are the same;
                 // the numbering is an engine detail, which is exactly what this conversion does
                 // not translate.
-                Check(match.Success
+                context.Check(match.Success
                       && match.Groups["year"].Value == "2026"
                       && match.Groups[1].Value == "10"
                       && match.Groups[2].Value == "28",
@@ -90,9 +82,9 @@ namespace QtSharp.Tests
                 using (var returned = proxy.filterRegularExpression())
                 {
                     var converted = returned.ToRegex();
-                    Check(converted.ToString() == "^ab+c$",
+                    context.Check(converted.ToString() == "^ab+c$",
                         $"a proxy-returned expression carries its pattern ('{converted.ToString()}')");
-                    Check(converted.Options == (RegexOptions.IgnoreCase | RegexOptions.Multiline),
+                    context.Check(converted.Options == (RegexOptions.IgnoreCase | RegexOptions.Multiline),
                         $"and its options ({converted.Options})");
                 }
             }
@@ -114,13 +106,13 @@ namespace QtSharp.Tests
             foreach (var option in mappable)
             {
                 using (var expression = new Regex("a", option.Net).ToQRegularExpression())
-                    Check(expression.patternOptions() == option.Qt,
+                    context.Check(expression.patternOptions() == option.Qt,
                         $"RegexOptions.{option.Net} -> PatternOptions.{expression.patternOptions()} ({option.Name})");
 
                 using (var expression = new QRegularExpression("a", option.Qt))
                 {
                     var converted = expression.ToRegex();
-                    Check(converted.Options == option.Net,
+                    context.Check(converted.Options == option.Net,
                         $"PatternOptions.{option.Qt} -> RegexOptions.{converted.Options} ({option.Name})");
                 }
             }
@@ -131,7 +123,7 @@ namespace QtSharp.Tests
                        RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant)
                        .ToQRegularExpression())
             {
-                Check(expression.patternOptions() == QRegularExpression.PatternOptions.CaseInsensitiveOption,
+                context.Check(expression.patternOptions() == QRegularExpression.PatternOptions.CaseInsensitiveOption,
                     $"Compiled and CultureInvariant add no Qt flag ({expression.patternOptions()})");
             }
             using (var expression = new QRegularExpression("a",
@@ -139,7 +131,7 @@ namespace QtSharp.Tests
             {
                 var converted = expression.ToRegex(
                     RegexOptions.Compiled | RegexOptions.CultureInvariant);
-                Check(converted.Options == (RegexOptions.Multiline
+                context.Check(converted.Options == (RegexOptions.Multiline
                                             | RegexOptions.Compiled
                                             | RegexOptions.CultureInvariant),
                     $"extraOptions are added on the .NET side ({converted.Options})");
@@ -157,11 +149,11 @@ namespace QtSharp.Tests
                     try
                     {
                         var converted = expression.ToRegex();
-                        Check(false, $"PatternOptions.{qtOption} should not convert (got '{converted}')");
+                        context.Check(false, $"PatternOptions.{qtOption} should not convert (got '{converted}')");
                     }
                     catch (NotSupportedException)
                     {
-                        Check(true, $"PatternOptions.{qtOption} throws NotSupportedException");
+                        context.Check(true, $"PatternOptions.{qtOption} throws NotSupportedException");
                     }
                 }
             }
@@ -178,11 +170,11 @@ namespace QtSharp.Tests
                 try
                 {
                     using (var converted = unsupportedRegex.ToQRegularExpression())
-                        Check(false, $"RegexOptions.{netOption} should not convert (got '{converted.Pattern()}')");
+                        context.Check(false, $"RegexOptions.{netOption} should not convert (got '{converted.Pattern()}')");
                 }
                 catch (NotSupportedException)
                 {
-                    Check(true, $"RegexOptions.{netOption} throws NotSupportedException");
+                    context.Check(true, $"RegexOptions.{netOption} throws NotSupportedException");
                 }
             }
 
@@ -190,15 +182,15 @@ namespace QtSharp.Tests
             // \K is a PCRE2 construct .NET does not have: Qt accepts it, the .NET constructor does not.
             using (var expression = new QRegularExpression(@"a\Kb"))
             {
-                Check(expression.IsValid(), "Qt accepts the PCRE2-only \\K");
+                context.Check(expression.IsValid(), "Qt accepts the PCRE2-only \\K");
                 try
                 {
                     var converted = expression.ToRegex();
-                    Check(false, $"PCRE2-only \\K should not compile as .NET (got '{converted}')");
+                    context.Check(false, $"PCRE2-only \\K should not compile as .NET (got '{converted}')");
                 }
                 catch (RegexParseException)
                 {
-                    Check(true, "a PCRE2-only pattern makes ToRegex throw RegexParseException");
+                    context.Check(true, "a PCRE2-only pattern makes ToRegex throw RegexParseException");
                 }
             }
 
@@ -208,28 +200,27 @@ namespace QtSharp.Tests
             long qtOffset;
             using (var rejected = new QRegularExpression(NetOnlyPattern))
             {
-                Check(!rejected.IsValid(), "Qt rejects the .NET-only balancing group");
+                context.Check(!rejected.IsValid(), "Qt rejects the .NET-only balancing group");
                 qtError = rejected.ErrorString();
                 qtOffset = rejected.PatternErrorOffset();
             }
-            Check(!string.IsNullOrEmpty(qtError) && qtOffset > 0,
+            context.Check(!string.IsNullOrEmpty(qtError) && qtOffset > 0,
                 $"Qt reports an error and a non-zero offset ('{qtError}' at {qtOffset})");
 
             var netOnlyRegex = new Regex(NetOnlyPattern);
             try
             {
                 using (var converted = netOnlyRegex.ToQRegularExpression())
-                    Check(false, "a .NET-only pattern should not convert to Qt");
+                    context.Check(false, "a .NET-only pattern should not convert to Qt");
             }
             catch (ArgumentException e)
             {
-                Check(e.Message.Contains(qtError)
+                context.Check(e.Message.Contains(qtError)
                       && e.Message.Contains(qtOffset.ToString(CultureInfo.InvariantCulture)),
                     $"ToQRegularExpression throws ArgumentException with Qt's error and offset ({e.Message})");
             }
 
-            Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[FAIL] {failures} check(s) failed");
-            return failures == 0 ? 0 : 1;
+            return context.ExitCode;
         }
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 // Port of examples/widgets/itemviews/customsortfiltermodel on the new pipeline.
 //
@@ -268,112 +268,156 @@ public sealed class ApiCustomSortFilterWindow : QWidget
 [Demo("qtwidgets-customsortfilter")]
 public static class CustomSortFilter
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         using var window = new ApiCustomSortFilterWindow();
-        window.Show();
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
 
         // The source model is untouched by the proxy: the window shows both side by side.
-        Check(window.SourceModel.RowCount() == 5 && window.SourceModel.ColumnCount() == 3,
+#if QTSHARP_DEMO_SMOKE
+
+        // The source model is untouched by the proxy: the window shows both side by side.
+        demo.Check(window.SourceModel.RowCount() == 5 && window.SourceModel.ColumnCount() == 3,
             $"the source model has five rows and three columns "
             + $"({window.SourceModel.RowCount()}x{window.SourceModel.ColumnCount()})");
-        Check(window.SourceView.Model() != null
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.SourceView.Model() != null
               && window.SourceView.Model().Handle == window.SourceModel.Handle,
             "the source view shows the original model");
+        #endif
 
         // The initial filter: the pattern "Grace|Sports" as a regular expression.
         var rows = window.ProxyRows();
-        Check(rows.Length == 2,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(rows.Length == 2,
             $"the pattern Grace|Sports keeps two rows (got {rows.Length}: {string.Join(", ", System.Array.ConvertAll(rows, r => r.Name))})");
+        #endif
         bool graceSports = Array.Exists(rows, r => r.Name == "Grace") && Array.Exists(rows, r => r.Name == "Sports");
-        Check(graceSports, "the two rows kept are Grace and Sports");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(graceSports, "the two rows kept are Grace and Sports");
+        #endif
 
         // The managed override is what filtered them.
-        Check(window.ProxyModel.FilterAcceptsRowCalls >= 5,
+#if QTSHARP_DEMO_SMOKE
+
+        // The managed override is what filtered them.
+        demo.Check(window.ProxyModel.FilterAcceptsRowCalls >= 5,
             $"Qt called the managed filterAcceptsRow({window.ProxyModel.FilterAcceptsRowCalls} times)");
+#endif
 
         // Fixed string syntax: QRegularExpression::escape makes the pattern literal.
         window.FilterWidget.SyntaxComboBox.SetCurrentIndex(1);
         window.FilterWidget.LineEdit.SetText("greg");
         rows = window.ProxyRows();
-        Check(rows.Length == 1 && rows[0].Name == "gregory",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(rows.Length == 1 && rows[0].Name == "gregory",
             $"a fixed-string pattern keeps only gregory (got {rows.Length})");
+        #endif
 
         // Wildcard syntax: QRegularExpression::wildcardToRegularExpression.
         window.FilterWidget.SyntaxComboBox.SetCurrentIndex(2);
         window.FilterWidget.LineEdit.SetText("spor*");
         rows = window.ProxyRows();
-        Check(rows.Length == 2, $"the wildcard 'spor*' keeps Sports and sporty (got {rows.Length})");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(rows.Length == 2, $"the wildcard 'spor*' keeps Sports and sporty (got {rows.Length})");
+        #endif
 
         // Case sensitivity is a pattern option, and it reaches the proxy.
         window.FilterWidget.CaseComboBox.SetCurrentIndex(1);
         window.FilterWidget.LineEdit.SetText("SPORT*");
         rows = window.ProxyRows();
-        Check(rows.Length == 0, $"case-sensitively 'SPORT*' matches nothing (got {rows.Length})");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(rows.Length == 0, $"case-sensitively 'SPORT*' matches nothing (got {rows.Length})");
+        #endif
         window.FilterWidget.CaseComboBox.SetCurrentIndex(0);
         rows = window.ProxyRows();
-        Check(rows.Length == 2, $"case-insensitively it matches again (got {rows.Length})");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(rows.Length == 2, $"case-insensitively it matches again (got {rows.Length})");
+        #endif
 
         // Back to a pattern that matches everything, then the date range: the custom minimum and
         // maximum dates are what the official example adds on top of the pattern.
         window.FilterWidget.SyntaxComboBox.SetCurrentIndex(0);
         window.FilterWidget.LineEdit.SetText(".");
         rows = window.ProxyRows();
-        Check(rows.Length == 5, $"the pattern '.' keeps every row (got {rows.Length})");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(rows.Length == 5, $"the pattern '.' keeps every row (got {rows.Length})");
+        #endif
 
         window.FromDateEdit.SetDate(new QDate(2020, 1, 1));
         rows = window.ProxyRows();
-        Check(rows.Length == 3,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(rows.Length == 3,
             $"a minimum date of 2020-01-01 drops the two older rows (got {rows.Length})");
+        #endif
 
         window.ToDateEdit.SetDate(new QDate(2021, 12, 31));
         rows = window.ProxyRows();
-        Check(rows.Length == 2,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(rows.Length == 2,
             $"a maximum date of 2021-12-31 drops the 2022 row (got {rows.Length})");
-        Check(window.ProxyModel.MinimumDateIso == "2020-01-01"
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ProxyModel.MinimumDateIso == "2020-01-01"
               && window.ProxyModel.MaximumDateIso == "2021-12-31",
             $"the custom dates reached the proxy model "
             + $"({window.ProxyModel.MinimumDateIso} .. {window.ProxyModel.MaximumDateIso})");
+        #endif
 
         // The second hook: the managed lessThan sorts the e-mail column by the name before the '@'
         // (case-insensitively), so Grace comes before Sports - an order that only our override
         // produces, since Qt's default would compare the whole address.
         rows = window.ProxyRows();
-        Check(window.ProxyModel.LessThanCalls > 0,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ProxyModel.LessThanCalls > 0,
             $"Qt called the managed lessThan({window.ProxyModel.LessThanCalls} times)");
-        Check(rows.Length == 2 && rows[0].Email == "grace@example.com" && rows[1].Email == "sports@example.com",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(rows.Length == 2 && rows[0].Email == "grace@example.com" && rows[1].Email == "sports@example.com",
             $"the proxy is ordered by the managed lessThan "
             + $"({string.Join(", ", System.Array.ConvertAll(rows, r => r.Email))})");
+        #endif
 
         // The proxy's own model API, mapped back to the source.
-        Check(window.ProxyModel.ColumnCount() == 3 && window.ProxyModel.RowCount() == 2,
+#if QTSHARP_DEMO_SMOKE
+
+        // The proxy's own model API, mapped back to the source.
+        demo.Check(window.ProxyModel.ColumnCount() == 3 && window.ProxyModel.RowCount() == 2,
             $"the proxy reports three columns and its filtered row count "
             + $"({window.ProxyModel.ColumnCount()}x{window.ProxyModel.RowCount()})");
+#endif
         var proxyIndex = window.ProxyModel.Index(0, 0);
         var sourceIndex = window.ProxyModel.MapToSource(proxyIndex);
         {
             string sourceValue = window.SourceModel.Data(sourceIndex)?.ToString();
-            Check(sourceIndex.IsValid() && sourceValue == rows[0].Name,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(sourceIndex.IsValid() && sourceValue == rows[0].Name,
                 $"mapToSource turns the first proxy index into the matching source row "
                 + $"(row {sourceIndex.Row}, '{sourceValue}' vs proxy '{rows[0].Name}')");
+            #endif
         }
 
         window.ProxyModel.SetFilterKeyColumn(1);
-        Check(window.ProxyModel.filterKeyColumn() == 1,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ProxyModel.filterKeyColumn() == 1,
             $"the filter key column round-trips (got {window.ProxyModel.filterKeyColumn()})");
+        #endif
         window.ProxyModel.SetDynamicSortFilter(false);
-        Check(!window.ProxyModel.dynamicSortFilter(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.ProxyModel.dynamicSortFilter(),
             "the dynamic sort filter flag round-trips");
+        #endif
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 // The official widgets/mainwindows/menus example, ported onto the *new* pipeline. It is a
 // QMainWindow (not a dialog): a menu bar with File / Edit / Help, a Format submenu under Edit
@@ -256,164 +256,284 @@ public sealed class ApiMenusWindow : QMainWindow
 [Demo("qtwidgets-menus")]
 public static class Menus
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         var window = new ApiMenusWindow();
-        window.Show();
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
 
         // ------------------------------------------------------------------ menu bar
         var bar = window.MenuBar();
         var menus = bar.Actions();
-        Check(menus.Length == 3, $"menu bar has three menus (got {menus.Length})");
-        Check(menus[0].text() == "&File" && menus[1].text() == "&Edit" && menus[2].text() == "&Help",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(menus.Length == 3, $"menu bar has three menus (got {menus.Length})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(menus[0].text() == "&File" && menus[1].text() == "&Edit" && menus[2].text() == "&Help",
             $"menu bar titles in order (got '{menus[0].text()}', '{menus[1].text()}', '{menus[2].text()}')");
-        Check(QMenu.MenuInAction(menus[0]).title() == "&File",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(QMenu.MenuInAction(menus[0]).title() == "&File",
             $"MenuInAction resolves the File menu (got '{QMenu.MenuInAction(menus[0]).title()}')");
+        #endif
 
         // ------------------------------------------------------------------ File menu
         var fileActions = window.FileMenu.Actions();
-        Check(fileActions.Length == 6, $"File has six entries (got {fileActions.Length})");
-        Check(fileActions[0].text() == "&New" && fileActions[1].text() == "&Open..."
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(fileActions.Length == 6, $"File has six entries (got {fileActions.Length})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(fileActions[0].text() == "&New" && fileActions[1].text() == "&Open..."
               && fileActions[2].text() == "&Save" && fileActions[3].text() == "&Print...",
             "File texts New/Open/Save/Print in order");
-        Check(fileActions[4].IsSeparator() && fileActions[5].text() == "E&xit",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(fileActions[4].IsSeparator() && fileActions[5].text() == "E&xit",
             "File ends with a separator then Exit");
+        #endif
 
         // ------------------------------------------------------------------ Edit menu
         var editActions = window.EditMenu.Actions();
-        Check(editActions.Length == 8, $"Edit has eight entries (got {editActions.Length})");
-        Check(editActions[0].text() == "&Undo" && editActions[1].text() == "&Redo",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(editActions.Length == 8, $"Edit has eight entries (got {editActions.Length})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(editActions[0].text() == "&Undo" && editActions[1].text() == "&Redo",
             "Edit starts with Undo/Redo");
-        Check(editActions[2].IsSeparator(), "Edit has a separator after Redo");
-        Check(editActions[3].text() == "Cu&t" && editActions[4].text() == "&Copy" && editActions[5].text() == "&Paste",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(editActions[2].IsSeparator(), "Edit has a separator after Redo");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(editActions[3].text() == "Cu&t" && editActions[4].text() == "&Copy" && editActions[5].text() == "&Paste",
             "Edit has Cut/Copy/Paste");
-        Check(editActions[6].IsSeparator(), "Edit has a separator before Format");
-        Check(editActions[7].text() == "&Format", $"Edit ends with the Format submenu (got '{editActions[7].text()}')");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(editActions[6].IsSeparator(), "Edit has a separator before Format");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(editActions[7].text() == "&Format", $"Edit ends with the Format submenu (got '{editActions[7].text()}')");
+        #endif
 
         // ------------------------------------------------------------------ Format menu
         var formatActions = window.FormatMenu.Actions();
-        Check(formatActions.Length == 10, $"Format has ten entries (got {formatActions.Length})");
-        Check(formatActions[0].text() == "&Bold" && formatActions[1].text() == "&Italic",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(formatActions.Length == 10, $"Format has ten entries (got {formatActions.Length})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(formatActions[0].text() == "&Bold" && formatActions[1].text() == "&Italic",
             "Format starts with Bold/Italic");
-        Check(formatActions[2].IsSeparator(), "Format has a separator after Italic");
-        Check(formatActions[3].text() == "&Left Align" && formatActions[4].text() == "&Right Align"
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(formatActions[2].IsSeparator(), "Format has a separator after Italic");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(formatActions[3].text() == "&Left Align" && formatActions[4].text() == "&Right Align"
               && formatActions[5].text() == "&Justify" && formatActions[6].text() == "&Center",
             "Format holds the four alignment actions in order");
-        Check(formatActions[7].IsSeparator(), "Format has a separator before the spacing actions");
-        Check(formatActions[8].text() == "Set &Line Spacing..." && formatActions[9].text() == "Set &Paragraph Spacing...",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(formatActions[7].IsSeparator(), "Format has a separator before the spacing actions");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(formatActions[8].text() == "Set &Line Spacing..." && formatActions[9].text() == "Set &Paragraph Spacing...",
             "Format ends with the spacing actions");
+        #endif
 
         // ------------------------------------------------------------------ Help menu
         var helpActions = window.HelpMenu.Actions();
-        Check(helpActions.Length == 2 && helpActions[0].text() == "&About" && helpActions[1].text() == "About &Qt",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(helpActions.Length == 2 && helpActions[0].text() == "&About" && helpActions[1].text() == "About &Qt",
             $"Help holds About/About Qt (got {helpActions.Length})");
-        Check(window.AboutAct.IsEnabled() && window.AboutQtAct.IsEnabled(),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.AboutAct.IsEnabled() && window.AboutQtAct.IsEnabled(),
             "About / About Qt actions are enabled (not triggered: they would block)");
+        #endif
 
         // ------------------------------------------------------------------ the alignment group
-        Check(window.LeftAlignAct.IsCheckable() && window.RightAlignAct.IsCheckable()
+#if QTSHARP_DEMO_SMOKE
+
+        // ------------------------------------------------------------------ the alignment group
+        demo.Check(window.LeftAlignAct.IsCheckable() && window.RightAlignAct.IsCheckable()
               && window.JustifyAct.IsCheckable() && window.CenterAct.IsCheckable(),
             "all four alignment actions are checkable");
-        Check(window.AlignmentGroup.Actions().Length == 4,
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.AlignmentGroup.Actions().Length == 4,
             $"the group owns four actions (got {window.AlignmentGroup.Actions().Length})");
-        Check(window.AlignmentGroup.IsExclusive(), "the alignment group is exclusive");
-        Check(window.AlignmentGroup.exclusionPolicy() == QActionGroup.ExclusionPolicy.Exclusive,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.AlignmentGroup.IsExclusive(), "the alignment group is exclusive");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.AlignmentGroup.exclusionPolicy() == QActionGroup.ExclusionPolicy.Exclusive,
             "the alignment group's exclusion policy is Exclusive");
-        Check(window.LeftAlignAct.IsChecked(), "Left Align starts out checked");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.LeftAlignAct.IsChecked(), "Left Align starts out checked");
+        #endif
 
         window.RightAlignAct.Trigger();
-        Check(window.RightAlignAct.IsChecked(), "triggering Right Align checks it");
-        Check(!window.LeftAlignAct.IsChecked(), "triggering Right Align unchecks Left Align");
-        Check(!window.JustifyAct.IsChecked() && !window.CenterAct.IsChecked(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.RightAlignAct.IsChecked(), "triggering Right Align checks it");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.LeftAlignAct.IsChecked(), "triggering Right Align unchecks Left Align");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.JustifyAct.IsChecked() && !window.CenterAct.IsChecked(),
             "triggering Right Align leaves the other two unchecked");
-        Check(ReferenceEquals(window.AlignmentGroup.CheckedAction(), window.RightAlignAct),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(ReferenceEquals(window.AlignmentGroup.CheckedAction(), window.RightAlignAct),
             "the group reports Right Align as the checked action");
-        Check(window.InfoLabel.Text == "Invoked <b>Edit|Format|Right Align</b>",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.InfoLabel.Text == "Invoked <b>Edit|Format|Right Align</b>",
             $"the label follows the alignment trigger (got '{window.InfoLabel.Text}')");
+        #endif
 
         window.JustifyAct.Trigger();
-        Check(window.JustifyAct.IsChecked() && !window.RightAlignAct.IsChecked(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.JustifyAct.IsChecked() && !window.RightAlignAct.IsChecked(),
             "triggering Justify moves the exclusive check");
+        #endif
         window.LeftAlignAct.Trigger();
-        Check(window.LeftAlignAct.IsChecked() && !window.JustifyAct.IsChecked(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.LeftAlignAct.IsChecked() && !window.JustifyAct.IsChecked(),
             "triggering Left Align moves the exclusive check again");
+        #endif
 
         // ------------------------------------------------------------------ status-bar tips
-        Check(window.StatusBar().CurrentMessage() == "A context menu is available by right-clicking",
+#if QTSHARP_DEMO_SMOKE
+
+        // ------------------------------------------------------------------ status-bar tips
+        demo.Check(window.StatusBar().CurrentMessage() == "A context menu is available by right-clicking",
             $"the status bar starts with the help message (got '{window.StatusBar().CurrentMessage()}')");
+#endif
         window.NewAct.ShowStatusText(window);
-        Check(window.StatusBar().CurrentMessage() == "Create a new file",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.StatusBar().CurrentMessage() == "Create a new file",
             $"a File action's status tip reaches the status bar (got '{window.StatusBar().CurrentMessage()}')");
+        #endif
         window.LeftAlignAct.ShowStatusText(window);
-        Check(window.StatusBar().CurrentMessage() == "left align the selected text",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.StatusBar().CurrentMessage() == "left align the selected text",
             $"an alignment action's status tip reaches the status bar (got '{window.StatusBar().CurrentMessage()}')");
+        #endif
         window.SetLineSpacingAct.ShowStatusText(window);
-        Check(window.StatusBar().CurrentMessage() == "Change the gap between the lines of a paragraph",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.StatusBar().CurrentMessage() == "Change the gap between the lines of a paragraph",
             $"a Format action's status tip reaches the status bar (got '{window.StatusBar().CurrentMessage()}')");
+        #endif
 
         // ------------------------------------------------------------------ shortcuts as QKeySequence
-        Check(window.NewAct.shortcut().ToString() == "Ctrl+N",
+#if QTSHARP_DEMO_SMOKE
+
+        // ------------------------------------------------------------------ shortcuts as QKeySequence
+        demo.Check(window.NewAct.shortcut().ToString() == "Ctrl+N",
             $"New's shortcut round-trips (got '{window.NewAct.shortcut().ToString()}')");
-        Check(window.OpenAct.shortcut().ToString() == "Ctrl+O",
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.OpenAct.shortcut().ToString() == "Ctrl+O",
             $"Open's shortcut round-trips (got '{window.OpenAct.shortcut().ToString()}')");
-        Check(window.JustifyAct.shortcut().ToString() == "Ctrl+J",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.JustifyAct.shortcut().ToString() == "Ctrl+J",
             $"Justify's shortcut round-trips (got '{window.JustifyAct.shortcut().ToString()}')");
+        #endif
         var ctrlShiftZ = new QKeySequence("Ctrl+Shift+Z");
-        Check(ctrlShiftZ.ToString() == "Ctrl+Shift+Z" && ctrlShiftZ.Count() == 1,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(ctrlShiftZ.ToString() == "Ctrl+Shift+Z" && ctrlShiftZ.Count() == 1,
             $"QKeySequence(string) round-trips and has one chord (got '{ctrlShiftZ.ToString()}', {ctrlShiftZ.Count()})");
-        Check(window.ExitAct.shortcut().Matches(new QKeySequence("Ctrl+Q")) == QKeySequence.SequenceMatch.ExactMatch,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ExitAct.shortcut().Matches(new QKeySequence("Ctrl+Q")) == QKeySequence.SequenceMatch.ExactMatch,
             "Exit's shortcut exactly matches Ctrl+Q");
+        #endif
 
         // ------------------------------------------------------------------ the current-action label
         window.NewAct.Trigger();
-        Check(window.InfoLabel.Text == "Invoked <b>File|New</b>",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.InfoLabel.Text == "Invoked <b>File|New</b>",
             $"triggering New updates the label (got '{window.InfoLabel.Text}')");
+        #endif
         window.OpenAct.Trigger();
-        Check(window.InfoLabel.Text == "Invoked <b>File|Open</b>",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.InfoLabel.Text == "Invoked <b>File|Open</b>",
             $"triggering Open updates the label (got '{window.InfoLabel.Text}')");
+        #endif
         window.UndoAct.Trigger();
-        Check(window.InfoLabel.Text == "Invoked <b>Edit|Undo</b>",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.InfoLabel.Text == "Invoked <b>Edit|Undo</b>",
             $"triggering Undo updates the label (got '{window.InfoLabel.Text}')");
+        #endif
         window.BoldAct.Trigger();
-        Check(window.InfoLabel.Text == "Invoked <b>Edit|Format|Bold</b>",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.InfoLabel.Text == "Invoked <b>Edit|Format|Bold</b>",
             $"triggering Bold updates the label (got '{window.InfoLabel.Text}')");
-        Check(window.BoldAct.IsChecked(), "Bold toggles itself (checkable but outside the group)");
-        Check(window.BoldAct.Font.Bold(), "Bold's action font is bold");
-        Check(window.ItalicAct.Font.Italic(), "Italic's action font is italic");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.BoldAct.IsChecked(), "Bold toggles itself (checkable but outside the group)");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.BoldAct.Font.Bold(), "Bold's action font is bold");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ItalicAct.Font.Italic(), "Italic's action font is italic");
+        #endif
         window.SetLineSpacingAct.Trigger();
-        Check(window.InfoLabel.Text == "Invoked <b>Edit|Format|Set Line Spacing</b>",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.InfoLabel.Text == "Invoked <b>Edit|Format|Set Line Spacing</b>",
             $"triggering the spacing action updates the label (got '{window.InfoLabel.Text}')");
+        #endif
 
         // ------------------------------------------------------------------ context menu
         var context = window.CreateContextMenu();
         var contextActions = context.Actions();
-        Check(contextActions.Length == 3, $"the context menu holds three actions (got {contextActions.Length})");
-        Check(contextActions[0].text() == "Cu&t" && contextActions[1].text() == "&Copy" && contextActions[2].text() == "&Paste",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(contextActions.Length == 3, $"the context menu holds three actions (got {contextActions.Length})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(contextActions[0].text() == "Cu&t" && contextActions[1].text() == "&Copy" && contextActions[2].text() == "&Paste",
             "the context menu is Cut/Copy/Paste");
+        #endif
         // Actions() hands back transient wrappers (container elements are owned elsewhere), so the
         // identity check compares native handles rather than object references.
-        Check(contextActions[0].Handle == window.CutAct.Handle
+        #if QTSHARP_DEMO_SMOKE
+        // Actions() hands back transient wrappers (container elements are owned elsewhere), so the
+        // identity check compares native handles rather than object references.
+        demo.Check(contextActions[0].Handle == window.CutAct.Handle
               && contextActions[1].Handle == window.CopyAct.Handle
               && contextActions[2].Handle == window.PasteAct.Handle,
             "the context menu reuses the window's own actions");
-        Check(contextActions[0].shortcut().ToString() == "Ctrl+X",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(contextActions[0].shortcut().ToString() == "Ctrl+X",
             $"the context menu carries the shortcuts (got '{contextActions[0].shortcut().ToString()}')");
+        #endif
 
         // ------------------------------------------------------------------ exit wiring
-        Check(window.ExitAct.text() == "E&xit" && window.ExitAct.statusTip() == "Exit the application",
-            "Exit action's text/status tip are wired");
-        window.ExitAct.Trigger();
-        Check(window.ExitRequests == 1, $"triggering Exit reached the handler (got {window.ExitRequests})");
+#if QTSHARP_DEMO_SMOKE
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        // ------------------------------------------------------------------ exit wiring
+        demo.Check(window.ExitAct.text() == "E&xit" && window.ExitAct.statusTip() == "Exit the application",
+            "Exit action's text/status tip are wired");
+#endif
+        window.ExitAct.Trigger();
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ExitRequests == 1, $"triggering Exit reached the handler (got {window.ExitRequests})");
+        #endif
+
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

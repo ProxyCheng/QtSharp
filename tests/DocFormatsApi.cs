@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 
@@ -7,18 +7,11 @@ using System.Text;
 // this is also the proof that the extra modules link and load. XML is no longer a Qt module in
 // the binding - System.Xml covers it, and QXmlStreamReader/Writer stay in QtCore; the seam is
 // exercised by test-xmlseam.
-[Demo("test-docformats")]
+[Test("test-docformats")]
 public static class ApiDocFormatsDemo
 {
-    public static int Run(QApplication app)
+    public static int Run(TestContext context)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         string dir = Path.Combine(Path.GetTempPath(), "qtsharp-doc-" + Guid.NewGuid().ToString("N").Substring(0, 8));
         Directory.CreateDirectory(dir);
@@ -28,14 +21,14 @@ public static class ApiDocFormatsDemo
                    + "<rect width='16' height='16' fill='#000000'/>"
                    + "<rect x='4' y='4' width='8' height='8' fill='#00ff00'/></svg>";
         var renderer = new QSvgRenderer(new QByteArray(svg));
-        Check(renderer.IsValid(), "QSvgRenderer accepts an SVG document");
+        context.Check(renderer.IsValid(), "QSvgRenderer accepts an SVG document");
         var image = new QImage(16, 16, QImage.Format.Format_ARGB32);
         var painter = new QPainter(image);
         renderer.Render(painter);
         painter.End();
         var centre = image.PixelColor(8, 8);
         var corner = image.PixelColor(1, 1);
-        Check(centre.Green() == 255 && centre.Red() == 0 && corner.Red() == 0 && corner.Green() == 0,
+        context.Check(centre.Green() == 255 && centre.Red() == 0 && corner.Red() == 0 && corner.Green() == 0,
             $"the SVG rendered (centre {centre.Red()},{centre.Green()},{centre.Blue()}; corner {corner.Red()},{corner.Green()})");
 
         // ---- QtSvg / QtSvgGenerator: paint to an SVG file ----------------------------------
@@ -50,7 +43,7 @@ public static class ApiDocFormatsDemo
         svgPainter.Dispose();
         // The generator finalises (and closes) the file when it is destroyed, not on End().
         generator.Dispose();
-        Check(File.Exists(svgPath) && File.ReadAllText(svgPath).Contains("<svg"),
+        context.Check(File.Exists(svgPath) && File.ReadAllText(svgPath).Contains("<svg"),
             "QSvgGenerator paints to an SVG file");
 
         // ---- QtPrintSupport: QPrinter writes a real PDF ------------------------------------
@@ -65,13 +58,12 @@ public static class ApiDocFormatsDemo
         printer.Dispose();      // flushes and closes the PDF
         bool pdfExists = File.Exists(pdfPath) && new FileInfo(pdfPath).Length > 0;
         string head = pdfExists ? Encoding.ASCII.GetString(File.ReadAllBytes(pdfPath), 0, 4) : "";
-        Check(pdfExists && head == "%PDF", $"QPrinter writes a PDF ({(pdfExists ? new FileInfo(pdfPath).Length + " bytes" : "missing")})");
-        Check(QPrinterInfo.AvailablePrinterNames().Length >= 0,
+        context.Check(pdfExists && head == "%PDF", $"QPrinter writes a PDF ({(pdfExists ? new FileInfo(pdfPath).Length + " bytes" : "missing")})");
+        context.Check(QPrinterInfo.AvailablePrinterNames().Length >= 0,
             $"QPrinterInfo::availablePrinterNames ({QPrinterInfo.AvailablePrinterNames().Length} printer(s))");
 
         try { Directory.Delete(dir, true); } catch { /* the temp files are harmless */ }
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        return context.ExitCode;
     }
 }

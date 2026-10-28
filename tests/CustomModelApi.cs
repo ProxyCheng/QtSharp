@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 // The extension points a real application needs: an item model and an item delegate written
@@ -9,7 +9,7 @@ using System.Collections.Generic;
 //   view.SetItemDelegate(managed)  -> Qt calls paint()/sizeHint() while rendering
 //
 // This is what the whole virtual-dispatch axis was for.
-[Demo("test-custommodel")]
+[Test("test-custommodel")]
 public static class ApiCustomModelDemo
 {
     sealed class TableModel : QAbstractTableModel
@@ -105,15 +105,8 @@ public static class ApiCustomModelDemo
         }
     }
 
-    public static int Run(QApplication app)
+    public static int Run(TestContext context)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         var model = new TableModel();
         var view = new QTableView();
@@ -125,66 +118,66 @@ public static class ApiCustomModelDemo
         // Reaching the model *through Qt*: the view holds a QAbstractItemModel*, so these calls
         // only work if the managed overrides are installed in the native vtable.
         var throughQt = view.Model();
-        Check(throughQt != null && throughQt.RowCount() == 3,
+        context.Check(throughQt != null && throughQt.RowCount() == 3,
             $"the view sees the managed model's row count (got {throughQt?.RowCount()})");
-        Check(throughQt.ColumnCount() == 2, "column count through the view");
-        Check(throughQt.Data(throughQt.Index(1, 0))?.ToString() == "beta",
+        context.Check(throughQt.ColumnCount() == 2, "column count through the view");
+        context.Check(throughQt.Data(throughQt.Index(1, 0))?.ToString() == "beta",
             $"the managed model supplied the data (got '{throughQt.Data(throughQt.Index(1, 0))}')");
-        Check(throughQt.HeaderData(1, Qt.Orientation.Horizontal)?.ToString() == "col 1",
+        context.Check(throughQt.HeaderData(1, Qt.Orientation.Horizontal)?.ToString() == "col 1",
             $"the managed model supplied the header (got '{throughQt.HeaderData(1, Qt.Orientation.Horizontal)}')");
-        Check(model.RowCountCalls >= 2 && model.DataCalls > 0,
+        context.Check(model.RowCountCalls >= 2 && model.DataCalls > 0,
             $"Qt called the managed overrides ({model.RowCountCalls} rowCount, {model.DataCalls} data)");
 
         // A boxed return (QVariant) and an enum-flag return (Qt::ItemFlags) cross the C ABI.
         var flags = throughQt.Flags(throughQt.Index(0, 0));
-        Check((flags & Qt.ItemFlags.ItemIsEditable) != 0 && (flags & Qt.ItemFlags.ItemIsEnabled) != 0,
+        context.Check((flags & Qt.ItemFlags.ItemIsEditable) != 0 && (flags & Qt.ItemFlags.ItemIsEnabled) != 0,
             $"the managed flags came back (got {flags})");
 
         // A container return: the managed string[] is copied into Qt's QStringList.
         var mimeTypes = throughQt.MimeTypes();
-        Check(mimeTypes.Length == 1 && mimeTypes[0] == "text/plain",
+        context.Check(mimeTypes.Length == 1 && mimeTypes[0] == "text/plain",
             $"the managed mimeTypes() returned (got {(mimeTypes.Length > 0 ? mimeTypes[0] : "<none>")})");
 
         // A container parameter: Qt hands the override a list, which must be a *copy* (the wrapper
         // owns it, and freeing it would corrupt Qt's own container).
         var indexes = new[] { throughQt.Index(0, 0), throughQt.Index(1, 0) };
         var mimeData = model.MimeData(indexes);
-        Check(mimeData != null && mimeData.Text() == "from-managed-model",
+        context.Check(mimeData != null && mimeData.Text() == "from-managed-model",
             $"the managed mimeData() returned (got '{mimeData?.Text()}')");
-        Check(model.LastMimeIndexes != null && model.LastMimeIndexes.Length == 2
+        context.Check(model.LastMimeIndexes != null && model.LastMimeIndexes.Length == 2
               && model.LastMimeIndexes[1].Row() == 1,
             $"the container parameter arrived intact (got {model.LastMimeIndexes?.Length} index(es))");
 
         // A QHash<int, QByteArray> return.
         var roleNames = throughQt.RoleNames();
-        Check(roleNames.Count == 2 && roleNames[0].ConstData() == "display",
+        context.Check(roleNames.Count == 2 && roleNames[0].ConstData() == "display",
             $"the managed roleNames() returned (got {roleNames.Count} role(s))");
 
         // Editing goes through the model: Qt asks flags(), then calls setData().
-        Check(throughQt.SetData(throughQt.Index(0, 0), "renamed", 2),
+        context.Check(throughQt.SetData(throughQt.Index(0, 0), "renamed", 2),
             "setData reached the managed model");
-        Check(model.SetDataCalls == 1 && model.LastRole == "renamed",
+        context.Check(model.SetDataCalls == 1 && model.LastRole == "renamed",
             $"the managed model recorded the edit (got '{model.LastRole}')");
-        Check(throughQt.Data(throughQt.Index(0, 0))?.ToString() == "renamed",
+        context.Check(throughQt.Data(throughQt.Index(0, 0))?.ToString() == "renamed",
             "and the model really changed");
 
         // The real proof for the delegate: render the view and count the managed paint() calls.
         var shot = view.Grab();
-        Check(itemDelegate.PaintCalls > 0,
+        context.Check(itemDelegate.PaintCalls > 0,
             $"Qt asked the managed delegate to paint ({itemDelegate.PaintCalls} time(s))");
-        Check(DemoCatalog.GrabCovers(shot, 320, 200),
+        context.Check(DemoPixels.GrabCovers(shot, 320, 200),
             $"the view rendered off-screen (got {shot.Width()}x{shot.Height()})");
 
         // Asking the view to size its rows is what makes it consult the delegate's sizeHint().
         view.ResizeRowsToContents();
-        Check(itemDelegate.SizeHintCalls > 0,
+        context.Check(itemDelegate.SizeHintCalls > 0,
             $"Qt asked the managed delegate for a size hint ({itemDelegate.SizeHintCalls} time(s))");
 
         // A boxed parameter is a *copy*: the delegate's size hint is its own, and the caller's
         // option object is untouched.
         var option = new QStyleOptionViewItem();
         var hint = itemDelegate.SizeHint(option, throughQt.Index(0, 0));
-        Check(hint.Width() == 140 && hint.Height() == 24,
+        context.Check(hint.Width() == 140 && hint.Height() == 24,
             $"the managed sizeHint reached the caller's slot (got {hint.Width()}x{hint.Height()})");
 
         // Everything must survive a collection: the wrappers Qt handed the overrides were clones,
@@ -194,12 +187,11 @@ public static class ApiCustomModelDemo
             GC.Collect();
             GC.WaitForPendingFinalizers();
         }
-        Check(view.Model().RowCount() == 3 && throughQt.Data(throughQt.Index(2, 0))?.ToString() == "gamma",
+        context.Check(view.Model().RowCount() == 3 && throughQt.Data(throughQt.Index(2, 0))?.ToString() == "gamma",
             "the managed model still works after a full GC");
         using (var again = view.Grab())
-            Check(DemoCatalog.GrabCovers(again, 320, 200), "and the view still renders");
+            context.Check(DemoPixels.GrabCovers(again, 320, 200), "and the view still renders");
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        return context.ExitCode;
     }
 }

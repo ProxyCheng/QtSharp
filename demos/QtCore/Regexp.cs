@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 // Qt's regexp example (examples/corelib/tools/regexp): a pattern is compiled once, every match in
@@ -7,20 +7,17 @@ using System.Collections.Generic;
 [Demo("qtcore-regexp")]
 public static class Regexp
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         const string pattern = @"(?<key>\w+)=(?<value>\d+)";
         using var expression = new QRegularExpression(pattern);
-        Check(expression.IsValid(), "the pattern compiles");
-        Check(expression.Pattern() == pattern, "the expression keeps its pattern");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(expression.IsValid(), "the pattern compiles");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(expression.Pattern() == pattern, "the expression keeps its pattern");
+        #endif
 
         const string subject = "a=1, b=22, c=333";
         var found = new List<string>();
@@ -32,22 +29,41 @@ public static class Regexp
                 found.Add(match.Captured("key") + ":" + match.Captured("value"));
             }
         }
-        Check(found.Count == 3, $"globalMatch() finds every occurrence ({found.Count})");
-        Check(string.Join(",", found) == "a:1,b:22,c:333",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(found.Count == 3, $"globalMatch() finds every occurrence ({found.Count})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(string.Join(",", found) == "a:1,b:22,c:333",
             $"the captures come back in order ({string.Join(",", found)})");
+        #endif
 
         using (var first = expression.Match(subject))
         {
-            Check(first.HasMatch(), "match() reports the first occurrence");
-            Check(first.Captured(2) == "1", "a numbered capture reads back");
-            Check(first.CapturedStart(1) == 0 && first.CapturedEnd(1) == 1,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(first.HasMatch(), "match() reports the first occurrence");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(first.Captured(2) == "1", "a numbered capture reads back");
+            #endif
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(first.CapturedStart(1) == 0 && first.CapturedEnd(1) == 1,
                 "a capture reports its offsets");
+            #endif
         }
 
         using var none = expression.Match("no numbers here");
-        Check(!none.HasMatch(), "a subject without the pattern reports no match");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!none.HasMatch(), "a subject without the pattern reports no match");
+        #endif
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[FAIL] {failures} check(s) failed");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        // The upstream console loop, for a human: one line per match.
+        Console.WriteLine($"[regexp] {pattern} over \"{subject}\"");
+        foreach (var capture in found)
+            Console.WriteLine($"[regexp] {capture}");
+        return 0;
+        #endif
     }
 }

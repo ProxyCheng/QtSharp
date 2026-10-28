@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 // Writing Qt subclasses in C#, and letting Qt drive them. Nothing here calls an override on
@@ -16,7 +16,7 @@ using System.Collections.Generic;
 //   by-reference virtual parameters     QValidator::validate rewrites its QString and int through
 //                                       references. The managed override writes them back into
 //                                       Qt's variables; QLineEdit then reports the verdict.
-[Demo("test-subclass")]
+[Test("test-subclass")]
 public static class ApiSubclassDemo
 {
     sealed class ManagedButton : QAbstractButton
@@ -130,15 +130,8 @@ public static class ApiSubclassDemo
         }
     }
 
-    public static int Run(QApplication app)
+    public static int Run(TestContext context)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         // ---- an abstract Qt class implemented in C# --------------------------------------
         var host = new QWidget();
@@ -149,45 +142,45 @@ public static class ApiSubclassDemo
         layout.AddWidget(button);
 
         // Qt's own path reaches the managed addItem (QLayout::addWidget calls the virtual).
-        Check(layout.AddItemCalls == 1,
+        context.Check(layout.AddItemCalls == 1,
             $"Qt reached the managed layout's addItem ({layout.AddItemCalls} call(s))");
-        Check(layout.Count() >= 1, $"the managed count() sees the item ({layout.Count()})");
+        context.Check(layout.Count() >= 1, $"the managed count() sees the item ({layout.Count()})");
 
         host.Show();
         layout.Activate();
-        Check(layout.SetGeometryCalls > 0,
+        context.Check(layout.SetGeometryCalls > 0,
             $"Qt asked the managed layout to set its geometry ({layout.SetGeometryCalls} call(s))");
-        Check(layout.LastGeometry.Width() == 300 && layout.LastGeometry.Height() == 160,
+        context.Check(layout.LastGeometry.Width() == 300 && layout.LastGeometry.Height() == 160,
             $"the layout got the host's rectangle ({layout.LastGeometry.Width()}x{layout.LastGeometry.Height()})");
-        Check(button.width() > 0 && button.height() > 0,
+        context.Check(button.width() > 0 && button.height() > 0,
             $"the managed layout placed the child ({button.width()}x{button.height()})");
 
         // QLayout::totalSizeHint() measures by calling the virtual sizeHint().
         var total = layout.TotalSizeHint();
-        Check(layout.SizeHintCalls > 0 && total.Width() >= 80 && total.Height() >= 30,
+        context.Check(layout.SizeHintCalls > 0 && total.Width() >= 80 && total.Height() >= 30,
             $"the managed layout's sizeHint was consulted ({total.Width()}x{total.Height()}, {layout.SizeHintCalls} call(s))");
 
         // QLayout::indexOf walks count()/itemAt() through the vtable; the item it hands back is
         // Qt's own QWidgetItem, whose sizeHint() calls the widget's virtual - the managed button.
-        Check(layout.IndexOf(button) == 0 && layout.ItemAtCalls > 0,
+        context.Check(layout.IndexOf(button) == 0 && layout.ItemAtCalls > 0,
             $"the managed itemAt() answered Qt's indexOf ({layout.ItemAtCalls} call(s))");
         var item = layout.ItemAt(0);
         var childHint = item.SizeHint();
-        Check(button.SizeHintCalls > 0 && childHint.Width() == 120 && childHint.Height() == 40,
+        context.Check(button.SizeHintCalls > 0 && childHint.Width() == 120 && childHint.Height() == 40,
             $"Qt consulted the managed button's sizeHint ({childHint.Width()}x{childHint.Height()}, {button.SizeHintCalls} call(s))");
 
         // Rendering calls the managed paintEvent; the grab proves the override really painted.
         var shot = button.Grab();
-        Check(button.PaintCalls > 0,
+        context.Check(button.PaintCalls > 0,
             $"Qt asked the managed button to paint ({button.PaintCalls} call(s))");
-        Check(DemoCatalog.GrabCovers(shot, button.width(), button.height()),
+        context.Check(DemoPixels.GrabCovers(shot, button.width(), button.height()),
             $"the managed paintEvent produced the widget content ({shot.Width()}x{shot.Height()})");
 
         // QLayout::removeWidget goes through takeAt().
         layout.RemoveWidget(button);
-        Check(layout.TakeAtCalls > 0,
+        context.Check(layout.TakeAtCalls > 0,
             $"Qt reached the managed layout's takeAt ({layout.TakeAtCalls} call(s))");
-        Check(layout.Count() == 0, $"the managed layout released the item ({layout.Count()} left)");
+        context.Check(layout.Count() == 0, $"the managed layout released the item ({layout.Count()} left)");
 
         // ---- a protected nested type in an override signature ---------------------------
         var view = new DownOnlyView();
@@ -199,9 +192,9 @@ public static class ApiSubclassDemo
 
         var start = view.MoveCursor(QAbstractItemView.CursorAction.MoveDown,
                                     Qt.KeyboardModifiers.NoModifier);
-        Check(view.MoveCursorCalls == 1 && view.LastAction == QAbstractItemView.CursorAction.MoveDown,
+        context.Check(view.MoveCursorCalls == 1 && view.LastAction == QAbstractItemView.CursorAction.MoveDown,
             $"the managed moveCursor override ran ({view.MoveCursorCalls} call(s), {view.LastAction})");
-        Check(start.IsValid(),
+        context.Check(start.IsValid(),
             "the managed override chained to QListView::moveCursor (the protected enum crossed both ways)");
 
         // ---- by-reference parameters on an override ------------------------------------
@@ -209,12 +202,12 @@ public static class ApiSubclassDemo
         var validator = new DigitsOnlyValidator();
         editor.SetValidator(validator);
         editor.SetText("12a");
-        Check(!editor.HasAcceptableInput(),
+        context.Check(!editor.HasAcceptableInput(),
             "QLineEdit rejected the non-digit text through the managed validator");
         editor.SetText("42");
-        Check(editor.HasAcceptableInput(),
+        context.Check(editor.HasAcceptableInput(),
             "QLineEdit accepted the digits through the managed validator");
-        Check(validator.ValidateCalls >= 2,
+        context.Check(validator.ValidateCalls >= 2,
             $"Qt called the managed validate(reference quintet) override ({validator.ValidateCalls} call(s))");
 
         editor.Close();
@@ -227,7 +220,6 @@ public static class ApiSubclassDemo
         view.Dispose();
         host.Dispose();
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        return context.ExitCode;
     }
 }

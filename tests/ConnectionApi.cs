@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 
 // Signal connections as disposable handles: QSignal.Connect returns a QtConnection whose Dispose
@@ -9,7 +9,7 @@ using System.Threading;
 // The context is also the receiver Qt uses for thread affinity, so a queued connection runs on the
 // context's thread. A thread test therefore needs a real event loop on the worker side, which is
 // what LoopingThread below provides; the assertion records the native thread id inside the handler.
-[Demo("test-connections")]
+[Test("test-connections")]
 public static class ApiConnectionDemo
 {
     // A QThread whose run() is Qt's own event loop. The context object is created inside Run:
@@ -35,15 +35,8 @@ public static class ApiConnectionDemo
         }
     }
 
-    public static int Run(QApplication app)
+    public static int Run(TestContext context)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         // A timer's timeout() is an ordinary signal; Emit activates it without an event loop.
         var timer = new QTimer();
@@ -54,12 +47,12 @@ public static class ApiConnectionDemo
         int scopedCalls = 0;
         {
             using var connection = timer.TimeoutSignal.Connect(() => scopedCalls++);
-            Check(connection != null && connection.IsConnected, "Connect returns a live QtConnection");
+            context.Check(connection != null && connection.IsConnected, "Connect returns a live QtConnection");
             timer.TimeoutSignal.Emit();
-            Check(scopedCalls == 1, $"the connection delivers the emission (got {scopedCalls})");
+            context.Check(scopedCalls == 1, $"the connection delivers the emission (got {scopedCalls})");
         }
         timer.TimeoutSignal.Emit();
-        Check(scopedCalls == 1,
+        context.Check(scopedCalls == 1,
             $"disposing the handle disconnects it, so the later emission is ignored (got {scopedCalls})");
 
         // Disposing twice is documented as a no-op, like every other generated Dispose.
@@ -68,7 +61,7 @@ public static class ApiConnectionDemo
         doubleDispose.Dispose();
         doubleDispose.Dispose();
         timer.TimeoutSignal.Emit();
-        Check(doubleDisposeCalls == 0, "a second Dispose does not resurrect or double-free anything");
+        context.Check(doubleDisposeCalls == 0, "a second Dispose does not resurrect or double-free anything");
 
         // ---------------------------------------------------------------- the handler is the key
         // The connector records the handler as the connection's key, which is the same record an
@@ -76,10 +69,10 @@ public static class ApiConnectionDemo
         int keyedCalls = 0;
         Action keyHandler = () => keyedCalls++;
         var keyedConnection = timer.TimeoutSignal.Connect(keyHandler);
-        Check(ApiRuntime.Disconnect(timer.Handle, "timeout()", keyHandler),
+        context.Check(ApiRuntime.Disconnect(timer.Handle, "timeout()", keyHandler),
             "a QSignal connection is bookkept under its handler key");
         timer.TimeoutSignal.Emit();
-        Check(keyedCalls == 0, "the key-based Disconnect dropped it");
+        context.Check(keyedCalls == 0, "the key-based Disconnect dropped it");
         keyedConnection.Dispose();       // already disconnected: safe no-op
 
         // A handle identifies one connection, not "the newest one with this handler": the same
@@ -89,28 +82,28 @@ public static class ApiConnectionDemo
         var first = timer.TimeoutSignal.Connect(repeated);
         var second = timer.TimeoutSignal.Connect(repeated);
         timer.TimeoutSignal.Emit();
-        Check(repeatedCalls == 2, $"the same handler connected twice runs twice (got {repeatedCalls})");
+        context.Check(repeatedCalls == 2, $"the same handler connected twice runs twice (got {repeatedCalls})");
         first.Dispose();
         timer.TimeoutSignal.Emit();
-        Check(repeatedCalls == 3, $"disposing one handle leaves the other connection (got {repeatedCalls})");
+        context.Check(repeatedCalls == 3, $"disposing one handle leaves the other connection (got {repeatedCalls})");
         second.Dispose();
         timer.TimeoutSignal.Emit();
-        Check(repeatedCalls == 3, $"disposing the last handle leaves neither (got {repeatedCalls})");
+        context.Check(repeatedCalls == 3, $"disposing the last handle leaves neither (got {repeatedCalls})");
 
         // ---------------------------------------------------------------- context lifetime
         // A context the caller owns: destroying it before the signal fires must remove the
         // connection Qt is holding, so the handler is not reached. A bare QObject has no Dispose,
         // so it dies with a disposable parent - one of the ordinary ways a QObject goes away.
         var contextOwner = new QTimer();
-        var context = new QObject(contextOwner);
+        var qtContext = new QObject(contextOwner);
         int contextCalls = 0;
-        var contextConnection = timer.TimeoutSignal.Connect(() => contextCalls++, context);
+        var contextConnection = timer.TimeoutSignal.Connect(() => contextCalls++, qtContext);
         timer.TimeoutSignal.Emit();
-        Check(contextCalls == 1, $"a context connection is live while the context is (got {contextCalls})");
+        context.Check(contextCalls == 1, $"a context connection is live while the context is (got {contextCalls})");
         contextOwner.Dispose();
-        Check(!contextConnection.IsConnected, "destroying the context marks the handle disconnected");
+        context.Check(!contextConnection.IsConnected, "destroying the context marks the handle disconnected");
         timer.TimeoutSignal.Emit();
-        Check(contextCalls == 1,
+        context.Check(contextCalls == 1,
             $"destroying the context before the signal fires prevents the handler (got {contextCalls})");
         contextConnection.Dispose();     // the connection is gone; the handle still frees cleanly
 
@@ -120,7 +113,7 @@ public static class ApiConnectionDemo
         using (timer.TimeoutSignal.Connect(() => directCalls++, Qt.ConnectionType.DirectConnection))
         {
             timer.TimeoutSignal.Emit();
-            Check(directCalls == 1, $"a direct connection runs on the emitting thread (got {directCalls})");
+            context.Check(directCalls == 1, $"a direct connection runs on the emitting thread (got {directCalls})");
         }
 
         // ---------------------------------------------------------------- queued on a context
@@ -128,9 +121,9 @@ public static class ApiConnectionDemo
         // is the worker), the connection is queued, and the handler must run over there.
         var worker = new LoopingThread();
         worker.Start();
-        Check(worker.Ready.Wait(5000), "the worker thread started and created its context");
+        context.Check(worker.Ready.Wait(5000), "the worker thread started and created its context");
         IntPtr mainThreadId = QThread.CurrentThreadId();
-        Check(worker.ThreadId != mainThreadId,
+        context.Check(worker.ThreadId != mainThreadId,
             $"the worker runs on its own thread (worker {worker.ThreadId}, main {mainThreadId})");
 
         var queuedTimer = new QTimer();
@@ -154,13 +147,13 @@ public static class ApiConnectionDemo
             }
             queuedTimer.Stop();
         }
-        Check(Volatile.Read(ref queuedCalls) > 0,
+        context.Check(Volatile.Read(ref queuedCalls) > 0,
             $"the queued connection is delivered through the worker's event loop (got {queuedCalls})");
-        Check(handlerThreadId == worker.ThreadId,
+        context.Check(handlerThreadId == worker.ThreadId,
             $"the queued handler runs on the context's thread (handler {handlerThreadId}, context {worker.ThreadId})");
 
         worker.Quit();
-        Check(worker.Wait(5000), "the worker thread stopped");
+        context.Check(worker.Wait(5000), "the worker thread stopped");
         worker.Dispose();
         queuedTimer.Dispose();
 
@@ -173,17 +166,16 @@ public static class ApiConnectionDemo
         timer.Timeout += eventFirst;
         timer.Timeout += eventSecond;
         timer.TimeoutSignal.Emit();
-        Check(eventCalls == 2, $"event += subscribes both handlers (got {eventCalls})");
+        context.Check(eventCalls == 2, $"event += subscribes both handlers (got {eventCalls})");
         timer.Timeout -= eventFirst;
         timer.TimeoutSignal.Emit();
-        Check(eventCalls == 3, $"event -= removes only the handler it names (got {eventCalls})");
+        context.Check(eventCalls == 3, $"event -= removes only the handler it names (got {eventCalls})");
         timer.Timeout -= eventSecond;
         timer.TimeoutSignal.Emit();
-        Check(eventCalls == 3, $"the last event -= disconnects as well (got {eventCalls})");
+        context.Check(eventCalls == 3, $"the last event -= disconnects as well (got {eventCalls})");
 
         timer.Dispose();
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        return context.ExitCode;
     }
 }
