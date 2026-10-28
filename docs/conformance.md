@@ -16,7 +16,7 @@ each holds exactly one `Main`, one `QApplication` and the module's reflected `[E
 | `QtSharp.Examples.QtMultimedia` | `examples/QtMultimedia/` | 1 | 12 |
 | `QtSharp.Charts.Examples` | `examples/Charts/` | 38 | 571 |
 | `QtSharp.Qt3D.Examples` | `examples/Qt3D/` | 3 | 37 |
-| `testapp` (the binding tests) | `tests/testapp/` | 33 | 915 |
+| `testapp` (the binding tests) | `tests/testapp/` | 34 | 930 |
 
 `tools/run-examples.ps1` builds all ten example executables and hands each to
 `tools/run-window-tests.ps1`; the gate, CI and the release build all use that one table. A runner
@@ -84,6 +84,7 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 | `test-ownership` | who may delete a native object; liveness and generation counters |
 | `test-positioning` | QtPositioning: coordinate distance/azimuth, shape containment, position info, source enumeration |
 | `test-qt3d-valuetypes` | Qt3D's trivially copyable QNodeId/QKeyFrame, including Qt's equality rules |
+| `test-qtslot` | C# methods as real Qt slots: by-name invoke, overload signatures, `connectSlotsByName`, validation |
 | `test-regexinterop` | the explicit System.Text.RegularExpressions ↔ QRegularExpression conversion |
 | `test-rolesugar` | the role-taking API with the named `Qt.ItemDataRole` enum over the `int` primary overloads |
 | `test-sqlmodel` | the SQL substitute: an ADO.NET result behind QSqlQueryModel/QSqlTableModel, edits written by SubmitAll |

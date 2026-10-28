@@ -47,7 +47,7 @@ Current coverage: **483 classes / 9938 methods / 1901 virtuals / 516 enums / 834
 properties / 475 signals / 68 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg,
 QtSvgWidgets, QtPrintSupport, QtOpenGL, QtOpenGLWidgets). The gate runs 73 examples (**1544
 assertions**) in ten executables — 32 official base-module examples plus the tours, 38 official Qt
-Charts examples and the three official Qt3D examples — and 33 binding-specific tests (**915
+Charts examples and the three official Qt3D examples — and 34 binding-specific tests (**930
 assertions**).
 
 Extension modules are separate assemblies and packages against the same runtime:
@@ -351,7 +351,7 @@ renders through OpenGL.
 The official examples are named after the module they exercise (`qtcore-*`, `qtgui-*`, `qtwidgets-*`, plus
 `qtsvg-*`, `qtsvgwidgets-*`, `qtprintsupport-*`, `qtnetwork-*`, `qtcharts-*`,
 `qtmultimedia-*` and `qt3d-*`); the binding tests use `test-*` and cover
-ownership, exceptions, C#-declared signals/properties, value types, the BCL conversions and the
+ownership, exceptions, C#-declared signals/properties/slots, value types, the BCL conversions and the
 modules whose upstream examples are not ported yet. `docs/conformance.md` has the full matrix.
 Registration is discovery, not a list: a class carries `[Example("qtwidgets-analogclock")]` and each
 executable finds the names in its own assembly.
@@ -567,13 +567,16 @@ static class Program
   `Runnable.Run`, `FilterAcceptsRow`, `QGraphicsItem::boundingRect`/`paint`/`advance`, … The
   native side forwards to your override. A virtual is an override point whenever its signature is
   expressible; private and `final` ones stay callable only.
-* **Declaring your own signal or property** (PyQt's `pyqtSignal`/`pyqtProperty`): put the
-  attribute on the member, and the member is the declaration:
+* **Declaring your own signal, property or slot** (PyQt's
+  `pyqtSignal`/`pyqtProperty`/`pyqtSlot`): put the attribute on the member, and the member is the
+  declaration:
   ```csharp
   [QtSignal] public event Action<int> ValueChanged;          // the Qt signal valueChanged(int)
   [QtProperty] public int Value { get; set; }                // readable and writable
   [QtProperty("caption")] public string Text { get; set; }   // an explicit Qt name
   [QtProperty] public string Label => "read-only";           // get-only: a read-only property
+  [QtSlot] public int Add(int a, int b) => a + b;            // the Qt slot add(int,int)
+  [QtSlot("multiply")] public int Times(int a, int b) => a * b;   // an explicit Qt name
 
   void SetValue(int value)
   {
@@ -592,6 +595,15 @@ static class Program
   and a Qt `connect()` all reach the same handlers, and Qt reaches a property through
   `QObject::setProperty`/`property`, just like a moc-generated one.
   `[QtSignal]` needs a field-like event (the compiler's handler list is what the runtime reads).
+  `[QtSlot]` puts a public instance method in the meta-object as a real slot: Qt reaches it by name
+  (`QMetaObject.InvokeMethod(obj, "add", ..., new object[] { 2, 3 }, out result)`), by index
+  (`QMetaMethod.Invoke`), and through `QMetaObject.ConnectSlotsByName` with the usual
+  `on_<objectName>_<signal>` naming. Overloads stay ordinary C# overloads and are told apart by
+  their normalized signature (`"foo(int)"` / `"foo(QString)"`); the attribute's argument renames
+  the slot. Every parameter and a non-void return type must have a Qt type name, and a method that
+  cannot be a slot (static, generic, `ref`/`out`, `params`, an unmapped type) throws at
+  construction instead of being silently omitted. The slot runs through reflection, so a throwing
+  slot is reported through `ApiRuntime.UnhandledCallbackException` rather than unwinding into Qt.
   The rest of `Q_PROPERTY` maps to `QtProperty`'s properties: `Notify` (the signal named by its
   C# member or Qt name; `<Property>Changed` is used when omitted), `Reset` (a parameterless
   method; `Reset<Property>` by convention), `Constant`, `Final`, `Required`, `Designable`,
