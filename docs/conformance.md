@@ -16,7 +16,7 @@ each holds exactly one `Main`, one `QApplication` and the module's reflected `[E
 | `QtSharp.Examples.QtMultimedia` | `examples/QtMultimedia/` | 1 | 12 |
 | `QtSharp.Charts.Examples` | `examples/Charts/` | 38 | 571 |
 | `QtSharp.Qt3D.Examples` | `examples/Qt3D/` | 3 | 37 |
-| `testapp` (the binding tests) | `tests/testapp/` | 36 | 945 |
+| `testapp` (the binding tests) | `tests/testapp/` | 37 | 948 |
 
 `tools/run-examples.ps1` builds all ten example executables and hands each to
 `tools/run-window-tests.ps1`; the gate, CI and the release build all use that one table. A runner
@@ -37,9 +37,10 @@ mixes the two products does not compile. An example owns its shared construction
 mode; View contains no assertions and Smoke contains no window registration.
 
 The Smoke host selects `offscreen` by default (with the Windows font directory set, which the
-offscreen plugin does not discover itself), so the gate never maps a window. `QTSHARP_EXAMPLE_PLATFORM`
-or an already-set `QT_QPA_PLATFORM` overrides that; the host prints one `[platform] ...` line
-saying where the choice came from. The Qt3D View product is the one exception: it renders through
+offscreen plugin does not discover itself), so the gate never maps a window. The write goes to the
+C library's environment (`_wputenv_s` on Windows, `setenv` on Unix), which is the table Qt reads;
+`QTSHARP_EXAMPLE_PLATFORM` or an already-set `QT_QPA_PLATFORM` overrides that, and the host prints
+one `[platform] ...` line saying where the choice came from. The Qt3D View product is the one exception: it renders through
 OpenGL, which the offscreen plugin on Windows does not provide, so its View runs need a real
 display. Its Smoke product never shows the `Qt3DWindow`, so the gate is unaffected.
 
@@ -84,6 +85,7 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 | `test-nativeslot` | the read-side `[QtNativeSlot]` marker on generated slots and `Q_INVOKABLE` methods |
 | `test-network` | QtNetwork transport beyond the fortune example: host addresses, local-socket handoff, TCP |
 | `test-ownership` | who may delete a native object; liveness and generation counters |
+| `test-platformenv` | the QPA platform the hosts choose reaches Qt through the C library's environment, not only .NET's copy |
 | `test-positioning` | QtPositioning: coordinate distance/azimuth, shape containment, position info, source enumeration |
 | `test-qt3d-valuetypes` | Qt3D's trivially copyable QNodeId/QKeyFrame, including Qt's equality rules |
 | `test-qtslot` | C# methods as real Qt slots: by-name invoke, overload signatures, `connectSlotsByName`, validation |

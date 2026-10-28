@@ -170,16 +170,27 @@ namespace QtSharp.Examples.Hosting
 
         // Qt reads its platform environment through the C runtime, whose copy is not updated by
         // Environment.SetEnvironmentVariable. _wputenv_s updates both, so the plugin Qt picks and
-        // the font directory it finds are the ones chosen here. On Unix setenv is the same table.
+        // the font directory it finds are the ones chosen here. Unix has no such call: .NET keeps
+        // its own copy of the environment there and never calls setenv, so the C table - the one
+        // Qt reads - needs the write itself.
         [DllImport("ucrtbase", CharSet = CharSet.Unicode, ExactSpelling = true)]
         static extern int _wputenv_s(string name, string value);
+
+        [DllImport("libc", EntryPoint = "setenv", SetLastError = true)]
+        static extern int SetEnv([MarshalAs(UnmanagedType.LPUTF8Str)] string name,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string value, int overwrite);
 
         static void SetEnvironment(string name, string value)
         {
             if (OperatingSystem.IsWindows())
+            {
                 _wputenv_s(name, value);
-            else
-                Environment.SetEnvironmentVariable(name, value);
+                return;
+            }
+            if (SetEnv(name, value, 1) != 0)
+                throw new InvalidOperationException(
+                    $"setenv({name}) failed with errno {Marshal.GetLastPInvokeError()}");
+            Environment.SetEnvironmentVariable(name, value);
         }
 #endif
     }
