@@ -617,6 +617,17 @@ static class Program
   types) are `partial`; every other
   wrapper is a whole declaration, and `unsafe` sits on the few constructors that pass a function
   pointer rather than on the class.
+* **A method can be called by name** (the script/plugin case): `QMetaObject.InvokeMethod(target,
+  "setText", Qt.ConnectionType.DirectConnection, new object[] { "hi" }, out object result)` and
+  `QMetaMethod.Invoke(target, args, out result)` build the `QGenericArgument` list in a small native
+  shim, resolve the member once, and run it through `QMetaMethod::invoke`. Arguments may be C#
+  primitives,
+  `string`, `byte[]`, enums, bound Qt values and QObject pointers; anything else crosses as a
+  `QVariant` and is converted to the parameter's declared type. The return value comes back through
+  the ordinary QVariant conversion. A missing member, a mismatched argument list, more than ten
+  arguments, or Qt refusing the call is `false` (with an optional `out string error`), never an
+  exception; a queued connection cannot carry a return value, so ask for one only on a direct call.
+  `tests/MetaInvokeApi.cs` is the same calls under test.
 * **Ownership**: an object you `new` is yours — `Dispose()` (or the finalizer) deletes it, unless you
   handed it to Qt (a parent, a layout, a scene, a view), in which case the generated destructor asks
   `parent()` first and leaves it alone. Objects Qt owns are never deleted by the GC, and once Qt has
