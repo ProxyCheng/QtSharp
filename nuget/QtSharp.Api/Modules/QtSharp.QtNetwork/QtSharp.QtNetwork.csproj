@@ -20,6 +20,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\out\qtnetwork\generated\**\*.cs">
       <Link>Generated\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\runtime\QtNetwork\**\*.cs">
+      <Link>Runtime\QtNetwork\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
