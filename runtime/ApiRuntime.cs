@@ -370,6 +370,21 @@ namespace QtSharp.Runtime
         public string Name { get; }
     }
 
+    // The method half of the same idea: the C# method is the implementation, and the attribute
+    // puts it in the meta-object as a real Qt slot, so QMetaObject::invokeMethod and
+    // QMetaMethod::invoke reach it, connectSlotsByName can connect it, and a name-based connect
+    // sees it like any moc-declared slot. (Not a `[QtNativeSlot]`: this is a *declaration*, the
+    // opposite of the read-side attributes below.)
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+    public sealed class QtSlotAttribute : Attribute
+    {
+        public QtSlotAttribute() { }
+        public QtSlotAttribute(string name) => Name = name;
+
+        /// <summary>The Qt slot name; null derives it from the C# member name.</summary>
+        public string Name { get; }
+    }
+
     // The *generated* members already exist in moc's meta-object, so they are not declarations and
     // must not be passed to AttachMetaObject. These attributes are the read side of that: tooling,
     // documentation and a caller reflecting over a generated wrapper can tell a native Q_PROPERTY
@@ -598,6 +613,86 @@ namespace QtSharp.Runtime
             for (int i = 0; i < args.Length; i++)
                 args[i] = MetaType.ReadArgument(Parameters[i], argv, i);
             handlers.DynamicInvoke(args);
+        }
+    }
+
+    // An [QtSlot] C# method. The MethodInfo is both the declaration and the implementation, so
+    // overloads stay ordinary C# overloads and the normalized signature is what tells them apart
+    // in the meta-object. Everything a meta-object cannot carry (a static or generic method, a
+    // by-reference or params parameter, an argument with no Qt type name) is rejected here rather
+    // than quietly left out: a declaration that does nothing is worse than an error.
+    sealed class AttributedSlot
+    {
+        public MethodInfo Method;
+        public string Name;                      // the Qt slot name (the method's, or the attribute's)
+        public string Signature;                 // name(type,type), the normalized Qt spelling
+        public Type[] Parameters;
+        public string ReturnTypeName;            // null for a void slot
+
+        public AttributedSlot(MethodInfo method, string name)
+        {
+            Method = method;
+            Name = name;
+            string member = $"{method.DeclaringType?.Name}.{method.Name}";
+
+            if (method.IsStatic || !method.IsPublic)
+                throw new InvalidOperationException(
+                    $"[QtSlot] member '{member}' must be a public instance method");
+            if (method.IsAbstract)
+                throw new InvalidOperationException(
+                    $"[QtSlot] member '{member}' is abstract; a slot needs an implementation to invoke");
+            if (method.IsGenericMethod || method.ContainsGenericParameters)
+                throw new InvalidOperationException(
+                    $"[QtSlot] member '{member}' is generic; a Qt slot cannot carry type parameters");
+
+            var declared = method.GetParameters();
+            Parameters = new Type[declared.Length];
+            for (int i = 0; i < declared.Length; i++)
+            {
+                var parameter = declared[i];
+                if (parameter.ParameterType.IsByRef || parameter.IsOut || parameter.IsIn)
+                    throw new InvalidOperationException(
+                        $"[QtSlot] member '{member}' has a ref/out/in parameter, which a Qt slot cannot carry");
+                if (parameter.GetCustomAttribute<ParamArrayAttribute>() != null)
+                    throw new InvalidOperationException(
+                        $"[QtSlot] member '{member}' has a params parameter, which a Qt slot cannot write into");
+                Parameters[i] = parameter.ParameterType;
+                QtName(Parameters[i], member, "parameter");
+            }
+
+            if (method.ReturnType.IsByRef)
+                throw new InvalidOperationException(
+                    $"[QtSlot] member '{member}' returns by reference, which a Qt slot cannot carry");
+            ReturnTypeName = method.ReturnType == typeof(void)
+                ? null
+                : QtName(method.ReturnType, member, "return type");
+
+            var signature = new System.Text.StringBuilder(name);
+            signature.Append('(');
+            for (int i = 0; i < Parameters.Length; i++)
+            {
+                if (i > 0)
+                    signature.Append(',');
+                signature.Append(MetaType.QtName(Parameters[i]));
+            }
+            signature.Append(')');
+            Signature = signature.ToString();
+        }
+
+        // The failure names the member and the offending type: "no Qt type name" on its own would
+        // not say which declaration asked for one.
+        static string QtName(Type type, string member, string role)
+        {
+            try
+            {
+                return MetaType.QtName(type);
+            }
+            catch (NotSupportedException)
+            {
+                throw new InvalidOperationException(
+                    $"[QtSlot] {role} of member '{member}' has the type '{type.FullName}', for which "
+                    + "there is no Qt type name");
+            }
         }
     }
 
@@ -1228,13 +1323,19 @@ namespace QtSharp.Runtime
         // ------------------------------------------------------------------ user-declared members
         static readonly Dictionary<Type, MetaObjectSpec> metaSpecs = new();
         static readonly Dictionary<IntPtr, MetaObjectSpec> metaByHandle = new();
+        // The slot implementation a native meta-object index names, per managed type. Kept apart
+        // from metaSpecs because the native callback has only the object to go on: the table is
+        // looked up by the object's type, walking up if the declaration lives on a managed base.
+        static readonly Dictionary<Type, AttributedSlot[]> metaSlots = new();
         static bool metaPropertyCallbackInstalled;
+        static bool metaSlotCallbackInstalled;
 
         sealed class MetaObjectSpec
         {
             public string Name;
             public List<AttributedSignal> Events = new();
             public List<QMetaPropertyBase> Properties = new();
+            public List<AttributedSlot> Slots = new();
         }
 
         /// <summary>
@@ -1256,6 +1357,12 @@ namespace QtSharp.Runtime
                 {
                     spec = BuildSpec(type);
                     metaSpecs[type] = spec;
+                    // The native callback resolves a slot by the object's managed type, so the
+                    // table is published once for this type (a derived type that inherits the
+                    // declaration gets its own entry).
+                    if (spec != null && spec.Slots.Count > 0)
+                        lock (metaSlots)
+                            metaSlots[type] = spec.Slots.ToArray();
                 }
             }
             if (spec == null)
@@ -1269,6 +1376,15 @@ namespace QtSharp.Runtime
                         (IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, int, int, IntPtr, void>)&OnMetaProperty);
                 }
                 metaPropertyCallbackInstalled = true;
+            }
+            if (spec.Slots.Count > 0 && !metaSlotCallbackInstalled)
+            {
+                unsafe
+                {
+                    SetMetaSlotCallback(
+                        (IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, int, IntPtr, void>)&OnMetaSlot);
+                }
+                metaSlotCallbackInstalled = true;
             }
 
             var signatures = new string[spec.Events.Count];
@@ -1287,8 +1403,16 @@ namespace QtSharp.Runtime
                 notify[i] = spec.Properties[i].NotifyIndex;
                 revisions[i] = spec.Properties[i].Revision;
             }
+            var slotSignatures = new string[spec.Slots.Count];
+            var slotReturns = new string[spec.Slots.Count];
+            for (int i = 0; i < slotSignatures.Length; i++)
+            {
+                slotSignatures[i] = spec.Slots[i].Signature;
+                slotReturns[i] = spec.Slots[i].ReturnTypeName;      // null means void
+            }
             if (AttachNative(handle.Handle, spec.Name, signatures, signatures.Length,
-                    names, types, types.Length, flags, notify, revisions) != 0)
+                    names, types, types.Length, flags, notify, revisions,
+                    slotSignatures, slotReturns, slotSignatures.Length) != 0)
             {
                 bool firstAttach;
                 lock (metaByHandle)
@@ -1314,16 +1438,21 @@ namespace QtSharp.Runtime
             var spec = new MetaObjectSpec { Name = type.Name };
             AddAttributedMembers(spec, type);
             ResolveAttributedProperties(spec);
-            return spec.Events.Count == 0 && spec.Properties.Count == 0 ? null : spec;
+            return spec.Events.Count == 0 && spec.Properties.Count == 0 && spec.Slots.Count == 0
+                ? null : spec;
         }
 
-        // [QtProperty]/[QtSignal] members live on the C# class itself (or a user base of it) and
-        // never on a generated binding class, so the walk stops at the first generated type: the
-        // binding's hundreds of inherited properties are not inspected for nothing.
+        // [QtProperty]/[QtSignal]/[QtSlot] members live on the C# class itself (or a user base of
+        // it) and never on a generated binding class, so the walk stops at the first generated
+        // type: the binding's hundreds of inherited properties are not inspected for nothing.
         static void AddAttributedMembers(MetaObjectSpec spec, Type type)
         {
             const BindingFlags declared = BindingFlags.Public | BindingFlags.NonPublic
                                           | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+            // A static [QtSlot] has to be found to be rejected, so methods include Static; the
+            // property and event walks do not.
+            const BindingFlags declaredMethods = declared | BindingFlags.Static;
+            var slotSignatures = new HashSet<string>(StringComparer.Ordinal);
             for (var current = type;
                  current != null && current != typeof(object) && current.GetCustomAttribute<GeneratedCodeAttribute>() == null;
                  current = current.BaseType)
@@ -1353,6 +1482,21 @@ namespace QtSharp.Runtime
                             $"[QtSignal] member '{current.Name}.{declaredEvent.Name}' must be a public event");
                     spec.Events.Add(AttributedSignal.Create(
                         declaredEvent, DeclaredName(declaredEvent.Name, attribute.Name)));
+                }
+
+                foreach (var method in current.GetMethods(declaredMethods))
+                {
+                    var attribute = method.GetCustomAttribute<QtSlotAttribute>(false);
+                    if (attribute == null)
+                        continue;
+                    var slot = new AttributedSlot(method, DeclaredName(method.Name, attribute.Name));
+                    // Qt identifies a method by name and parameter types; the return type is not
+                    // part of that, so two declarations with the same signature could only be one.
+                    if (!slotSignatures.Add(slot.Signature))
+                        throw new InvalidOperationException(
+                            $"[QtSlot] member '{current.Name}.{method.Name}' duplicates the Qt slot "
+                            + $"signature '{slot.Signature}'");
+                    spec.Slots.Add(slot);
                 }
             }
         }
@@ -1588,6 +1732,59 @@ namespace QtSharp.Runtime
             }
         }
 
+        // Runs an [QtSlot] method on behalf of the dynamic meta-object. `args` is moc's argv: the
+        // return storage at [0] and the address of each parameter's native value from [1] on. The
+        // table is found by the object's own managed type, walking up so a slot declared on a
+        // managed base class runs with the derived instance as its target.
+        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
+        static void OnMetaSlot(IntPtr handle, int slotIndex, IntPtr args)
+        {
+            var target = LookupWrapper(handle);
+            if (target == null)
+                return;
+            var slots = SlotTable(target.GetType());
+            if (slots == null || slotIndex < 0 || slotIndex >= slots.Length)
+                return;
+            var slot = slots[slotIndex];
+            if (args == IntPtr.Zero && (slot.Parameters.Length > 0 || slot.ReturnTypeName != null))
+                return;
+
+            try
+            {
+                var values = new object[slot.Parameters.Length];
+                for (int i = 0; i < values.Length; i++)
+                    values[i] = MetaType.ReadValue(slot.Parameters[i],
+                        Marshal.ReadIntPtr(args, (i + 1) * IntPtr.Size));
+                object result = slot.Method.Invoke(target, values);
+                if (slot.ReturnTypeName == null)
+                    return;
+                IntPtr destination = Marshal.ReadIntPtr(args, 0);
+                if (destination != IntPtr.Zero)
+                    MetaType.Write(slot.ReturnTypeName, destination, result);
+            }
+            catch (TargetInvocationException exception) when (exception.InnerException != null)
+            {
+                // Qt called this from inside its C++ frames; see ReportCallbackException. The
+                // return storage stays as Qt initialised it.
+                ReportCallbackException("a declared slot", exception.InnerException);
+            }
+            catch (Exception exception)
+            {
+                ReportCallbackException("a declared slot", exception);
+            }
+        }
+
+        static AttributedSlot[] SlotTable(Type type)
+        {
+            lock (metaSlots)
+            {
+                for (var current = type; current != null && current != typeof(object); current = current.BaseType)
+                    if (metaSlots.TryGetValue(current, out var slots))
+                        return slots;
+            }
+            return null;
+        }
+
         internal static object LookupWrapper(IntPtr handle)
         {
             if (wrappers.TryGetValue(handle, out var list))
@@ -1661,10 +1858,16 @@ namespace QtSharp.Runtime
             int propertyCount,
             [MarshalAs(UnmanagedType.LPArray)] int[] propertyFlags,
             [MarshalAs(UnmanagedType.LPArray)] int[] propertyNotify,
-            [MarshalAs(UnmanagedType.LPArray)] int[] propertyRevisions);
+            [MarshalAs(UnmanagedType.LPArray)] int[] propertyRevisions,
+            [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] slotSignatures,
+            [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] slotReturnTypes,
+            int slotCount);
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_set_meta_property_callback", CallingConvention = CallingConvention.Cdecl)]
         private static extern void SetMetaPropertyCallback(IntPtr callback);
+
+        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_set_meta_slot_callback", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void SetMetaSlotCallback(IntPtr callback);
 
         /// <summary>
         /// Builds the process's one Qt application object from a command line, and returns its
