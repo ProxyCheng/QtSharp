@@ -501,6 +501,11 @@ extern "C" QS_API_EXPORT int qs_api_emit(void* sender, const char* signature, vo
 typedef void (*QsApiMetaPropertyCallback)(void* object, int index, int call, void* value);
 static QsApiMetaPropertyCallback g_metaPropertyCallback = nullptr;
 
+// A dynamic slot's managed implementation. `args` is moc's argv: args[0] is the return storage
+// (null for a void slot) and args[i + 1] points at the i-th argument's native value.
+typedef void (*QsApiMetaSlotCallback)(void* object, int slotIndex, void** args);
+static QsApiMetaSlotCallback g_metaSlotCallback = nullptr;
+
 // The Q_PROPERTY flags the managed side sends, one bit per QMetaProperty::is*() accessor.
 enum QsApiMetaPropertyFlag : int
 {
@@ -519,9 +524,12 @@ enum QsApiMetaPropertyFlag : int
 class QsApiDynamicMetaObject : public QAbstractDynamicMetaObject
 {
 public:
-    QsApiDynamicMetaObject(QMetaObject* metaObject, int propertyBase)
+    QsApiDynamicMetaObject(QMetaObject* metaObject, int propertyBase,
+                           int localSignalCount, int localSlotCount)
         : m_metaObject(metaObject)
         , m_propertyBase(propertyBase)
+        , m_signalCount(localSignalCount)
+        , m_slotCount(localSlotCount)
     {
         // QObject::metaObject() hands back this very object, so the QMetaObject half has to carry
         // the built table. The table belongs to QMetaObjectBuilder (its string/method data lives
@@ -532,6 +540,11 @@ public:
 
     // Only the members past the base's are ours; everything below is a copy of the base's own
     // table and is handled by moc's generated qt_metacall.
+    //
+    // Method ids arrive in the built table's numbering, so the base's methods occupy [0,
+    // superClass()->methodCount()). The builder appends methods in the order they were added -
+    // signals first, then slots - which puts the local signals at [base, base + signalCount) and
+    // the local slots right after them.
     int metaCall(QObject* object, QMetaObject::Call call, int id, void** args) override
     {
         if ((call == QMetaObject::ReadProperty || call == QMetaObject::WriteProperty
@@ -544,12 +557,28 @@ public:
             g_metaPropertyCallback(object, id - m_propertyBase, code, args ? args[0] : nullptr);
             return 0;
         }
+        if (call == QMetaObject::InvokeMetaMethod && m_slotCount > 0 && g_metaSlotCallback)
+        {
+            const QMetaObject* parent = superClass();
+            const int local = id - (parent ? parent->methodCount() : 0);
+            if (local >= m_signalCount && local < m_signalCount + m_slotCount)
+            {
+                g_metaSlotCallback(object, local - m_signalCount, args);
+                // QMetaMethod::invoke reads the result the way moc's qt_metacall spells it: a
+                // negative value means "handled", anything else means "not handled" and the call
+                // is reported as failed - with the slot already run, the worst kind of wrong.
+                // -1 is what moc returns once it has consumed the last method id.
+                return -1;
+            }
+        }
         return object->qt_metacall(call, id, args);
     }
 
 private:
     QMetaObject* m_metaObject;
     int m_propertyBase;
+    int m_signalCount;
+    int m_slotCount;
 };
 
 // The meta-object tables are built once per member list and shared by every instance of the
@@ -561,18 +590,24 @@ extern "C" QS_API_EXPORT void qs_api_set_meta_property_callback(QsApiMetaPropert
     g_metaPropertyCallback = callback;
 }
 
-// Installs a meta-object carrying the extra signals and properties. Must be called before any
-// connection to them (i.e. right after the object is constructed).
+extern "C" QS_API_EXPORT void qs_api_set_meta_slot_callback(QsApiMetaSlotCallback callback)
+{
+    g_metaSlotCallback = callback;
+}
+
+// Installs a meta-object carrying the extra signals, properties and slots. Must be called before
+// any connection to them (i.e. right after the object is constructed).
 // (`signals`/`slots` are macros in Qt, so the parameter names avoid them.)
 extern "C" QS_API_EXPORT int qs_api_attach_metaobject(
     void* object, const char* className,
     const char* const* signalSignatures, int signalCount,
     const char* const* propertyNames, const char* const* propertyTypes, int propertyCount,
-    const int* propertyFlags, const int* propertyNotify, const int* propertyRevisions)
+    const int* propertyFlags, const int* propertyNotify, const int* propertyRevisions,
+    const char* const* slotSignatures, const char* const* slotReturnTypes, int slotCount)
 {
     if (!object || !className)
         return 0;
-    if (signalCount <= 0 && propertyCount <= 0)
+    if (signalCount <= 0 && propertyCount <= 0 && slotCount <= 0)
         return 0;
 
     auto* qobject = static_cast<QObject*>(object);
@@ -599,6 +634,16 @@ extern "C" QS_API_EXPORT int qs_api_attach_metaobject(
         key += std::to_string(propertyNotify ? propertyNotify[i] : -1);
         key += ':';
         key += std::to_string(propertyRevisions ? propertyRevisions[i] : 0);
+        key += '\n';
+    }
+    // The slots are part of the table's identity as much as the signals and properties: two
+    // managed classes sharing a name but declaring different slots must not share a table.
+    key += '\x1d';
+    for (int i = 0; i < slotCount; ++i)
+    {
+        key += slotSignatures && slotSignatures[i] ? slotSignatures[i] : "";
+        key += ':';
+        key += slotReturnTypes && slotReturnTypes[i] ? slotReturnTypes[i] : "void";
         key += '\n';
     }
 
@@ -640,6 +685,16 @@ extern "C" QS_API_EXPORT int qs_api_attach_metaobject(
             if (notify >= 0 && notify < int(signalBuilders.size()))
                 property.setNotifySignal(signalBuilders[size_t(notify)]);
         }
+        // Slots are appended after the signals, so the local signal range is [0, signalCount) and
+        // the local slot range follows it (see QsApiDynamicMetaObject::metaCall).
+        for (int i = 0; i < slotCount; ++i)
+        {
+            QMetaMethodBuilder slot = builder.addSlot(
+                slotSignatures && slotSignatures[i] ? slotSignatures[i] : "");
+            if (slotReturnTypes && slotReturnTypes[i])
+                slot.setReturnType(slotReturnTypes[i]);
+            slot.setAccess(QMetaMethod::Public);
+        }
         // Marks the object as already carrying our table (and is what makes the check above a
         // one-time operation).
         builder.addClassInfo("qtsharp-dynamic", "1");
@@ -652,8 +707,9 @@ extern "C" QS_API_EXPORT int qs_api_attach_metaobject(
     }
 
     // The built table holds only the managed class's own members, so everything at or past the
-    // base's property count belongs to it.
-    auto* dynamicMetaObject = new QsApiDynamicMetaObject(built, base->propertyCount());
+    // base's counts belongs to it.
+    auto* dynamicMetaObject = new QsApiDynamicMetaObject(
+        built, base->propertyCount(), signalCount, slotCount);
     QObjectPrivate::get(qobject)->metaObject = dynamicMetaObject;
     return 1;
 }
