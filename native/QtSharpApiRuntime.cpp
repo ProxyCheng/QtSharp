@@ -20,6 +20,7 @@
 #include <private/qmetaobject_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include <atomic>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <string>
@@ -581,8 +582,8 @@ private:
     int m_slotCount;
 };
 
-// The meta-object tables are built once per member list and shared by every instance of the
-// managed type; a managed type is identified by the name it hands over.
+// The meta-object tables are built once per (base, class name, member list) and shared by every
+// instance of the managed type.
 static std::unordered_map<std::string, QMetaObject*> g_dynamicMetaObjects;
 
 extern "C" QS_API_EXPORT void qs_api_set_meta_property_callback(QsApiMetaPropertyCallback callback)
@@ -615,7 +616,14 @@ extern "C" QS_API_EXPORT int qs_api_attach_metaobject(
     if (base->indexOfClassInfo("qtsharp-dynamic") >= 0)
         return 1;                       // already attached
 
+    // The class name and the member list are not the table's whole identity: two C# types can
+    // share a simple name (they differ by namespace) and declare the same members while deriving
+    // from different Qt classes. Every id in the table is an offset from the base's counts, so a
+    // table built for the other base would misnumber this type's methods and properties. The
+    // base's static meta-object is stable for the life of the process and names it exactly.
     std::string key = className;
+    key += '\x1f';
+    key += std::to_string(reinterpret_cast<std::uintptr_t>(base));
     key += '\x1f';
     for (int i = 0; i < signalCount; ++i)
     {
