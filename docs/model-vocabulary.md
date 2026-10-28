@@ -33,6 +33,8 @@ Three files own it:
 | an enum or a `QFlags` | a C# enum or flags enum | as its integer |
 | a `std::chrono` duration | `TimeSpan` | nanoseconds on the ABI, converted at the call |
 | `void*` | `IntPtr` | a raw handle with nothing to dereference |
+| a C function type, `ret(*)(T1,T2)` | `Action<...>`/`Func<...,R>` in both positions | a rooted managed thunk, or a wrap of the returned address; see [Function types](#function-types) |
+| `QFunctionPointer` | the `QtSharp.QtCore.QFunctionPointer` struct in both positions | an address carrier: explicit `IntPtr` casts and `As<TDelegate>()` supply the meaning at the call site |
 
 Containers are converted element by element. Each distinct element type that actually occurs in the
 model produces its own set of native entry points — `qs_api_list_<stem>_new`, `_append`, `_count`,
@@ -45,6 +47,98 @@ Two containers are deliberately absent even though they are adjacent to the mode
 `QMultiMap`/`QMultiHash` are different classes and stay unbound, and a container of containers
 (`QHash<int, QHash<T, QVariant>>`) is refused because the element codec handles scalars, strings,
 enums, boxed values and class pointers, not another container.
+
+## Function types
+
+A function type is part of the vocabulary in both directions. The model spelling is Qt's own
+without the parameter names: `ret(*)(T1,T2)`, and `void(*)()` when there are no arguments. A typedef
+resolves to that spelling too, so `QEasingCurve::EasingFunction`, `QtMessageHandler` and
+`QImageCleanupFunction` do not appear in the model under their typedef names; the typedef's spelling
+is kept in the parameter object's `cpp` field instead, for the native glue's `reinterpret_cast`.
+
+`QFunctionPointer` is the deliberate exception. Qt documents it as "a pointer to a function" without
+promising a signature, and the APIs that use it - `QLibrary::resolve`,
+`QGuiApplication::platformFunction`, `QOpenGLContext::getProcAddress` - hand back an address the
+binding cannot call on its own. It keeps its own name in the model, the way a named `QFlags` typedef
+does, and it maps to the hand-written `QtSharp.QtCore.QFunctionPointer` struct
+(`runtime/QtCore/QFunctionPointer.cs`): a one-field carrier for the address, in both positions. That
+is the C++ situation restated - the typedef carries no signature, so the signature lives at the call
+site. The struct offers an explicit conversion from and to `IntPtr`, equality by address, and
+`As<TDelegate>()`/`TryAs<TDelegate>()` for the opt-in call. `As` goes through the same
+registry-aware wrap as the typed returns, so an address this binding installed resolves to the
+original delegate instance; a foreign address is marshalled with the platform's default calling
+convention and its wrapper is memoized per address and delegate type. A constructed generic delegate
+(`Func<double, double>`) cannot go through
+`Marshal.GetDelegateForFunctionPointer` - the marshaller rejects generic delegate types - so the
+struct bridges those with a `calli` over the same signature; that path accepts the blittable C ABI
+shapes (scalars other than `bool`/`char`, enums, pointers). The generated extern still crosses the
+ABI as `IntPtr`: the carrier is one field, and the wrapper unwraps it at the call.
+
+A concrete function type, by contrast, is the delegate Qt declared:
+
+* **Parameter.** The managed side is an `Action` (void return) or `Func<..., R>`, so
+  `QEasingCurve.SetCustomType` takes a `Func<double, double>` and the call site stays ordinary
+  C#. The generated code passes a thunk to Qt, and the runtime registry keeps that thunk and the
+  caller's delegate reachable.
+* **Return.** The managed side is the same delegate type. `QEasingCurve.CustomType()` returns the
+  `Func<double, double>` that `SetCustomType` installed - the registry's reverse lookup returns the
+  very instance, which a test can check with `ReferenceEquals` - and `qInstallMessageHandler`
+  returns the previous handler as an `Action<...>` (`null` when Qt had none). A null address is
+  `null`. An address that was installed by native code has no managed instance to look up; the
+  generated thunk marshals it with the signature Qt declared, and that contract is all the binding
+  has: a stale or dangling pointer is a process crash, not an exception. This is the same trust
+  PySide6 and PyQt6 place in the declaration when they turn an address into a callable.
+  Identity is a property of this binding's registry: a native-installed pointer returns a wrapper
+  over the same address, so the behaviour is the same, but it is not the same object as any
+  delegate the caller holds.
+
+The callback's own signature has a small vocabulary, because the thunk has to convert every value
+without a native helper:
+
+* arguments: scalars, enums and `QFlags`, `QString`, and any pointer (`T*` crosses as `IntPtr`).
+  A pointer or reference to a class the model does not bind is the one argument that loses its
+  declared spelling: it crosses as `void*`, i.e. `IntPtr` too. `qInstallMessageHandler`'s
+  `const QMessageLogContext&` is the case that forced this: the class is not published, but Qt
+  passes it to every message handler.
+* return: `void`, a scalar, an enum/`QFlags`, or a pointer. A `QString`, a container or a class by
+  value cannot be returned: the thunk would need Qt's copy/move machinery in a frame it does not
+  own.
+* a variadic prototype and a callback nested inside another callback are refused.
+
+A `QString` argument is Qt's `const QString&`; the ABI carries the address of the object and the
+thunk reads it with `ApiRuntime.ToManagedTransient`, the borrowed counterpart of `ToManaged`, so the
+managed string is a copy and Qt's object is not freed. Pointer arguments stay pointers: they point
+at memory Qt owns for the duration of the call, and the binding has no way to know its length or
+lifetime.
+
+`QMessageLogContext` is worth calling out because it is a visible difference from the other
+bindings: PySide6 and PyQt6 publish it as a real type, while here it arrives as the raw `IntPtr` of
+its `const&`. The context is deliberately not a root class; a handler that needs the context can
+read it through its own interop, but the ordinary use - the message text - is already a `string`.
+
+A callback parameter on a virtual or a signal is not published. A virtual override is dispatched
+from a C++ stub with no calling convention of its own, and a signal argument is marshalled through
+the meta-object's argument storage; neither path has been taught function types, so those
+declarations stay dropped rather than emitting a signature that cannot be called.
+
+### Lifetime
+
+Qt stores only the address, so the delegate cannot be collected while Qt might call it. The
+generated thunk and the caller's delegate are rooted in `QtSharp.Runtime.QtCallbackRegistry` for the
+lifetime of the process, and the registry is keyed by delegate instance: the same instance always
+gives the same address, and two equal lambdas are two different routines. That identity is required
+by `qAddPostRoutine`/`qRemovePostRoutine`, which hand Qt the same routine twice and expect Qt to
+match it.
+
+Rooting forever is the safe direction (a delegate released late, never early), but it has the same
+caveat every binding has: a native object can outlive its managed wrapper. A `QEasingCurve` kept by
+Qt after the C# wrapper is collected still holds the address, and the callback it points at stays
+alive with it. PySide6 solves the same problem with a fixed pool of ten static trampolines and frees
+a slot on wrapper finalization; the .NET registry has no pool limit, at the cost of not releasing
+anything on finalization.
+
+`null` is Qt's `nullptr`: `Qt.QInstallMessageHandler(null)` restores the default handler, and a null
+callback parameter is never registered.
 
 ## The gap is invisible in the model and in the generated API
 

@@ -100,6 +100,14 @@ public static class ApiCodeGen
     static string CsString(string text)
         => "\"" + text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
 
+    // A hand-written type that lives in the QtCore assembly. QFunctionPointer is the one such
+    // type the model spells: the struct is not a bound class, so it has no entry in ClassModules
+    // and needs the owning namespace spelled out for every dependent module.
+    const string QtCoreNamespace = "QtSharp.QtCore";
+
+    static string CoreTypeName(string name)
+        => csharpNamespace == QtCoreNamespace ? name : QtCoreNamespace + "." + name;
+
     // The C# spelling of a model type. A type owned by this module is unqualified; one owned by
     // another module (base or addon) is qualified with that module's namespace.
     static string CsTypeName(string t)
@@ -993,6 +1001,10 @@ public static class ApiCodeGen
             return "default";
         if (ManagedType(type) == "IntPtr")
             return "default";       // a value type: IntPtr.Zero is not a constant
+        // A null Action/Func is Qt's own nullptr default (the declaration's "cpp" spelling is
+        // what the glue otherwise substitutes, and null is the only C# constant a delegate has).
+        if (IsCallbackType(type))
+            return "null";
         if (IsArray(type) || IsPtr(type) || IsBoxed(type) || IsStringT(type) || type == "char*"
             || IsStringListT(type) || IsListT(type) || IsAssocT(type) || type == "QByteArrayView")
             return "null";
@@ -1030,6 +1042,8 @@ public static class ApiCodeGen
         ByteArrayView,   // QByteArrayView
         TimeSpan,        // a std::chrono duration
         BoxedClass,      // a bound class crossing by value (a handle)
+        Callback,        // a C function type: ret(*)(T1,T2)
+        FunctionPointer, // QFunctionPointer: a signature-less function address (its carrier struct)
     }
 
     static readonly Dictionary<string, TypeKind> typeKinds = new(StringComparer.Ordinal);
@@ -1059,6 +1073,10 @@ public static class ApiCodeGen
         if (t == "char*") return TypeKind.CString;
         if (t == "QByteArrayView") return TypeKind.ByteArrayView;
         if (t == "TimeSpan") return TypeKind.TimeSpan;
+        // QFunctionPointer is not a concrete signature: Qt promises only "a pointer to a
+        // function", so the managed side is the QtCore carrier struct, holding the address.
+        if (t == "QFunctionPointer") return TypeKind.FunctionPointer;
+        if (ApiTypes.IsCallback(t)) return TypeKind.Callback;
         if (t == "void") return TypeKind.Void;
         if (ApiTypes.IsStruct(t)) return TypeKind.Struct;
         // The null-conditional is for the few calls the setup makes before the tables exist (the
@@ -1332,6 +1350,12 @@ public static class ApiCodeGen
     // opaque handle (void*, QEvent*).
     static bool IsPtr(string t) => Kind(t) is TypeKind.CString or TypeKind.CharPtr
                                             or TypeKind.ClassPtr or TypeKind.OpaquePtr;
+    static bool IsCallbackType(string t) => Kind(t) == TypeKind.Callback;
+
+    // Both of Qt's function-pointer spellings: a concrete type to build a thunk for, and the
+    // signature-less QFunctionPointer that is only ever an address.
+    static bool IsFunctionType(string t)
+        => Kind(t) == TypeKind.Callback || Kind(t) == TypeKind.FunctionPointer;
     static bool IsClassPtr(string t) => IsPtr(t) && ClassNames.Contains(t.Substring(0, t.Length - 1));
     static bool IsEnum(string t) => Kind(t) is TypeKind.Enum or TypeKind.FlagsEnum;
     static bool IsFlags(string t) => Kind(t) == TypeKind.FlagsEnum;
@@ -1442,6 +1466,13 @@ public static class ApiCodeGen
             file.AppendLine("    }");
             file.AppendLine();
         }
+
+        // The managed thunks for every function type in a published signature. Qt keeps only the
+        // address, so one bridge class per spelling turns the C ABI values back into Action/Func;
+        // the runtime registry roots both the thunk and the caller's delegate.
+        var callbackSpellings = CallbackSpellings();
+        if (callbackSpellings.Count > 0)
+            WriteCallbackThunks(CSharpFile(PlainFileKey(ns + ".Callbacks")), callbackSpellings);
 
         // The QVariant bridge's type table. Two kinds of value type register here:
         //   * the ones Qt converts with `operator QVariant()` (QColor, QBrush, ...): the metatype
@@ -2149,6 +2180,170 @@ public static class ApiCodeGen
             foreach (string line in NativeBody(fn, $"{fname}({args})"))
                 sb.AppendLine("    " + line);
             sb.AppendLine("}");
+            sb.AppendLine();
+        }
+    }
+
+    // Every function-type spelling that appears in a published signature. One thunk class per
+    // distinct spelling: the ABI shape is a function of the spelling alone, so two APIs taking the
+    // same function type share the conversion code. Both positions count - a returned callback is
+    // wrapped by the same class that installs one.
+    static SortedSet<string> CallbackSpellings()
+    {
+        var found = new SortedSet<string>(StringComparer.Ordinal);
+        void Add(string t)
+        {
+            if (IsCallbackType(t))
+                found.Add(t);
+        }
+
+        foreach (var (fn, _) in FreeFunctionEntries())
+        {
+            Add(ReturnType(fn));
+            foreach (var p in Params(fn))
+                Add(PType(p));
+        }
+        foreach (var cls in Classes)
+        {
+            foreach (string list in new[] { "methods", "virtuals", "constructors" })
+            {
+                if (!cls.TryGetProperty(list, out var functions) || functions.ValueKind != JsonValueKind.Array)
+                    continue;
+                foreach (var fn in functions.EnumerateArray())
+                {
+                    // Constructors have no return value, and only they lack the property.
+                    if (list != "constructors")
+                        Add(ReturnType(fn));
+                    foreach (var p in Params(fn))
+                        Add(PType(p));
+                }
+            }
+        }
+        return found;
+    }
+
+    // The managed -> native bridge for one function type. Qt stores only the address, so the
+    // generated delegate (a static thunk per spelling) does the value conversion and the runtime
+    // registry keeps the thunk and the caller's delegate rooted. The delegate type itself is
+    // Action/Func, which is what makes a callback an ordinary C# value.
+    static void WriteCallbackThunks(StringBuilder sb, IEnumerable<string> spellings)
+    {
+        foreach (string spelling in spellings)
+        {
+            if (!ApiTypes.TryParseCallback(spelling, out string ret, out string[] arguments))
+                continue;
+
+            string className = CallbackThunkName(spelling);
+            string managed = CallbackDelegateType(spelling);
+            var declarations = new List<string>();
+            var parameters = new List<string>();
+            var conversions = new List<string>();
+            for (int i = 0; i < arguments.Length; i++)
+            {
+                declarations.Add(CallbackAbiParam(arguments[i], i));
+                parameters.Add("arg" + i);
+                conversions.Add(CallbackParamToManaged(arguments[i], "arg" + i));
+            }
+            string call = $"callback({string.Join(", ", conversions)})";
+
+            sb.AppendLine("    /// <summary>");
+            sb.AppendLine($"    /// Converts the C ABI shape of <c>{spelling}</c> to its managed Action/Func. Qt");
+            sb.AppendLine("    /// keeps only the address, so the thunk and the callback stay rooted in");
+            sb.AppendLine("    /// <see cref=\"QtCallbackRegistry\"/> for the lifetime of the process.");
+            sb.AppendLine("    /// </summary>");
+            sb.AppendLine($"    internal static class {className}");
+            sb.AppendLine("    {");
+            sb.AppendLine("        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]");
+            if (ret == "bool")
+                sb.AppendLine("        [return: MarshalAs(UnmanagedType.I1)]");
+            sb.AppendLine($"        private delegate {CallbackAbiType(ret)} Native({string.Join(", ", declarations)});");
+            sb.AppendLine();
+            sb.AppendLine($"        internal static IntPtr Get({managed} callback)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            if (callback == null)");
+            sb.AppendLine("                return IntPtr.Zero;      // Qt's own nullptr: restore the default");
+            sb.AppendLine($"            return QtCallbackRegistry.Get(callback, () => new Native(({string.Join(", ", parameters)}) =>");
+            sb.AppendLine("            {");
+            sb.AppendLine("                try");
+            sb.AppendLine("                {");
+            if (ret == "void")
+                sb.AppendLine($"                    {call};");
+            else
+                sb.AppendLine($"                    return {CallbackReturnToAbi(ret, call)};");
+            sb.AppendLine("                }");
+            sb.AppendLine("                catch (Exception exception)");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    // Qt called this from its own C++ frames; an exception must not");
+            sb.AppendLine("                    // unwind through them. Report it and return the type's zero.");
+            sb.AppendLine("                    ApiRuntime.ReportCallbackException(\"a native callback\", exception);");
+            if (ret != "void")
+                sb.AppendLine("                    return default;");
+            sb.AppendLine("                }");
+            sb.AppendLine("            }));");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
+            // Qt can also hand a function type back (QEasingCurve::customType,
+            // qInstallMessageHandler's previous handler). A concrete signature is wrapped into the
+            // same managed delegate type. A QString argument of a *foreign* callback needs a native
+            // QString built for the call and freed afterwards.
+            var abiArguments = new List<string>();
+            var qstringArguments = new List<int>();
+            for (int i = 0; i < arguments.Length; i++)
+            {
+                if (arguments[i] == "QString")
+                {
+                    qstringArguments.Add(i);
+                    abiArguments.Add("qsArg" + i);
+                }
+                else
+                {
+                    abiArguments.Add(CallbackManagedToAbi(arguments[i], "arg" + i));
+                }
+            }
+            string nativeCall = $"native({string.Join(", ", abiArguments)})";
+            string managedParameters = string.Join(", ", parameters);
+
+            sb.AppendLine($"        internal static {managed} Wrap(IntPtr pointer)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            if (pointer == IntPtr.Zero)");
+            sb.AppendLine("                return null;      // Qt's nullptr: no callback installed");
+            sb.AppendLine("            return QtCallbackRegistry.Wrap(pointer, () =>");
+            sb.AppendLine("            {");
+            sb.AppendLine("                // The address was installed by native code, so the declaration's");
+            sb.AppendLine("                // signature is the contract; the registry memoizes this wrapper per");
+            sb.AppendLine("                // address and delegate type (a repeated read returns the same object).");
+            sb.AppendLine("                var native = (Native)Marshal.GetDelegateForFunctionPointer(pointer, typeof(Native));");
+            if (qstringArguments.Count == 0)
+            {
+                string body = ret == "void"
+                    ? nativeCall
+                    : CallbackAbiToManagedReturn(ret, nativeCall);
+                sb.AppendLine($"                return new {managed}(({managedParameters}) => {body});");
+            }
+            else
+            {
+                sb.AppendLine($"                return new {managed}(({managedParameters}) =>");
+                sb.AppendLine("                {");
+                foreach (int i in qstringArguments)
+                    sb.AppendLine($"                    var qsArg{i} = ApiRuntime.NewQString(arg{i});");
+                sb.AppendLine("                    try");
+                sb.AppendLine("                    {");
+                if (ret == "void")
+                    sb.AppendLine($"                        {nativeCall};");
+                else
+                    sb.AppendLine($"                        return {CallbackAbiToManagedReturn(ret, nativeCall)};");
+                sb.AppendLine("                    }");
+                sb.AppendLine("                    finally");
+                sb.AppendLine("                    {");
+                foreach (int i in qstringArguments)
+                    sb.AppendLine($"                        ApiRuntime.FreeQString(qsArg{i});");
+                sb.AppendLine("                    }");
+                sb.AppendLine("                });");
+            }
+            sb.AppendLine("            });");
+            sb.AppendLine("        }");
+            sb.AppendLine("    }");
             sb.AppendLine();
         }
     }
@@ -4003,6 +4198,14 @@ public static class ApiCodeGen
                 // The declaration already says out/ref, so the call site just repeats it.
                 args.Add((IsOut(p) ? "out " : "ref ") + n);
             }
+            else if (IsCallbackType(t))
+            {
+                // Qt gets an address, not a delegate. The generated thunk converts the C ABI
+                // values to the managed ones and the registry keeps the delegate and the thunk
+                // alive; the same delegate instance always yields the same address, which is how
+                // qRemovePostRoutine finds the routine qAddPostRoutine registered.
+                args.Add($"{CallbackThunkName(t)}.Get({n})");
+            }
             else if (IsStringListT(t))
             {
                 prelude.Add($"var {n}Handle = ApiRuntime.NewStringList({n});");
@@ -4470,6 +4673,12 @@ public static class ApiCodeGen
         if (IsCharT(t)) return "char";
         if (IsCharPtrT(t)) return "string";
         if (t == "uchar*") return "byte[]";
+        // A callback in parameter position is the delegate the managed caller hands over; in
+        // return position it is the same delegate type (the managed wrapper reads the address and
+        // wraps it). QFunctionPointer has no signature to wrap: it is the QtCore carrier struct
+        // the caller opts into a signature on with As<TDelegate>.
+        if (IsCallbackType(t)) return CallbackDelegateType(t);
+        if (t == "QFunctionPointer") return CoreTypeName("QFunctionPointer");
         // An array of a struct declared by another module (QPoint[] seen from QtGui) carries
         // that module's namespace, like the single value does.
         if (IsArray(t)) return ManagedElement(t.Substring(0, t.Length - 1)) + "[]";
@@ -4488,8 +4697,84 @@ public static class ApiCodeGen
 
     // The managed type of a *return* value: a pointer to a runtime struct comes back as the address
     // it is (a view into a container - QRegion's iterator), which is the one place a struct pointer
-    // does not read as an array.
-    static string ManagedRetType(string t) => IsStructPtr(t) ? "IntPtr" : ManagedType(t);
+    // does not read as an array. A concrete function type comes back as the matching delegate: Qt
+    // declared the signature, so the wrapper can trust it (and Wrap first looks the address up in
+    // the registry, so a callback the binding installed comes back as the same instance).
+    // QFunctionPointer has no such declaration, so it comes back as the carrier struct over the
+    // address and the caller supplies the signature with As<TDelegate>.
+    static string ManagedRetType(string t)
+        => IsStructPtr(t) ? "IntPtr" : ManagedType(t);
+
+    // The delegate the managed caller hands over for a function type. Action/Func are the BCL
+    // shapes PySide's PyObject* and PyQt's Callable both stand for, and they keep the callback a
+    // first-class C# value (nothing custom to learn).
+    static string CallbackDelegateType(string t)
+    {
+        if (!ApiTypes.TryParseCallback(t, out string ret, out string[] arguments))
+            return "IntPtr";
+        var parts = new List<string>(arguments.Select(CallbackManagedType));
+        if (ret == "void")
+            return parts.Count == 0 ? "Action" : $"Action<{string.Join(", ", parts)}>";
+        parts.Add(CallbackManagedType(ret));
+        return $"Func<{string.Join(", ", parts)}>";
+    }
+
+    // What one callback argument looks like on the managed side. A pointer is only an address Qt
+    // lends the callback for the duration of the call, never a wrapper the managed side owns, so
+    // it stays IntPtr; QString is read out of Qt's reference; enums keep their generated type.
+    static string CallbackManagedType(string t)
+    {
+        if (t == "QString") return "string";
+        if (t.EndsWith("*", StringComparison.Ordinal)) return "IntPtr";
+        if (IsEnum(t)) return CsEnum(t);
+        return CSharpScalar(t) ?? t;
+    }
+
+    // The same values over the C ABI: an enum is an int, a pointer/QString reference is an
+    // address, and the scalar spellings are the C# ones (long -> int on the MSVC target).
+    static string CallbackAbiType(string t)
+    {
+        if (t == "void") return "void";
+        if (IsEnum(t)) return "int";
+        // A QString argument is Qt's const QString&: the ABI carries the address of the object.
+        if (t == "QString" || t.EndsWith("*", StringComparison.Ordinal)) return "IntPtr";
+        return CSharpScalar(t) ?? t;
+    }
+
+    static string CallbackAbiParam(string t, int index)
+    {
+        // A C++ bool is one byte; the default delegate marshalling would make it a 4-byte BOOL.
+        string type = t == "bool" ? "[MarshalAs(UnmanagedType.I1)] bool" : CallbackAbiType(t);
+        return type + " arg" + index;
+    }
+
+    static string CallbackParamToManaged(string t, string argument)
+    {
+        if (t == "QString")
+            // Borrowed: the QString belongs to Qt for the duration of the callback and must not
+            // be freed by the managed side (ToManaged would release it).
+            return $"ApiRuntime.ToManagedTransient({argument})";
+        if (t.EndsWith("*", StringComparison.Ordinal))
+            return argument;
+        if (IsEnum(t))
+            return $"({CsEnum(t)}){argument}";
+        return argument;
+    }
+
+    static string CallbackReturnToAbi(string t, string expression)
+        => IsEnum(t) ? $"(int){expression}" : expression;
+
+    // The same conversion in the other direction, used when the binding calls a callback that
+    // native code installed. A QString is the caller's job (it has to build and free the native
+    // object), so this covers the values that cross as themselves or as an int.
+    static string CallbackManagedToAbi(string t, string argument)
+        => IsEnum(t) ? $"(int){argument}" : argument;
+
+    static string CallbackAbiToManagedReturn(string t, string expression)
+        => IsEnum(t) ? $"({CsEnum(t)}){expression}" : expression;
+
+    static string CallbackThunkName(string t) => "CallbackThunk_" + StableHash(t);
+
 
     static string NativeParamType(string t)
     {
@@ -4501,6 +4786,9 @@ public static class ApiCodeGen
         if (IsArray(t)) return ManagedType(t);
         if (t == "char*") return "[MarshalAs(UnmanagedType.LPUTF8Str)] string";
         if (t == "TimeSpan") return "long";
+        // The ABI carries the function's address; the managed thunk is what Qt calls on the way
+        // in, and the wrapper wraps the address on the way out.
+        if (IsCallbackType(t) || t == "QFunctionPointer") return "IntPtr";
         // A value crosses as a struct whose layout is the C++ one: two doubles, two ints. No handle,
         // no allocation, no entry in the runtime's tables - and nothing for the caller to release.
         // A struct declared by another module (QPointF seen from QtGui) carries that namespace.
@@ -4724,6 +5012,10 @@ public static class ApiCodeGen
             return scalar;
         // A duration crosses as nanoseconds.
         if (t == "TimeSpan") return "long";
+        // A function type comes back as the function's address; the managed wrapper turns a
+        // concrete one into its delegate (QtCallbackRegistry.Wrap) and a QFunctionPointer into the
+        // carrier struct over that address.
+        if (t == "QFunctionPointer" || IsCallbackType(t)) return "IntPtr";
         return IsEnum(t) ? "int" : "IntPtr";
     }
 
@@ -4763,6 +5055,8 @@ public static class ApiCodeGen
         if (IsArray(t) || IsStringT(t) || t == "char*") return name;
         if (t == "TimeSpan") return $"(long)({name}.Ticks * 100)";
         if (IsStringListT(t) || IsListT(t) || IsAssocT(t) || t == "QByteArrayView") return $"{name}Handle";
+        // The carrier crosses the ABI as the raw address it holds.
+        if (t == "QFunctionPointer") return $"{name}.Address";
         if (IsEnum(t)) return $"(int){name}";
         // Opaque pointers (QEvent*) are already raw handles and must not be dereferenced.
         if (IsClassPtr(t) || IsBoxed(t)) return $"{name}?.Handle ?? IntPtr.Zero";
@@ -4784,6 +5078,14 @@ public static class ApiCodeGen
         if (IsStruct(t)) return call;
         // A struct pointer *is* the address; the managed side reads it through its own accessors.
         if (IsStructPtr(t)) return call;
+        // A concrete function type comes back as the delegate Qt declared. The thunk's Wrap looks
+        // the address up in the registry first, so a callback installed through the binding returns
+        // as the very same delegate instance; a foreign address is marshalled with the declared
+        // signature and memoized. A null address is null.
+        if (IsCallbackType(t)) return $"{CallbackThunkName(t)}.Wrap({call})";
+        // QFunctionPointer promises no signature, so it comes back as the carrier struct over the
+        // address; the caller supplies the signature with As<TDelegate>.
+        if (t == "QFunctionPointer") return $"new {CoreTypeName("QFunctionPointer")}({call})";
         // The native side hands back a newly allocated QString for both string conventions.
         if (IsStringT(t) || t == "char*") return $"ApiRuntime.ToManaged({call})";
         if (t == "TimeSpan") return $"TimeSpan.FromTicks({call} / 100)";
@@ -5286,6 +5588,11 @@ public static class ApiCodeGen
 
     static string CppArgFor(JsonElement p)
     {
+        // A function pointer arrives as an address. The cast has to name exactly the type Qt
+        // declared (QtMessageHandler, QEasingCurve::EasingFunction, QFunctionPointer), which is
+        // what the model's "cpp" field carries.
+        if (IsFunctionType(PType(p)))
+            return $"reinterpret_cast<{p.GetProperty("cpp").GetString()}>({NativeName(PName(p))})";
         // A duration arrives as nanoseconds and has to become the unit Qt declared
         // (std::chrono::milliseconds), which is why a duration parameter carries its clang
         // spelling.
@@ -5309,7 +5616,12 @@ public static class ApiCodeGen
     // with the C ABI argument converted straight to that type - which for everything but a
     // by-reference parameter is the name itself.
     static string CppCtorArgFor(JsonElement p)
-        => IsRef(p) ? "*" + NativeName(PName(p)) : NativeName(PName(p));
+    {
+        // The constructor's C++ parameter is the function type itself, not the ABI address.
+        if (IsFunctionType(PType(p)))
+            return $"reinterpret_cast<{p.GetProperty("cpp").GetString()}>({NativeName(PName(p))})";
+        return IsRef(p) ? "*" + NativeName(PName(p)) : NativeName(PName(p));
+    }
 
     static string CppParamType(string t)
     {
@@ -5331,6 +5643,9 @@ public static class ApiCodeGen
         if (t == "uchar*") return "unsigned char*";
         // Any other scalar pointer is an input array: the caller owns it and Qt only reads it.
         if (IsArray(t)) return "const " + t;
+        // A function pointer crosses as an untyped address; the call casts it back to the type Qt
+        // declared (see CppArgFor), exactly as the buffer convention does.
+        if (IsFunctionType(t)) return "void*";
         if (IsStringListT(t) || IsListT(t) || IsAssocT(t) || t == "QByteArrayView") return "void*";
         if (IsPtr(t) || IsBoxed(t)) return "void*";
         if (IsEnum(t)) return "int";
@@ -5356,6 +5671,8 @@ public static class ApiCodeGen
         if (IsListT(t) || IsAssocT(t)) return $"const {CppTypeName(t)}&";
         // A byte[] argument is carried as a QByteArray, which converts to the view implicitly.
         if (t == "QByteArrayView") return "const QByteArray&";
+        // The constructor takes the declared function type; the ABI carries an address.
+        if (IsFunctionType(t)) return "void*";
         if (IsEnum(t) || IsPtr(t)) return CppTypeName(t);
         // QChar crosses as the real value; a QChar* buffer as the const pointer Qt declares.
         if (IsCharT(t)) return "QChar";
@@ -5478,6 +5795,10 @@ public static class ApiCodeGen
         // conversion is a stated part of the ABI rather than an implicit one.
         if (t == "long" || t == "unsigned long")
             return $"return static_cast<{CppAbiScalar(t)}>({call});";
+        // A function type goes back as a plain address; a concrete one is wrapped into a delegate
+        // on the managed side, QFunctionPointer into its carrier struct over the same address.
+        if (t == "QFunctionPointer" || IsCallbackType(t))
+            return $"return reinterpret_cast<void*>({call});";
         return $"return {call};";
     }
 
