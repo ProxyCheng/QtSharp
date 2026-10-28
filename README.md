@@ -476,6 +476,36 @@ static class Program
   dedicated rule before it can stop being a handle. `QMetaObject` stays a handle too: Qt returns it
   as a `const QMetaObject*` to static data, and the struct-pointer convention would surface that as
   an `IntPtr` instead.
+* **A `Regex` and a `QRegularExpression` convert explicitly, never implicitly.** They are two
+  different engines (the BCL's and PCRE2), and Qt's match/iterator results cannot become
+  `System.Text.RegularExpressions.Match`, so the types stay separate. The extension methods in
+  `QtSharp.QtCore.QRegularExpressionInterop` carry the pattern and the five options both engines
+  spell the same way:
+  ```csharp
+  Regex regex = qre.ToRegex();                    // PCRE2 pattern compiled by .NET
+  using var qre2 = regex.ToQRegularExpression();  // .NET pattern compiled by Qt
+  ```
+  | `QRegularExpression.PatternOptions` | `RegexOptions` |
+  |---|---|
+  | `CaseInsensitiveOption` | `IgnoreCase` |
+  | `MultilineOption` | `Multiline` |
+  | `DotMatchesEverythingOption` | `Singleline` |
+  | `ExtendedPatternSyntaxOption` | `IgnorePatternWhitespace` |
+  | `DontCaptureOption` | `ExplicitCapture` |
+
+  An option with no counterpart throws `NotSupportedException` instead of being silently dropped:
+  Qt's `InvertedGreedinessOption`/`UseUnicodePropertiesOption` when reading a `QRegularExpression`,
+  and .NET's `RightToLeft`, `ECMAScript` and `NonBacktracking` when building one (`ToRegex`'s
+  `extraOptions` are .NET-only additions made after the mapping, so they are not constrained by
+  it). `RegexOptions.Compiled` is accepted and ignored when building the Qt pattern (an execution
+  strategy, not pattern semantics), and `CultureInvariant` is accepted as a no-op (Qt's case folding
+  is locale-independent), though culture-sensitive .NET matching can still differ. Conversion
+  transfers a pattern; it does not translate dialects. The pattern must compile in the target
+  engine (`RegexParseException` from `new Regex`; `ArgumentException` carrying Qt's `ErrorString()`
+  and `PatternErrorOffset()` when PCRE2 rejects it), but a pattern both accept can still match
+  differently. A converted `Regex` is a pattern carrier: Qt APIs still evaluate with PCRE2,
+  `QRegularExpression.Match()` still returns Qt's match objects, and `Regex.Match()` re-evaluates
+  with the .NET engine.
 * **JSON objects are dictionaries, arrays are lists.** `QJsonObject` implements
   `IDictionary<string, QJsonValue>` (a writable view over the Qt object; `Insert` returns the value
   the C++ iterator points at) and `QJsonArray` implements `IList<QJsonValue>`. The LINQ-friendly
