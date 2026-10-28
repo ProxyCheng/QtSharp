@@ -14994,7 +14994,7 @@
         { "name": "setAlignment", "returnType": "void", "parameters": [{ "name": "arg0", "type": "Qt::Alignment" }] },
         { "name": "setWidget", "returnType": "void", "parameters": [{ "name": "widget", "type": "QWidget*" }] },
         { "name": "setWidgetResizable", "returnType": "void", "parameters": [{ "name": "resizable", "type": "bool" }] },
-        { "name": "takeWidget", "returnType": "QWidget*", "parameters": [] },
+        { "name": "takeWidget", "flags": ["ownedReturn"], "returnType": "QWidget*", "parameters": [] },
         { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
         { "name": "widget", "flags": ["const"], "returnType": "QWidget*", "parameters": [] },
         { "name": "widgetResizable", "flags": ["const"], "returnType": "bool", "parameters": [] }
@@ -21313,7 +21313,7 @@
         { "name": "contentsRect", "flags": ["const"], "returnType": "QRect", "parameters": [] },
         { "name": "contextMenuPolicy", "flags": ["const"], "returnType": "Qt::ContextMenuPolicy", "parameters": [] },
         { "name": "createWinId", "returnType": "void", "parameters": [] },
-        { "name": "createWindowContainer", "flags": ["static"], "returnType": "QWidget*", "parameters": [{ "name": "window", "type": "QWindow*" }, { "name": "parent", "type": "QWidget*", "flags": ["optional"], "default": "null" }, { "name": "flags", "type": "Qt::WindowFlags", "flags": ["optional"], "default": "0" }] },
+        { "name": "createWindowContainer", "flags": ["static"], "ownedWhenNull": "parent", "returnType": "QWidget*", "parameters": [{ "name": "window", "type": "QWindow*" }, { "name": "parent", "type": "QWidget*", "flags": ["optional"], "default": "null" }, { "name": "flags", "type": "Qt::WindowFlags", "flags": ["optional"], "default": "0" }] },
         { "name": "cursor", "flags": ["const"], "returnType": "QCursor", "parameters": [] },
         { "name": "depth", "flags": ["const"], "returnType": "int", "parameters": [] },
         { "name": "devicePixelRatio", "flags": ["const"], "returnType": "double", "parameters": [] },
