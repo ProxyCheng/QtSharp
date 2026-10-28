@@ -27,8 +27,10 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   documented in `docs/model-vocabulary.md`.
 - **Automated runs are headless.** `qoffscreen.dll` / `qminimal.dll` are staged by the Qt kit and
   copied next to every built app, and the example/test gate runs with `QT_QPA_PLATFORM=offscreen`, so
-  the conformance suite no longer maps windows on the desktop. Checks that need a real font engine
-  report an `[info]` line where the headless platform cannot provide one.
+  the conformance suite no longer maps windows on the desktop. The hosts write that variable before
+  the `QApplication` exists; on Unix they go through `setenv` because .NET keeps its own copy of the
+  environment there and Qt reads the C library's. Checks that need a real font engine report an
+  `[info]` line where the headless platform cannot provide one.
 - **Explicit regex interop.** `QRegularExpressionInterop` converts a `QRegularExpression` to a
   `Regex` and back, carrying the five options both engines spell the same way and throwing for the
   rest. See the README for the mapping and the engine caveat.
