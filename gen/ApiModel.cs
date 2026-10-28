@@ -306,11 +306,6 @@ public static class ApiTypes
                 return $"Dictionary<{Managed(key, classes)}, {Managed(value, classes)}>";
             }
 
-        // A handle to a Qt property (the bindableFoo() accessors): a wrapper the generated code
-        // publishes once, generic over the value type.
-        if (modelType.StartsWith("QBindable<", StringComparison.Ordinal) && modelType.EndsWith(">"))
-            return $"QBindable<{Managed(modelType.Substring("QBindable<".Length, modelType.Length - "QBindable<".Length - 1), classes)}>";
-
         // Byte buffers: a uchar* whose length is passed separately, and the Qt6 byte view that
         // carries its own length.
         if (modelType == "uchar*" || modelType == "QByteArrayView")

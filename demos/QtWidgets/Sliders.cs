@@ -335,7 +335,12 @@ public static class Sliders
 
         // resizeEvent flips the outer layout (and the group's inner layout + orientation).
         int before = window.ResizeEventCount;
-        window.Resize(300, 700);            // aspect < 1  =>  TopToBottom / Horizontal
+        // The layout's minimum width can be larger than 300 on some font metrics (it was 717 under
+        // the offscreen platform), so use a tall height that keeps the aspect below 1 regardless.
+        window.Resize(300, 2000);           // aspect < 1  =>  TopToBottom / Horizontal
+        // A headless platform may apply the geometry asynchronously; let it before the fallback
+        // handler reads Width/Height.
+        QCoreApplication.ProcessEvents();
         if (window.ResizeEventCount == before)
             window.ResizeEvent(null);       // no event loop: drive the override directly
         Check(window.OuterLayout.direction() == QBoxLayout.Direction.TopToBottom,
@@ -347,6 +352,7 @@ public static class Sliders
 
         before = window.ResizeEventCount;
         window.Resize(1000, 150);           // aspect > 1  =>  LeftToRight / Vertical
+        QCoreApplication.ProcessEvents();
         if (window.ResizeEventCount == before)
             window.ResizeEvent(null);
         Check(window.OuterLayout.direction() == QBoxLayout.Direction.LeftToRight,

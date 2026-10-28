@@ -501,9 +501,11 @@ public static partial class ApiModel
             return "QMap<" + mapKey + "," + mapValue + ">";
         if (IsAssoc(type, "QHash", out var hashKey, out var hashValue))
             return "QHash<" + hashKey + "," + hashValue + ">";
-        // QBindable<T> is the handle Qt's property-binding API hands out (bindableFoo()).
-        if (IsQBindable(type, out var bound))
-            return "QBindable<" + bound + ">";
+        // QBindable<T> (the bindableFoo() accessors) stays unbound. Its read/write Value is the
+        // property accessor again, and the members that make it distinct - setBinding,
+        // onValueChanged, hasBinding - are not bound, so publishing the handle would add a second
+        // path to the same value and no capability. Named null here, which is how a whole method
+        // returning one drops out of the model. See the BINDABLE note in the README.
 
         if (type.kind == CXTypeKind.CXType_Pointer)
         {
@@ -666,32 +668,6 @@ public static partial class ApiModel
         key = ModelName(keyType);
         value = ModelName(valueType);
         return key != null && value != null;
-    }
-
-    // A QBindable<T> specialization, with its single template argument.
-    static bool TryUnwrapBindable(CXType type, out CXType element)
-    {
-        element = default;
-        type = Unwrap(type);
-        while (type.kind == CXTypeKind.CXType_LValueReference || type.kind == CXTypeKind.CXType_RValueReference)
-            type = Unwrap(type.PointeeType);
-        var canonical = type.CanonicalType;
-        var declaration = canonical.Declaration;
-        if (clang.getCursorKind(declaration) != CXCursorKind.CXCursor_ClassDecl)
-            return false;
-        if (clang.getCursorSpelling(declaration).ToString() != "QBindable")
-            return false;
-        if (clang.Cursor_getNumTemplateArguments(declaration) != 1)
-            return false;
-        element = clang.Cursor_getTemplateArgumentType(declaration, 0);
-        return true;
-    }
-
-    // A QBindable<T> whose T the vocabulary can express.
-    static bool IsQBindable(CXType type, out string element)
-    {
-        element = null;
-        return TryUnwrapBindable(type, out var elementType) && (element = ModelName(elementType)) != null;
     }
 
     static string BuiltinName(CXType type) => type.kind switch
@@ -1262,11 +1238,6 @@ public static partial class ApiModel
                    && !IsContainerSpelling(ModelName(mapKeyType))
                    && !IsContainerSpelling(ModelName(mapValueType));
         }
-        // A QBindable<T> only ever comes *out* of Qt (the bindableFoo() accessors). Handing one
-        // back in would need a native QBindable object, which the managed side has no way to
-        // make, so a bindable parameter is not bindable.
-        if (TryUnwrapBindable(type, out var boundType))
-            return !isParameter && SupportedType(boundType);
 
         var flags = FlagsName(type);
         if (flags != null)

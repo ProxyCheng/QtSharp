@@ -1024,7 +1024,6 @@ public static class ApiCodeGen
         StringList,      // QStringList
         Map,             // QMap<K,V>
         Hash,            // QHash<K,V>
-        Bindable,        // QBindable<E>
         ByteArrayView,   // QByteArrayView
         TimeSpan,        // a std::chrono duration
         BoxedClass,      // a bound class crossing by value (a handle)
@@ -1066,7 +1065,6 @@ public static class ApiCodeGen
         if (t.StartsWith("QList<", StringComparison.Ordinal) && t.EndsWith(">")) return TypeKind.List;
         if (t.StartsWith("QMap<", StringComparison.Ordinal) && t.EndsWith(">")) return TypeKind.Map;
         if (t.StartsWith("QHash<", StringComparison.Ordinal) && t.EndsWith(">")) return TypeKind.Hash;
-        if (t.StartsWith("QBindable<", StringComparison.Ordinal) && t.EndsWith(">")) return TypeKind.Bindable;
         if (t.EndsWith("*", StringComparison.Ordinal))
         {
             string pointee = t.Substring(0, t.Length - 1);
@@ -1327,11 +1325,6 @@ public static class ApiCodeGen
     }
     static string AssocHelper(string t) => $"QsApi{AssocPrefix(t)}_{AssocStem(t)}";
 
-    // The handle Qt's property-binding API hands out. Its value type is the only thing that
-    // varies, so one value type gets one codec and the wrapper itself is generic.
-    static bool IsBindableT(string t) => Kind(t) == TypeKind.Bindable;
-    static string BindableElem(string t) => t.Substring("QBindable<".Length, t.Length - "QBindable<".Length - 1);
-    static string BindableHelper(string elem) => "QsApiBindable_" + ListStem(elem);
     // Every pointer that is not an array: a C string, a UTF-16 buffer, a bound class, or an
     // opaque handle (void*, QEvent*).
     static bool IsPtr(string t) => Kind(t) is TypeKind.CString or TypeKind.CharPtr
@@ -1353,7 +1346,7 @@ public static class ApiCodeGen
     // The C# binding is split the way Qt's C++ headers are: every class, value-type struct and
     // free function goes into the file named after the header the model records for it
     // (QtWidgets/qwidget.h -> generated/QtWidgets/qwidget.cs). Namespace-level enums have no
-    // header in the model and live in <namespace>.Enums.cs; the generated list/assoc/bindable
+    // header in the model and live in <namespace>.Enums.cs; the generated list/assoc
     // helpers and the shared P/Invokes have their own files too.
     static string HeaderFileKey(string header)
     {
@@ -1541,8 +1534,7 @@ public static class ApiCodeGen
         // The generated helpers for the container types used by the signatures.
         var listElements = ListElements();
         var assocElements = AssocElements();
-        var bindableElements = BindableElements();
-        if (listElements.Count > 0 || assocElements.Count > 0 || bindableElements.Count > 0)
+        if (listElements.Count > 0 || assocElements.Count > 0)
         {
             var helpers = CSharpFile(PlainFileKey(ns + ".Helpers"));
             helpers.AppendLine("    internal static partial class ApiNative");
@@ -1551,17 +1543,11 @@ public static class ApiCodeGen
                 WriteListNativeDeclarations(helpers, elem);
             foreach (var assoc in assocElements)
                 WriteAssocNativeDeclarations(helpers, assoc);
-            foreach (var elem in bindableElements)
-                WriteBindableNativeDeclarations(helpers, elem);
             helpers.AppendLine("    }");
             foreach (var elem in listElements)
                 WriteListHelper(helpers, elem);
             foreach (var assoc in assocElements)
                 WriteAssocHelper(helpers, assoc);
-            foreach (var elem in bindableElements)
-                WriteBindableHelper(helpers, elem);
-            if (bindableElements.Count > 0)
-                WriteBindableClass(helpers);
         }
 
         var result = new SortedDictionary<string, string>(StringComparer.Ordinal);
@@ -1710,109 +1696,6 @@ public static class ApiCodeGen
             if (t != null && IsAssocT(t))
                 types.Add(t);
         return types.ToList();
-    }
-
-    // Every value type a QBindable<...> is instantiated with, in a stable order.
-    static List<string> BindableElements()
-    {
-        var elements = new SortedSet<string>(StringComparer.Ordinal);
-        foreach (var t in SignatureTypes())
-            if (t != null && IsBindableT(t))
-                elements.Add(BindableElem(t));
-        return elements.ToList();
-    }
-
-    // The generic wrapper, published once: a property handle that reads and writes through the
-    // codec generated for its value type.
-    static void WriteBindableClass(StringBuilder sb)
-    {
-        sb.AppendLine("    /// <summary>A handle to a Qt property (QBindable&lt;T&gt;), as the bindableFoo() accessors hand it out.</summary>");
-        sb.AppendLine("    public sealed class QBindable<T> : IDisposable");
-        sb.AppendLine("    {");
-        sb.AppendLine("        IntPtr _handle;");
-        sb.AppendLine("        readonly Func<IntPtr, T> _get;");
-        sb.AppendLine("        readonly Action<IntPtr, T> _set;");
-        sb.AppendLine("        readonly Action<IntPtr> _free;");
-        sb.AppendLine();
-        sb.AppendLine("        internal QBindable(IntPtr handle, Func<IntPtr, T> get, Action<IntPtr, T> set, Action<IntPtr> free)");
-        sb.AppendLine("        {");
-        sb.AppendLine("            _handle = handle;");
-        sb.AppendLine("            _get = get;");
-        sb.AppendLine("            _set = set;");
-        sb.AppendLine("            _free = free;");
-        sb.AppendLine("        }");
-        sb.AppendLine();
-        sb.AppendLine("        public bool IsDisposed => _handle == IntPtr.Zero;");
-        sb.AppendLine();
-        sb.AppendLine("        /// <summary>The property's current value; assigning writes it back through Qt.</summary>");
-        sb.AppendLine("        public T Value");
-        sb.AppendLine("        {");
-        sb.AppendLine("            get => _get(_handle);");
-        sb.AppendLine("            set => _set(_handle, value);");
-        sb.AppendLine("        }");
-        sb.AppendLine();
-        sb.AppendLine("        public void Dispose()");
-        sb.AppendLine("        {");
-        sb.AppendLine("            if (_handle == IntPtr.Zero)");
-        sb.AppendLine("                return;");
-        sb.AppendLine("            _free(_handle);");
-        sb.AppendLine("            _handle = IntPtr.Zero;");
-        sb.AppendLine("        }");
-        sb.AppendLine("    }");
-        sb.AppendLine();
-    }
-
-    // One value type's codec: the DllImports plus the factory the return conversion calls.
-    static void WriteBindableHelper(StringBuilder sb, string elem)
-    {
-        string helper = BindableHelper(elem);
-        string stem = ListStem(elem);
-        string managed = ManagedElement(elem);
-
-        sb.AppendLine();
-        sb.AppendLine($"    internal static class {helper}");
-        sb.AppendLine("    {");
-        sb.AppendLine($"        public static QBindable<{managed}> FromOwnedHandle(IntPtr handle)");
-        sb.AppendLine($"            => new QBindable<{managed}>(handle, Get, Set, ApiNative.Bindable_{stem}_free);");
-        sb.AppendLine();
-        sb.AppendLine($"        static {managed} Get(IntPtr handle) => {ElemRead(elem, $"ApiNative.Bindable_{stem}_value(handle)")};");
-        sb.AppendLine();
-        sb.AppendLine($"        static void Set(IntPtr handle, {managed} value) => ApiNative.Bindable_{stem}_setValue(handle, {ElemArg(elem, "value")});");
-        sb.AppendLine("    }");
-    }
-
-    static void WriteBindableNativeDeclarations(StringBuilder sb, string elem)
-    {
-        string stem = ListStem(elem);
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_bindable_{stem}_value\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern {ElemAbiCsRet(elem)} Bindable_{stem}_value(IntPtr bindable);");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_bindable_{stem}_setValue\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern void Bindable_{stem}_setValue(IntPtr bindable, {ElemAbiCsParam(elem)} value);");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_bindable_{stem}_free\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern void Bindable_{stem}_free(IntPtr bindable);");
-    }
-
-    static void WriteBindableNativeCpp(StringBuilder sb, string elem)
-    {
-        string stem = ListStem(elem);
-        string bindable = $"QBindable<{elem}>";
-        sb.AppendLine();
-        sb.AppendLine($"// QBindable<{elem}>: read/write through the property Qt gave us.");
-        sb.AppendLine($"extern \"C\" QS_API_EXPORT {ElemAbiCppRet(elem)} qs_api_bindable_{stem}_value(void* bindable)");
-        sb.AppendLine("{");
-        sb.AppendLine($"    return {ElemFromCpp(elem, $"static_cast<{bindable}*>(bindable)->value()")};");
-        sb.AppendLine("}");
-        sb.AppendLine($"extern \"C\" QS_API_EXPORT void qs_api_bindable_{stem}_setValue(void* bindable, {ElemAbiCppParam(elem)} value)");
-        sb.AppendLine("{");
-        sb.AppendLine($"    static_cast<{bindable}*>(bindable)->setValue({ElemToCpp(elem, "value")});");
-        sb.AppendLine("}");
-        sb.AppendLine($"extern \"C\" QS_API_EXPORT void qs_api_bindable_{stem}_free(void* bindable)");
-        sb.AppendLine("{");
-        sb.AppendLine($"    delete static_cast<{bindable}*>(bindable);");
-        sb.AppendLine("}");
     }
 
     // The C# side of the container conversion: New/Free around a call, Read for a return.
@@ -4545,7 +4428,6 @@ public static class ApiCodeGen
             var (key, value) = AssocElems(t);
             return $"Dictionary<{ManagedElement(key)}, {ManagedElement(value)}>";
         }
-        if (IsBindableT(t)) return $"QBindable<{ManagedElement(BindableElem(t))}>";
         if (IsPtr(t)) return IsClassPtr(t) ? CsTypeName(t.Substring(0, t.Length - 1)) : "IntPtr";
         if (IsEnum(t)) return CsEnum(t);
         if (IsBoxed(t)) return CsTypeName(t);
@@ -4857,8 +4739,6 @@ public static class ApiCodeGen
         if (IsListT(t)) return $"{ListHelper(ListElem(t))}.Read({call})";
         if (IsAssocT(t))
             return $"{AssocHelper(t)}.Read({call})";
-        if (IsBindableT(t))
-            return $"{BindableHelper(BindableElem(t))}.FromOwnedHandle({call})";
         if (t == "QByteArrayView") return $"ApiRuntime.ToManagedBytes({call})";
         if (IsEnum(t)) return $"({CsEnum(t)}){call}";
         if (IsClassPtr(t)) return $"{CsTypeName(t.Substring(0, t.Length - 1))}.FromHandle({call})";
@@ -4875,10 +4755,6 @@ public static class ApiCodeGen
             .Concat(Functions.Select(f => f.GetProperty("header").GetString()))
                      .Distinct().OrderBy(h => h, StringComparer.Ordinal))
             sb.AppendLine($"#include <{header}>");
-        // The property-binding templates: the class headers only forward-declare QBindable<T>,
-        // and the generated wrapper instantiates it.
-        if (BindableElements().Count > 0)
-            sb.AppendLine("#include <qproperty.h>");
         sb.AppendLine("#include \"QtSharpApiRuntime.h\"");
         // qHashBits, used by the hash of a struct whose equality ignores padding/flag bits.
         sb.AppendLine("#include <qhashfunctions.h>");
@@ -4923,9 +4799,6 @@ public static class ApiCodeGen
 
         foreach (var assoc in AssocElements())
             WriteAssocNativeCpp(sb, assoc);
-
-        foreach (var elem in BindableElements())
-            WriteBindableNativeCpp(sb, elem);
 
         // A managed override that returns a value type hands the value over by copying it into
         // the caller's slot.
@@ -5380,9 +5253,6 @@ public static class ApiCodeGen
         // Any other scalar pointer is an input array: the caller owns it and Qt only reads it.
         if (IsArray(t)) return "const " + t;
         if (IsStringListT(t) || IsListT(t) || IsAssocT(t) || t == "QByteArrayView") return "void*";
-        // A bindable parameter would need a native QBindable the managed side cannot make; the
-        // extractor rejects those, so this is only a guard.
-        if (IsBindableT(t)) return "void*";
         if (IsPtr(t) || IsBoxed(t)) return "void*";
         if (IsEnum(t)) return "int";
         return CppAbiScalar(t);
@@ -5515,8 +5385,6 @@ public static class ApiCodeGen
             return $"return new {CppTypeName(t)}({call});";
         }
         if (IsAssocT(t)) return $"return new {CppTypeName(t)}({call});";
-        // The bindable handle is a small value; managed code gets a heap copy it disposes.
-        if (IsBindableT(t)) return $"return new {CppTypeName(t)}({call});";
         if (t == "QByteArrayView") return $"return new QByteArray({call});";
         // A duration comes back as nanoseconds whatever unit Qt used.
         if (t == "TimeSpan")

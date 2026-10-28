@@ -83,10 +83,13 @@ public static class Transformations
         var text = new QPainterPath();
         using var font = new QFont();
         font.SetPixelSize(50);
-        using var metrics = new QFontMetrics(font);
-        var bounds = metrics.BoundingRect("Qt");
+        // Centre on the path's own bounds rather than QFontMetrics::boundingRect: the headless
+        // platforms can report a sentinel rectangle for the default font, and the glyph outlines
+        // are what the demo draws anyway.
+        text.AddText(new QPointF(0, 0), font, "Qt");
+        var bounds = text.BoundingRect();
         var center = bounds.Center();
-        text.AddText(new QPointF(-center.X(), -center.Y()), font, "Qt");
+        text.Translate(-center.X(), -center.Y());
         return text;
     }
 }

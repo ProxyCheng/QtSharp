@@ -555,7 +555,14 @@ static class Program
   C# member or Qt name; `<Property>Changed` is used when omitted), `Reset` (a parameterless
   method; `Reset<Property>` by convention), `Constant`, `Final`, `Required`, `Designable`,
   `Scriptable`, `Stored`, `User` and `Revision`. `BINDABLE` is not exposed: it needs binding
-  support in the native runtime, not just a flag.
+  support in the native runtime, not just a flag. For the same reason the generated classes omit
+  Qt's `bindableFoo()` accessors and the `QBindable<T>` handle they return: that handle's `Value`
+  only repeats the property's own getter and setter, while `setBinding`, `onValueChanged` and
+  `hasBinding` are not bound. Use the normal property accessor and, where Qt declares one, its
+  `...Changed` NOTIFY signal instead. `QTimer`'s `active`/`interval`/`singleShot`/`timerType`,
+  `QMovie.cacheMode`/`speed` and `QGeoPositionInfoSource.updateInterval` have no NOTIFY signal,
+  so changes to them are not observable through the binding until the binding feature (or a
+  per-class signal) exists.
   `tests/MetaObjectApi.cs` is the same declaration under test.
   The generated Qt classes are deliberately different: their properties and signals already exist
   in moc's meta-object, so they do not carry these attributes. Their types are marked
@@ -657,6 +664,7 @@ Replace the local source path with your checkout's `out/packages` directory.
 | `nuget/QtSharp.Api/`, `nuget/QtSharp.Runtime/`, `nuget/QtSharp.Qt6/` | the base binding and its runtime packages (nine module assemblies inside `QtSharp.Api`) |
 | `nuget/QtSharp.Charts*`, `nuget/QtSharp.Qt3D*`, `nuget/QtSharp.Multimedia*` | the addon packages and their `*.Qt6` runtime companions |
 | `docs/conformance.md` | which Qt examples run against which module, and the remaining coverage gaps |
+| `docs/model-vocabulary.md` | the Qt-to-C# type vocabulary, the rule for adding a missing spelling, and the spellings it still leaves out |
 | `tools/regen-api.ps1` | the build and the gate |
 | `tools/parallel.ps1` | the process pool the gate and CI use to run independent build steps several at a time |
 | `tools/clangprobe/` | the probe used to validate the libclang front end (not part of the build) |
@@ -699,6 +707,13 @@ Replace the local source path with your checkout's `out/packages` directory.
   implicit default (the AST does not list it), so there is no `QAudioFormat(...)`; as a struct its
   default (`new QAudioFormat()` / `default`) is Qt's default format, and the setters fill it in.
   `QAudioDevice.PreferredFormat()` is still the useful starting point.
+* **Bindable property handles are not exposed.** Qt's `bindableFoo()` accessors and their
+  `QBindable<T>` return type are absent; use the property getter/setter and its NOTIFY signal
+  instead. `QTimer.active`/`interval`/`singleShot`/`timerType`, `QMovie.cacheMode`/`speed` and
+  `QGeoPositionInfoSource.updateInterval` have no NOTIFY signal, so changes to them cannot be
+  observed through the binding. Re-adding `QBindable<T>` only makes sense together with the
+  binding members the current half-API left out (`SetBinding`, `OnValueChanged`, `HasBinding`,
+  `ClearBinding`), and a test proving the auto-update.
 * **The bound modules** are QtCore, QtGui, QtWidgets, QtNetwork (host addressing, local sockets
   `QLocalServer`/`QLocalSocket`, TCP/UDP, the HTTP client), QtSvg/QtSvgWidgets, QtPrintSupport
   (`QPrinter`, print dialogs/preview) and QtOpenGL/QtOpenGLWidgets (`QOpenGLWidget`,

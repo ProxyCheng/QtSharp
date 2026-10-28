@@ -1045,7 +1045,6 @@
         { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "bindableSourceModel", "returnType": "QBindable<QAbstractItemModel*>", "parameters": [] },
         { "name": "createSourceIndex", "flags": ["protected", "const"], "returnType": "QModelIndex", "parameters": [{ "name": "row", "type": "int" }, { "name": "col", "type": "int" }, { "name": "internalPtr", "type": "void*" }] },
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "sourceModel", "flags": ["const"], "returnType": "QAbstractItemModel*", "parameters": [] },
@@ -9028,7 +9027,6 @@
         { "parameters": [{ "name": "model", "type": "QAbstractItemModel*" }, { "name": "parent", "type": "QObject*" }] }
       ],
       "methods": [
-        { "name": "bindableModel", "returnType": "QBindable<QAbstractItemModel*>", "parameters": [] },
         { "name": "clearSelection", "returnType": "void", "parameters": [] },
         { "name": "columnIntersectsSelection", "flags": ["const"], "returnType": "bool", "parameters": [{ "name": "column", "type": "int" }, { "name": "parent", "type": "QModelIndex", "flags": ["optional"], "defaultCpp": "QModelIndex()" }] },
         { "name": "currentIndex", "flags": ["const"], "returnType": "QModelIndex", "parameters": [] },
@@ -11476,8 +11474,6 @@
       ],
       "methods": [
         { "name": "backgroundColor", "flags": ["const"], "returnType": "QColor", "parameters": [] },
-        { "name": "bindableCacheMode", "returnType": "QBindable<QMovie::CacheMode>", "parameters": [] },
-        { "name": "bindableSpeed", "returnType": "QBindable<int>", "parameters": [] },
         { "name": "cacheMode", "flags": ["const"], "returnType": "QMovie::CacheMode", "parameters": [] },
         { "name": "currentFrameNumber", "flags": ["const"], "returnType": "int", "parameters": [] },
         { "name": "currentImage", "flags": ["const"], "returnType": "QImage", "parameters": [] },
@@ -11894,7 +11890,6 @@
         { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "bindableObjectName", "returnType": "QBindable<QString>", "parameters": [] },
         { "name": "blockSignals", "returnType": "bool", "parameters": [{ "name": "b", "type": "bool" }] },
         { "name": "children", "flags": ["const"], "returnType": "QList<QObject*>", "parameters": [] },
         { "name": "deleteLater", "returnType": "void", "parameters": [] },
@@ -15628,16 +15623,6 @@
       "methods": [
         { "name": "autoAcceptChildRows", "flags": ["const"], "returnType": "bool", "parameters": [] },
         { "name": "beginFilterChange", "flags": ["protected"], "returnType": "void", "parameters": [] },
-        { "name": "bindableAutoAcceptChildRows", "returnType": "QBindable<bool>", "parameters": [] },
-        { "name": "bindableDynamicSortFilter", "returnType": "QBindable<bool>", "parameters": [] },
-        { "name": "bindableFilterCaseSensitivity", "returnType": "QBindable<Qt::CaseSensitivity>", "parameters": [] },
-        { "name": "bindableFilterKeyColumn", "returnType": "QBindable<int>", "parameters": [] },
-        { "name": "bindableFilterRegularExpression", "returnType": "QBindable<QRegularExpression>", "parameters": [] },
-        { "name": "bindableFilterRole", "returnType": "QBindable<int>", "parameters": [] },
-        { "name": "bindableIsSortLocaleAware", "returnType": "QBindable<bool>", "parameters": [] },
-        { "name": "bindableRecursiveFilteringEnabled", "returnType": "QBindable<bool>", "parameters": [] },
-        { "name": "bindableSortCaseSensitivity", "returnType": "QBindable<Qt::CaseSensitivity>", "parameters": [] },
-        { "name": "bindableSortRole", "returnType": "QBindable<int>", "parameters": [] },
         { "name": "dataChangeRelevanceFlags", "flags": ["protected", "const"], "returnType": "QSortFilterProxyModel::DataChangeRelevanceFlags", "parameters": [{ "name": "sourceTopLeft", "type": "QModelIndex" }, { "name": "sourceBottomRight", "type": "QModelIndex" }, { "name": "roles", "type": "QList<int>" }] },
         { "name": "dynamicSortFilter", "flags": ["const"], "returnType": "bool", "parameters": [] },
         { "name": "endFilterChange", "flags": ["protected"], "returnType": "void", "parameters": [{ "name": "directions", "type": "QSortFilterProxyModel::Directions", "flags": ["optional"], "default": "QSortFilterProxyModel.Directions.Both" }] },
@@ -16121,7 +16106,6 @@
         { "name": "appendColumn", "returnType": "void", "parameters": [{ "name": "items", "type": "QList<QStandardItem*>" }] },
         { "name": "appendRow", "returnType": "void", "parameters": [{ "name": "items", "type": "QList<QStandardItem*>" }] },
         { "name": "appendRow", "returnType": "void", "parameters": [{ "name": "item", "type": "QStandardItem*" }] },
-        { "name": "bindableSortRole", "returnType": "QBindable<int>", "parameters": [] },
         { "name": "clear", "returnType": "void", "parameters": [] },
         { "name": "findItems", "flags": ["const"], "returnType": "QList<QStandardItem*>", "parameters": [{ "name": "text", "type": "QString" }, { "name": "flags", "type": "Qt::MatchFlags", "flags": ["optional"], "default": "Qt.MatchFlags.MatchExactly" }, { "name": "column", "type": "int", "flags": ["optional"], "default": "0" }] },
         { "name": "horizontalHeaderItem", "flags": ["const"], "returnType": "QStandardItem*", "parameters": [{ "name": "column", "type": "int" }] },
@@ -19853,10 +19837,6 @@
         { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "bindableActive", "returnType": "QBindable<bool>", "parameters": [] },
-        { "name": "bindableInterval", "returnType": "QBindable<int>", "parameters": [] },
-        { "name": "bindableSingleShot", "returnType": "QBindable<bool>", "parameters": [] },
-        { "name": "bindableTimerType", "returnType": "QBindable<Qt::TimerType>", "parameters": [] },
         { "name": "id", "flags": ["const"], "returnType": "Qt::TimerId", "parameters": [] },
         { "name": "interval", "flags": ["const"], "returnType": "int", "parameters": [] },
         { "name": "intervalAsDuration", "flags": ["const"], "returnType": "TimeSpan", "parameters": [] },
