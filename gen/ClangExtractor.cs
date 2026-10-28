@@ -117,6 +117,17 @@ public static partial class ApiModel
             .ToList();
         Console.WriteLine($"[model2] scanned {rootProperties.Count} Q_PROPERTY declaration(s)");
 
+        // The methods moc registers in the meta-object. The marker (a Q_SLOTS/slots section,
+        // Q_SLOT or Q_INVOKABLE) is invisible to clang, so the header text says which declarations
+        // are slots/invokables; the AST supplies their parameters, matched by name and arity.
+        var rootSlots = ActiveRoots
+            .Select(r => (r.Module, r.Header))
+            .Distinct()
+            .SelectMany(h => Program.ScanSlots(h.Module, h.Header))
+            .Where(s => RootClasses.Contains(s.ClassName))
+            .ToList();
+        Console.WriteLine($"[model2] scanned {rootSlots.Count} slot/Q_INVOKABLE declaration(s)");
+
         // One group per header. The grouping only makes the log readable now (the "owned" rule
         // that used to depend on it is gone); the class *order* in the model is sorted anyway.
         foreach (var chunk in ActiveRoots.GroupBy(r => (r.Module, r.Header)))
@@ -135,7 +146,7 @@ public static partial class ApiModel
                     Console.WriteLine($"[model2] WARNING: root class {root.Class} was not found in the parsed headers");
                     continue;
                 }
-                part.Classes[root.ManagedClass] = ClassJson(classRecord, root, index2, rootSignals, allSignalNames, rootProperties, part.Enums);
+                part.Classes[root.ManagedClass] = ClassJson(classRecord, root, index2, rootSignals, allSignalNames, rootProperties, rootSlots, part.Enums);
             }
             Console.WriteLine($"[model2]   {chunk.Key.Module}/{chunk.Key.Header}: {chunk.Count()} class(es)");
         }
@@ -1309,6 +1320,12 @@ public static partial class ApiModel
         // ownership (FromOwnedHandle), and Dispose deletes the object. Conditional ownership is
         // not this flag - it is the `ownedWhenNull` field, which names the parameter that decides.
         OwnedReturn = 16,
+        // Qt declares the method in a Q_SLOTS/Q_SLOT section, so moc registered it as a slot
+        // (QMetaMethod::Slot). The generated method carries [QtNativeSlot], the read-side marker.
+        Slot = 32,
+        // The declaration is prefixed Q_INVOKABLE: Qt registers it as a method (QMetaMethod::Method),
+        // not a slot. Kept apart from Slot because the attribute reports which one Qt made.
+        Invokable = 64,
     }
 
     // The independent traits a parameter carries. How it crosses (in/out/ref) is a separate mode:
@@ -1386,6 +1403,11 @@ public static partial class ApiModel
         // other unsupported return is published as void.
         public bool ReturnDropped;
         public bool ReturnFromIterator;
+        // moc registered the declaration in the meta-object: a Q_SLOTS/Q_SLOT slot or a
+        // Q_INVOKABLE method. The header scan sets these (the AST cannot see the markers), and
+        // both stay off for a method nobody marked - a plain callable member.
+        public bool IsSlot;
+        public bool IsInvokable;
         public List<ParamFact> Params = new();
         // The longest marshalable prefix of the declaration: what the model emits.
         public List<ParamFact> Visible = new();
@@ -1410,6 +1432,7 @@ public static partial class ApiModel
     static string ClassJson(CXCursor record, Root root, ClangIndex index,
                             List<Program.SignalInfo> signals, HashSet<string> allSignalNames,
                             List<Program.PropertyInfo> properties,
+                            List<Program.SlotInfo> slots,
                             Dictionary<string, EnumEntry> enums)
     {
         // The model (and the C# binding) uses the simple class name; the C++ qualified name is
@@ -1527,6 +1550,26 @@ public static partial class ApiModel
             .ThenBy(m => m.Params.Count)
             .ThenBy(SignatureKey, StringComparer.Ordinal)
             .ToList();
+
+        // The methods moc registered in this class's meta-object. The header scan says *which*
+        // declarations those are (a slots block, Q_SLOT, Q_INVOKABLE); the AST method of the same
+        // name and parameter count is the one Qt generated the entry from. Nothing is forced into
+        // the list: a declaration with no published counterpart - a slot that is also a virtual
+        // (published as a virtual instead), a private one, or a signature the vocabulary drops -
+        // is skipped. A name with several scanned overloads marks every AST overload with that
+        // name and arity, which is the same rule SignalFactsOf uses.
+        foreach (var info in slots.Where(s => s.ClassName == className))
+        {
+            foreach (var m in methods)
+            {
+                if (m.Name != info.Name || m.Params.Count != info.Arity)
+                    continue;
+                if (info.Invokable)
+                    m.IsInvokable = true;
+                else
+                    m.IsSlot = true;
+            }
+        }
 
         // Only the virtuals this class declares, and only the names a managed override may
         // install. The dispatch chain is merged from the model by the code generator.
@@ -2824,6 +2867,10 @@ public static partial class ApiModel
             // ours, and only under that predicate. The two spellings must not disagree.
             if (ownedReturn.Owned && ownedReturn.WhenNull == null)
                 methodFlags |= MethodFlags.OwnedReturn;
+            if (m.IsSlot)
+                methodFlags |= MethodFlags.Slot;
+            if (m.IsInvokable)
+                methodFlags |= MethodFlags.Invokable;
             if (methodFlags != MethodFlags.None)
                 sb.Append(", \"flags\": [")
                   .Append(string.Join(", ", MethodFlagNames(methodFlags).Select(Json)))
@@ -2921,6 +2968,10 @@ public static partial class ApiModel
             yield return "iterator";
         if ((flags & MethodFlags.OwnedReturn) != 0)
             yield return "ownedReturn";
+        if ((flags & MethodFlags.Slot) != 0)
+            yield return "slot";
+        if ((flags & MethodFlags.Invokable) != 0)
+            yield return "invokable";
     }
 
     static IEnumerable<string> ParamFlagNames(ParamFlags flags)

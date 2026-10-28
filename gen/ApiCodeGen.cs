@@ -850,6 +850,8 @@ public static class ApiCodeGen
             "const" => (int)ApiModel.MethodFlags.Const,
             "iterator" => (int)ApiModel.MethodFlags.Iterator,
             "ownedReturn" => (int)ApiModel.MethodFlags.OwnedReturn,
+            "slot" => (int)ApiModel.MethodFlags.Slot,
+            "invokable" => (int)ApiModel.MethodFlags.Invokable,
             _ => 0,
         });
 
@@ -3474,6 +3476,18 @@ public static class ApiCodeGen
             // A method that shadows an inherited member of the same signature (or an inherited
             // property/field/type) needs `new`; an override must not say both.
             string methodNew = overrideMod == "" ? NewMethod(inherited, CSharpMemberName(mname), ps) : "";
+            // A method Qt itself registered in the meta-object: a Q_SLOTS/Q_SLOT slot or a
+            // Q_INVOKABLE method. The signature is the normalized Qt spelling of the model types
+            // the DllImport is generated from (setText(QString), grab(QRect)), so
+            // QMetaObject::indexOfMethod resolves the very entry moc created. The marker is
+            // read-side only: the member already exists, and [QtSlot] is the declaration side a
+            // C# subclass uses for a method of its own.
+            if (HasMethod(m, ApiModel.MethodFlags.Slot) || HasMethod(m, ApiModel.MethodFlags.Invokable))
+            {
+                string qtSig = mname + "(" + string.Join(",", ps.Select(p => CppTypeName(PType(p)))) + ")";
+                bool invokable = HasMethod(m, ApiModel.MethodFlags.Invokable);
+                sb.AppendLine($"        [QtNativeSlot({CsString(qtSig)}{(invokable ? ", invokable: true" : "")})]");
+            }
             sb.AppendLine($"        public {overrideMod}{methodNew}{staticMod}{ManagedRetType(ret)} {CSharpMemberName(mname)}({sig})");
             sb.AppendLine("        {");
             var marshal = MarshalParams(ps, IsStatic(m) ? null : "Handle");
