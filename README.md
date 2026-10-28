@@ -595,6 +595,12 @@ static class Program
   handed it to Qt (a parent, a layout, a scene, a view), in which case the generated destructor asks
   `parent()` first and leaves it alone. Objects Qt owns are never deleted by the GC, and once Qt has
   destroyed one, touching its wrapper throws `ObjectDisposedException` instead of crashing.
+  A method that hands a *new* object to the caller — `QScrollArea.TakeWidget()`, or
+  `QWidget.CreateWindowContainer()` without a parent — returns an owned wrapper, so `Dispose()`
+  deletes that object too. Where ownership depends on an argument, the binding follows the model's
+  predicate rather than guessing: `CreateWindowContainer(window, parent)` with a non-null `parent`
+  returns a borrowed wrapper, because Qt's parent owns the container. An owned object that also has
+  a parent is not deleted twice: the same `parent()` guard runs before the delete.
 * **A destroyed object reads as null.** A wrapper whose Qt object is gone compares equal to null the
   way a destroyed `UnityEngine.Object` does, so `if (w != null) w.Use();` is the guard to write, and
   `w.IsAlive` asks the same question by name (PyQt's `sip.isValid`). Only the operator is

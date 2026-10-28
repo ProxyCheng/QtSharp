@@ -849,6 +849,7 @@ public static class ApiCodeGen
             "protected" => (int)ApiModel.MethodFlags.Protected,
             "const" => (int)ApiModel.MethodFlags.Const,
             "iterator" => (int)ApiModel.MethodFlags.Iterator,
+            "ownedReturn" => (int)ApiModel.MethodFlags.OwnedReturn,
             _ => 0,
         });
 
@@ -3190,10 +3191,14 @@ public static class ApiCodeGen
             sb.AppendLine($"        public static bool operator !=({name} left, {name} right) => !(left == right);");
             sb.AppendLine();
             // Whether this wrapper is the one that has to release the native object. Only a
-            // constructor we published, or a boxed copy Qt handed over, sets it: a wrapper that
-            // merely adopts an object (FromHandle/FromTransientHandle - the objects a view or a
-            // scene owns) must never delete it at finalization, or the GC frees what Qt still
-            // points at.
+            // constructor we published, a boxed copy or an owned method return Qt handed over
+            // (FromOwnedHandle) sets it: a wrapper that merely adopts an object
+            // (FromHandle/FromTransientHandle - the objects a view or a scene owns) must never
+            // delete it at finalization, or the GC frees what Qt still points at.
+            //
+            // An owned return can also be parented (a conditional return such as a window
+            // container with a parent): the model then leaves it borrowed, and even a wrapper
+            // that does own has the destructor's parent() guard in front of the delete.
             //
             // Always declared: a root class's derived classes may live in *another* module's
             // assembly (QEvent is QtCore's, QGestureEvent is QtWidgets'), and they assign the
@@ -3478,24 +3483,57 @@ public static class ApiCodeGen
             // A call that hands an item over to Qt records the association, so the item's wrapper
             // dies with its owner.
             var transfer = OwnershipTransferOf(mname, ps, ret);
+            // An owned return is wrapped with FromOwnedHandle, so Dispose deletes it. Conditional
+            // ownership (ownedWhenNull) is the model's explicit predicate: the returned object is
+            // only ours when that pointer parameter was null - CreateWindowContainer with a parent
+            // hands back a child Qt owns, and claiming it would double-delete when the parent dies.
+            // The predicate is read before the call, and an absent predicate means "always ours".
+            string ownedParam = OwnedWhenNull(m);
+            string retExpr = RetToManaged(ret, call);
+            string ownedPrelude = null;
+            if (ReturnsOwned(m))
+            {
+                OwnedRetToManaged(ret, call);      // validates the return has a release path
+                if (ownedParam == null)
+                {
+                    retExpr = OwnedRetToManaged(ret, call);
+                }
+                else
+                {
+                    JsonElement predicate = default;
+                    bool found = false;
+                    foreach (var p in ps)
+                        if (PName(p) == ownedParam) { predicate = p; found = true; break; }
+                    if (!found || !IsClassPtr(PType(predicate)))
+                        throw new InvalidOperationException(
+                            $"{name}.{mname}: ownedWhenNull names '{ownedParam}', which is not a " +
+                            "class-pointer parameter (the only nullable spelling the model has).");
+                    ownedPrelude = $"bool __ownsReturn = {SafeName(ownedParam)} == null;\n"
+                                 + $"var __ownedHandle = {call};";
+                    retExpr = $"__ownedHandle == IntPtr.Zero ? null : (__ownsReturn ? "
+                            + $"{OwnedRetToManaged(ret, "__ownedHandle")} : {RetToManaged(ret, "__ownedHandle")})";
+                }
+            }
             // A postlude has to run between the call and the return, so the return value is kept
             // in a local when there is one.
             string body;
             if (marshal.Postlude.Count == 0 && transfer.IsItem)
-                body = $"var __item = {RetToManaged(ret, call)};\n"
+                body = $"var __item = {retExpr};\n"
                      + "ApiRuntime.AssociateOwner(Handle, __item?.Handle ?? IntPtr.Zero);\n"
                      + "return __item;";
             else if (marshal.Postlude.Count == 0 && transfer.IsArgument)
                 body = $"{call};\nApiRuntime.AssociateOwner(Handle, {transfer.Argument});";
             else if (marshal.Postlude.Count == 0)
-                body = ret == "void" ? $"{call};" : $"return {RetToManaged(ret, call)};";
+                body = ret == "void" ? $"{call};" : $"return {retExpr};";
             else
             {
                 string writeBack = string.Join("\n", marshal.Postlude);
                 body = ret == "void"
                     ? $"{call};\n{writeBack}"
-                    : $"var __result = {RetToManaged(ret, call)};\n{writeBack}\nreturn __result;";
+                    : $"var __result = {retExpr};\n{writeBack}\nreturn __result;";
             }
+            if (ownedPrelude != null)
+                body = ownedPrelude + "\n" + body;
             EmitGuarded(sb, "            ", body, marshal.Cleanup);
             sb.AppendLine("        }");
             sb.AppendLine();
@@ -4744,6 +4782,33 @@ public static class ApiCodeGen
         if (IsClassPtr(t)) return $"{CsTypeName(t.Substring(0, t.Length - 1))}.FromHandle({call})";
         if (IsBoxed(t)) return IsOwned(t) ? $"{CsTypeName(t)}.FromOwnedHandle({call})" : $"{CsTypeName(t)}.FromTransientHandle({call})";
         return call;
+    }
+
+    // The parameter that makes an owned return conditional (`ownedWhenNull` in the model): the
+    // caller owns the object only when this parameter was null. Absent means the return is always
+    // borrowed, exactly like a plain method.
+    static string OwnedWhenNull(JsonElement m)
+        => m.TryGetProperty("ownedWhenNull", out var p) && p.ValueKind == JsonValueKind.String
+            ? p.GetString()
+            : null;
+
+    // A method that hands a new object to the caller. Conditional ownership counts: the model's
+    // `ownedWhenNull` is the explicit predicate, and the generated body chooses the factory.
+    static bool ReturnsOwned(JsonElement m)
+        => HasMethod(m, ApiModel.MethodFlags.OwnedReturn) || OwnedWhenNull(m) != null;
+
+    // The managed expression for an owned return. Only a pointer to a class the binding can
+    // release is expressible: the release path (FromOwnedHandle/Dispose/Destroy_<X>) is generated
+    // together with the class's constructors, and a value or an opaque pointer has nothing to
+    // own. A model entry that names anything else is a generator error, not a silent borrow -
+    // otherwise the caller would be handed an object it can never release.
+    static string OwnedRetToManaged(string t, string call)
+    {
+        if (IsClassPtr(t) && IsOwned(t.Substring(0, t.Length - 1)))
+            return $"{CsTypeName(t.Substring(0, t.Length - 1))}.FromOwnedHandle({call})";
+        throw new InvalidOperationException(
+            $"A method return is marked owned, but '{t}' has no release path " +
+            "(a bound class pointer with published constructors is required).");
     }
 
     // ------------------------------------------------------------------ C++

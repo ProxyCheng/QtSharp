@@ -1305,6 +1305,10 @@ public static partial class ApiModel
         // `int foo() const`: the method does not mutate the receiver (the struct emitters pass
         // `this` by value rather than by reference).
         Const = 8,
+        // The method hands a newly allocated object to the caller: the generated wrapper takes
+        // ownership (FromOwnedHandle), and Dispose deletes the object. Conditional ownership is
+        // not this flag - it is the `ownedWhenNull` field, which names the parameter that decides.
+        OwnedReturn = 16,
     }
 
     // The independent traits a parameter carries. How it crosses (in/out/ref) is a separate mode:
@@ -1666,7 +1670,7 @@ public static partial class ApiModel
             body.Append("      ],\n");
         }
         WriteConstructors2(body, ctors);
-        WriteFunctions2(body, "methods", methods);
+        WriteFunctions2(body, "methods", methods, className);
         WriteVirtuals2(body, virtuals);
         // Before the signals: WriteSignals is the last key and relies on having no trailing comma.
         WriteProperties2(body, classProperties);
@@ -1813,6 +1817,32 @@ public static partial class ApiModel
     // `if (object->parent()) return;` - and the wrapper only ever releases what it created
     // (__ownsNative).
     static bool OwnedOf(Root root) => root.Owned;
+
+    // Methods whose C++ return value is a *new* object the caller has to release. The headers do
+    // not spell ownership, so the list is hand-maintained, exactly like the graphics-item adoption
+    // list in the code generator. A null value means the return is always ours; a non-null value
+    // names the parameter that decides - the return is ours only when that parameter is null
+    // (QWidget::createWindowContainer hands back a parented child otherwise, which Qt owns). The
+    // extractor records the answer in the model, so a hand-edited model is never the source.
+    static readonly Dictionary<(string Class, string Method), string> OwnedReturns = new()
+    {
+        [("QScrollArea", "takeWidget")] = null,
+        [("QWidget", "createWindowContainer")] = "parent",
+    };
+
+    // The ownership annotation for one method: whether the return is ours, and when it is
+    // conditional, the parameter that has to be null. The predicate is checked against the
+    // declaration, because a renamed parameter would otherwise silently turn the annotation off.
+    static (bool Owned, string WhenNull) OwnedReturnOf(string className, FnFact method)
+    {
+        if (!OwnedReturns.TryGetValue((className, method.Name), out string whenNull))
+            return (false, null);
+        if (whenNull != null && !method.Visible.Any(p => p.Name == whenNull))
+            throw new InvalidOperationException(
+                $"OwnedReturns lists {className}::{method.Name} as owned when '{whenNull}' is null, " +
+                "but the declaration has no such parameter.");
+        return (true, whenNull);
+    }
 
     // The application classes. Their exec()/quit()/exit() act on the process's one application
     // object, so the binding publishes them as *instance* members: C# cannot call a static member
@@ -2773,13 +2803,14 @@ public static partial class ApiModel
         sb.Append("      ],\n");
     }
 
-    static void WriteFunctions2(StringBuilder sb, string key, List<FnFact> methods)
+    static void WriteFunctions2(StringBuilder sb, string key, List<FnFact> methods, string className)
     {
         sb.Append($"      \"{key}\": [\n");
         for (int i = 0; i < methods.Count; i++)
         {
             var m = methods[i];
             sb.Append("        { \"name\": ").Append(Json(m.Name));
+            var ownedReturn = OwnedReturnOf(className, m);
             var methodFlags = MethodFlags.None;
             if (m.IsStatic)
                 methodFlags |= MethodFlags.Static;
@@ -2789,10 +2820,16 @@ public static partial class ApiModel
                 methodFlags |= MethodFlags.Const;
             if (m.ReturnFromIterator)
                 methodFlags |= MethodFlags.Iterator;
+            // A conditional return keeps the flag off: `ownedWhenNull` already says the return is
+            // ours, and only under that predicate. The two spellings must not disagree.
+            if (ownedReturn.Owned && ownedReturn.WhenNull == null)
+                methodFlags |= MethodFlags.OwnedReturn;
             if (methodFlags != MethodFlags.None)
                 sb.Append(", \"flags\": [")
                   .Append(string.Join(", ", MethodFlagNames(methodFlags).Select(Json)))
                   .Append("]");
+            if (ownedReturn.WhenNull != null)
+                sb.Append(", \"ownedWhenNull\": ").Append(Json(ownedReturn.WhenNull));
             sb.Append(", \"returnType\": ").Append(Json(m.ReturnType));
             sb.Append(", \"parameters\": [");
             sb.Append(string.Join(", ", m.Visible.Select(p => ParamJson2(p))));
@@ -2882,6 +2919,8 @@ public static partial class ApiModel
             yield return "const";
         if ((flags & MethodFlags.Iterator) != 0)
             yield return "iterator";
+        if ((flags & MethodFlags.OwnedReturn) != 0)
+            yield return "ownedReturn";
     }
 
     static IEnumerable<string> ParamFlagNames(ParamFlags flags)

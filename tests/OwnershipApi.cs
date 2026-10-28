@@ -208,6 +208,66 @@ public static class ApiOwnershipDemo
         context.Check(!mime.GetType().GetInterfaces().Any(i => i.Name == "IDisposable"),
             "QMimeData is deliberately not disposable (the clipboard owns it once it is set)");
 
+        // ------------------------------------------------------------------ owned returns
+        // A method can hand a *new* object to the caller. The model marks those returns, so the
+        // generated wrapper comes from FromOwnedHandle and Dispose really deletes the object.
+        // TakeWidget transfers the widget: the scroll area drops it and the caller owns it.
+        var scrollArea = new QScrollArea();
+        var content = new QLabel("owned-return");
+        scrollArea.SetWidget(content);
+        context.Check(scrollArea.Widget() == content,
+            "the scroll area shows the widget that was set");
+        // Let go of our constructor-owned wrapper first: the widget is parented by the viewport,
+        // so the destructor's parent() guard leaves it alone, and only the wrapper TakeWidget
+        // returns is left claiming ownership. Disposing that one has to delete exactly once.
+        content.Dispose();
+        var taken = scrollArea.TakeWidget();
+        context.Check(taken != null && taken.IsAlive, "TakeWidget hands back a live wrapper");
+        context.Check(scrollArea.Widget() == null, "the scroll area no longer owns the widget");
+        bool takenDestroyed = false;
+        ApiRuntime.Connect(taken.Handle, "destroyed()", (_, _) => takenDestroyed = true);
+        taken.Dispose();
+        context.Check(takenDestroyed,
+            "Dispose on the owned TakeWidget return deletes the widget (Qt said destroyed)");
+        context.Check(taken == null && !taken.IsAlive, "and the wrapper reads as gone");
+
+        // CreateWindowContainer is the conditional case: without a parent the container is ours,
+        // with one Qt owns it. Both facts are exercised so the predicate cannot silently flip.
+        var ownedWindow = new QWindow();
+        var ownedContainer = QWidget.CreateWindowContainer(ownedWindow);
+        context.Check(ownedContainer != null && ownedContainer.IsAlive,
+            "CreateWindowContainer without a parent returns a live container");
+        context.Check(ownedContainer.Parent() == null, "and the container has no parent");
+        bool containerDestroyed = false;
+        ApiRuntime.Connect(ownedContainer.Handle, "destroyed()", (_, _) => containerDestroyed = true);
+        ownedContainer.Dispose();
+        context.Check(containerDestroyed,
+            "Dispose on that container deletes it (it was an owned return)");
+        // The wrapper is left to its owner: if the container took the window with it, Qt's
+        // destroyed notification already invalidated this wrapper; otherwise the wrapper itself
+        // still owns the window and its finalizer releases it. Calling Dispose here would risk
+        // deleting a window Qt has only scheduled for deletion.
+
+        var host = new QWidget();
+        var childWindow = new QWindow();
+        var childContainer = QWidget.CreateWindowContainer(childWindow, host);
+        context.Check(childContainer.Parent() == host, "with a parent, the container is parented");
+        IntPtr childHandle = childContainer.Handle;
+        int childrenBeforeTake = host.Children().Length;
+        bool childDestroyed = false;
+        ApiRuntime.Connect(childContainer.Handle, "destroyed()", (_, _) => childDestroyed = true);
+        childContainer.Dispose();
+        context.Check(!childDestroyed, "Dispose on a parented container does not delete it");
+        context.Check(host.Children().Length == childrenBeforeTake,
+            $"the parent still has its container (got {host.Children().Length}, expected {childrenBeforeTake})");
+        var stillThere = QWidget.FromHandle(childHandle);
+        context.Check(stillThere != null && stillThere.IsAlive,
+            "and the native container is still alive (it was a borrowed return)");
+        // host.Dispose() is the one that owns the container: deleting the parent deletes the child.
+        host.Dispose();
+        context.Check(!stillThere.IsAlive, "the parent's teardown deletes the parented container");
+        // childWindow is likewise left to whatever owns it now; the local keeps the wrapper alive
+        // until the container has been torn down, so no finalizer can run against it in the middle.
         // ------------------------------------------------------------------ lifetime generations
         // A native address is not an identity: the allocator hands a freed block to the next object
         // of the same size. Qt's destroy notification is therefore tagged with the generation it was
