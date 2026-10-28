@@ -10,6 +10,7 @@
 #include <qmetatype.h>
 #include <qvariant.h>
 #include <qbytearray.h>
+#include <qbytearrayview.h>
 #include <qchar.h>
 #include <qstring.h>
 #include <qcoreapplication.h>
@@ -655,6 +656,284 @@ extern "C" QS_API_EXPORT int qs_api_attach_metaobject(
     auto* dynamicMetaObject = new QsApiDynamicMetaObject(built, base->propertyCount());
     QObjectPrivate::get(qobject)->metaObject = dynamicMetaObject;
     return 1;
+}
+
+// ------------------------------------------------------------------ dynamic invocation
+// QMetaMethod::invoke and QMetaObject::invokeMethod are the runtime's reflection entry points:
+// they take an argument list whose element is a type name and the address of a value in that
+// type's native representation. Managed code cannot spell QGenericArgument (it is a C++ class),
+// so this shim carries the same pair across a plain C ABI and builds the QGenericArgument /
+// QGenericReturnArgument values itself.
+//
+// A call answers with one of the statuses below instead of throwing: the managed surface turns
+// them into false plus a reason, so a dynamic call site never crashes on a name or a type that
+// does not match. The value pointed to by `result` is a QVariant* the caller owns (release it
+// with the ordinary QVariant destructor, i.e. through the managed VariantMarshalling bridge).
+typedef struct QsApiInvokeArgument
+{
+    const char* typeName;   // the Qt spelling ("int", "QString", "QWidget*", "QVariant")
+    const void* value;      // address of a value in that type's native representation
+} QsApiInvokeArgument;
+
+enum QsApiInvokeStatus
+{
+    QsApiInvokeOk = 0,
+    QsApiInvokeInvalid = 1,           // null object/meta-object/signature
+    QsApiInvokeNotFound = 2,          // no member with that name and argument count
+    QsApiInvokeTooManyArguments = 3,  // QMetaMethod::invoke carries at most ten
+    QsApiInvokeFailed = 4,            // Qt refused the call (type mismatch, queued return, ...)
+    QsApiInvokeReturnUnavailable = 5, // a result was asked for, the return type cannot be copied
+};
+
+// One argument as it is finally handed to Qt. Normally that is the caller's own type name and
+// value; a QVariant is converted to the parameter's declared type, and a QObject pointer is
+// re-labelled with the parameter's declared class (Qt matches pointer metatypes exactly, so a
+// QWidget* argument for a QObject* parameter would otherwise be rejected).
+struct QsApiPreparedArgument
+{
+    QVariant converted;
+    QByteArray declaredName;
+    void* nullPointer = nullptr;
+    const char* typeName = nullptr;
+    const void* value = nullptr;
+};
+
+// Whether an argument can satisfy parameter `index`. "QVariant" is accepted for any parameter
+// because the conversion is attempted while the call is prepared; a QObject pointer is accepted
+// for a base-class pointer parameter when the object really is an instance of that class.
+static bool qs_api_argument_matches(const QMetaMethod& method, int index,
+                                    const QsApiInvokeArgument& argument)
+{
+    const QByteArray declared = method.parameterTypeName(index);
+    const char* given = argument.typeName ? argument.typeName : "QVariant";
+    if (declared == given)
+        return true;
+    if (std::strcmp(given, "QVariant") == 0)
+        return true;
+    if (!argument.value || !declared.endsWith('*') || !given || !*given || given[std::strlen(given) - 1] != '*')
+        return false;
+
+    const QMetaType declaredType = QMetaType::fromName(declared);
+    if (!declaredType.isValid() || !declaredType.flags().testFlag(QMetaType::PointerToQObject))
+        return false;
+    const QMetaObject* declaredMetaObject = declaredType.metaObject();
+    const QObject* object = *static_cast<QObject* const*>(argument.value);
+    return declaredMetaObject && object && object->inherits(declaredMetaObject->className());
+}
+
+// Picks the method a by-name call means. A member with a parameter list is Qt's normalized
+// signature and must resolve exactly; a bare name is matched against the methods of that name
+// and argument count, preferring one whose parameter types fit. A count-only match is returned
+// as a fallback so Qt still gets to refuse it with its own diagnostic rather than this shim
+// reporting "not found".
+static QMetaMethod qs_api_resolve_method(const QMetaObject* metaObject, const char* member,
+                                         int argumentCount,
+                                         const QsApiInvokeArgument* arguments, int* status)
+{
+    if (!metaObject || !member || !*member) {
+        *status = QsApiInvokeInvalid;
+        return QMetaMethod();
+    }
+    if (argumentCount < 0 || argumentCount > Q_METAMETHOD_INVOKE_MAX_ARGS) {
+        *status = QsApiInvokeTooManyArguments;
+        return QMetaMethod();
+    }
+
+    if (std::strchr(member, '(')) {
+        const QByteArray signature = QMetaObject::normalizedSignature(member);
+        const int index = metaObject->indexOfMethod(signature);
+        if (index < 0 || metaObject->method(index).parameterCount() != argumentCount) {
+            *status = QsApiInvokeNotFound;
+            return QMetaMethod();
+        }
+        *status = QsApiInvokeOk;
+        return metaObject->method(index);
+    }
+
+    const QByteArray name(member);
+    QMetaMethod fallback;
+    for (int i = 0; i < metaObject->methodCount(); ++i) {
+        QMetaMethod method = metaObject->method(i);
+        if (method.methodType() == QMetaMethod::Constructor
+            || method.name() != name || method.parameterCount() != argumentCount)
+            continue;
+        bool matches = true;
+        for (int a = 0; a < argumentCount; ++a) {
+            if (!qs_api_argument_matches(method, a, arguments[a])) {
+                matches = false;
+                break;
+            }
+        }
+        if (matches) {
+            *status = QsApiInvokeOk;
+            return method;
+        }
+        if (!fallback.isValid())
+            fallback = method;
+    }
+    if (fallback.isValid()) {
+        *status = QsApiInvokeOk;
+        return fallback;
+    }
+    *status = QsApiInvokeNotFound;
+    return QMetaMethod();
+}
+
+// Fills in the final type names and values. The prepared array outlives the invoke call, so the
+// QByteArray names and converted QVariants the QGenericArguments point at stay alive.
+static void qs_api_prepare_arguments(const QMetaMethod& method,
+                                     const QsApiInvokeArgument* arguments, int argumentCount,
+                                     QsApiPreparedArgument (&prepared)[Q_METAMETHOD_INVOKE_MAX_ARGS])
+{
+    for (int i = 0; i < argumentCount; ++i) {
+        const char* given = arguments[i].typeName ? arguments[i].typeName : "QVariant";
+        const void* value = arguments[i].value;
+        prepared[i].typeName = given;
+        prepared[i].value = value;
+
+        if (!method.isValid())
+            continue;
+        const QByteArray declared = method.parameterTypeName(i);
+        if (declared == given)
+            continue;
+
+        if (std::strcmp(given, "QVariant") == 0 && value) {
+            const QVariant* variant = static_cast<const QVariant*>(value);
+            if (declared.endsWith('*') && !variant->isValid()) {
+                // A null managed reference is a null pointer for a pointer parameter.
+                prepared[i].declaredName = declared;
+                prepared[i].typeName = prepared[i].declaredName.constData();
+                prepared[i].value = &prepared[i].nullPointer;
+                continue;
+            }
+            const QMetaType target = QMetaType::fromName(declared);
+            if (target.isValid()) {
+                prepared[i].converted = *variant;
+                if (prepared[i].converted.convert(target)) {
+                    prepared[i].declaredName = declared;
+                    prepared[i].typeName = prepared[i].declaredName.constData();
+                    // The argument points at the value inside the variant, not at the QVariant.
+                    prepared[i].value = prepared[i].converted.constData();
+                }
+            }
+            continue;
+        }
+
+        if (declared == "QVariant" && value) {
+            // The other direction: a value with a concrete Qt type for a QVariant parameter.
+            const QMetaType givenType = QMetaType::fromName(QByteArrayView(given));
+            if (givenType.isValid()) {
+                prepared[i].converted = QVariant(givenType, value);
+                prepared[i].declaredName = declared;
+                prepared[i].typeName = prepared[i].declaredName.constData();
+                prepared[i].value = &prepared[i].converted;
+            }
+            continue;
+        }
+
+        if (qs_api_argument_matches(method, i, arguments[i])) {
+            prepared[i].declaredName = declared;
+            prepared[i].typeName = prepared[i].declaredName.constData();
+        }
+    }
+}
+
+// The shared tail: allocate the return storage, build the ten QGenericArguments and make the
+// call. Both entry points end here with a *resolved* method, so the call is always
+// QMetaMethod::invoke. That matters: QMetaObject::invokeMethod's by-name overload accepts only a
+// bare name (never a signature) and re-resolves it from the argument type names, which would lose
+// the QVariant conversions prepared here and could land on a same-name, same-count overload whose
+// types do not match. Resolving once and invoking the method Qt gave us is the same call with
+// fewer ways to get it wrong.
+static int qs_api_run_invoke(QMetaMethod method, void* object, int connectionType,
+                             const QsApiInvokeArgument* arguments, int argumentCount,
+                             void** result)
+{
+    if (!method.isValid() || !object)
+        return QsApiInvokeInvalid;
+    if (argumentCount < 0 || argumentCount > Q_METAMETHOD_INVOKE_MAX_ARGS)
+        return QsApiInvokeTooManyArguments;
+    if (result)
+        *result = nullptr;
+
+    const QMetaType returnType = method.returnMetaType();
+    const bool wantsResult = result != nullptr;
+    const bool hasResult = wantsResult && returnType.isValid() && returnType.id() != QMetaType::Void;
+    void* returnStorage = nullptr;
+    if (hasResult) {
+        returnStorage = returnType.create();
+        if (!returnStorage)
+            return QsApiInvokeReturnUnavailable;
+    }
+
+    int status = QsApiInvokeFailed;
+    QsApiPreparedArgument prepared[Q_METAMETHOD_INVOKE_MAX_ARGS];
+    qs_api_prepare_arguments(method, arguments, argumentCount, prepared);
+
+    QGenericArgument values[Q_METAMETHOD_INVOKE_MAX_ARGS];
+    for (int i = 0; i < argumentCount; ++i) {
+        if (prepared[i].typeName)
+            values[i] = QGenericArgument(prepared[i].typeName, prepared[i].value);
+    }
+    const QGenericReturnArgument returnArgument(
+        hasResult ? (method.typeName() ? method.typeName() : returnType.name()) : nullptr,
+        returnStorage);
+
+    const bool invoked = method.invoke(static_cast<QObject*>(object),
+                                       static_cast<Qt::ConnectionType>(connectionType), returnArgument,
+                                       values[0], values[1], values[2], values[3], values[4],
+                                       values[5], values[6], values[7], values[8], values[9]);
+
+    if (invoked) {
+        if (hasResult)
+            *result = new QVariant(returnType, returnStorage);
+        status = QsApiInvokeOk;
+    }
+    if (returnStorage)
+        returnType.destroy(returnStorage);
+    return status;
+}
+
+// The QMetaMethod::invoke half. The managed QMetaMethod is a value type whose enclosing
+// meta-object is a borrowed pointer, so the method is re-addressed here by the index it reports
+// (QMetaMethod::methodIndex is the index QMetaObject::method takes).
+extern "C" QS_API_EXPORT int qs_api_qmeta_method_invoke(
+    void* metaObject, int methodIndex, void* object, int connectionType,
+    const QsApiInvokeArgument* arguments, int argumentCount, void** result)
+{
+    if (!metaObject || !object)
+        return QsApiInvokeInvalid;
+    if (argumentCount < 0 || argumentCount > Q_METAMETHOD_INVOKE_MAX_ARGS)
+        return QsApiInvokeTooManyArguments;
+
+    const auto* meta = static_cast<const QMetaObject*>(metaObject);
+    if (methodIndex < 0 || methodIndex >= meta->methodCount())
+        return QsApiInvokeNotFound;
+    const QMetaMethod method = meta->method(methodIndex);
+    if (!method.isValid() || method.parameterCount() != argumentCount)
+        return QsApiInvokeNotFound;
+    return qs_api_run_invoke(method, object, connectionType, arguments, argumentCount, result);
+}
+
+// The by-name half. The member is resolved once here (a bare name with compatible argument types,
+// or an exact normalized signature); the resolved method is then invoked, so Qt's own by-name
+// overload never has to re-resolve what this shim already matched.
+extern "C" QS_API_EXPORT int qs_api_qmeta_object_invoke(
+    void* object, const char* member, int connectionType,
+    const QsApiInvokeArgument* arguments, int argumentCount, void** result)
+{
+    if (!object || !member)
+        return QsApiInvokeInvalid;
+    if (argumentCount < 0 || argumentCount > Q_METAMETHOD_INVOKE_MAX_ARGS)
+        return QsApiInvokeTooManyArguments;
+
+    const auto* qobject = static_cast<const QObject*>(object);
+    int status = QsApiInvokeOk;
+    const QMetaMethod method = qs_api_resolve_method(qobject->metaObject(), member,
+                                                     argumentCount, arguments, &status);
+    if (status != QsApiInvokeOk)
+        return status;
+    return qs_api_run_invoke(method, object, connectionType, arguments, argumentCount, result);
 }
 
 // ------------------------------------------------------------------ object destruction
