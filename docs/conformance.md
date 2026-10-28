@@ -16,7 +16,7 @@ each holds exactly one `Main`, one `QApplication` and the module's reflected `[E
 | `QtSharp.Examples.QtMultimedia` | `examples/QtMultimedia/` | 1 | 12 |
 | `QtSharp.Charts.Examples` | `examples/Charts/` | 38 | 571 |
 | `QtSharp.Qt3D.Examples` | `examples/Qt3D/` | 3 | 37 |
-| `testapp` (the binding tests) | `tests/testapp/` | 39 | 1006 |
+| `testapp` (the binding tests) | `tests/testapp/` | 39 | 1009 |
 
 `tools/run-examples.ps1` builds all ten example executables and hands each to
 `tools/run-window-tests.ps1`; the gate, CI and the release build all use that one table. A runner
@@ -70,8 +70,14 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 | test | why it exists |
 |---|---|
 | `test-bclinterop` | the BCL conversions: QPoint/QSize/QRect/QColor/vectors/quaternion/URL/GUID/QVariant |
+| `test-bitsinterop` | QBitArray ↔ System.Collections.BitArray, including the int-length guard |
 | `test-callbacks` | C function pointers: custom easing, message-handler chain identity, post routines, and the `QFunctionPointer` carrier with its opt-in `As<TDelegate>` |
+| `test-collatorinterop` | QCollator as an `IComparer<string>` |
 | `test-connections` | signal connections as disposable handles, context objects and queued thread affinity |
+| `test-localeinterop` | QLocale ↔ CultureInfo name mapping, including the C/invariant case |
+| `test-matrixinterop` | QMatrix4x4 ↔ System.Numerics.Matrix4x4 with the column/row-vector transpose |
+| `test-networkinterop` | QHostAddress ↔ System.Net.IPAddress, including IPv4/IPv6 and scope ids |
+| `test-processenvironmentinterop` | QProcessEnvironment ↔ a dictionary snapshot and its comparer rules |
 | `test-core` | the QtCore value/utility classes (files, JSON, ids, timers, threads, IPC, XML stream) |
 | `test-custommodel` | managed item models/delegates and Qt's calls back into them |
 | `test-docformats` | the document modules together: SVG rendering/export and PDF output (XML is System.Xml's job; `test-xmlseam` covers the hand-off) |
@@ -95,6 +101,7 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 | `test-rolesugar` | the role-taking API with the named `Qt.ItemDataRole` enum over the `int` primary overloads |
 | `test-sqlmodel` | the SQL substitute: an ADO.NET result behind QSqlQueryModel/QSqlTableModel, edits written by SubmitAll |
 | `test-subclass` | C# subclasses driven by Qt's own machinery (abstract widget, layout, model, runnable) |
+| `test-timezoneinterop` | QTimeZone ↔ TimeZoneInfo, the IANA/Windows bridge, fixed offsets and rule re-use |
 | `test-valuetypes` | the POD value structs and their conversions |
 | `test-variantlifetime` | QVariant's managed-payload table: every copy releases its entry |
 | `test-variantobject` | QVariant's object-shaped API: Qt values, `QObject*`, and opaque managed payloads |

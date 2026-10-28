@@ -60,7 +60,7 @@ Current coverage: **483 classes / 9947 methods / 1901 virtuals / 517 enums / 834
 properties / 475 signals / 72 namespace functions** (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg,
 QtSvgWidgets, QtPrintSupport, QtOpenGL, QtOpenGLWidgets). The gate runs 73 examples (**1544
 assertions**) in ten executables — 32 official base-module examples plus the tours, 38 official Qt
-Charts examples and the three official Qt3D examples — and 39 binding-specific tests (**1006
+Charts examples and the three official Qt3D examples — and 39 binding-specific tests (**1009
 assertions**).
 
 Extension modules are separate assemblies and packages against the same runtime:
@@ -883,6 +883,9 @@ written in C#, you can use the official [Qt Bridge for C#](https://github.com/qt
   bound either — the model publishes top-level classes and enums only.
 * Hand-written code inside a bound class is not preserved by a regeneration: the binding lives in
   `out/api` (gitignored), and everything hand-written lives in `runtime/`.
+
+See [detailed limitations](docs/limitations.md) for deployment, API-marshalling and module-coverage
+notes.
 
 ## License and third-party notices
 
