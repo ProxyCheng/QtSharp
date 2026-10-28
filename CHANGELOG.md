@@ -27,6 +27,25 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 - **Disposable signal connections.** `QSignal.Connect` returns a `QtConnection`; `Dispose`
   disconnects exactly that connection, and overloads take a `Qt.ConnectionType` and a context
   `QObject`.
+- **Owned method returns.** `QScrollArea.TakeWidget()` and `QWidget.CreateWindowContainer()` without
+  a parent return a wrapper whose `Dispose` deletes the object. Ownership is a model annotation
+  (`ownedReturn`, and `ownedWhenNull` for the conditional case) that the generator turns into
+  `FromOwnedHandle`, so a parented container stays Qt's and is never deleted twice.
+- **`QObject.Sender` and `QObject.SenderSignal`.** A managed signal handler can ask which object
+  emitted the signal and which moc signature the connection used (PyQt's `sender()` /
+  `senderSignalIndex()`). The values are per thread and per callback; a nested emission restores the
+  outer frame, and a queued delivery sees them on the thread that runs the slot. A C#-declared
+  `[QtSignal]` invoked directly has no frame of its own — documented on both members.
+- **Dynamic invocation.** `QMetaMethod.Invoke` and `QMetaObject.InvokeMethod` call a method by name
+  or normalized signature through a compact native shim. Primitives, `string`, `byte[]`, enums,
+  bound Qt values and QObject pointers cross; the result arrives through the QVariant bridge. A
+  failure is `false` plus a reason, never an exception or a crash (a queued call cannot carry a
+  result).
+- **More explicit BCL interop.** `QHostAddress` ↔ `IPAddress`, `QTimeZone` ↔ `TimeZoneInfo`,
+  `QProcessEnvironment` ↔ `IReadOnlyDictionary`, `QLocale` ↔ `CultureInfo`, `QBitArray` ↔
+  `BitArray`, `QVersionNumber` ↔ `Version`, `QMatrix4x4` ↔ `System.Numerics.Matrix4x4`, and
+  `QCollator` implementing `IComparer<string>`. The README lists every mapping and its exception
+  policy; the QNetwork conversions live in `runtime/QtNetwork/`.
 
 ## 0.19.0 - 2026-10-27
 
