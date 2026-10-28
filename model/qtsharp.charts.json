@@ -356,7 +356,7 @@
         { "name": "append", "returnType": "void", "parameters": [{ "name": "categories", "type": "QStringList" }] },
         { "name": "at", "flags": ["const"], "returnType": "QString", "parameters": [{ "name": "index", "type": "int" }] },
         { "name": "categories", "returnType": "QStringList", "parameters": [] },
-        { "name": "clear", "returnType": "void", "parameters": [] },
+        { "name": "clear", "flags": ["invokable"], "returnType": "void", "parameters": [] },
         { "name": "count", "flags": ["const"], "returnType": "int", "parameters": [] },
         { "name": "insert", "returnType": "void", "parameters": [{ "name": "index", "type": "int" }, { "name": "category", "type": "QString" }] },
         { "name": "max", "flags": ["const"], "returnType": "QString", "parameters": [] },
@@ -1638,7 +1638,7 @@
         { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
-        { "name": "applyNiceNumbers", "returnType": "void", "parameters": [] },
+        { "name": "applyNiceNumbers", "flags": ["slot"], "returnType": "void", "parameters": [] },
         { "name": "labelFormat", "flags": ["const"], "returnType": "QString", "parameters": [] },
         { "name": "max", "flags": ["const"], "returnType": "double", "parameters": [] },
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },

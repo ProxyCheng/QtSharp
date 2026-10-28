@@ -623,8 +623,10 @@ static class Program
   `The windowTitle property (Q_PROPERTY, QString, read/write)` and
   `The windowTitleChanged(QString) signal as a C# event`. `[QtProperty]`/`[QtSignal]` are only for
   members *you* declare on a C# subclass. A generated member instead carries the read-side
-  `[QtNativeProperty(name, type, writable)]` or `[QtNativeSignal(mocSignature)]`, so reflection
-  and tooling can tell the two apart without guessing from the type. Only the types the
+  `[QtNativeProperty(name, type, writable)]`, `[QtNativeSignal(mocSignature)]` or
+  `[QtNativeSlot(signature, invokable)]`, so reflection and tooling can tell the two apart without
+  guessing from the type. (The slot marker's `invokable` flag distinguishes a `Q_INVOKABLE` method
+  from a `Q_SLOTS`/`Q_SLOT` slot, the way Qt's `QMetaMethod::Method` and `QMetaMethod::Slot` do.) Only the types the
   hand-written runtime extends (the application classes, `QObject`, and the date/time/byte-array
   types) are `partial`; every other
   wrapper is a whole declaration, and `unsafe` sits on the few constructors that pass a function

@@ -47,7 +47,7 @@
       ],
       "methods": [
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "setSourceDevice", "returnType": "void", "parameters": [{ "name": "sourceDevice", "type": "Qt3DInput::QAbstractPhysicalDevice*" }] },
+        { "name": "setSourceDevice", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "sourceDevice", "type": "Qt3DInput::QAbstractPhysicalDevice*" }] },
         { "name": "sourceDevice", "flags": ["const"], "returnType": "Qt3DInput::QAbstractPhysicalDevice*", "parameters": [] },
         { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
@@ -128,8 +128,8 @@
       "methods": [
         { "name": "buttons", "flags": ["const"], "returnType": "QList<int>", "parameters": [] },
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "setButtons", "returnType": "void", "parameters": [{ "name": "buttons", "type": "QList<int>" }] },
-        { "name": "setSourceDevice", "returnType": "void", "parameters": [{ "name": "sourceDevice", "type": "Qt3DInput::QAbstractPhysicalDevice*" }] },
+        { "name": "setButtons", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "buttons", "type": "QList<int>" }] },
+        { "name": "setSourceDevice", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "sourceDevice", "type": "Qt3DInput::QAbstractPhysicalDevice*" }] },
         { "name": "sourceDevice", "flags": ["const"], "returnType": "Qt3DInput::QAbstractPhysicalDevice*", "parameters": [] },
         { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
@@ -157,7 +157,7 @@
       "methods": [
         { "name": "axis", "flags": ["const"], "returnType": "int", "parameters": [] },
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "setAxis", "returnType": "void", "parameters": [{ "name": "axis", "type": "int" }] },
+        { "name": "setAxis", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "axis", "type": "int" }] },
         { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
@@ -209,9 +209,9 @@
       "methods": [
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "scale", "flags": ["const"], "returnType": "float", "parameters": [] },
-        { "name": "setScale", "returnType": "void", "parameters": [{ "name": "scale", "type": "float" }] },
-        { "name": "setSourceAxis", "returnType": "void", "parameters": [{ "name": "sourceAxis", "type": "Qt3DInput::QAxis*" }] },
-        { "name": "setSourceAxisType", "returnType": "void", "parameters": [{ "name": "sourceAxisType", "type": "QAxisAccumulator::SourceAxisType" }] },
+        { "name": "setScale", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "scale", "type": "float" }] },
+        { "name": "setSourceAxis", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "sourceAxis", "type": "Qt3DInput::QAxis*" }] },
+        { "name": "setSourceAxisType", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "sourceAxisType", "type": "QAxisAccumulator::SourceAxisType" }] },
         { "name": "sourceAxis", "flags": ["const"], "returnType": "Qt3DInput::QAxis*", "parameters": [] },
         { "name": "sourceAxisType", "flags": ["const"], "returnType": "QAxisAccumulator::SourceAxisType", "parameters": [] },
         { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
@@ -250,9 +250,9 @@
         { "name": "deadZoneRadius", "flags": ["const"], "returnType": "float", "parameters": [] },
         { "name": "isSmoothEnabled", "flags": ["const"], "returnType": "bool", "parameters": [] },
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "setAxes", "returnType": "void", "parameters": [{ "name": "axes", "type": "QList<int>" }] },
-        { "name": "setDeadZoneRadius", "returnType": "void", "parameters": [{ "name": "deadZoneRadius", "type": "float" }] },
-        { "name": "setSmoothEnabled", "returnType": "void", "parameters": [{ "name": "enabled", "type": "bool" }] },
+        { "name": "setAxes", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "axes", "type": "QList<int>" }] },
+        { "name": "setDeadZoneRadius", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "deadZoneRadius", "type": "float" }] },
+        { "name": "setSmoothEnabled", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "enabled", "type": "bool" }] },
         { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
@@ -284,10 +284,10 @@
         { "name": "deceleration", "flags": ["const"], "returnType": "float", "parameters": [] },
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "scale", "flags": ["const"], "returnType": "float", "parameters": [] },
-        { "name": "setAcceleration", "returnType": "void", "parameters": [{ "name": "acceleration", "type": "float" }] },
-        { "name": "setButtons", "returnType": "void", "parameters": [{ "name": "buttons", "type": "QList<int>" }] },
-        { "name": "setDeceleration", "returnType": "void", "parameters": [{ "name": "deceleration", "type": "float" }] },
-        { "name": "setScale", "returnType": "void", "parameters": [{ "name": "scale", "type": "float" }] },
+        { "name": "setAcceleration", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "acceleration", "type": "float" }] },
+        { "name": "setButtons", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "buttons", "type": "QList<int>" }] },
+        { "name": "setDeceleration", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "deceleration", "type": "float" }] },
+        { "name": "setScale", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "scale", "type": "float" }] },
         { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
@@ -345,7 +345,7 @@
         { "name": "chords", "flags": ["const"], "returnType": "QList<Qt3DInput::QAbstractActionInput*>", "parameters": [] },
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "removeChord", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractActionInput*" }] },
-        { "name": "setTimeout", "returnType": "void", "parameters": [{ "name": "timeout", "type": "int" }] },
+        { "name": "setTimeout", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "timeout", "type": "int" }] },
         { "name": "timeout", "flags": ["const"], "returnType": "int", "parameters": [] },
         { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
@@ -374,8 +374,8 @@
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "removeSequence", "returnType": "void", "parameters": [{ "name": "input", "type": "Qt3DInput::QAbstractActionInput*" }] },
         { "name": "sequences", "flags": ["const"], "returnType": "QList<Qt3DInput::QAbstractActionInput*>", "parameters": [] },
-        { "name": "setButtonInterval", "returnType": "void", "parameters": [{ "name": "buttonInterval", "type": "int" }] },
-        { "name": "setTimeout", "returnType": "void", "parameters": [{ "name": "timeout", "type": "int" }] },
+        { "name": "setButtonInterval", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "buttonInterval", "type": "int" }] },
+        { "name": "setTimeout", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "timeout", "type": "int" }] },
         { "name": "timeout", "flags": ["const"], "returnType": "int", "parameters": [] },
         { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
@@ -403,7 +403,7 @@
       "methods": [
         { "name": "eventSource", "flags": ["const"], "returnType": "QObject*", "parameters": [] },
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "setEventSource", "returnType": "void", "parameters": [{ "name": "eventSource", "type": "QObject*" }] },
+        { "name": "setEventSource", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "eventSource", "type": "QObject*" }] },
         { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
@@ -429,7 +429,7 @@
         { "name": "isAccepted", "flags": ["const"], "returnType": "bool", "parameters": [] },
         { "name": "isAutoRepeat", "flags": ["const"], "returnType": "bool", "parameters": [] },
         { "name": "key", "flags": ["const"], "returnType": "int", "parameters": [] },
-        { "name": "matches", "flags": ["const"], "returnType": "bool", "parameters": [{ "name": "key_", "type": "QKeySequence::StandardKey" }] },
+        { "name": "matches", "flags": ["const", "invokable"], "returnType": "bool", "parameters": [{ "name": "key_", "type": "QKeySequence::StandardKey" }] },
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "modifiers", "flags": ["const"], "returnType": "int", "parameters": [] },
         { "name": "nativeScanCode", "flags": ["const"], "returnType": "unsigned int", "parameters": [] },
@@ -501,8 +501,8 @@
       "methods": [
         { "name": "focus", "flags": ["const"], "returnType": "bool", "parameters": [] },
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "setFocus", "returnType": "void", "parameters": [{ "name": "focus", "type": "bool" }] },
-        { "name": "setSourceDevice", "returnType": "void", "parameters": [{ "name": "keyboardDevice", "type": "Qt3DInput::QKeyboardDevice*" }] },
+        { "name": "setFocus", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "focus", "type": "bool" }] },
+        { "name": "setSourceDevice", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "keyboardDevice", "type": "Qt3DInput::QKeyboardDevice*" }] },
         { "name": "sourceDevice", "flags": ["const"], "returnType": "Qt3DInput::QKeyboardDevice*", "parameters": [] },
         { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
@@ -601,8 +601,8 @@
         { "name": "buttonNames", "flags": ["const"], "returnType": "QStringList", "parameters": [] },
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "sensitivity", "flags": ["const"], "returnType": "float", "parameters": [] },
-        { "name": "setSensitivity", "returnType": "void", "parameters": [{ "name": "value", "type": "float" }] },
-        { "name": "setUpdateAxesContinuously", "returnType": "void", "parameters": [{ "name": "updateAxesContinuously", "type": "bool" }] },
+        { "name": "setSensitivity", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "value", "type": "float" }] },
+        { "name": "setUpdateAxesContinuously", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "updateAxesContinuously", "type": "bool" }] },
         { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
         { "name": "updateAxesContinuously", "flags": ["const"], "returnType": "bool", "parameters": [] }
       ],
@@ -672,7 +672,7 @@
       "methods": [
         { "name": "containsMouse", "flags": ["const"], "returnType": "bool", "parameters": [] },
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
-        { "name": "setSourceDevice", "returnType": "void", "parameters": [{ "name": "mouseDevice", "type": "Qt3DInput::QMouseDevice*" }] },
+        { "name": "setSourceDevice", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "mouseDevice", "type": "Qt3DInput::QMouseDevice*" }] },
         { "name": "sourceDevice", "flags": ["const"], "returnType": "Qt3DInput::QMouseDevice*", "parameters": [] },
         { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
