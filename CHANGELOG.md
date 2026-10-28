@@ -12,6 +12,11 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   `QMetaMethod::Method`, the default is a `QMetaMethod::Slot`). The extractor records the new
   `slot`/`invokable` method flags; `test-nativeslot` checks that the signatures resolve through
   `QMetaObject::indexOfMethod`.
+- **The dynamic meta-object cache is keyed by the base class too.** Two C# types can share a simple
+  name (different namespaces) and declare identical members while deriving from different Qt
+  classes; the built table used to be reused for both, so the second type counted its method and
+  property ids from the wrong superclass. The cache key now includes the base's meta-object, and
+  `test-metaobjectcache` covers the collision.
 - **`QBindable<T>` is removed from the public API.** The generated `bindableFoo()` handles exposed
   only `Value` (get/set) and `Dispose`, which the normal property accessors already provide, while
   the members that make a bindable distinct (`setBinding`, `onValueChanged`, `hasBinding`, …) were
