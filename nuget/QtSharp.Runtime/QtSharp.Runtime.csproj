@@ -42,6 +42,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\ApiRuntime.cs">
       <Link>Runtime\ApiRuntime.cs</Link>
     </Compile>
+    <!-- Qt calls function pointers by address long after the call that installed them returns;
+         the registry keeps the managed thunk and the caller's delegate rooted. -->
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\QtCallbackRegistry.cs">
+      <Link>Runtime\QtCallbackRegistry.cs</Link>
+    </Compile>
     <!-- The binding tests probe the liveness generation counters (OwnershipApi); those members
          are internal to the runtime otherwise. -->
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
@@ -51,6 +56,11 @@
          classes (runtime/QtCore/QSignalConnections.cs) and forward to the internal primitive. -->
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>QtSharp.QtCore</_Parameter1>
+    </AssemblyAttribute>
+    <!-- Generated QtGui callbacks (QGuiApplication::platformFunction, QOpenGLContext) use the same
+         internal wrapping helper; the modules are separate assemblies, so each needs the grant. -->
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>QtSharp.QtGui</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
 

@@ -16,7 +16,7 @@ each holds exactly one `Main`, one `QApplication` and the module's reflected `[E
 | `QtSharp.Examples.QtMultimedia` | `examples/QtMultimedia/` | 1 | 12 |
 | `QtSharp.Charts.Examples` | `examples/Charts/` | 38 | 571 |
 | `QtSharp.Qt3D.Examples` | `examples/Qt3D/` | 3 | 37 |
-| `testapp` (the binding tests) | `tests/testapp/` | 37 | 948 |
+| `testapp` (the binding tests) | `tests/testapp/` | 38 | 979 |
 
 `tools/run-examples.ps1` builds all ten example executables and hands each to
 `tools/run-window-tests.ps1`; the gate, CI and the release build all use that one table. A runner
@@ -70,6 +70,7 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 | test | why it exists |
 |---|---|
 | `test-bclinterop` | the BCL conversions: QPoint/QSize/QRect/QColor/vectors/quaternion/URL/GUID/QVariant |
+| `test-callbacks` | C function pointers: custom easing, message-handler chain identity, post routines, and the `QFunctionPointer` carrier with its opt-in `As<TDelegate>` |
 | `test-connections` | signal connections as disposable handles, context objects and queued thread affinity |
 | `test-core` | the QtCore value/utility classes (files, JSON, ids, timers, threads, IPC, XML stream) |
 | `test-custommodel` | managed item models/delegates and Qt's calls back into them |
