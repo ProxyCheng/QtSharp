@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 // Port of the official "Shortcut Editor" example
@@ -366,36 +366,42 @@ public sealed class ShortcutWindowApi : QMainWindow
 [Demo("qtwidgets-shortcuteditor")]
 public static class ShortcutEditor
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         var window = new ShortcutWindowApi();
-        window.Show();
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
 
         var model = window.Editor.Model;
         var view = window.Editor.View;
         var registry = ShortcutRegistry.Instance;
 
-        Check(registry.Actions.Count == 6, $"the registry holds six actions (got {registry.Actions.Count})");
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(registry.Actions.Count == 6, $"the registry holds six actions (got {registry.Actions.Count})");
+#endif
 
         // The tree shape: two contexts, one category each, three actions per category. Every one of
         // those counts comes out of a QModelIndex the *managed* model built with createIndex.
         var topIndex = model.Index(0, 0);
-        Check(model.RowCount() == 2 && topIndex.IsValid(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.RowCount() == 2 && topIndex.IsValid(),
             $"the root has two contexts (got {model.RowCount()})");
+        #endif
 
         string firstContext = model.Data(topIndex, 0)?.ToString();
         var categoryIndex = model.Index(0, 0, topIndex);
-        Check((firstContext == "bottom" || firstContext == "top") && model.Data(categoryIndex, 0)?.ToString() == "color",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check((firstContext == "bottom" || firstContext == "top") && model.Data(categoryIndex, 0)?.ToString() == "color",
             $"context row -> category row (got '{firstContext}' -> '{model.Data(categoryIndex, 0)}')");
-        Check(model.RowCount(categoryIndex) == 3, $"the category holds three actions (got {model.RowCount(categoryIndex)})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.RowCount(categoryIndex) == 3, $"the category holds three actions (got {model.RowCount(categoryIndex)})");
+        #endif
 
         var nameIndex = model.Index(0, 0, categoryIndex);
         var actionIndex = model.Index(0, 1, categoryIndex);
@@ -403,17 +409,23 @@ public static class ShortcutEditor
         // indexes rather than two roles.
         string actionName = model.Data(nameIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString();
         string actionShortcut = model.Data(actionIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString();
-        Check(actionName.Length > 0 && actionShortcut.Length > 0,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(actionName.Length > 0 && actionShortcut.Length > 0,
             $"an action row carries a name and a shortcut ('{actionName}' / '{actionShortcut}')");
+        #endif
 
         // The index really is the one the model handed out: it round-trips to the same node and
         // walks back to its parent (this is the part that used to crash).
         var parentOfAction = model.Parent(actionIndex);
-        Check(parentOfAction.IsValid() && parentOfAction.Row() == categoryIndex.Row()
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(parentOfAction.IsValid() && parentOfAction.Row() == categoryIndex.Row()
               && parentOfAction.InternalId() == categoryIndex.InternalId(),
             "an index walks back to its parent through the id the model stored in it");
-        Check(actionIndex.InternalId() >= 0 && actionIndex.Row() == 0,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(actionIndex.InternalId() >= 0 && actionIndex.Row() == 0,
             $"the index carries the model's own id (id={actionIndex.InternalId()}, row={actionIndex.Row()})");
+        #endif
 
         // The crash the user hit: expanding the "color" node and letting Qt paint it. Expanding
         // makes the view ask the model for the child indexes and the delegate for a size hint, and
@@ -423,12 +435,16 @@ public static class ShortcutEditor
         int painted = view.SizeHintForColumn(0);
         using (var rendered = view.Grab())
         {
-            Check(!rendered.IsNull() && rendered.Width() > 0,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(!rendered.IsNull() && rendered.Width() > 0,
                 $"the tree renders with a node expanded (got {rendered.Width()}x{rendered.Height()}, column hint {painted})");
+            #endif
         }
-        Check(model.RowCount(categoryIndex) == 3
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.RowCount(categoryIndex) == 3
               && model.Data(actionIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString().Length > 0,
             "the model still answers after the expansion");
+        #endif
 
         // The delegate's contract, driven directly: it has to hand the model's value to the editor
         // and write the editor's value back.
@@ -436,22 +452,30 @@ public static class ShortcutEditor
         using (var option = new QStyleOptionViewItem())
         {
             var editor = delegateInstance.CreateEditor(view, option, actionIndex);
-            Check(editor is QKeySequenceEdit, $"the delegate built its editor (got {editor.GetType().Name})");
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(editor is QKeySequenceEdit, $"the delegate built its editor (got {editor.GetType().Name})");
+            #endif
 
             delegateInstance.UpdateEditorGeometry(editor, option, actionIndex);
             delegateInstance.SetEditorData(editor, actionIndex);
             string before = ((QKeySequenceEdit)editor).KeySequence.ToString();
-            Check(before.Length > 0, $"the editor was seeded from the model (got '{before}')");
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(before.Length > 0, $"the editor was seeded from the model (got '{before}')");
+            #endif
 
             using (var replacement = new QKeySequence("Ctrl+Shift+R"))
                 ((QKeySequenceEdit)editor).SetKeySequence(replacement);
             delegateInstance.SetModelData(editor, model, actionIndex);
 
             string after = model.Data(actionIndex, (int)Qt.ItemDataRole.DisplayRole)?.ToString();
-            Check(after == "Ctrl+Shift+R", $"the editor's value reached the model (got '{after}')");
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(after == "Ctrl+Shift+R", $"the editor's value reached the model (got '{after}')");
+            #endif
             var editedAction = model.ActionAt(actionIndex);
-            Check(editedAction != null && editedAction.Shortcut.ToString() == "Ctrl+Shift+R",
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(editedAction != null && editedAction.Shortcut.ToString() == "Ctrl+Shift+R",
                 $"and the model wrote it through to the action itself (got '{editedAction?.Shortcut.ToString()}')");
+            #endif
         }
 
         // The path a double-click takes: Qt opens the editor itself, so setEditorData() is called
@@ -462,28 +486,36 @@ public static class ShortcutEditor
         delegateInstance.LastEditor = null;
         view.ExpandAll();
         view.Edit(actionIndex);
-        Check(delegateInstance.LastEditor is QKeySequenceEdit,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(delegateInstance.LastEditor is QKeySequenceEdit,
             $"a view-driven edit hands the delegate back its own QKeySequenceEdit "
             + $"(got {delegateInstance.LastEditor?.GetType().Name ?? "nothing"})");
+        #endif
 
         // A structural change announced the way a model has to announce one - the protected
         // beginInsertRows/endInsertRows the binding now publishes.
         int rowsBefore = model.RowCount(categoryIndex);
         var added = model.AddAction(firstContext, "color", "yellow", "y");
-        Check(added.IsValid() && model.RowCount(categoryIndex) == rowsBefore + 1,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(added.IsValid() && model.RowCount(categoryIndex) == rowsBefore + 1,
             $"inserting a row through beginInsertRows/endInsertRows (got {model.RowCount(categoryIndex)} rows)");
+        #endif
         var addedName = model.Index(rowsBefore, 0, categoryIndex);
+        #if QTSHARP_DEMO_SMOKE
         // Qt normalises a single-letter sequence to upper case ("y" comes back as "Y"), which is
         // what the view shows.
-        Check(model.Data(addedName, (int)Qt.ItemDataRole.DisplayRole).ToString() == "yellow"
+        demo.Check(model.Data(addedName, (int)Qt.ItemDataRole.DisplayRole).ToString() == "yellow"
               && model.Data(added, (int)Qt.ItemDataRole.DisplayRole).ToString() == "Y",
             $"the inserted row is addressable by its new index ('{model.Data(addedName, 0).ToString()}'"
             + $" / '{model.Data(added, 0).ToString()}')");
+        #endif
 
         view.ExpandAll();
         view.SetCurrentIndex(added);
+        #if QTSHARP_DEMO_SMOKE
         using (var rendered = view.Grab())
-            Check(!rendered.IsNull(), "the view renders after the insertion");
+            demo.Check(!rendered.IsNull(), "the view renders after the insertion");
+        #endif
 
         // The failure mode the legacy demo had: a full collection while the view holds the model
         // and the delegate. Everything the managed side owns is reachable through the widget, so
@@ -494,25 +526,21 @@ public static class ShortcutEditor
             GC.WaitForPendingFinalizers();
         }
         view.ExpandAll();
-        Check(model.RowCount(categoryIndex) == rowsBefore + 1
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(model.RowCount(categoryIndex) == rowsBefore + 1
               && model.Data(added, (int)Qt.ItemDataRole.DisplayRole).ToString() == "Y"
               && view.Model().RowCount(categoryIndex) == rowsBefore + 1,
             "the model, the delegate and the view survive repeated full GCs");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
         using (var rendered = view.Grab())
-            Check(!rendered.IsNull(), "and the tree still renders afterwards");
+            demo.Check(!rendered.IsNull(), "and the tree still renders afterwards");
+        #endif
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-
-        // Then leave the window up so it can be *used*: expand the nodes, edit a shortcut. The
-        // default is short enough for the gate; QTSHARP_DEMO_MS=60000 to play with it properly
-        // (the official example's own interactions: open a context, then a category, then edit).
-        var stop = new QTimer();
-        stop.SetSingleShot(true);
-        stop.TimeoutSignal.Connect(() => app.Quit());
-        int runFor = int.TryParse(Environment.GetEnvironmentVariable("QTSHARP_DEMO_MS"), out var ms) ? ms : 1500;
-        stop.Start(runFor);
-        app.Exec();
-
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

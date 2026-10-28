@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 
@@ -8,24 +8,26 @@ using System.Text;
 [Demo("qtprintsupport-notepad")]
 public static class Notepad
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         string dir = Path.Combine(Path.GetTempPath(), "qtsharp-notepad-" + Guid.NewGuid().ToString("N").Substring(0, 8));
         Directory.CreateDirectory(dir);
         try
         {
-            using var document = new QTextDocument();
-            document.SetHtml(
+            const string html =
                 "<h1>QtSharp</h1>"
-                + "<p>The notepad example prints a <b>QTextDocument</b> through a QPrinter.</p>");
+                + "<p>The notepad example prints a <b>QTextDocument</b> through a QPrinter.</p>";
+            using var document = new QTextDocument();
+            document.SetHtml(html);
+
+#if QTSHARP_DEMO_VIEW
+            // The notepad window, reduced to the document the tutorial prints.
+            var editor = new QTextEdit();
+            editor.SetWindowTitle("Notepad");
+            editor.SetHtml(html);
+            demo.Show(editor);
+#endif
 
             string pdfPath = Path.Combine(dir, "notepad.pdf");
             using (var printer = new QPrinter(QPrinter.PrinterMode.ScreenResolution))
@@ -37,18 +39,26 @@ public static class Notepad
 
             bool exists = File.Exists(pdfPath) && new FileInfo(pdfPath).Length > 0;
             string header = exists ? Encoding.ASCII.GetString(File.ReadAllBytes(pdfPath), 0, 4) : "";
-            Check(exists && header == "%PDF",
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(exists && header == "%PDF",
                 $"QTextDocument prints through QPrinter to a PDF ({(exists ? new FileInfo(pdfPath).Length + " bytes" : "missing")})");
+            #endif
 
-            Check(QPrinterInfo.AvailablePrinterNames().Length >= 0,
+#if QTSHARP_DEMO_SMOKE
+
+            demo.Check(QPrinterInfo.AvailablePrinterNames().Length >= 0,
                 $"QPrinterInfo enumerates the installed printers ({QPrinterInfo.AvailablePrinterNames().Length})");
+#endif
         }
         finally
         {
             try { Directory.Delete(dir, true); } catch { /* temp files are harmless */ }
         }
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[FAIL] {failures} check(s) failed");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

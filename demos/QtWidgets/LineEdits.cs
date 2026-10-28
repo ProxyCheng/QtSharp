@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 // The official widgets/lineedits example, ported onto the *new* pipeline: group boxes, grid
@@ -190,61 +190,79 @@ public sealed class ApiLineEditsWindow : QWidget
 [Demo("qtwidgets-lineedits")]
 public static class LineEdits
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         var window = new ApiLineEditsWindow();
         window.WatchText(window.Echo);
-        window.Show();
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
 
         // Echo: selecting "Password" must reach the handler and change the line edit.
         window.Boxes[0].SetCurrentIndex(1);
-        Check(window.Echo.echoMode() == QLineEdit.EchoMode.Password,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Echo.echoMode() == QLineEdit.EchoMode.Password,
             $"combo signal drove the echo mode (got {window.Echo.echoMode()})");
+        #endif
 
         // Validator: an int validator must reject letters and accept digits.
         window.Boxes[1].SetCurrentIndex(1);
-        Check(window.ValidatorEdit.Validator() != null, "int validator installed on the line edit");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ValidatorEdit.Validator() != null, "int validator installed on the line edit");
+        #endif
         window.ValidatorEdit.SetText("abc");
-        Check(!window.ValidatorEdit.HasAcceptableInput(), "int validator rejects \"abc\"");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.ValidatorEdit.HasAcceptableInput(), "int validator rejects \"abc\"");
+        #endif
         window.ValidatorEdit.SetText("123");
-        Check(window.ValidatorEdit.HasAcceptableInput(), "int validator accepts \"123\"");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ValidatorEdit.HasAcceptableInput(), "int validator accepts \"123\"");
+        #endif
 
         // Alignment: a QFlags argument through the generated binding.
         window.Boxes[2].SetCurrentIndex(2);
-        Check(window.AlignmentEdit.alignment().HasFlag(Qt.Alignment.AlignRight),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.AlignmentEdit.alignment().HasFlag(Qt.Alignment.AlignRight),
             $"alignment flag applied (got {(int)window.AlignmentEdit.alignment():X})");
+        #endif
 
         // Input mask: the handler sets the mask and fills the text.
         window.Boxes[3].SetCurrentIndex(2);
-        Check(window.InputMaskEdit.inputMask() == "0000-00-00" && window.InputMaskEdit.HasAcceptableInput(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.InputMaskEdit.inputMask() == "0000-00-00" && window.InputMaskEdit.HasAcceptableInput(),
             $"input mask applied and satisfied (mask='{window.InputMaskEdit.inputMask()}')");
+        #endif
 
         // Read-only switch.
         window.Boxes[4].SetCurrentIndex(1);
-        Check(window.AccessEdit.IsReadOnly(), "read-only flag applied");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.AccessEdit.IsReadOnly(), "read-only flag applied");
+        #endif
 
         // The line edit's own signal, delivered through the generic moc forwarder.
         window.Echo.SetText("hello");
-        Check(window.LastTextChanged == "hello",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.LastTextChanged == "hello",
             $"textChanged delivered (got '{window.LastTextChanged}')");
+        #endif
 
-        var stop = new QTimer();
-        stop.SetSingleShot(true);
-        stop.TimeoutSignal.Connect(() => app.Quit());
-        stop.Start(int.TryParse(Environment.GetEnvironmentVariable("QTSHARP_DEMO_MS"), out var ms) ? ms : 1200);
-        app.Exec();
+        #if QTSHARP_DEMO_SMOKE
+        // The paint event only arrives through an event loop; pump the off-screen widget's
+        // instead of entering app.Exec(), which belongs to the View host.
+        var clock = new QElapsedTimer();
+        clock.Start();
+        while (window.PaintCount == 0 && clock.Elapsed() < 2000)
+            QCoreApplication.ProcessEvents();
+        demo.Check(window.PaintCount > 0, $"the dialog rendered ({window.PaintCount} paint(s))");
+#endif
 
-        Check(window.PaintCount > 0, $"the dialog rendered ({window.PaintCount} paint(s))");
-
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

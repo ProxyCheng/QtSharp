@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using QtSharp.Qt3DCore;
 
 // The one canonical C# -> Qt type-name map. MetaType.QtName is what a [QtSignal]/[QtProperty]
@@ -23,7 +23,7 @@ public class TypeNameObject : QObject
     }
 }
 
-[Demo("test-metatype")]
+[Test("test-metatype")]
 public static class MetaTypeApi
 {
     // A QObject subclass the binding did not generate. Its meta-object is named after the C#
@@ -36,92 +36,85 @@ public static class MetaTypeApi
     {
     }
 
-    public static int Run(QApplication app)
+    public static int Run(TestContext context)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         // ---------------------------------------------------------------- the intrinsic table
-        Check(MetaType.QtName(typeof(string)) == "QString", "string is QString");
-        Check(MetaType.QtName(typeof(int)) == "int", "int is int");
-        Check(MetaType.QtName(typeof(bool)) == "bool", "bool is bool");
-        Check(MetaType.QtName(typeof(long)) == "qint64", "long is qint64");
-        Check(MetaType.QtName(typeof(byte)) == "uchar", "byte is uchar");
+        context.Check(MetaType.QtName(typeof(string)) == "QString", "string is QString");
+        context.Check(MetaType.QtName(typeof(int)) == "int", "int is int");
+        context.Check(MetaType.QtName(typeof(bool)) == "bool", "bool is bool");
+        context.Check(MetaType.QtName(typeof(long)) == "qint64", "long is qint64");
+        context.Check(MetaType.QtName(typeof(byte)) == "uchar", "byte is uchar");
 
         // The BCL spellings the rest of the binding already crosses as a Qt value.
-        Check(MetaType.QtName(typeof(char)) == "QChar", "char is QChar");
-        Check(MetaType.QtName(typeof(DateTime)) == "QDateTime", "DateTime is QDateTime");
-        Check(MetaType.QtName(typeof(DateOnly)) == "QDate", "DateOnly is QDate");
-        Check(MetaType.QtName(typeof(TimeOnly)) == "QTime", "TimeOnly is QTime");
-        Check(MetaType.QtName(typeof(Guid)) == "QUuid", "Guid is QUuid");
-        Check(MetaType.QtName(typeof(Uri)) == "QUrl", "Uri is QUrl");
-        Check(MetaType.QtName(typeof(byte[])) == "QByteArray", "byte[] is QByteArray");
+        context.Check(MetaType.QtName(typeof(char)) == "QChar", "char is QChar");
+        context.Check(MetaType.QtName(typeof(DateTime)) == "QDateTime", "DateTime is QDateTime");
+        context.Check(MetaType.QtName(typeof(DateOnly)) == "QDate", "DateOnly is QDate");
+        context.Check(MetaType.QtName(typeof(TimeOnly)) == "QTime", "TimeOnly is QTime");
+        context.Check(MetaType.QtName(typeof(Guid)) == "QUuid", "Guid is QUuid");
+        context.Check(MetaType.QtName(typeof(Uri)) == "QUrl", "Uri is QUrl");
+        context.Check(MetaType.QtName(typeof(byte[])) == "QByteArray", "byte[] is QByteArray");
 
         // ---------------------------------------------------------------- bound value classes
         // The generated table knows these are value classes, not object pointers, so the name
         // carries no '*' (the old IQtHandle fallback said QFont*, QByteArray*).
-        Check(MetaType.QtName(typeof(QFont)) == "QFont", $"QFont is QFont (got '{MetaType.QtName(typeof(QFont))}')");
-        Check(MetaType.QtName(typeof(QByteArray)) == "QByteArray",
+        context.Check(MetaType.QtName(typeof(QFont)) == "QFont", $"QFont is QFont (got '{MetaType.QtName(typeof(QFont))}')");
+        context.Check(MetaType.QtName(typeof(QByteArray)) == "QByteArray",
             $"QByteArray is QByteArray (got '{MetaType.QtName(typeof(QByteArray))}')");
-        Check(MetaType.QtName(typeof(QIcon)) == "QIcon", $"QIcon is QIcon (got '{MetaType.QtName(typeof(QIcon))}')");
-        Check(MetaType.QtName(typeof(QColorSpace)) == "QColorSpace",
+        context.Check(MetaType.QtName(typeof(QIcon)) == "QIcon", $"QIcon is QIcon (got '{MetaType.QtName(typeof(QIcon))}')");
+        context.Check(MetaType.QtName(typeof(QColorSpace)) == "QColorSpace",
             $"QColorSpace is QColorSpace (got '{MetaType.QtName(typeof(QColorSpace))}')");
 
         // A runtime struct is a value with no handle at all.
-        Check(MetaType.QtName(typeof(QColor)) == "QColor", $"QColor is QColor (got '{MetaType.QtName(typeof(QColor))}')");
+        context.Check(MetaType.QtName(typeof(QColor)) == "QColor", $"QColor is QColor (got '{MetaType.QtName(typeof(QColor))}')");
 
         // ---------------------------------------------------------------- QObject pointers
-        Check(MetaType.QtName(typeof(QObject)) == "QObject*", "QObject is a pointer metatype");
-        Check(MetaType.QtName(typeof(QWidget)) == "QWidget*", "a bound QObject subclass is a pointer metatype");
-        Check(MetaType.QtName(typeof(ManagedObject)) == "ManagedObject*",
+        context.Check(MetaType.QtName(typeof(QObject)) == "QObject*", "QObject is a pointer metatype");
+        context.Check(MetaType.QtName(typeof(QWidget)) == "QWidget*", "a bound QObject subclass is a pointer metatype");
+        context.Check(MetaType.QtName(typeof(ManagedObject)) == "ManagedObject*",
             $"a QObject subclass declared in C# is named after its meta-object (got '{MetaType.QtName(typeof(ManagedObject))}')");
 
         // The generated table's exact cppName keeps the namespace Qt3D declares.
-        Check(MetaType.QtName(typeof(QEntity)) == "Qt3DCore::QEntity*",
+        context.Check(MetaType.QtName(typeof(QEntity)) == "Qt3DCore::QEntity*",
             $"a namespaced class keeps its namespace (got '{MetaType.QtName(typeof(QEntity))}')");
 
         // A bound enum keeps the name QMetaType registered it under.
-        Check(MetaType.QtName(typeof(Qt.Alignment)) == "Qt::Alignment",
+        context.Check(MetaType.QtName(typeof(Qt.Alignment)) == "Qt::Alignment",
             $"an enum keeps its Qt spelling (got '{MetaType.QtName(typeof(Qt.Alignment))}')");
 
         // ---------------------------------------------------------------- unsupported types fail
-        Check(Throws(() => MetaType.QtName(typeof(NotAQtType))),
+        context.Check(Throws(() => MetaType.QtName(typeof(NotAQtType))),
             "an unsupported type throws instead of being spelled from t.Name");
-        Check(Throws(() => QMetaType.FromType<NotAQtType>()),
+        context.Check(Throws(() => QMetaType.FromType<NotAQtType>()),
             "QMetaType.FromType<T> fails the same way for an unsupported type");
 
         // ---------------------------------------------------------------- the declared members agree
         var declared = new TypeNameObject();
         var meta = declared.MetaObject();
-        Check(meta.IndexOfSignal("fontChanged(QFont)") >= 0,
+        context.Check(meta.IndexOfSignal("fontChanged(QFont)") >= 0,
             "a [QtSignal] carrying a value class spells it without a pointer");
-        Check(meta.IndexOfSignal("dataChanged(QByteArray)") >= 0,
+        context.Check(meta.IndexOfSignal("dataChanged(QByteArray)") >= 0,
             "and the same for another value class");
 
         // ---------------------------------------------------------------- QMetaType.FromType<T>
-        Check(Matches<string>("QString"), "FromType<string>() is QString");
-        Check(Matches<int>("int"), "FromType<int>() is int");
-        Check(Matches<char>("QChar"), "FromType<char>() is QChar");
-        Check(Matches<DateTime>("QDateTime"), "FromType<DateTime>() is QDateTime");
-        Check(Matches<QColor>("QColor"), "FromType<QColor>() is QColor");
-        Check(Matches<QFont>("QFont"), "FromType<QFont>() is QFont");
-        Check(Matches<QByteArray>("QByteArray"), "FromType<QByteArray>() is QByteArray");
-        Check(Matches<QObject>("QObject*"), "FromType<QObject>() is QObject*");
+        context.Check(Matches<string>("QString"), "FromType<string>() is QString");
+        context.Check(Matches<int>("int"), "FromType<int>() is int");
+        context.Check(Matches<char>("QChar"), "FromType<char>() is QChar");
+        context.Check(Matches<DateTime>("QDateTime"), "FromType<DateTime>() is QDateTime");
+        context.Check(Matches<QColor>("QColor"), "FromType<QColor>() is QColor");
+        context.Check(Matches<QFont>("QFont"), "FromType<QFont>() is QFont");
+        context.Check(Matches<QByteArray>("QByteArray"), "FromType<QByteArray>() is QByteArray");
+        context.Check(Matches<QObject>("QObject*"), "FromType<QObject>() is QObject*");
 
         // Qt resolves a name only once its metatype is registered; Qt3DCore does not register
         // QEntity*, so this is an invalid QMetaType. What the call does prove is that FromType
         // reaches the generated table for the class at all (an unknown class throws, as above),
         // and the spelling it feeds FromName is pinned by the mapper check above.
         int entityId = QMetaType.FromType<QEntity>().Id();
-        Check(entityId == QMetaType.Type("Qt3DCore::QEntity*"),
+        context.Check(entityId == QMetaType.Type("Qt3DCore::QEntity*"),
             $"FromType<QEntity>() looks the metatype up by Qt3DCore::QEntity* (got {entityId})");
 
-        return failures;
+        return context.ExitCode;
     }
 
     // Qt has to know the metatype under exactly the name the mapper gave it. A zero id would mean

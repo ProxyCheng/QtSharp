@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace QtSharp.Tests
 {
@@ -9,26 +9,19 @@ namespace QtSharp.Tests
     /// once the last QVariant copy is gone - the failure mode would be a silently growing table
     /// (or a freed object still reachable through a Qt copy).
     /// </summary>
-    [Demo("test-variantlifetime")]
+    [Test("test-variantlifetime")]
     public static class VariantLifetimeTests
     {
         sealed class Payload
         {
         }
 
-        public static int Run(QApplication app)
+        public static int Run(TestContext context)
         {
-            int failures = 0;
-            void Check(bool ok, string what)
-            {
-                Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-                if (!ok)
-                    failures++;
-            }
 
             int storeBaseline = ManagedVariantStore.Count;
             long boxBaseline = ManagedVariantStore.NativeBoxCount;
-            Check(storeBaseline == 0 && boxBaseline == 0,
+            context.Check(storeBaseline == 0 && boxBaseline == 0,
                 $"the table starts empty (store {storeBaseline}, boxes {boxBaseline})");
 
             // ---------------------------------------------------------------- create/dispose
@@ -36,29 +29,29 @@ namespace QtSharp.Tests
                 using (var variant = new QVariant(new Payload()))
                 {
                 }
-            Check(ManagedVariantStore.Count == storeBaseline,
+            context.Check(ManagedVariantStore.Count == storeBaseline,
                 $"200 disposed variants leave no managed table entries (got {ManagedVariantStore.Count})");
-            Check(ManagedVariantStore.NativeBoxCount == boxBaseline,
+            context.Check(ManagedVariantStore.NativeBoxCount == boxBaseline,
                 $"and no native boxes (got {ManagedVariantStore.NativeBoxCount})");
 
             // ---------------------------------------------------------------- copies share one box
             var payload = new Payload();
             using (var original = new QVariant(payload))
             {
-                Check(ManagedVariantStore.Count == storeBaseline + 1
+                context.Check(ManagedVariantStore.Count == storeBaseline + 1
                       && ManagedVariantStore.NativeBoxCount == boxBaseline + 1,
                     "one wrapped object has one table entry and one native box");
                 using (var clone = new QVariant((object)original))
                 {
-                    Check(ManagedVariantStore.Count == storeBaseline + 1
+                    context.Check(ManagedVariantStore.Count == storeBaseline + 1
                           && ManagedVariantStore.NativeBoxCount == boxBaseline + 1,
                         "a QVariant copy shares the payload instead of allocating another box");
-                    Check(ReferenceEquals(clone.ToObject(), payload), "and unwraps to the same object");
+                    context.Check(ReferenceEquals(clone.ToObject(), payload), "and unwraps to the same object");
                 }
-                Check(ManagedVariantStore.Count == storeBaseline + 1,
+                context.Check(ManagedVariantStore.Count == storeBaseline + 1,
                     "disposing the copy leaves the original's payload alive");
             }
-            Check(ManagedVariantStore.Count == storeBaseline
+            context.Check(ManagedVariantStore.Count == storeBaseline
                   && ManagedVariantStore.NativeBoxCount == boxBaseline,
                 "disposing the original releases the last payload");
 
@@ -68,17 +61,17 @@ namespace QtSharp.Tests
             {
                 combo.AddItem("payload", original);
                 original.Dispose();
-                Check(ManagedVariantStore.Count == storeBaseline + 1
+                context.Check(ManagedVariantStore.Count == storeBaseline + 1
                       && ManagedVariantStore.NativeBoxCount == boxBaseline + 1,
                     "Qt's item-data copy keeps exactly one payload alive after the original is gone");
                 {
-                    Check(ReferenceEquals(combo.ItemData(0, (int)Qt.ItemDataRole.UserRole), payload),
+                    context.Check(ReferenceEquals(combo.ItemData(0, (int)Qt.ItemDataRole.UserRole), payload),
                         "the payload is still readable through Qt's copy");
-                    Check(ManagedVariantStore.Count == storeBaseline + 1,
+                    context.Check(ManagedVariantStore.Count == storeBaseline + 1,
                         "reading through Qt does not root another payload");
                 }
             }
-            Check(ManagedVariantStore.Count == storeBaseline
+            context.Check(ManagedVariantStore.Count == storeBaseline
                   && ManagedVariantStore.NativeBoxCount == boxBaseline,
                 "destroying the combo releases the last payload");
 
@@ -87,10 +80,10 @@ namespace QtSharp.Tests
             // value back with no wrapper (and so nothing in the identity cache).
             using (var variant = new QVariant(new QColor(1, 2, 3)))
             {
-                Check(variant.ToObject() is QColor back && back.IsValid() && back.Red() == 1,
+                context.Check(variant.ToObject() is QColor back && back.IsValid() && back.Red() == 1,
                     "a QColor variant unwraps to the struct");
             }
-            Check(ManagedVariantStore.Count == storeBaseline
+            context.Check(ManagedVariantStore.Count == storeBaseline
                   && ManagedVariantStore.NativeBoxCount == boxBaseline,
                 "QColor conversions use no opaque managed payloads");
 
@@ -104,13 +97,13 @@ namespace QtSharp.Tests
                 {
                     if (variant.type() != (int)QVariant.Type.Uuid)
                     {
-                        Check(false, $"round {i} produced {variant.type()} instead of Uuid");
+                        context.Check(false, $"round {i} produced {variant.type()} instead of Uuid");
                         break;
                     }
                 }
-            Check(ManagedVariantStore.Count == storeBaseline,
+            context.Check(ManagedVariantStore.Count == storeBaseline,
                 $"200 Guid variants leave no managed table entries (got {ManagedVariantStore.Count})");
-            Check(ManagedVariantStore.NativeBoxCount == boxBaseline,
+            context.Check(ManagedVariantStore.NativeBoxCount == boxBaseline,
                 $"and no native boxes (got {ManagedVariantStore.NativeBoxCount})");
 
             // Qt's own copy (an item's data) still unwraps after ours is gone.
@@ -118,21 +111,21 @@ namespace QtSharp.Tests
             {
                 using (var variant = new QVariant(uuid))
                     combo.AddItem("uuid", variant);
-                Check(combo.ItemData(0, (int)Qt.ItemDataRole.UserRole) is Guid stored && stored == uuid,
+                context.Check(combo.ItemData(0, (int)Qt.ItemDataRole.UserRole) is Guid stored && stored == uuid,
                         "Qt's copy of a Uuid variant still unwraps to the Guid");
-                Check(ManagedVariantStore.Count == storeBaseline,
+                context.Check(ManagedVariantStore.Count == storeBaseline,
                     "reading it roots no managed payload");
             }
 
             // A struct has no wrapper to leave in the identity cache; only the QVariant does.
             using (var variant = new QVariant(new QColor(4, 5, 6)))
-                Check(variant.ToObject() is QColor stored && stored.Blue() == 6,
+                context.Check(variant.ToObject() is QColor stored && stored.Blue() == 6,
                     "a QColor variant round-trips without a native wrapper");
 
             IntPtr variantHandle;
             using (var variant = new QVariant(new Payload()))
                 variantHandle = variant.Handle;
-            Check(variantHandle != IntPtr.Zero && ApiRuntime.TryGetWrapper(variantHandle) == null,
+            context.Check(variantHandle != IntPtr.Zero && ApiRuntime.TryGetWrapper(variantHandle) == null,
                 "a disposed QVariant leaves the runtime's identity cache");
 
             // The generated wrappers do not use QVariant at all: they lease the native variant to
@@ -142,24 +135,23 @@ namespace QtSharp.Tests
             IntPtr leaseHandle = lease.Handle;
             var leaseAlias = lease;
             lease.Dispose();
-            Check(leaseHandle != IntPtr.Zero && lease.Handle == IntPtr.Zero && leaseAlias.Handle == IntPtr.Zero,
+            context.Check(leaseHandle != IntPtr.Zero && lease.Handle == IntPtr.Zero && leaseAlias.Handle == IntPtr.Zero,
                 "a VariantLease disposes once for every copy (it is the same object)");
             leaseAlias.Dispose();
-            Check(ApiRuntime.TryGetWrapper(leaseHandle) == null,
+            context.Check(ApiRuntime.TryGetWrapper(leaseHandle) == null,
                 "and the detached QVariant leaves the runtime's identity cache");
-            Check(ManagedVariantStore.Count == storeBaseline,
+            context.Check(ManagedVariantStore.Count == storeBaseline,
                 "the lease's managed payload is released when it is disposed");
 
             using (var invalid = new QVariant())
             {
-                Check(invalid.ToObject() == null, "an invalid QVariant unwraps to null");
-                Check(ManagedVariantStore.Count == storeBaseline
+                context.Check(invalid.ToObject() == null, "an invalid QVariant unwraps to null");
+                context.Check(ManagedVariantStore.Count == storeBaseline
                       && ManagedVariantStore.NativeBoxCount == boxBaseline,
                     "and carries no payload");
             }
 
-            Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[FAIL] {failures} check(s) failed");
-            return failures == 0 ? 0 : 1;
+            return context.ExitCode;
         }
     }
 }

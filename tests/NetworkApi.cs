@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Text;
 
@@ -8,36 +8,27 @@ using System.Text;
 //
 // These classes live in Qt6Network.dll, a module of their own: the binding links Qt6Network and the
 // runtime folder carries the matching DLL (see README.md).
-[Demo("test-network")]
+[Test("test-network")]
 public static class ApiNetworkDemo
 {
-    public static int Run(QApplication app)
+    public static int Run(TestContext context)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
-
         // Addressing: a QHostAddress round-trips through its string form, and the machine has at
         // least the loopback interface.
         var loopback = new QHostAddress("127.0.0.1");
-        Check(loopback.ToString() == "127.0.0.1", $"QHostAddress round-trip ('{loopback}')");
-        Check(QNetworkInterface.AllInterfaces().Length >= 1,
+        context.Check(loopback.ToString() == "127.0.0.1", $"QHostAddress round-trip ('{loopback}')");
+        context.Check(QNetworkInterface.AllInterfaces().Length >= 1,
             $"QNetworkInterface::allInterfaces ({QNetworkInterface.AllInterfaces().Length} interface(s))");
 
-        LocalSocketHandoff(app, Check);
-        TcpLoopback(app, Check);
+        LocalSocketHandoff(context.Check);
+        TcpLoopback(context.Check);
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        return context.ExitCode;
     }
 
     // The single-instance handoff: the running instance listens, the second one connects and hands
     // over a message.
-    static void LocalSocketHandoff(QApplication app, Action<bool, string> check)
+    static void LocalSocketHandoff(Action<bool, string> check)
     {
         // A name unique to this run: a server left behind by an earlier (or crashed) run would
         // otherwise be the one that answers.
@@ -79,7 +70,7 @@ public static class ApiNetworkDemo
     }
 
     // The TCP transport: a server on an ephemeral localhost port, a client, and a message each way.
-    static void TcpLoopback(QApplication app, Action<bool, string> check)
+    static void TcpLoopback(Action<bool, string> check)
     {
         var server = new QTcpServer();
         check(server.Listen(), "QTcpServer::listen on an ephemeral port");

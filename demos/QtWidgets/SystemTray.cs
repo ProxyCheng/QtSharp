@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 
 // Port of examples/widgets/desktop/systray/{window.h,window.cpp} onto the *new* pipeline.
 // Everything (the dialog, its group boxes, layouts, labels, combo boxes, spin box, line edit,
 // text edit, push button, actions, menu and the tray icon) comes from model/qtsharp.api.json -
 // nothing here is hand-written glue.
 //
-// Fidelity *improvements* over the legacy C# port (testbind/SystemTray.cs):
+// Fidelity *improvements* over the legacy C# port:
 //   * QSystemTrayIcon::activated() is modelled now, so IconActivated() is connected for real
 //     (the legacy binding could only leave a comment saying it was unreachable);
 //   * QStyle::standardIcon() is modelled now, so the tray/type icons are the real style icons
@@ -331,15 +331,8 @@ public sealed class ApiSystemTrayWindow : QDialog
 [Demo("qtwidgets-systray")]
 public static class SystemTray
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         var window = new ApiSystemTrayWindow();
         // Set before anything can raise the modal box (closeEvent / messageClicked).
@@ -355,15 +348,27 @@ public static class SystemTray
                           + $"supportsMessages={QSystemTrayIcon.SupportsMessages()} (OS behaviour, not asserted)");
 
         // ---------------------------------------------------------------- icon group box
-        Check(window.IconGroupBox.Title == "Tray Icon",
+#if QTSHARP_DEMO_SMOKE
+
+        // ---------------------------------------------------------------- icon group box
+        demo.Check(window.IconGroupBox.Title == "Tray Icon",
             $"the icon group box is titled \"Tray Icon\" (got '{window.IconGroupBox.Title}')");
-        Check(window.IconLabel.text() == "Icon:",
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.IconLabel.text() == "Icon:",
             $"the icon label reads \"Icon:\" (got '{window.IconLabel.text()}')");
-        Check(iconCombo.Count == 3, $"the icon combo has three entries (got {iconCombo.Count})");
-        Check(iconCombo.ItemText(0) == "Bad" && iconCombo.ItemText(1) == "Heart" && iconCombo.ItemText(2) == "Trash",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(iconCombo.Count == 3, $"the icon combo has three entries (got {iconCombo.Count})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(iconCombo.ItemText(0) == "Bad" && iconCombo.ItemText(1) == "Heart" && iconCombo.ItemText(2) == "Trash",
             "the icon combo texts are Bad/Heart/Trash");
-        Check(!iconCombo.ItemIcon(0).IsNull() && !iconCombo.ItemIcon(1).IsNull() && !iconCombo.ItemIcon(2).IsNull(),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!iconCombo.ItemIcon(0).IsNull() && !iconCombo.ItemIcon(1).IsNull() && !iconCombo.ItemIcon(2).IsNull(),
             "every icon combo entry carries a real icon");
+        #endif
 
         // The icons come from QStyle::standardIcon() (the .qrc art is not shipped); each entry must
         // be a distinct real icon. (QIcon::cacheKey identifies the shared icon data, so two copies
@@ -371,21 +376,36 @@ public static class SystemTray
         long criticalKey = iconCombo.ItemIcon(0).CacheKey();
         long heartKey = iconCombo.ItemIcon(1).CacheKey();
         long trashKey = iconCombo.ItemIcon(2).CacheKey();
-        Check(criticalKey != heartKey && heartKey != trashKey && criticalKey != trashKey,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(criticalKey != heartKey && heartKey != trashKey && criticalKey != trashKey,
             "the three icon entries are three distinct style icons");
+        #endif
 
-        Check(window.ShowIconCheckBox.text() == "Show icon",
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.ShowIconCheckBox.text() == "Show icon",
             $"the show-icon check box reads \"Show icon\" (got '{window.ShowIconCheckBox.text()}')");
-        Check(window.ShowIconCheckBox.Checked, "the show-icon check box starts checked");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ShowIconCheckBox.Checked, "the show-icon check box starts checked");
+        #endif
 
         // ---------------------------------------------------------------- balloon message group box
-        Check(window.MessageGroupBox.Title == "Balloon Message",
+#if QTSHARP_DEMO_SMOKE
+
+        // ---------------------------------------------------------------- balloon message group box
+        demo.Check(window.MessageGroupBox.Title == "Balloon Message",
             $"the message group box is titled \"Balloon Message\" (got '{window.MessageGroupBox.Title}')");
-        Check(typeCombo.Count == 5, $"the type combo has five entries (got {typeCombo.Count})");
-        Check(typeCombo.ItemText(0) == "None" && typeCombo.ItemText(1) == "Information"
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(typeCombo.Count == 5, $"the type combo has five entries (got {typeCombo.Count})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(typeCombo.ItemText(0) == "None" && typeCombo.ItemText(1) == "Information"
               && typeCombo.ItemText(2) == "Warning" && typeCombo.ItemText(3) == "Critical"
               && typeCombo.ItemText(4) == "Custom icon",
             "the type combo texts are None/Information/Warning/Critical/Custom icon");
+        #endif
 
         // The per-item user-role data the official addItem(text, variant) calls store.
         int[] expectedIconData =
@@ -399,151 +419,282 @@ public static class SystemTray
         bool itemDataOk = true;
         for (int i = 0; i < expectedIconData.Length; i++)
             itemDataOk &= (int)typeCombo.ItemData(i, (int)Qt.ItemDataRole.UserRole) == expectedIconData[i];
-        Check(itemDataOk, "the type combo carries NoIcon/Information/Warning/Critical/-1 as user-role data");
-        Check(typeCombo.CurrentIndex == 1,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(itemDataOk, "the type combo carries NoIcon/Information/Warning/Critical/-1 as user-role data");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(typeCombo.CurrentIndex == 1,
             $"the type combo defaults to Information (got index {typeCombo.CurrentIndex})");
-        Check(typeCombo.ItemIcon(4).IsNull(), "the \"Custom icon\" entry has a null icon (the official empty QIcon)");
-        Check(!typeCombo.ItemIcon(1).IsNull(), "the Information entry carries an icon");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(typeCombo.ItemIcon(4).IsNull(), "the \"Custom icon\" entry has a null icon (the official empty QIcon)");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!typeCombo.ItemIcon(1).IsNull(), "the Information entry carries an icon");
+        #endif
 
-        Check(window.DurationLabel.text() == "Duration:",
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.DurationLabel.text() == "Duration:",
             $"the duration label reads \"Duration:\" (got '{window.DurationLabel.text()}')");
-        Check(window.DurationSpinBox.Minimum == 5 && window.DurationSpinBox.Maximum == 60,
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.DurationSpinBox.Minimum == 5 && window.DurationSpinBox.Maximum == 60,
             $"the duration range is 5..60 s (got {window.DurationSpinBox.Minimum}..{window.DurationSpinBox.Maximum})");
-        Check(window.DurationSpinBox.Suffix == " s",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.DurationSpinBox.Suffix == " s",
             $"the duration suffix is \" s\" (got '{window.DurationSpinBox.Suffix}')");
-        Check(window.DurationSpinBox.Value == 15,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.DurationSpinBox.Value == 15,
             $"the duration defaults to 15 s (got {window.DurationSpinBox.Value})");
-        Check(window.DurationWarningLabel.text() == "(some systems might ignore this hint)"
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.DurationWarningLabel.text() == "(some systems might ignore this hint)"
               && window.DurationWarningLabel.Indent == 10,
             "the duration warning label has the official text and an indent of 10");
+        #endif
 
-        Check(window.TitleEdit.Text == "Cannot connect to network",
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.TitleEdit.Text == "Cannot connect to network",
             $"the title edit is pre-filled (got '{window.TitleEdit.Text}')");
-        Check(window.BodyEdit.PlainText.Contains("Click this balloon for details."),
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.BodyEdit.PlainText.Contains("Click this balloon for details."),
             $"the body edit is pre-filled (got '{window.BodyEdit.PlainText}')");
+        #endif
 
-        Check(window.ShowMessageButton.Text == "Show Message",
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.ShowMessageButton.Text == "Show Message",
             $"the message button reads \"Show Message\" (got '{window.ShowMessageButton.Text}')");
-        Check(window.ShowMessageButton.Default, "the message button is the dialog's default button");
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ShowMessageButton.Default, "the message button is the dialog's default button");
+        #endif
 
         // ---------------------------------------------------------------- the tray icon itself
-        Check(tray.ToolTip == "Heart",
+#if QTSHARP_DEMO_SMOKE
+
+        // ---------------------------------------------------------------- the tray icon itself
+        demo.Check(tray.ToolTip == "Heart",
             $"the tray tooltip follows the default icon entry (got '{tray.ToolTip}')");
-        Check(tray.Icon.CacheKey() == heartKey, "the tray icon is the default Heart icon");
-        Check(window.WindowIcon.CacheKey() == heartKey, "the window icon follows the tray icon");
-        Check(tray.Visible, "trayIcon.show() was called and the visibility flag is set");
-        Check(tray.ContextMenu() != null && tray.ContextMenu().Handle == menu.Handle,
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(tray.Icon.CacheKey() == heartKey, "the tray icon is the default Heart icon");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.WindowIcon.CacheKey() == heartKey, "the window icon follows the tray icon");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(tray.Visible, "trayIcon.show() was called and the visibility flag is set");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(tray.ContextMenu() != null && tray.ContextMenu().Handle == menu.Handle,
             "the tray icon's context menu is the menu that was built");
+        #endif
 
         // Changing the icon entry drives setIcon through currentIndexChanged.
         iconCombo.CurrentIndex = 2;
-        Check(tray.ToolTip == "Trash" && tray.Icon.CacheKey() == trashKey,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(tray.ToolTip == "Trash" && tray.Icon.CacheKey() == trashKey,
             $"selecting \"Trash\" updates the tooltip and icon (tooltip '{tray.ToolTip}')");
-        Check(window.WindowIcon.CacheKey() == trashKey, "the window icon follows the selection");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.WindowIcon.CacheKey() == trashKey, "the window icon follows the selection");
+        #endif
         iconCombo.CurrentIndex = 0;
-        Check(tray.ToolTip == "Bad" && tray.Icon.CacheKey() == criticalKey,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(tray.ToolTip == "Bad" && tray.Icon.CacheKey() == criticalKey,
             $"selecting \"Bad\" updates the tooltip and icon (tooltip '{tray.ToolTip}')");
+        #endif
 
         // ---------------------------------------------------------------- menu contents
         var actions = menu.Actions();
-        Check(actions.Length == 5, $"the tray menu has five entries (got {actions.Length})");
-        Check(actions[0].Text == "Mi&nimize" && actions[1].Text == "Ma&ximize"
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(actions.Length == 5, $"the tray menu has five entries (got {actions.Length})");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(actions[0].Text == "Mi&nimize" && actions[1].Text == "Ma&ximize"
               && actions[2].Text == "&Restore" && actions[4].Text == "&Quit",
             "the menu entries are Minimize/Maximize/Restore/-/Quit, in order");
-        Check(actions[3].IsSeparator(), "the fourth entry is the separator");
-        Check(actions[0].Handle == window.MinimizeAction.Handle
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(actions[3].IsSeparator(), "the fourth entry is the separator");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(actions[0].Handle == window.MinimizeAction.Handle
               && actions[1].Handle == window.MaximizeAction.Handle
               && actions[2].Handle == window.RestoreAction.Handle
               && actions[4].Handle == window.QuitAction.Handle,
             "the menu holds the four actions that were created");
-        Check(window.MinimizeAction.Parent() != null && window.MinimizeAction.Parent().Handle == window.Handle,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MinimizeAction.Parent() != null && window.MinimizeAction.Parent().Handle == window.Handle,
             "the actions are parented to the window");
-        Check(window.QuitAction.Enabled, "the quit action starts enabled");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.QuitAction.Enabled, "the quit action starts enabled");
+        #endif
 
         // ---------------------------------------------------------------- window visibility / actions
         // Showing the window runs the official setVisible() override, which sets the action states.
-        window.Show();
-        Check(window.ShowEventCount >= 1, $"showing the window delivered the show event ({window.ShowEventCount} time(s))");
-        Check(window.MinimizeAction.Enabled && window.MaximizeAction.Enabled && !window.RestoreAction.Enabled,
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
+
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ShowEventCount >= 1, $"showing the window delivered the show event ({window.ShowEventCount} time(s))");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MinimizeAction.Enabled && window.MaximizeAction.Enabled && !window.RestoreAction.Enabled,
             "a visible, normal window enables minimize/maximize and disables restore");
-        Check(!window.RestoreAction.Enabled, "restore stays disabled while the window is normal");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.RestoreAction.Enabled, "restore stays disabled while the window is normal");
+        #endif
 
         // ---------------------------------------------------------------- ShowMessage arguments
-        Check(window.TypeComboBox.CurrentIndex == 1, "the type combo is on Information before the first message");
+#if QTSHARP_DEMO_SMOKE
+
+        // ---------------------------------------------------------------- ShowMessage arguments
+        demo.Check(window.TypeComboBox.CurrentIndex == 1, "the type combo is on Information before the first message");
+#endif
         window.DurationSpinBox.Value = 20;
         window.ShowMessage();
-        Check(window.LastMessageUsedCustomIcon == false && window.LastMessageIconType == QSystemTrayIcon.MessageIcon.Information,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.LastMessageUsedCustomIcon == false && window.LastMessageIconType == QSystemTrayIcon.MessageIcon.Information,
             $"the Information entry selects the enum overload (got {window.LastMessageIconType})");
-        Check(window.LastMessageMsecs == 20000,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.LastMessageMsecs == 20000,
             $"the duration is converted to milliseconds (got {window.LastMessageMsecs})");
-        Check(window.LastMessageTitle == "Cannot connect to network"
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.LastMessageTitle == "Cannot connect to network"
               && window.LastMessageBody.Contains("Click this balloon for details."),
             $"the message uses the title/body edits (title '{window.LastMessageTitle}')");
-        Check(window.LastMessageCustomIcon == null, "the enum overload passes no custom icon");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.LastMessageCustomIcon == null, "the enum overload passes no custom icon");
+        #endif
 
         // The "Custom icon" entry (-1) selects the QIcon overload.
         typeCombo.CurrentIndex = 4;
         window.ShowMessage();
-        Check(window.LastMessageUsedCustomIcon && window.LastMessageIconType == QSystemTrayIcon.MessageIcon.NoIcon,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.LastMessageUsedCustomIcon && window.LastMessageIconType == QSystemTrayIcon.MessageIcon.NoIcon,
             "the Custom icon entry selects the QIcon overload");
-        Check(window.LastMessageCustomIcon != null && !window.LastMessageCustomIcon.IsNull()
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.LastMessageCustomIcon != null && !window.LastMessageCustomIcon.IsNull()
               && window.LastMessageCustomIcon.CacheKey() == iconCombo.ItemIcon(iconCombo.CurrentIndex).CacheKey(),
             "the custom message icon is the currently selected tray icon");
+        #endif
 
         typeCombo.CurrentIndex = 2;
         window.ShowMessage();
-        Check(window.LastMessageIconType == QSystemTrayIcon.MessageIcon.Warning,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.LastMessageIconType == QSystemTrayIcon.MessageIcon.Warning,
             $"the Warning entry selects Warning (got {window.LastMessageIconType})");
+        #endif
 
         // ShowMessage() re-checks the "show icon" box (the official behaviour).
         window.ShowIconCheckBox.SetChecked(false);
-        Check(!tray.Visible, "unchecking \"Show icon\" hides the tray icon through toggled()");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!tray.Visible, "unchecking \"Show icon\" hides the tray icon through toggled()");
+        #endif
         window.ShowMessage();
-        Check(window.ShowIconCheckBox.Checked && tray.Visible,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ShowIconCheckBox.Checked && tray.Visible,
             "showing a message re-checks the box and shows the tray icon again");
+        #endif
 
         // ---------------------------------------------------------------- activated() wiring
         // activated() is bound now: emitting it must reach IconActivated().
         typeCombo.CurrentIndex = 1;
         iconCombo.CurrentIndex = 1;
         tray.ActivatedSignal.Emit(QSystemTrayIcon.ActivationReason.Trigger);
-        Check(iconCombo.CurrentIndex == 2, $"Trigger cycles the icon selection (got {iconCombo.CurrentIndex})");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(iconCombo.CurrentIndex == 2, $"Trigger cycles the icon selection (got {iconCombo.CurrentIndex})");
+        #endif
         tray.ActivatedSignal.Emit(QSystemTrayIcon.ActivationReason.DoubleClick);
-        Check(iconCombo.CurrentIndex == 0, $"DoubleClick cycles it again (got {iconCombo.CurrentIndex})");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(iconCombo.CurrentIndex == 0, $"DoubleClick cycles it again (got {iconCombo.CurrentIndex})");
+        #endif
         tray.ActivatedSignal.Emit(QSystemTrayIcon.ActivationReason.Context);
-        Check(iconCombo.CurrentIndex == 0, "Context is not handled and leaves the selection alone");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(iconCombo.CurrentIndex == 0, "Context is not handled and leaves the selection alone");
+        #endif
 
         int messagesBefore = window.MessageClickedCount;
         tray.ActivatedSignal.Emit(QSystemTrayIcon.ActivationReason.MiddleClick);
-        Check(window.LastMessageUsedCustomIcon == false && window.LastMessageMsecs == 20000,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.LastMessageUsedCustomIcon == false && window.LastMessageMsecs == 20000,
             "MiddleClick routes to ShowMessage() (message arguments recorded)");
+        #endif
 
         // ---------------------------------------------------------------- messageClicked() wiring
         tray.MessageClickedSignal.Emit();
-        Check(window.MessageClickedCount == messagesBefore + 1,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MessageClickedCount == messagesBefore + 1,
             $"messageClicked() reaches the handler (count {window.MessageClickedCount})");
+        #endif
 
         // ---------------------------------------------------------------- close logic (no modal box)
         // HandleCloseRequest() is exactly what CloseEvent() calls.
-        window.Show();
-        Check(window.HandleCloseRequest(true) && !window.IsVisible(),
-            "a spontaneous close request on a visible window with a visible tray hides it");
-        Check(!window.HandleCloseRequest(true), "a second close request is ignored because the window is hidden");
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
 
-        window.Show();
-        Check(!window.HandleCloseRequest(false),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.HandleCloseRequest(true) && !window.IsVisible(),
+            "a spontaneous close request on a visible window with a visible tray hides it");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.HandleCloseRequest(true), "a second close request is ignored because the window is hidden");
+        #endif
+
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
+
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.HandleCloseRequest(false),
             "a non-spontaneous (programmatic) close request is left to Qt");
-        Check(window.IsVisible(), "the window stayed visible for the non-spontaneous request");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.IsVisible(), "the window stayed visible for the non-spontaneous request");
+        #endif
 
         tray.Visible = false;
-        Check(!window.HandleCloseRequest(true), "with the tray hidden the close request is not intercepted");
-        Check(window.IsVisible(), "the window stayed visible when the tray is hidden");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.HandleCloseRequest(true), "with the tray hidden the close request is not intercepted");
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.IsVisible(), "the window stayed visible when the tray is hidden");
+        #endif
         tray.Visible = true;
 
         // ---------------------------------------------------------------- the minimize action is wired
-        window.Show();
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
+
         window.MinimizeAction.Trigger();
-        Check(!window.IsVisible(), "triggering the minimize action hides the window (its handler ran)");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.IsVisible(), "triggering the minimize action hides the window (its handler ran)");
+        #endif
 
         // Leave the shell nothing to talk to. A live QSystemTrayIcon (with a balloon message the
         // shell still owns) makes the process teardown unreliable: the runtime destroys the
@@ -553,7 +704,10 @@ public static class SystemTray
         tray.Visible = false;
         window.Hide();
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

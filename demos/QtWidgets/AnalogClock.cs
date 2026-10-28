@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 // The official examples/widgets/widgets/analogclock example, ported onto the *new* pipeline:
 // every type below (QWidget, QPainter, QTimer, QColor, QTime, QPolygon, the enums) comes from
@@ -169,18 +169,16 @@ public sealed class ApiAnalogClock : QWidget
 [Demo("qtwidgets-analogclock")]
 public static class AnalogClock
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         var clock = new ApiAnalogClock();
-        clock.Show();
+        #if QTSHARP_DEMO_SMOKE
+            clock.Show();
+        #else
+            demo.Show(clock);
+        #endif
+
         clock.Resize(200, 200);
 
         // ---- geometry helpers, all expressed in the 200x200 logical space the painter uses --
@@ -255,6 +253,7 @@ public static class AnalogClock
 
         // True when anything is painted around (px, py) compared with an empty part of the
         // widget (the upper-left interior, which no hand and no tick reaches).
+        #if QTSHARP_DEMO_SMOKE
         bool IsInk(QImage img, int px, int py)
         {
             var bgPt = PixelAt(img, -70, -70, 0.0);
@@ -273,6 +272,7 @@ public static class AnalogClock
             }
             return false;
         }
+        #endif
 
         // ---- 3:00:00: hour hand at 3 o'clock (+x), minute hand at 12 (-y) -------------------
         var fixedTime = new QTime(3, 0, 0);
@@ -282,51 +282,76 @@ public static class AnalogClock
         clock.Repaint();
         using var rendered = clock.Grab();
 
-        Check(DemoCatalog.GrabCovers(rendered, 200, 200),
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(DemoPixels.GrabCovers(rendered, 200, 200),
             $"grab() rendered the clock at the requested 200x200 (got {rendered?.Width()}x{rendered?.Height()})");
-        Check(clock.PaintCount > 0,
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(clock.PaintCount > 0,
             $"paintEvent reached C# {clock.PaintCount} time(s) through the generated dispatch");
+        #endif
 
         using var image = rendered.ToImage();
 
         int hourRay = RayCount(image, 90.0, 12, 38, true);
-        Check(hourRay >= 22,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(hourRay >= 22,
             $"the hour hand is painted along the 3 o'clock ray (magenta pixels {hourRay}/27)");
+        #endif
 
         int minuteRay = RayCount(image, 0.0, 12, 62, false);
-        Check(minuteRay >= 45,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(minuteRay >= 45,
             $"the minute hand is painted along the 12 o'clock ray (teal pixels {minuteRay}/51)");
+        #endif
 
         var hourSample = PixelAt(image, 0, -30, 90.0);
-        Check(BestScore(image, hourSample.X, hourSample.Y, true) >= 40,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(BestScore(image, hourSample.X, hourSample.Y, true) >= 40,
             "the hour-hand sample carries the official hour colour (magenta 127,0,127)");
+        #endif
 
         var minuteSample = PixelAt(image, 0, -50, 0.0);
-        Check(BestScore(image, minuteSample.X, minuteSample.Y, false) >= 40,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(BestScore(image, minuteSample.X, minuteSample.Y, false) >= 40,
             "the minute-hand sample carries the official minute colour (teal 0,127,127,191)");
+        #endif
 
         var empty = PixelAt(image, -60, 0, 0.0);
-        Check(!IsInk(image, empty.X, empty.Y),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!IsInk(image, empty.X, empty.Y),
             "a direction with no hand and no tick is still background");
+        #endif
 
         int hourTicks = RingCount(image, 90, true, 30);
-        Check(hourTicks == 12, $"all 12 hour ticks are painted at r=90 (found {hourTicks}/12)");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(hourTicks == 12, $"all 12 hour ticks are painted at r=90 (found {hourTicks}/12)");
+        #endif
 
         int minuteTicks = RingCount(image, 94, false, 6, 30);
-        Check(minuteTicks >= 46, $"the 48 minute ticks are painted at r=94 (found {minuteTicks}/48)");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(minuteTicks >= 46, $"the 48 minute ticks are painted at r=94 (found {minuteTicks}/48)");
+        #endif
 
         int tealAtHourAngles = RingCount(image, 94, false, 30);
-        Check(tealAtHourAngles == 0,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(tealAtHourAngles == 0,
             $"every fifth minute tick is skipped (teal at the 12 hour angles: {tealAtHourAngles}/12)");
+        #endif
 
         int hourAtRing = RingCount(image, 94, true, 30);
-        Check(hourAtRing == 12,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(hourAtRing == 12,
             $"the hour ticks reach the r=94 ring under the skipped minute ticks (found {hourAtRing}/12)");
+        #endif
 
         var ringInner = PixelAt(image, 94, 0, 0.0);
         var ringOuter = PixelAt(image, 99, 0, 0.0);
-        Check(IsInk(image, ringInner.X, ringInner.Y) && !IsInk(image, ringOuter.X, ringOuter.Y),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(IsInk(image, ringInner.X, ringInner.Y) && !IsInk(image, ringOuter.X, ringOuter.Y),
             "the tick ring ends before r=99 (painted at r=94, empty at r=99)");
+        #endif
 
         // ---- 3:30:00: the hour hand carries the minutes and sits halfway between 3 and 4 -----
         var halfPast = new QTime(3, 30, 0);
@@ -335,22 +360,30 @@ public static class AnalogClock
         using var imageHalf = renderedHalf.ToImage();
 
         int hourHalf = RayCount(imageHalf, 105.0, 12, 38, true);
-        Check(hourHalf >= 22,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(hourHalf >= 22,
             $"the hour hand tracks the minutes: at 3:30 it points at 105 degrees (magenta {hourHalf}/27)");
+        #endif
 
         int minuteHalf = RayCount(imageHalf, 180.0, 12, 62, false);
-        Check(minuteHalf >= 45,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(minuteHalf >= 45,
             $"at 3:30 the minute hand points at 6 o'clock (180 degrees) (teal {minuteHalf}/51)");
+        #endif
 
         var hourAt90 = PixelAt(imageHalf, 0, -30, 90.0);
-        Check(BestScore(imageHalf, hourAt90.X, hourAt90.Y, true) < 40,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(BestScore(imageHalf, hourAt90.X, hourAt90.Y, true) < 40,
             "at 3:30 the hour hand has left the 3 o'clock ray, so the minute carry term is real");
+        #endif
 
         // ---- the QTimer wiring --------------------------------------------------------------
         QTimer timer = clock.ClockTimer;
-        Check(timer != null && timer.IsActive() && timer.interval() == 1000 && timer.Interval == 1000,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(timer != null && timer.IsActive() && timer.interval() == 1000 && timer.Interval == 1000,
             $"the official QTimer is created, parented and started at 1000 ms "
             + $"(active={timer?.IsActive()}, interval={timer?.interval()})");
+        #endif
 
         // Prove the timeout actually reaches managed code without paying for exec(): shorten the
         // interval, wait past it, and pump the pending events ourselves.
@@ -360,23 +393,34 @@ public static class AnalogClock
         for (int i = 0; i < 5; i++)
             QCoreApplication.ProcessEvents();
 
-        Check(clock.TimerTicks > 0,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(clock.TimerTicks > 0,
             $"the timer timeout reached the managed handler ({clock.TimerTicks} tick(s))");
-        Check(clock.PaintCount > paintsBeforeTimer,
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(clock.PaintCount > paintsBeforeTimer,
             $"a tick calls update(), so a repaint is dispatched (paints {paintsBeforeTimer} -> {clock.PaintCount})");
+        #endif
 
         // ---- inherited-virtual override and the bound mouse payload -------------------------
         bool delivered = ApiRuntime.SendUserEvent(clock.Handle);
-        Check(delivered && clock.CustomEventCount == 1,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(delivered && clock.CustomEventCount == 1,
             $"override of an inherited virtual (QObject::customEvent) reached C# (count={clock.CustomEventCount})");
-        Check(clock.UserEventCount == 1,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(clock.UserEventCount == 1,
             "the event was bound as a class, not a raw pointer (QEvent::type() == User)");
+        #endif
 
         bool pressed = ApiRuntime.SendMousePress(clock.Handle, 42, 24);
-        Check(pressed && clock.PressCount == 1 && clock.LastPressX == 42 && clock.LastPressY == 24
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(pressed && clock.PressCount == 1 && clock.LastPressX == 42 && clock.LastPressY == 24
               && clock.LastButton == Qt.MouseButton.LeftButton,
             $"mousePressEvent payload reached C# (delivered={pressed}, count={clock.PressCount}, "
             + $"button={clock.LastButton}, at {clock.LastPressX},{clock.LastPressY})");
+        #endif
 
         // ---- the value types the earlier revision exercised ---------------------------------
         // QFlags surfaces as a [Flags] enum over the native QFlags type, so a mask has to
@@ -384,19 +428,25 @@ public static class AnalogClock
         var probe = new QWidget(null);
         probe.SetWindowFlags(Qt.WindowFlags.FramelessWindowHint | Qt.WindowFlags.WindowStaysOnTopHint);
         var flags = probe.WindowFlags();
-        Check(flags.HasFlag(Qt.WindowFlags.FramelessWindowHint) && flags.HasFlag(Qt.WindowFlags.WindowStaysOnTopHint),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(flags.HasFlag(Qt.WindowFlags.FramelessWindowHint) && flags.HasFlag(Qt.WindowFlags.WindowStaysOnTopHint),
             $"QFlags round-trip through the native QFlags type (got 0x{(int)flags:X})");
+        #endif
 
         // Geometry value types are boxed handles too, so a round-trip exercises construction,
         // by-const-reference parameters, by-value returns and ownership at once.
         probe.Resize(123, 45);
         var rect = probe.rect();
-            Check(rect.Width() == 123 && rect.Height() == 45,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(rect.Width() == 123 && rect.Height() == 45,
                 $"QRect return + accessors (got {rect.Width()}x{rect.Height()})");
+            #endif
         probe.Move(new QPoint(7, 9));
         var pos = probe.pos();
-            Check(pos.X() == 7 && pos.Y() == 9,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(pos.X() == 7 && pos.Y() == 9,
                 $"QPoint round-trip through move() (got {pos.X()},{pos.Y()})");
+            #endif
 
         // The remaining value types are exercised through an offscreen QImage: a pen, a brush and
         // a painter path drawn into native pixel storage, then read back.
@@ -421,17 +471,26 @@ public static class AnalogClock
 
             // (12,6) is inside the ellipse but off the red diagonal drawn below it.
             var inside = image2.PixelColor(12, 6);
-                Check(inside.Green() == 255 && inside.Blue() == 0,
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(inside.Green() == 255 && inside.Blue() == 0,
                     $"QImage + QPen/QBrush/QPainterPath painted a filled ellipse (got rgb {inside.Red()},{inside.Green()},{inside.Blue()})");
+                #endif
             var outside = image2.PixelColor(30, 1);
-                Check(outside.Red() == 0 && outside.Green() == 0,
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(outside.Red() == 0 && outside.Green() == 0,
                     $"the rest of the image is still the fill colour (got rgb {outside.Red()},{outside.Green()},{outside.Blue()})");
+                #endif
         }
 
         var action = new QAction("Open");
-        Check(action.text() == "Open", $"QAction constructed and read back (got '{action.text()}')");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(action.text() == "Open", $"QAction constructed and read back (got '{action.text()}')");
+        #endif
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 
 // Port of examples/widgets/tools/completer on the new pipeline.
@@ -243,15 +243,8 @@ public sealed class ApiCompleterWindow : QMainWindow
 [Demo("qtwidgets-completer")]
 public static class Completer
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         // The file-system models need something small and known to watch.
         string root = Path.Combine(Path.GetTempPath(), "qtsharp-completer-" + Guid.NewGuid().ToString("N"));
@@ -260,137 +253,208 @@ public static class Completer
         File.WriteAllText(Path.Combine(root, "beta.txt"), "beta");
 
         using var window = new ApiCompleterWindow(root);
-        window.Show();
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
 
         // The controls of the example, with the official ranges and defaults.
-        Check(window.ModelComboBox.count() == 4 && window.ModeComboBox.count() == 3
+#if QTSHARP_DEMO_SMOKE
+
+        // The controls of the example, with the official ranges and defaults.
+        demo.Check(window.ModelComboBox.count() == 4 && window.ModeComboBox.count() == 3
               && window.CaseComboBox.count() == 2,
             $"the combo boxes are populated (models={window.ModelComboBox.count()}, "
             + $"modes={window.ModeComboBox.count()}, cases={window.CaseComboBox.count()})");
-        Check(window.MaxVisibleSpinBox.minimum() == 3 && window.MaxVisibleSpinBox.maximum() == 25
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.MaxVisibleSpinBox.minimum() == 3 && window.MaxVisibleSpinBox.maximum() == 25
               && window.MaxVisibleSpinBox.value() == 10,
             $"the visible-item spin box is 3..25, default 10 "
             + $"({window.MaxVisibleSpinBox.minimum()}..{window.MaxVisibleSpinBox.maximum()}, "
             + $"value {window.MaxVisibleSpinBox.value()})");
-        Check(window.WrapCheckBox.IsChecked() && window.ModeComboBox.currentIndex() == 1
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.WrapCheckBox.IsChecked() && window.ModeComboBox.currentIndex() == 1
               && window.CaseComboBox.currentIndex() == 0,
             "wrap-around starts checked, the mode is Filtered Popup and the case is insensitive");
+        #endif
 
         // The default model is the plain QFileSystemModel rooted where we pointed it.
-        Check(window.Completer.Model() != null
+#if QTSHARP_DEMO_SMOKE
+
+        // The default model is the plain QFileSystemModel rooted where we pointed it.
+        demo.Check(window.Completer.Model() != null
               && window.Completer.Model().MetaObject().ClassName() == "QFileSystemModel",
             $"the default completer model is a QFileSystemModel "
             + $"(got {window.Completer.Model()?.MetaObject().ClassName()})");
-        Check(window.ContentsLabel.Text == "Enter file path",
+#endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ContentsLabel.Text == "Enter file path",
             $"the contents label follows the model (got '{window.ContentsLabel.Text}')");
-        Check(window.LineEdit.Completer() != null
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.LineEdit.Completer() != null
               && window.LineEdit.Completer().Handle == window.Completer.Handle,
             "the line edit was given the completer");
+        #endif
 
         // The full-path model: the managed data() override is what QCompleter reads for column 0.
         window.ModelComboBox.SetCurrentIndex(1);
-        Check(window.FullPathModel != null && window.Completer.Model() != null
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.FullPathModel != null && window.Completer.Model() != null
               && window.Completer.Model().Handle == window.FullPathModel.Handle,
             "choosing the second entry installs the managed QFileSystemModel subclass");
+        #endif
 
         // The word list: a QStringListModel behind the completer, with the completion API.
         window.ModelComboBox.SetCurrentIndex(3);
-        Check(window.ContentsLabel.Text == "Enter a word",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.ContentsLabel.Text == "Enter a word",
             $"choosing the word list updates the contents label (got '{window.ContentsLabel.Text}')");
-        Check(window.Completer.Model().MetaObject().ClassName() == "QStringListModel"
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Completer.Model().MetaObject().ClassName() == "QStringListModel"
               && window.Completer.Model().RowCount() == ApiCompleterWindow.Words.Length
               && window.WordModel.StringList().Length == ApiCompleterWindow.Words.Length
               && window.WordModel.StringList()[0] == "auto",
             $"the word list is a QStringListModel carrying the C# array "
             + $"({window.Completer.Model().MetaObject().ClassName()}, "
             + $"{window.Completer.Model().RowCount()} rows, first '{window.WordModel.StringList()[0]}')");
+        #endif
 
         // Completion itself: prefix -> count, and the first completion. The model is a plain,
         // unsorted QStringListModel here, which is what Qt's linear completion engine handles.
         window.Completer.SetCompletionPrefix("gra");
-        Check(window.Completer.CompletionCount() == 4,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Completer.CompletionCount() == 4,
             $"the prefix 'gra' matches four words (got {window.Completer.CompletionCount()})");
-        Check(window.Completer.CurrentCompletion() == "grace",
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Completer.CurrentCompletion() == "grace",
             $"the first completion is 'grace' (got '{window.Completer.CurrentCompletion()}')");
+        #endif
         window.Completer.SetCompletionPrefix("aut");
-        Check(window.Completer.CompletionCount() == 4,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Completer.CompletionCount() == 4,
             $"the prefix 'aut' matches four words (got {window.Completer.CompletionCount()})");
+        #endif
 
         // Case sensitivity.
         window.Completer.SetCompletionPrefix("GRA");
-        Check(window.Completer.CompletionCount() == 4,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Completer.CompletionCount() == 4,
             $"case-insensitively 'GRA' still matches (got {window.Completer.CompletionCount()})");
+        #endif
         window.CaseComboBox.SetCurrentIndex(1);
-        Check(window.Completer.caseSensitivity() == Qt.CaseSensitivity.CaseSensitive,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Completer.caseSensitivity() == Qt.CaseSensitivity.CaseSensitive,
             $"the case combo box drives the completer (got {window.Completer.caseSensitivity()})");
+        #endif
         window.Completer.SetCompletionPrefix("GRA");
-        Check(window.Completer.CompletionCount() == 0,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Completer.CompletionCount() == 0,
             $"case-sensitively 'GRA' matches nothing (got {window.Completer.CompletionCount()})");
+        #endif
         window.CaseComboBox.SetCurrentIndex(0);
         window.Completer.SetCompletionPrefix("gra");
-        Check(window.Completer.CompletionCount() == 4,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Completer.CompletionCount() == 4,
             $"switching back restores the matches (got {window.Completer.CompletionCount()})");
+        #endif
 
         // modelSorting, the optimisation the official example turns on for its sorted word list.
         // Qt swaps in a binary-search engine for this, so the lowercase prefix still has to
         // complete (it is the case-insensitive *sorted* engine that is selected here).
         window.Completer.SetModelSorting(QCompleter.ModelSorting.CaseInsensitivelySortedModel);
-        Check(window.Completer.modelSorting() == QCompleter.ModelSorting.CaseInsensitivelySortedModel,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Completer.modelSorting() == QCompleter.ModelSorting.CaseInsensitivelySortedModel,
             $"modelSorting round-trips (got {window.Completer.modelSorting()})");
+        #endif
         window.Completer.SetCompletionPrefix("gra");
-        Check(window.Completer.CompletionCount() == 4,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Completer.CompletionCount() == 4,
             $"the sorted-model engine completes too (got {window.Completer.CompletionCount()})");
+        #endif
         window.Completer.SetModelSorting(QCompleter.ModelSorting.UnsortedModel);
 
         // Completion modes and the visible-item count.
         window.ModeComboBox.SetCurrentIndex(0);
-        Check(window.Completer.completionMode() == QCompleter.CompletionMode.InlineCompletion,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Completer.completionMode() == QCompleter.CompletionMode.InlineCompletion,
             $"the mode combo box drives the completer (got {window.Completer.completionMode()})");
+        #endif
         window.ModeComboBox.SetCurrentIndex(2);
-        Check(window.Completer.completionMode() == QCompleter.CompletionMode.UnfilteredPopupCompletion,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Completer.completionMode() == QCompleter.CompletionMode.UnfilteredPopupCompletion,
             $"the third mode is the unfiltered popup (got {window.Completer.completionMode()})");
+        #endif
         window.ModeComboBox.SetCurrentIndex(1);
         window.MaxVisibleSpinBox.SetValue(7);
-        Check(window.Completer.maxVisibleItems() == 7,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Completer.maxVisibleItems() == 7,
             $"the spin box drives the visible-item count (got {window.Completer.maxVisibleItems()})");
+        #endif
 
         // Wrap-around round-trips.
         window.WrapCheckBox.SetChecked(false);
-        Check(!window.Completer.wrapAround(), "unchecking wrap-around reaches the completer");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(!window.Completer.wrapAround(), "unchecking wrap-around reaches the completer");
+        #endif
         window.WrapCheckBox.SetChecked(true);
-        Check(window.Completer.wrapAround(), "checking it again reaches the completer");
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Completer.wrapAround(), "checking it again reaches the completer");
+        #endif
 
         // The country list: a two-column QStandardItemModel and a QTreeView popup.
         window.ModelComboBox.SetCurrentIndex(2);
-        Check(window.Completer.Model() != null && window.Completer.Model().ColumnCount() == 2,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Completer.Model() != null && window.Completer.Model().ColumnCount() == 2,
             $"the country model has two columns (got {window.Completer.Model()?.ColumnCount()})");
+        #endif
         var country = window.Completer.Model().Index(0, 0);
         var symbol = window.Completer.Model().Index(0, 1);
         {
             string countryText = window.Completer.Model().Data(country).ToString();
             string symbolText = window.Completer.Model().Data(symbol).ToString();
-            Check(countryText == "Germany" && symbolText == "DE",
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(countryText == "Germany" && symbolText == "DE",
                 $"the country model carries name and symbol ({countryText}/{symbolText})");
+            #endif
         }
-        Check(window.CountryPopup != null && !window.CountryPopup.rootIsDecorated()
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.CountryPopup != null && !window.CountryPopup.rootIsDecorated()
               && !window.CountryPopup.Header().IsVisible(),
             "the custom popup view is the undecorated, header-less tree view");
-        Check(window.Completer.Popup() != null
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Completer.Popup() != null
               && window.Completer.Popup().Handle == window.CountryPopup.Handle,
             "the completer is using that tree view as its popup");
+        #endif
 
         // The activated signal of the example (string overload): connected and emitted.
         string activatedText = null;
         window.Completer.ActivatedSignal.Connect(text => activatedText = text);
         window.Completer.ActivatedSignal.Emit("Greece");
-        Check(activatedText == "Greece",
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(activatedText == "Greece",
             $"the activated(QString) signal reaches managed code (got '{activatedText}')");
+        #endif
 
         // The menu bar of the official window.
-        Check(window.MenuBar().Actions().Length == 2,
-            $"the menu bar has File and About (got {window.MenuBar().Actions().Length})");
+#if QTSHARP_DEMO_SMOKE
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        // The menu bar of the official window.
+        demo.Check(window.MenuBar().Actions().Length == 2,
+            $"the menu bar has File and About (got {window.MenuBar().Actions().Length})");
+#endif
+
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace QtSharp.Tests
 {
@@ -8,47 +8,40 @@ namespace QtSharp.Tests
     /// enumeration. No hardware is needed - position plugins simply may not be present, which the
     /// source check tolerates.
     /// </summary>
-    [Demo("test-positioning")]
+    [Test("test-positioning")]
     public static class PositioningTests
     {
-        public static int Run(QApplication app)
+        public static int Run(TestContext context)
         {
-            int failures = 0;
-            void Check(bool ok, string what)
-            {
-                Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-                if (!ok)
-                    failures++;
-            }
 
             using var berlin = new QGeoCoordinate(52.52, 13.405);
             using var paris = new QGeoCoordinate(48.8566, 2.3522);
-            Check(berlin.IsValid && Math.Abs(berlin.latitude() - 52.52) < 1e-9,
+            context.Check(berlin.IsValid && Math.Abs(berlin.latitude() - 52.52) < 1e-9,
                 $"QGeoCoordinate keeps its latitude ({berlin.latitude()})");
 
             double distance = berlin.DistanceTo(paris);
-            Check(distance > 870_000 && distance < 885_000,
+            context.Check(distance > 870_000 && distance < 885_000,
                 $"DistanceTo measures Berlin-Paris ({distance / 1000:F0} km)");
 
             double azimuth = berlin.AzimuthTo(paris);
-            Check(azimuth > 235 && azimuth < 255,
+            context.Check(azimuth > 235 && azimuth < 255,
                 $"AzimuthTo points south-south-west ({azimuth:F0} degrees)");
 
             using (var withAltitude = new QGeoCoordinate(52.52, 13.405, 34))
-                Check(Math.Abs(withAltitude.altitude() - 34) < 1e-9, "the altitude round-trips");
+                context.Check(Math.Abs(withAltitude.altitude() - 34) < 1e-9, "the altitude round-trips");
 
             using (var rectangle = new QGeoRectangle(new QGeoCoordinate(53, 3), new QGeoCoordinate(48, 14)))
             using (var origin = new QGeoCoordinate(0, 0))
             {
-                Check(rectangle.Contains(berlin), "QGeoRectangle contains Berlin");
-                Check(!rectangle.Contains(origin), "QGeoRectangle rejects a point outside it");
+                context.Check(rectangle.Contains(berlin), "QGeoRectangle contains Berlin");
+                context.Check(!rectangle.Contains(origin), "QGeoRectangle rejects a point outside it");
             }
 
             using (var circle = new QGeoCircle(berlin, 50_000))
             using (var nearby = new QGeoCoordinate(52.6, 13.5))
             {
-                Check(circle.Contains(nearby), "QGeoCircle contains a point within its radius");
-                Check(!circle.Contains(paris), "QGeoCircle rejects Paris, 880 km away");
+                context.Check(circle.Contains(nearby), "QGeoCircle contains a point within its radius");
+                context.Check(!circle.Contains(paris), "QGeoCircle rejects Paris, 880 km away");
             }
 
             var pathCoordinates = new[]
@@ -58,21 +51,20 @@ namespace QtSharp.Tests
                 new QGeoCoordinate(52.55, 13.44),
             };
             using (var path = new QGeoPath(pathCoordinates, 0))
-                Check(path.Length() > 0, $"QGeoPath measures its length ({path.Length():F0} m)");
+                context.Check(path.Length() > 0, $"QGeoPath measures its length ({path.Length():F0} m)");
             foreach (var coordinate in pathCoordinates)
                 coordinate.Dispose();
 
             using (var when = new QDateTime(DateTime.UtcNow))
             using (var info = new QGeoPositionInfo(berlin, when))
             using (var coordinate = info.Coordinate())
-                Check(info.IsValid() && coordinate.IsValid,
+                context.Check(info.IsValid() && coordinate.IsValid,
                     "QGeoPositionInfo carries its coordinate");
 
-            Check(QGeoPositionInfoSource.AvailableSources() != null,
+            context.Check(QGeoPositionInfoSource.AvailableSources() != null,
                 $"the position sources enumerate ({QGeoPositionInfoSource.AvailableSources().Length} available)");
 
-            Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[FAIL] {failures} check(s) failed");
-            return failures == 0 ? 0 : 1;
+            return context.ExitCode;
         }
     }
 }

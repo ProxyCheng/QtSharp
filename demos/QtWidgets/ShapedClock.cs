@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 // The official widgets/shapedclock example, ported onto the *new* pipeline. Every type below
 // comes from model/qtsharp.api.json through the code generator - there is no hand-written glue.
@@ -229,33 +229,37 @@ public sealed class ApiShapedClock : QWidget
 [Demo("qtwidgets-shapedclock")]
 public static class ShapedClock
 {
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         var clock = new ApiShapedClock();
-        clock.Show();
+        #if QTSHARP_DEMO_SMOKE
+            clock.Show();
+        #else
+            demo.Show(clock);
+        #endif
 
         // A forced synchronous repaint, so the paintEvent override is reached even though no
         // event loop runs; grab() then renders the same widget off-screen.
         clock.Repaint();
+        #if QTSHARP_DEMO_SMOKE
         using (var rendered = clock.Grab())
-            Check(DemoCatalog.GrabCovers(rendered, 200, 200),
+            demo.Check(DemoPixels.GrabCovers(rendered, 200, 200),
                 $"grab() rendered the shaped clock off-screen (got {rendered?.Width()}x{rendered?.Height()})");
+        #endif
 
-        Check(clock.PaintCount > 0,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(clock.PaintCount > 0,
             $"paintEvent reached C# {clock.PaintCount} time(s) through the generated dispatch");
+#endif
 
         // QFlags surfaces as a [Flags] enum over the native QFlags type, and windowFlags() round-trips.
         var flags = clock.WindowFlags();
-        Check(flags.HasFlag(Qt.WindowFlags.FramelessWindowHint) && flags.HasFlag(Qt.WindowFlags.WindowStaysOnTopHint),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(flags.HasFlag(Qt.WindowFlags.FramelessWindowHint) && flags.HasFlag(Qt.WindowFlags.WindowStaysOnTopHint),
             $"the frameless/stays-on-top flags took effect (got 0x{(int)flags:X})");
+        #endif
 
         // The round window: an ellipse region, not a rectangle (many scanline rects), spanning the
         // whole 200x200 widget.
@@ -273,50 +277,73 @@ public static class ShapedClock
             }
             // An ellipse region is a set of scanline rects, and Qt's scanline approximation makes
             // the bounding box one row short at the bottom, so 199 is the correct height here.
-            Check(maskSet && rectCount > 1 && maskWidth == 200 && maskHeight >= 199,
+            #if QTSHARP_DEMO_SMOKE
+            // An ellipse region is a set of scanline rects, and Qt's scanline approximation makes
+            // the bounding box one row short at the bottom, so 199 is the correct height here.
+            demo.Check(maskSet && rectCount > 1 && maskWidth == 200 && maskHeight >= 199,
                 $"the round mask is set ({rectCount} scanline rects, bounding {maskWidth}x{maskHeight})");
+            #endif
         }
 
         // The virtual override: the boxed QSize comes back through the generated accessor.
         var hint = clock.SizeHint;
-            Check(hint.Width() == 200 && hint.Height() == 200,
+            #if QTSHARP_DEMO_SMOKE
+            demo.Check(hint.Width() == 200 && hint.Height() == 200,
                 $"sizeHint() reports 200x200 (got {hint.Width()}x{hint.Height()})");
+            #endif
 
         // The context menu (the official example's right-click menu) is the widget's actions.
-        Check(clock.ContextMenuPolicy == Qt.ContextMenuPolicy.ActionsContextMenu,
+#if QTSHARP_DEMO_SMOKE
+
+        // The context menu (the official example's right-click menu) is the widget's actions.
+        demo.Check(clock.ContextMenuPolicy == Qt.ContextMenuPolicy.ActionsContextMenu,
             $"contextMenuPolicy is ActionsContextMenu (got {clock.ContextMenuPolicy})");
+#endif
 
         QAction quitAction = null;
         foreach (var action in clock.Actions())
             if (action.text() == "E&xit")
                 quitAction = action;
 
-        Check(quitAction != null, "the quit QAction is installed on the clock");
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(quitAction != null, "the quit QAction is installed on the clock");
+#endif
         if (quitAction != null)
         {
             // StandardKey.Quit has no binding on Windows (Windows apps quit with Alt+F4), so the
             // platform's own sequence may legitimately be empty; the contract is that the action
             // carries exactly that sequence.
+            #if QTSHARP_DEMO_SMOKE
             using (var actual = quitAction.Shortcut)
             using (var expected = new QKeySequence(QKeySequence.StandardKey.Quit))
-                Check(actual != null && actual.Count() == expected.Count() && actual.ToString() == expected.ToString(),
+                demo.Check(actual != null && actual.Count() == expected.Count() && actual.ToString() == expected.ToString(),
                     $"the quit action carries the StandardKey.Quit shortcut (got '{actual?.ToString()}', "
                     + $"platform's Quit = '{expected?.ToString()}')");
+            #endif
         }
 
         // A real mouse press delivered by Qt, with its payload read through the bound event class:
         // button() *and* buttons() (the accessor the legacy port lacked).
         bool pressed = ApiRuntime.SendMousePress(clock.Handle, 42, 24);
-        Check(pressed && clock.PressCount == 1 && clock.LastButton == Qt.MouseButton.LeftButton,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(pressed && clock.PressCount == 1 && clock.LastButton == Qt.MouseButton.LeftButton,
             $"mousePressEvent payload reached C# (delivered={pressed}, count={clock.PressCount}, button={clock.LastButton})");
-        Check((clock.LastButtons & Qt.MouseButtons.LeftButton) != 0,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check((clock.LastButtons & Qt.MouseButtons.LeftButton) != 0,
             $"QMouseEvent::buttons() is bound and reports the held button (got {clock.LastButtons})");
-        Check(clock.LastGlobalX == 42 && clock.LastGlobalY == 24,
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(clock.LastGlobalX == 42 && clock.LastGlobalY == 24,
             $"globalPosition() reached C# (got {clock.LastGlobalX},{clock.LastGlobalY})");
-        Check(clock.DragOffsetX == clock.LastGlobalX - clock.PressFrameX
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(clock.DragOffsetX == clock.LastGlobalX - clock.PressFrameX
               && clock.DragOffsetY == clock.LastGlobalY - clock.PressFrameY,
             $"the press stored globalPosition - frameGeometry().topLeft "
             + $"(offset {clock.DragOffsetX},{clock.DragOffsetY} from frame {clock.PressFrameX},{clock.PressFrameY})");
+        #endif
 
         // The drag itself: the press stored `globalPosition - frameGeometry().topLeft`, and a move
         // to `press + delta` has to move the window by exactly that delta. Driven through the
@@ -327,13 +354,18 @@ public static class ShapedClock
             int dy = -21;
             clock.DragTo(new QPoint(clock.LastGlobalX + dx, clock.LastGlobalY + dy));
             var posAfter = clock.pos();
-                Check(clock.DragMoveCount == 1
+                #if QTSHARP_DEMO_SMOKE
+                demo.Check(clock.DragMoveCount == 1
                       && posAfter.X() - posBefore.X() == dx && posAfter.Y() - posBefore.Y() == dy,
                     $"the drag moved the window by ({dx},{dy}) (from {posBefore.X()},{posBefore.Y()} "
                     + $"to {posAfter.X()},{posAfter.Y()})");
+                #endif
         }
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }

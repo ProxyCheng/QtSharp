@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 // The official widgets/layouts/flowlayout example, ported onto the generated binding. This is the
@@ -138,58 +138,76 @@ public static class FlowLayoutDemo
         }
     }
 
-    public static int Run(QApplication app)
+    public static int Run(DemoContext demo)
     {
-        int failures = 0;
-        void Check(bool ok, string what)
-        {
-            Console.WriteLine($"{(ok ? "[PASS]" : "[FAIL]")} {what}");
-            if (!ok)
-                failures++;
-        }
 
         var window = new FlowWindow();
         window.Resize(320, 200);
-        window.Show();
+        #if QTSHARP_DEMO_SMOKE
+            window.Show();
+        #else
+            demo.Show(window);
+        #endif
+
         // Qt activates the layout when the window is shown; activating again makes the geometry
         // deterministic before the assertions read it.
         window.Flow.Activate();
 
-        Check(window.Flow.Count() == 5,
+#if QTSHARP_DEMO_SMOKE
+
+        demo.Check(window.Flow.Count() == 5,
             $"the managed layout holds every widget QLayout::addWidget handed it ({window.Flow.Count()})");
+#endif
         var first = window.Flow.ItemAt(0)?.Widget();
         var last = window.Flow.ItemAt(4)?.Widget();
-        Check(first != null && last != null,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(first != null && last != null,
             "the managed itemAt() hands Qt's own QWidgetItems back");
+        #endif
         // The margin is -1, which Qt resolves to the style's default margin; the first item sits
         // at the content origin, whatever that margin turns out to be.
         var margins = window.Flow.contentsMargins();
-        Check(first != null && first.Geometry.X() == margins.Left() && first.Geometry.Y() == margins.Top(),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(first != null && first.Geometry.X() == margins.Left() && first.Geometry.Y() == margins.Top(),
             $"the layout placed the first button at its content origin ({first?.Geometry.X()},{first?.Geometry.Y()}, margin {margins.Left()})");
-        Check(last != null && last.width() > last.height(),
+        #endif
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(last != null && last.width() > last.height(),
             $"the last button was laid out with its size hint ({last?.width()}x{last?.height()})");
+        #endif
 
         // Wrapping: the same layout measured at two widths. HeightForWidth is the virtual Qt
         // consults when the window is resized; a narrower window cannot need fewer lines.
         int wide = window.Flow.HeightForWidth(320);
         int narrow = window.Flow.HeightForWidth(140);
-        Check(wide > 0 && narrow >= wide,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(wide > 0 && narrow >= wide,
             $"heightForWidth grows as the window narrows ({wide} at 320, {narrow} at 140)");
+        #endif
 
         var shot = window.Grab();
-        Check(DemoCatalog.GrabCovers(shot, 320, 200),
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(DemoPixels.GrabCovers(shot, 320, 200),
             $"the window rendered off-screen ({shot.Width()}x{shot.Height()})");
+        #endif
 
         // A real resize goes through QLayout::setGeometry -> the managed doLayout.
         window.Resize(140, 260);
         window.Flow.Activate();
-        Check(window.Flow.ItemAt(4)?.Widget().Geometry.Y() > 0,
+        #if QTSHARP_DEMO_SMOKE
+        demo.Check(window.Flow.ItemAt(4)?.Widget().Geometry.Y() > 0,
             $"narrowing the window made the managed layout wrap ({window.Flow.ItemAt(4)?.Widget().Geometry.Y()})");
+        #endif
 
+        #if QTSHARP_DEMO_SMOKE
         window.Close();
         window.Dispose();
+        #endif
 
-        Console.WriteLine(failures == 0 ? "[SELFTEST OK]" : $"[SELFTEST FAILED] {failures}");
-        return failures == 0 ? 0 : 1;
+        #if QTSHARP_DEMO_SMOKE
+        return demo.ExitCode;
+        #else
+        return 0;
+        #endif
     }
 }
