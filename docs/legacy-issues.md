@@ -15,8 +15,8 @@ guaranteed between releases.** Pin package versions and test your application wh
 | [#81](https://github.com/ddobrev/QtSharp/issues/81): objects in QVariant | Variant-taking APIs accept and return `object`. Existing QObject wrappers and ordinary managed objects retain their identity when stored and retrieved. General `qobject_cast<T>` support is not available. |
 | [#80](https://github.com/ddobrev/QtSharp/issues/80): nested layout disposal | Qt parenting determines ownership; deleting a parent invalidates the child wrappers. The nested-layout reproduction passes with the Windows v0.19.0 package. |
 | [#57](https://github.com/ddobrev/QtSharp/issues/57): QTreeWidget.ItemClicked | Generated signal handlers wrap items with `FromHandle`. The compatibility sample checks item identity, event delivery and disconnection. Its GUI scenario has not completed local runtime verification. |
-| [#61](https://github.com/ddobrev/QtSharp/issues/61): QObject.Sender | No sender-context API is exposed. Capture the emitter in the event handler's closure. |
-| [#50](https://github.com/ddobrev/QtSharp/issues/50): findChild/findChildren | Generic lookup methods are not exposed. Use `Children()` for manual traversal. C# type checks alone do not implement native downcasts. |
+| [#61](https://github.com/ddobrev/QtSharp/issues/61): QObject.Sender | Exposed as `QObject.Sender`/`SenderSignal`, with per-thread and per-callback restoration. |
+| [#50](https://github.com/ddobrev/QtSharp/issues/50): findChild/findChildren | Exposed as `FindChild<T>`/`FindChildren<T>` (plus `Type`/`Type[]` and `QRegularExpression` overloads). Wrappers carry their actual bound type, so the type test is `is`/`IsInstanceOfType`; `Children()` remains available for manual traversal. |
 
 Multiple header labels:
 
@@ -114,6 +114,9 @@ commit `11a9b5ae25ea026b2e34c2bf0d02de4780bf77d0`:
 | `variants` | Passed: QObject and ordinary managed values preserve reference identity through dynamic properties. |
 | `api-gaps` | Confirmed `Sender`, `sender`, `FindChild` and `FindChildren` are absent from the QObject member surface. |
 | `strings`, `tree` | Compiled, but the local run timed out during QApplication initialization, before the assertions. The cause was not established. |
+
+The `api-gaps` results describe the v0.19.0 package; the current tree adds `Sender`/`SenderSignal`
+and `FindChild`/`FindChildren` after that check.
 
 See also the [Windows and Linux release checks](https://github.com/ProxyCheng/QtSharp/actions/runs/40489656599)
 and the broader [example and test suite](conformance.md).
