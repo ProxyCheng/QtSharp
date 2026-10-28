@@ -55,18 +55,18 @@
     <Project Path="tools/QtSharp.Tools/QtSharp.Tools.csproj" />
   </Folder>
 
-  <Folder Name="/Demos/">
-    <Project Path="demos/hosting/QtSharp.Demos.Hosting.csproj" />
-    <Project Path="demos/QtCore/QtSharp.Demos.QtCore.csproj" />
-    <Project Path="demos/QtGui/QtSharp.Demos.QtGui.csproj" />
-    <Project Path="demos/QtWidgets/QtSharp.Demos.QtWidgets.csproj" />
-    <Project Path="demos/QtNetwork/QtSharp.Demos.QtNetwork.csproj" />
-    <Project Path="demos/QtSvg/QtSharp.Demos.QtSvg.csproj" />
-    <Project Path="demos/QtSvgWidgets/QtSharp.Demos.QtSvgWidgets.csproj" />
-    <Project Path="demos/QtPrintSupport/QtSharp.Demos.QtPrintSupport.csproj" />
-    <Project Path="demos/QtMultimedia/QtSharp.Demos.QtMultimedia.csproj" />
-    <Project Path="demos/Charts/QtSharp.Charts.Demos.csproj" />
-    <Project Path="demos/Qt3D/QtSharp.Qt3D.Demos.csproj" />
+  <Folder Name="/Examples/">
+    <Project Path="examples/hosting/QtSharp.Examples.Hosting.csproj" />
+    <Project Path="examples/QtCore/QtSharp.Examples.QtCore.csproj" />
+    <Project Path="examples/QtGui/QtSharp.Examples.QtGui.csproj" />
+    <Project Path="examples/QtWidgets/QtSharp.Examples.QtWidgets.csproj" />
+    <Project Path="examples/QtNetwork/QtSharp.Examples.QtNetwork.csproj" />
+    <Project Path="examples/QtSvg/QtSharp.Examples.QtSvg.csproj" />
+    <Project Path="examples/QtSvgWidgets/QtSharp.Examples.QtSvgWidgets.csproj" />
+    <Project Path="examples/QtPrintSupport/QtSharp.Examples.QtPrintSupport.csproj" />
+    <Project Path="examples/QtMultimedia/QtSharp.Examples.QtMultimedia.csproj" />
+    <Project Path="examples/Charts/QtSharp.Charts.Examples.csproj" />
+    <Project Path="examples/Qt3D/QtSharp.Qt3D.Examples.csproj" />
   </Folder>
 
   <Folder Name="/Tests/">

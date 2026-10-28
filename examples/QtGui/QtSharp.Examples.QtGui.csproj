@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Ports of Qt's official QtGui examples, as one executable. Each example is a static class
+       registered with [Example("...")] and found by ExampleHost; this project holds the only Main and
+       the only QApplication. The binding is compiled into the QtSharp.Api assemblies, so
+       QtSharp.Api.props is imported with compilation off. ExampleMode.props selects Smoke or View
+       and defines the matching constant for the example sources. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>QtSharp.Examples.QtGui</AssemblyName>
+    <QtSharpCompileBinding>false</QtSharpCompileBinding>
+  </PropertyGroup>
+
+  <Import Project="..\..\QtSharp.Api.props" />
+  <Import Project="..\ExampleMode.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\hosting\QtSharp.Examples.Hosting.csproj" />
+    <ProjectReference Include="..\..\nuget\QtSharp.Runtime\QtSharp.Runtime.csproj" />
+    <ProjectReference Include="..\..\nuget\QtSharp.Api\Modules\QtSharp.QtCore\QtSharp.QtCore.csproj" />
+    <ProjectReference Include="..\..\nuget\QtSharp.Api\Modules\QtSharp.QtGui\QtSharp.QtGui.csproj" />
+    <ProjectReference Include="..\..\nuget\QtSharp.Api\Modules\QtSharp.QtWidgets\QtSharp.QtWidgets.csproj" />
+  </ItemGroup>
+
+</Project>

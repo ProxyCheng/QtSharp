@@ -69,7 +69,7 @@ from:
 ## The rule for adding a spelling
 
 A new spelling is added only when a concrete API that the binding should expose needs it: a root
-class's method in a header the model parses, or a call a port in `demos/` (or a downstream consumer)
+class's method in a header the model parses, or a call a port in `examples/` (or a downstream consumer)
 actually makes. It is never added because the type exists in Qt, because another binding exposes it,
 or in anticipation of a module that might need it later.
 
@@ -170,7 +170,7 @@ only part of the pointer family.
 The concrete candidates are in Qt3D. `QAspectEngine::setRootEntity(QEntityPtr)` and `rootEntity()`
 use the public typedef `QEntityPtr = QSharedPointer<QEntity>`, and `QTextureData::imageData()`
 returns `QList<QTextureImageDataPtr>`; the typedefs resolve to the smart-pointer specialization, so
-those declarations and that method are dropped. No port calls them today — the Qt3D demos go through
+those declarations and that method are dropped. No port calls them today — the Qt3D examples go through
 `Qt3DWindow::setRootEntity`, which takes a raw `QEntity *` — so the ownership question can wait for a
 port that actually needs one. Add a spelling only together with the ownership rule and a test.
 

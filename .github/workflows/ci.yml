@@ -33,7 +33,7 @@ jobs:
         run: |
           $errors = $null
           $tokens = $null
-          foreach ($path in @('tools/regen-api.ps1', 'tools/run-demos.ps1', 'tools/parallel.ps1', 'tools/run-window-tests.ps1', 'tools/pack-qt-tools.ps1', 'tools/pack-qt-binding.ps1', 'tools/test-packages.ps1', 'tools/build-qt-kit.ps1', 'tools/build-native-module.ps1')) {
+          foreach ($path in @('tools/regen-api.ps1', 'tools/run-examples.ps1', 'tools/parallel.ps1', 'tools/run-window-tests.ps1', 'tools/pack-qt-tools.ps1', 'tools/pack-qt-binding.ps1', 'tools/test-packages.ps1', 'tools/build-qt-kit.ps1', 'tools/build-native-module.ps1')) {
             [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $path), [ref]$tokens, [ref]$errors) | Out-Null
 
             if ($errors.Count -gt 0) { $errors | Format-List | Out-Host; throw "PowerShell parse failed: $path" }
@@ -144,13 +144,13 @@ jobs:
             throw "native build failed: $($failed.Name -join ', ')"
           }
 
-      # Every module's demos are the binding's conformance suite. The executable owns its single
+      # Every module's examples are the binding's conformance suite. The executable owns its single
       # QApplication and runs offscreen, so a runner with no GPU still renders and asserts.
-      - name: Build and run every demo executable
+      - name: Build and run every example executable
         shell: pwsh
         run: |
-          ./tools/run-demos.ps1 -QtRuntimeDir $env:QT_RUNTIME_DIR
-          if ($LASTEXITCODE -ne 0) { throw "some demos failed" }
+          ./tools/run-examples.ps1 -QtRuntimeDir $env:QT_RUNTIME_DIR
+          if ($LASTEXITCODE -ne 0) { throw "some examples failed" }
 
       # Hand the generated source tree and the native glue to the smoke/pack jobs so they do not
       # have to regenerate them. The staging directory makes the artifact's layout explicit:
@@ -310,12 +310,12 @@ jobs:
           echo "native libraries carry the \$ORIGIN/lib deployment rpath"
 
       # The Smoke hosts pick the offscreen platform before constructing their QApplication, so the
-      # demos render without an X display; the Qt3D scene checks need no GL context either.
-      - name: Build and run every demo executable
+      # examples render without an X display; the Qt3D scene checks need no GL context either.
+      - name: Build and run every example executable
         shell: pwsh
         run: |
-          ./tools/run-demos.ps1 -QtRuntimeDir $env:QT_RUNTIME_DIR
-          if ($LASTEXITCODE -ne 0) { throw "some demos failed" }
+          ./tools/run-examples.ps1 -QtRuntimeDir $env:QT_RUNTIME_DIR
+          if ($LASTEXITCODE -ne 0) { throw "some examples failed" }
 
       # The Linux half of the Windows binding artifact: the generated C# tree plus the .so glue,
       # for the Linux smoke job. The Windows job stages the same layout with the DLL glue.
@@ -499,7 +499,7 @@ jobs:
       - name: Build the binding tests
         shell: pwsh
         run: |
-          # The demos are the exported binding's conformance suite; this job additionally runs the
+          # The examples are the exported binding's conformance suite; this job additionally runs the
           # tests under test-* through the one test executable.
           dotnet build tests/testapp/testapp.csproj -c Release --nologo "-p:QtRuntimeDir=$env:QT_RUNTIME_DIR"
           if ($LASTEXITCODE -ne 0) { throw "binding test build failed" }

@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 
 // Writing Qt subclasses in C#, and letting Qt drive them. Nothing here calls an override on
@@ -173,7 +173,7 @@ public static class ApiSubclassDemo
         var shot = button.Grab();
         context.Check(button.PaintCalls > 0,
             $"Qt asked the managed button to paint ({button.PaintCalls} call(s))");
-        context.Check(DemoPixels.GrabCovers(shot, button.width(), button.height()),
+        context.Check(ExamplePixels.GrabCovers(shot, button.width(), button.height()),
             $"the managed paintEvent produced the widget content ({shot.Width()}x{shot.Height()})");
 
         // QLayout::removeWidget goes through takeAt().

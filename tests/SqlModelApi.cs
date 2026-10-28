@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
 
@@ -53,7 +53,7 @@ namespace QtSharp.Tests
                 view.Show();
                 QCoreApplication.ProcessEvents();
                 using var pixmap = view.Grab();
-                context.Check(DemoPixels.GrabCovers(pixmap, view.Width, view.Height),
+                context.Check(ExamplePixels.GrabCovers(pixmap, view.Width, view.Height),
                     $"QTableView renders the SQL model ({pixmap.Width()}x{pixmap.Height()})");
             }
 

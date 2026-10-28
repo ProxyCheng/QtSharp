@@ -11,7 +11,7 @@ global using QtSharp.QtSvg;
 global using QtSharp.QtSvgWidgets;
 global using QtSharp.QtPrintSupport;
 global using QtSharp.QtMultimedia;
-global using QtSharp.Demos.Hosting;
+global using QtSharp.Examples.Hosting;
 global using QtSharp.Tests;
 
 // Only QtCore declares a static `Qt` class: every other module names its free-function class

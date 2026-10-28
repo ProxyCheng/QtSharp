@@ -1,54 +1,54 @@
 # Conformance coverage
 
 The gate treats Qt's own examples as the test suite, the same way a language binding claims
-compatibility by running upstream programs. Each module with demos has its own executable, and
-each holds exactly one `Main`, one `QApplication` and the module's reflected `[Demo]` classes:
+compatibility by running upstream programs. Each module with examples has its own executable, and
+each holds exactly one `Main`, one `QApplication` and the module's reflected `[Example]` classes:
 
 | executable | project | windows | assertions |
 |---|---|---|---|
-| `QtSharp.Demos.QtCore` | `demos/QtCore/` | 2 | 17 |
-| `QtSharp.Demos.QtGui` | `demos/QtGui/` | 6 | 180 |
-| `QtSharp.Demos.QtWidgets` | `demos/QtWidgets/` | 19 | 704 |
-| `QtSharp.Demos.QtNetwork` | `demos/QtNetwork/` | 1 | 9 |
-| `QtSharp.Demos.QtSvg` | `demos/QtSvg/` | 1 | 8 |
-| `QtSharp.Demos.QtSvgWidgets` | `demos/QtSvgWidgets/` | 1 | 4 |
-| `QtSharp.Demos.QtPrintSupport` | `demos/QtPrintSupport/` | 1 | 2 |
-| `QtSharp.Demos.QtMultimedia` | `demos/QtMultimedia/` | 1 | 12 |
-| `QtSharp.Charts.Demos` | `demos/Charts/` | 38 | 571 |
-| `QtSharp.Qt3D.Demos` | `demos/Qt3D/` | 3 | 37 |
+| `QtSharp.Examples.QtCore` | `examples/QtCore/` | 2 | 17 |
+| `QtSharp.Examples.QtGui` | `examples/QtGui/` | 6 | 180 |
+| `QtSharp.Examples.QtWidgets` | `examples/QtWidgets/` | 19 | 704 |
+| `QtSharp.Examples.QtNetwork` | `examples/QtNetwork/` | 1 | 9 |
+| `QtSharp.Examples.QtSvg` | `examples/QtSvg/` | 1 | 8 |
+| `QtSharp.Examples.QtSvgWidgets` | `examples/QtSvgWidgets/` | 1 | 4 |
+| `QtSharp.Examples.QtPrintSupport` | `examples/QtPrintSupport/` | 1 | 2 |
+| `QtSharp.Examples.QtMultimedia` | `examples/QtMultimedia/` | 1 | 12 |
+| `QtSharp.Charts.Examples` | `examples/Charts/` | 38 | 571 |
+| `QtSharp.Qt3D.Examples` | `examples/Qt3D/` | 3 | 37 |
 | `testapp` (the binding tests) | `tests/testapp/` | 24 | 780 |
 
-`tools/run-demos.ps1` builds all ten demo executables and hands each to
+`tools/run-examples.ps1` builds all ten example executables and hands each to
 `tools/run-window-tests.ps1`; the gate, CI and the release build all use that one table. A runner
 lists its own names with `--list`, so the gate and the tables cannot drift.
 
 ## Smoke and View
 
-The demo sources compile twice, selected by the build configuration:
+The example sources compile twice, selected by the build configuration:
 
 | configuration | alias | product |
 |---|---|---|
 | `Smoke` | `Release` | the automated half: builds each scene, checks it, prints `[PASS]`/`[FAIL]` and returns an exit code. No event loop runs; the host picks the offscreen platform before the one `QApplication` is constructed |
 | `View` | `Debug` | the interactive half: builds the scene, hands the window to the host and runs the event loop until the last window closes (`--seconds N` closes it early) |
 
-`demos/DemoMode.props` defines `QTSHARP_DEMO_SMOKE`/`QTSHARP_DEMO_VIEW`; those constants compile
-the `DemoContext` surface down to `Check`/`ExitCode` (Smoke) or `Show` (View), so a demo that
-mixes the two products does not compile. A demo owns its shared construction and has one body per
+`examples/ExampleMode.props` defines `QTSHARP_EXAMPLE_SMOKE`/`QTSHARP_EXAMPLE_VIEW`; those constants compile
+the `ExampleContext` surface down to `Check`/`ExitCode` (Smoke) or `Show` (View), so an example that
+mixes the two products does not compile. An example owns its shared construction and has one body per
 mode; View contains no assertions and Smoke contains no window registration.
 
 The Smoke host selects `offscreen` by default (with the Windows font directory set, which the
-offscreen plugin does not discover itself), so the gate never maps a window. `QTSHARP_DEMO_PLATFORM`
+offscreen plugin does not discover itself), so the gate never maps a window. `QTSHARP_EXAMPLE_PLATFORM`
 or an already-set `QT_QPA_PLATFORM` overrides that; the host prints one `[platform] ...` line
 saying where the choice came from. The Qt3D View product is the one exception: it renders through
 OpenGL, which the offscreen plugin on Windows does not provide, so its View runs need a real
 display. Its Smoke product never shows the `Qt3DWindow`, so the gate is unaffected.
 
-## Official demos, by module
+## Official examples, by module
 
-The demo catalog contains only ports of official Qt examples. The executable, the directory and
+The example catalog contains only ports of official Qt examples. The executable, the directory and
 the runnable names all name the module the example exercises:
 
-| module | demos |
+| module | examples |
 |---|---|
 | QtCore | `qtcore-savegame` — the JSON Save Game example's document model; `qtcore-regexp` — the regexp example's match/capture walk |
 | QtGui | `qtgui-basicdrawing`, `qtgui-gradients`, `qtgui-painterpaths`, `qtgui-composition`, `qtgui-transformations`, `qtgui-pathstroke` |
@@ -58,8 +58,8 @@ the runnable names all name the module the example exercises:
 | QtSvgWidgets | `qtsvgwidgets-svgwidget` — QSvgWidget loading and off-screen rendering |
 | QtPrintSupport | `qtprintsupport-notepad` — the notepad tutorial's QPrinter path |
 | QtMultimedia | `qtmultimedia-player` — Qt's player example core: a generated WAV loaded through QMediaPlayer, plus the format/device classes and QVideoWidget |
-| Qt Charts | `qtcharts-*` — 38 official Qt Charts examples (`demos/Charts/`) |
-| Qt 3D | `qt3d-simple`, `qt3d-basicshapes`, `qt3d-text` (`demos/Qt3D/`) |
+| Qt Charts | `qtcharts-*` — 38 official Qt Charts examples (`examples/Charts/`) |
+| Qt 3D | `qt3d-simple`, `qt3d-basicshapes`, `qt3d-text` (`examples/Qt3D/`) |
 
 ## Binding tests
 
@@ -108,13 +108,13 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 | QtSvgWidgets | `qtsvgwidgets-svgwidget` | |
 | QtPrintSupport | `qtprintsupport-notepad` | |
 | QtMultimedia | `qtmultimedia-player` | playback is asserted through a loaded WAV; camera capture needs a device |
-| QtOpenGL | no demo | `QOpenGLFunctions` is not bound, so `hellogl2` cannot be ported as-is |
-| QtOpenGLWidgets | no demo | `QOpenGLWidget` is bound; needs a GPU/software-GL runner |
+| QtOpenGL | no example | `QOpenGLFunctions` is not bound, so `hellogl2` cannot be ported as-is |
+| QtOpenGLWidgets | no example | `QOpenGLWidget` is bound; needs a GPU/software-GL runner |
 | Qt Charts | 38 official examples | |
 | Qt 3D | 3 official examples | Smoke runs windowless; View needs a real display for OpenGL |
 
-A demo is registered by putting `[Demo("name")]` on its static class, which must expose
-`public static int Run(DemoContext demo)`; each module's `Program` hands its assembly to
-`DemoHost.Run`, and the test executable hands the test assembly to `TestHost.Run`.
-`DemoDiscovery` finds the registrations in that assembly. There is no separate list to maintain,
+An example is registered by putting `[Example("name")]` on its static class, which must expose
+`public static int Run(ExampleContext example)`; each module's `Program` hands its assembly to
+`ExampleHost.Run`, and the test executable hands the test assembly to `TestHost.Run`.
+`ExampleDiscovery` finds the registrations in that assembly. There is no separate list to maintain,
 and a duplicate or malformed registration fails at startup.

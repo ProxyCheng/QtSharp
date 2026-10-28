@@ -1,10 +1,10 @@
-﻿using System;
+﻿﻿using System;
 
 // The graphics view family on the new pipeline: a scene, a view, three item kinds, the
 // QList<QGraphicsItem*> the scene hands back, and an off-screen render of the whole thing.
 //
 // Items are owned by the scene, so the managed wrappers are non-owning (the model marks the
-// item classes owned: false) - this demo only checks that driving them works, not that they are
+// item classes owned: false) - this example only checks that driving them works, not that they are
 // collected.
 [Test("test-graphics")]
 public static class ApiGraphicsDemo
@@ -40,7 +40,7 @@ public static class ApiGraphicsDemo
 
         // An off-screen render proves the scene actually painted through Qt.
         var shot = view.Grab();
-        context.Check(DemoPixels.GrabCovers(shot, 240, 120),
+        context.Check(ExamplePixels.GrabCovers(shot, 240, 120),
             $"the view rendered off-screen (got {shot.Width()}x{shot.Height()})");
 
         return context.ExitCode;

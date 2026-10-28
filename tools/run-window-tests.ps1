@@ -52,7 +52,7 @@ function Invoke-WindowTests {
             $process.StartInfo = $startInfo
             [void]$process.Start()
             # Read while the child runs: a full stdout pipe would block it, and the output of the
-            # larger demos is more than the pipe buffer.
+            # larger examples is more than the pipe buffer.
             $running.Add([pscustomobject]@{
                 Name = $item.Name; Attempt = $item.Attempt + 1; Process = $process
                 Stdout = $process.StandardOutput.ReadToEndAsync()

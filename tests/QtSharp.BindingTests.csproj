@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Binding-specific tests, not official demos: ownership, the exception boundary,
+  <!-- Binding-specific tests, not official examples: ownership, the exception boundary,
        C#-declared signals/properties, value types, and the modules whose official examples are
        not ported yet. Each is a static class with [Test("test-*")]; testapp dispatches them.
-       The official demo catalog lives in demos/, one executable per module, and is not
+       The official example catalog lives in examples/, one executable per module, and is not
        referenced here. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -28,7 +28,7 @@
 
   <ItemGroup>
     <!-- The hosting library for the shared pixel helper; the base modules come through it. -->
-    <ProjectReference Include="..\demos\hosting\QtSharp.Demos.Hosting.csproj" />
+    <ProjectReference Include="..\examples\hosting\QtSharp.Examples.Hosting.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtNetwork\QtSharp.QtNetwork.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtSvg\QtSharp.QtSvg.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Api\Modules\QtSharp.QtSvgWidgets\QtSharp.QtSvgWidgets.csproj" />

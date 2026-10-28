@@ -48,14 +48,14 @@ namespace QtSharp.Tests
         }
 
         /// <summary>
-        /// Chooses the QPA platform before the QApplication is constructed. QTSHARP_DEMO_PLATFORM is
+        /// Chooses the QPA platform before the QApplication is constructed. QTSHARP_EXAMPLE_PLATFORM is
         /// the explicit override, a QT_QPA_PLATFORM the caller set is honoured, and otherwise the
         /// tests run offscreen. The one line it prints is not an assertion.
         /// </summary>
         static void UseOffscreenPlatform()
         {
-            string platform = Environment.GetEnvironmentVariable("QTSHARP_DEMO_PLATFORM");
-            string source = "QTSHARP_DEMO_PLATFORM";
+            string platform = Environment.GetEnvironmentVariable("QTSHARP_EXAMPLE_PLATFORM");
+            string source = "QTSHARP_EXAMPLE_PLATFORM";
             if (string.IsNullOrEmpty(platform))
             {
                 platform = Environment.GetEnvironmentVariable("QT_QPA_PLATFORM");
@@ -74,7 +74,7 @@ namespace QtSharp.Tests
                 SetEnvironment("QT_QPA_FONTDIR",
                     Environment.GetFolderPath(Environment.SpecialFolder.Fonts));
             Console.WriteLine(source == "default"
-                ? "[platform] offscreen (set QTSHARP_DEMO_PLATFORM=windows to override)"
+                ? "[platform] offscreen (set QTSHARP_EXAMPLE_PLATFORM=windows to override)"
                 : $"[platform] {platform} (from {source})");
         }
 

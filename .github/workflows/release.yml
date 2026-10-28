@@ -152,13 +152,13 @@ jobs:
             throw "native build failed: $($failed.Name -join ', ')"
           }
       # The examples are the binding's own test suite, and a release must not ship a binding that
-      # cannot render - which is exactly what the demo gate caught once, after a package had gone
+      # cannot render - which is exactly what the example gate caught once, after a package had gone
       # out. They run before the pack, so a failing example stops the job before any package exists.
-      - name: Build and run every demo executable
+      - name: Build and run every example executable
         shell: pwsh
         run: |
-          ./tools/run-demos.ps1 -QtRuntimeDir $env:QT_RUNTIME_DIR
-          if ($LASTEXITCODE -ne 0) { throw "some demos failed (see the output above)" }
+          ./tools/run-examples.ps1 -QtRuntimeDir $env:QT_RUNTIME_DIR
+          if ($LASTEXITCODE -ne 0) { throw "some examples failed (see the output above)" }
 
       - name: Build and run the binding tests
         shell: pwsh
@@ -298,10 +298,10 @@ jobs:
           done
           echo "native libraries carry the \$ORIGIN/lib deployment rpath"
 
-      - name: Build and run every demo executable
+      - name: Build and run every example executable
         shell: bash
         run: |
-          pwsh ./tools/run-demos.ps1 -QtRuntimeDir "$QT_RUNTIME_DIR"
+          pwsh ./tools/run-examples.ps1 -QtRuntimeDir "$QT_RUNTIME_DIR"
 
       - name: Build and run the binding tests
         shell: bash

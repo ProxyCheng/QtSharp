@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 
 // The extension points a real application needs: an item model and an item delegate written
@@ -165,7 +165,7 @@ public static class ApiCustomModelDemo
         var shot = view.Grab();
         context.Check(itemDelegate.PaintCalls > 0,
             $"Qt asked the managed delegate to paint ({itemDelegate.PaintCalls} time(s))");
-        context.Check(DemoPixels.GrabCovers(shot, 320, 200),
+        context.Check(ExamplePixels.GrabCovers(shot, 320, 200),
             $"the view rendered off-screen (got {shot.Width()}x{shot.Height()})");
 
         // Asking the view to size its rows is what makes it consult the delegate's sizeHint().
@@ -190,7 +190,7 @@ public static class ApiCustomModelDemo
         context.Check(view.Model().RowCount() == 3 && throughQt.Data(throughQt.Index(2, 0))?.ToString() == "gamma",
             "the managed model still works after a full GC");
         using (var again = view.Grab())
-            context.Check(DemoPixels.GrabCovers(again, 320, 200), "and the view still renders");
+            context.Check(ExamplePixels.GrabCovers(again, 320, 200), "and the view still renders");
 
         return context.ExitCode;
     }
