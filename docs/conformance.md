@@ -7,8 +7,8 @@ cannot drift):
 
 | runner | source | windows | assertions |
 |---|---|---|---|
-| `testbind` | `demos/` — the official Qt examples, plus `tests/` — binding-specific tests | 46 | 1379 |
-| `QtSharp.Charts.Demos` | `demos.charts/` — Qt Charts | 38 | 570 |
+| `testbind` | `demos/` — the official Qt examples, plus `tests/` — binding-specific tests | 56 | 1715 |
+| `QtSharp.Charts.Demos` | `demos.charts/` — Qt Charts | 38 | 571 |
 | `QtSharp.Qt3D.Demos` | `demos.qt3d/` — Qt 3D | 3 | 37 |
 
 ## Official demos, by module
@@ -40,6 +40,8 @@ run under `test-*` names and stay in the gate:
 | `test-events` | the input-event family and managed virtual event handlers |
 | `test-exceptions` | the native exception boundary (`qFatal`, C++ unwinding across managed frames) |
 | `test-metaobject` | C#-declared signals/properties (`[QtSignal]`/`[QtProperty]`) |
+| `test-metatype` | the canonical C# -> Qt type-name map and `QMetaType.FromType<T>` |
+| `test-connections` | signal connections: disposable handles, connection type and context lifetime |
 | `test-ownership` | who may delete a native object; liveness and generation counters |
 | `test-valuetypes` | the POD value structs and their conversions |
 | `test-network` | QtNetwork transport beyond the fortune example: host addresses, local-socket handoff, TCP |
@@ -47,6 +49,7 @@ run under `test-*` names and stay in the gate:
 | `test-custommodel` | managed item models/delegates and Qt's calls back into them |
 | `test-graphics` | the graphics-view family (scene, items, off-screen render) |
 | `test-bclinterop` | the BCL conversions: QPoint/QSize/QRect/QColor/vectors/quaternion/URL/GUID/QVariant |
+| `test-regexinterop` | `Regex` <-> `QRegularExpression`: the mappable options, the rejecting ones and both dialect failures |
 | `test-json` | JSON as C# containers: QJsonObject as a writable dictionary, QJsonArray as a list, unwrapped snapshots, LINQ |
 | `test-iodevice` | a .NET Stream behind QIODevice: QImage/QXmlStreamReader reading it, write path, leak checks |
 | `test-xmlseam` | System.Xml and QXmlStreamReader/Writer handing documents to each other |

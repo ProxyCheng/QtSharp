@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -19,139 +20,193 @@ namespace QtSharp.Runtime
     // The generated binding is what produces the native argument storage, because only it knows
     // whether a parameter is a bound class pointer, a boxed value or a container - the same
     // distinction the virtual dispatch makes.
+    //
+    // `Connect` hands back a QtConnection: the binding's closure opens the native connection and
+    // remembers the handler as its key, and the handle drops exactly that connection on Dispose.
+    // The context/connection-type overloads live in QtSharp.QtCore (QSignalConnections), because
+    // naming QObject and Qt::ConnectionType would make this runtime depend on the binding.
     public sealed class QSignal
     {
-        readonly Action<Action> connector;
+        readonly Func<Action, IQtObject, int, QtConnection> connector;
         readonly Action emitter;
 
-        public QSignal(Action<Action> connector, Action emitter)
+        public QSignal(Func<Action, IQtObject, int, QtConnection> connector, Action emitter)
         {
             this.connector = connector;
             this.emitter = emitter;
         }
 
-        public void Connect(Action handler) => connector(handler);
+        public QtConnection Connect(Action handler) => connector(handler, null, ApiRuntime.AutoConnection);
         public void Emit() => emitter();
+
+        internal QtConnection ConnectCore(Action handler, IQtObject context, int connectionType)
+            => connector(handler, context, connectionType);
     }
 
     public sealed class QSignal<T1>
     {
-        readonly Action<Action<T1>> connector;
+        readonly Func<Action<T1>, IQtObject, int, QtConnection> connector;
         readonly Action<T1> emitter;
 
-        public QSignal(Action<Action<T1>> connector, Action<T1> emitter)
+        public QSignal(Func<Action<T1>, IQtObject, int, QtConnection> connector, Action<T1> emitter)
         {
             this.connector = connector;
             this.emitter = emitter;
         }
 
-        public void Connect(Action<T1> handler) => connector(handler);
+        public QtConnection Connect(Action<T1> handler) => connector(handler, null, ApiRuntime.AutoConnection);
         public void Emit(T1 a1) => emitter(a1);
+
+        internal QtConnection ConnectCore(Action<T1> handler, IQtObject context, int connectionType)
+            => connector(handler, context, connectionType);
     }
 
     public sealed class QSignal<T1, T2>
     {
-        readonly Action<Action<T1, T2>> connector;
+        readonly Func<Action<T1, T2>, IQtObject, int, QtConnection> connector;
         readonly Action<T1, T2> emitter;
 
-        public QSignal(Action<Action<T1, T2>> connector, Action<T1, T2> emitter)
+        public QSignal(Func<Action<T1, T2>, IQtObject, int, QtConnection> connector, Action<T1, T2> emitter)
         {
             this.connector = connector;
             this.emitter = emitter;
         }
 
-        public void Connect(Action<T1, T2> handler) => connector(handler);
+        public QtConnection Connect(Action<T1, T2> handler) => connector(handler, null, ApiRuntime.AutoConnection);
         public void Emit(T1 a1, T2 a2) => emitter(a1, a2);
+
+        internal QtConnection ConnectCore(Action<T1, T2> handler, IQtObject context, int connectionType)
+            => connector(handler, context, connectionType);
     }
 
     public sealed class QSignal<T1, T2, T3>
     {
-        readonly Action<Action<T1, T2, T3>> connector;
+        readonly Func<Action<T1, T2, T3>, IQtObject, int, QtConnection> connector;
         readonly Action<T1, T2, T3> emitter;
 
-        public QSignal(Action<Action<T1, T2, T3>> connector, Action<T1, T2, T3> emitter)
+        public QSignal(Func<Action<T1, T2, T3>, IQtObject, int, QtConnection> connector, Action<T1, T2, T3> emitter)
         {
             this.connector = connector;
             this.emitter = emitter;
         }
 
-        public void Connect(Action<T1, T2, T3> handler) => connector(handler);
+        public QtConnection Connect(Action<T1, T2, T3> handler) => connector(handler, null, ApiRuntime.AutoConnection);
         public void Emit(T1 a1, T2 a2, T3 a3) => emitter(a1, a2, a3);
+
+        internal QtConnection ConnectCore(Action<T1, T2, T3> handler, IQtObject context, int connectionType)
+            => connector(handler, context, connectionType);
     }
 
     public sealed class QSignal<T1, T2, T3, T4>
     {
-        readonly Action<Action<T1, T2, T3, T4>> connector;
+        readonly Func<Action<T1, T2, T3, T4>, IQtObject, int, QtConnection> connector;
         readonly Action<T1, T2, T3, T4> emitter;
 
-        public QSignal(Action<Action<T1, T2, T3, T4>> connector, Action<T1, T2, T3, T4> emitter)
+        public QSignal(Func<Action<T1, T2, T3, T4>, IQtObject, int, QtConnection> connector, Action<T1, T2, T3, T4> emitter)
         {
             this.connector = connector;
             this.emitter = emitter;
         }
 
-        public void Connect(Action<T1, T2, T3, T4> handler) => connector(handler);
+        public QtConnection Connect(Action<T1, T2, T3, T4> handler) => connector(handler, null, ApiRuntime.AutoConnection);
         public void Emit(T1 a1, T2 a2, T3 a3, T4 a4) => emitter(a1, a2, a3, a4);
+
+        internal QtConnection ConnectCore(Action<T1, T2, T3, T4> handler, IQtObject context, int connectionType)
+            => connector(handler, context, connectionType);
     }
 
     public sealed class QSignal<T1, T2, T3, T4, T5>
     {
-        readonly Action<Action<T1, T2, T3, T4, T5>> connector;
+        readonly Func<Action<T1, T2, T3, T4, T5>, IQtObject, int, QtConnection> connector;
         readonly Action<T1, T2, T3, T4, T5> emitter;
 
-        public QSignal(Action<Action<T1, T2, T3, T4, T5>> connector, Action<T1, T2, T3, T4, T5> emitter)
+        public QSignal(Func<Action<T1, T2, T3, T4, T5>, IQtObject, int, QtConnection> connector, Action<T1, T2, T3, T4, T5> emitter)
         {
             this.connector = connector;
             this.emitter = emitter;
         }
 
-        public void Connect(Action<T1, T2, T3, T4, T5> handler) => connector(handler);
+        public QtConnection Connect(Action<T1, T2, T3, T4, T5> handler) => connector(handler, null, ApiRuntime.AutoConnection);
         public void Emit(T1 a1, T2 a2, T3 a3, T4 a4, T5 a5) => emitter(a1, a2, a3, a4, a5);
+
+        internal QtConnection ConnectCore(Action<T1, T2, T3, T4, T5> handler, IQtObject context, int connectionType)
+            => connector(handler, context, connectionType);
     }
 
     public sealed class QSignal<T1, T2, T3, T4, T5, T6>
     {
-        readonly Action<Action<T1, T2, T3, T4, T5, T6>> connector;
+        readonly Func<Action<T1, T2, T3, T4, T5, T6>, IQtObject, int, QtConnection> connector;
         readonly Action<T1, T2, T3, T4, T5, T6> emitter;
 
-        public QSignal(Action<Action<T1, T2, T3, T4, T5, T6>> connector, Action<T1, T2, T3, T4, T5, T6> emitter)
+        public QSignal(Func<Action<T1, T2, T3, T4, T5, T6>, IQtObject, int, QtConnection> connector, Action<T1, T2, T3, T4, T5, T6> emitter)
         {
             this.connector = connector;
             this.emitter = emitter;
         }
 
-        public void Connect(Action<T1, T2, T3, T4, T5, T6> handler) => connector(handler);
+        public QtConnection Connect(Action<T1, T2, T3, T4, T5, T6> handler) => connector(handler, null, ApiRuntime.AutoConnection);
         public void Emit(T1 a1, T2 a2, T3 a3, T4 a4, T5 a5, T6 a6) => emitter(a1, a2, a3, a4, a5, a6);
+
+        internal QtConnection ConnectCore(Action<T1, T2, T3, T4, T5, T6> handler, IQtObject context, int connectionType)
+            => connector(handler, context, connectionType);
     }
 
     public sealed class QSignal<T1, T2, T3, T4, T5, T6, T7>
     {
-        readonly Action<Action<T1, T2, T3, T4, T5, T6, T7>> connector;
+        readonly Func<Action<T1, T2, T3, T4, T5, T6, T7>, IQtObject, int, QtConnection> connector;
         readonly Action<T1, T2, T3, T4, T5, T6, T7> emitter;
 
-        public QSignal(Action<Action<T1, T2, T3, T4, T5, T6, T7>> connector, Action<T1, T2, T3, T4, T5, T6, T7> emitter)
+        public QSignal(Func<Action<T1, T2, T3, T4, T5, T6, T7>, IQtObject, int, QtConnection> connector, Action<T1, T2, T3, T4, T5, T6, T7> emitter)
         {
             this.connector = connector;
             this.emitter = emitter;
         }
 
-        public void Connect(Action<T1, T2, T3, T4, T5, T6, T7> handler) => connector(handler);
+        public QtConnection Connect(Action<T1, T2, T3, T4, T5, T6, T7> handler) => connector(handler, null, ApiRuntime.AutoConnection);
         public void Emit(T1 a1, T2 a2, T3 a3, T4 a4, T5 a5, T6 a6, T7 a7) => emitter(a1, a2, a3, a4, a5, a6, a7);
+
+        internal QtConnection ConnectCore(Action<T1, T2, T3, T4, T5, T6, T7> handler, IQtObject context, int connectionType)
+            => connector(handler, context, connectionType);
     }
 
     public sealed class QSignal<T1, T2, T3, T4, T5, T6, T7, T8>
     {
-        readonly Action<Action<T1, T2, T3, T4, T5, T6, T7, T8>> connector;
+        readonly Func<Action<T1, T2, T3, T4, T5, T6, T7, T8>, IQtObject, int, QtConnection> connector;
         readonly Action<T1, T2, T3, T4, T5, T6, T7, T8> emitter;
 
-        public QSignal(Action<Action<T1, T2, T3, T4, T5, T6, T7, T8>> connector, Action<T1, T2, T3, T4, T5, T6, T7, T8> emitter)
+        public QSignal(Func<Action<T1, T2, T3, T4, T5, T6, T7, T8>, IQtObject, int, QtConnection> connector, Action<T1, T2, T3, T4, T5, T6, T7, T8> emitter)
         {
             this.connector = connector;
             this.emitter = emitter;
         }
 
-        public void Connect(Action<T1, T2, T3, T4, T5, T6, T7, T8> handler) => connector(handler);
+        public QtConnection Connect(Action<T1, T2, T3, T4, T5, T6, T7, T8> handler) => connector(handler, null, ApiRuntime.AutoConnection);
         public void Emit(T1 a1, T2 a2, T3 a3, T4 a4, T5 a5, T6 a6, T7 a7, T8 a8) => emitter(a1, a2, a3, a4, a5, a6, a7, a8);
+
+        internal QtConnection ConnectCore(Action<T1, T2, T3, T4, T5, T6, T7, T8> handler, IQtObject context, int connectionType)
+            => connector(handler, context, connectionType);
+    }
+
+    // The disposable handle `QSignal.Connect` returns. It owns one connection record, so Dispose
+    // disconnects that exact connection - not "the most recent one with this handler" - and drops
+    // the record, which releases the managed thunk Qt was calling. Disposing twice is a no-op.
+    // A connection Qt has already broken (the sender or the context was destroyed) still disposes
+    // cleanly: QObject::disconnect reports false and the native handle is freed either way.
+    public sealed class QtConnection : IDisposable
+    {
+        ApiRuntime.SignalConnection connection;
+
+        internal QtConnection(ApiRuntime.SignalConnection connection) => this.connection = connection;
+
+        /// <summary>Whether this handle still refers to a connection Qt has not dropped.</summary>
+        public bool IsConnected => connection != null && !connection.Dropped && connection.Native != IntPtr.Zero;
+
+        public void Dispose()
+        {
+            var current = Interlocked.Exchange(ref connection, null);
+            if (current != null)
+                ApiRuntime.DisconnectConnection(current);
+        }
     }
 
     // A managed view of a Qt object. Qt owns the lifetime (a parent, a scene, the application),
@@ -621,37 +676,91 @@ namespace QtSharp.Runtime
             => EmitSignal(new object[] { a1, a2, a3, a4, a5, a6, a7, a8 });
     }
 
+    // How a bound type crosses the native boundary, as far as its Qt type name is concerned.
+    // Qt spells a QObject-derived class as a pointer metatype ("QWidget*"), while a value class
+    // (QFont, QByteArray), a trivially copyable struct (QColor) and an enum keep their bare name.
+    public enum QtTypeKind
+    {
+        ObjectPointer,
+        ValueClass,
+        Pod,
+        Enum,
+    }
+
     // The C# type -> Qt type name map the declared members use, plus the conversions between a
     // managed value and the native storage moc's qt_metacall would have used.
+    //
+    // QtName is the one canonical mapper: it has an intrinsic half (the C# primitives and the BCL
+    // types the binding crosses as a Qt value) and the generated half the module assemblies
+    // register at load time (every bound class, struct and enum, with the exact C++ spelling and
+    // its QtTypeKind). QMetaType.FromType<T> asks the same mapper before QMetaType.FromName, so
+    // a declared member and a metatype can never disagree about a type's name.
     public static class MetaType
     {
+        static readonly Dictionary<Type, string> intrinsic = new()
+        {
+            [typeof(string)] = "QString",
+            [typeof(bool)] = "bool",
+            [typeof(int)] = "int",
+            [typeof(uint)] = "uint",
+            [typeof(short)] = "short",
+            [typeof(ushort)] = "ushort",
+            [typeof(long)] = "qint64",
+            [typeof(ulong)] = "quint64",
+            [typeof(float)] = "float",
+            [typeof(double)] = "double",
+            [typeof(byte)] = "uchar",
+            [typeof(sbyte)] = "char",
+            [typeof(IntPtr)] = "void*",
+            // The BCL types that mean the same value as a Qt one, the way BclInterop spells the
+            // conversions: a declared member may use either spelling.
+            [typeof(char)] = "QChar",
+            [typeof(DateOnly)] = "QDate",
+            [typeof(TimeOnly)] = "QTime",
+            [typeof(DateTime)] = "QDateTime",
+            [typeof(Guid)] = "QUuid",
+            [typeof(Uri)] = "QUrl",
+            [typeof(byte[])] = "QByteArray",
+        };
+
+        // The generated table's half, filled by the module initializers the generator emits. A
+        // module is loaded before any of its types can be named, so registration has happened by
+        // the time a declared member or FromType<T> asks about one.
+        static readonly ConcurrentDictionary<Type, (string Name, QtTypeKind Kind)> bound = new();
+
+        /// <summary>
+        /// Registers a bound type's Qt name and kind. The generated module initializers call this;
+        /// user code does not need to.
+        /// </summary>
+        public static void Register(Type managedType, string qtName, QtTypeKind kind)
+        {
+            if (managedType == null)
+                throw new ArgumentNullException(nameof(managedType));
+            if (string.IsNullOrEmpty(qtName))
+                throw new ArgumentException("A Qt type name cannot be empty.", nameof(qtName));
+            bound[managedType] = (qtName, kind);
+        }
+
         public static string QtName(Type t)
         {
-            if (t == typeof(string)) return "QString";
-            if (t == typeof(bool)) return "bool";
-            if (t == typeof(int)) return "int";
-            if (t == typeof(uint)) return "uint";
-            if (t == typeof(short)) return "short";
-            if (t == typeof(ushort)) return "ushort";
-            if (t == typeof(long)) return "qint64";
-            if (t == typeof(ulong)) return "quint64";
-            if (t == typeof(float)) return "float";
-            if (t == typeof(double)) return "double";
-            if (t == typeof(byte)) return "uchar";
-            if (t == typeof(sbyte)) return "char";
-            if (t == typeof(IntPtr)) return "void*";
-            if (t.IsEnum)
-            {
-                // A nested enum surfaces as Qt::ItemDataRole / QAbstractItemDelegate::EndEditHint,
-                // which is the name QMetaType registered it under.
-                var scope = t.DeclaringType;
-                return scope == null ? t.Name : scope.Name + "::" + t.Name;
-            }
-            // A bound class crosses as its pointer; the runtime wraps it with the generated
-            // FromHandle the type publishes.
-            if (typeof(IQtHandle).IsAssignableFrom(t))
+            if (t == null)
+                throw new ArgumentNullException(nameof(t));
+            if (intrinsic.TryGetValue(t, out string name))
+                return name;
+            if (bound.TryGetValue(t, out var entry))
+                return entry.Kind == QtTypeKind.ObjectPointer ? entry.Name + "*" : entry.Name;
+            // A QObject subclass written in C# is not in the generated table: AttachMetaObject
+            // names its meta-object after the C# type (BuildSpec), and a QObject crosses as a
+            // pointer, so the metatype follows that same spelling.
+            if (typeof(IQtObject).IsAssignableFrom(t))
                 return t.Name + "*";
-            return t.Name;
+            // No guess for anything else: a name invented from t.Name would be a metatype Qt has
+            // never heard of, and the failure would surface far away (in a signal signature or a
+            // Q_PROPERTY). Failing here says which type is unsupported.
+            throw new NotSupportedException(
+                $"There is no Qt type name for '{t.FullName}'. A [QtSignal]/[QtProperty] type has " +
+                "to be a C# primitive, one of the BCL types the binding maps (DateTime, DateOnly, " +
+                "TimeOnly, Guid, Uri, byte[]), a bound Qt type, or a QObject subclass.");
         }
 
         /// <summary>Reads the i-th signal argument out of moc's argv.</summary>
@@ -735,7 +844,7 @@ namespace QtSharp.Runtime
         public const string Library = "QtSharp.Api";
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate void SignalCallback(IntPtr userData, int argc, IntPtr argv, IntPtr typeIds);
+        internal delegate void SignalCallback(IntPtr userData, int argc, IntPtr argv, IntPtr typeIds);
 
         // The destroyed hook is one function pointer for the whole process (never a delegate per
         // object): it points at static code, so nothing has to be kept alive.
@@ -1353,7 +1462,7 @@ namespace QtSharp.Runtime
             // a C# event runs its handlers synchronously on the raising thread. Auto would queue a
             // raise from another thread and deliver them a second time once the delegate chain has
             // already called them.
-            var connection = ConnectNative(sender, declared.Signature, callback, sender, DirectConnection);
+            var connection = ConnectNative(sender, declared.Signature, callback, sender, IntPtr.Zero, DirectConnection);
             if (connection == IntPtr.Zero)
                 return;
             lock (connections)
@@ -1363,8 +1472,6 @@ namespace QtSharp.Runtime
                     Callback = callback, Native = connection,
                 });
         }
-
-        const int DirectConnection = 1;
 
         // How many activations of a (sender, signal) pair came from a [QtSignal] event's own
         // Invoke, and are therefore delivered to the C# handlers by the delegate chain. A count,
@@ -1641,20 +1748,38 @@ namespace QtSharp.Runtime
         // The callback has to stay alive for as long as Qt holds the connection.
         public delegate void SignalSlot(IntPtr argv, IntPtr typeIds);
 
+        // The Qt::ConnectionType values the native side forwards. Auto is the default; Direct is
+        // what ConnectDeclaredSignal needs (see the comment there).
+        internal const int AutoConnection = 0;
+        internal const int DirectConnection = 1;
+
         /// <summary>
-        /// Connects a managed handler to a signal, without a key - the shape a QSignal's Connect
-        /// uses. The connection stays until the sender dies; Disconnect cannot find it.
+        /// Connects a managed handler to a signal without a key: the connection lives until its
+        /// sender dies, and Dispose of the returned handle drops it earlier. This is the shape a
+        /// QSignal's <c>Connect(handler)</c> uses.
         /// </summary>
-        public static bool Connect(IntPtr sender, string signature, SignalSlot handler)
+        public static QtConnection Connect(IntPtr sender, string signature, SignalSlot handler)
             => Connect(sender, signature, handler, null);
 
         /// <summary>
         /// Connects a managed handler to a signal, remembering <paramref name="key"/> so that
         /// Disconnect can drop exactly this connection again. That is what the `-=` of a signal
         /// exposed as a C# event needs: `key` is the user's own handler, and comparison is
-        /// delegate equality - the same rule C# events use for remove.
+        /// delegate equality - the same rule C# events use for remove. The returned handle
+        /// disconnects the connection by identity, so the same handler may be connected twice.
         /// </summary>
-        public static bool Connect(IntPtr sender, string signature, SignalSlot handler, Delegate key)
+        public static QtConnection Connect(IntPtr sender, string signature, SignalSlot handler, Delegate key)
+            => Connect(sender, signature, handler, key, IntPtr.Zero, AutoConnection);
+
+        /// <summary>
+        /// Connects a managed handler to a signal with a context object and a Qt::ConnectionType.
+        /// A non-zero <paramref name="context"/> is the native QObject whose thread the handler
+        /// runs on for a queued connection and whose destruction breaks the connection; zero keeps
+        /// the pre-existing behaviour (the sender is the receiver, the handler runs on whichever
+        /// thread emits).
+        /// </summary>
+        public static QtConnection Connect(IntPtr sender, string signature, SignalSlot handler, Delegate key,
+                                           IntPtr context, int connectionType)
         {
             SignalCallback callback = (userData, argc, argv, typeIds) =>
             {
@@ -1662,19 +1787,20 @@ namespace QtSharp.Runtime
                 try { handler(argv, typeIds); }
                 catch (Exception exception) { ReportCallbackException("a signal handler", exception); }
             };
-            var connection = ConnectNative(sender, signature, callback, IntPtr.Zero, 0);
+            var connection = ConnectNative(sender, signature, callback, IntPtr.Zero, context, connectionType);
             if (connection == IntPtr.Zero)
-                return false;
+                return new QtConnection(null);
 
             // The record holds the callback: the native slot object points at the thunk the
             // marshaller built for it, which must stay alive for as long as Qt holds the slot.
+            var record = new SignalConnection
+            {
+                Sender = sender, Signature = signature, Key = key, Context = context,
+                Callback = callback, Native = connection,
+            };
             lock (connections)
-                connections.Add(new SignalConnection
-                {
-                    Sender = sender, Signature = signature, Key = key,
-                    Callback = callback, Native = connection,
-                });
-            return true;
+                connections.Add(record);
+            return new QtConnection(record);
         }
 
         /// <summary>
@@ -1683,6 +1809,7 @@ namespace QtSharp.Runtime
         /// </summary>
         public static bool Disconnect(IntPtr sender, string signature, Delegate key)
         {
+            SignalConnection found = null;
             lock (connections)
             {
                 for (int i = connections.Count - 1; i >= 0; i--)
@@ -1692,35 +1819,80 @@ namespace QtSharp.Runtime
                         && Equals(candidate.Key, key))
                     {
                         connections.RemoveAt(i);
-                        return DisconnectNative(candidate.Native) != 0;
+                        found = candidate;
+                        break;
                     }
                 }
             }
-            return false;
+            return found != null && DisconnectConnection(found);
+        }
+
+        /// <summary>
+        /// Drops one connection record: removes it from the bookkeeping, disconnects the native
+        /// connection it names, and frees the native handle. Idempotent - the record's
+        /// <see cref="SignalConnection.Native"/> is cleared under the lock, so a handle disposed
+        /// after its sender (or context) was destroyed still frees the handle safely.
+        /// </summary>
+        internal static bool DisconnectConnection(SignalConnection connection)
+        {
+            IntPtr native;
+            lock (connections)
+            {
+                connections.Remove(connection);
+                native = connection.Native;
+                connection.Native = IntPtr.Zero;
+            }
+            // QObject::disconnect is safe on a connection Qt has already broken (the sender or
+            // the context was destroyed); the handle is ours to free either way.
+            return native != IntPtr.Zero && DisconnectNative(native) != 0;
         }
 
         /// <summary>
         /// A live signal connection. <see cref="Callback"/> is what keeps the native thunk alive,
-        /// <see cref="Key"/> is the handler a C# event removes by, and <see cref="Native"/> is the
-        /// QMetaObject::Connection the runtime disconnects.
+        /// <see cref="Key"/> is the handler a C# event removes by, <see cref="Context"/> is the
+        /// receiver/context whose lifetime and thread affinity Qt applies, and
+        /// <see cref="Native"/> is the QMetaObject::Connection the runtime disconnects.
         /// </summary>
-        sealed class SignalConnection
+        internal sealed class SignalConnection
         {
             public IntPtr Sender;
             public string Signature;
             public Delegate Key;
+            public IntPtr Context;
             public SignalCallback Callback;
             public IntPtr Native;
+            public bool Dropped;     // Qt destroyed the sender/context; the record is no longer live
         }
 
         static readonly List<SignalConnection> connections = new();
 
         // The connections of a sender that Qt has destroyed are gone with it; dropping the records
-        // releases the managed callbacks (and the native connection handles Qt already broke).
+        // releases the managed callbacks, and a handle that still points at one of these records
+        // frees its native wrapper when it is disposed.
+        //
+        // A destroyed *context* is only marked, not removed: Qt has already dropped the connection
+        // (so the handler cannot run and IsConnected must say so), but the sender may still be
+        // alive and, on another thread, mid-activation of the very slot object whose thunk this
+        // record keeps alive. Releasing the callback here would race that call; the record goes
+        // when the sender dies or the caller disposes the handle.
         static void ForgetConnections(IntPtr sender)
         {
             lock (connections)
-                connections.RemoveAll(c => c.Sender == sender);
+            {
+                for (int i = connections.Count - 1; i >= 0; i--)
+                {
+                    var connection = connections[i];
+                    if (connection.Sender == sender)
+                    {
+                        connection.Dropped = true;
+                        connections.RemoveAt(i);
+                    }
+                    else if (connection.Context == sender)
+                    {
+                        connection.Dropped = true;
+                    }
+                }
+            }
         }
 
 
@@ -1917,7 +2089,7 @@ namespace QtSharp.Runtime
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_connect", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr ConnectNative(IntPtr sender, [MarshalAs(UnmanagedType.LPUTF8Str)] string signature,
-            SignalCallback callback, IntPtr userData, int connectionType);
+            SignalCallback callback, IntPtr userData, IntPtr context, int connectionType);
 
         [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = "qs_api_disconnect", CallingConvention = CallingConvention.Cdecl)]
         private static extern int DisconnectNative(IntPtr connection);

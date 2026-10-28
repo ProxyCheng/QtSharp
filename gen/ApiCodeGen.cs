@@ -748,6 +748,77 @@ public static class ApiCodeGen
         return null;
     }
 
+    // The generated half of the C# -> Qt type-name map the runtime's MetaType class publishes.
+    // Only the types this run emits are registered: the dependencies' types belong to their own
+    // assemblies and their own module initializers. The exact C++ spelling matters - a Qt3D class
+    // is "Qt3DCore::QEntity", not the simple C# name - and the kind is what decides whether
+    // MetaType appends the "*" a QObject pointer metatype carries.
+    static void WriteTypeTable(string ns)
+    {
+        var table = CSharpFile(PlainFileKey(ns + ".TypeTable"));
+        table.AppendLine("    /// <summary>The Qt type names of the types this assembly publishes.</summary>");
+        table.AppendLine("    internal static class BoundTypeTable");
+        table.AppendLine("    {");
+        table.AppendLine("        [ModuleInitializer]");
+        table.AppendLine("        internal static void Register()");
+        table.AppendLine("        {");
+        foreach (var cls in Classes)
+        {
+            string name = Name(cls);
+            // QVariant is the internal bridge type: no declared member can name it, and the
+            // marshaler handles its metatype separately.
+            if (name == "QVariant")
+                continue;
+            // The QObject subtree is the pointer metatype (QWidget*, Qt3DCore::QEntity*); the
+            // owned classes that do not derive from QObject (QFont, QByteArray) cross by value.
+            string kind = DerivesFromQObject(Ref(cls)) ? "ObjectPointer" : "ValueClass";
+            table.AppendLine(
+                $"            QtSharp.Runtime.MetaType.Register(typeof({CsTypeName(Ref(cls))}), {Quoted(CppClass(name))}, QtSharp.Runtime.QtTypeKind.{kind});");
+        }
+        // The runtime structs (QColor, QDate, QNodeId) are values with no handle.
+        foreach (var s in ApiTypes.RuntimeStructs)
+        {
+            if (!ModelRuntimeStructNames.Contains(s.Name))
+                continue;
+            table.AppendLine(
+                $"            QtSharp.Runtime.MetaType.Register(typeof({s.Name}), {Quoted(ApiTypes.CppStructName(s.Name))}, QtSharp.Runtime.QtTypeKind.Pod);");
+        }
+        // Enums keep their bare name too; cppQualified is what keeps a Qt3D enum's namespace.
+        foreach (var e in Enums)
+        {
+            // An enum whose owning class was erased (QChar, QUuid) has no managed type to name
+            // unless it was hoisted to the namespace; QVariant::Type became int.
+            if (!EnumIsEmitted(e))
+                continue;
+            string qualified = e.GetProperty("qualified").GetString();
+            string cpp = CppEnumNames.TryGetValue(qualified, out var spelled) ? spelled : qualified;
+            table.AppendLine(
+                $"            QtSharp.Runtime.MetaType.Register(typeof({CsTypeName(qualified)}), {Quoted(cpp)}, QtSharp.Runtime.QtTypeKind.Enum);");
+        }
+        table.AppendLine("        }");
+        table.AppendLine("    }");
+        table.AppendLine();
+    }
+
+    // Whether the generated C# for an enum exists: a namespace-level or Qt-namespace one, one
+    // hoisted out of an erased class, or one nested in a class/struct this run emits.
+    static bool EnumIsEmitted(JsonElement e)
+    {
+        string qualified = e.GetProperty("qualified").GetString();
+        string scope = ScopeOf(e);
+        if (scope.Length == 0 || scope == "Qt")
+            return true;
+        if (HoistedEnumNames.ContainsKey(qualified))
+            return true;
+        // QVariant::Type is the deprecated Qt5 enum of metatype ids: signatures spell it as int,
+        // and the class itself is internal to the bridge, so there is no managed type to name.
+        if (scope == "QVariant")
+            return false;
+        if (ModelRuntimeStructNames.Contains(scope))
+            return true;
+        return Classes.Any(c => Name(c) == scope);
+    }
+
     // Every declaration kind carries one flag list; these read it once and the callers test bits.
     static int FlagBits(JsonElement e, Func<string, int> bit)
     {
@@ -1423,6 +1494,12 @@ public static class ApiCodeGen
             conversions.AppendLine("    }");
             conversions.AppendLine();
         }
+
+        // The generated half of the C# -> Qt type-name map (MetaType, in the runtime assembly).
+        // The runtime is Qt-type-free, so every module registers the types it declares when its
+        // assembly loads; QMetaType.FromType<T> and the declared-member mapper then read the same
+        // table, including the exact C++ spelling of a namespaced class (Qt3DCore::QEntity).
+        WriteTypeTable(ns);
 
         // The value types' members come from the same model, into the partial structs the
         // hand-written core extends (see WriteStructMembers); they carry their P/Invokes too.
@@ -3695,13 +3772,18 @@ public static class ApiCodeGen
             // The native forwarder already skipped the return slot (moc's argv[0]), so the
             // signal's first argument is argv[0] here - unlike the virtual-dispatch convention,
             // where the generated wrapper builds the whole array.
+            //
+            // The handler doubles as the connection key, and the closure forwards the context and
+            // connection type: `signal.Connect(h)` uses the defaults, while the QtCore extension
+            // overloads (QSignalConnections) pass a context QObject and Qt::ConnectionType through
+            // to the same native connection.
             string handler = csTypes.Count == 0
                 ? "h()"
                 : "h(" + string.Join(", ", ps.Select((p, i) => SignalRead(PType(p), i))) + ")";
             sb.AppendLine($"        /// <summary>The <c>{mocSigDoc}</c> signal as a QSignal (`Connect`/`Emit`).</summary>");
             sb.AppendLine($"        [QtNativeSignal({CsString(mocSig)})]");
             sb.AppendLine($"        public {NewName(inherited, Pascal(sname) + sSuffix + "Signal")}{signalType} {Pascal(sname)}{sSuffix}Signal =>");
-            sb.AppendLine($"            new {signalType}(h => ApiRuntime.Connect(Handle, \"{mocSig}\", (argv, _) => {handler}),");
+            sb.AppendLine($"            new {signalType}((h, context, type) => ApiRuntime.Connect(Handle, \"{mocSig}\", (argv, _) => {handler}, h, context?.Handle ?? IntPtr.Zero, type),");
             foreach (string line in EmitLambda(ps, mocSig))
                 sb.AppendLine("                " + line);
             sb.AppendLine("                );");
