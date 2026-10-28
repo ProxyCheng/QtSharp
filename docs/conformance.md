@@ -16,7 +16,7 @@ each holds exactly one `Main`, one `QApplication` and the module's reflected `[E
 | `QtSharp.Examples.QtMultimedia` | `examples/QtMultimedia/` | 1 | 12 |
 | `QtSharp.Charts.Examples` | `examples/Charts/` | 38 | 571 |
 | `QtSharp.Qt3D.Examples` | `examples/Qt3D/` | 3 | 37 |
-| `testapp` (the binding tests) | `tests/testapp/` | 38 | 979 |
+| `testapp` (the binding tests) | `tests/testapp/` | 39 | 1006 |
 
 `tools/run-examples.ps1` builds all ten example executables and hands each to
 `tools/run-window-tests.ps1`; the gate, CI and the release build all use that one table. A runner
@@ -85,6 +85,7 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 | `test-metatype` | the C# → Qt type-name map: value classes, namespaced bound classes, unsupported types |
 | `test-nativeslot` | the read-side `[QtNativeSlot]` marker on generated slots and `Q_INVOKABLE` methods |
 | `test-network` | QtNetwork transport beyond the fortune example: host addresses, local-socket handoff, TCP |
+| `test-objectlookup` | wrappers of actual bound type: `QObject*` returns, `QList<QObject*>` elements, signal arguments, parent/child accessors, managed subclasses, unpublished internal and namespaced classes |
 | `test-ownership` | who may delete a native object; liveness and generation counters |
 | `test-platformenv` | the QPA platform the hosts choose reaches Qt through the C library's environment, not only .NET's copy |
 | `test-positioning` | QtPositioning: coordinate distance/azimuth, shape containment, position info, source enumeration |
