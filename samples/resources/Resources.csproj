@@ -6,7 +6,10 @@
   </PropertyGroup>
   <Import Project="..\..\QtSharp.Api.props" />
   <ItemGroup>
-    <ProjectReference Include="..\..\demos\QtSharp.Demos.csproj" />
+    <!-- The sample consumes the binding the way a package consumer does: the QtCore module
+         assembly plus the shared runtime; the props above supplies the native glue and Qt DLLs. -->
+    <ProjectReference Include="..\..\nuget\QtSharp.Runtime\QtSharp.Runtime.csproj" />
+    <ProjectReference Include="..\..\nuget\QtSharp.Api\Modules\QtSharp.QtCore\QtSharp.QtCore.csproj" />
     <PackageReference Include="QtSharp.Tools" Version="0.1.0" PrivateAssets="all" />
     <QtResource Include="assets\sample.qrc" />
   </ItemGroup>
