@@ -13,8 +13,8 @@ works - pass its `DbConnection`:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api.win-x64" Version="0.20.0" />
-  <PackageReference Include="QtSharp.Sql.win-x64" Version="0.20.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.21.0" />
+  <PackageReference Include="QtSharp.Sql.win-x64" Version="0.21.0" />
   <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
 </ItemGroup>
 ```

@@ -22,7 +22,7 @@
        identical; the native payload below is the matching half only. -->
   <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
     <PackageId>QtSharp.Runtime.$(QtSharpPlatform)</PackageId>
-    <Version>0.20.0</Version>
+    <Version>0.21.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>QtSharp runtime: the managed handle/signal/marshalling layer shared by every QtSharp binding module, plus the native QtSharp.Api glue.</Description>
     <PackageTags>Qt;Qt6;CSharp;dotnet;binding;interop;runtime</PackageTags>

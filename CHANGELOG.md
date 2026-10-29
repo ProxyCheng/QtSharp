@@ -4,6 +4,43 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.21.0 - 2026-10-29
+
+- **C function pointers are part of the model.** A `ret(*)(T1,T2)` type now maps to `Action` /
+  `Func<..., R>` in both positions, so `QEasingCurve.SetCustomType`/`CustomType`,
+  `qInstallMessageHandler`, `qAddPreRoutine`/`qAddPostRoutine`/`qRemovePostRoutine` and the QImage
+  cleanup constructors are bound. The runtime roots each thunk and the caller's delegate and keys
+  them by instance, so a callback Qt hands back is the very delegate that was installed
+  (`curve.CustomType()` after `SetCustomType(f)` is `f` by reference) and `qRemovePostRoutine` finds
+  the routine `qAddPostRoutine` registered. A callback parameter on a virtual or a signal stays out,
+  as does a variadic or nested one. `QFunctionPointer` - Qt's signature-less "pointer to a
+  function" - keeps its own name and surfaces as the `QtSharp.QtCore.QFunctionPointer` carrier:
+  explicit `IntPtr` conversions, equality by address, and `As<TDelegate>()`/`TryAs<TDelegate>()` at
+  the call site, which is where the C++ `reinterpret_cast` lives. `docs/model-vocabulary.md` has
+  the full rule.
+- **QObject wrappers are their actual bound type** (issue #11). `FromHandle`,
+  `FromTransientHandle` and `FromOwnedHandle` resolve the most-derived bound class through the
+  native meta-object before the wrapper is made, so `is`/`as` work on a `QObject*` return, a
+  `QList<QObject*>` element (`QObject.Children()`), a signal argument and a parent/child accessor.
+  An existing compatible wrapper wins (identity and C# subclasses), an unpublished internal class
+  resolves to its nearest bound base (`QComboBox.View()` is a `QListView`), and the declared type is
+  the fallback when the module is not loaded. Owned returns set the ownership flag inside the actual
+  type's own class.
+- **`QObject.FindChild`/`FindChildren` as C# generics.** Qt only offers the two lookups as
+  templates; they are now methods over the wrapper tree, with Qt's order (a whole level is tested
+  before the search descends), `null`/empty name matching any object, `Qt.FindChildOptions` deciding
+  whether it descends, and managed subclasses found by their own type.
+- **`QImage` buffer constructors pin their `byte[]`.** Qt does not copy the buffer the image is
+  built from; it reads it until its last copy is destroyed and then calls the cleanup function. The
+  binding now pins the array for exactly that window (`QtSharp.Runtime.PinnedBuffer`), hands Qt a
+  cleanup that first runs the caller's `cleanupFunction(cleanupInfo)` and then releases the pin and
+  its thunk registry entry, and releases it directly when the native call fails. This is PySide6's
+  buffer-plus-decref design in C#, where the reference has to be a pin because the GC may move the
+  array.
+- Also in this release: the 0.20.1 fixes below (the Windows package's headless platform plugins, and
+  the QImage cleanup constructor's function-pointer parameter type on Linux), plus the
+  `collidingmice` example no longer culls an edge item from its own paint assertion.
+
 ## 0.20.1 - 2026-10-29
 
 - **The Windows package carries the headless platforms.** 0.20.0 said automated runs are headless,
