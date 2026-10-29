@@ -10,8 +10,8 @@ the two widget classes from QtMultimediaWidgets (`QVideoWidget`, `QGraphicsVideo
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api.win-x64" Version="0.21.0" />
-  <PackageReference Include="QtSharp.Multimedia.win-x64" Version="0.21.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.22.0" />
+  <PackageReference Include="QtSharp.Multimedia.win-x64" Version="0.22.0" />
 </ItemGroup>
 ```
 

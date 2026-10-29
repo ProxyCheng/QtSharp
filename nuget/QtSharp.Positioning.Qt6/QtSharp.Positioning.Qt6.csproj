@@ -13,7 +13,7 @@
        identical; the native payload below is the matching half only. -->
   <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
     <PackageId>QtSharp.Positioning.Qt6.$(QtSharpPlatform)</PackageId>
-    <Version>0.21.0</Version>
+    <Version>0.22.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>The Qt Positioning runtime (Qt6Positioning.dll) loaded by QtSharp.Positioning.</Description>
     <PackageTags>Qt;Qt6;QtPositioning;runtime;native</PackageTags>
