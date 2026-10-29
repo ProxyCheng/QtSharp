@@ -12,12 +12,18 @@ complete error or crash signature. For native crashes, include the smallest repr
 the generated/native log when possible. Never attach secrets, proprietary Qt files, or customer
 data.
 
+## API design
+
+When designing an API, aim for the ease of use of PyQt/PySide while following C# conventions
+and using .NET libraries where appropriate. Consider the call site, object lifetime and
+interaction with other QtSharp components; API coverage alone is not the goal.
+
 ## Development setup
 
-1. Install the prerequisites listed in `README.md` for your platform.
-2. Place the Qt development kit and clang builtin headers in the documented locations, or set the
-   corresponding environment variables. On Linux, `tools/build-qt-kit.sh` stages both the kit and
-   the runtime tree.
+1. Follow the platform setup in the [development guide](docs/development.md#prerequisites).
+2. Configure the Qt kit and runtime paths. Clang resource headers are needed when re-extracting
+   the model; `-SkipExtract` builds from the checked-in models instead. On Linux,
+   `tools/build-qt-kit.sh` stages both the kit and the runtime tree.
 3. Run `powershell -File tools\regen-api.ps1` (Windows) or `pwsh ./tools/regen-api.ps1` (Linux)
    from any directory. Model extraction is Windows-only; a Linux run uses the checked-in model and
    skips that step.
