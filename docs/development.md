@@ -114,7 +114,7 @@ After generation and native compilation, the projects can be built normally:
 
 ```text
 dotnet build tests/testapp/testapp.csproj -c Release
-pwsh ./tools/run-examples.ps1 -Configuration Release
+./tools/run-examples.ps1 -Configuration Release
 ```
 
 The example runner builds the ten example executables and hands each name to
