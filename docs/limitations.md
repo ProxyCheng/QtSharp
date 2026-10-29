@@ -16,6 +16,10 @@ The supported release targets are .NET 10 with Qt 6.12.0 on Windows x64 and Linu
   native libraries elsewhere and breaks that layout.
 * **`QtSharp.Tools` is Windows x64 only** — its `rcc`/`uic`/`lrelease`/`lupdate` payload is the
   MSVC build. On Linux use the tools from the Qt kit directly.
+* **`QtSharp.WebView` is Windows x64 only** — it hosts Microsoft Edge WebView2, which has no
+  Linux implementation. The machine also needs the Evergreen WebView2 Runtime (preinstalled on
+  Windows 11 and most updated Windows 10 systems);
+  `WebView2Widget.IsRuntimeAvailable` reports whether it is present.
 * **QtMultimedia on Linux needs the distribution's FFmpeg runtime.** Qt's ffmpeg backend plugin
   links `libavcodec`/`libavformat`/`libavutil`/`libswresample`/`libswscale`; install the ffmpeg
   runtime packages that match the kit's build (on Ubuntu 24.04, the `libavcodec60` family). The
@@ -51,13 +55,19 @@ The supported release targets are .NET 10 with Qt 6.12.0 on Windows x64 and Linu
 
 * **Intentionally omitted**: QtXml, QtSql and QtWebSockets use .NET alternatives; see
   [module scope and .NET integration](../README.md#module-scope-and-net-integration).
-* **Not currently bound**: QtQml/QtQuick, QtPdf and QtWebEngine.
+* **Not currently bound**: QtQml/QtQuick, QtPdf, QtWebEngine and QtWebView. The measured cost of
+  the web view modules is in [web view options](webview.md); `QtSharp.WebView` is the managed
+  WebView2 substitute for the Windows case.
 * **Not ported**: the RHI examples (they need `QRhi` and prebuilt shaders) and Window Embedding.
   PDF *output* works through `QPrinter` (see `test-docformats`); PDF *reading* needs the QtPdf
   module, which is not bound.
 
 ## Runtime behavior
 
+* **`QtSharp.WebView` has airspace limits.** WebView2 renders into a native child window, so
+  Qt-painted content cannot cover it: child widgets, stylesheet backgrounds and translucent
+  overlays above it are hidden. Menus, tooltips and dialogs are separate top-level windows and
+  work normally. The widget is also UI-thread bound; use `RunOnUiThread` after background work.
 * **`QtSharp.Sql` materializes a whole result set.** Qt's `QSqlTableModel` fetches in 256-row
   batches; the substitute loads everything up front, so page very large tables with `WHERE`/`LIMIT`.
   Its per-cell `Data()` also crosses the managed/native boundary (a per-call cost for visible cells).

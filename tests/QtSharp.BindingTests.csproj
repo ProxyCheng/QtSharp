@@ -15,15 +15,21 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PlatformTarget>x64</PlatformTarget>
     <QtSharpCompileBinding>false</QtSharpCompileBinding>
+    <!-- Microsoft.Web.WebView2 (through the WebView2 test) adds its WPF assembly to every
+         net5.0+ project; WindowsBase 5.0 conflicts with the .NET 10 ref pack's 4.0. The package
+         offers no switch to skip the WPF reference, and the test only uses Core. -->
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
   <Import Project="..\QtSharp.Api.props" />
 
   <ItemGroup>
-    <!-- One platform file per host, so the test sources never branch on the OS. -->
-    <Compile Include="*.cs" Exclude="TestPlatform.Windows.cs;TestPlatform.Unix.cs" />
+    <!-- One platform file per host, so the test sources never branch on the OS. WebViewApi is
+         Windows-only (WebView2), so it is compiled and referenced only there. -->
+    <Compile Include="*.cs" Exclude="TestPlatform.Windows.cs;TestPlatform.Unix.cs;WebViewApi.cs" />
     <Compile Include="TestPlatform.Windows.cs" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
     <Compile Include="TestPlatform.Unix.cs" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
+    <Compile Include="WebViewApi.cs" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,6 +43,7 @@
     <ProjectReference Include="..\nuget\QtSharp.Positioning\QtSharp.Positioning.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Qt3D\Modules\QtSharp.Qt3DExtras\QtSharp.Qt3DExtras.csproj" />
     <ProjectReference Include="..\nuget\QtSharp.Sql\QtSharp.Sql.csproj" />
+    <ProjectReference Include="..\nuget\QtSharp.WebView\QtSharp.WebView.csproj" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
   </ItemGroup>
 
   <ItemGroup>

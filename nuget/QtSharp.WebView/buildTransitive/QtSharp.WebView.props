@@ -1,0 +1,11 @@
+<Project>
+  <!-- Microsoft.Web.WebView2's targets add its WPF assembly to every net5.0+ project. That
+       assembly references WindowsBase 5.0, which conflicts with the WindowsBase 4.0 in the .NET
+       10 ref pack when no WPF project brings the newer one; MSBuild reports the conflict as
+       MSB3277. A QtSharp.WebView consumer uses the Core API only, so the warning is noise, and
+       the WebView2 package offers no property to skip the WPF reference. Demote exactly that
+       warning; every other warning stays visible. -->
+  <PropertyGroup>
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
+  </PropertyGroup>
+</Project>
