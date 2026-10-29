@@ -53,6 +53,12 @@
     <!-- concrt140 is a redistributable, not a Qt module: some kits ship it and some do not. -->
     <None Include="$(QtRuntimeDir)\concrt140*.dll" Pack="true" PackagePath="tools/native/win-x64/"  Condition="'$(QtSharpPlatform)' == 'win-x64'" />
     <None Include="$(QtRuntimeDir)\platforms\qwindows.dll" Pack="true" PackagePath="tools/native/win-x64/platforms/"  Condition="'$(QtSharpPlatform)' == 'win-x64'" />
+    <!-- The headless platforms. A test or a check that must not map a window selects one with
+         QT_QPA_PLATFORM=offscreen, and Qt aborts the process when the platform it was told to use
+         is not in the build - so a package without these can only run with a desktop. The kit
+         stages both (tools/build-qt-kit.ps1); they are packed when it did. -->
+    <None Include="$(QtRuntimeDir)\platforms\qoffscreen.dll" Pack="true" PackagePath="tools/native/win-x64/platforms/"  Condition="'$(QtSharpPlatform)' == 'win-x64' And Exists('$(QtRuntimeDir)\platforms\qoffscreen.dll')" />
+    <None Include="$(QtRuntimeDir)\platforms\qminimal.dll" Pack="true" PackagePath="tools/native/win-x64/platforms/"  Condition="'$(QtSharpPlatform)' == 'win-x64' And Exists('$(QtRuntimeDir)\platforms\qminimal.dll')" />
     <!-- linux-x64: the whole staged prefix (all Qt libraries and plugin trees, including the
          addons). Every addon package depends on QtSharp.Qt6, so keeping the shared tree here - one
          copy instead of the same libraries in four packages - is both smaller and immune to a
