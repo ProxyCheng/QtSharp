@@ -219,6 +219,10 @@ public static class CollidingMice
             $"Qt asked the managed items for their bounding rectangles ({bounds.Width():F0}x{bounds.Height():F0})");
         #endif
 
+        // The view is smaller than the scene, so an item near the edge can legitimately be culled
+        // from the grab; fit the whole scene first, so "every mouse was painted" is the question
+        // the assertion actually asks.
+        view.FitInView(scene.SceneRect);
         using var shot = view.Grab();
         int painted = 0;
         for (int i = 0; i < mouseCount; i++)
