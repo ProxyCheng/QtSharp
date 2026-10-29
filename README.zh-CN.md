@@ -64,7 +64,7 @@ dotnet run --project samples/hello/Hello.csproj --no-restore
 
 这些示例通过仓库的[开发构建流程](docs/development.md)运行，验证范围见
 [示例与测试覆盖](docs/conformance.md)。门禁把它们当作一致性测试套件：十个可执行文件共
-**73 个示例（1544 条断言）**，另有 **40 个绑定测试（1020 条断言）**。
+**73 个示例（1544 条断言）**，另有 **41 个绑定测试（1029 条断言）**。
 
 当前覆盖：**483 个类 / 9947 个方法 / 1901 个虚函数 / 517 个枚举 / 834 个 Q_PROPERTY
 属性 / 475 个信号 / 72 个命名空间函数**（QtCore、QtGui、QtWidgets、QtNetwork、QtSvg、

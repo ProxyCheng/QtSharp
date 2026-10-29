@@ -47,6 +47,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\QtCallbackRegistry.cs">
       <Link>Runtime\QtCallbackRegistry.cs</Link>
     </Compile>
+    <!-- The pinned-buffer lifetime for Qt's buffer-plus-cleanup constructors. -->
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\QtPinnedBuffer.cs">
+      <Link>Runtime\QtPinnedBuffer.cs</Link>
+    </Compile>
     <!-- The binding tests probe the liveness generation counters (OwnershipApi); those members
          are internal to the runtime otherwise. -->
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">

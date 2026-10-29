@@ -61,6 +61,11 @@
     <Compile Include="$(QtSharpRoot)runtime/QtCallbackRegistry.cs">
       <Link>Runtime\%(Filename)%(Extension)</Link>
     </Compile>
+    <!-- The buffer-plus-cleanup constructors: a byte[] Qt keeps reading is pinned until Qt calls
+         the cleanup (QtSharp.Runtime.PinnedBuffer). -->
+    <Compile Include="$(QtSharpRoot)runtime/QtPinnedBuffer.cs">
+      <Link>Runtime\%(Filename)%(Extension)</Link>
+    </Compile>
     <!-- The pieces that belong to a module and must sit beside its generated classes: the
          QObject signal API (QtCore), the BCL conversions (QtCore), and the command-line
          constructors of QCoreApplication/QGuiApplication/QApplication. -->
