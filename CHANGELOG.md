@@ -4,6 +4,16 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.20.1 - 2026-10-29
+
+- **The Windows package carries the headless platforms.** 0.20.0 said automated runs are headless,
+  and the kit stages `qoffscreen.dll` and `qminimal.dll` for that, but the packaging project listed
+  only `platforms/qwindows.dll` and `buildTransitive` copied only that one: a consumer setting
+  `QT_QPA_PLATFORM=offscreen` had no such plugin and Qt aborted the process instead of drawing
+  nothing. Both are packed now (when the kit produced them) and copied next to the executable on
+  Build and on Publish, so the recipe in the 0.20.0 note works for a consumer of the package, not
+  only for this repository's own test host.
+
 ## 0.20.0 - 2026-10-28
 
 - **Generated methods are marked as Qt slots.** A method Qt declares in a `Q_SLOTS`/`Q_SLOT`

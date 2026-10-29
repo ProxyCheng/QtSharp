@@ -95,7 +95,9 @@ $expectedCommon = @{
 $expectedWin = @{
     'QtSharp.Runtime'    = @('tools/native/win-x64/QtSharp.Api.dll')
     'QtSharp.Qt6'        = @('tools/native/win-x64/Qt6Core.dll', 'tools/native/win-x64/Qt6Widgets.dll',
-                             'tools/native/win-x64/platforms/qwindows.dll')
+                             'tools/native/win-x64/platforms/qwindows.dll',
+                             'tools/native/win-x64/platforms/qoffscreen.dll',
+                             'tools/native/win-x64/platforms/qminimal.dll')
     'QtSharp.Charts.Qt6' = @('tools/native/win-x64/Qt6Charts.dll')
     'QtSharp.Charts'     = @('tools/native/win-x64/QtSharp.Charts.Native.dll')
     'QtSharp.Qt3D.Qt6'   = @('tools/native/win-x64/Qt63DCore.dll', 'tools/native/win-x64/Qt6ShaderTools.dll',

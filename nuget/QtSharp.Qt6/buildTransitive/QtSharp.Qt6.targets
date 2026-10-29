@@ -10,6 +10,10 @@
     <ItemGroup>
       <_QtSharpQt6Native Include="$(QtSharpQt6NativeDir)*.dll" />
       <_QtSharpQt6Platform Include="$(QtSharpQt6NativeDir)platforms\qwindows.dll" />
+      <_QtSharpQt6Platform Include="$(QtSharpQt6NativeDir)platforms\qoffscreen.dll"
+                           Condition="Exists('$(QtSharpQt6NativeDir)platforms\qoffscreen.dll')" />
+      <_QtSharpQt6Platform Include="$(QtSharpQt6NativeDir)platforms\qminimal.dll"
+                           Condition="Exists('$(QtSharpQt6NativeDir)platforms\qminimal.dll')" />
     </ItemGroup>
     <Copy SourceFiles="@(_QtSharpQt6Native)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(_QtSharpQt6Platform)" DestinationFolder="$(OutDir)platforms\" SkipUnchangedFiles="true" />
@@ -19,6 +23,10 @@
     <ItemGroup>
       <_QtSharpQt6NativePublish Include="$(QtSharpQt6NativeDir)*.dll" />
       <_QtSharpQt6PlatformPublish Include="$(QtSharpQt6NativeDir)platforms\qwindows.dll" />
+      <_QtSharpQt6PlatformPublish Include="$(QtSharpQt6NativeDir)platforms\qoffscreen.dll"
+                                  Condition="Exists('$(QtSharpQt6NativeDir)platforms\qoffscreen.dll')" />
+      <_QtSharpQt6PlatformPublish Include="$(QtSharpQt6NativeDir)platforms\qminimal.dll"
+                                  Condition="Exists('$(QtSharpQt6NativeDir)platforms\qminimal.dll')" />
     </ItemGroup>
     <Copy SourceFiles="@(_QtSharpQt6NativePublish)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(_QtSharpQt6PlatformPublish)" DestinationFolder="$(PublishDir)platforms\" SkipUnchangedFiles="true" />
