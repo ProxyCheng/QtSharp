@@ -19,7 +19,7 @@
        identical; the native payload below is the matching half only. -->
   <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
     <PackageId>QtSharp.Positioning.$(QtSharpPlatform)</PackageId>
-    <Version>0.20.0</Version>
+    <Version>0.21.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>Qt Positioning for .NET, generated from the Qt 6.12 headers. References QtSharp.Api.</Description>
     <PackageTags>Qt;Qt6;QtPositioning;CSharp;dotnet;binding;interop;geo</PackageTags>
