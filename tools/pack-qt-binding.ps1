@@ -67,6 +67,7 @@ $packages = @(
     @{ Name = 'QtSharp.Multimedia';  Args = @() },
     @{ Name = 'QtSharp.Positioning.Qt6'; Args = @("-p:QtPositioningRuntimeDir=$QtRuntime") },
     @{ Name = 'QtSharp.Positioning';  Args = @() },
+    @{ Name = 'QtSharp.WebView';      Args = @(); Platforms = @('win-x64') },
     @{ Name = 'QtSharp.Sql';          Args = @() }
 )
 
@@ -89,6 +90,7 @@ $expectedCommon = @{
     'QtSharp.Multimedia' = @('lib/net10.0/QtSharp.QtMultimedia.dll', 'buildTransitive/QtSharp.Multimedia.%rid%.targets')
     'QtSharp.Positioning.Qt6' = @('buildTransitive/QtSharp.Positioning.Qt6.%rid%.targets')
     'QtSharp.Positioning' = @('lib/net10.0/QtSharp.QtPositioning.dll', 'buildTransitive/QtSharp.Positioning.%rid%.targets')
+    'QtSharp.WebView' = @('lib/net10.0/QtSharp.WebView.dll', 'buildTransitive/QtSharp.WebView.%rid%.props')
     'QtSharp.Sql' = @('lib/net10.0/QtSharp.QtSql.dll')
 }
 
@@ -109,6 +111,7 @@ $expectedWin = @{
     'QtSharp.Multimedia' = @('tools/native/win-x64/QtSharp.QtMultimedia.Native.dll')
     'QtSharp.Positioning.Qt6' = @('tools/native/win-x64/Qt6Positioning.dll')
     'QtSharp.Positioning' = @('tools/native/win-x64/QtSharp.QtPositioning.Native.dll')
+    'QtSharp.WebView' = @()
 }
 
 # Addon Qt-runtime packages deliberately have no Linux payload: the base QtSharp.Qt6 package
@@ -149,6 +152,7 @@ foreach ($platform in $Platforms) {
     $otherRid = if ($platform -eq 'win-x64') { 'linux-x64' } else { 'win-x64' }
 
     foreach ($package in $packages) {
+        if ($package.ContainsKey('Platforms') -and $package.Platforms -notcontains $platform) { continue }
         Write-Host "=== Pack $($package.Name).$platform ==="
         $arguments = @('pack', "$root/nuget/$($package.Name)/$($package.Name).csproj",
                        '-c', 'Release', '-o', $outDir, '--nologo', "-p:Version=$PackageVersion",
@@ -157,8 +161,38 @@ foreach ($platform in $Platforms) {
         if ($LASTEXITCODE -ne 0) { throw "$($package.Name).$platform pack failed." }
     }
 
+    # QtSharp.WebView's one non-QtSharp dependency is Microsoft.Web.WebView2, and the documented
+    # install path is a local feed built from this archive. Put that package in the feed too, or a
+    # consumer restoring with only this folder as its source fails with NU1101. The version comes
+    # from the packed nuspec, so it cannot drift from the project.
+    if ($platform -eq 'win-x64') {
+        $webViewPackage = Join-Path $outDir "QtSharp.WebView.win-x64.$PackageVersion.nupkg"
+        if (Test-Path -LiteralPath $webViewPackage) {
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            $zip = [System.IO.Compression.ZipFile]::OpenRead($webViewPackage)
+            try {
+                $nuspecEntry = $zip.Entries | Where-Object { $_.FullName -like '*.nuspec' } | Select-Object -First 1
+                $reader = New-Object System.IO.StreamReader($nuspecEntry.Open())
+                try { [xml]$nuspec = $reader.ReadToEnd() } finally { $reader.Dispose() }
+            } finally { $zip.Dispose() }
+            $dependency = @($nuspec.package.metadata.dependencies.group.dependency |
+                Where-Object { $_.id -eq 'Microsoft.Web.WebView2' })[0]
+            if ($dependency) {
+                $webView2Version = $dependency.version
+                $packageRoot = if ($env:NUGET_PACKAGES) { $env:NUGET_PACKAGES } else { Join-Path ([Environment]::GetFolderPath('UserProfile')) '.nuget/packages' }
+                $source = Join-Path $packageRoot "microsoft.web.webview2/$webView2Version/microsoft.web.webview2.$webView2Version.nupkg"
+                if (-not (Test-Path -LiteralPath $source)) {
+                    throw "Microsoft.Web.WebView2 $webView2Version is missing from the NuGet cache ('$source'); restore QtSharp.WebView before packing."
+                }
+                Copy-Item -LiteralPath $source -Destination (Join-Path $outDir "Microsoft.Web.WebView2.$webView2Version.nupkg") -Force
+                Write-Host "  added Microsoft.Web.WebView2.$webView2Version.nupkg to the feed (QtSharp.WebView dependency)"
+            }
+        }
+    }
+
     Write-Host "=== Inspect the $platform packages ==="
     foreach ($package in $packages) {
+        if ($package.ContainsKey('Platforms') -and $package.Platforms -notcontains $platform) { continue }
         # The version starts with a digit, which keeps QtSharp.Multimedia.<rid>.* from also
         # matching QtSharp.Multimedia.Qt6.<rid>.* (whose name starts with a letter).
         $pattern = "^$([regex]::Escape($package.Name))\.$([regex]::Escape($platform))\.\d"

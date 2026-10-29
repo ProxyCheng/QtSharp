@@ -44,6 +44,9 @@ New-Item -ItemType Directory -Path $WorkDir | Out-Null
     <PlatformTarget>x64</PlatformTarget>
     <AssemblyName>PackageConsumer</AssemblyName>
   </PropertyGroup>
+  <PropertyGroup Condition="`$([MSBuild]::IsOSPlatform('Windows'))">
+    <DefineConstants>WEBVIEW</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="QtSharp.Api.$Platform" Version="$PackageVersion" />
     <PackageReference Include="QtSharp.Charts.$Platform" Version="$PackageVersion" />
@@ -51,6 +54,7 @@ New-Item -ItemType Directory -Path $WorkDir | Out-Null
     <PackageReference Include="QtSharp.Multimedia.$Platform" Version="$PackageVersion" />
     <PackageReference Include="QtSharp.Positioning.$Platform" Version="$PackageVersion" />
     <PackageReference Include="QtSharp.Sql.$Platform" Version="$PackageVersion" />
+    <PackageReference Include="QtSharp.WebView.win-x64" Version="$PackageVersion" Condition="`$([MSBuild]::IsOSPlatform('Windows'))" />
   </ItemGroup>
 </Project>
 "@ | Set-Content -LiteralPath (Join-Path $WorkDir 'PackageConsumer.csproj') -Encoding utf8
@@ -63,6 +67,9 @@ using QtSharp.QtMultimedia;
 using QtSharp.QtPositioning;
 using QtSharp.QtSql;
 using QtSharp.QtWidgets;
+#if WEBVIEW
+using QtSharp.WebView;
+#endif
 
 static class Program
 {
@@ -79,6 +86,11 @@ static class Program
         using var coordinate = new QGeoCoordinate(52.52, 13.405);
         using var sql = new QSqlQueryModel();
         Console.WriteLine(`$"[PASS] {app.GetType().FullName}, {chart.GetType().FullName}, {entity.GetType().FullName}, {player.GetType().FullName}, {coordinate.GetType().FullName}, {sql.GetType().FullName}");
+#if WEBVIEW
+        // Not constructed: that would start a browser, and the dependency graph is what this
+        // consumer proves. The loader deployment is checked below.
+        Console.WriteLine(`$"[PASS] {typeof(WebView2Widget).FullName}");
+#endif
         return 0;
     }
 }
@@ -100,4 +112,13 @@ try {
 $output | ForEach-Object { Write-Host $_ }
 if ($code -ne 0) { throw "The package consumer failed with exit code $code." }
 if (-not ($output -match '\[PASS\]')) { throw 'The package consumer ran but printed no [PASS] line.' }
+# QtSharp.WebView depends on Microsoft.Web.WebView2, whose native asset is the loader the Core
+# assembly P/Invokes. It is resolved from the consumer's runtimes/ folder, not the package root.
+if ($PSVersionTable.PSVersion.Major -lt 6 -or $IsWindows) {
+    $loader = Join-Path $WorkDir 'bin\Release\net10.0\runtimes\win-x64\native\WebView2Loader.dll'
+    if (-not (Test-Path -LiteralPath $loader)) {
+        throw "QtSharp.WebView did not deploy the WebView2 loader ('$loader')."
+    }
+    Write-Host "OK: QtSharp.WebView.win-x64 restored and deployed WebView2Loader.dll."
+}
 Write-Host "OK: QtSharp.Api.$Platform + QtSharp.Charts.$Platform + QtSharp.Qt3D.$Platform + QtSharp.Multimedia.$Platform + QtSharp.Positioning.$Platform + QtSharp.Sql.$Platform restored from $PackagesDir and ran."

@@ -25,14 +25,16 @@ namespace per Qt module**.
 | `QtSharp.Qt3D` | six assemblies: `QtSharp.Qt3DCore`, `QtSharp.Qt3DRender`, `QtSharp.Qt3DInput`, `QtSharp.Qt3DLogic`, `QtSharp.Qt3DAnimation`, `QtSharp.Qt3DExtras`; six native glues | `QtSharp.Api`, `QtSharp.Qt3D.Qt6` |
 | `QtSharp.Qt3D.Qt6` | `Qt63D*.dll`, `Qt6Concurrent`, `Qt6ShaderTools`, renderer/geometry/scene plugins | — |
 | `QtSharp.Tools` | Qt command-line tools and MSBuild `.qrc` support | — |
+| `QtSharp.Sql` | an ADO.NET implementation of the Qt SQL model APIs; it does not bind QtSql or require a Qt SQL runtime package | `QtSharp.Api` |
+| `QtSharp.WebView` | a managed-only `QWidget` host for Microsoft Edge WebView2 (Windows x64); no Qt module, native glue or browser payload | `QtSharp.Api`, `Microsoft.Web.WebView2` |
 
-QtMultimedia and QtPositioning also have binding/runtime package pairs. `QtSharp.Sql` is
-an ADO.NET implementation of the Qt SQL model APIs; it does not bind QtSql or require a Qt SQL
-runtime package. QtQml, QtQuick, QtPdf and QtWebEngine are not currently bound.
+QtMultimedia and QtPositioning also have binding/runtime package pairs. QtQml, QtQuick, QtPdf
+and QtWebEngine are not currently bound.
 
 Platform packages have a `.win-x64` or `.linux-x64` suffix; the table uses their base names.
 On Linux the base `QtSharp.Qt6` package deploys the Qt runtime tree, including addon libraries
-and plugins. `QtSharp.Tools` is Windows x64 only and has no platform suffix.
+and plugins. `QtSharp.Tools` is Windows x64 only and has no platform suffix, and
+`QtSharp.WebView` is Windows x64 only because WebView2 has no Linux implementation.
 
 ## Module selection and managed adapters
 
@@ -49,10 +51,14 @@ Qt-facing interface while using a .NET library internally. Existing examples are
   `QIODevice`, so Qt image loaders and other IO consumers can use it.
 - [XML interoperability tests](../tests/XmlSeamApi.cs): documents passed between `System.Xml`
   and QtCore's `QXmlStreamReader`/`QXmlStreamWriter`.
+- [`QtSharp.WebView`](../nuget/QtSharp.WebView/README.md): a `QWidget` that hosts Edge WebView2,
+  so a QtSharp window can show web content without binding QtWebEngine or shipping Chromium.
 
 Further adapters can be added as integration needs arise. There is no Qt-facing WebSocket
-adapter at present. QtQml/QtQuick, QtPdf and QtWebEngine are also unbound, but are separate
-coverage gaps rather than the .NET substitutions described here.
+adapter at present. QtQml/QtQuick and QtPdf are separate coverage gaps. Web content has its own
+note: QtWebEngine and Qt WebView are both unbound, `QtSharp.WebView` covers the Windows/WebView2
+case, and [web view options](webview.md) records the measured payloads and why QtWebEngine was
+not bound.
 
 ## Assemblies in the base binding
 
@@ -163,12 +169,15 @@ nuget/
   QtSharp.Qt3D/                    pack project for six assemblies
     Modules/QtSharp.Qt3DCore/ …    one csproj per Qt3D module
   QtSharp.Qt3D.Qt6/                Qt3D runtime + plugins
+  QtSharp.WebView/                 managed WebView2 QWidget host (Windows x64, no native glue)
 ```
 
 The pack projects only collect `lib/net10.0` assemblies and `tools/native` payloads; the companion
 `*.Qt6` packages own the Qt DLLs and use `buildTransitive` to copy them next to the consumer's
 executable. `QtSharp.Api` and the addon packages depend on their runtime companions with ordinary
-NuGet dependencies, so a consumer never lists the runtime packages by hand.
+NuGet dependencies, so a consumer never lists the runtime packages by hand. `QtSharp.WebView` is the
+exception: it ships only the managed assembly, and its dependency (`Microsoft.Web.WebView2`) brings
+the loader and the runtime is the one the system installed.
 
 ## Verification
 

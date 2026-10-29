@@ -107,7 +107,8 @@ The repository includes C# ports of official Qt examples:
 
 These examples use the repository's [development build](docs/development.md). The gate runs them
 as its conformance suite: **73 examples (1544 assertions)** in ten executables — the base-module
-ports, the Qt Charts ports and the three Qt 3D scenes — plus **41 binding tests (1029 assertions)**.
+ports, the Qt Charts ports and the three Qt 3D scenes — plus **42 binding tests (1029 assertions)**.
+The WebView2 test asserts only under a real window; the offscreen gate reports it as skipped.
 See [conformance coverage](docs/conformance.md) for the scenarios they check.
 
 Current coverage: **483 classes / 9947 methods / 1901 virtuals / 517 enums / 834 Q_PROPERTY
@@ -130,6 +131,7 @@ applications well, we prefer those libraries:
 | QtXml | `System.Xml` | QtCore's `QXmlStreamReader`/`QXmlStreamWriter` remain available. |
 | QtSql | ADO.NET providers | `QtSharp.Sql` exposes query/table models backed by a `DbConnection`. |
 | QtWebSockets | `ClientWebSocket` | Use the .NET API directly; no Qt-facing adapter is provided yet. |
+| QtWebEngine | System web view (Edge WebView2 on Windows) | Not bound. `QtSharp.WebView` hosts WebView2 in a `QWidget` (Windows x64); Qt WebView is the cross-platform Qt module if needed. See [web view options](docs/webview.md). |
 
 `QtSharp.Sql` and [`StreamIODevice`](runtime/QtCore/IoDeviceInterop.cs), which exposes a .NET
 `Stream` as `QIODevice`, already use this approach. Further adapters may make C# libraries
@@ -160,6 +162,7 @@ The sample projects and package examples use v0.21.0.
 | `QtSharp.Multimedia` | Media playback, capture and device APIs. |
 | `QtSharp.Positioning` | Coordinates, shapes, positioning and satellite APIs. |
 | `QtSharp.Sql` | ADO.NET-backed query and table models. |
+| `QtSharp.WebView` | A `QWidget` host for Microsoft Edge WebView2 (Windows x64 only); web content without QtWebEngine. |
 
 Optional binding packages pull in their runtime dependencies. `QtSharp.Tools` is a separate
 Windows x64 package, without a platform suffix, containing Qt command-line tools and MSBuild
@@ -170,6 +173,7 @@ resource support. See the [tools guide](tools/QtSharp.Tools/README.md) and
 
 - Supported platforms are Windows x64 and Linux x64/glibc. macOS, ARM64 and musl are not packaged.
 - QtQml/QtQuick, QtPdf and QtWebEngine are not bound. PDF output through `QPrinter` is supported.
+  `QtSharp.WebView` (Edge WebView2) is Windows x64 only.
 - Single-file publishing is not supported on Linux.
 - APIs using C++ `long` retain 32-bit values on Linux; use the corresponding 64-bit APIs where needed.
 - Some native window teardown scenarios remain unstable.

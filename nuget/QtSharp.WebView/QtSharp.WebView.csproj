@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The WebView2 adapter: a QWidget host for Microsoft Edge WebView2, the .NET-side answer to
+       "show web content in a QtSharp application" without binding QtWebEngine. Hand-written, like
+       QtSharp.Sql: no generated code and no native glue. The WebView2 SDK supplies the browser
+       control and the Evergreen runtime supplies Chromium, so this package carries no Qt addon
+       payload and no bundled browser.
+
+       Windows only by construction: WebView2 has no Linux implementation. The project still
+       targets net10.0 rather than net10.0-windows so the repository's cross-platform builds can
+       compile it; the widget refuses to construct elsewhere. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>QtSharp.WebView</AssemblyName>
+    <RootNamespace>QtSharp.WebView</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <PlatformTarget>x64</PlatformTarget>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <IsPackable>true</IsPackable>
+
+  <!-- One package per platform, like the other addons. Only win-x64 is produced; the id still
+       carries the RID so a Linux consumer cannot install it by accident. -->
+  <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
+    <PackageId>QtSharp.WebView.$(QtSharpPlatform)</PackageId>
+    <Version>0.21.0</Version>
+    <Authors>ProxyCheng</Authors>
+    <Description>A QWidget that hosts Microsoft Edge WebView2, for showing web content in a QtSharp application without QtWebEngine (Windows x64).</Description>
+    <PackageTags>Qt;Qt6;WebView2;Edge;Chromium;CSharp;dotnet;binding;interop;widget</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ProxyCheng/QtSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ProxyCheng/QtSharp.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- Microsoft.Web.WebView2's build targets add its WPF assembly to every net5.0+ project,
+         and that assembly's WindowsBase 5.0 reference conflicts with the WindowsBase in the .NET
+         10 ref pack. The conflict is benign (this project only uses Core) and the package has no
+         switch to skip the WPF reference, so the specific MSB warning is demoted to a message. -->
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- PrivateAssets=none: the WebView2 package's build assets carry WebView2Loader.dll into the
+         consumer's output, so the dependency must flow with its Build assets, not only its lib. -->
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" PrivateAssets="none" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Runtime\QtSharp.Runtime.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\Modules\QtSharp.QtCore\QtSharp.QtCore.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\Modules\QtSharp.QtGui\QtSharp.QtGui.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\Modules\QtSharp.QtWidgets\QtSharp.QtWidgets.csproj" PrivateAssets="all" />
+    <!-- The package dependency: a WebView2Widget consumer gets QtSharp.Api.win-x64 as well. -->
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\QtSharp.Api\QtSharp.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <!-- The WebView2 package's WPF reference produces MSB3277 in the consumer's build too; the
+         props file demotes it there as well. -->
+    <None Include="buildTransitive\QtSharp.WebView.props" Pack="true" PackagePath="buildTransitive/QtSharp.WebView.$(QtSharpPlatform).props" />
+  </ItemGroup>
+
+</Project>

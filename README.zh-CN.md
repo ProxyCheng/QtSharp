@@ -84,6 +84,7 @@ QtSharp 不追求绑定全部 Qt 模块。对于 .NET 已有成熟、适合 C# �
 | QtXml | `System.Xml` | QtCore 中的 `QXmlStreamReader`/`QXmlStreamWriter` 仍可使用。 |
 | QtSql | ADO.NET 数据库驱动 | `QtSharp.Sql` 将 `DbConnection` 包装成查询和表格模型。 |
 | QtWebSockets | `ClientWebSocket` | 直接使用 .NET API，目前没有 Qt 接口适配。 |
+| QtWebEngine | 系统 WebView（Windows 上为 Edge WebView2） | 暂未绑定。`QtSharp.WebView` 在 `QWidget` 中承载 WebView2（仅 Windows x64）；如需跨平台可考虑 Qt WebView 模块。调研见[网页视图方案](docs/webview.md)。 |
 
 现有的 `QtSharp.Sql` 和将 .NET `Stream` 包装为 `QIODevice` 的
 [`StreamIODevice`](runtime/QtCore/IoDeviceInterop.cs) 已采用这种方式。后续也会按需考虑
@@ -103,8 +104,9 @@ QtSharp 目前没有绑定 QtQml/QtQuick。如果需要使用 QML/Qt Quick 编�
 ## 模块与限制
 
 基础包提供 Core、Gui、Widgets、Network、Svg、SvgWidgets、PrintSupport、OpenGL 和
-OpenGLWidgets 九个模块程序集。Charts、Qt3D、Multimedia、Positioning 和 SQL 模型为
-可选包，具体包名见[英文包列表](README.md#packages)和[包架构](docs/module-architecture.md)。
+OpenGLWidgets 九个模块程序集。Charts、Qt3D、Multimedia、Positioning、SQL 模型和
+WebView2 适配器（`QtSharp.WebView`，仅 Windows x64）为可选包，具体包名见
+[英文包列表](README.md#packages)和[包架构](docs/module-architecture.md)。
 
 目前不提供 macOS、ARM64 或 musl 包，尚未绑定 QtPdf 和 QtWebEngine，也不支持 Linux
 单文件发布。部分原生窗口退出场景仍不稳定。完整说明见[已知限制](docs/limitations.md)。
