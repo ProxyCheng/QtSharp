@@ -3471,8 +3471,13 @@ public static class ApiCodeGen
         int ctorIndex = 0;
         foreach (var ctor in ctors)
         {
-            var ps = Params(ctor);
+            var ps = Params(ctor).ToList();
             string sig = string.Join(", ", ps.Select(ParamSig));
+            // A constructor that hands Qt a buffer together with its cleanup function pins the
+            // array and composes the cleanup (see TryPinnedBuffer).
+            var pinned = TryPinnedBuffer(ps, out int dataIndex, out int cleanupIndex, out string cleanupName)
+                ? (dataIndex, cleanupIndex, cleanupName)
+                : ((int, int, string)?)null;
             string dispatch = virtuals.Count > 0
                 ? "(IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, int, IntPtr, void>)&Dispatch"
                 : "IntPtr.Zero";
@@ -3494,7 +3499,7 @@ public static class ApiCodeGen
             // what the subclass constructor below is for.)
             if (dispatch != "IntPtr.Zero")
                 sb.AppendLine("            var __context = GCHandle.Alloc(this);");
-            var marshal = MarshalParams(ps, null);
+            var marshal = MarshalParams(ps, null, pinned);
             foreach (string line in marshal.Prelude)
                 sb.AppendLine("            " + line);
             string context = dispatch == "IntPtr.Zero" ? "IntPtr.Zero" : "GCHandle.ToIntPtr(__context)";
@@ -3510,7 +3515,8 @@ public static class ApiCodeGen
                 // the object's meta-object gets them before any connection can be made.
                 register += "\n            ApiRuntime.AttachMetaObject(this);";
             }
-            EmitGuarded(sb, "            ", create + "\n" + register, marshal.Cleanup);
+            EmitGuarded(sb, "            ", create + "\n" + register, marshal.Cleanup,
+                pinned != null ? "__buffer.Dispose();" : null);
             sb.AppendLine("        }");
             sb.AppendLine();
         }
@@ -4245,8 +4251,42 @@ public static class ApiCodeGen
     // runs in a finally so an exception cannot leak it.
     // The postlude runs after the call and before the return: an in-out string has to be written
     // back into the caller's variable there.
+    // Qt's buffer-plus-cleanup constructors (QImage's uchar* family) hand Qt a buffer it keeps
+    // reading until it calls the cleanup function. That callback is what says so: a uchar* array
+    // without one is borrowed for the length of the call, while with one the callee owns the
+    // pointer until its last copy dies. Such a buffer is pinned for that window and the cleanup
+    // releases the pin (QtSharp.Runtime.PinnedBuffer); nothing is copied.
+    static bool TryPinnedBuffer(IReadOnlyList<JsonElement> ps, out int dataIndex, out int cleanupIndex,
+        out string cleanupName)
+    {
+        dataIndex = -1;
+        cleanupIndex = -1;
+        cleanupName = null;
+        for (int i = 0; i < ps.Count; i++)
+        {
+            string t = PType(ps[i]);
+            if (dataIndex < 0)
+            {
+                if (t == "uchar*")
+                    dataIndex = i;
+            }
+            else if (cleanupIndex < 0 && IsCleanupCallback(t))
+            {
+                cleanupIndex = i;
+            }
+        }
+        if (dataIndex < 0 || cleanupIndex < 0)
+            return false;
+        cleanupName = SafeName(PName(ps[cleanupIndex]));
+        return true;
+    }
+
+    static bool IsCleanupCallback(string t)
+        => ApiTypes.TryParseCallback(t, out string ret, out string[] arguments)
+           && ret == "void" && arguments.Length == 1 && arguments[0] == "void*";
+
     static (List<string> Prelude, List<string> Args, List<string> Postlude, List<string> Cleanup) MarshalParams(
-        IEnumerable<JsonElement> ps, string self)
+        IEnumerable<JsonElement> ps, string self, (int Data, int Cleanup, string CleanupName)? pinned = null)
     {
         var prelude = new List<string>();
         var args = new List<string>();
@@ -4254,9 +4294,25 @@ public static class ApiCodeGen
         var cleanup = new List<string>();
         if (self != null)
             args.Add(self);
-        foreach (var p in ps)
+        var parameters = ps.ToList();
+        for (int i = 0; i < parameters.Count; i++)
         {
+            var p = parameters[i];
             string t = PType(p), n = SafeName(PName(p));
+            if (pinned is { } pin && i == pin.Data)
+            {
+                // The callee keeps the pointer, so the array is pinned now and released by the
+                // cleanup Qt calls - or by the catch in the constructor when the native call fails.
+                prelude.Add($"var __buffer = PinnedBuffer.Pin({n}, {pin.CleanupName});");
+                args.Add("__buffer.Pointer");
+                continue;
+            }
+            if (pinned is { } pinnedCleanup && i == pinnedCleanup.Cleanup)
+            {
+                // The address of the composed cleanup (the caller's callback, then the pin release).
+                args.Add($"{CallbackThunkName(t)}.Get(__buffer.Cleanup)");
+                continue;
+            }
             if (IsOptionalStructDefault(p))
             {
                 // The managed signature is the nullable struct (`QRect? rectangle = null`); the call
@@ -4328,9 +4384,10 @@ public static class ApiCodeGen
         return (prelude, args, postlude, cleanup);
     }
 
-    static void EmitGuarded(StringBuilder sb, string indent, string body, List<string> cleanup)
+    static void EmitGuarded(StringBuilder sb, string indent, string body, List<string> cleanup,
+        string catchCleanup = null)
     {
-        if (cleanup.Count == 0)
+        if (cleanup.Count == 0 && catchCleanup == null)
         {
             foreach (var line in body.Split('\n'))
                 sb.AppendLine(indent + line);
@@ -4341,11 +4398,24 @@ public static class ApiCodeGen
         foreach (var line in body.Split('\n'))
             sb.AppendLine(indent + "    " + line);
         sb.AppendLine(indent + "}");
-        sb.AppendLine(indent + "finally");
-        sb.AppendLine(indent + "{");
-        foreach (var line in cleanup)
-            sb.AppendLine(indent + "    " + line);
-        sb.AppendLine(indent + "}");
+        // A pinned buffer must only be released when the native call failed: on success Qt owns
+        // the pointer and calls the cleanup itself.
+        if (catchCleanup != null)
+        {
+            sb.AppendLine(indent + "catch");
+            sb.AppendLine(indent + "{");
+            sb.AppendLine(indent + "    " + catchCleanup);
+            sb.AppendLine(indent + "    throw;");
+            sb.AppendLine(indent + "}");
+        }
+        if (cleanup.Count > 0)
+        {
+            sb.AppendLine(indent + "finally");
+            sb.AppendLine(indent + "{");
+            foreach (var line in cleanup)
+                sb.AppendLine(indent + "    " + line);
+            sb.AppendLine(indent + "}");
+        }
     }
 
     static void WriteNativeDeclarations(StringBuilder sb, JsonElement cls)
@@ -4397,9 +4467,19 @@ public static class ApiCodeGen
 
         for (int i = 0; i < ctors.Count; i++)
         {
-            var ps = Params(ctors[i]);
-            string sig = string.Join(", ", new[] { "IntPtr userData", "IntPtr dispatch" }
-                .Concat(ps.SelectMany(NativeParamsFor)));
+            var ps = Params(ctors[i]).ToList();
+            // A pinned buffer crosses as the address of the pin, not as the managed array the
+            // marshaller would only pin for the call.
+            bool pinned = TryPinnedBuffer(ps, out int dataIndex, out _, out _);
+            var nativeParams = new List<string> { "IntPtr userData", "IntPtr dispatch" };
+            for (int k = 0; k < ps.Count; k++)
+            {
+                if (pinned && k == dataIndex)
+                    nativeParams.Add("IntPtr " + SafeName(PName(ps[k])));
+                else
+                    nativeParams.AddRange(NativeParamsFor(ps[k]));
+            }
+            string sig = string.Join(", ", nativeParams);
             sb.AppendLine();
             sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}_ctor{CtorSuffix(i)}\", CallingConvention = CallingConvention.Cdecl)]");
             sb.AppendLine($"        internal static extern IntPtr Ctor_{name}{CtorSuffix(i)}({sig});");
@@ -5664,7 +5744,16 @@ public static class ApiCodeGen
     }
 
     static string CppCtorParamTypeFor(JsonElement p)
-        => IsByRef(p) ? CppParamTypeFor(p) : CppCtorParamType(PType(p));
+    {
+        // A function pointer is the one type the subclass constructor takes as Qt declared it,
+        // even though the C ABI carries a bare address: the initializer casts that address to the
+        // declared type, and the extern "C" entry point hands the address over as one. Spelling
+        // the parameter void* would make that hand-over a function-pointer-to-void* conversion,
+        // which g++ rejects (MSVC accepts it as an extension).
+        if (IsFunctionType(PType(p)))
+            return p.GetProperty("cpp").GetString();
+        return IsByRef(p) ? CppParamTypeFor(p) : CppCtorParamType(PType(p));
+    }
 
     static string CppArgFor(JsonElement p)
     {
@@ -5751,8 +5840,6 @@ public static class ApiCodeGen
         if (IsListT(t) || IsAssocT(t)) return $"const {CppTypeName(t)}&";
         // A byte[] argument is carried as a QByteArray, which converts to the view implicitly.
         if (t == "QByteArrayView") return "const QByteArray&";
-        // The constructor takes the declared function type; the ABI carries an address.
-        if (IsFunctionType(t)) return "void*";
         if (IsEnum(t) || IsPtr(t)) return CppTypeName(t);
         // QChar crosses as the real value; a QChar* buffer as the const pointer Qt declares.
         if (IsCharT(t)) return "QChar";
