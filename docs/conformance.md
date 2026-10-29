@@ -16,7 +16,7 @@ each holds exactly one `Main`, one `QApplication` and the module's reflected `[E
 | `QtSharp.Examples.QtMultimedia` | `examples/QtMultimedia/` | 1 | 12 |
 | `QtSharp.Charts.Examples` | `examples/Charts/` | 38 | 571 |
 | `QtSharp.Qt3D.Examples` | `examples/Qt3D/` | 3 | 37 |
-| `testapp` (the binding tests) | `tests/testapp/` | 39 | 1006 |
+| `testapp` (the binding tests) | `tests/testapp/` | 40 | 1020 |
 
 `tools/run-examples.ps1` builds all ten example executables and hands each to
 `tools/run-window-tests.ps1`; the gate, CI and the release build all use that one table. A runner
@@ -77,6 +77,7 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 | `test-docformats` | the document modules together: SVG rendering/export and PDF output (XML is System.Xml's job; `test-xmlseam` covers the hand-off) |
 | `test-events` | the input-event family and managed virtual event handlers |
 | `test-exceptions` | the native exception boundary (`qFatal`, C++ unwinding across managed frames) |
+| `test-findchild` | `QObject.FindChild`/`FindChildren` as generics: type and name matching, Qt's depth-first order, the direct-children option, actual types and managed subclasses |
 | `test-graphics` | the graphics-view family (scene, items, off-screen render) |
 | `test-iodevice` | a .NET Stream behind QIODevice: QImage/QXmlStreamReader reading it, write path, leak checks |
 | `test-json` | JSON as C# containers: QJsonObject as a writable dictionary, QJsonArray as a list, unwrapped snapshots, LINQ |

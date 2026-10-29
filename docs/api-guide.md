@@ -227,6 +227,16 @@ class resolves to its nearest bound base (`QComboBox.View()` is a `QListView`). 
 is the fallback when nothing matches, for example a module whose assembly has not loaded yet.
 `QList<QObject*>` elements are read through the identity cache, so repeated `Children()` calls
 return the same wrapper instances.
+The same resolution powers the two lookups Qt only offers as templates, rewritten as C# generics:
+```csharp
+QPushButton button = window.FindChild<QPushButton>();                  // first child of that type
+QLineEdit edit = window.FindChild<QLineEdit>("edit");                  // ... with a matching objectName
+QWidget[] all = window.FindChildren<QWidget>();                        // the whole subtree
+QWidget[] direct = window.FindChildren<QWidget>(null, Qt.FindChildOptions.FindDirectChildrenOnly);
+```
+The order is Qt's (`findChildren` tests a whole level before descending), `null` or an empty name
+matches every object, a miss is `null` or an empty array, and a managed subclass is found by its
+own type as well as by its base. `tests/FindChildApi.cs` is the same lookup under test.
 
 ## Ownership
 
