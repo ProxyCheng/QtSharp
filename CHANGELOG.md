@@ -13,6 +13,11 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   nothing. Both are packed now (when the kit produced them) and copied next to the executable on
   Build and on Publish, so the recipe in the 0.20.0 note works for a consumer of the package, not
   only for this repository's own test host.
+- **The `QImage` cleanup-function constructor compiles on Linux.** The generated subclass
+  constructor declared the function-pointer parameter as `void*` while the entry point handed it the
+  address cast to `QImageCleanupFunction`; g++ rejects that conversion (MSVC accepts it as an
+  extension), so the Linux packages could not be built. The constructor now takes the type Qt
+  declared. `test-imagebuffer` covers the path.
 
 ## 0.20.0 - 2026-10-28
 
