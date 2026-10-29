@@ -107,7 +107,7 @@ The repository includes C# ports of official Qt examples:
 
 These examples use the repository's [development build](docs/development.md). The gate runs them
 as its conformance suite: **73 examples (1544 assertions)** in ten executables — the base-module
-ports, the Qt Charts ports and the three Qt 3D scenes — plus **40 binding tests (1020 assertions)**.
+ports, the Qt Charts ports and the three Qt 3D scenes — plus **41 binding tests (1029 assertions)**.
 See [conformance coverage](docs/conformance.md) for the scenarios they check.
 
 Current coverage: **483 classes / 9947 methods / 1901 virtuals / 517 enums / 834 Q_PROPERTY

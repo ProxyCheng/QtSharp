@@ -121,6 +121,27 @@ variant's `ToObject()` unwraps them (nested objects as `Dictionary<string, objec
 managed IO. The generator publishes QIODevice's virtuals through a small bridge registry
 (`gen/Bridges.cs`), which is also where future bridges belong.
 
+## Image buffers
+
+`QImage`'s buffer constructors do not copy what they are given: the image reads the array until its
+last copy is destroyed. The binding pins the array for that window and installs the cleanup that
+releases the pin, then runs your `cleanupFunction`:
+```csharp
+var pixels = new byte[width * height * 4];          // ARGB32, filled however you like
+using var image = new QImage(pixels, width, height, QImage.Format.Format_ARGB32);
+pixels[0] = 0xFF;                                   // the image reads the same memory in place
+```
+This is PySide's buffer-plus-decref design with a .NET pin, because the GC may move a `byte[]`:
+the address is stable only while the pin lives, so the array is not copied and writes through it are
+visible in the image. `image.Copy()` returns an image with pixels of its own, but the original
+keeps reading the pinned array until it is destroyed. An image handed to Qt (a copy kept elsewhere)
+delays the cleanup until the last copy dies, exactly as in Qt; until then the array stays pinned
+and reachable.
+
+The generator recognizes the shape - a `uchar*` buffer followed by a `void(*)(void*)` cleanup
+callback - and only that shape is pinned; a bare `uchar*` parameter is borrowed for the length of
+the call.
+
 ## Application lifetime
 
 Create one application object: `new QApplication(args)`,

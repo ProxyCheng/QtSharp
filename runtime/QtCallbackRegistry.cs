@@ -110,6 +110,31 @@ namespace QtSharp.Runtime
         }
 
         /// <summary>
+        /// Drops the registration behind <paramref name="callback"/>.
+        /// </summary>
+        /// <remarks>
+        /// The cleanup a pinned buffer hands Qt runs exactly once, when Qt destroys the last copy of
+        /// the object; after it, neither that delegate nor its thunk can be called again, so the
+        /// registry releases both instead of rooting them for the process lifetime. Removing the
+        /// entry while the thunk is executing is safe: the call itself keeps the delegate alive
+        /// until it returns.
+        /// </remarks>
+        internal static void Release(Delegate callback)
+        {
+            if (callback == null)
+                return;
+            lock (gate)
+            {
+                if (!entries.TryGetValue(callback, out Entry entry))
+                    return;
+                entries.Remove(callback);
+                if (installedByAddress.TryGetValue(entry.Pointer, out Delegate installed)
+                    && ReferenceEquals(installed, callback))
+                    installedByAddress.Remove(entry.Pointer);
+            }
+        }
+
+        /// <summary>
         /// Turns an address Qt returned into the delegate the declaration says it is.
         /// </summary>
         /// <param name="pointer">The address Qt returned; <see cref="IntPtr.Zero"/> means none.</param>
