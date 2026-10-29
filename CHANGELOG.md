@@ -4,6 +4,25 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## 0.22.0 - 2026-10-29
+
+- **`QtSharp.WebView`: a QWidget host for Edge WebView2.** `WebView2Widget` puts web content in a
+  QtSharp window without binding QtWebEngine and without shipping Chromium: the browser is the
+  Microsoft Edge WebView2 runtime the system updates. The widget is a plain `QWidget` in the Qt
+  layout; it parents the WebView2 controller to its own `WinId()`, keeps bounds, rasterization
+  scale and visibility in step with Qt's resize/show/hide/DPI events, and pumps Qt's event loop
+  while WebView2 completes its asynchronous start-up (a plain `GetResult()` on the UI thread would
+  deadlock on the message-queue completion). `Navigate`, `NavigateToString`, `ExecuteScript(Async)`,
+  `PostWebMessage`, the navigation/process events and `RunOnUiThread` (a queued `[QtSlot]`
+  invocation) are exposed; the raw `CoreWebView2` remains available for the rest. The package is
+  `QtSharp.WebView.win-x64`, depends on `QtSharp.Api.win-x64` and `Microsoft.Web.WebView2`, and
+  the Windows release archive carries that dependency so a local feed restores offline. Windows
+  only: WebView2 has no Linux implementation, and Qt WebView (QtWebEngine on Linux) remains the
+  cross-platform route. `test-webview2` asserts load, title, script execution and the worker-thread
+  dispatch under a real window; the offscreen gate reports it as skipped. Airspace is the known
+  limitation: the native browser window cannot be painted over by Qt content. The research and the
+  measured cost of QtWebEngine/QtWebView are in `docs/webview.md`.
+
 ## 0.21.0 - 2026-10-29
 
 - **C function pointers are part of the model.** A `ret(*)(T1,T2)` type now maps to `Action` /
