@@ -20,7 +20,7 @@
        identical; the native payload below is the matching half only. -->
   <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
     <PackageId>QtSharp.Sql.$(QtSharpPlatform)</PackageId>
-    <Version>0.24.0</Version>
+    <Version>0.25.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>The Qt model classes QtSql used to bind - QSqlQueryModel and QSqlTableModel - implemented over ADO.NET (System.Data.Common), so a Qt view can show SQL data without a Qt SQL binding.</Description>
     <PackageTags>Qt;Qt6;Sql;ADO.NET;CSharp;dotnet;binding;interop</PackageTags>

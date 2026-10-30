@@ -7,7 +7,7 @@
     <QtSharpPlatform Condition="$([MSBuild]::IsOSPlatform('Linux'))">linux-x64</QtSharpPlatform>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="QtSharp.Api.$(QtSharpPlatform)" Version="0.24.0" />
+    <PackageReference Include="QtSharp.Api.$(QtSharpPlatform)" Version="0.25.0" />
   </ItemGroup>
   <Target Name="CheckQtSharpPlatform" BeforeTargets="CollectPackageReferences" Condition="'$(QtSharpPlatform)' == ''">
     <Error Text="This sample supports Windows x64 and Linux x64. Build on a supported platform." />

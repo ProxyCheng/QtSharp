@@ -23,7 +23,7 @@
        carries the RID so a Linux consumer cannot install it by accident. -->
   <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
     <PackageId>QtSharp.WebView.$(QtSharpPlatform)</PackageId>
-    <Version>0.24.0</Version>
+    <Version>0.25.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>A QWidget that hosts Microsoft Edge WebView2, for showing web content in a QtSharp application without QtWebEngine (Windows x64).</Description>
     <PackageTags>Qt;Qt6;WebView2;Edge;Chromium;CSharp;dotnet;binding;interop;widget</PackageTags>

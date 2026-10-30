@@ -13,7 +13,7 @@
        identical; the native payload below is the matching half only. -->
   <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
     <PackageId>QtSharp.Charts.Qt6.$(QtSharpPlatform)</PackageId>
-    <Version>0.24.0</Version>
+    <Version>0.25.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>The Qt Charts runtime (Qt6Charts.dll) loaded by QtSharp.Charts.</Description>
     <PackageTags>Qt;Qt6;QtCharts;runtime;native</PackageTags>

@@ -19,7 +19,7 @@
        identical; the native payload below is the matching half only. -->
   <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
     <PackageId>QtSharp.Api.$(QtSharpPlatform)</PackageId>
-    <Version>0.24.0</Version>
+    <Version>0.25.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>Qt for .NET: the generated C# binding as nine module assemblies (QtCore, QtGui, QtWidgets, QtNetwork, QtSvg, QtSvgWidgets, QtPrintSupport, QtOpenGL, QtOpenGLWidgets), generated from the Qt 6.12 headers.</Description>
     <PackageTags>Qt;Qt6;CSharp;dotnet;binding;interop;gui</PackageTags>
