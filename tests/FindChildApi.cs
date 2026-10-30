@@ -56,7 +56,7 @@ public static class FindChildApi
         context.Check(all.SequenceEqual(new QObject[] { button, edit, box, custom, label }),
             "the order is Qt's: direct children first, then each child's subtree");
 
-        context.Check(root.FindChildren<QWidget>(null, Qt.FindChildOptions.FindDirectChildrenOnly).Length == 4,
+        context.Check(root.FindChildren<QWidget>((string)null, Qt.FindChildOptions.FindDirectChildrenOnly).Length == 4,
             "FindDirectChildrenOnly returns only the four direct children");
         context.Check(root.FindChildren<QLabel>().Length == 1,
             "a type that occurs once returns one element");
@@ -64,6 +64,54 @@ public static class FindChildApi
             "an empty name matches every object, like Qt's null QString");
         context.Check(root.FindChildren<QPushButton>("nothing").Length == 0,
             "no match returns an empty array, not null");
+
+        // ---------------------------------------------------------------- QRegularExpression
+        // Qt's pattern overload searches the object name (re.match(name).hasMatch()), so "di"
+        // matches "edit"; it is not a full match.
+        using (var startsWithO = new QRegularExpression("^o"))
+            context.Check(ReferenceEquals(root.FindChild<QPushButton>(startsWithO), button),
+                "a pattern selects by object name");
+
+        using (var unanchored = new QRegularExpression("di"))
+            context.Check(ReferenceEquals(root.FindChild<QWidget>(unanchored), edit),
+                "the pattern is a search, not a full match (di matches edit)");
+
+        using (var deepPattern = new QRegularExpression("^deep$"))
+        {
+            context.Check(ReferenceEquals(root.FindChild<QLabel>(deepPattern), label),
+                "a pattern search descends like the name search");
+            context.Check(root.FindChild<QLabel>(deepPattern, Qt.FindChildOptions.FindDirectChildrenOnly) == null,
+                "FindDirectChildrenOnly applies to patterns too");
+        }
+
+        using (var editPattern = new QRegularExpression("^edit$"))
+            context.Check(root.FindChild<QLabel>(editPattern) == null,
+                "the type filter still applies to patterns");
+
+        using (var everyName = new QRegularExpression("."))
+        {
+            context.Check(root.FindChildren<QWidget>(everyName).Length == 5,
+                "a pattern matching every name returns the whole subtree");
+            context.Check(root.FindChildren<QWidget>(everyName, Qt.FindChildOptions.FindDirectChildrenOnly).Length == 4,
+                "and FindDirectChildrenOnly narrows it");
+        }
+
+        using (var upper = new QRegularExpression("^EDIT$"))
+            context.Check(root.FindChild<QWidget>(upper) == null,
+                "pattern matching is case-sensitive by default");
+
+        using (var isolated = new QWidget())
+        {
+            using var unnamed = new QWidget(isolated);
+            using (var emptyName = new QRegularExpression("^$"))
+                context.Check(ReferenceEquals(isolated.FindChild<QWidget>(emptyName), unnamed),
+                    "a pattern can match an empty object name");
+        }
+
+        bool nullPatternRefused = false;
+        try { root.FindChild<QWidget>((QRegularExpression)null); }
+        catch (ArgumentNullException) { nullPatternRefused = true; }
+        context.Check(nullPatternRefused, "a null pattern is rejected");
 
         // A managed subclass is its own type and also a QWidget; both searches see the same wrapper.
         context.Check(ReferenceEquals(root.FindChild<ManagedWidget>(), custom),
