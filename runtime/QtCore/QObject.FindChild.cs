@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 // QObject::findChild<T>() / findChildren<T>() are templates, so the model cannot publish them: the
 // type filter is a C# generic here and the walk uses the wrapper tree the binding already owns.
@@ -12,6 +13,14 @@ using System.Collections.Generic;
 // QRegularExpression (a *search* over the object name, so "di" matches "edit"; Qt calls
 // re.match(name).hasMatch()). Both are here. Because the name and pattern overloads are both
 // reference types, a bare `null` argument is now ambiguous: write `(string)null` for the old form.
+//
+// The QMetaObject overloads are the reflection form of the same lookup, the one PyQt's
+// `findChild(type)` exposes: Qt only has the templates, but the runtime filter is
+// QMetaObject::cast, and these overloads do the walk natively (qs_api_qobject_find_children,
+// the equivalent of qt_qFindChildren_helper) so only matched objects are wrapped. A managed
+// subclass matches its Qt base's metaobject through the inheritance chain; it cannot be found by
+// a QMetaObject containing its C#-declared type, because that metaobject is per instance - the
+// generic overload is the one that matches it exactly.
 namespace QtSharp.QtCore
 {
     public partial class QObject
@@ -60,7 +69,7 @@ namespace QtSharp.QtCore
         {
             if (pattern is null)
                 throw new ArgumentNullException(nameof(pattern));
-            return FindFirst<T>(name => PatternMatches(pattern, name), options);
+            return FindFirst<T>(candidate => PatternMatches(pattern, candidate.ObjectName), options);
         }
 
         /// <summary>
@@ -86,23 +95,95 @@ namespace QtSharp.QtCore
         {
             if (pattern is null)
                 throw new ArgumentNullException(nameof(pattern));
-            return FindAll<T>(name => PatternMatches(pattern, name), options);
+            return FindAll<T>(candidate => PatternMatches(pattern, candidate.ObjectName), options);
         }
 
-        static Func<string, bool> NameMatcher(string name)
+        // ---------------------------------------------------------------- QMetaObject reflection
+
+        /// <summary>
+        /// The first descendant whose meta-object derives from <paramref name="metaObject"/> and
+        /// whose object name is <paramref name="name"/>, or <c>null</c>. The reflection form of
+        /// <see cref="FindChild{T}(string, Qt.FindChildOptions)"/> (PyQt's
+        /// <c>findChild(type)</c>), backed by <c>QMetaObject::cast</c>.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="metaObject"/> is null.</exception>
+        public QObject FindChild(QMetaObject metaObject, string name = null,
+            Qt.FindChildOptions options = Qt.FindChildOptions.FindChildrenRecursively)
+            => First(FindByMetaObject(metaObject, name, null, options, firstOnly: true));
+
+        /// <summary>
+        /// The first descendant whose meta-object derives from <paramref name="metaObject"/> and
+        /// whose object name the pattern matches, or <c>null</c>.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="metaObject"/> or <paramref name="pattern"/> is null.
+        /// </exception>
+        public QObject FindChild(QMetaObject metaObject, QRegularExpression pattern,
+            Qt.FindChildOptions options = Qt.FindChildOptions.FindChildrenRecursively)
+            => First(FindByMetaObject(metaObject, null, pattern, options, firstOnly: true));
+
+        /// <summary>
+        /// Every descendant whose meta-object derives from <paramref name="metaObject"/> and whose
+        /// object name is <paramref name="name"/>, in Qt's order; an empty array when there is
+        /// none.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="metaObject"/> is null.</exception>
+        public QObject[] FindChildren(QMetaObject metaObject, string name = null,
+            Qt.FindChildOptions options = Qt.FindChildOptions.FindChildrenRecursively)
+            => FindByMetaObject(metaObject, name, null, options, firstOnly: false);
+
+        /// <summary>
+        /// Every descendant whose meta-object derives from <paramref name="metaObject"/> and whose
+        /// object name the pattern matches, in Qt's order.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="metaObject"/> or <paramref name="pattern"/> is null.
+        /// </exception>
+        public QObject[] FindChildren(QMetaObject metaObject, QRegularExpression pattern,
+            Qt.FindChildOptions options = Qt.FindChildOptions.FindChildrenRecursively)
+            => FindByMetaObject(metaObject, null, pattern, options, firstOnly: false);
+
+        QObject[] FindByMetaObject(QMetaObject metaObject, string name, QRegularExpression pattern,
+            Qt.FindChildOptions options, bool firstOnly)
+        {
+            if (metaObject is null)
+                throw new ArgumentNullException(nameof(metaObject));
+            if (pattern is not null && !pattern.IsValid())
+                throw new ArgumentException("The regular expression is not valid.", nameof(pattern));
+
+            IntPtr list = QObjectNative.FindChildren(Handle, metaObject.Handle,
+                pattern?.Handle ?? IntPtr.Zero, name, (int)options, firstOnly ? 1 : 0);
+            if (list == IntPtr.Zero)
+                return Array.Empty<QObject>();
+            try
+            {
+                int count = QObjectNative.Count(list);
+                var found = new QObject[count];
+                for (int i = 0; i < count; i++)
+                    found[i] = FromHandle(QObjectNative.At(list, i));
+                return found;
+            }
+            finally
+            {
+                QObjectNative.Free(list);
+            }
+        }
+
+        static QObject First(QObject[] found) => found.Length == 0 ? null : found[0];
+
+        // ---------------------------------------------------------------- managed walk
+
+        static Func<QObject, bool> NameMatcher(string name)
             => name is null || name.Length == 0
                 ? (_ => true)
-                : candidate => candidate == name;
+                : candidate => candidate.ObjectName == name;
 
-        // QRegularExpression::match() returns an owned match object; dispose it once the answer is
-        // read. An object with no name has an empty object name, which a pattern can still match.
+        // The native helper reads the pattern and subject without allocating a managed
+        // QRegularExpressionMatch per candidate.
         static bool PatternMatches(QRegularExpression pattern, string name)
-        {
-            using var match = pattern.Match(name ?? string.Empty);
-            return match.HasMatch();
-        }
+            => QObjectNative.HasMatch(pattern.Handle, name ?? string.Empty) != 0;
 
-        T FindFirst<T>(Func<string, bool> matches, Qt.FindChildOptions options)
+        T FindFirst<T>(Func<QObject, bool> matches, Qt.FindChildOptions options)
             where T : QObject
         {
             var found = new List<T>(1);
@@ -110,7 +191,7 @@ namespace QtSharp.QtCore
             return found.Count == 0 ? null : found[0];
         }
 
-        T[] FindAll<T>(Func<string, bool> matches, Qt.FindChildOptions options)
+        T[] FindAll<T>(Func<QObject, bool> matches, Qt.FindChildOptions options)
             where T : QObject
         {
             var found = new List<T>();
@@ -121,14 +202,14 @@ namespace QtSharp.QtCore
         // Qt checks a whole level before descending (qt_qFindChildren_helper): the direct children
         // are tested in order, then each child's subtree in child order. Recursion happens only
         // when FindChildrenRecursively is set, exactly as Qt tests it.
-        void CollectChildren<T>(Func<string, bool> matches, Qt.FindChildOptions options,
+        void CollectChildren<T>(Func<QObject, bool> matches, Qt.FindChildOptions options,
             List<T> found, bool firstOnly)
             where T : QObject
         {
             QObject[] children = Children();
             foreach (QObject child in children)
             {
-                if (child is T match && matches(child.ObjectName))
+                if (child is T match && matches(child))
                 {
                     found.Add(match);
                     if (firstOnly)
@@ -144,5 +225,30 @@ namespace QtSharp.QtCore
                     return;
             }
         }
+    }
+
+    static class QObjectNative
+    {
+        [DllImport(ApiNative.Library, EntryPoint = "qs_api_qobject_find_children",
+            CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr FindChildren(IntPtr self, IntPtr metaObject, IntPtr pattern,
+            [MarshalAs(UnmanagedType.LPWStr)] string name, int options, int firstOnly);
+
+        [DllImport(ApiNative.Library, EntryPoint = "qs_api_qobject_find_children_count",
+            CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int Count(IntPtr list);
+
+        [DllImport(ApiNative.Library, EntryPoint = "qs_api_qobject_find_children_at",
+            CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr At(IntPtr list, int index);
+
+        [DllImport(ApiNative.Library, EntryPoint = "qs_api_qobject_find_children_free",
+            CallingConvention = CallingConvention.Cdecl)]
+        internal static extern void Free(IntPtr list);
+
+        [DllImport(ApiNative.Library, EntryPoint = "qs_api_qregularexpression_has_match",
+            CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int HasMatch(IntPtr pattern,
+            [MarshalAs(UnmanagedType.LPWStr)] string subject);
     }
 }

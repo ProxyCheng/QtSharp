@@ -17,6 +17,7 @@
 #include <qguiapplication.h>
 #include <qapplication.h>
 #include <qtimer.h>
+#include <qregularexpression.h>
 #include <private/qobject_p.h>
 #include <private/qmetaobject_p.h>
 #include <private/qmetaobjectbuilder_p.h>
@@ -1361,6 +1362,84 @@ extern "C" QS_API_EXPORT bool qs_api_qmetaobject_invoke_method_functor(
                 invoke(functor->token, 0, nullptr);
         },
         static_cast<Qt::ConnectionType>(connectionType));
+}
+
+// ------------------------------------------------------------------ reflection lookup
+//
+// The QMetaObject-based counterpart of findChild<T>/findChildren<T>. Qt only publishes the
+// templates, but the runtime filter is QMetaObject::cast, the reflection primitive, and doing the
+// walk natively keeps the allocation profile of qt_qFindChildren_helper: only matched objects
+// cross into managed code. `name` is UTF-16 and null/empty matches any object, exactly like a
+// default-constructed QString; `pattern` is a QRegularExpression handle or null.
+
+namespace
+{
+void CollectByMetaObject(QObject* parent, const QMetaObject* metaObject,
+    const QRegularExpression* pattern, const QString& name, int options,
+    bool firstOnly, QList<QObject*>& found)
+{
+    const QObjectList children = parent->children();
+    for (QObject* child : children)
+    {
+        if (metaObject && !metaObject->cast(child))
+            continue;
+        if (!name.isEmpty() && child->objectName() != name)
+            continue;
+        if (pattern && !pattern->match(child->objectName()).hasMatch())
+            continue;
+        found.append(child);
+        if (firstOnly)
+            return;
+    }
+    if ((options & Qt::FindChildrenRecursively) == 0)
+        return;
+    for (QObject* child : children)
+    {
+        CollectByMetaObject(child, metaObject, pattern, name, options, firstOnly, found);
+        if (firstOnly && !found.isEmpty())
+            return;
+    }
+}
+}
+
+extern "C" QS_API_EXPORT void* qs_api_qobject_find_children(
+    void* self, const void* metaObject, const void* pattern, const char16_t* name,
+    int options, int firstOnly)
+{
+    auto* found = new QList<QObject*>();
+    const QString wanted = name ? QString::fromUtf16(name) : QString();
+    CollectByMetaObject(static_cast<QObject*>(self),
+        static_cast<const QMetaObject*>(metaObject),
+        static_cast<const QRegularExpression*>(pattern),
+        wanted, options, firstOnly != 0, *found);
+    return found;
+}
+
+extern "C" QS_API_EXPORT int qs_api_qobject_find_children_count(void* list)
+{
+    return static_cast<int>(static_cast<const QList<QObject*>*>(list)->size());
+}
+
+extern "C" QS_API_EXPORT void* qs_api_qobject_find_children_at(void* list, int index)
+{
+    return (*static_cast<const QList<QObject*>*>(list))[index];
+}
+
+extern "C" QS_API_EXPORT void qs_api_qobject_find_children_free(void* list)
+{
+    delete static_cast<QList<QObject*>*>(list);
+}
+
+// The regex half of the managed walk: a stack QRegularExpressionMatch instead of the owned
+// wrapper QRegularExpression::match() returns, so a search over a large tree does not allocate
+// one managed handle per visited object.
+extern "C" QS_API_EXPORT int qs_api_qregularexpression_has_match(
+    const void* pattern, const char16_t* subject)
+{
+    if (!pattern)
+        return 0;
+    const QString text = subject ? QString::fromUtf16(subject) : QString();
+    return static_cast<const QRegularExpression*>(pattern)->match(text).hasMatch() ? 1 : 0;
 }
 
 
