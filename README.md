@@ -23,8 +23,8 @@ Current targets: **.NET 10, Qt 6.12.0, Windows x64 and Linux x64 (glibc)**.
 
 ## Install the binding
 
-Install the **.NET 10 SDK**, then download **QtSharp-0.23.0-win-x64.zip** or
-**QtSharp-0.23.0-linux-x64.zip** from [v0.23.0](https://github.com/ProxyCheng/QtSharp/releases/tag/v0.23.0).
+Install the **.NET 10 SDK**, then download **QtSharp-0.24.0-win-x64.zip** or
+**QtSharp-0.24.0-linux-x64.zip** from [v0.24.0](https://github.com/ProxyCheng/QtSharp/releases/tag/v0.24.0).
 Extract the archive into a local NuGet source folder, keeping all its packages together.
 The packages include the native binding and Qt runtime; application developers do not need
 a Qt SDK or C++ compiler.
@@ -43,13 +43,13 @@ Add the package for your build platform, replacing the source path with your ext
 Windows / PowerShell:
 
 ```powershell
-dotnet add package QtSharp.Api.win-x64 --version 0.23.0 --source C:/Downloads/QtSharp-packages
+dotnet add package QtSharp.Api.win-x64 --version 0.24.0 --source C:/Downloads/QtSharp-packages
 ```
 
 Linux:
 
 ```bash
-dotnet add package QtSharp.Api.linux-x64 --version 0.23.0 --source /home/you/Downloads/QtSharp-packages
+dotnet add package QtSharp.Api.linux-x64 --version 0.24.0 --source /home/you/Downloads/QtSharp-packages
 ```
 
 Replace `Program.cs` with:
@@ -153,7 +153,7 @@ written in C#, you can use the official [Qt Bridge for C#](https://github.com/qt
 ## Packages
 
 Platform package names end in `.win-x64` or `.linux-x64`. The table uses their base names.
-The sample projects and package examples use v0.23.0.
+The sample projects and package examples use v0.24.0.
 
 | Package | Contents |
 |---|---|

@@ -15,8 +15,8 @@ C# 的语言特性与 .NET 生态调整 API 和模块设计。目前提供 Qt Wi
 
 ## 安装与快速开始
 
-安装 **.NET 10 SDK**，从 [v0.23.0 发布页](https://github.com/ProxyCheng/QtSharp/releases/tag/v0.23.0)
-下载对应平台的 `QtSharp-0.23.0-win-x64.zip` 或 `QtSharp-0.23.0-linux-x64.zip`，
+安装 **.NET 10 SDK**，从 [v0.24.0 发布页](https://github.com/ProxyCheng/QtSharp/releases/tag/v0.24.0)
+下载对应平台的 `QtSharp-0.24.0-win-x64.zip` 或 `QtSharp-0.24.0-linux-x64.zip`，
 解压到本地 NuGet 源目录。请保留归档中的全部包，以便还原依赖。
 
 包中包含原生绑定和 Qt 运行库，编写应用无需另装 Qt SDK 或 C++ 编译器。

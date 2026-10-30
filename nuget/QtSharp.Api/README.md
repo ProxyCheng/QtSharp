@@ -11,7 +11,7 @@ are not guaranteed. Pin package versions and test your application before upgrad
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api.win-x64" Version="0.23.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.24.0" />
 </ItemGroup>
 ```
 
