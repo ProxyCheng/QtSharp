@@ -6,6 +6,19 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 
 ## Unreleased
 
+- **BCL -> Qt extension methods (`ToQ*`).** The bridges now have a source-side spelling:
+  `dateTime.ToQDateTime()`, `dateOnly.ToQDate()`, `timeOnly.ToQTime()`, `uri.ToQUrl()`,
+  `culture.ToQLocale()`, `zone.ToQTimeZone()`, `version.ToQVersionNumber()`,
+  `bits.ToQBitArray()`, `regex.ToQRegularExpression()`, `bytes.ToQByteArray()`,
+  `node.ToQJsonValue()`/`jsonObject.ToQJsonObject()`/`jsonArray.ToQJsonArray()`,
+  `directory.ToQDir()`, `info.ToQFileInfo()`; QtGui's `point.ToQPoint()`/`ToQPointF()`,
+  `size.ToQSize()`/`ToQSizeF()`, `rectangle.ToQRect()`/`ToQRectF()`, `color.ToQColor()`,
+  `vector.ToQVector2D()`/`ToQVector3D()`/`ToQVector4D()`, `quaternion.ToQQuaternion()`,
+  `matrix.ToQMatrix4x4()`; and QtNetwork's `address.ToQHostAddress()`. They replace the named
+  constructors at the call site (`new QPointF(x, y)` -> `point.ToQPointF()`); because a method
+  name is new, the overload resolution of existing calls does not change. A handle result is the
+  caller's to dispose, a null reference receiver throws `ArgumentNullException`, and a null
+  JsonNode converts to `QJsonValue::Null` (in a JSON tree that is what null means).
 - **System.Text.Json bridges for the JSON DOM.** `QJsonValue.FromJsonNode(JsonNode)` and
   `ToJsonNode()`, `QJsonObject(JsonObject)`/`ToJsonObject()`,
   `QJsonArray(JsonArray)`/`ToJsonArray()`, and `QJsonDocument.FromJsonNode(JsonNode)`/
