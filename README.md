@@ -133,8 +133,10 @@ applications well, we prefer those libraries:
 | QtWebSockets | `ClientWebSocket` | Use the .NET API directly; no Qt-facing adapter is provided yet. |
 | QtWebEngine | System web view (Edge WebView2 on Windows) | Not bound. `QtSharp.WebView` hosts WebView2 in a `QWidget` (Windows x64); Qt WebView is the cross-platform Qt module if needed. See [web view options](docs/webview.md). |
 
-`QtSharp.Sql` and [`StreamIODevice`](runtime/QtCore/IoDeviceInterop.cs), which exposes a .NET
-`Stream` as `QIODevice`, already use this approach. Further adapters may make C# libraries
+`QtSharp.Sql`, [`StreamIODevice`](runtime/QtCore/IoDeviceInterop.cs) (a .NET `Stream` as
+`QIODevice`), and the System.IO/BCL bridges under [`runtime/QtCore`](runtime/QtCore)
+(`QIODevice.AsStream`, `QDir`/`QFileInfo` ↔ `DirectoryInfo`/`FileInfo`, `QDateTime` ↔
+`DateTime`, ...) already use this approach. Further adapters may make C# libraries
 available through the model, IO or other interfaces used by QtSharp components.
 
 ## Comparison with similar projects

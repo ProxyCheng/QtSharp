@@ -1262,6 +1262,8 @@
         { "name": "connectToHost", "returnType": "void", "returnCpp": "void", "parameters": [{ "name": "hostName", "type": "QString", "cpp": "const QString &" }, { "name": "port", "type": "unsigned short", "cpp": "quint16" }, { "name": "mode", "type": "QIODeviceBase::OpenMode", "cpp": "OpenMode", "flags": ["optional"], "default": "QIODeviceBase.OpenMode.ReadWrite" }, { "name": "protocol", "type": "QAbstractSocket::NetworkLayerProtocol", "cpp": "NetworkLayerProtocol", "flags": ["optional"], "default": "QAbstractSocket.NetworkLayerProtocol.AnyIPProtocol" }] },
         { "name": "disconnectFromHost", "returnType": "void", "returnCpp": "void", "parameters": [] },
         { "name": "isSequential", "flags": ["const"], "returnType": "bool", "returnCpp": "bool", "parameters": [] },
+        { "name": "readData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "void*", "cpp": "char *", "flags": ["buffer"] }, { "name": "maxlen", "type": "long long", "cpp": "qint64" }] },
+        { "name": "readLineData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "void*", "cpp": "char *", "flags": ["buffer"] }, { "name": "maxlen", "type": "long long", "cpp": "qint64" }] },
         { "name": "resume", "returnType": "void", "returnCpp": "void", "parameters": [] },
         { "name": "setReadBufferSize", "returnType": "void", "returnCpp": "void", "parameters": [{ "name": "size", "type": "long long", "cpp": "qint64" }] },
         { "name": "setSocketDescriptor", "returnType": "bool", "returnCpp": "bool", "parameters": [{ "name": "socketDescriptor", "type": "long long", "cpp": "qintptr" }, { "name": "state", "type": "QAbstractSocket::SocketState", "cpp": "SocketState", "flags": ["optional"], "default": "QAbstractSocket.SocketState.ConnectedState" }, { "name": "openMode", "type": "QIODeviceBase::OpenMode", "cpp": "OpenMode", "flags": ["optional"], "default": "QIODeviceBase.OpenMode.ReadWrite" }] },
@@ -1273,7 +1275,7 @@
         { "name": "waitForConnected", "returnType": "bool", "returnCpp": "bool", "parameters": [{ "name": "msecs", "type": "int", "cpp": "int", "flags": ["optional"], "default": "30000" }] },
         { "name": "waitForDisconnected", "returnType": "bool", "returnCpp": "bool", "parameters": [{ "name": "msecs", "type": "int", "cpp": "int", "flags": ["optional"], "default": "30000" }] },
         { "name": "waitForReadyRead", "returnType": "bool", "returnCpp": "bool", "parameters": [{ "name": "msecs", "type": "int", "cpp": "int", "flags": ["optional"], "default": "30000" }] },
-        { "name": "writeData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "char*", "cpp": "const char *" }, { "name": "len", "type": "long long", "cpp": "qint64" }] }
+        { "name": "writeData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "void*", "cpp": "const char *", "flags": ["buffer"] }, { "name": "len", "type": "long long", "cpp": "qint64" }] }
       ],
       "signals": [
         { "name": "connected", "parameters": [] },
@@ -1900,9 +1902,10 @@
         { "name": "disconnectNotify", "returnType": "void", "returnCpp": "void", "parameters": [{ "name": "arg0", "type": "QMetaMethod", "cpp": "const QMetaMethod &" }] },
         { "name": "open", "returnType": "bool", "returnCpp": "bool", "parameters": [{ "name": "openMode", "type": "QIODeviceBase::OpenMode", "cpp": "OpenMode" }] },
         { "name": "pos", "flags": ["const"], "returnType": "long long", "returnCpp": "qint64", "parameters": [] },
+        { "name": "readData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "void*", "cpp": "char *", "flags": ["buffer"] }, { "name": "maxlen", "type": "long long", "cpp": "qint64" }] },
         { "name": "seek", "returnType": "bool", "returnCpp": "bool", "parameters": [{ "name": "off", "type": "long long", "cpp": "qint64" }] },
         { "name": "size", "flags": ["const"], "returnType": "long long", "returnCpp": "qint64", "parameters": [] },
-        { "name": "writeData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "char*", "cpp": "const char *" }, { "name": "len", "type": "long long", "cpp": "qint64" }] }
+        { "name": "writeData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "void*", "cpp": "const char *", "flags": ["buffer"] }, { "name": "len", "type": "long long", "cpp": "qint64" }] }
       ],
       "signals": [
       ]
@@ -4800,11 +4803,13 @@
         { "name": "isSequential", "flags": ["const"], "returnType": "bool", "returnCpp": "bool", "parameters": [] },
         { "name": "permissions", "flags": ["const"], "returnType": "QFileDevice::Permissions", "returnCpp": "Permissions", "parameters": [] },
         { "name": "pos", "flags": ["const"], "returnType": "long long", "returnCpp": "qint64", "parameters": [] },
+        { "name": "readData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "void*", "cpp": "char *", "flags": ["buffer"] }, { "name": "maxlen", "type": "long long", "cpp": "qint64" }] },
+        { "name": "readLineData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "void*", "cpp": "char *", "flags": ["buffer"] }, { "name": "maxlen", "type": "long long", "cpp": "qint64" }] },
         { "name": "resize", "returnType": "bool", "returnCpp": "bool", "parameters": [{ "name": "sz", "type": "long long", "cpp": "qint64" }] },
         { "name": "seek", "returnType": "bool", "returnCpp": "bool", "parameters": [{ "name": "offset", "type": "long long", "cpp": "qint64" }] },
         { "name": "setPermissions", "returnType": "bool", "returnCpp": "bool", "parameters": [{ "name": "permissionSpec", "type": "QFileDevice::Permissions", "cpp": "Permissions" }] },
         { "name": "size", "flags": ["const"], "returnType": "long long", "returnCpp": "qint64", "parameters": [] },
-        { "name": "writeData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "char*", "cpp": "const char *" }, { "name": "len", "type": "long long", "cpp": "qint64" }] }
+        { "name": "writeData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "void*", "cpp": "const char *", "flags": ["buffer"] }, { "name": "len", "type": "long long", "cpp": "qint64" }] }
       ],
       "signals": [
       ]
@@ -10245,10 +10250,12 @@
         { "name": "close", "returnType": "void", "returnCpp": "void", "parameters": [] },
         { "name": "isSequential", "flags": ["const"], "returnType": "bool", "returnCpp": "bool", "parameters": [] },
         { "name": "open", "returnType": "bool", "returnCpp": "bool", "parameters": [{ "name": "openMode", "type": "QIODeviceBase::OpenMode", "cpp": "OpenMode", "flags": ["optional"], "default": "QIODeviceBase.OpenMode.ReadWrite" }] },
+        { "name": "readData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "arg0", "type": "void*", "cpp": "char *", "flags": ["buffer"] }, { "name": "arg1", "type": "long long", "cpp": "qint64" }] },
+        { "name": "readLineData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "void*", "cpp": "char *", "flags": ["buffer"] }, { "name": "maxSize", "type": "long long", "cpp": "qint64" }] },
         { "name": "skipData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "maxSize", "type": "long long", "cpp": "qint64" }] },
         { "name": "waitForBytesWritten", "returnType": "bool", "returnCpp": "bool", "parameters": [{ "name": "msecs", "type": "int", "cpp": "int", "flags": ["optional"], "default": "30000" }] },
         { "name": "waitForReadyRead", "returnType": "bool", "returnCpp": "bool", "parameters": [{ "name": "msecs", "type": "int", "cpp": "int", "flags": ["optional"], "default": "30000" }] },
-        { "name": "writeData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "arg0", "type": "char*", "cpp": "const char *" }, { "name": "arg1", "type": "long long", "cpp": "qint64" }] }
+        { "name": "writeData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "arg0", "type": "void*", "cpp": "const char *", "flags": ["buffer"] }, { "name": "arg1", "type": "long long", "cpp": "qint64" }] }
       ],
       "properties": [
         { "name": "socketOptions", "type": "QLocalSocket::SocketOptions", "getter": "socketOptions", "setter": "setSocketOptions" }
@@ -11829,7 +11836,7 @@
         { "name": "ignoreSslErrors", "returnType": "void", "returnCpp": "void", "parameters": [] },
         { "name": "isSequential", "flags": ["const"], "returnType": "bool", "returnCpp": "bool", "parameters": [] },
         { "name": "setReadBufferSize", "returnType": "void", "returnCpp": "void", "parameters": [{ "name": "size", "type": "long long", "cpp": "qint64" }] },
-        { "name": "writeData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "char*", "cpp": "const char *" }, { "name": "len", "type": "long long", "cpp": "qint64" }] }
+        { "name": "writeData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "void*", "cpp": "const char *", "flags": ["buffer"] }, { "name": "len", "type": "long long", "cpp": "qint64" }] }
       ],
       "signals": [
         { "name": "downloadProgress", "parameters": [{ "name": "bytesReceived", "type": "long long" }, { "name": "bytesTotal", "type": "long long" }] },
@@ -13864,9 +13871,10 @@
         { "name": "close", "returnType": "void", "returnCpp": "void", "parameters": [] },
         { "name": "isSequential", "flags": ["const"], "returnType": "bool", "returnCpp": "bool", "parameters": [] },
         { "name": "open", "returnType": "bool", "returnCpp": "bool", "parameters": [{ "name": "mode", "type": "QIODeviceBase::OpenMode", "cpp": "OpenMode", "flags": ["optional"], "default": "QIODeviceBase.OpenMode.ReadWrite" }] },
+        { "name": "readData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "void*", "cpp": "char *", "flags": ["buffer"] }, { "name": "maxlen", "type": "long long", "cpp": "qint64" }] },
         { "name": "waitForBytesWritten", "returnType": "bool", "returnCpp": "bool", "parameters": [{ "name": "msecs", "type": "int", "cpp": "int", "flags": ["optional"], "default": "30000" }] },
         { "name": "waitForReadyRead", "returnType": "bool", "returnCpp": "bool", "parameters": [{ "name": "msecs", "type": "int", "cpp": "int", "flags": ["optional"], "default": "30000" }] },
-        { "name": "writeData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "char*", "cpp": "const char *" }, { "name": "len", "type": "long long", "cpp": "qint64" }] }
+        { "name": "writeData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "void*", "cpp": "const char *", "flags": ["buffer"] }, { "name": "len", "type": "long long", "cpp": "qint64" }] }
       ],
       "signals": [
         { "name": "errorOccurred", "parameters": [{ "name": "error", "type": "QProcess::ProcessError" }] },
@@ -14882,7 +14890,7 @@
         { "name": "close", "flags": ["noBase"], "returnType": "void", "returnCpp": "void", "parameters": [] },
         { "name": "fileName", "flags": ["const"], "returnType": "QString", "returnCpp": "QString", "parameters": [] },
         { "name": "open", "returnType": "bool", "returnCpp": "bool", "parameters": [{ "name": "flags", "type": "QIODeviceBase::OpenMode", "cpp": "OpenMode" }] },
-        { "name": "writeData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "char*", "cpp": "const char *" }, { "name": "len", "type": "long long", "cpp": "qint64" }] }
+        { "name": "writeData", "returnType": "long long", "returnCpp": "qint64", "parameters": [{ "name": "data", "type": "void*", "cpp": "const char *", "flags": ["buffer"] }, { "name": "len", "type": "long long", "cpp": "qint64" }] }
       ],
       "signals": [
       ]
