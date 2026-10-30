@@ -113,6 +113,43 @@ public static class FindChildApi
         catch (ArgumentNullException) { nullPatternRefused = true; }
         context.Check(nullPatternRefused, "a null pattern is rejected");
 
+        // ---------------------------------------------------------------- QMetaObject reflection
+        // The QMetaObject overloads are the reflection form (PyQt's findChild(type)): the walk and
+        // the QMetaObject::cast happen natively, and only matched objects are wrapped.
+        QMetaObject widgetMeta = root.MetaObject();
+        QObject[] byWidget = root.FindChildren(widgetMeta);
+        context.Check(byWidget.Length == 5
+              && byWidget.SequenceEqual(new QObject[] { button, edit, box, custom, label }),
+            "FindChildren(QMetaObject) matches the generic result and order");
+        context.Check(ReferenceEquals(root.FindChild(widgetMeta), button),
+            "FindChild(QMetaObject) returns the first match");
+
+        QMetaObject pushButtonMeta = button.MetaObject();
+        context.Check(ReferenceEquals(root.FindChild(pushButtonMeta), button),
+            "a derived meta-object filters by type");
+        context.Check(root.FindChild(pushButtonMeta, "edit") == null,
+            "the name still narrows the reflection lookup");
+
+        QMetaObject labelMeta = label.MetaObject();
+        context.Check(ReferenceEquals(root.FindChild(labelMeta), label),
+            "a meta-object search descends into grandchildren");
+        context.Check(root.FindChild(labelMeta,
+                options: Qt.FindChildOptions.FindDirectChildrenOnly) == null,
+            "FindDirectChildrenOnly applies to the reflection lookup");
+
+        using (var deepReflection = new QRegularExpression("^deep$"))
+            context.Check(ReferenceEquals(root.FindChild(labelMeta, deepReflection), label),
+                "a pattern applies to the reflection lookup");
+
+        // A managed subclass matches its Qt base's meta-object through the inheritance chain.
+        context.Check(root.FindChildren(widgetMeta).Contains(custom),
+            "a managed subclass matches the Qt base meta-object");
+
+        bool nullMetaRefused = false;
+        try { root.FindChild((QMetaObject)null); }
+        catch (ArgumentNullException) { nullMetaRefused = true; }
+        context.Check(nullMetaRefused, "a null meta-object is rejected");
+
         // A managed subclass is its own type and also a QWidget; both searches see the same wrapper.
         context.Check(ReferenceEquals(root.FindChild<ManagedWidget>(), custom),
             "a managed subclass is found by its own type");

@@ -6,6 +6,15 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 
 ## Unreleased
 
+- **QMetaObject-based `FindChild`/`FindChildren` (reflection lookup).**
+  `FindChild(QMetaObject, ...)` and `FindChildren(QMetaObject, ...)`, with a name or a
+  `QRegularExpression`, filter by `QMetaObject::cast` at runtime — the C++ reflection primitive,
+  and the equivalent of PyQt's `findChild(type)`. The walk runs natively (Qt's order and
+  allocation profile: only matched objects are wrapped), and a managed subclass matches its Qt
+  base's meta-object through the inheritance chain.
+- **Cheaper managed lookup.** The generic walk no longer reads `ObjectName` when the name matches
+  everything, and its pattern path uses a native `hasMatch` helper instead of allocating a
+  `QRegularExpressionMatch` per visited object.
 - **Regular-expression `FindChild`/`FindChildren`.** `FindChild<T>(QRegularExpression, ...)` and
   `FindChildren<T>(QRegularExpression, ...)` add Qt's pattern overloads: the pattern is searched
   against each candidate's object name (`re.match(name).hasMatch()`, so `"di"` matches `"edit"`),
