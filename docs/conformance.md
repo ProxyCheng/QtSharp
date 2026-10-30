@@ -16,7 +16,7 @@ each holds exactly one `Main`, one `QApplication` and the module's reflected `[E
 | `QtSharp.Examples.QtMultimedia` | `examples/QtMultimedia/` | 1 | 12 |
 | `QtSharp.Charts.Examples` | `examples/Charts/` | 38 | 571 |
 | `QtSharp.Qt3D.Examples` | `examples/Qt3D/` | 3 | 37 |
-| `testapp` (the binding tests) | `tests/testapp/` | 42 | 1029 |
+| `testapp` (the binding tests) | `tests/testapp/` | 48 | 1164 |
 
 `tools/run-examples.ps1` builds all ten example executables and hands each to
 `tools/run-window-tests.ps1`; the gate, CI and the release build all use that one table. A runner
@@ -69,6 +69,7 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 
 | test | why it exists |
 |---|---|
+| `test-async-await` | `async`/`await` on the Qt thread: `QtSynchronizationContext` continuations, `QThreadPool.RunAsync` results/faults/cancellation, `QObject.InvokeAsync` thread hops, and tasks dropped when their context dies |
 | `test-bclinterop` | the BCL conversions: QPoint/QSize/QRect/QColor/vectors/quaternion/URL/GUID/QVariant |
 | `test-callbacks` | C function pointers: custom easing, message-handler chain identity, post routines, and the `QFunctionPointer` carrier with its opt-in `As<TDelegate>` |
 | `test-connections` | signal connections as disposable handles, context objects and queued thread affinity |

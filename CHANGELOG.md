@@ -4,6 +4,23 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## Unreleased
+
+- **`async`/`await` on the Qt thread (`QtSynchronizationContext`).** `QtSynchronizationContext.Install()`
+  installs a `SynchronizationContext` that queues continuations with
+  `QMetaObject::invokeMethod`/`QueuedConnection`, so `await Task.Run(...)` in a handler resumes on
+  the GUI thread — the C# counterpart of PySide's `QtAsyncio` scheduler, without a second event
+  loop. `Post` is always asynchronous even from the target thread; `Send` runs inline there and
+  blocks from elsewhere. A continuation posted to a destroyed context object is dropped, the same
+  way Qt drops a queued functor whose context died.
+- **`QThreadPool.RunAsync` and `QObject.InvokeAsync` — `Task` in place of `QFuture`.** `QFuture<T>`,
+  `QFutureWatcher<T>`, `QPromise<T>` and `QtConcurrent` are templates and stay unbound (PyQt and
+  PySide do not expose them either); these helpers cover the same ground: work on Qt's thread pool
+  with an optional `CancellationToken`, and a queued invocation on a specific object's thread, both
+  returning `Task`/`Task<T>`. Exceptions fault the task instead of unwinding into Qt; a task Qt
+  drops without running (pool cleared, context destroyed) completes as cancelled instead of
+  hanging. `test-async-await` covers the hops, results, faults, cancellation and lifetime paths.
+
 ## 0.24.0 - 2026-10-30
 
 - **QMetaObject-based `FindChild`/`FindChildren` (reflection lookup).**

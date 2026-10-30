@@ -313,6 +313,38 @@ is a crash, not an exception. Identity is a property of this binding's registry;
 installed by native code returns a wrapper over the same address. `docs/model-vocabulary.md` has
 the full rule and the lifetime notes.
 
+## Async and threads
+
+C# has `await`, so the binding does not mirror `QFuture<T>` — a template with nothing to bind.
+Instead it installs a `SynchronizationContext` on the Qt thread, the same role PySide's
+`QtAsyncio` plays for asyncio, and maps Qt's two threading primitives onto `Task`:
+```csharp
+var sync = QtSynchronizationContext.Install();          // the GUI thread, after the QApplication
+
+async void OnActivated()
+{
+    var rows = await Task.Run(() => ReadRows());        // .NET worker thread
+    list.AddItems(rows);                                // back on the GUI thread
+}
+
+using var pool = new QThreadPool();
+int count = await pool.RunAsync(() => CountRows());     // Qt's thread pool, result as a Task
+await window.InvokeAsync(() => SetStatus("done"));      // queued onto the object's thread
+```
+
+`QtSynchronizationContext.Post` queues a continuation with `QMetaObject::invokeMethod` and
+`QueuedConnection`, so the target thread must be pumping an event loop. `Send` runs inline on the
+target thread and blocks from any other. Neither `QFutureWatcher<T>` nor `QtConcurrent` is bound:
+the first is a template, and the second is templates all the way down; `QThreadPool.RunAsync` is
+the same capability without them. PyQt and PySide do not expose them either.
+
+`RunAsync` takes an optional `CancellationToken`; the token is checked when a worker picks the task
+up, so cancelling later needs cooperation inside the work. A task whose queued invocation is
+dropped — the pool was cleared, or the context object was destroyed before Qt dispatched it — comes
+back cancelled rather than pending. Exceptions from the work fault the task; nothing unwinds into
+Qt's C++ frames. `test-async-await` covers the thread hops, results, faults, cancellation and the
+context-lifetime paths.
+
 ## Event arguments
 
 Qt event arguments expose methods such as `e.Position()`, `e.Key()`, `e.Buttons()` and
