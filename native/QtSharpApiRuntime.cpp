@@ -18,6 +18,8 @@
 #include <qapplication.h>
 #include <qtimer.h>
 #include <qregularexpression.h>
+#include <qrunnable.h>
+#include <qthreadpool.h>
 #include <private/qobject_p.h>
 #include <private/qmetaobject_p.h>
 #include <private/qmetaobjectbuilder_p.h>
@@ -1362,6 +1364,51 @@ extern "C" QS_API_EXPORT bool qs_api_qmetaobject_invoke_method_functor(
                 invoke(functor->token, 0, nullptr);
         },
         static_cast<Qt::ConnectionType>(connectionType));
+}
+
+// ------------------------------------------------------------------ thread pool tasks
+//
+// QThreadPool::start takes a QRunnable, and a managed delegate is not one. This runnable carries
+// the same token contract as the functors above - methodId 0 invokes, methodId 1 releases - with
+// two differences that come from the pool owning its runnables:
+//
+//   * autoDelete stays on (Qt's default): the pool deletes the runnable after run() returns, so
+//     the managed side must never dispose this object. Its destructor is the release path.
+//   * QThreadPool::clear() discards queued runnables without running them; they are deleted, so
+//     release fires without an invoke. The managed side turns that into a cancelled task instead
+//     of leaving the TaskCompletionSource pending forever.
+//
+// The dispatch pointer is nulled before the invoke (TakeInvoke), so the destructor that follows a
+// completed run cannot release the token a second time.
+
+namespace
+{
+class QsApiThreadPoolTask : public QRunnable
+{
+public:
+    QsApiThreadPoolTask(void* token, QsApiDispatch dispatch) : m_functor(token, dispatch)
+    {
+        setAutoDelete(true);
+    }
+
+    QsApiThreadPoolTask(const QsApiThreadPoolTask&) = delete;
+    QsApiThreadPoolTask& operator=(const QsApiThreadPoolTask&) = delete;
+
+    void run() override
+    {
+        if (QsApiDispatch invoke = TakeInvoke(m_functor))
+            invoke(m_functor.token, 0, nullptr);
+    }
+
+private:
+    QsApiManagedFunctor m_functor;
+};
+}
+
+extern "C" QS_API_EXPORT void qs_api_threadpool_run_functor(
+    void* pool, int priority, void* token, QsApiDispatch dispatch)
+{
+    static_cast<QThreadPool*>(pool)->start(new QsApiThreadPoolTask(token, dispatch), priority);
 }
 
 // ------------------------------------------------------------------ reflection lookup
