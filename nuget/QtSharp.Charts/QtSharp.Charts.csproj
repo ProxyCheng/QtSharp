@@ -27,7 +27,7 @@
        identical; the native payload below is the matching half only. -->
   <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
     <PackageId>QtSharp.Charts.$(QtSharpPlatform)</PackageId>
-    <Version>0.22.0</Version>
+    <Version>0.23.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>Qt Charts for .NET, generated from the Qt 6.12 headers. References QtSharp.Api.</Description>
     <PackageTags>Qt;Qt6;QtCharts;CSharp;dotnet;binding;interop;charts</PackageTags>

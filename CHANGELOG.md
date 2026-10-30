@@ -4,7 +4,7 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
-## Unreleased
+## 0.23.0 - 2026-10-30
 
 - **BCL -> Qt extension methods (`ToQ*`).** The bridges now have a source-side spelling:
   `dateTime.ToQDateTime()`, `dateOnly.ToQDate()`, `timeOnly.ToQTime()`, `uri.ToQUrl()`,

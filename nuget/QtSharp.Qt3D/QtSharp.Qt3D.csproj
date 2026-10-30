@@ -20,7 +20,7 @@
        identical; the native payload below is the matching half only. -->
   <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
     <PackageId>QtSharp.Qt3D.$(QtSharpPlatform)</PackageId>
-    <Version>0.22.0</Version>
+    <Version>0.23.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>Qt 3D for .NET as six module assemblies (Qt3DCore, Qt3DRender, Qt3DInput, Qt3DLogic, Qt3DAnimation, Qt3DExtras), generated from the Qt 6.12 headers. References QtSharp.Api.</Description>
     <PackageTags>Qt;Qt6;Qt3D;CSharp;dotnet;binding;interop;3d</PackageTags>
