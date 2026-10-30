@@ -4,6 +4,19 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## Unreleased
+
+- **Qt's functor-taking template APIs.** `QTimer.singleShot(int, Action)`,
+  `QTimer.singleShot(int, QObject, Action)` and
+  `QMetaObject.InvokeMethod(QObject, Action, Qt.ConnectionType)` bind the
+  `QTimer::singleShot` and `QMetaObject::invokeMethod` functor overloads, which are C++ templates
+  and therefore have no exported symbol for the generator to see. The native runtime instantiates
+  them around a managed token; the delegate runs on the target thread, and the token is released
+  through native code when Qt destroys the functor without calling it (the context object died, the
+  queued event was discarded), so a cancelled call does not root its delegate until process exit.
+  The functor-based `QObject::connect` overloads are not added: a signal connection is already a
+  C# event. `test-functor-interop` covers firing, context cancellation and the queued invocation.
+
 ## 0.23.0 - 2026-10-30
 
 - **BCL -> Qt extension methods (`ToQ*`).** The bridges now have a source-side spelling:

@@ -16,6 +16,7 @@
 #include <qcoreapplication.h>
 #include <qguiapplication.h>
 #include <qapplication.h>
+#include <qtimer.h>
 #include <private/qobject_p.h>
 #include <private/qmetaobject_p.h>
 #include <private/qmetaobjectbuilder_p.h>
@@ -1283,6 +1284,83 @@ extern "C" QS_API_EXPORT void qs_api_app_destroy()
         delete Instance();
     Instance() = nullptr;
     OwnsInstance() = false;
+}
+
+// ------------------------------------------------------------------ managed functors
+//
+// Qt's functor-taking overloads (QTimer::singleShot, QMetaObject::invokeMethod) are templates, so
+// there is no exported symbol to bind. These helpers instantiate them with a lambda that carries a
+// managed token and dispatcher instead:
+//
+//   methodId 0 - invoke the delegate (the functor fired)
+//   methodId 1 - release the token (Qt destroyed the functor without calling it: the context
+//                object died, or the pending event was discarded)
+//
+// The shared_ptr keeps the token alive for exactly as long as Qt holds the functor. The dispatch
+// pointer is nulled before the invoke so the destructor that follows cannot release it a second
+// time; if destruction wins the race (it cannot in practice: Qt runs the functor and its
+// destruction on the same thread), only the destructor releases.
+
+namespace
+{
+struct QsApiManagedFunctor
+{
+    QsApiManagedFunctor(void* token, QsApiDispatch dispatch) : token(token), dispatch(dispatch) {}
+    QsApiManagedFunctor(const QsApiManagedFunctor&) = delete;
+    QsApiManagedFunctor& operator=(const QsApiManagedFunctor&) = delete;
+
+    void* token;
+    QsApiDispatch dispatch;
+
+    ~QsApiManagedFunctor()
+    {
+        if (dispatch)
+        {
+            QsApiDispatch release = dispatch;
+            dispatch = nullptr;
+            release(token, 1, nullptr);
+        }
+    }
+};
+
+QsApiDispatch TakeInvoke(QsApiManagedFunctor& functor)
+{
+    QsApiDispatch dispatch = functor.dispatch;
+    functor.dispatch = nullptr;
+    return dispatch;
+}
+}
+
+extern "C" QS_API_EXPORT void qs_api_qtimer_single_shot_functor(int msec, void* token, QsApiDispatch dispatch)
+{
+    auto functor = std::make_shared<QsApiManagedFunctor>(token, dispatch);
+    QTimer::singleShot(msec, [functor]() {
+        if (QsApiDispatch invoke = TakeInvoke(*functor))
+            invoke(functor->token, 0, nullptr);
+    });
+}
+
+extern "C" QS_API_EXPORT void qs_api_qtimer_single_shot_functor_context(
+    int msec, void* context, void* token, QsApiDispatch dispatch)
+{
+    auto functor = std::make_shared<QsApiManagedFunctor>(token, dispatch);
+    QTimer::singleShot(msec, static_cast<QObject*>(context), [functor]() {
+        if (QsApiDispatch invoke = TakeInvoke(*functor))
+            invoke(functor->token, 0, nullptr);
+    });
+}
+
+extern "C" QS_API_EXPORT bool qs_api_qmetaobject_invoke_method_functor(
+    void* context, int connectionType, void* token, QsApiDispatch dispatch)
+{
+    auto functor = std::make_shared<QsApiManagedFunctor>(token, dispatch);
+    return QMetaObject::invokeMethod(
+        static_cast<QObject*>(context),
+        [functor]() {
+            if (QsApiDispatch invoke = TakeInvoke(*functor))
+                invoke(functor->token, 0, nullptr);
+        },
+        static_cast<Qt::ConnectionType>(connectionType));
 }
 
 
