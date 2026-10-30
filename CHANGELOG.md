@@ -4,7 +4,7 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
-## Unreleased
+## 0.25.0 - 2026-10-30
 
 - **`async`/`await` on the Qt thread (`QtSynchronizationContext`).** `QtSynchronizationContext.Install()`
   installs a `SynchronizationContext` that queues continuations with
