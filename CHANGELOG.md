@@ -6,6 +6,12 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 
 ## Unreleased
 
+- **Regular-expression `FindChild`/`FindChildren`.** `FindChild<T>(QRegularExpression, ...)` and
+  `FindChildren<T>(QRegularExpression, ...)` add Qt's pattern overloads: the pattern is searched
+  against each candidate's object name (`re.match(name).hasMatch()`, so `"di"` matches `"edit"`),
+  with the same type filter, Qt traversal order and `Qt.FindChildOptions`. A null pattern throws
+  `ArgumentNullException`. Because the name and pattern overloads are both reference types, a bare
+  `null` argument now needs a cast: `FindChild<T>((string)null)`.
 - **Qt's functor-taking template APIs.** `QTimer.singleShot(int, Action)`,
   `QTimer.singleShot(int, QObject, Action)` and
   `QMetaObject.InvokeMethod(QObject, Action, Qt.ConnectionType)` bind the
