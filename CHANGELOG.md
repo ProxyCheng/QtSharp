@@ -4,6 +4,28 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## Unreleased
+
+- **System.IO bridges for the filesystem and QIODevice.** `QDir(DirectoryInfo)`/`ToDirectoryInfo()`,
+  `QFileInfo(FileSystemInfo)` with `ToFileSystemInfo()` plus the strict `ToFileInfo()`/
+  `ToDirectoryInfo()` (a type mismatch throws instead of returning the other type; a path that does
+  not exist yet converts to an `FileInfo`, the only choice `FileSystemInfo` allows), and
+  `QDirIterator.EnumeratePaths()`/`EnumerateFileInfos()` for `foreach` (the extensions dispose the
+  iterator they own, including when the loop breaks early). `QIODevice.AsStream()` is the missing
+  direction of `StreamIODevice`: an open Qt device becomes a `System.IO.Stream`, for a seekable
+  device `Position`/`Length`/`Seek` follow `pos()`/`size()`/`seek()`, `Flush` reaches
+  `QFileDevice::flush`, `SetLength` reaches `QFileDevice::resize` (`NotSupportedException` for a
+  QBuffer), and `leaveOpen: false` closes the Qt device on dispose. The conversions stay explicit:
+  `QDir`/`QFileInfo` keep their Qt spelling because their filter/sort state, the FileInfo/
+  DirectoryInfo split and native ownership have no lossless BCL equivalent. `test-filesystem-interop`
+  covers both directions, the iterator lifetime and binary writes.
+- **Fixed: the `writeData` hooks carried binary data as a string.** The derived declarations
+  (`QBuffer`, `QFileDevice`, `QAbstractSocket`, `QLocalSocket`, `QNetworkReply`, `QProcess`,
+  `QSaveFile`) were bound as `WriteData(string, long)`, so the managed dispatch round-tripped the
+  buffer through UTF-8: writing `0xFA` to a QBuffer stored `0xEF`. `QioDeviceBridge` now maps
+  `const char *` + length on every declaring class to the same `IntPtr` buffer the `QIODevice` base
+  already used. A managed override of those hooks changes from `string` to `IntPtr`.
+
 ## 0.22.0 - 2026-10-29
 
 - **`QtSharp.WebView`: a QWidget host for Edge WebView2.** `WebView2Widget` puts web content in a

@@ -86,8 +86,10 @@ QtSharp 不追求绑定全部 Qt 模块。对于 .NET 已有成熟、适合 C# �
 | QtWebSockets | `ClientWebSocket` | 直接使用 .NET API，目前没有 Qt 接口适配。 |
 | QtWebEngine | 系统 WebView（Windows 上为 Edge WebView2） | 暂未绑定。`QtSharp.WebView` 在 `QWidget` 中承载 WebView2（仅 Windows x64）；如需跨平台可考虑 Qt WebView 模块。调研见[网页视图方案](docs/webview.md)。 |
 
-现有的 `QtSharp.Sql` 和将 .NET `Stream` 包装为 `QIODevice` 的
-[`StreamIODevice`](runtime/QtCore/IoDeviceInterop.cs) 已采用这种方式。后续也会按需考虑
+现有的 `QtSharp.Sql`、将 .NET `Stream` 包装为 `QIODevice` 的
+[`StreamIODevice`](runtime/QtCore/IoDeviceInterop.cs)，以及 [`runtime/QtCore`](runtime/QtCore)
+下的 System.IO/BCL 桥（`QIODevice.AsStream`、`QDir`/`QFileInfo` ↔ `DirectoryInfo`/`FileInfo`、
+`QDateTime` ↔ `DateTime` 等）已采用这种方式。后续也会按需考虑
 包装 C# 库，让 QtSharp 的模型、IO 等接口及其他组件使用。
 
 ## 与相似项目的比较
