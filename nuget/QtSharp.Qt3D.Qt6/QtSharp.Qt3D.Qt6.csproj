@@ -14,7 +14,7 @@
        identical; the native payload below is the matching half only. -->
   <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
     <PackageId>QtSharp.Qt3D.Qt6.$(QtSharpPlatform)</PackageId>
-    <Version>0.23.0</Version>
+    <Version>0.24.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>The Qt 3D runtime (Qt63D*, Qt6Concurrent, Qt6ShaderTools and the renderer/geometry/scene plugins) loaded by QtSharp.Qt3D.</Description>
     <PackageTags>Qt;Qt6;Qt3D;runtime;native</PackageTags>

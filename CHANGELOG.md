@@ -4,7 +4,7 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
-## Unreleased
+## 0.24.0 - 2026-10-30
 
 - **QMetaObject-based `FindChild`/`FindChildren` (reflection lookup).**
   `FindChild(QMetaObject, ...)` and `FindChildren(QMetaObject, ...)`, with a name or a
