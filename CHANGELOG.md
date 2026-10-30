@@ -6,6 +6,20 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 
 ## Unreleased
 
+- **System.Text.Json bridges for the JSON DOM.** `QJsonValue.FromJsonNode(JsonNode)` and
+  `ToJsonNode()`, `QJsonObject(JsonObject)`/`ToJsonObject()`,
+  `QJsonArray(JsonArray)`/`ToJsonArray()`, and `QJsonDocument.FromJsonNode(JsonNode)`/
+  `ToJsonNode()`. `System.Text.Json.Nodes` is the counterpart rather than
+  `JsonDocument`/`JsonElement`: a `JsonNode` owns its data, while a `JsonElement` is only valid
+  for as long as its document lives. Numbers cross as doubles (Qt's representation), a null node
+  and Qt's Undefined both become null, and Qt's sorted object key order is kept.
+- **`QTextStream.ToTextReader()`.** A `TextReader` over Qt's decoded text stream: `Peek` uses a
+  one-character lookahead, `ReadLine`/`ReadToEnd` come from the stream, and `leaveOpen` decides
+  whether disposing the reader disposes the `QTextStream`. There is no `TextWriter` counterpart:
+  QTextStream writes through `operator<<`, which is not bound; use `QIODevice.AsStream()` with a
+  `StreamWriter` instead. (The XML stream pair is still out of reach: `QXmlStreamAttributes` is
+  not in the model, so `QXmlStreamReader.Attributes()` is not bound and an `XmlReader` adapter
+  could not see attributes.)
 - **System.IO bridges for the filesystem and QIODevice.** `QDir(DirectoryInfo)`/`ToDirectoryInfo()`,
   `QFileInfo(FileSystemInfo)` with `ToFileSystemInfo()` plus the strict `ToFileInfo()`/
   `ToDirectoryInfo()` (a type mismatch throws instead of returning the other type; a path that does
