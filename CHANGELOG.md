@@ -4,7 +4,7 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
-## Unreleased
+## 0.26.0 - 2026-11-02
 
 - **`QSqlTableModel` cells are editable in a view.** The model reports `Qt::ItemIsEditable`
   through `flags()` and emits `dataChanged` when `setData` stages an edit, matching Qt's

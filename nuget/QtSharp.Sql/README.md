@@ -13,8 +13,8 @@ works - pass its `DbConnection`:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api.win-x64" Version="0.25.0" />
-  <PackageReference Include="QtSharp.Sql.win-x64" Version="0.25.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.26.0" />
+  <PackageReference Include="QtSharp.Sql.win-x64" Version="0.26.0" />
   <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
 </ItemGroup>
 ```
@@ -36,7 +36,8 @@ view.Show();
 
 The editable half stages edits and writes them on `SubmitAll()` (one UPDATE per edited cell,
 inside a transaction); `RevertAll()` discards them. The primary key defaults to `id` and can be
-changed with `SetTable(table, primaryKey)`.
+changed with `SetTable(table, primaryKey)`. The model reports editable flags for every valid cell
+and emits `dataChanged` when an edit is staged, so a `QTableView` edits cells in place.
 
 Because the models are plain C# classes, there is no native glue, no Qt runtime dependency beyond
 `QtSharp.Api`, and no SQL driver plugin: the provider is whatever ADO.NET provider you reference.
