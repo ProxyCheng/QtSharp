@@ -32,24 +32,30 @@ The supported release targets are .NET 10 with Qt 6.12.0 on Windows x64 and Linu
   converts at the Qt call. That keeps one C# API across platforms, but `QByteArray.toLong`,
   `QLocale.toLong`, the `QEventPoint` timestamps and the `QThread`/`QWaitCondition` timeout
   parameters truncate to 32 bits on Linux (the timestamps wrap after ~49.7 days of uptime). Use the
-  `QByteArray::toLongLong` / `QLocale::toLongLong` overloads when the full range matters.
+  `QByteArray::toLongLong` / `QLocale::toLongLong` overloads when the full range matters. Permanent
+  for the 1.0 line: one C# surface that behaves the same on both platforms is worth more than a
+  per-platform `long`, and every affected API has a 64-bit sibling.
 * **Windows-only Qt members are not bound.** `QProcess.nativeArguments`/`setNativeArguments` are
   declared by Qt only on Windows; the generator filters them out so one API surface compiles on
   both platforms. Use `ProcessStartInfo.Arguments` instead.
 * **`QAudioFormat` has no constructor overloads in the binding.** Qt 6.12 declares none beyond the
   implicit default (the AST does not list it), so there is no `QAudioFormat(...)`; as a struct its
   default (`new QAudioFormat()` / `default`) is Qt's default format, and the setters fill it in.
+  Permanent: there is nothing in the headers to bind.
   `QAudioDevice.PreferredFormat()` is still the useful starting point.
 * An optional parameter whose C++ default is a *bare enumerator that is not an enumerator of the
   parameter's type* still truncates the overload (the C# default would be 0, which Qt often
   reserves for "invalid"). A boxed-value default is fine now: the parameter defaults to `null` and
   the native glue substitutes the declared expression, which is what unlocked
   `QPixmap.fill(QColor)`, `QWidget.grab(QRect)`, `QComboBox.addItem(QString, QVariant)` and
-  `QTcpServer.listen(address, port)`.
+  `QTcpServer.listen(address, port)`. The remaining bare-enumerator case is permanent: C# has no
+  spelling for "the default is this enumerator of another type".
 * A `const uchar *` *return* is dropped (there is no length to go with it), so `QResource.data()`
   and `QImage.bits()` are absent; `QResource.uncompressedData()`, `QByteArray` and the `byte[]`
   parameters cover the same ground. Nested classes (`QFont::Tag`, `QTextOption::Tab`) are not
-  bound either — the model publishes top-level classes and enums only.
+  bound either — the model publishes top-level classes and enums only, which is permanent for 1.0;
+  their top-level equivalents (`QFont`, `QTextOption`) carry the usable surface. Both are stable
+  limitations, not pending work.
 
 ## Module coverage
 
