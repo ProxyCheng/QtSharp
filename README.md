@@ -107,7 +107,7 @@ The repository includes C# ports of official Qt examples:
 
 These examples use the repository's [development build](docs/development.md). The gate runs them
 as its conformance suite: **74 examples (1547 assertions)** in eleven executables — the base-module
-ports, the Qt Charts ports and the three Qt 3D scenes — plus **48 binding tests (1176 assertions)**.
+ports, the Qt Charts ports and the three Qt 3D scenes — plus **50 binding tests (1181 assertions)**.
 The WebView2 test asserts only under a real window; the offscreen gate reports it as skipped.
 See [conformance coverage](docs/conformance.md) for the scenarios they check.
 

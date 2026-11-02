@@ -784,7 +784,7 @@ public static partial class ApiModel
         // QEvent is QtCore's (QtCore/qcoreevent.h); QtGui/qevent.h only includes that header
         // before declaring the GUI events. The root has to name the defining header, or the
         // class is split into the wrong module.
-        R("QEvent",             "qcoreevent.h", "QtCore", bindCtors: false, owned: false),
+        R("QEvent",             "qcoreevent.h", "QtCore", owned: false),
         R("QPointerEvent",      "qevent.h", "QtGui", bindCtors: false, owned: false),
         R("QSinglePointEvent",  "qevent.h", "QtGui", bindCtors: false, owned: false),
         R("QMouseEvent",        "qevent.h", "QtGui", bindCtors: false, owned: false),
