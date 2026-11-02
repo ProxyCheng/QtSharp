@@ -1319,9 +1319,12 @@ public static partial class ApiModel
         R("QPrintPreviewDialog",   "qprintpreviewdialog.h", "QtPrintSupport"),
         R("QPrintPreviewWidget",   "qprintpreviewwidget.h", "QtPrintSupport"),
         // QtOpenGLWidgets / QtOpenGL: rendering with OpenGL, including from C# (QOpenGLWidget's
-        // initializeGL/resizeGL/paintGL are overridable). QOpenGLContext is the QtGui half.
+        // initializeGL/resizeGL/paintGL are overridable). QOpenGLContext and QOpenGLFunctions are
+        // the QtGui half: the former owns the context, the latter is the GL entry points the
+        // hellogl2 port calls directly (glClear, glDrawArrays, the vertex-attrib setup).
         R("QPaintEngine",          "qpaintengine.h", "QtGui", bindCtors: false),
         R("QOpenGLContext",        "qopenglcontext.h", "QtGui"),
+        R("QOpenGLFunctions",      "qopenglfunctions.h", "QtGui"),
         R("QOpenGLWidget",         "qopenglwidget.h", "QtOpenGLWidgets"),
         R("QOpenGLShaderProgram",  "qopenglshaderprogram.h", "QtOpenGL"),
         R("QOpenGLBuffer",         "qopenglbuffer.h", "QtOpenGL"),
