@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using QtSharp.QtCore;
@@ -124,6 +125,44 @@ public static class AsyncAwaitTests
             Pump(() => skipped.IsCompleted);
             context.Check(skipped.IsCanceled && !started,
                 "a pre-cancelled token skips the work and cancels the task");
+        }
+
+        // Cooperative cancellation: the delegate gets the token, and throwing
+        // OperationCanceledException after it fires cancels the task instead of faulting it.
+        using (var cooperative = new CancellationTokenSource())
+        {
+            Task<int> stopped = pool.RunAsync<int>(token =>
+            {
+                cooperative.Cancel();
+                token.ThrowIfCancellationRequested();
+                return 1;
+            }, cooperative.Token);
+            Pump(() => stopped.IsCompleted);
+            context.Check(stopped.IsCanceled,
+                $"a work item that observes the token cancels the task ({stopped.Status})");
+        }
+
+        // Progress: the worker reports through IProgress<int>; Progress<int> was built on the Qt
+        // thread, so the reports arrive there, in order.
+        {
+            var reports = new List<int>();
+            var progress = new Progress<int>(value => { lock (reports) reports.Add(value); });
+            Task<int> reported = pool.RunAsync(p =>
+            {
+                p.Report(10);
+                p.Report(99);
+                return 5;
+            }, progress);
+            Pump(() => reported.IsCompleted);
+            context.Check(reported.Result == 5, "a progress-reporting task still returns its result");
+            Pump(() => { lock (reports) return reports.Count == 2; });
+            lock (reports)
+                context.Check(reports.Count == 2 && reports[0] == 10 && reports[1] == 99,
+                    $"progress reports arrive in order on the Qt thread ({string.Join(",", reports)})");
+
+            Task<int> silent = pool.RunAsync<int>(p => { p.Report(1); return 6; }, null);
+            Pump(() => silent.IsCompleted);
+            context.Check(silent.Result == 6, "a null progress object discards the reports");
         }
 
         // Awaiting a pool task from the Qt thread resumes on the Qt thread.
