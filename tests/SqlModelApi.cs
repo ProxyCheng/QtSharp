@@ -64,8 +64,30 @@ namespace QtSharp.Tests
             context.Check(table.RowCount() == 3, "SetTable loads the table");
 
             var cell = table.Index(1, 2);
-                context.Check(table.SetData(cell, "Lyon", 2 /* Qt::EditRole */),
-                    "SetData stages an edit");
+            context.Check(table.Flags(cell).HasFlag(Qt.ItemFlags.ItemIsEditable),
+                "Flags marks a valid cell editable");
+            context.Check(!table.Flags(default(QModelIndex)).HasFlag(Qt.ItemFlags.ItemIsEditable),
+                "Flags leaves an invalid index non-editable");
+
+            int changes = 0;
+            using var connectionHandle = ApiRuntime.Connect(
+                table.Handle, "dataChanged(QModelIndex,QModelIndex,QList<int>)",
+                (argv, _) => changes++);
+            context.Check(connectionHandle.IsConnected,
+                "a native connection to dataChanged(QModelIndex,QModelIndex,QList<int>) is established");
+
+            context.Check(table.SetData(cell, "Lyon", (int)Qt.ItemDataRole.EditRole),
+                "SetData stages an edit");
+            context.Check(changes == 1,
+                $"a staged edit emits one dataChanged (got {changes})");
+
+            int rejectedChanges = changes;
+            context.Check(!table.SetData(cell, "Paris", (int)Qt.ItemDataRole.DisplayRole),
+                "SetData rejects a non-edit role");
+            context.Check(!table.SetData(default(QModelIndex), "Paris", (int)Qt.ItemDataRole.EditRole),
+                "SetData rejects an invalid index");
+            context.Check(changes == rejectedChanges,
+                $"rejected edits emit no dataChanged (got {changes - rejectedChanges})");
             var staged = table.Index(1, 2);
                 context.Check(table.Data(staged) as string == "Lyon",
                     "the model shows the staged value before it is written");

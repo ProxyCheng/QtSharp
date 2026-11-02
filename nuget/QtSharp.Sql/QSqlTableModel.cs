@@ -41,6 +41,11 @@ namespace QtSharp.QtSql
             return base.CellValue(row, column);
         }
 
+        public override Qt.ItemFlags Flags(QModelIndex index)
+            => index.IsValid()
+                ? base.Flags(index) | Qt.ItemFlags.ItemIsEditable
+                : base.Flags(index);
+
         public override bool SetData(QModelIndex index, object value, int role = default)
         {
             // Qt::EditRole is 2; other roles are not editable.
@@ -50,6 +55,7 @@ namespace QtSharp.QtSql
             if (row < 0 || row >= RowCount() || column < 0 || column >= ColumnCount())
                 return false;
             pending[(row, column)] = value;
+            DataChanged(index, index, new[] { role, (int)Qt.ItemDataRole.DisplayRole });
             return true;
         }
 
