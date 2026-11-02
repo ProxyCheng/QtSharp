@@ -89,6 +89,7 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 | `test-nativeslot` | the read-side `[QtNativeSlot]` marker on generated slots and `Q_INVOKABLE` methods |
 | `test-network` | QtNetwork transport beyond the fortune example: host addresses, local-socket handoff, TCP |
 | `test-objectlookup` | wrappers of actual bound type: `QObject*` returns, `QList<QObject*>` elements, signal arguments, parent/child accessors, managed subclasses, unpublished internal and namespaced classes |
+| `test-opengl-functions` | `QOpenGLFunctions` through a `QOpenGLWidget`: initializeGL, `glClearColor`/`glClear`/`glEnable`, `glGetError`; skipped when the platform has no GL |
 | `test-ownership` | who may delete a native object; liveness and generation counters |
 | `test-platformenv` | the QPA platform the hosts choose reaches Qt through the C library's environment, not only .NET's copy |
 | `test-positioning` | QtPositioning: coordinate distance/azimuth, shape containment, position info, source enumeration |

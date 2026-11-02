@@ -6,6 +6,11 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 
 ## Unreleased
 
+- **`QOpenGLFunctions`.** The GL entry-point table is bound (137 methods: `glClear`, `glDrawArrays`,
+  the vertex-attrib setup, shader and uniform entry points), and `QOpenGLContext.functions()` is
+  extracted now that the class is in the model. `test-opengl-functions` initializes the table from a
+  `QOpenGLWidget` and checks that `glClearColor`/`glClear`/`glEnable` leave no GL error; under the
+  offscreen platform, which has no GL, it reports a skip like the WebView2 test.
 - **`QFuture` stays out of the API; the async surface is `Task`.** `QFuture<T>`,
   `QFutureWatcher<T>`, `QPromise<T>` and `QtConcurrent` are templates, and C# already spells their
   surface: `Task`/`Task<T>`, `CancellationToken` and `IProgress<T>`. No Qt handle is exposed, so
