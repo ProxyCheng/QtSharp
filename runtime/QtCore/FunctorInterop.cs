@@ -76,6 +76,82 @@ namespace QtSharp.QtCore
                 throw;
             }
         }
+
+        /// <summary>
+        /// Invokes <paramref name="action"/> once after <paramref name="interval"/> on the calling
+        /// thread's event loop. The managed equivalent of Qt's functor
+        /// <c>QTimer::singleShot(std::chrono::milliseconds, Functor)</c>.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="interval"/> is negative.</exception>
+        public static void singleShot(TimeSpan interval, Action action)
+            => Schedule(interval, Qt.TimerType.CoarseTimer, null, action);
+
+        /// <summary>
+        /// Invokes <paramref name="action"/> once after <paramref name="interval"/> unless
+        /// <paramref name="context"/> is destroyed first. The callback runs in the context object's
+        /// thread. The managed equivalent of Qt's functor
+        /// <c>QTimer::singleShot(std::chrono::milliseconds, const QObject*, Functor)</c>.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="context"/> or <paramref name="action"/> is null.
+        /// </exception>
+        public static void singleShot(TimeSpan interval, QObject context, Action action)
+        {
+            if (context is null)
+                throw new ArgumentNullException(nameof(context));
+            Schedule(interval, Qt.TimerType.CoarseTimer, context, action);
+        }
+
+        /// <summary>
+        /// Invokes <paramref name="action"/> once after <paramref name="interval"/>, using
+        /// <paramref name="timerType"/> for the timer's precision.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is null.</exception>
+        public static void singleShot(TimeSpan interval, Qt.TimerType timerType, Action action)
+            => Schedule(interval, timerType, null, action);
+
+        /// <summary>
+        /// Invokes <paramref name="action"/> once after <paramref name="interval"/> with the given
+        /// timer type, unless <paramref name="context"/> is destroyed first. The managed equivalent
+        /// of Qt's functor
+        /// <c>QTimer::singleShot(std::chrono::milliseconds, Qt::TimerType, const QObject*, Functor)</c>.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="context"/> or <paramref name="action"/> is null.
+        /// </exception>
+        public static void singleShot(TimeSpan interval, Qt.TimerType timerType,
+            QObject context, Action action)
+        {
+            if (context is null)
+                throw new ArgumentNullException(nameof(context));
+            Schedule(interval, timerType, context, action);
+        }
+
+        static void Schedule(TimeSpan interval, Qt.TimerType timerType,
+            QObject context, Action action)
+        {
+            if (action is null)
+                throw new ArgumentNullException(nameof(action));
+
+            double milliseconds = interval.TotalMilliseconds;
+            if (double.IsNaN(milliseconds) || milliseconds < 0)
+                throw new ArgumentOutOfRangeException(nameof(interval),
+                    "A single-shot interval cannot be negative.");
+            int msec = milliseconds >= int.MaxValue ? int.MaxValue : (int)milliseconds;
+
+            FunctorDispatch.Create(action, out IntPtr token, out IntPtr dispatch);
+            try
+            {
+                FunctorNative.QTimerSingleShotType(
+                    msec, (int)timerType, context?.Handle ?? IntPtr.Zero, token, dispatch);
+            }
+            catch
+            {
+                FunctorDispatch.Release(token);
+                throw;
+            }
+        }
     }
 
     public partial class QMetaObject
@@ -180,6 +256,11 @@ namespace QtSharp.QtCore
             CallingConvention = CallingConvention.Cdecl)]
         internal static extern void QTimerSingleShotContext(
             int msec, IntPtr context, IntPtr token, IntPtr dispatch);
+
+        [DllImport(ApiNative.Library, EntryPoint = "qs_api_qtimer_single_shot_functor_type",
+            CallingConvention = CallingConvention.Cdecl)]
+        internal static extern void QTimerSingleShotType(
+            int msec, int timerType, IntPtr context, IntPtr token, IntPtr dispatch);
 
         [DllImport(ApiNative.Library, EntryPoint = "qs_api_qmetaobject_invoke_method_functor",
             CallingConvention = CallingConvention.Cdecl)]

@@ -368,6 +368,20 @@ object was destroyed before Qt dispatched it — comes back cancelled rather tha
 from the work fault the task; nothing unwinds into Qt's C++ frames. `test-async-await` covers the
 thread hops, results, faults, cooperative cancellation, progress and the context-lifetime paths.
 
+The other template-shaped thread APIs are bound the same way — hand-written around a managed token,
+with the delegate released when Qt drops it:
+```csharp
+var worker = QThread.Create(() => DecodeAll());   // QThread::create: the caller owns the thread
+worker.Start();
+worker.Wait(5000);
+worker.Dispose();                                  // after it has finished, as Qt requires
+
+QTimer.singleShot(TimeSpan.FromMilliseconds(250), window, () => Refresh());   // duration + context
+QTimer.singleShot(TimeSpan.FromSeconds(1), Qt.TimerType.PreciseTimer, () => Tick());
+```
+A negative interval throws `ArgumentOutOfRangeException`; destroying the context before the timer
+fires cancels the call and releases the delegate.
+
 ## Event arguments
 
 Qt event arguments expose methods such as `e.Position()`, `e.Key()`, `e.Buttons()` and

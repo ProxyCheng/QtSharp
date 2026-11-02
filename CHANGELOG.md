@@ -16,6 +16,12 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   faulted. The `Action<IProgress<int>>` / `Func<IProgress<int>, T>` overloads give the work a
   reporter whose reports reach the caller's `Progress<T>` on the caller's thread — the progress
   that `QFutureWatcher::progressValueChanged` would have carried, without the watcher.
+- **`QThread.Create(Action)`.** Qt's template `QThread::create` around the same managed token as
+  the other functor helpers; the caller owns the returned thread (start, wait, dispose).
+- **`QTimer.singleShot` with `TimeSpan` and `Qt.TimerType`.** The remaining functor overloads
+  (`singleShot(std::chrono::milliseconds[, Qt::TimerType][, context], Functor)`) in managed form;
+  a negative interval throws instead of firing immediately, and destroying the context still
+  cancels the call.
 
 ## 0.25.0 - 2026-10-30
 
