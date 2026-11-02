@@ -22,6 +22,12 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   the paint path and the slider-driven rotations. Offscreen it asserts the mesh and the rotation
   wrapping and skips the GL path; on a real display it builds the program and paints, leaving no
   GL error.
+- **Custom `QEvent` instances from C#.** `QEvent`'s constructor is bound now, so a C# subclass can
+  carry the payload, and `QCoreApplication.PostEvent(receiver, event)` (the two-argument overload)
+  transfers the instance to Qt and invalidates the wrapper — the generated three-argument overload
+  only passes the pointer and leaves the caller owning an object Qt will delete. The receiver sees
+  an ordinary `QEvent`: dispatch on `type()`, the same contract PyQt has. `test-custom-events` posts
+  a subclass and checks the delivery and the ownership transfer.
 - **`QFuture` stays out of the API; the async surface is `Task`.** `QFuture<T>`,
   `QFutureWatcher<T>`, `QPromise<T>` and `QtConcurrent` are templates, and C# already spells their
   surface: `Task`/`Task<T>`, `CancellationToken` and `IProgress<T>`. No Qt handle is exposed, so

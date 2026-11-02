@@ -4563,6 +4563,7 @@
       "bases": [],
       "flags": ["subclassable"],
       "constructors": [
+        { "parameters": [{ "name": "type", "type": "QEvent::Type" }] }
       ],
       "methods": [
         { "name": "accept", "returnType": "void", "parameters": [] },
