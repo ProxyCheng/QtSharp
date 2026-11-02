@@ -56,6 +56,13 @@ The supported release targets are .NET 10 with Qt 6.12.0 on Windows x64 and Linu
   bound either — the model publishes top-level classes and enums only, which is permanent for 1.0;
   their top-level equivalents (`QFont`, `QTextOption`) carry the usable surface. Both are stable
   limitations, not pending work.
+* **Managed types have no Qt metatype.** A `[QtSignal]` parameter and a queued connection carry Qt
+  types; a managed object travels as a `QVariant` opaque payload (`new QVariant(anyObject)` and
+  `QVariant.Value<T>()`, covered by `test-variantobject`). Qt's metatype registry is keyed by C++
+  type, and a C# class has none, so `QMetaType.FromType<T>()` cannot produce an id for it. A single
+  wrapper metatype would make every managed type one id, which is not type identity; per-type
+  registration needs a generated C++ shell per managed type and is not planned for 1.0. Documented
+  so callers do not expect a managed object to survive a queued connection on its own.
 
 ## Module coverage
 
