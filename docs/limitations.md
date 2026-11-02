@@ -84,5 +84,9 @@ The supported release targets are .NET 10 with Qt 6.12.0 on Windows x64 and Linu
 * **`QtSharp.Sql` materializes a whole result set.** Qt's `QSqlTableModel` fetches in 256-row
   batches; the substitute loads everything up front, so page very large tables with `WHERE`/`LIMIT`.
   Its per-cell `Data()` also crosses the managed/native boundary (a per-call cost for visible cells).
-* [`WindowFlagsApi.cs`](../tests/WindowFlagsApi.cs) is excluded from the dispatcher because native window teardown is unstable.
-  Passing its assertions does not establish a clean process exit.
+* **Native window teardown needs the windows to be gone first.** `test-windowflags` used to crash
+  inside `qwindows.dll` about a quarter of the time while the runtime tore the application down with
+  a shown window still alive. Hiding the windows, flushing the posted events and disposing them
+  before returning fixes it (0 crashes in 40 runs), and that is what the test does. Application code
+  that shows its own windows should let `QApplication.exec()` return normally; a process that exits
+  with windows still shown keeps the same hazard.

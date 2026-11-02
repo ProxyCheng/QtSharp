@@ -22,6 +22,12 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   the paint path and the slider-driven rotations. Offscreen it asserts the mesh and the rotation
   wrapping and skips the GL path; on a real display it builds the program and paints, leaving no
   GL error.
+- **The windowflags example is in the gate again, with a teardown fix.** The port used to crash
+  inside `qwindows.dll` in about a quarter of the runs while the runtime tore the application down
+  with a shown window still alive. `test-windowflags` now hides both windows, flushes the posted
+  events and disposes them before returning: 0 crashes in 40 runs on the windows QPA platform, 5 in
+  20 before. Its 115 assertions - the typed `Qt.WindowFlags` union through all 12 `Qt::WindowType`
+  values, the hints and the preview text - run in the gate again.
 - **Custom `QEvent` instances from C#.** `QEvent`'s constructor is bound now, so a C# subclass can
   carry the payload, and `QCoreApplication.PostEvent(receiver, event)` (the two-argument overload)
   transfers the instance to Qt and invalidates the wrapper — the generated three-argument overload
