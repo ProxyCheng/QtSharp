@@ -334,16 +334,39 @@ await window.InvokeAsync(() => SetStatus("done"));      // queued onto the objec
 
 `QtSynchronizationContext.Post` queues a continuation with `QMetaObject::invokeMethod` and
 `QueuedConnection`, so the target thread must be pumping an event loop. `Send` runs inline on the
-target thread and blocks from any other. Neither `QFutureWatcher<T>` nor `QtConcurrent` is bound:
-the first is a template, and the second is templates all the way down; `QThreadPool.RunAsync` is
-the same capability without them. PyQt and PySide do not expose them either.
+target thread and blocks from any other.
 
-`RunAsync` takes an optional `CancellationToken`; the token is checked when a worker picks the task
-up, so cancelling later needs cooperation inside the work. A task whose queued invocation is
-dropped — the pool was cleared, or the context object was destroyed before Qt dispatched it — comes
-back cancelled rather than pending. Exceptions from the work fault the task; nothing unwinds into
-Qt's C++ frames. `test-async-await` covers the thread hops, results, faults, cancellation and the
-context-lifetime paths.
+`QFuture<T>`, `QFutureWatcher<T>` and `QtConcurrent` are deliberately not part of the API: they are
+templates, and C# already has the surface they model. Everything async is a `Task`, with
+`CancellationToken` for cancellation and `IProgress<T>` for progress — no Qt handle to dispose and no
+extra event loop:
+```csharp
+var progress = new Progress<int>(value => bar.Value = value);   // built on the GUI thread
+int count = await pool.RunAsync(p =>
+{
+    for (int i = 0; i < rows; i += 64) { p.Report(i); Scan(i); }   // runs on a pool thread
+    return rows;
+}, progress);
+
+using var cts = new CancellationTokenSource();
+var task = pool.RunAsync(token =>
+{
+    foreach (var row in rows)
+    {
+        token.ThrowIfCancellationRequested();   // cooperative, like QFuture::isCanceled()
+        Decode(row);
+    }
+    return rows.Length;
+}, cts.Token);
+cts.Cancel();                                   // task ends cancelled, not faulted
+```
+`Progress<T>` captures the `SynchronizationContext` it is constructed on, so reports made on the
+worker thread reach the Qt thread through the context installed above. A token cancelled before a
+worker picks the task up skips the work; a `OperationCanceledException` thrown after the token fires
+cancels the task. A task whose queued invocation is dropped — the pool was cleared, or the context
+object was destroyed before Qt dispatched it — comes back cancelled rather than pending. Exceptions
+from the work fault the task; nothing unwinds into Qt's C++ frames. `test-async-await` covers the
+thread hops, results, faults, cooperative cancellation, progress and the context-lifetime paths.
 
 ## Event arguments
 

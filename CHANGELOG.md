@@ -4,6 +4,19 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
+## Unreleased
+
+- **`QFuture` stays out of the API; the async surface is `Task`.** `QFuture<T>`,
+  `QFutureWatcher<T>`, `QPromise<T>` and `QtConcurrent` are templates, and C# already spells their
+  surface: `Task`/`Task<T>`, `CancellationToken` and `IProgress<T>`. No Qt handle is exposed, so
+  there is nothing to dispose and no watcher event loop to keep alive.
+- **Cooperative cancellation and progress on `QThreadPool.RunAsync`.** The
+  `Action<CancellationToken>` / `Func<CancellationToken, T>` overloads hand the work the token, and
+  an `OperationCanceledException` thrown after it fires completes the task as cancelled rather than
+  faulted. The `Action<IProgress<int>>` / `Func<IProgress<int>, T>` overloads give the work a
+  reporter whose reports reach the caller's `Progress<T>` on the caller's thread — the progress
+  that `QFutureWatcher::progressValueChanged` would have carried, without the watcher.
+
 ## 0.25.0 - 2026-10-30
 
 - **`async`/`await` on the Qt thread (`QtSynchronizationContext`).** `QtSynchronizationContext.Install()`

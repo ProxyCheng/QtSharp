@@ -69,6 +69,66 @@ namespace QtSharp.QtCore
             return Queue(pool, func, cancellationToken, priority);
         }
 
+        /// <summary>
+        /// Runs <paramref name="work"/> on the pool with the token it can observe. Cancellation is
+        /// cooperative on this side too: the delegate stops when it checks the token, and throws
+        /// <see cref="OperationCanceledException"/> to cancel the task. The managed equivalent of a
+        /// QFuture's cancellation, without a QFuture.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="pool"/> or <paramref name="work"/> is null.
+        /// </exception>
+        public static Task RunAsync(this QThreadPool pool, Action<CancellationToken> work,
+            CancellationToken cancellationToken, int priority = 0)
+        {
+            if (work is null)
+                throw new ArgumentNullException(nameof(work));
+            return Queue(pool, () => { work(cancellationToken); return true; },
+                cancellationToken, priority);
+        }
+
+        /// <summary>
+        /// Runs <paramref name="work"/> on the pool with the token it can observe, and completes
+        /// with its result.
+        /// </summary>
+        public static Task<T> RunAsync<T>(this QThreadPool pool, Func<CancellationToken, T> work,
+            CancellationToken cancellationToken, int priority = 0)
+        {
+            if (work is null)
+                throw new ArgumentNullException(nameof(work));
+            return Queue(pool, () => work(cancellationToken), cancellationToken, priority);
+        }
+
+        /// <summary>
+        /// Runs <paramref name="work"/> on the pool with an <see cref="IProgress{T}"/> it reports
+        /// to. Reports made on the worker thread reach the caller's progress object without a
+        /// QFuture or a QFutureWatcher. A null <paramref name="progress"/> discards the reports.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="pool"/> or <paramref name="work"/> is null.
+        /// </exception>
+        public static Task RunAsync(this QThreadPool pool, Action<IProgress<int>> work,
+            IProgress<int> progress = null, int priority = 0)
+        {
+            if (work is null)
+                throw new ArgumentNullException(nameof(work));
+            return Queue(pool, () => { work(progress ?? NoProgress.Instance); return true; },
+                CancellationToken.None, priority);
+        }
+
+        /// <summary>
+        /// Runs <paramref name="work"/> on the pool with a progress reporter, and completes with
+        /// its result.
+        /// </summary>
+        public static Task<T> RunAsync<T>(this QThreadPool pool, Func<IProgress<int>, T> work,
+            IProgress<int> progress = null, int priority = 0)
+        {
+            if (work is null)
+                throw new ArgumentNullException(nameof(work));
+            return Queue(pool, () => work(progress ?? NoProgress.Instance),
+                CancellationToken.None, priority);
+        }
+
         static Task<T> Queue<T>(QThreadPool pool, Func<T> work,
             CancellationToken cancellationToken, int priority)
         {
@@ -90,6 +150,11 @@ namespace QtSharp.QtCore
                     {
                         completion.TrySetResult(work());
                     }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        // The work observed the cancellation and stopped: cancelled, not faulted.
+                        completion.TrySetCanceled(cancellationToken);
+                    }
                     catch (Exception exception)
                     {
                         completion.TrySetException(exception);
@@ -99,6 +164,15 @@ namespace QtSharp.QtCore
 
             ThreadPoolTasks.Enqueue(pool.Handle, priority, task);
             return completion.Task;
+        }
+
+        sealed class NoProgress : IProgress<int>
+        {
+            internal static readonly NoProgress Instance = new NoProgress();
+
+            public void Report(int value)
+            {
+            }
         }
     }
 
