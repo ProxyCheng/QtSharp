@@ -244,6 +244,7 @@
     { "name": "FramebufferRestorePolicy", "qualified": "QOpenGLFramebufferObject::FramebufferRestorePolicy", "module": "qtopengl", "flags": false, "items": [{ "name": "DontRestoreFramebufferBinding", "value": 0 }, { "name": "RestoreFramebufferBindingToDefault", "value": 1 }, { "name": "RestoreFrameBufferBinding", "value": 2 }] },
     { "name": "OpenGLFeature", "qualified": "QOpenGLFunctions::OpenGLFeature", "module": "qtgui", "flags": false, "items": [{ "name": "Multitexture", "value": 1 }, { "name": "Shaders", "value": 2 }, { "name": "Buffers", "value": 4 }, { "name": "Framebuffers", "value": 8 }, { "name": "BlendColor", "value": 16 }, { "name": "BlendEquation", "value": 32 }, { "name": "BlendEquationSeparate", "value": 64 }, { "name": "BlendFuncSeparate", "value": 128 }, { "name": "BlendSubtract", "value": 256 }, { "name": "CompressedTextures", "value": 512 }, { "name": "Multisample", "value": 1024 }, { "name": "StencilSeparate", "value": 2048 }, { "name": "NPOTTextures", "value": 4096 }, { "name": "NPOTTextureRepeat", "value": 8192 }, { "name": "FixedFunctionPipeline", "value": 16384 }, { "name": "TextureRGFormats", "value": 32768 }, { "name": "MultipleRenderTargets", "value": 65536 }, { "name": "BlendEquationAdvanced", "value": 131072 }] },
     { "name": "OpenGLFeatures", "qualified": "QOpenGLFunctions::OpenGLFeatures", "module": "qtgui", "flags": true, "items": [{ "name": "Multitexture", "value": 1 }, { "name": "Shaders", "value": 2 }, { "name": "Buffers", "value": 4 }, { "name": "Framebuffers", "value": 8 }, { "name": "BlendColor", "value": 16 }, { "name": "BlendEquation", "value": 32 }, { "name": "BlendEquationSeparate", "value": 64 }, { "name": "BlendFuncSeparate", "value": 128 }, { "name": "BlendSubtract", "value": 256 }, { "name": "CompressedTextures", "value": 512 }, { "name": "Multisample", "value": 1024 }, { "name": "StencilSeparate", "value": 2048 }, { "name": "NPOTTextures", "value": 4096 }, { "name": "NPOTTextureRepeat", "value": 8192 }, { "name": "FixedFunctionPipeline", "value": 16384 }, { "name": "TextureRGFormats", "value": 32768 }, { "name": "MultipleRenderTargets", "value": 65536 }, { "name": "BlendEquationAdvanced", "value": 131072 }] },
+    { "name": "ShaderType", "qualified": "QOpenGLShader::ShaderType", "module": "qtopengl", "flags": true, "items": [{ "name": "Vertex", "value": 1 }, { "name": "Fragment", "value": 2 }, { "name": "Geometry", "value": 4 }, { "name": "TessellationControl", "value": 8 }, { "name": "TessellationEvaluation", "value": 16 }, { "name": "Compute", "value": 32 }] },
     { "name": "TargetBuffer", "qualified": "QOpenGLWidget::TargetBuffer", "module": "qtopenglwidgets", "flags": false, "items": [{ "name": "LeftBuffer", "value": 0 }, { "name": "RightBuffer", "value": 1 }] },
     { "name": "UpdateBehavior", "qualified": "QOpenGLWidget::UpdateBehavior", "module": "qtopenglwidgets", "flags": false, "items": [{ "name": "NoPartialUpdate", "value": 0 }, { "name": "PartialUpdate", "value": 1 }] },
     { "name": "OSType", "qualified": "QOperatingSystemVersion::OSType", "module": "qtcore", "flags": false, "items": [{ "name": "Unknown", "value": 0 }, { "name": "Windows", "value": 1 }, { "name": "MacOS", "value": 2 }, { "name": "IOS", "value": 3 }, { "name": "TvOS", "value": 4 }, { "name": "WatchOS", "value": 5 }, { "name": "Android", "value": 6 }, { "name": "VisionOS", "value": 7 }, { "name": "HarmonyOS", "value": 8 }] },
@@ -12237,6 +12238,33 @@
     }
 ,
     {
+      "name": "QOpenGLShader",
+      "header": "QtOpenGL/qopenglshaderprogram.h",
+      "bases": ["QObject"],
+      "flags": ["subclassable", "owned"],
+      "constructors": [
+        { "parameters": [{ "name": "type", "type": "QOpenGLShader::ShaderType" }, { "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
+      ],
+      "methods": [
+        { "name": "compileSourceCode", "returnType": "bool", "parameters": [{ "name": "source", "type": "QByteArray" }] },
+        { "name": "compileSourceCode", "returnType": "bool", "parameters": [{ "name": "source", "type": "char*" }] },
+        { "name": "compileSourceFile", "returnType": "bool", "parameters": [{ "name": "fileName", "type": "QString" }] },
+        { "name": "hasOpenGLShaders", "flags": ["static"], "returnType": "bool", "parameters": [{ "name": "type", "type": "QOpenGLShader::ShaderType" }, { "name": "context", "type": "QOpenGLContext*", "flags": ["optional"], "default": "null" }] },
+        { "name": "isCompiled", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "log", "flags": ["const"], "returnType": "QString", "parameters": [] },
+        { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "shaderId", "flags": ["const"], "returnType": "unsigned int", "parameters": [] },
+        { "name": "shaderType", "flags": ["const"], "returnType": "QOpenGLShader::ShaderType", "parameters": [] },
+        { "name": "sourceCode", "flags": ["const"], "returnType": "QByteArray", "parameters": [] },
+        { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
+      ],
+      "virtuals": [
+      ],
+      "signals": [
+      ]
+    }
+,
+    {
       "name": "QOpenGLShaderProgram",
       "header": "QtOpenGL/qopenglshaderprogram.h",
       "bases": ["QObject"],
@@ -12245,6 +12273,13 @@
         { "parameters": [{ "name": "parent", "type": "QObject*", "flags": ["optional"], "default": "null" }] }
       ],
       "methods": [
+        { "name": "addCacheableShaderFromSourceCode", "returnType": "bool", "parameters": [{ "name": "type", "type": "QOpenGLShader::ShaderType" }, { "name": "source", "type": "QByteArray" }] },
+        { "name": "addCacheableShaderFromSourceCode", "returnType": "bool", "parameters": [{ "name": "type", "type": "QOpenGLShader::ShaderType" }, { "name": "source", "type": "char*" }] },
+        { "name": "addCacheableShaderFromSourceFile", "returnType": "bool", "parameters": [{ "name": "type", "type": "QOpenGLShader::ShaderType" }, { "name": "fileName", "type": "QString" }] },
+        { "name": "addShader", "returnType": "bool", "parameters": [{ "name": "shader", "type": "QOpenGLShader*" }] },
+        { "name": "addShaderFromSourceCode", "returnType": "bool", "parameters": [{ "name": "type", "type": "QOpenGLShader::ShaderType" }, { "name": "source", "type": "QByteArray" }] },
+        { "name": "addShaderFromSourceCode", "returnType": "bool", "parameters": [{ "name": "type", "type": "QOpenGLShader::ShaderType" }, { "name": "source", "type": "char*" }] },
+        { "name": "addShaderFromSourceFile", "returnType": "bool", "parameters": [{ "name": "type", "type": "QOpenGLShader::ShaderType" }, { "name": "fileName", "type": "QString" }] },
         { "name": "attributeLocation", "flags": ["const"], "returnType": "int", "parameters": [{ "name": "name", "type": "QByteArray" }] },
         { "name": "attributeLocation", "flags": ["const"], "returnType": "int", "parameters": [{ "name": "name", "type": "char*" }] },
         { "name": "bind", "returnType": "bool", "parameters": [] },
@@ -12266,6 +12301,7 @@
         { "name": "programId", "flags": ["const"], "returnType": "unsigned int", "parameters": [] },
         { "name": "release", "returnType": "void", "parameters": [] },
         { "name": "removeAllShaders", "returnType": "void", "parameters": [] },
+        { "name": "removeShader", "returnType": "void", "parameters": [{ "name": "shader", "type": "QOpenGLShader*" }] },
         { "name": "setAttributeArray", "returnType": "void", "parameters": [{ "name": "name", "type": "char*" }, { "name": "values", "type": "QVector2D*" }, { "name": "stride", "type": "int", "flags": ["optional"], "default": "0" }] },
         { "name": "setAttributeArray", "returnType": "void", "parameters": [{ "name": "name", "type": "char*" }, { "name": "values", "type": "QVector3D*" }, { "name": "stride", "type": "int", "flags": ["optional"], "default": "0" }] },
         { "name": "setAttributeArray", "returnType": "void", "parameters": [{ "name": "name", "type": "char*" }, { "name": "values", "type": "QVector4D*" }, { "name": "stride", "type": "int", "flags": ["optional"], "default": "0" }] },
@@ -12345,6 +12381,7 @@
         { "name": "setUniformValueArray", "returnType": "void", "parameters": [{ "name": "location", "type": "int" }, { "name": "values", "type": "unsigned int*" }, { "name": "count", "type": "int" }] },
         { "name": "setUniformValueArray", "returnType": "void", "parameters": [{ "name": "name", "type": "char*" }, { "name": "values", "type": "float*" }, { "name": "count", "type": "int" }, { "name": "tupleSize", "type": "int" }] },
         { "name": "setUniformValueArray", "returnType": "void", "parameters": [{ "name": "location", "type": "int" }, { "name": "values", "type": "float*" }, { "name": "count", "type": "int" }, { "name": "tupleSize", "type": "int" }] },
+        { "name": "shaders", "flags": ["const"], "returnType": "QList<QOpenGLShader*>", "parameters": [] },
         { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] },
         { "name": "uniformLocation", "flags": ["const"], "returnType": "int", "parameters": [{ "name": "name", "type": "QByteArray" }] },
         { "name": "uniformLocation", "flags": ["const"], "returnType": "int", "parameters": [{ "name": "name", "type": "char*" }] }

@@ -1326,6 +1326,9 @@ public static partial class ApiModel
         R("QOpenGLContext",        "qopenglcontext.h", "QtGui"),
         R("QOpenGLFunctions",      "qopenglfunctions.h", "QtGui"),
         R("QOpenGLWidget",         "qopenglwidget.h", "QtOpenGLWidgets"),
+        // The shader-type enum lives on QOpenGLShader, and QOpenGLShaderProgram's
+        // addShaderFromSourceCode takes it - without the class the method has no bound parameter type.
+        R("QOpenGLShader",         "qopenglshaderprogram.h", "QtOpenGL"),
         R("QOpenGLShaderProgram",  "qopenglshaderprogram.h", "QtOpenGL"),
         R("QOpenGLBuffer",         "qopenglbuffer.h", "QtOpenGL"),
         R("QOpenGLVertexArrayObject", "qopenglvertexarrayobject.h", "QtOpenGL"),

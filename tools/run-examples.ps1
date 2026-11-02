@@ -25,6 +25,7 @@ $examples = @(
     @{ Name = 'QtSvgWidgets';   Project = 'examples/QtSvgWidgets/QtSharp.Examples.QtSvgWidgets.csproj'; Exe = 'QtSharp.Examples.QtSvgWidgets' }
     @{ Name = 'QtPrintSupport'; Project = 'examples/QtPrintSupport/QtSharp.Examples.QtPrintSupport.csproj'; Exe = 'QtSharp.Examples.QtPrintSupport' }
     @{ Name = 'QtMultimedia';   Project = 'examples/QtMultimedia/QtSharp.Examples.QtMultimedia.csproj'; Exe = 'QtSharp.Examples.QtMultimedia' }
+    @{ Name = 'QtOpenGLWidgets'; Project = 'examples/QtOpenGLWidgets/QtSharp.Examples.QtOpenGLWidgets.csproj'; Exe = 'QtSharp.Examples.QtOpenGLWidgets' }
     @{ Name = 'Charts';         Project = 'examples/Charts/QtSharp.Charts.Examples.csproj';             Exe = 'QtSharp.Charts.Examples' }
     @{ Name = 'Qt3D';           Project = 'examples/Qt3D/QtSharp.Qt3D.Examples.csproj';                 Exe = 'QtSharp.Qt3D.Examples' }
 )

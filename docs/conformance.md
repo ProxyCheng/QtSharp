@@ -14,11 +14,12 @@ each holds exactly one `Main`, one `QApplication` and the module's reflected `[E
 | `QtSharp.Examples.QtSvgWidgets` | `examples/QtSvgWidgets/` | 1 | 4 |
 | `QtSharp.Examples.QtPrintSupport` | `examples/QtPrintSupport/` | 1 | 2 |
 | `QtSharp.Examples.QtMultimedia` | `examples/QtMultimedia/` | 1 | 12 |
+| `QtSharp.Examples.QtOpenGLWidgets` | `examples/QtOpenGLWidgets/` | 1 | 3 |
 | `QtSharp.Charts.Examples` | `examples/Charts/` | 38 | 571 |
 | `QtSharp.Qt3D.Examples` | `examples/Qt3D/` | 3 | 37 |
 | `testapp` (the binding tests) | `tests/testapp/` | 48 | 1176 |
 
-`tools/run-examples.ps1` builds all ten example executables and hands each to
+`tools/run-examples.ps1` builds all eleven example executables and hands each to
 `tools/run-window-tests.ps1`; the gate, CI and the release build all use that one table. A runner
 lists its own names with `--list`, so the gate and the tables cannot drift.
 
@@ -119,8 +120,8 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 | QtSvgWidgets | `qtsvgwidgets-svgwidget` | |
 | QtPrintSupport | `qtprintsupport-notepad` | |
 | QtMultimedia | `qtmultimedia-player` | playback is asserted through a loaded WAV; camera capture needs a device |
-| QtOpenGL | no example | `QOpenGLFunctions` is not bound, so `hellogl2` cannot be ported as-is |
-| QtOpenGLWidgets | no example | `QOpenGLWidget` is bound; needs a GPU/software-GL runner |
+| QtOpenGL | covered by `hellogl2` | `QOpenGLShaderProgram` and the shader enum are bound; the shader sources are uploaded through `QOpenGLShaderProgram` |
+| QtOpenGLWidgets | `hellogl2` | the port runs offscreen for the mesh/rotation assertions and skips the GL path; a real display runs the full path |
 | Qt Charts | 38 official examples | |
 | Qt 3D | 3 official examples | Smoke runs windowless; View needs a real display for OpenGL |
 
