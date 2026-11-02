@@ -17,7 +17,7 @@ each holds exactly one `Main`, one `QApplication` and the module's reflected `[E
 | `QtSharp.Examples.QtOpenGLWidgets` | `examples/QtOpenGLWidgets/` | 1 | 3 |
 | `QtSharp.Charts.Examples` | `examples/Charts/` | 38 | 571 |
 | `QtSharp.Qt3D.Examples` | `examples/Qt3D/` | 3 | 37 |
-| `testapp` (the binding tests) | `tests/testapp/` | 50 | 1181 |
+| `testapp` (the binding tests) | `tests/testapp/` | 51 | 1296 |
 
 `tools/run-examples.ps1` builds all eleven example executables and hands each to
 `tools/run-window-tests.ps1`; the gate, CI and the release build all use that one table. A runner
@@ -104,10 +104,8 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 | `test-valuetypes` | the POD value structs and their conversions |
 | `test-variantlifetime` | QVariant's managed-payload table: every copy releases its entry |
 | `test-variantobject` | QVariant's object-shaped API: Qt values, `QObject*`, and opaque managed payloads |
+| `test-windowflags` | the official windowflags example: the typed `Qt.WindowFlags` union through all 12 `Qt::WindowType` values, hints, the preview text and the show/hide toggle; hides, flushes and disposes both windows before returning (the teardown fix) |
 | `test-xmlseam` | System.Xml and QXmlStreamReader/Writer handing documents to each other |
-
-`tests/WindowFlagsApi.cs` is parked: every assertion passes, but the process dies inside
-`qwindows.dll` during teardown roughly three runs in ten, so it is not in the catalog.
 
 ## Remaining gaps
 
