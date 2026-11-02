@@ -4,12 +4,15 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
-## 0.26.0 - 2026-11-02
+## Unreleased
 
 - **`QSqlTableModel` cells are editable in a view.** The model reports `Qt::ItemIsEditable`
   through `flags()` and emits `dataChanged` when `setData` stages an edit, matching Qt's
   `QSqlTableModel`, so a `QTableView` opens an editor and repaints the staged value.
   `test-sqlmodel` covers the flags and the signal.
+
+## 0.26.0 - 2026-11-02
+
 - **`QOpenGLFunctions`.** The GL entry-point table is bound (137 methods: `glClear`, `glDrawArrays`,
   the vertex-attrib setup, shader and uniform entry points), and `QOpenGLContext.functions()` is
   extracted now that the class is in the model. `test-opengl-functions` initializes the table from a

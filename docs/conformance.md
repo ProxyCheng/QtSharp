@@ -17,7 +17,7 @@ each holds exactly one `Main`, one `QApplication` and the module's reflected `[E
 | `QtSharp.Examples.QtOpenGLWidgets` | `examples/QtOpenGLWidgets/` | 1 | 3 |
 | `QtSharp.Charts.Examples` | `examples/Charts/` | 38 | 571 |
 | `QtSharp.Qt3D.Examples` | `examples/Qt3D/` | 3 | 37 |
-| `testapp` (the binding tests) | `tests/testapp/` | 51 | 1296 |
+| `testapp` (the binding tests) | `tests/testapp/` | 51 | 1303 |
 
 `tools/run-examples.ps1` builds all eleven example executables and hands each to
 `tools/run-window-tests.ps1`; the gate, CI and the release build all use that one table. A runner
