@@ -19,6 +19,7 @@
 #include <qtimer.h>
 #include <qregularexpression.h>
 #include <qrunnable.h>
+#include <qthread.h>
 #include <qthreadpool.h>
 #include <private/qobject_p.h>
 #include <private/qmetaobject_p.h>
@@ -1348,6 +1349,33 @@ extern "C" QS_API_EXPORT void qs_api_qtimer_single_shot_functor_context(
 {
     auto functor = std::make_shared<QsApiManagedFunctor>(token, dispatch);
     QTimer::singleShot(msec, static_cast<QObject*>(context), [functor]() {
+        if (QsApiDispatch invoke = TakeInvoke(*functor))
+            invoke(functor->token, 0, nullptr);
+    });
+}
+
+extern "C" QS_API_EXPORT void qs_api_qtimer_single_shot_functor_type(
+    int msec, int timerType, void* context, void* token, QsApiDispatch dispatch)
+{
+    auto functor = std::make_shared<QsApiManagedFunctor>(token, dispatch);
+    auto callback = [functor]() {
+        if (QsApiDispatch invoke = TakeInvoke(*functor))
+            invoke(functor->token, 0, nullptr);
+    };
+    if (context)
+        QTimer::singleShot(msec, static_cast<Qt::TimerType>(timerType),
+            static_cast<QObject*>(context), callback);
+    else
+        QTimer::singleShot(msec, static_cast<Qt::TimerType>(timerType), callback);
+}
+
+// QThread::create is a template too, and it returns a QThread the caller owns. The returned
+// object is handed to the managed wrapper as an owned handle, so Dispose() deletes it; while the
+// thread is running that must not happen, which is the same rule Qt documents for create().
+extern "C" QS_API_EXPORT void* qs_api_qthread_create(void* token, QsApiDispatch dispatch)
+{
+    auto functor = std::make_shared<QsApiManagedFunctor>(token, dispatch);
+    return QThread::create([functor]() {
         if (QsApiDispatch invoke = TakeInvoke(*functor))
             invoke(functor->token, 0, nullptr);
     });

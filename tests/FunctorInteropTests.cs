@@ -46,6 +46,39 @@ namespace QtSharp.Tests
                 context.Check(invoked == 1, $"the queued functor ran ({invoked})");
             }
 
+            // ---------------------------------------------------------------- TimeSpan / TimerType
+            int spanFired = 0;
+            QTimer.singleShot(TimeSpan.FromMilliseconds(1), () => spanFired++);
+            Pump(() => spanFired == 1);
+            context.Check(spanFired == 1, "singleShot(TimeSpan) fires once");
+
+            int preciseFired = 0;
+            QTimer.singleShot(TimeSpan.Zero, Qt.TimerType.PreciseTimer, () => preciseFired++);
+            Pump(() => preciseFired == 1);
+            context.Check(preciseFired == 1, "singleShot(TimeSpan, TimerType) fires");
+
+            var spanContext = new QTimer();
+            int spanContextFired = 0;
+            QTimer.singleShot(TimeSpan.FromMilliseconds(1), Qt.TimerType.CoarseTimer,
+                spanContext, () => spanContextFired++);
+            Pump(() => spanContextFired == 1);
+            context.Check(spanContextFired == 1, "singleShot(TimeSpan, TimerType, context) fires");
+            spanContext.Dispose();
+
+            // The context still cancels the TimeSpan form when it dies first.
+            int spanCancelled = 0;
+            var spanDoomed = new QTimer();
+            QTimer.singleShot(TimeSpan.FromSeconds(5), Qt.TimerType.CoarseTimer,
+                spanDoomed, () => spanCancelled++);
+            spanDoomed.Dispose();
+            PumpFor(50);
+            context.Check(spanCancelled == 0, "destroying the context cancels the TimeSpan form");
+
+            bool negativeRefused = false;
+            try { QTimer.singleShot(TimeSpan.FromMilliseconds(-1), () => { }); }
+            catch (ArgumentOutOfRangeException) { negativeRefused = true; }
+            context.Check(negativeRefused, "a negative interval is rejected");
+
             // ---------------------------------------------------------------- argument checks
             bool nullActionRefused = false;
             try { QTimer.singleShot(0, (Action)null); }
