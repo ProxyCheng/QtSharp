@@ -10,6 +10,30 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   through `flags()` and emits `dataChanged` when `setData` stages an edit, matching Qt's
   `QSqlTableModel`, so a `QTableView` opens an editor and repaints the staged value.
   `test-sqlmodel` covers the flags and the signal.
+- **SQL model editors open on the cell's value.** `QSqlQueryModel.data` (and so
+  `QSqlTableModel`) answered `Qt::DisplayRole` only, where Qt's model serves `Qt::EditRole` too;
+  the view's delegate reads `EditRole` to seed the editor, so every double-click opened an empty
+  editor and committed the empty value back over the cell. `test-sqlmodel` now checks both roles
+  for a query model and for a staged table edit.
+- **`RevertAll` repaints, and `record()` reads the model.** `RevertAll` dropped the staged edits
+  without a signal, so a view kept painting the discarded values until the caller nudged it; it
+  now emits `dataChanged` over each row that had an edit, as Qt's `revertCachedRow` does.
+  `Record(row)` and `Value(row, column)` read through `CellValue`, so they show the same staged
+  value `Data` does - Qt's `record()` fills its fields from `data(..., Qt::EditRole)`.
+- **Provider errors are reported, not thrown.** `QSqlQueryModel.SetQuery`/`Select` and
+  `QSqlTableModel.SubmitAll` return `false` and leave the driver's exception in `LastError()`, the
+  counterpart of Qt's `lastError()`. Before, a failing `SubmitAll` from a button handler unwound a
+  `SqliteException` out of the model into the signal dispatch. A failed `SetQuery` resets the model,
+  as Qt's `setQuery` does; a failed `SubmitAll` rolls its transaction back and keeps the staged
+  edits and rows, as Qt keeps its cache until a successful submit. `test-sqlmodel` covers both.
+- **The SQL models stage rows and headers like Qt.** `QSqlTableModel` now implements
+  `insertRows`/`insertRow` and `removeRows`/`removeRow`: inserted rows appear as `*` in the
+  vertical header, deleted base rows as `!` and are no longer editable, and `submitAll` writes the
+  inserts and deletes in the same transaction as the updates while `revertAll` drops inserted
+  rows and restores deleted ones. `QSqlQueryModel.setHeaderData` stores a horizontal header,
+  falls back from `DisplayRole` to the stored `EditRole` value and emits `headerDataChanged`;
+  `setData` returns true without a signal for an unchanged value; and `flags` honors columns the
+  provider reports as read-only (SQLite reports none, matching Qt's SQLite driver).
 
 ## 0.26.0 - 2026-11-02
 
