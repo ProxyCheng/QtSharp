@@ -34,6 +34,11 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
   falls back from `DisplayRole` to the stored `EditRole` value and emits `headerDataChanged`;
   `setData` returns true without a signal for an unchanged value; and `flags` honors columns the
   provider reports as read-only (SQLite reports none, matching Qt's SQLite driver).
+- **Row-header markers repaint when they change.** Marking a base row deleted now emits
+  `headerDataChanged(Qt::Vertical, row, row)`, as Qt's `removeRows` does in the manual-submit
+  strategy, and `revertAll` emits it when it restores the row, so a `QTableView`'s vertical
+  header switches between the row number and `!` immediately instead of waiting for another
+  repaint. `test-sqlmodel` checks both signals.
 
 ## 0.26.0 - 2026-11-02
 

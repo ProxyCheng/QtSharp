@@ -217,6 +217,10 @@ namespace QtSharp.QtSql
 
                 slot.Operation = RowOperation.Delete;
                 DataChanged(Index(i, 0), Index(i, ColumnCount() - 1));
+                // The vertical header went from the row number to "!". Qt's removeRows emits this
+                // in the manual-submit strategy; without it the header keeps painting the number
+                // until something else forces a repaint.
+                HeaderDataChangedSignal.Emit(Qt.Orientation.Vertical, i, i);
             }
             return true;
         }
@@ -397,6 +401,9 @@ namespace QtSharp.QtSql
                 {
                     slot.Operation = RowOperation.None;
                     DataChanged(Index(row, 0), Index(row, ColumnCount() - 1));
+                    // The marker goes back to the row number. Qt's revertCachedRow leaves this to
+                    // the next repaint; emitting it makes the revert visible immediately.
+                    HeaderDataChangedSignal.Emit(Qt.Orientation.Vertical, row, row);
                 }
             }
 

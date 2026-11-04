@@ -45,7 +45,9 @@ answers both `DisplayRole` and `EditRole`, so the view's editor opens on the cur
 Rows are staged the same way Qt stages them: `InsertRows`/`InsertRow` add empty rows (marked `*`
 in the vertical header), `RemoveRows`/`RemoveRow` mark base rows deleted (marked `!`, still
 visible, not editable), and `SubmitAll` writes the UPDATEs, INSERTs and DELETEs in one transaction.
-`RevertAll` drops inserted rows and restores deleted ones. `SetHeaderData` stores a horizontal
+`RevertAll` drops inserted rows and restores deleted ones. Marking a row deleted and restoring
+it each emit `headerDataChanged` for that row, so the vertical header repaints its `!` marker (or
+the row number) right away. `SetHeaderData` stores a horizontal
 header and emits `headerDataChanged`; a `DisplayRole` lookup falls back to the stored `EditRole`
 value, as in Qt. Columns the provider reports as read-only are not editable.
 

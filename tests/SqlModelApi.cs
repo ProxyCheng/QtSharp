@@ -223,6 +223,29 @@ namespace QtSharp.Tests
                     "the restored row shows its value again");
             }
 
+            using (var marked = new QSqlTableModel())
+            {
+                marked.SetConnection(connection);
+                marked.SetTable("notes");
+
+                var headerSignals = new List<(Qt.Orientation Orientation, int First, int Last)>();
+                marked.HeaderDataChanged += (orientation, first, last) =>
+                    headerSignals.Add((orientation, first, last));
+
+                marked.RemoveRow(1);
+                context.Check(headerSignals.Count == 1
+                      && headerSignals[0] == (Qt.Orientation.Vertical, 1, 1),
+                    $"marking a row deleted emits headerDataChanged for its section (got {headerSignals.Count})");
+
+                headerSignals.Clear();
+                marked.RevertAll();
+                context.Check(headerSignals.Count == 1
+                      && headerSignals[0] == (Qt.Orientation.Vertical, 1, 1),
+                    $"reverting a deletion repaints the header too (got {headerSignals.Count})");
+                context.Check(marked.HeaderData(1, Qt.Orientation.Vertical, 0) as int? == 2,
+                    "the vertical header shows the row number again");
+            }
+
             using (var shifting = new QSqlTableModel())
             {
                 shifting.SetConnection(connection);
