@@ -1,5 +1,5 @@
 param(
-    [string]$PackageVersion = '0.26.0',
+    [string]$PackageVersion = '0.27.0',
     [string]$QtRuntimeDir = '',
     [string]$QtLinuxRuntimeDir = '',
     [string[]]$Platforms = @('win-x64'),
