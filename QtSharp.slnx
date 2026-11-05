@@ -40,6 +40,10 @@
     <Project Path="nuget/QtSharp.Positioning.Qt6/QtSharp.Positioning.Qt6.csproj" />
   </Folder>
 
+  <Folder Name="/Packages - WebView/">
+    <Project Path="nuget/QtSharp.WebView/QtSharp.WebView.csproj" />
+  </Folder>
+
   <Folder Name="/Packages - Qt3D/">
     <Project Path="nuget/QtSharp.Qt3D/QtSharp.Qt3D.csproj" />
     <Project Path="nuget/QtSharp.Qt3D.Qt6/QtSharp.Qt3D.Qt6.csproj" />

@@ -121,6 +121,13 @@ from a C++ stub with no calling convention of its own, and a signal argument is 
 the meta-object's argument storage; neither path has been taught function types, so those
 declarations stay dropped rather than emitting a signature that cannot be called.
 
+Qt's template functor overloads (`QTimer::singleShot(msec, functor)`,
+`QMetaObject::invokeMethod(context, functor, type)`) are not declarations the model can hold at all:
+they have no exported symbol. The two common ones are bound by hand in
+`runtime/QtCore/FunctorInterop.cs` through the native helpers in `native/QtSharpApiRuntime.cpp`.
+The functor-based `QObject::connect` overloads stay out because a signal connection is already a
+C# event.
+
 ### Lifetime
 
 Qt stores only the address, so the delegate cannot be collected while Qt might call it. The

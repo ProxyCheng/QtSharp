@@ -290,6 +290,26 @@ public static class ApiCoreDemo
         context.Check(worker.Wait(5000) && worker.Runs == 1,
             $"a managed QThread subclass ran its override ({worker.Runs} time(s))");
 
+        // QThread::create's template form: the action runs on the new thread, and the caller owns
+        // the returned thread (start, wait, dispose - Qt's rule for create()).
+        int createdRuns = 0;
+        IntPtr createdThreadId = IntPtr.Zero;
+        var createdThread = QThread.Create(() =>
+        {
+            createdRuns = 1;
+            createdThreadId = QThread.CurrentThreadId();
+        });
+        createdThread.Start();
+        context.Check(createdThread.Wait(5000), "QThread.Create ran its action");
+        context.Check(createdRuns == 1 && createdThreadId != QThread.CurrentThreadId(),
+            "the created thread ran the action on its own thread");
+        createdThread.Dispose();
+
+        bool nullCreateRefused = false;
+        try { QThread.Create(null); }
+        catch (ArgumentNullException) { nullCreateRefused = true; }
+        context.Check(nullCreateRefused, "QThread.Create rejects a null action");
+
         // ---------------------------------------------------------------- in-out strings
         // A non-const QString& is Qt's "rewrite this string" convention (QValidator::validate,
         // QClipboard::text). The managed spelling is `ref string`, and the updated text comes back

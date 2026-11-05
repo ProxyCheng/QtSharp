@@ -14,11 +14,12 @@ each holds exactly one `Main`, one `QApplication` and the module's reflected `[E
 | `QtSharp.Examples.QtSvgWidgets` | `examples/QtSvgWidgets/` | 1 | 4 |
 | `QtSharp.Examples.QtPrintSupport` | `examples/QtPrintSupport/` | 1 | 2 |
 | `QtSharp.Examples.QtMultimedia` | `examples/QtMultimedia/` | 1 | 12 |
+| `QtSharp.Examples.QtOpenGLWidgets` | `examples/QtOpenGLWidgets/` | 1 | 3 |
 | `QtSharp.Charts.Examples` | `examples/Charts/` | 38 | 571 |
 | `QtSharp.Qt3D.Examples` | `examples/Qt3D/` | 3 | 37 |
-| `testapp` (the binding tests) | `tests/testapp/` | 39 | 1024 |
+| `testapp` (the binding tests) | `tests/testapp/` | 51 | 1359 |
 
-`tools/run-examples.ps1` builds all ten example executables and hands each to
+`tools/run-examples.ps1` builds all eleven example executables and hands each to
 `tools/run-window-tests.ps1`; the gate, CI and the release build all use that one table. A runner
 lists its own names with `--list`, so the gate and the tables cannot drift.
 
@@ -69,21 +70,19 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 
 | test | why it exists |
 |---|---|
+| `test-async-await` | `async`/`await` on the Qt thread: `QtSynchronizationContext` continuations, `QThreadPool.RunAsync` results/faults/cancellation, `QObject.InvokeAsync` thread hops, and tasks dropped when their context dies |
 | `test-bclinterop` | the BCL conversions: QPoint/QSize/QRect/QColor/vectors/quaternion/URL/GUID/QVariant |
-| `test-bitsinterop` | QBitArray ↔ System.Collections.BitArray, including the int-length guard |
 | `test-callbacks` | C function pointers: custom easing, message-handler chain identity, post routines, and the `QFunctionPointer` carrier with its opt-in `As<TDelegate>` |
-| `test-collatorinterop` | QCollator as an `IComparer<string>` |
 | `test-connections` | signal connections as disposable handles, context objects and queued thread affinity |
-| `test-localeinterop` | QLocale ↔ CultureInfo name mapping, including the C/invariant case |
-| `test-matrixinterop` | QMatrix4x4 ↔ System.Numerics.Matrix4x4 with the column/row-vector transpose |
-| `test-networkinterop` | QHostAddress ↔ System.Net.IPAddress, including IPv4/IPv6 and scope ids |
-| `test-processenvironmentinterop` | QProcessEnvironment ↔ a dictionary snapshot and its comparer rules |
+| `test-custom-events` | a C# `QEvent` subclass with a payload, posted through `QCoreApplication.PostEvent`: type-id delivery, ownership transfer and the null check |
 | `test-core` | the QtCore value/utility classes (files, JSON, ids, timers, threads, IPC, XML stream) |
 | `test-custommodel` | managed item models/delegates and Qt's calls back into them |
 | `test-docformats` | the document modules together: SVG rendering/export and PDF output (XML is System.Xml's job; `test-xmlseam` covers the hand-off) |
 | `test-events` | the input-event family and managed virtual event handlers |
 | `test-exceptions` | the native exception boundary (`qFatal`, C++ unwinding across managed frames) |
+| `test-findchild` | `QObject.FindChild`/`FindChildren` as generics: type and name matching, Qt's depth-first order, the direct-children option, actual types and managed subclasses |
 | `test-graphics` | the graphics-view family (scene, items, off-screen render) |
+| `test-imagebuffer` | QImage's `byte[]` constructors: the pin that keeps the buffer alive across collections, the shared memory, and the cleanup callback with its `cleanupInfo` |
 | `test-iodevice` | a .NET Stream behind QIODevice: QImage/QXmlStreamReader reading it, write path, leak checks |
 | `test-json` | JSON as C# containers: QJsonObject as a writable dictionary, QJsonArray as a list, unwrapped snapshots, LINQ |
 | `test-metaobject` | C#-declared signals/properties (`[QtSignal]`/`[QtProperty]`) |
@@ -91,7 +90,8 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 | `test-metatype` | the C# → Qt type-name map: value classes, namespaced bound classes, unsupported types |
 | `test-nativeslot` | the read-side `[QtNativeSlot]` marker on generated slots and `Q_INVOKABLE` methods |
 | `test-network` | QtNetwork transport beyond the fortune example: host addresses, local-socket handoff, TCP |
-| `test-objectlookup` | wrappers of actual bound type: `QObject*` returns, `QList<QObject*>` elements, signal arguments, parent/child accessors, managed subclasses, unpublished internal and namespaced classes; `FindChild`/`FindChildren` by generic, runtime `Type`/`Type[]` and regular expression |
+| `test-objectlookup` | wrappers of actual bound type: `QObject*` returns, `QList<QObject*>` elements, signal arguments, parent/child accessors, managed subclasses, unpublished internal and namespaced classes |
+| `test-opengl-functions` | `QOpenGLFunctions` through a `QOpenGLWidget`: initializeGL, `glClearColor`/`glClear`/`glEnable`, `glGetError`; skipped when the platform has no GL |
 | `test-ownership` | who may delete a native object; liveness and generation counters |
 | `test-platformenv` | the QPA platform the hosts choose reaches Qt through the C library's environment, not only .NET's copy |
 | `test-positioning` | QtPositioning: coordinate distance/azimuth, shape containment, position info, source enumeration |
@@ -101,14 +101,11 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 | `test-rolesugar` | the role-taking API with the named `Qt.ItemDataRole` enum over the `int` primary overloads |
 | `test-sqlmodel` | the SQL substitute: an ADO.NET result behind QSqlQueryModel/QSqlTableModel, edits written by SubmitAll |
 | `test-subclass` | C# subclasses driven by Qt's own machinery (abstract widget, layout, model, runnable) |
-| `test-timezoneinterop` | QTimeZone ↔ TimeZoneInfo, the IANA/Windows bridge, fixed offsets and rule re-use |
 | `test-valuetypes` | the POD value structs and their conversions |
 | `test-variantlifetime` | QVariant's managed-payload table: every copy releases its entry |
 | `test-variantobject` | QVariant's object-shaped API: Qt values, `QObject*`, and opaque managed payloads |
+| `test-windowflags` | the official windowflags example: the typed `Qt.WindowFlags` union through all 12 `Qt::WindowType` values, hints, the preview text and the show/hide toggle; hides, flushes and disposes both windows before returning (the teardown fix) |
 | `test-xmlseam` | System.Xml and QXmlStreamReader/Writer handing documents to each other |
-
-`tests/WindowFlagsApi.cs` is parked: every assertion passes, but the process dies inside
-`qwindows.dll` during teardown roughly three runs in ten, so it is not in the catalog.
 
 ## Remaining gaps
 
@@ -122,8 +119,8 @@ run under `test-*` names in one executable, `tests/testapp`, and stay in the gat
 | QtSvgWidgets | `qtsvgwidgets-svgwidget` | |
 | QtPrintSupport | `qtprintsupport-notepad` | |
 | QtMultimedia | `qtmultimedia-player` | playback is asserted through a loaded WAV; camera capture needs a device |
-| QtOpenGL | no example | `QOpenGLFunctions` is not bound, so `hellogl2` cannot be ported as-is |
-| QtOpenGLWidgets | no example | `QOpenGLWidget` is bound; needs a GPU/software-GL runner |
+| QtOpenGL | covered by `hellogl2` | `QOpenGLShaderProgram` and the shader enum are bound; the shader sources are uploaded through `QOpenGLShaderProgram` |
+| QtOpenGLWidgets | `hellogl2` | the port runs offscreen for the mesh/rotation assertions and skips the GL path; a real display runs the full path |
 | Qt Charts | 38 official examples | |
 | Qt 3D | 3 official examples | Smoke runs windowless; View needs a real display for OpenGL |
 

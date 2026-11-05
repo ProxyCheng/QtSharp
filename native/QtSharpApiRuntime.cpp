@@ -16,6 +16,11 @@
 #include <qcoreapplication.h>
 #include <qguiapplication.h>
 #include <qapplication.h>
+#include <qtimer.h>
+#include <qregularexpression.h>
+#include <qrunnable.h>
+#include <qthread.h>
+#include <qthreadpool.h>
 #include <private/qobject_p.h>
 #include <private/qmetaobject_p.h>
 #include <private/qmetaobjectbuilder_p.h>
@@ -1283,6 +1288,233 @@ extern "C" QS_API_EXPORT void qs_api_app_destroy()
         delete Instance();
     Instance() = nullptr;
     OwnsInstance() = false;
+}
+
+// ------------------------------------------------------------------ managed functors
+//
+// Qt's functor-taking overloads (QTimer::singleShot, QMetaObject::invokeMethod) are templates, so
+// there is no exported symbol to bind. These helpers instantiate them with a lambda that carries a
+// managed token and dispatcher instead:
+//
+//   methodId 0 - invoke the delegate (the functor fired)
+//   methodId 1 - release the token (Qt destroyed the functor without calling it: the context
+//                object died, or the pending event was discarded)
+//
+// The shared_ptr keeps the token alive for exactly as long as Qt holds the functor. The dispatch
+// pointer is nulled before the invoke so the destructor that follows cannot release it a second
+// time; if destruction wins the race (it cannot in practice: Qt runs the functor and its
+// destruction on the same thread), only the destructor releases.
+
+namespace
+{
+struct QsApiManagedFunctor
+{
+    QsApiManagedFunctor(void* token, QsApiDispatch dispatch) : token(token), dispatch(dispatch) {}
+    QsApiManagedFunctor(const QsApiManagedFunctor&) = delete;
+    QsApiManagedFunctor& operator=(const QsApiManagedFunctor&) = delete;
+
+    void* token;
+    QsApiDispatch dispatch;
+
+    ~QsApiManagedFunctor()
+    {
+        if (dispatch)
+        {
+            QsApiDispatch release = dispatch;
+            dispatch = nullptr;
+            release(token, 1, nullptr);
+        }
+    }
+};
+
+QsApiDispatch TakeInvoke(QsApiManagedFunctor& functor)
+{
+    QsApiDispatch dispatch = functor.dispatch;
+    functor.dispatch = nullptr;
+    return dispatch;
+}
+}
+
+extern "C" QS_API_EXPORT void qs_api_qtimer_single_shot_functor(int msec, void* token, QsApiDispatch dispatch)
+{
+    auto functor = std::make_shared<QsApiManagedFunctor>(token, dispatch);
+    QTimer::singleShot(msec, [functor]() {
+        if (QsApiDispatch invoke = TakeInvoke(*functor))
+            invoke(functor->token, 0, nullptr);
+    });
+}
+
+extern "C" QS_API_EXPORT void qs_api_qtimer_single_shot_functor_context(
+    int msec, void* context, void* token, QsApiDispatch dispatch)
+{
+    auto functor = std::make_shared<QsApiManagedFunctor>(token, dispatch);
+    QTimer::singleShot(msec, static_cast<QObject*>(context), [functor]() {
+        if (QsApiDispatch invoke = TakeInvoke(*functor))
+            invoke(functor->token, 0, nullptr);
+    });
+}
+
+extern "C" QS_API_EXPORT void qs_api_qtimer_single_shot_functor_type(
+    int msec, int timerType, void* context, void* token, QsApiDispatch dispatch)
+{
+    auto functor = std::make_shared<QsApiManagedFunctor>(token, dispatch);
+    auto callback = [functor]() {
+        if (QsApiDispatch invoke = TakeInvoke(*functor))
+            invoke(functor->token, 0, nullptr);
+    };
+    if (context)
+        QTimer::singleShot(msec, static_cast<Qt::TimerType>(timerType),
+            static_cast<QObject*>(context), callback);
+    else
+        QTimer::singleShot(msec, static_cast<Qt::TimerType>(timerType), callback);
+}
+
+// QThread::create is a template too, and it returns a QThread the caller owns. The returned
+// object is handed to the managed wrapper as an owned handle, so Dispose() deletes it; while the
+// thread is running that must not happen, which is the same rule Qt documents for create().
+extern "C" QS_API_EXPORT void* qs_api_qthread_create(void* token, QsApiDispatch dispatch)
+{
+    auto functor = std::make_shared<QsApiManagedFunctor>(token, dispatch);
+    return QThread::create([functor]() {
+        if (QsApiDispatch invoke = TakeInvoke(*functor))
+            invoke(functor->token, 0, nullptr);
+    });
+}
+
+extern "C" QS_API_EXPORT bool qs_api_qmetaobject_invoke_method_functor(
+    void* context, int connectionType, void* token, QsApiDispatch dispatch)
+{
+    auto functor = std::make_shared<QsApiManagedFunctor>(token, dispatch);
+    return QMetaObject::invokeMethod(
+        static_cast<QObject*>(context),
+        [functor]() {
+            if (QsApiDispatch invoke = TakeInvoke(*functor))
+                invoke(functor->token, 0, nullptr);
+        },
+        static_cast<Qt::ConnectionType>(connectionType));
+}
+
+// ------------------------------------------------------------------ thread pool tasks
+//
+// QThreadPool::start takes a QRunnable, and a managed delegate is not one. This runnable carries
+// the same token contract as the functors above - methodId 0 invokes, methodId 1 releases - with
+// two differences that come from the pool owning its runnables:
+//
+//   * autoDelete stays on (Qt's default): the pool deletes the runnable after run() returns, so
+//     the managed side must never dispose this object. Its destructor is the release path.
+//   * QThreadPool::clear() discards queued runnables without running them; they are deleted, so
+//     release fires without an invoke. The managed side turns that into a cancelled task instead
+//     of leaving the TaskCompletionSource pending forever.
+//
+// The dispatch pointer is nulled before the invoke (TakeInvoke), so the destructor that follows a
+// completed run cannot release the token a second time.
+
+namespace
+{
+class QsApiThreadPoolTask : public QRunnable
+{
+public:
+    QsApiThreadPoolTask(void* token, QsApiDispatch dispatch) : m_functor(token, dispatch)
+    {
+        setAutoDelete(true);
+    }
+
+    QsApiThreadPoolTask(const QsApiThreadPoolTask&) = delete;
+    QsApiThreadPoolTask& operator=(const QsApiThreadPoolTask&) = delete;
+
+    void run() override
+    {
+        if (QsApiDispatch invoke = TakeInvoke(m_functor))
+            invoke(m_functor.token, 0, nullptr);
+    }
+
+private:
+    QsApiManagedFunctor m_functor;
+};
+}
+
+extern "C" QS_API_EXPORT void qs_api_threadpool_run_functor(
+    void* pool, int priority, void* token, QsApiDispatch dispatch)
+{
+    static_cast<QThreadPool*>(pool)->start(new QsApiThreadPoolTask(token, dispatch), priority);
+}
+
+// ------------------------------------------------------------------ reflection lookup
+//
+// The QMetaObject-based counterpart of findChild<T>/findChildren<T>. Qt only publishes the
+// templates, but the runtime filter is QMetaObject::cast, the reflection primitive, and doing the
+// walk natively keeps the allocation profile of qt_qFindChildren_helper: only matched objects
+// cross into managed code. `name` is UTF-16 and null/empty matches any object, exactly like a
+// default-constructed QString; `pattern` is a QRegularExpression handle or null.
+
+namespace
+{
+void CollectByMetaObject(QObject* parent, const QMetaObject* metaObject,
+    const QRegularExpression* pattern, const QString& name, int options,
+    bool firstOnly, QList<QObject*>& found)
+{
+    const QObjectList children = parent->children();
+    for (QObject* child : children)
+    {
+        if (metaObject && !metaObject->cast(child))
+            continue;
+        if (!name.isEmpty() && child->objectName() != name)
+            continue;
+        if (pattern && !pattern->match(child->objectName()).hasMatch())
+            continue;
+        found.append(child);
+        if (firstOnly)
+            return;
+    }
+    if ((options & Qt::FindChildrenRecursively) == 0)
+        return;
+    for (QObject* child : children)
+    {
+        CollectByMetaObject(child, metaObject, pattern, name, options, firstOnly, found);
+        if (firstOnly && !found.isEmpty())
+            return;
+    }
+}
+}
+
+extern "C" QS_API_EXPORT void* qs_api_qobject_find_children(
+    void* self, const void* metaObject, const void* pattern, const char16_t* name,
+    int options, int firstOnly)
+{
+    auto* found = new QList<QObject*>();
+    const QString wanted = name ? QString::fromUtf16(name) : QString();
+    CollectByMetaObject(static_cast<QObject*>(self),
+        static_cast<const QMetaObject*>(metaObject),
+        static_cast<const QRegularExpression*>(pattern),
+        wanted, options, firstOnly != 0, *found);
+    return found;
+}
+
+extern "C" QS_API_EXPORT int qs_api_qobject_find_children_count(void* list)
+{
+    return static_cast<int>(static_cast<const QList<QObject*>*>(list)->size());
+}
+
+extern "C" QS_API_EXPORT void* qs_api_qobject_find_children_at(void* list, int index)
+{
+    return (*static_cast<const QList<QObject*>*>(list))[index];
+}
+
+extern "C" QS_API_EXPORT void qs_api_qobject_find_children_free(void* list)
+{
+    delete static_cast<QList<QObject*>*>(list);
+}
+
+// The regex half of the managed walk: a stack QRegularExpressionMatch instead of the owned
+// wrapper QRegularExpression::match() returns, so a search over a large tree does not allocate
+// one managed handle per visited object.
+extern "C" QS_API_EXPORT int qs_api_qregularexpression_has_match(
+    const void* pattern, const char16_t* subject)
+{
+    if (!pattern)
+        return 0;
+    const QString text = subject ? QString::fromUtf16(subject) : QString();
+    return static_cast<const QRegularExpression*>(pattern)->match(text).hasMatch() ? 1 : 0;
 }
 
 

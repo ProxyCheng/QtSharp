@@ -784,7 +784,7 @@ public static partial class ApiModel
         // QEvent is QtCore's (QtCore/qcoreevent.h); QtGui/qevent.h only includes that header
         // before declaring the GUI events. The root has to name the defining header, or the
         // class is split into the wrong module.
-        R("QEvent",             "qcoreevent.h", "QtCore", bindCtors: false, owned: false),
+        R("QEvent",             "qcoreevent.h", "QtCore", owned: false),
         R("QPointerEvent",      "qevent.h", "QtGui", bindCtors: false, owned: false),
         R("QSinglePointEvent",  "qevent.h", "QtGui", bindCtors: false, owned: false),
         R("QMouseEvent",        "qevent.h", "QtGui", bindCtors: false, owned: false),
@@ -1319,10 +1319,16 @@ public static partial class ApiModel
         R("QPrintPreviewDialog",   "qprintpreviewdialog.h", "QtPrintSupport"),
         R("QPrintPreviewWidget",   "qprintpreviewwidget.h", "QtPrintSupport"),
         // QtOpenGLWidgets / QtOpenGL: rendering with OpenGL, including from C# (QOpenGLWidget's
-        // initializeGL/resizeGL/paintGL are overridable). QOpenGLContext is the QtGui half.
+        // initializeGL/resizeGL/paintGL are overridable). QOpenGLContext and QOpenGLFunctions are
+        // the QtGui half: the former owns the context, the latter is the GL entry points the
+        // hellogl2 port calls directly (glClear, glDrawArrays, the vertex-attrib setup).
         R("QPaintEngine",          "qpaintengine.h", "QtGui", bindCtors: false),
         R("QOpenGLContext",        "qopenglcontext.h", "QtGui"),
+        R("QOpenGLFunctions",      "qopenglfunctions.h", "QtGui"),
         R("QOpenGLWidget",         "qopenglwidget.h", "QtOpenGLWidgets"),
+        // The shader-type enum lives on QOpenGLShader, and QOpenGLShaderProgram's
+        // addShaderFromSourceCode takes it - without the class the method has no bound parameter type.
+        R("QOpenGLShader",         "qopenglshaderprogram.h", "QtOpenGL"),
         R("QOpenGLShaderProgram",  "qopenglshaderprogram.h", "QtOpenGL"),
         R("QOpenGLBuffer",         "qopenglbuffer.h", "QtOpenGL"),
         R("QOpenGLVertexArrayObject", "qopenglvertexarrayobject.h", "QtOpenGL"),

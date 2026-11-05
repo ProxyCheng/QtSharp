@@ -10,6 +10,8 @@
     <AssemblyName>testapp</AssemblyName>
     <!-- The binding is compiled inside QtSharp.BindingTests; this app only dispatches to it. -->
     <QtSharpCompileBinding>false</QtSharpCompileBinding>
+    <!-- See QtSharp.BindingTests.csproj: WebView2's transitive WPF reference trips MSB3277. -->
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
   <!-- The native QtSharp.Api.dll, the Qt runtime DLLs and the platform plugin. -->

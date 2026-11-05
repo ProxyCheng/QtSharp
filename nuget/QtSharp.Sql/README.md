@@ -13,8 +13,8 @@ works - pass its `DbConnection`:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api.win-x64" Version="0.20.0" />
-  <PackageReference Include="QtSharp.Sql.win-x64" Version="0.20.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.27.0" />
+  <PackageReference Include="QtSharp.Sql.win-x64" Version="0.27.0" />
   <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
 </ItemGroup>
 ```
@@ -35,8 +35,27 @@ view.Show();
 ```
 
 The editable half stages edits and writes them on `SubmitAll()` (one UPDATE per edited cell,
-inside a transaction); `RevertAll()` discards them. The primary key defaults to `id` and can be
-changed with `SetTable(table, primaryKey)`.
+inside a transaction); `RevertAll()` discards them and emits `dataChanged` for each row that had
+an edit, so the view repaints the restored values. The primary key defaults to `id` and can be
+changed with `SetTable(table, primaryKey)`. The model reports editable flags for every valid cell
+and emits `dataChanged` when an edit is staged, so a `QTableView` edits cells in place. `Data`
+answers both `DisplayRole` and `EditRole`, so the view's editor opens on the current value;
+`Record(row)` and `Value(row, column)` read through the same path, staged edits included.
+
+Rows are staged the same way Qt stages them: `InsertRows`/`InsertRow` add empty rows (marked `*`
+in the vertical header), `RemoveRows`/`RemoveRow` mark base rows deleted (marked `!`, still
+visible, not editable), and `SubmitAll` writes the UPDATEs, INSERTs and DELETEs in one transaction.
+`RevertAll` drops inserted rows and restores deleted ones. Marking a row deleted and restoring
+it each emit `headerDataChanged` for that row, so the vertical header repaints its `!` marker (or
+the row number) right away. `SetHeaderData` stores a horizontal
+header and emits `headerDataChanged`; a `DisplayRole` lookup falls back to the stored `EditRole`
+value, as in Qt. Columns the provider reports as read-only are not editable.
+
+Provider failures follow Qt rather than C#: `SetQuery`/`Select` and `SubmitAll` return `false` and
+leave the driver's exception in `LastError()` instead of throwing through the view's signal
+handlers. A failed `SetQuery` resets the model the way Qt's `setQuery` does. A failed `SubmitAll`
+rolls the transaction back and keeps every staged edit, inserted row and deletion, so the caller
+can fix the offending row and submit again - Qt only clears the cache after a successful submit.
 
 Because the models are plain C# classes, there is no native glue, no Qt runtime dependency beyond
 `QtSharp.Api`, and no SQL driver plugin: the provider is whatever ADO.NET provider you reference.

@@ -441,7 +441,7 @@ jobs:
       - name: Build the managed assemblies
         shell: pwsh
         run: |
-          foreach ($project in @('QtSharp.Api', 'QtSharp.Charts', 'QtSharp.Qt3D', 'QtSharp.Multimedia', 'QtSharp.Positioning', 'QtSharp.Sql')) {
+          foreach ($project in @('QtSharp.Api', 'QtSharp.Charts', 'QtSharp.Qt3D', 'QtSharp.Multimedia', 'QtSharp.Positioning', 'QtSharp.Sql', 'QtSharp.WebView')) {
             dotnet build "nuget/$project/$project.csproj" -c Release --nologo
             if ($LASTEXITCODE -ne 0) { throw "$project build failed" }
           }
@@ -460,7 +460,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: packages-ci
-          path: out/packages/*.0.0.0-ci.nupkg
+          path: |
+            out/packages/*.0.0.0-ci.nupkg
+            out/packages/Microsoft.Web.WebView2.*.nupkg
           if-no-files-found: error
 
   # The conformance suite: every official example this repository has ported, driving the binding
