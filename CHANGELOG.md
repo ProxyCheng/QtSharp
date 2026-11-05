@@ -6,6 +6,16 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 
 ## Unreleased
 
+- **`QList` and `QStringList` surface as `List<T>`.** Returns are a mutable `List<T>` snapshot; a
+  parameter is the read-only interface (`IReadOnlyList<T>`, `IReadOnlySet<T>`,
+  `IReadOnlyDictionary<K,V>`), so a `List<T>`, a `T[]`, a `HashSet<T>` or a `Dictionary<K,V>` can be
+  passed without an overload. Collection expressions such as `menu.AddActions([a, b])` still infer
+  the target type.
+- **`std::optional<T>` is bound as `T?`/a nullable reference.** An engaged value is the payload and
+  a disengaged one is `null`; `QScreenCapture`/`QWindowCapture::maximumFrameRate`,
+  `QMetaEnum`'s 64-bit accessors and `QFontComboBox::displayFont` are bound. The payload is a leaf
+  type, and optional does not appear in signals or virtual slots because neither has a has-value
+  slot.
 - **`QPair`/`std::pair` is bound as `ValueTuple`, and containers nest in value positions.**
   `QPair<A,B>` (Qt 6 spells it `std::pair`) now surfaces as `ValueTuple<A,B>`, so
   `QSurfaceFormat.version()`, `QUrlQuery.queryItems()/setQueryItems()`, `QHostAddress.parseSubnet()/

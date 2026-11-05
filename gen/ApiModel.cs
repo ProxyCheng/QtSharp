@@ -261,7 +261,7 @@ public static class ApiTypes
             case "char*":
                 return "string";
             case "QStringList":
-                return "string[]";
+                return "List<string>";
             // QUuid is pure 128-bit data, and System.Guid is the same value: it crosses as a Guid
             // (see the note on IsUuid in ApiCodeGen). The Qt-only operations are extensions on
             // Guid in runtime/QtCore/Uuid.cs; QUuid itself is not a type in the binding.
@@ -302,11 +302,11 @@ public static class ApiTypes
                 return "QFunctionPointer";
         }
 
-        // A generic container: the managed surface is an array of the managed element type
-        // (QList<int> -> int[], QList<QStandardItem*> -> QStandardItem[]); the unordered one is
-        // the matching BCL set (QSet<QByteArray> -> HashSet<QByteArray>).
+        // A generic container: the managed surface is a List of the managed element type
+        // (QList<int> -> List<int>, QList<QStandardItem*> -> List<QStandardItem>); the unordered
+        // one is the matching BCL set (QSet<QByteArray> -> HashSet<QByteArray>).
         if (modelType.StartsWith("QList<", StringComparison.Ordinal) && modelType.EndsWith(">"))
-            return Managed(modelType.Substring("QList<".Length, modelType.Length - "QList<".Length - 1), classes) + "[]";
+            return "List<" + Managed(modelType.Substring("QList<".Length, modelType.Length - "QList<".Length - 1), classes) + ">";
         if (modelType.StartsWith("QSet<", StringComparison.Ordinal) && modelType.EndsWith(">"))
             return "HashSet<" + Managed(modelType.Substring("QSet<".Length, modelType.Length - "QSet<".Length - 1), classes) + ">";
         // A pair is a two-field value; ValueTuple is the BCL shape with the same structural
@@ -315,6 +315,17 @@ public static class ApiTypes
         {
             var (first, second) = SplitPair(modelType.Substring("QPair<".Length, modelType.Length - "QPair<".Length - 1));
             return $"ValueTuple<{Managed(first, classes)}, {Managed(second, classes)}>";
+        }
+        // An optional value is a Nullable<T> for a C# value type, and a nullable reference for
+        // a string/wrapper. Enums are the one kind this table cannot see; the code generator's
+        // ManagedType handles them with its full type knowledge.
+        if (modelType.StartsWith("std::optional<", StringComparison.Ordinal) && modelType.EndsWith(">"))
+        {
+            string inner = modelType.Substring("std::optional<".Length, modelType.Length - "std::optional<".Length - 1);
+            string managed = Managed(inner, classes);
+            bool valueType = ScalarModelTypes.Contains(inner) || IsStruct(inner)
+                             || inner is "QUuid" or "QChar" or "TimeSpan";
+            return valueType ? managed + "?" : managed;
         }
 
         // An associative container: the managed surface is a dictionary

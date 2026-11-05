@@ -514,7 +514,7 @@ public static class SystemTray
         // ---------------------------------------------------------------- menu contents
         var actions = menu.Actions();
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(actions.Length == 5, $"the tray menu has five entries (got {actions.Length})");
+        example.Check(actions.Count == 5, $"the tray menu has five entries (got {actions.Count})");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
         example.Check(actions[0].Text == "Mi&nimize" && actions[1].Text == "Ma&ximize"

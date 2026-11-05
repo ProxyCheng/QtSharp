@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Numerics;
@@ -190,8 +191,8 @@ namespace QtSharp.Tests
             context.Check((string)QVariant.From("hello").ToObject() == "hello", "QVariant string round-trip");
             context.Check(Math.Abs((double)QVariant.From(2.5).ToObject() - 2.5) < 1e-9, "QVariant double round-trip");
 
-            var strings = (string[])QVariant.From(new[] { "a", "b" }).ToObject();
-            context.Check(strings.Length == 2 && strings[1] == "b", "QVariant string[] round-trip");
+            var strings = (List<string>)QVariant.From(new[] { "a", "b" }).ToObject();
+            context.Check(strings.Count == 2 && strings[1] == "b", "QVariant string[] round-trip");
 
             var bytes = (byte[])QVariant.From(new byte[] { 1, 2, 255 }).ToObject();
             context.Check(bytes.Length == 3 && bytes[2] == 255, "QVariant byte[] round-trip");

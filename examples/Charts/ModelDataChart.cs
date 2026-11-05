@@ -91,11 +91,11 @@ public static class ModelDataChart
             #endif
 #if QTSHARP_EXAMPLE_SMOKE
 
-            example.Check(chart.Series().Length == 2, $"both series are on the chart (got {chart.Series().Length})");
+            example.Check(chart.Series().Count == 2, $"both series are on the chart (got {chart.Series().Count})");
 #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chart.Axes(Qt.Orientations.Horizontal, null).Length == 1
-                        && chart.Axes(Qt.Orientations.Vertical, null).Length == 1,
+            example.Check(chart.Axes(Qt.Orientations.Horizontal, null).Count == 1
+                        && chart.Axes(Qt.Orientations.Vertical, null).Count == 1,
                 "createDefaultAxes built both axes");
             #endif
 

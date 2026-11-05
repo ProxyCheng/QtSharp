@@ -442,10 +442,10 @@ public sealed class ApiPathStrokeRenderer : ApiArthurFrame
             // transient (QTouchEvent has no destructor path of its own), so it is not disposed.
             var touch = QTouchEvent.FromHandle(e.Handle);
             var touchPoints = touch.TouchPoints();
-            var mapped = new TouchPoint[touchPoints.Length];
+            var mapped = new TouchPoint[touchPoints.Count];
             try
             {
-                for (int i = 0; i < touchPoints.Length; i++)
+                for (int i = 0; i < touchPoints.Count; i++)
                 {
                     var position = touchPoints[i].position();
                     mapped[i] = new TouchPoint(touchPoints[i].id(), touchPoints[i].state(),

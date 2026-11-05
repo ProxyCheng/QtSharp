@@ -43,7 +43,7 @@ public static class PieChart
 
             var slices = series.Slices();
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(slices.Length == 5, $"QList<QPieSlice*> came back with five slices (got {slices.Length})");
+            example.Check(slices.Count == 5, $"QList<QPieSlice*> came back with five slices (got {slices.Count})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(slices[1].Label == "Joe", $"the second slice is Joe (got '{slices[1].Label}')");

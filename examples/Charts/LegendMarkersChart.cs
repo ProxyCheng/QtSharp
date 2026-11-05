@@ -25,7 +25,7 @@ public static class LegendMarkersChart
                 series.Add(line);
                 line.SetName("line " + series.Count);
 
-                int offset = chart.Series().Length;
+                int offset = chart.Series().Count;
                 for (int i = 0; i < 360; i++)
                 {
                     double x = offset * 20 + i;
@@ -93,7 +93,7 @@ public static class LegendMarkersChart
             example.Check(series.Count == 4, $"four sine waves were added (got {series.Count})");
 #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chart.Series().Length == 4, $"the chart holds all four (got {chart.Series().Length})");
+            example.Check(chart.Series().Count == 4, $"the chart holds all four (got {chart.Series().Count})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(series[0].Count() == 360, $"a wave has a point per degree (got {series[0].Count()})");
@@ -102,7 +102,7 @@ public static class LegendMarkersChart
             example.Check(markersSeen == 4, $"the legend has one marker per series (got {markersSeen})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chart.Axes(Qt.Orientations.Vertical).Length == 1,
+            example.Check(chart.Axes(Qt.Orientations.Vertical).Count == 1,
                 "the first series' createDefaultAxes() built the axes");
             #endif
 

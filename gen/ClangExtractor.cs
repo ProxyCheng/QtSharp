@@ -525,6 +525,13 @@ public static partial class ApiModel
         // side is a ValueTuple.
         if (IsPair(type, out var first, out var second))
             return "QPair<" + first + "," + second + ">";
+        // std::optional<T> is the value that may not be set; the managed side is T?/a nullable
+        // reference (see ManagedType in ApiCodeGen).
+        if (TryUnwrapOptional(type, out var optionalValue))
+        {
+            var inner = ModelName(optionalValue);
+            return inner == null ? null : "std::optional<" + inner + ">";
+        }
         // QMap<K, V> and QHash<K, V> keep both halves of the template; QMultiMap/QMultiHash are
         // different classes and stay unbound.
         if (IsAssoc(type, "QMap", out var mapKey, out var mapValue))
@@ -865,6 +872,33 @@ public static partial class ApiModel
         return first != null && second != null;
     }
 
+    // std::optional's single template argument. The canonical spelling is unambiguous; the
+    // declaration is a class template like QList's.
+    static bool TryUnwrapOptional(CXType type, out CXType value)
+    {
+        value = default;
+        type = Unwrap(type);
+        while (type.kind == CXTypeKind.CXType_LValueReference || type.kind == CXTypeKind.CXType_RValueReference)
+            type = Unwrap(type.PointeeType);
+        var canonical = type.CanonicalType;
+        var spelling = clang.getTypeSpelling(canonical).ToString();
+        if (!spelling.Replace(" ", string.Empty).StartsWith("std::optional<", StringComparison.Ordinal))
+            return false;
+        var declaration = canonical.Declaration;
+        var kind = clang.getCursorKind(declaration);
+        if (kind != CXCursorKind.CXCursor_ClassDecl && kind != CXCursorKind.CXCursor_StructDecl)
+            return false;
+        if (clang.getCursorSpelling(declaration).ToString() != "optional")
+            return false;
+        if (clang.Cursor_getNumTemplateArguments(declaration) != 1)
+            return false;
+        value = clang.Cursor_getTemplateArgumentType(declaration, 0);
+        return true;
+    }
+
+    static bool IsOptionalSpelling(string name)
+        => name != null && name.StartsWith("std::optional<", StringComparison.Ordinal);
+
     // A QMap/QHash specialization's two template arguments, references unwrapped. The arguments
     // come from the specialization rather than from parsing the spelling, exactly as they do for
     // QList.
@@ -1172,6 +1206,9 @@ public static partial class ApiModel
         // pointer has no dispatch slot there (nothing in the bound set declares such a virtual).
         if (IsFunctionPointer(fn.ReturnClangType))
             return false;
+        // std::optional has no meta-type spelling and the dispatch slot has no has-value bit.
+        if (IsOptionalSpelling(fn.ReturnType))
+            return false;
         if (!fn.ReturnDropped && !SupportedType(fn.ReturnClangType, isReturn: true))
             return false;
         // A pointer written as a *buffer* has no length in the signature, so the ABI cannot carry
@@ -1185,7 +1222,7 @@ public static partial class ApiModel
             // A QIODevice byte buffer is an IntPtr by construction (QioDeviceBridge.cs).
             if (p.Buffer)
                 continue;
-            if (p.Type == null || !SupportedType(p.ClangType, isParameter: true))
+            if (p.Type == null || IsOptionalSpelling(p.Type) || !SupportedType(p.ClangType, isParameter: true))
                 return false;
             // The dispatch stub has no calling convention for a function pointer argument: a
             // managed override cannot be handed one, and Qt has no virtual like that in scope.
@@ -1477,6 +1514,10 @@ public static partial class ApiModel
                 return false;
             return SupportedTypes.Contains(name);
         }
+        // std::optional is a top-level value only: its payload is a leaf, not a container/pair,
+        // and it is never a container element or a pair half.
+        if (TryUnwrapOptional(type, out var optionalValue))
+            return SupportedLeaf(optionalValue);
         // Containers and pairs are recursive: the element codec now hands one container through
         // another, and a pair is a ValueTuple of two leaf values.
         if (IsContainerSpelling(name))
@@ -1924,7 +1965,8 @@ public static partial class ApiModel
             // A signal is emitted through the meta-object, whose argument marshalling has no
             // function-pointer slot; no signal in the bound set has one, so the type is kept out
             // of the signal surface rather than half-supported.
-            .Where(f => f.Params.All(p => p.Type == null || !ApiTypes.IsCallback(p.Type)))
+            .Where(f => f.Params.All(p => p.Type == null
+                                          || (!ApiTypes.IsCallback(p.Type) && !IsOptionalSpelling(p.Type))))
             .GroupBy(f => f.Name + "(" + string.Join(",", f.Params.Select(p => p.Type)) + ")")
             .Select(g => g.First())
             .OrderBy(f => f.Name, StringComparer.Ordinal)
@@ -2848,6 +2890,10 @@ public static partial class ApiModel
                 : "0";
         if (text is "true" or "false")
             return text;
+        // A disengaged std::optional default; the managed spelling is null for both a Nullable<T>
+        // and a nullable reference.
+        if (text is "std::nullopt" or "nullopt")
+            return "null";
         // A value-initialised default: `{}`, `Type()` or `Type{}`. An empty pair of braces is the
         // zero of the type - a flag set with no bits for the flags and enum types Qt writes this
         // for (QUrl::AceProcessingOptions, Qt::WindowFlags), and "let the C++ default stand in"

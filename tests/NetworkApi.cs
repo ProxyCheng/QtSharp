@@ -17,8 +17,8 @@ public static class ApiNetworkDemo
         // least the loopback interface.
         var loopback = new QHostAddress("127.0.0.1");
         context.Check(loopback.ToString() == "127.0.0.1", $"QHostAddress round-trip ('{loopback}')");
-        context.Check(QNetworkInterface.AllInterfaces().Length >= 1,
-            $"QNetworkInterface::allInterfaces ({QNetworkInterface.AllInterfaces().Length} interface(s))");
+        context.Check(QNetworkInterface.AllInterfaces().Count >= 1,
+            $"QNetworkInterface::allInterfaces ({QNetworkInterface.AllInterfaces().Count} interface(s))");
 
         LocalSocketHandoff(context.Check);
         TcpLoopback(context.Check);

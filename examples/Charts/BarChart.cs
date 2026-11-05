@@ -70,7 +70,7 @@ public static class BarChart
 
             var sets = series.BarSets();
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(sets.Length == 5, $"the series holds five bar sets (got {sets.Length})");
+            example.Check(sets.Count == 5, $"the series holds five bar sets (got {sets.Count})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(sets[4].Label == "Samantha",
@@ -84,7 +84,7 @@ public static class BarChart
 
             var readCategories = axisX.Categories;
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(readCategories.Length == 6 && readCategories[5] == "Jun",
+            example.Check(readCategories.Count == 6 && readCategories[5] == "Jun",
                 $"the category axis holds the months (got [{string.Join(",", readCategories)}])");
             #endif
 #if QTSHARP_EXAMPLE_SMOKE
@@ -102,11 +102,11 @@ public static class BarChart
             example.Check(chart.Legend().Alignment == Qt.Alignment.AlignBottom, "the legend sits at the bottom");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chart.Series().Length == 1, $"the chart holds one series (got {chart.Series().Length})");
+            example.Check(chart.Series().Count == 1, $"the chart holds one series (got {chart.Series().Count})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(series.AttachedAxes().Length == 2,
-                $"the series is attached to both axes (got {series.AttachedAxes().Length})");
+            example.Check(series.AttachedAxes().Count == 2,
+                $"the series is attached to both axes (got {series.AttachedAxes().Count})");
             #endif
 
             using var rendered = view.Grab();

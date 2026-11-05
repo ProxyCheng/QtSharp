@@ -78,7 +78,7 @@ public static class ZoomLineChart
             example.Check(chart.Title == "Zoom in/out example", $"the title round-trips (got '{chart.Title}')");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chart.Series().Length == 1, "the chart holds the one series");
+            example.Check(chart.Series().Count == 1, "the chart holds the one series");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(!ChartsAssertions.IsLegendVisible(chart), "the legend is hidden, as the example asks");
@@ -88,8 +88,8 @@ public static class ZoomLineChart
                 "the animations start as SeriesAnimations");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chart.Axes(Qt.Orientations.Horizontal, null).Length == 1
-                        && chart.Axes(Qt.Orientations.Vertical, null).Length == 1,
+            example.Check(chart.Axes(Qt.Orientations.Horizontal, null).Count == 1
+                        && chart.Axes(Qt.Orientations.Vertical, null).Count == 1,
                 "createDefaultAxes built both axes");
             #endif
 #if QTSHARP_EXAMPLE_SMOKE

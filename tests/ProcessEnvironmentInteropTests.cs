@@ -68,8 +68,8 @@ namespace QtSharp.Tests
                 // distinct, which is the case that lets the caller's comparer collide.
                 if (OperatingSystem.IsWindows())
                 {
-                    context.Check(environment.Keys().Length == 1,
-                        $"Qt on Windows folds PATH and Path into one name ({environment.Keys().Length})");
+                    context.Check(environment.Keys().Count == 1,
+                        $"Qt on Windows folds PATH and Path into one name ({environment.Keys().Count})");
                     context.Check(environment.Value("PATH") == "second"
                           && environment.Value("Path") == "second"
                           && environment.Value("path") == "second",

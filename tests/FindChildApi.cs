@@ -51,19 +51,19 @@ public static class FindChildApi
 
         // FindChildren order: direct children in child order, then each subtree (Qt's helper tests
         // a whole level before descending). box's label comes after custom, the last direct child.
-        QWidget[] all = root.FindChildren<QWidget>();
-        context.Check(all.Length == 5, $"FindChildren<QWidget>() returns the whole subtree ({all.Length})");
+        var all = root.FindChildren<QWidget>();
+        context.Check(all.Count == 5, $"FindChildren<QWidget>() returns the whole subtree ({all.Count})");
         context.Check(all.SequenceEqual(new QObject[] { button, edit, box, custom, label }),
             "the order is Qt's: direct children first, then each child's subtree");
 
-        context.Check(root.FindChildren<QWidget>((string)null, Qt.FindChildOptions.FindDirectChildrenOnly).Length == 4,
+        context.Check(root.FindChildren<QWidget>((string)null, Qt.FindChildOptions.FindDirectChildrenOnly).Count == 4,
             "FindDirectChildrenOnly returns only the four direct children");
-        context.Check(root.FindChildren<QLabel>().Length == 1,
+        context.Check(root.FindChildren<QLabel>().Count == 1,
             "a type that occurs once returns one element");
-        context.Check(root.FindChildren<QWidget>("").Length == 5,
+        context.Check(root.FindChildren<QWidget>("").Count == 5,
             "an empty name matches every object, like Qt's null QString");
-        context.Check(root.FindChildren<QPushButton>("nothing").Length == 0,
-            "no match returns an empty array, not null");
+        context.Check(root.FindChildren<QPushButton>("nothing").Count == 0,
+            "no match returns an empty list, not null");
 
         // ---------------------------------------------------------------- QRegularExpression
         // Qt's pattern overload searches the object name (re.match(name).hasMatch()), so "di"
@@ -90,9 +90,9 @@ public static class FindChildApi
 
         using (var everyName = new QRegularExpression("."))
         {
-            context.Check(root.FindChildren<QWidget>(everyName).Length == 5,
+            context.Check(root.FindChildren<QWidget>(everyName).Count == 5,
                 "a pattern matching every name returns the whole subtree");
-            context.Check(root.FindChildren<QWidget>(everyName, Qt.FindChildOptions.FindDirectChildrenOnly).Length == 4,
+            context.Check(root.FindChildren<QWidget>(everyName, Qt.FindChildOptions.FindDirectChildrenOnly).Count == 4,
                 "and FindDirectChildrenOnly narrows it");
         }
 
@@ -117,8 +117,8 @@ public static class FindChildApi
         // The QMetaObject overloads are the reflection form (PyQt's findChild(type)): the walk and
         // the QMetaObject::cast happen natively, and only matched objects are wrapped.
         QMetaObject widgetMeta = root.MetaObject();
-        QObject[] byWidget = root.FindChildren(widgetMeta);
-        context.Check(byWidget.Length == 5
+        var byWidget = root.FindChildren(widgetMeta);
+        context.Check(byWidget.Count == 5
               && byWidget.SequenceEqual(new QObject[] { button, edit, box, custom, label }),
             "FindChildren(QMetaObject) matches the generic result and order");
         context.Check(ReferenceEquals(root.FindChild(widgetMeta), button),

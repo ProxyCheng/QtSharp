@@ -214,7 +214,7 @@ public sealed class ApiRecentFiles
     public void Restore(QSettings settings, string key)
     {
         files.Clear();
-        var stored = settings.Value(key) as string[];
+        var stored = settings.Value(key) as List<string>;
         if (stored == null)
             return;
         foreach (string fileName in stored)
@@ -659,7 +659,7 @@ public static class DocumentViewer
 
 #if QTSHARP_EXAMPLE_SMOKE
 
-        example.Check(window.MenuBar().Actions().Length == 3, $"the menu bar has three menus (got {window.MenuBar().Actions().Length})");
+        example.Check(window.MenuBar().Actions().Count == 3, $"the menu bar has three menus (got {window.MenuBar().Actions().Count})");
 #endif
         #if QTSHARP_EXAMPLE_SMOKE
         example.Check(window.FileMenu.title() == "&File", $"File menu title (got '{window.FileMenu.title()}')");
@@ -676,14 +676,14 @@ public static class DocumentViewer
 
 #if QTSHARP_EXAMPLE_SMOKE
 
-        example.Check(window.FileMenu.Actions().Length == 4,
-            $"File holds Open / Recently opened / Print / Exit (got {window.FileMenu.Actions().Length})");
+        example.Check(window.FileMenu.Actions().Count == 4,
+            $"File holds Open / Recently opened / Print / Exit (got {window.FileMenu.Actions().Count})");
 #endif
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(window.EditMenu.Actions().Length == 3, $"Edit holds Cut / Copy / Paste (got {window.EditMenu.Actions().Length})");
+        example.Check(window.EditMenu.Actions().Count == 3, $"Edit holds Cut / Copy / Paste (got {window.EditMenu.Actions().Count})");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(window.HelpMenu.Actions().Length == 2, $"Help holds About / About Qt (got {window.HelpMenu.Actions().Length})");
+        example.Check(window.HelpMenu.Actions().Count == 2, $"Help holds About / About Qt (got {window.HelpMenu.Actions().Count})");
         #endif
 
 #if QTSHARP_EXAMPLE_SMOKE
@@ -728,7 +728,7 @@ public static class DocumentViewer
         example.Check(window.ToolBar.windowTitle() == "ToolBar", $"the tool bar is named (got '{window.ToolBar.windowTitle()}')");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(toolActions.Length == 5, $"the tool bar holds Open/Print/separator/Back/Forward (got {toolActions.Length})");
+        example.Check(toolActions.Count == 5, $"the tool bar holds Open/Print/separator/Back/Forward (got {toolActions.Count})");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
         example.Check(toolActions[0].text() == "&Open" && toolActions[1].text() == "&Print" && toolActions[2].IsSeparator()
@@ -848,7 +848,7 @@ public static class DocumentViewer
             $"the opened file entered the recent list (got {window.Recent.Files.Count})");
 #endif
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(window.RecentMenu.Enabled && window.RecentMenu.Actions().Length == 1,
+        example.Check(window.RecentMenu.Enabled && window.RecentMenu.Actions().Count == 1,
             "the Recently opened submenu was rebuilt and enabled");
         #endif
 
@@ -940,10 +940,10 @@ public static class DocumentViewer
                 $"the working directory round-trips (got '{settings.Value(ApiDocumentViewerWindow.SettingsWorkingDir)}')");
             #endif
 
-            var stored = settings.Value(ApiDocumentViewerWindow.SettingsApiRecentFiles) as string[];
+            var stored = settings.Value(ApiDocumentViewerWindow.SettingsApiRecentFiles) as List<string>;
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(stored != null && stored.Length == ApiRecentFiles.MaxFiles,
-                $"the recent array round-trips {ApiRecentFiles.MaxFiles} entries (got {stored?.Length ?? 0})");
+            example.Check(stored != null && stored.Count == ApiRecentFiles.MaxFiles,
+                $"the recent array round-trips {ApiRecentFiles.MaxFiles} entries (got {stored?.Count ?? 0})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(stored != null && Path.GetFileName(stored[0]) == "cap11.txt",
@@ -961,7 +961,7 @@ public static class DocumentViewer
             $"a second window restores the recent list (got {restoredWindow.Recent.Files.Count})");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(restoredWindow.RecentMenu.Enabled && restoredWindow.RecentMenu.Actions().Length == ApiRecentFiles.MaxFiles,
+        example.Check(restoredWindow.RecentMenu.Enabled && restoredWindow.RecentMenu.Actions().Count == ApiRecentFiles.MaxFiles,
             "the restored window rebuilds an enabled Recently opened submenu");
         #endif
 

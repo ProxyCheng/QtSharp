@@ -67,7 +67,7 @@ public static class ScatterInteractions
             example.Check(scatter2.Count() == 0, $"the receiving series starts empty (got {scatter2.Count()})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chart.Series().Length == 2, $"both series are on the chart (got {chart.Series().Length})");
+            example.Check(chart.Series().Count == 2, $"both series are on the chart (got {chart.Series().Count})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(scatter2.Name == "scatter2", "the second series keeps its name");

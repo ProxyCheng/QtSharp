@@ -98,7 +98,7 @@ public static class CandlestickChart
             // The day-of-month labels come out of the timestamps.
             var readCategories = axisX.Categories;
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(readCategories.Length == 22, $"one label per candle (got {readCategories.Length})");
+            example.Check(readCategories.Count == 22, $"one label per candle (got {readCategories.Count})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(readCategories[0] == "01", $"the first is the 1st (got '{readCategories[0]}')");

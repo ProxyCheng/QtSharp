@@ -161,7 +161,7 @@ public static class PercentCalloutCustom
             example.Check(appended.Label == "Slice 6", $"and numbered the label (got '{appended.Label}')");
             #endif
 
-            int index = System.Array.FindIndex(series.Slices(), s => s.Handle == custom.Handle);
+            int index = series.Slices().FindIndex(s => s.Handle == custom.Handle);
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(index == 2, $"the selected slice is the third (got {index})");
             #endif

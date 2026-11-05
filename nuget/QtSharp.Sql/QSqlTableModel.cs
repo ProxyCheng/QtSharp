@@ -165,7 +165,7 @@ namespace QtSharp.QtSql
             else
                 pending[(slot.BaseRow, column)] = value;
 
-            DataChanged(index, index, new[] { role, (int)Qt.ItemDataRole.DisplayRole });
+            DataChanged(index, index, new List<int> { role, (int)Qt.ItemDataRole.DisplayRole });
             return true;
         }
 

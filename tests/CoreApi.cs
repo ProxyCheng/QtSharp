@@ -57,8 +57,8 @@ public static class ApiCoreDemo
         context.Check(dir.Exists(), "QDir::exists");
         context.Check(dir.Count() >= 1, $"QDir::count sees the file (got {dir.Count()})");
         var entries = dir.EntryList();
-        context.Check(Array.IndexOf(entries, "payload.txt") >= 0,
-            $"QDir::entryList contains the file (got {entries.Length} entr(y|ies))");
+        context.Check(entries.IndexOf("payload.txt") >= 0,
+            $"QDir::entryList contains the file (got {entries.Count} entr(y|ies))");
 
         // QDirIterator walks the same directory. It is a QDirIterator over a path, and the
         // QFileInfo it hands back is a copy the wrapper owns.
@@ -71,7 +71,7 @@ public static class ApiCoreDemo
         // The static locations: QStandardPaths is static-only in Qt (private ctor and dtor).
         context.Check(QStandardPaths.WritableLocation(QStandardPaths.StandardLocation.TempLocation).Length > 0,
             "QStandardPaths::writableLocation");
-        context.Check(QStandardPaths.StandardLocations(QStandardPaths.StandardLocation.HomeLocation).Length > 0,
+        context.Check(QStandardPaths.StandardLocations(QStandardPaths.StandardLocation.HomeLocation).Count > 0,
             "QStandardPaths::standardLocations");
 
         // QDir is also a value with static helpers.
@@ -103,8 +103,8 @@ public static class ApiCoreDemo
         context.Check(progress >= 0 && progress <= 1, $"QEasingCurve::valueForProgress (got {progress:F3})");
 
         // The Q_WEAK_OVERLOAD constructor: `template <typename = void> QVersionNumber(const
-        // QList<int> &)` reaches the model as QVersionNumber(int[]).
-        var version = new QVersionNumber(new[] { 1, 2, 3 });
+        // QList<int> &)` reaches the model as QVersionNumber(List<int>).
+        var version = new QVersionNumber(new List<int> { 1, 2, 3 });
         context.Check(version.SegmentCount() == 3 && version.ToString() == "1.2.3",
             $"QVersionNumber round-trip (got '{version.ToString()}')");
         var parsedVersion = QVersionNumber.FromString("4.5");
@@ -138,14 +138,14 @@ public static class ApiCoreDemo
         var named = new QCommandLineOption("name", "the name", "name");
         parser.AddOption(verbose);
         parser.AddOption(named);
-        parser.Process(new[] { "testapp", "-v", "--name=qtsharp" });
+        parser.Process(new List<string> { "testapp", "-v", "--name=qtsharp" });
         context.Check(parser.IsSet(verbose), "QCommandLineParser::isSet");
         context.Check(parser.Value(named) == "qtsharp", $"QCommandLineParser::value (got '{parser.Value(named)}')");
-        context.Check(verbose.Names().Length == 1 && verbose.Names()[0] == "v", "QCommandLineOption::names");
+        context.Check(verbose.Names().Count == 1 && verbose.Names()[0] == "v", "QCommandLineOption::names");
 
         // QProcessEnvironment is a value type; the process environment itself is a static.
         var environment = QProcessEnvironment.SystemEnvironment();
-        context.Check(!environment.IsEmpty(), $"QProcessEnvironment::systemEnvironment (got {environment.Keys().Length} entries)");
+        context.Check(!environment.IsEmpty(), $"QProcessEnvironment::systemEnvironment (got {environment.Keys().Count} entries)");
         var custom = new QProcessEnvironment();
         custom.Insert("QTSHARP_TEST", "1");
         context.Check(custom.Contains("QTSHARP_TEST") && custom.Value("QTSHARP_TEST") == "1",
@@ -197,11 +197,11 @@ public static class ApiCoreDemo
         // ---------------------------------------------------------------- processes and threads
         // QProcess starts a real program; the shell that answers -c (or /c) is the platform's,
         // and its spelling lives in tests/TestPlatform.<platform>.cs.
-        context.Check(QProcess.Execute(TestPlatform.Shell, TestPlatform.Exit7Args) == 7,
+        context.Check(QProcess.Execute(TestPlatform.Shell, new List<string>(TestPlatform.Exit7Args)) == 7,
             "QProcess::execute returns the child's exit code");
 
         var process = new QProcess();
-        process.Start(TestPlatform.Shell, TestPlatform.EchoArgs);
+        process.Start(TestPlatform.Shell, new List<string>(TestPlatform.EchoArgs));
         context.Check(process.WaitForFinished(10000), "QProcess::waitForFinished");
         var captured = process.ReadAllStandardOutput().ConstData();
         context.Check(captured != null && captured.Contains("captured"),
@@ -470,8 +470,8 @@ public static class ApiCoreDemo
         watcher.FileChangedSignal.Connect(_ => watchedEvents++);
         var watchedFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "qtsharp-watch.txt");
         System.IO.File.WriteAllText(watchedFile, "one");
-        context.Check(watcher.AddPath(watchedFile) && watcher.Files().Length == 1,
-            $"QFileSystemWatcher::addPath (got {watcher.Files().Length} file(s))");
+        context.Check(watcher.AddPath(watchedFile) && watcher.Files().Count == 1,
+            $"QFileSystemWatcher::addPath (got {watcher.Files().Count} file(s))");
         System.IO.File.WriteAllText(watchedFile, "two");
         // Qt delivers this through the event loop, so give it one turn.
         var pump = new QEventLoop();

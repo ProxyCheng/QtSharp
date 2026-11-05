@@ -84,7 +84,7 @@ public static class LegendChart
                 $"the legend font is 12pt (got {legend.Font.PointSizeF()})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(series.BarSets().Length == 4, $"four bar sets to start with (got {series.BarSets().Length})");
+            example.Check(series.BarSets().Count == 4, $"four bar sets to start with (got {series.BarSets().Count})");
             #endif
 
             // Add Barset.
@@ -92,18 +92,18 @@ public static class LegendChart
             added.Append(new[] { 1.4, 2.4, 3.4, 4.4 });
             series.Append(added);
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(series.BarSets().Length == 5, $"adding a bar set grew the series (got {series.BarSets().Length})");
+            example.Check(series.BarSets().Count == 5, $"adding a bar set grew the series (got {series.BarSets().Count})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chart.Legend().Markers(null).Length >= 5,
-                $"the legend grew a marker with it (got {chart.Legend().Markers(null).Length})");
+            example.Check(chart.Legend().Markers(null).Count >= 5,
+                $"the legend grew a marker with it (got {chart.Legend().Markers(null).Count})");
             #endif
 
             // Remove Barset: the example drops the last one.
             var sets = series.BarSets();
-            series.Remove(sets[sets.Length - 1]);
+            series.Remove(sets[sets.Count - 1]);
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(series.BarSets().Length == 4, $"removing one shrank it back (got {series.BarSets().Length})");
+            example.Check(series.BarSets().Count == 4, $"removing one shrank it back (got {series.BarSets().Count})");
             #endif
 #if QTSHARP_EXAMPLE_SMOKE
 

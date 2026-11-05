@@ -317,7 +317,7 @@ public static class Completer
         #if QTSHARP_EXAMPLE_SMOKE
         example.Check(window.Completer.Model().MetaObject().ClassName() == "QStringListModel"
               && window.Completer.Model().RowCount() == ApiCompleterWindow.Words.Length
-              && window.WordModel.StringList().Length == ApiCompleterWindow.Words.Length
+              && window.WordModel.StringList().Count == ApiCompleterWindow.Words.Length
               && window.WordModel.StringList()[0] == "auto",
             $"the word list is a QStringListModel carrying the C# array "
             + $"({window.Completer.Model().MetaObject().ClassName()}, "
@@ -447,8 +447,8 @@ public static class Completer
 #if QTSHARP_EXAMPLE_SMOKE
 
         // The menu bar of the official window.
-        example.Check(window.MenuBar().Actions().Length == 2,
-            $"the menu bar has File and About (got {window.MenuBar().Actions().Length})");
+        example.Check(window.MenuBar().Actions().Count == 2,
+            $"the menu bar has File and About (got {window.MenuBar().Actions().Count})");
 #endif
 
         #if QTSHARP_EXAMPLE_SMOKE

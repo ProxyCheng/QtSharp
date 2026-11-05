@@ -38,7 +38,7 @@ public static class PercentBarChart
                 $"the series reports itself as a percent bar series (got {series.type()})");
 #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(series.BarSets().Length == 5, $"five sets (got {series.BarSets().Length})");
+            example.Check(series.BarSets().Count == 5, $"five sets (got {series.BarSets().Count})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(set0.Sum() == 21, $"the sets keep their own values, not the percentages (got {set0.Sum()})");

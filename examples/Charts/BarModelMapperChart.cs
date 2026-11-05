@@ -69,7 +69,7 @@ public static class BarModelMapperChart
                 $"the mapper built four bar sets - one per column (got {series.Count})");
 #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(series.BarSets().Length == 4, "and the series agrees");
+            example.Check(series.BarSets().Count == 4, "and the series agrees");
             #endif
 
             var sets = series.BarSets();

@@ -33,7 +33,7 @@ public static class ObjectLookupApi
         context.Check(editor != null && ReferenceEquals(editor.Parent(), spin),
             "the editor's Parent() is the QSpinBox wrapper that owns it");
         var childrenAgain = spin.Children();
-        context.Check(children.Length == childrenAgain.Length &&
+        context.Check(children.Count == childrenAgain.Count &&
               children.Zip(childrenAgain, (a, b) => ReferenceEquals(a, b)).All(same => same),
             "every QList<QObject*> element is identity-stable between two reads");
 
@@ -149,7 +149,7 @@ public static class ObjectLookupApi
         return context.ExitCode;
     }
 
-    static string Describe(QObject[] objects)
+    static string Describe(System.Collections.Generic.IEnumerable<QObject> objects)
         => objects == null ? "null" : string.Join(", ", objects.Select(o => o?.GetType().Name ?? "null"));
 
     // A QObject subclass declared in C# has no native class name in the registry; an existing

@@ -30,7 +30,7 @@ namespace QtSharp.QtCore
         public bool SetHeaderData(int section, Qt.Orientation orientation, object value, Qt.ItemDataRole role)
             => SetHeaderData(section, orientation, value, (int)role);
 
-        public QModelIndex[] Match(QModelIndex start, Qt.ItemDataRole role, object value,
+        public List<QModelIndex> Match(QModelIndex start, Qt.ItemDataRole role, object value,
                                    int hits = 1,
                                    Qt.MatchFlags flags = Qt.MatchFlags.MatchStartsWith | Qt.MatchFlags.MatchWrap)
             => Match(start, (int)role, value, hits, flags);

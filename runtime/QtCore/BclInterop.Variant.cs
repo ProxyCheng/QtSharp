@@ -61,7 +61,7 @@ namespace QtSharp.QtCore
         }
 
         /// <summary>
-        /// Wraps a BCL or Qt value as a QVariant. The BCL types (the primitives, string, string[],
+        /// Wraps a BCL or Qt value as a QVariant. The BCL types (the primitives, string, List<string>,
         /// byte[], the date types, Uri, Guid and the System.Drawing geometry) and the Qt value types
         /// QVariant has a constructor for are converted; arrays and dictionaries recurse into a
         /// QVariantList/QVariantMap. A managed type with no Qt mapping is carried as an opaque
@@ -93,7 +93,10 @@ namespace QtSharp.QtCore
                 case char c: return FromChar(c);
                 case Enum e: return FromEnum(e);
                 case string s: return new QVariant(s);
-                case string[] strings: return new QVariant(strings);
+                // QStringList is List<string> in this binding; a plain array is still accepted
+                // and converted to the same Qt type, not to a QVariantList.
+                case string[] strings: return new QVariant(new List<string>(strings));
+                case List<string> strings: return new QVariant(strings);
                 case QVariant[] variants: return new QVariant(variants);
                 case byte[] bytes:
                     using (var array = new QByteArray(bytes))
@@ -120,9 +123,9 @@ namespace QtSharp.QtCore
                 case SizeF sizeF: return new QVariant(new QSizeF(sizeF));
                 case Rectangle rectangle: return new QVariant(new QRect(rectangle));
                 case RectangleF rectangleF: return new QVariant(new QRectF(rectangleF));
-                // Lists and maps recurse, exactly as ToObject() unwraps them. string[], byte[] and
-                // QVariant[] are above: their element types are what Qt expects, so they need no
-                // conversion pass. Any other array, and List<T>/IList, becomes a QVariantList.
+                // Lists and maps recurse, exactly as ToObject() unwraps them. List<string>, byte[]
+                // and QVariant[] are above: their element types are what Qt expects, so they need
+                // no conversion pass. Any other array, and List<T>/IList, becomes a QVariantList.
                 case System.Collections.IList items: return FromList(items);
                 case IDictionary<string, QVariant> entries: return FromMap(entries);
                 case IDictionary<string, object> entries: return FromMap(entries);
@@ -272,7 +275,7 @@ namespace QtSharp.QtCore
 
         /// <summary>
         /// The contained value as the closest managed type, the way PyQt's QVariant.value()
-        /// unwraps: int/uint/long/ulong/float/double/bool, string, string[], byte[], char,
+        /// unwraps: int/uint/long/ulong/float/double/bool, string, List<string>, byte[], char,
         /// DateOnly, TimeOnly, DateTime, Uri, Guid, the System.Drawing geometry, the Qt value types
         /// registered by QtVariantConversion (QColor, QBrush, QPoint, QUrl, QJsonValue, ...), a
         /// QObject wrapper, or the original managed object. Lists and maps are unwrapped

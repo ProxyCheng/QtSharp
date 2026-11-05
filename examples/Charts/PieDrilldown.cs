@@ -117,7 +117,7 @@ public static class PieDrilldown
             example.Check(chart.Swaps == 1, $"the year series was put on the chart (got {chart.Swaps})");
 #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chart.Series().Length == 1, $"and it is the only one (got {chart.Series().Length})");
+            example.Check(chart.Series().Count == 1, $"and it is the only one (got {chart.Series().Count})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(yearSeries.Count == Names.Length,
@@ -153,7 +153,7 @@ public static class PieDrilldown
             example.Check(chart.Swaps == 2, $"the click swapped the series (got {chart.Swaps})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chart.Series().Length == 1, "still exactly one series on the chart");
+            example.Check(chart.Series().Count == 1, "still exactly one series on the chart");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(chart.Series()[0].Handle == monthlySeries.Handle, "and it is the monthly one");

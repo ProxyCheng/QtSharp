@@ -1110,9 +1110,11 @@
         { "name": "error", "flags": ["const"], "returnType": "QScreenCapture::Error", "parameters": [] },
         { "name": "errorString", "flags": ["const"], "returnType": "QString", "parameters": [] },
         { "name": "isActive", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "maximumFrameRate", "flags": ["const"], "returnType": "std::optional<double>", "parameters": [] },
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "screen", "flags": ["const"], "returnType": "QScreen*", "parameters": [] },
         { "name": "setActive", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "active", "type": "bool" }] },
+        { "name": "setMaximumFrameRate", "returnType": "void", "parameters": [{ "name": "frameRate", "type": "std::optional<double>" }] },
         { "name": "setScreen", "returnType": "void", "parameters": [{ "name": "screen", "type": "QScreen*" }] },
         { "name": "start", "flags": ["slot"], "returnType": "void", "parameters": [] },
         { "name": "stop", "flags": ["slot"], "returnType": "void", "parameters": [] },
@@ -1124,6 +1126,7 @@
         { "name": "active", "type": "bool", "getter": "isActive", "setter": "setActive" },
         { "name": "error", "type": "QScreenCapture::Error", "getter": "error" },
         { "name": "errorString", "type": "QString", "getter": "errorString" },
+        { "name": "maximumFrameRate", "type": "std::optional<double>", "getter": "maximumFrameRate", "setter": "setMaximumFrameRate" },
         { "name": "screen", "type": "QScreen*", "getter": "screen", "setter": "setScreen" }
       ],
       "signals": [
@@ -1372,8 +1375,10 @@
         { "name": "error", "flags": ["const"], "returnType": "QWindowCapture::Error", "parameters": [] },
         { "name": "errorString", "flags": ["const"], "returnType": "QString", "parameters": [] },
         { "name": "isActive", "flags": ["const"], "returnType": "bool", "parameters": [] },
+        { "name": "maximumFrameRate", "flags": ["const"], "returnType": "std::optional<double>", "parameters": [] },
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
         { "name": "setActive", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "active", "type": "bool" }] },
+        { "name": "setMaximumFrameRate", "returnType": "void", "parameters": [{ "name": "frameRate", "type": "std::optional<double>" }] },
         { "name": "setWindow", "returnType": "void", "parameters": [{ "name": "window", "type": "QCapturableWindow" }] },
         { "name": "start", "flags": ["slot"], "returnType": "void", "parameters": [] },
         { "name": "stop", "flags": ["slot"], "returnType": "void", "parameters": [] },
@@ -1386,6 +1391,7 @@
         { "name": "active", "type": "bool", "getter": "isActive", "setter": "setActive" },
         { "name": "error", "type": "QWindowCapture::Error", "getter": "error" },
         { "name": "errorString", "type": "QString", "getter": "errorString" },
+        { "name": "maximumFrameRate", "type": "std::optional<double>", "getter": "maximumFrameRate", "setter": "setMaximumFrameRate" },
         { "name": "window", "type": "QCapturableWindow", "getter": "window", "setter": "setWindow" }
       ],
       "signals": [

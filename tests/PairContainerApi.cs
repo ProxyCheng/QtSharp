@@ -28,10 +28,10 @@ public static class PairContainerApi
         {
             query.SetQueryItems(new[] { ("a", "1"), ("b", "2") });
             var items = query.QueryItems();
-            context.Check(items.Length == 2
-                          && Array.IndexOf(items, ("a", "1")) >= 0
-                          && Array.IndexOf(items, ("b", "2")) >= 0,
-                $"QUrlQuery::queryItems round-trips the pair list (got {items.Length})");
+            context.Check(items.Count == 2
+                          && items.IndexOf(("a", "1")) >= 0
+                          && items.IndexOf(("b", "2")) >= 0,
+                $"QUrlQuery::queryItems round-trips the pair list (got {items.Count})");
         }
 
         // QPair<QHostAddress, int>: a pair with a boxed class half, in both directions.
@@ -54,9 +54,9 @@ public static class PairContainerApi
             animation.SetPosAt(0.5, new QPointF(10, 20));
             var rotations = animation.RotationList();
             var positions = animation.PosList();
-            context.Check(rotations.Length == 2 && rotations[1] == (1.0, 90.0),
+            context.Check(rotations.Count == 2 && rotations[1] == (1.0, 90.0),
                 "QGraphicsItemAnimation::rotationList keeps the pairs");
-            context.Check(positions.Length == 1
+            context.Check(positions.Count == 1
                           && positions[0].Item1 == 0.5
                           && positions[0].Item2 == new QPointF(10, 20),
                 "QGraphicsItemAnimation::posList keeps (step, QPointF)");
@@ -67,7 +67,7 @@ public static class PairContainerApi
         {
             gradient.SetStops(new[] { (0.0, new QColor(255, 0, 0)), (1.0, new QColor(0, 0, 255)) });
             var stops = gradient.Stops();
-            context.Check(stops.Length == 2 && stops[0].Item2.Red() == 255 && stops[1].Item2.Blue() == 255,
+            context.Check(stops.Count == 2 && stops[0].Item2.Red() == 255 && stops[1].Item2.Blue() == 255,
                 "QGradient::stops carries (position, QColor)");
         }
 
@@ -81,9 +81,9 @@ public static class PairContainerApi
         // A list of enums: the element codec's enum branch, which the same check opened. Qt
         // returns the locale's *weekdays*, not all seven days, so only Monday is guaranteed.
         var days = new QLocale().Weekdays();
-        context.Check(days.Length is > 0 and <= 7
-                      && Array.IndexOf(days, Qt.DayOfWeek.Monday) >= 0,
-            $"QLocale::weekdays returns the locale's DayOfWeek list (got {days.Length})");
+        context.Check(days.Count is > 0 and <= 7
+                      && days.IndexOf(Qt.DayOfWeek.Monday) >= 0,
+            $"QLocale::weekdays returns the locale's DayOfWeek list (got {days.Count})");
 
         return context.ExitCode;
     }

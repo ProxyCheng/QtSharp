@@ -59,8 +59,8 @@ public static class ApiDocFormatsDemo
         bool pdfExists = File.Exists(pdfPath) && new FileInfo(pdfPath).Length > 0;
         string head = pdfExists ? Encoding.ASCII.GetString(File.ReadAllBytes(pdfPath), 0, 4) : "";
         context.Check(pdfExists && head == "%PDF", $"QPrinter writes a PDF ({(pdfExists ? new FileInfo(pdfPath).Length + " bytes" : "missing")})");
-        context.Check(QPrinterInfo.AvailablePrinterNames().Length >= 0,
-            $"QPrinterInfo::availablePrinterNames ({QPrinterInfo.AvailablePrinterNames().Length} printer(s))");
+        context.Check(QPrinterInfo.AvailablePrinterNames().Count >= 0,
+            $"QPrinterInfo::availablePrinterNames ({QPrinterInfo.AvailablePrinterNames().Count} printer(s))");
 
         try { Directory.Delete(dir, true); } catch { /* the temp files are harmless */ }
 

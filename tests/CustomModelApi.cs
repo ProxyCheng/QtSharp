@@ -63,13 +63,13 @@ public static class ApiCustomModelDemo
             return true;
         }
 
-        // A container return: the managed string[] has to become a native QStringList in the slot
-        // Qt provided.
-        public override string[] MimeTypes() => new[] { "text/plain" };
+        // A container return: the managed List<string> has to become a native QStringList in the
+        // slot Qt provided.
+        public override List<string> MimeTypes() => new() { "text/plain" };
 
         // A container parameter (the model index list) and a pointer return.
-        public QModelIndex[] LastMimeIndexes;
-        public override QMimeData MimeData(QModelIndex[] indexes)
+        public IReadOnlyList<QModelIndex> LastMimeIndexes;
+        public override QMimeData MimeData(IReadOnlyList<QModelIndex> indexes)
         {
             LastMimeIndexes = indexes;
             var data = new QMimeData();
@@ -133,20 +133,20 @@ public static class ApiCustomModelDemo
         context.Check((flags & Qt.ItemFlags.ItemIsEditable) != 0 && (flags & Qt.ItemFlags.ItemIsEnabled) != 0,
             $"the managed flags came back (got {flags})");
 
-        // A container return: the managed string[] is copied into Qt's QStringList.
+        // A container return: the managed List<string> is copied into Qt's QStringList.
         var mimeTypes = throughQt.MimeTypes();
-        context.Check(mimeTypes.Length == 1 && mimeTypes[0] == "text/plain",
-            $"the managed mimeTypes() returned (got {(mimeTypes.Length > 0 ? mimeTypes[0] : "<none>")})");
+        context.Check(mimeTypes.Count == 1 && mimeTypes[0] == "text/plain",
+            $"the managed mimeTypes() returned (got {(mimeTypes.Count > 0 ? mimeTypes[0] : "<none>")})");
 
         // A container parameter: Qt hands the override a list, which must be a *copy* (the wrapper
         // owns it, and freeing it would corrupt Qt's own container).
-        var indexes = new[] { throughQt.Index(0, 0), throughQt.Index(1, 0) };
+        var indexes = new List<QModelIndex> { throughQt.Index(0, 0), throughQt.Index(1, 0) };
         var mimeData = model.MimeData(indexes);
         context.Check(mimeData != null && mimeData.Text() == "from-managed-model",
             $"the managed mimeData() returned (got '{mimeData?.Text()}')");
-        context.Check(model.LastMimeIndexes != null && model.LastMimeIndexes.Length == 2
+        context.Check(model.LastMimeIndexes != null && model.LastMimeIndexes.Count == 2
               && model.LastMimeIndexes[1].Row() == 1,
-            $"the container parameter arrived intact (got {model.LastMimeIndexes?.Length} index(es))");
+            $"the container parameter arrived intact (got {model.LastMimeIndexes?.Count} index(es))");
 
         // A QHash<int, QByteArray> return.
         var roleNames = throughQt.RoleNames();

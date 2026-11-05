@@ -63,6 +63,10 @@ public static class ApiCodeGen
     /// binding's assembly instead of generating a second copy.
     /// </summary>
     internal static HashSet<string> ModelClassNames = new(StringComparer.Ordinal);
+    // The class rows whose members this run emits: ordinary classes plus the runtime structs
+    // (QMetaEnum, QDate, ...). The latter are filtered out of Classes but their methods still
+    // use containers, pairs and optionals, so SignatureTypes walks this list.
+    static List<JsonElement> EmittedClassRows = new();
     // The runtime structs this run's own model declares (un-namespaced core classes only).
     internal static HashSet<string> ModelRuntimeStructNames = new(StringComparer.Ordinal);
     static List<JsonElement> Enums;
@@ -253,6 +257,8 @@ public static class ApiCodeGen
             var (first, second) = ApiTypes.SplitPair(t.Substring("QPair<".Length, t.Length - "QPair<".Length - 1));
             return "std::pair<" + CppTypeName(first) + "," + CppTypeName(second) + ">";
         }
+        if (t.StartsWith("std::optional<", StringComparison.Ordinal) && t.EndsWith(">", StringComparison.Ordinal))
+            return "std::optional<" + CppTypeName(OptionalElem(t)) + ">";
         foreach (var container in new[] { "QList", "QSet", "QMap", "QHash" })
         {
             if (!t.StartsWith(container + "<", StringComparison.Ordinal) || !t.EndsWith(">", StringComparison.Ordinal))
@@ -462,6 +468,7 @@ public static class ApiCodeGen
         var modelClasses = root.GetProperty("classes").EnumerateArray().ToList();
         var modelEnums = root.GetProperty("enums").EnumerateArray().ToList();
         Classes = modelClasses.Where(c => !IsRuntimeStructClass(c) && !IsUuid(Name(c)) && !IsCharT(Name(c))).ToList();
+        EmittedClassRows = modelClasses.Where(c => !IsUuid(Name(c)) && !IsCharT(Name(c))).ToList();
         // The core classes this model itself declares as runtime structs. A simple name is not
         // enough: an extension has its own namespaced Qt3DCore::QTransform, which must not be
         // mistaken for QtGui's QTransform struct.
@@ -952,7 +959,26 @@ public static class ApiCodeGen
     static string RefValueType(string t) => t.EndsWith("*") ? t.Substring(0, t.Length - 1) : t;
 
     static string ParamManagedType(JsonElement p)
-        => IsOut(p) ? ManagedType(RefValueType(PType(p))) : ManagedType(PType(p));
+        => IsOut(p) ? ManagedType(RefValueType(PType(p))) : ParamValueManagedType(p);
+
+    // A container parameter accepts the read-only interface for its kind, so a List<T>, an array,
+    // a HashSet<T> or a Dictionary all work without an overload. Returns stay concrete.
+    static string ParamValueManagedType(JsonElement p)
+    {
+        string t = PType(p);
+        if (t == "QStringList")
+            return "IReadOnlyList<string>";
+        if (Kind(t) == TypeKind.List)
+            return $"IReadOnlyList<{ManagedElement(SequenceElem(t))}>";
+        if (Kind(t) == TypeKind.Set)
+            return $"IReadOnlySet<{ManagedElement(SequenceElem(t))}>";
+        if (IsAssocT(t))
+        {
+            var (key, value) = AssocElems(t);
+            return $"IReadOnlyDictionary<{ManagedElement(key)}, {ManagedElement(value)}>";
+        }
+        return ManagedType(t);
+    }
 
     // A non-const QString& is Qt's in-out string (QValidator::validate/fixup, QClipboard::text).
     // The C ABI cannot carry a reference, so one model parameter becomes two native ones: the
@@ -971,7 +997,7 @@ public static class ApiCodeGen
         if (IsByRef(p))
             return $"{(IsOut(p) ? "out" : "ref")} {ParamManagedType(p)} {SafeName(PName(p))}";
         // The slot Qt writes one value through is the caller's own struct, addressed by hand.
-        string managed = IsOpaqueStructPtr(p) ? "IntPtr" : ManagedType(type);
+        string managed = IsOpaqueStructPtr(p) ? "IntPtr" : ParamValueManagedType(p);
         string sig = $"{managed} {SafeName(PName(p))}";
         if (!IsOptional(p))
             return sig;
@@ -1012,7 +1038,8 @@ public static class ApiCodeGen
         if (IsCallbackType(type))
             return "null";
         if (IsArray(type) || IsPtr(type) || IsBoxed(type) || IsStringT(type) || type == "char*"
-            || IsStringListT(type) || IsSequenceT(type) || IsAssocT(type) || type == "QByteArrayView")
+            || IsStringListT(type) || IsSequenceT(type) || IsAssocT(type) || IsPairT(type)
+            || IsOptionalT(type) || type == "QByteArrayView")
             return "null";
         return "default";
     }
@@ -1047,6 +1074,7 @@ public static class ApiCodeGen
         Map,             // QMap<K,V>
         Hash,            // QHash<K,V>
         Pair,            // QPair<A,B> / std::pair<A,B>
+        Optional,        // std::optional<T>
         ByteArrayView,   // QByteArrayView
         TimeSpan,        // a std::chrono duration
         BoxedClass,      // a bound class crossing by value (a handle)
@@ -1096,6 +1124,7 @@ public static class ApiCodeGen
         if (t.StartsWith("QMap<", StringComparison.Ordinal) && t.EndsWith(">")) return TypeKind.Map;
         if (t.StartsWith("QHash<", StringComparison.Ordinal) && t.EndsWith(">")) return TypeKind.Hash;
         if (t.StartsWith("QPair<", StringComparison.Ordinal) && t.EndsWith(">")) return TypeKind.Pair;
+        if (t.StartsWith("std::optional<", StringComparison.Ordinal) && t.EndsWith(">")) return TypeKind.Optional;
         if (t.EndsWith("*", StringComparison.Ordinal))
         {
             string pointee = t.Substring(0, t.Length - 1);
@@ -1294,6 +1323,20 @@ public static class ApiCodeGen
         return ListStem(first) + "_" + ListStem(second);
     }
     static string PairHelper(string t) => "QsApiPair_" + PairStem(t);
+
+    // std::optional<T>: the managed side is T? for a value type and a nullable reference
+    // otherwise; the native side is a heap std::optional<T> handle.
+    static bool IsOptionalT(string t) => Kind(t) == TypeKind.Optional;
+    static string OptionalElem(string t)
+        => t.Substring("std::optional<".Length, t.Length - "std::optional<".Length - 1);
+    static string OptionalStem(string t) => ListStem(OptionalElem(t));
+    static string OptionalHelper(string t) => "QsApiOptional_" + OptionalStem(t);
+
+    // The managed kinds that are C# value types, so an optional of one needs Nullable<T> rather
+    // than the plain type (which could only mean "empty" as default(T)).
+    static bool IsValueTypeManaged(string t) => Kind(t) is TypeKind.Scalar or TypeKind.Enum
+        or TypeKind.FlagsEnum or TypeKind.Struct or TypeKind.Uuid or TypeKind.Char
+        or TypeKind.TimeSpan or TypeKind.Pair;
 
     // A value that crosses the ABI as a heap handle and is materialized by a generated helper.
     static bool IsNativeContainerT(string t) => IsSequenceT(t) || IsAssocT(t) || IsPairT(t);
@@ -1670,21 +1713,39 @@ public static class ApiCodeGen
         if (containerTypes.Count > 0)
         {
             var helpers = CSharpFile(PlainFileKey(ns + ".Helpers"));
-            helpers.AppendLine("    internal static partial class ApiNative");
-            helpers.AppendLine("    {");
+            var apiNative = new CodeWriter(helpers, 1);
+            apiNative.Open("internal static partial class ApiNative");
+            var declarationWriter = new CodeWriter(helpers, 2);
             foreach (var type in containerTypes.Where(IsSequenceT))
-                WriteSequenceNativeDeclarations(helpers, type);
+                WriteSequenceNativeDeclarations(declarationWriter, type);
             foreach (var type in containerTypes.Where(IsAssocT))
-                WriteAssocNativeDeclarations(helpers, type);
+                WriteAssocNativeDeclarations(declarationWriter, type);
             foreach (var type in containerTypes.Where(IsPairT))
-                WritePairNativeDeclarations(helpers, type);
-            helpers.AppendLine("    }");
+                WritePairNativeDeclarations(declarationWriter, type);
+            apiNative.Close();
+            var helperWriter = new CodeWriter(helpers, 1);
             foreach (var type in containerTypes.Where(IsSequenceT))
-                WriteSequenceHelper(helpers, type);
+                WriteSequenceHelper(helperWriter, type);
             foreach (var type in containerTypes.Where(IsAssocT))
-                WriteAssocHelper(helpers, type);
+                WriteAssocHelper(helperWriter, type);
             foreach (var type in containerTypes.Where(IsPairT))
-                WritePairHelper(helpers, type);
+                WritePairHelper(helperWriter, type);
+        }
+
+        // std::optional helpers live in the same file, in their own partial ApiNative block.
+        var optionalTypes = OptionalTypes();
+        if (optionalTypes.Count > 0)
+        {
+            var helpers = CSharpFile(PlainFileKey(ns + ".Helpers"));
+            var apiNative = new CodeWriter(helpers, 1);
+            apiNative.Open("internal static partial class ApiNative");
+            var declarationWriter = new CodeWriter(helpers, 2);
+            foreach (var type in optionalTypes)
+                WriteOptionalNativeDeclarations(declarationWriter, type);
+            apiNative.Close();
+            var helperWriter = new CodeWriter(helpers, 1);
+            foreach (var type in optionalTypes)
+                WriteOptionalHelper(helperWriter, type);
         }
 
         var result = new SortedDictionary<string, string>(StringComparer.Ordinal);
@@ -1701,7 +1762,7 @@ public static class ApiCodeGen
     // signal may be the only place a container appears (QListView::indexesMoved, QList<QModelIndex>).
     static IEnumerable<string> SignatureTypes()
     {
-        foreach (var cls in Classes)
+        foreach (var cls in EmittedClassRows)
         {
             foreach (var fn in Methods(cls)
                          .Concat(cls.GetProperty("virtuals").EnumerateArray())
@@ -1754,6 +1815,17 @@ public static class ApiCodeGen
         return types.ToList();
     }
 
+    // Every std::optional<T> spelling that appears in a signature. Optionals are top-level
+    // values only (never a container element or a pair half).
+    static List<string> OptionalTypes()
+    {
+        var types = new SortedSet<string>(StringComparer.Ordinal);
+        foreach (var t in SignatureTypes())
+            if (t != null && IsOptionalT(t))
+                types.Add(t);
+        return types.ToList();
+    }
+
     static IEnumerable<string> ContainerTypesIn(string t)
     {
         if (t == null)
@@ -1787,7 +1859,7 @@ public static class ApiCodeGen
     // The C# side of the container conversion: New/Free around a call, Read for a return. A list
     // surfaces as an array and a set as a HashSet; everything else - the element codec, the
     // transient/owned split, the write-back path - is the same for both.
-    static void WriteSequenceHelper(StringBuilder sb, string type)
+    static void WriteSequenceHelper(CodeWriter w, string type)
     {
         string elem = SequenceElem(type);
         bool isSet = Kind(type) == TypeKind.Set;
@@ -1795,95 +1867,87 @@ public static class ApiCodeGen
         string prefix = SequencePrefix(type);
         string stem = ListStem(elem);
         string managed = ManagedElement(elem);
-        string collection = isSet ? $"HashSet<{managed}>" : $"{managed}[]";
+        string collection = isSet ? $"HashSet<{managed}>" : $"List<{managed}>";
         // The element is the loop variable of the generated New(); ElemToAbi supplies the leaf
         // conversion or the temporary a QVariant / nested container element needs.
         var (prelude, argConv, cleanup) = ElemToAbi(elem, "item", "__item");
         string add = isSet ? "insert" : "append";
+        string insert = $"ApiNative.{prefix}_{stem}_{add}(container, {argConv});";
 
-        sb.AppendLine();
-        sb.AppendLine($"    internal static class {helper}");
-        sb.AppendLine("    {");
-        sb.AppendLine($"        public static IntPtr New({collection} items)");
-        sb.AppendLine("        {");
-        sb.AppendLine($"            var container = ApiNative.{prefix}_{stem}_new();");
-        sb.AppendLine("            if (items != null)");
-        sb.AppendLine("                foreach (var item in items)");
+        w.Blank();
+        w.Open($"internal static class {helper}");
+        w.Open($"public static IntPtr New(IEnumerable<{managed}> items)");
+        w.Line($"var container = ApiNative.{prefix}_{stem}_new();");
+        w.Line("if (items != null)");
+        w.Line("    foreach (var item in items)");
         if (prelude.Count == 0 && cleanup.Count == 0)
         {
-            sb.AppendLine($"                    ApiNative.{prefix}_{stem}_{add}(container, {argConv});");
+            w.Line("        " + insert);
         }
         else
         {
-            sb.AppendLine("                {");
+            w.Line("    {");
+            w.Indent().Indent();
             foreach (var line in prelude)
-                sb.AppendLine("                    " + line);
+                w.Line(line);
             if (cleanup.Count == 0)
             {
-                sb.AppendLine($"                    ApiNative.{prefix}_{stem}_{add}(container, {argConv});");
+                w.Line(insert);
             }
             else
             {
-                sb.AppendLine("                    try");
-                sb.AppendLine("                    {");
-                sb.AppendLine($"                        ApiNative.{prefix}_{stem}_{add}(container, {argConv});");
-                sb.AppendLine("                    }");
-                sb.AppendLine("                    finally");
-                sb.AppendLine("                    {");
+                w.Open("try");
+                w.Line(insert);
+                w.Close();
+                w.Open("finally");
                 foreach (var line in cleanup)
-                    sb.AppendLine("                        " + line);
-                sb.AppendLine("                    }");
+                    w.Line(line);
+                w.Close();
             }
-            sb.AppendLine("                }");
+            w.Dedent().Dedent();
+            w.Line("    }");
         }
-        sb.AppendLine("            return container;");
-        sb.AppendLine("        }");
-        sb.AppendLine();
-        sb.AppendLine($"        public static void Free(IntPtr container) => ApiNative.{prefix}_{stem}_free(container);");
-        sb.AppendLine();
+        w.Line("return container;");
+        w.Close();
+        w.Blank();
+        w.Line($"public static void Free(IntPtr container) => ApiNative.{prefix}_{stem}_free(container);");
+        w.Blank();
         // Read copies the container out and releases it (it was allocated for us); ReadTransient
         // is for the container a virtual override is handed, which belongs to Qt.
-        sb.AppendLine($"        public static {collection} Read(IntPtr container)");
-        sb.AppendLine("        {");
-        sb.AppendLine($"            var result = ReadTransient(container);");
-        sb.AppendLine($"            if (container != IntPtr.Zero)");
-        sb.AppendLine($"                ApiNative.{prefix}_{stem}_free(container);");
-        sb.AppendLine("            return result;");
-        sb.AppendLine("        }");
-        sb.AppendLine();
-        sb.AppendLine($"        internal static {collection} ReadTransient(IntPtr container)");
-        sb.AppendLine("        {");
-        sb.AppendLine("            if (container == IntPtr.Zero)");
-        sb.AppendLine("                return null;");
-        sb.AppendLine($"            int count = ApiNative.{prefix}_{stem}_count(container);");
-        sb.AppendLine(isSet ? $"            var result = new HashSet<{managed}>(count);" : $"            var result = new {managed}[count];");
-        sb.AppendLine("            for (int i = 0; i < count; i++)");
-        sb.AppendLine(isSet
-            ? $"                result.Add({ReadElement(type, "container")});"
-            : $"                result[i] = {ReadElement(type, "container")};");
-        sb.AppendLine("            return result;");
-        sb.AppendLine("        }");
-        sb.AppendLine();
+        w.Open($"public static {collection} Read(IntPtr container)");
+        w.Line("var result = ReadTransient(container);");
+        w.Line("if (container != IntPtr.Zero)");
+        w.Line($"    ApiNative.{prefix}_{stem}_free(container);");
+        w.Line("return result;");
+        w.Close();
+        w.Blank();
+        w.Open($"internal static {collection} ReadTransient(IntPtr container)");
+        w.Line("if (container == IntPtr.Zero)");
+        w.Line("    return null;");
+        w.Line($"int count = ApiNative.{prefix}_{stem}_count(container);");
+        w.Line(isSet ? $"var result = new HashSet<{managed}>(count);" : $"var result = new List<{managed}>(count);");
+        w.Line("for (int i = 0; i < count; i++)");
+        w.Line($"    result.Add({ReadElement(type, "container")});");
+        w.Line("return result;");
+        w.Close();
+        w.Blank();
         // Write is the virtual-dispatch direction: the managed override produced the collection and
         // it has to land in the caller's slot.
-        sb.AppendLine($"        internal static void Write(IntPtr destination, {collection} items)");
-        sb.AppendLine("        {");
-        sb.AppendLine($"            var container = New(items);");
-        sb.AppendLine("            try");
-        sb.AppendLine("            {");
-        sb.AppendLine($"                ApiNative.Assign_{prefix}_{stem}(destination, container);");
-        sb.AppendLine("            }");
-        sb.AppendLine("            finally");
-        sb.AppendLine("            {");
-        sb.AppendLine($"                Free(container);");
-        sb.AppendLine("            }");
-        sb.AppendLine("        }");
-        sb.AppendLine("    }");
+        w.Open($"internal static void Write(IntPtr destination, {collection} items)");
+        w.Line("var container = New(items);");
+        w.Open("try");
+        w.Line($"ApiNative.Assign_{prefix}_{stem}(destination, container);");
+        w.Close();
+        w.Open("finally");
+        w.Line("Free(container);");
+        w.Close();
+        w.Close();
+        w.Close();
     }
 
     // The pair helper: a ValueTuple is built from two element-codec arguments, read back from
     // the two accessors, and assigned into a virtual's caller slot.
-    static void WritePairHelper(StringBuilder sb, string t)
+    static void WritePairHelper(CodeWriter w, string t)
     {
         var (first, second) = PairElems(t);
         string helper = PairHelper(t);
@@ -1896,69 +1960,113 @@ public static class ApiCodeGen
         var prelude = firstPrelude.Concat(secondPrelude).ToList();
         var cleanup = secondCleanup.Concat(firstCleanup).ToList();
 
-        sb.AppendLine();
-        sb.AppendLine($"    internal static class {helper}");
-        sb.AppendLine("    {");
-        sb.AppendLine($"        public static IntPtr New({tuple} value)");
-        sb.AppendLine("        {");
-        sb.AppendLine("            var (first, second) = value;");
+        w.Blank();
+        w.Open($"internal static class {helper}");
+        w.Open($"public static IntPtr New({tuple} value)");
+        w.Line("var (first, second) = value;");
         foreach (var line in prelude)
-            sb.AppendLine("            " + line);
+            w.Line(line);
         string newCall = $"ApiNative.Pair_{stem}_new({firstArg}, {secondArg});";
         if (cleanup.Count == 0)
         {
-            sb.AppendLine($"            return {newCall}");
+            w.Line($"return {newCall}");
         }
         else
         {
-            sb.AppendLine("            try");
-            sb.AppendLine("            {");
-            sb.AppendLine($"                return {newCall}");
-            sb.AppendLine("            }");
-            sb.AppendLine("            finally");
-            sb.AppendLine("            {");
+            w.Open("try");
+            w.Line($"return {newCall}");
+            w.Close();
+            w.Open("finally");
             foreach (var line in cleanup)
-                sb.AppendLine("                " + line);
-            sb.AppendLine("            }");
+                w.Line(line);
+            w.Close();
         }
-        sb.AppendLine("        }");
-        sb.AppendLine();
-        sb.AppendLine($"        public static void Free(IntPtr pair) => ApiNative.Pair_{stem}_free(pair);");
-        sb.AppendLine();
-        sb.AppendLine($"        public static {tuple} Read(IntPtr pair)");
-        sb.AppendLine("        {");
-        sb.AppendLine("            var result = ReadTransient(pair);");
-        sb.AppendLine("            if (pair != IntPtr.Zero)");
-        sb.AppendLine($"                ApiNative.Pair_{stem}_free(pair);");
-        sb.AppendLine("            return result;");
-        sb.AppendLine("        }");
-        sb.AppendLine();
-        sb.AppendLine($"        internal static {tuple} ReadTransient(IntPtr pair)");
-        sb.AppendLine("        {");
-        sb.AppendLine("            if (pair == IntPtr.Zero)");
-        sb.AppendLine("                return default;");
-        sb.AppendLine($"            return new {tuple}(");
-        sb.AppendLine($"                {ElemRead(first, $"ApiNative.Pair_{stem}_first(pair)")},");
-        sb.AppendLine($"                {ElemRead(second, $"ApiNative.Pair_{stem}_second(pair)")});");
-        sb.AppendLine("        }");
-        sb.AppendLine();
-        sb.AppendLine($"        internal static void Write(IntPtr destination, {tuple} value)");
-        sb.AppendLine("        {");
-        sb.AppendLine("            var pair = New(value);");
-        sb.AppendLine("            try");
-        sb.AppendLine("            {");
-        sb.AppendLine($"                ApiNative.Assign_Pair_{stem}(destination, pair);");
-        sb.AppendLine("            }");
-        sb.AppendLine("            finally");
-        sb.AppendLine("            {");
-        sb.AppendLine("                Free(pair);");
-        sb.AppendLine("            }");
-        sb.AppendLine("        }");
-        sb.AppendLine("    }");
+        w.Close();
+        w.Blank();
+        w.Line($"public static void Free(IntPtr pair) => ApiNative.Pair_{stem}_free(pair);");
+        w.Blank();
+        w.Open($"public static {tuple} Read(IntPtr pair)");
+        w.Line("var result = ReadTransient(pair);");
+        w.Line("if (pair != IntPtr.Zero)");
+        w.Line($"    ApiNative.Pair_{stem}_free(pair);");
+        w.Line("return result;");
+        w.Close();
+        w.Blank();
+        w.Open($"internal static {tuple} ReadTransient(IntPtr pair)");
+        w.Line("if (pair == IntPtr.Zero)");
+        w.Line("    return default;");
+        w.Line($"return new {tuple}(");
+        w.Line($"    {ElemRead(first, $"ApiNative.Pair_{stem}_first(pair)")},");
+        w.Line($"    {ElemRead(second, $"ApiNative.Pair_{stem}_second(pair)")});");
+        w.Close();
+        w.Blank();
+        w.Open($"internal static void Write(IntPtr destination, {tuple} value)");
+        w.Line("var pair = New(value);");
+        w.Open("try");
+        w.Line($"ApiNative.Assign_Pair_{stem}(destination, pair);");
+        w.Close();
+        w.Open("finally");
+        w.Line("Free(pair);");
+        w.Close();
+        w.Close();
+        w.Close();
+    }
+
+    // The optional helper: New/Free around a call, Read for a return. A value type arrives as
+    // Nullable<T>; a string/wrapper uses null as the disengaged state.
+    static void WriteOptionalHelper(CodeWriter w, string t)
+    {
+        string inner = OptionalElem(t);
+        string helper = OptionalHelper(t);
+        string stem = OptionalStem(t);
+        string managedInner = ManagedElement(inner);
+        bool valueType = IsValueTypeManaged(inner);
+        string managed = valueType ? managedInner + "?" : managedInner;
+        string argExpr = valueType ? "(value ?? default)" : "value";
+        string hasValue = valueType ? "value.HasValue" : "value != null";
+        var (prelude, arg, cleanup) = ElemToAbi(inner, argExpr, "__value");
+        string newCall = $"ApiNative.Optional_{stem}_new({arg}, {hasValue});";
+
+        w.Blank();
+        w.Open($"internal static class {helper}");
+        w.Open($"public static IntPtr New({managed} value)");
+        foreach (var line in prelude)
+            w.Line(line);
+        if (cleanup.Count == 0)
+        {
+            w.Line($"return {newCall}");
+        }
+        else
+        {
+            w.Open("try");
+            w.Line($"return {newCall}");
+            w.Close();
+            w.Open("finally");
+            foreach (var line in cleanup)
+                w.Line(line);
+            w.Close();
+        }
+        w.Close();
+        w.Blank();
+        w.Line($"public static void Free(IntPtr optional) => ApiNative.Optional_{stem}_free(optional);");
+        w.Blank();
+        w.Open($"public static {managed} Read(IntPtr optional)");
+        w.Line("var result = ReadTransient(optional);");
+        w.Line("if (optional != IntPtr.Zero)");
+        w.Line($"    ApiNative.Optional_{stem}_free(optional);");
+        w.Line("return result;");
+        w.Close();
+        w.Blank();
+        w.Open($"internal static {managed} ReadTransient(IntPtr optional)");
+        w.Line($"if (optional == IntPtr.Zero || !ApiNative.Optional_{stem}_has(optional))");
+        w.Line("    return default;");
+        w.Line($"return {ElemRead(inner, $"ApiNative.Optional_{stem}_value(optional)")};");
+        w.Close();
+        w.Close();
     }
 
     // The C# side of the container conversion: New/Free around a call, Read for a return.
-    static void WriteAssocHelper(StringBuilder sb, string t)
+    static void WriteAssocHelper(CodeWriter w, string t)
     {
         var (key, value) = AssocElems(t);
         string helper = AssocHelper(t);
@@ -1970,87 +2078,83 @@ public static class ApiCodeGen
         var (valuePrelude, valueArg, valueCleanup) = ElemToAbi(value, "pair.Value", "__value");
         var prelude = keyPrelude.Concat(valuePrelude).ToList();
         var cleanup = valueCleanup.Concat(keyCleanup).ToList();
+        string insert = $"ApiNative.{prefix}_{stem}_insert(map, {keyArg}, {valueArg});";
 
-        sb.AppendLine();
-        sb.AppendLine($"    internal static class {helper}");
-        sb.AppendLine("    {");
-        sb.AppendLine($"        public static IntPtr New(Dictionary<{managedKey}, {managedValue}> items)");
-        sb.AppendLine("        {");
-        sb.AppendLine($"            var map = ApiNative.{prefix}_{stem}_new();");
-        sb.AppendLine("            if (items != null)");
-        sb.AppendLine("                foreach (var pair in items)");
+        w.Blank();
+        w.Open($"internal static class {helper}");
+        w.Open($"public static IntPtr New(IEnumerable<KeyValuePair<{managedKey}, {managedValue}>> items)");
+        w.Line($"var map = ApiNative.{prefix}_{stem}_new();");
+        w.Line("if (items != null)");
+        w.Line("    foreach (var pair in items)");
         if (prelude.Count == 0 && cleanup.Count == 0)
         {
-            sb.AppendLine($"                    ApiNative.{prefix}_{stem}_insert(map, {keyArg}, {valueArg});");
+            w.Line("        " + insert);
         }
         else
         {
-            sb.AppendLine("                {");
+            w.Line("    {");
+            w.Indent().Indent();
             foreach (var line in prelude)
-                sb.AppendLine("                    " + line);
+                w.Line(line);
             if (cleanup.Count == 0)
             {
-                sb.AppendLine($"                    ApiNative.{prefix}_{stem}_insert(map, {keyArg}, {valueArg});");
+                w.Line(insert);
             }
             else
             {
-                sb.AppendLine("                    try");
-                sb.AppendLine("                    {");
-                sb.AppendLine($"                        ApiNative.{prefix}_{stem}_insert(map, {keyArg}, {valueArg});");
-                sb.AppendLine("                    }");
-                sb.AppendLine("                    finally");
-                sb.AppendLine("                    {");
+                w.Open("try");
+                w.Line(insert);
+                w.Close();
+                w.Open("finally");
                 foreach (var line in cleanup)
-                    sb.AppendLine("                        " + line);
-                sb.AppendLine("                    }");
+                    w.Line(line);
+                w.Close();
             }
-            sb.AppendLine("                }");
+            w.Dedent().Dedent();
+            w.Line("    }");
         }
-        sb.AppendLine("            return map;");
-        sb.AppendLine("        }");
-        sb.AppendLine();
-        sb.AppendLine($"        public static void Free(IntPtr map) => ApiNative.{prefix}_{stem}_free(map);");
-        sb.AppendLine();
-        sb.AppendLine($"        public static Dictionary<{managedKey}, {managedValue}> Read(IntPtr map)");
-        sb.AppendLine("        {");
-        sb.AppendLine($"            var result = ReadTransient(map);");
-        sb.AppendLine("            if (map != IntPtr.Zero)");
-        sb.AppendLine($"                ApiNative.{prefix}_{stem}_free(map);");
-        sb.AppendLine("            return result;");
-        sb.AppendLine("        }");
-        sb.AppendLine();
-        sb.AppendLine($"        internal static Dictionary<{managedKey}, {managedValue}> ReadTransient(IntPtr map)");
-        sb.AppendLine("        {");
-        sb.AppendLine("            if (map == IntPtr.Zero)");
-        sb.AppendLine("                return null;");
-        sb.AppendLine($"            int count = ApiNative.{prefix}_{stem}_count(map);");
-        sb.AppendLine($"            var result = new Dictionary<{managedKey}, {managedValue}>(count);");
-        sb.AppendLine("            for (int i = 0; i < count; i++)");
-        sb.AppendLine("            {");
-        sb.AppendLine($"                var itemKey = {ElemRead(key, $"ApiNative.{prefix}_{stem}_key(map, i)")};");
-        sb.AppendLine($"                var itemValue = {ElemRead(value, $"ApiNative.{prefix}_{stem}_value(map, i)")};");
-        sb.AppendLine("                result[itemKey] = itemValue;");
-        sb.AppendLine("            }");
-        sb.AppendLine("            return result;");
-        sb.AppendLine("        }");
-        sb.AppendLine();
-        sb.AppendLine($"        internal static void Write(IntPtr destination, Dictionary<{managedKey}, {managedValue}> items)");
-        sb.AppendLine("        {");
-        sb.AppendLine($"            var map = New(items);");
-        sb.AppendLine("            try");
-        sb.AppendLine("            {");
-        sb.AppendLine($"                ApiNative.Assign_{prefix}_{stem}(destination, map);");
-        sb.AppendLine("            }");
-        sb.AppendLine("            finally");
-        sb.AppendLine("            {");
-        sb.AppendLine("                Free(map);");
-        sb.AppendLine("            }");
-        sb.AppendLine("        }");
-        sb.AppendLine("    }");
+        w.Line("return map;");
+        w.Close();
+        w.Blank();
+        w.Line($"public static void Free(IntPtr map) => ApiNative.{prefix}_{stem}_free(map);");
+        w.Blank();
+        w.Open($"public static Dictionary<{managedKey}, {managedValue}> Read(IntPtr map)");
+        w.Line("var result = ReadTransient(map);");
+        w.Line("if (map != IntPtr.Zero)");
+        w.Line($"    ApiNative.{prefix}_{stem}_free(map);");
+        w.Line("return result;");
+        w.Close();
+        w.Blank();
+        w.Open($"internal static Dictionary<{managedKey}, {managedValue}> ReadTransient(IntPtr map)");
+        w.Line("if (map == IntPtr.Zero)");
+        w.Line("    return null;");
+        w.Line($"int count = ApiNative.{prefix}_{stem}_count(map);");
+        w.Line($"var result = new Dictionary<{managedKey}, {managedValue}>(count);");
+        w.Line("for (int i = 0; i < count; i++)");
+        w.Line("{");
+        w.Indent();
+        w.Line($"var itemKey = {ElemRead(key, $"ApiNative.{prefix}_{stem}_key(map, i)")};");
+        w.Line($"var itemValue = {ElemRead(value, $"ApiNative.{prefix}_{stem}_value(map, i)")};");
+        w.Line("result[itemKey] = itemValue;");
+        w.Dedent();
+        w.Line("}");
+        w.Line("return result;");
+        w.Close();
+        w.Blank();
+        w.Open($"internal static void Write(IntPtr destination, Dictionary<{managedKey}, {managedValue}> items)");
+        w.Line("var map = New(items);");
+        w.Open("try");
+        w.Line($"ApiNative.Assign_{prefix}_{stem}(destination, map);");
+        w.Close();
+        w.Open("finally");
+        w.Line("Free(map);");
+        w.Close();
+        w.Close();
+        w.Close();
     }
 
     // The DllImports the generated container helper class calls.
-    static void WriteAssocNativeDeclarations(StringBuilder sb, string t)
+    static void WriteAssocNativeDeclarations(CodeWriter w, string t)
     {
         var (key, value) = AssocElems(t);
         string prefix = AssocPrefix(t);
@@ -2059,27 +2163,27 @@ public static class ApiCodeGen
         string abiValue = ElemAbiCsParam(value);
         string retKey = ElemAbiCsRet(key);
         string retValue = ElemAbiCsRet(value);
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_new\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern IntPtr {prefix}_{stem}_new();");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_insert\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern void {prefix}_{stem}_insert(IntPtr map, {abiKey} key, {abiValue} value);");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_count\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern int {prefix}_{stem}_count(IntPtr map);");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_key\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern {retKey} {prefix}_{stem}_key(IntPtr map, int index);");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_value\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern {retValue} {prefix}_{stem}_value(IntPtr map, int index);");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_free\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern void {prefix}_{stem}_free(IntPtr map);");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_assign_{AssocTag(t)}_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern void Assign_{prefix}_{stem}(IntPtr destination, IntPtr source);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_new\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern IntPtr {prefix}_{stem}_new();");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_insert\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern void {prefix}_{stem}_insert(IntPtr map, {abiKey} key, {abiValue} value);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_count\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern int {prefix}_{stem}_count(IntPtr map);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_key\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern {retKey} {prefix}_{stem}_key(IntPtr map, int index);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_value\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern {retValue} {prefix}_{stem}_value(IntPtr map, int index);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{AssocTag(t)}_{stem}_free\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern void {prefix}_{stem}_free(IntPtr map);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_assign_{AssocTag(t)}_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern void Assign_{prefix}_{stem}(IntPtr destination, IntPtr source);");
     }
 
     // The C++ side. Neither container has random access, so the pair at an index is reached by
@@ -2136,7 +2240,7 @@ public static class ApiCodeGen
     }
 
     // The DllImports the generated helper class calls.
-    static void WriteSequenceNativeDeclarations(StringBuilder sb, string type)
+    static void WriteSequenceNativeDeclarations(CodeWriter w, string type)
     {
         string elem = SequenceElem(type);
         bool isSet = Kind(type) == TypeKind.Set;
@@ -2148,46 +2252,46 @@ public static class ApiCodeGen
         // The same per-element ABI the map/hash helpers use: a scalar as itself, a string as its
         // UTF-16 pointer, a handle as the raw pointer it wraps, a struct as its POD.
         string abi = ElemAbiCsParam(elem);
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{tag}_{stem}_new\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern IntPtr {prefix}_{stem}_new();");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{tag}_{stem}_{add}\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern void {prefix}_{stem}_{add}(IntPtr container, {abi} item);");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{tag}_{stem}_count\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern int {prefix}_{stem}_count(IntPtr container);");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{tag}_{stem}_at\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern {abi} {prefix}_{stem}_at(IntPtr container, int index);");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{tag}_{stem}_free\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern void {prefix}_{stem}_free(IntPtr container);");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_assign_{tag}_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern void Assign_{prefix}_{stem}(IntPtr destination, IntPtr source);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{tag}_{stem}_new\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern IntPtr {prefix}_{stem}_new();");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{tag}_{stem}_{add}\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern void {prefix}_{stem}_{add}(IntPtr container, {abi} item);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{tag}_{stem}_count\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern int {prefix}_{stem}_count(IntPtr container);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{tag}_{stem}_at\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern {abi} {prefix}_{stem}_at(IntPtr container, int index);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{tag}_{stem}_free\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern void {prefix}_{stem}_free(IntPtr container);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_assign_{tag}_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern void Assign_{prefix}_{stem}(IntPtr destination, IntPtr source);");
     }
 
     // The DllImports the generated pair helper calls.
-    static void WritePairNativeDeclarations(StringBuilder sb, string t)
+    static void WritePairNativeDeclarations(CodeWriter w, string t)
     {
         var (first, second) = PairElems(t);
         string stem = PairStem(t);
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_pair_{stem}_new\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern IntPtr Pair_{stem}_new({ElemAbiCsParam(first)} first, {ElemAbiCsParam(second)} second);");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_pair_{stem}_first\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern {ElemAbiCsRet(first)} Pair_{stem}_first(IntPtr pair);");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_pair_{stem}_second\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern {ElemAbiCsRet(second)} Pair_{stem}_second(IntPtr pair);");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_pair_{stem}_free\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern void Pair_{stem}_free(IntPtr pair);");
-        sb.AppendLine();
-        sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_assign_pair_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
-        sb.AppendLine($"        internal static extern void Assign_Pair_{stem}(IntPtr destination, IntPtr source);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_pair_{stem}_new\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern IntPtr Pair_{stem}_new({ElemAbiCsParam(first)} first, {ElemAbiCsParam(second)} second);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_pair_{stem}_first\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern {ElemAbiCsRet(first)} Pair_{stem}_first(IntPtr pair);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_pair_{stem}_second\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern {ElemAbiCsRet(second)} Pair_{stem}_second(IntPtr pair);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_pair_{stem}_free\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern void Pair_{stem}_free(IntPtr pair);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_assign_pair_{stem}\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern void Assign_Pair_{stem}(IntPtr destination, IntPtr source);");
     }
 
     // The C++ side of the pair conversion: both halves go through the element codec.
@@ -2224,6 +2328,56 @@ public static class ApiCodeGen
         sb.AppendLine("{");
         sb.AppendLine("    if (source)");
         sb.AppendLine($"        *static_cast<{pair}*>(destination) = *static_cast<const {pair}*>(source);");
+        sb.AppendLine("}");
+    }
+
+    // The DllImports the generated optional helper calls.
+    static void WriteOptionalNativeDeclarations(CodeWriter w, string t)
+    {
+        string inner = OptionalElem(t);
+        string stem = OptionalStem(t);
+        string abi = ElemAbiCsParam(inner);
+        string ret = ElemAbiCsRet(inner);
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_optional_{stem}_new\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern IntPtr Optional_{stem}_new({abi} value, [MarshalAs(UnmanagedType.I1)] bool hasValue);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_optional_{stem}_has\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"[return: MarshalAs(UnmanagedType.I1)]");
+        w.Line($"internal static extern bool Optional_{stem}_has(IntPtr optional);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_optional_{stem}_value\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern {ret} Optional_{stem}_value(IntPtr optional);");
+        w.Blank();
+        w.Line($"[SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_optional_{stem}_free\", CallingConvention = CallingConvention.Cdecl)]");
+        w.Line($"internal static extern void Optional_{stem}_free(IntPtr optional);");
+    }
+
+    // The C++ side of std::optional: a heap optional built from the element codec.
+    static void WriteOptionalNativeCpp(StringBuilder sb, string t)
+    {
+        string inner = OptionalElem(t);
+        string stem = OptionalStem(t);
+        string optional = CppTypeName(t);
+        string abiParam = ElemAbiCppParam(inner);
+        string abiRet = ElemAbiCppRet(inner);
+        sb.AppendLine();
+        sb.AppendLine($"// {optional}: a value that may not be set.");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT void* qs_api_optional_{stem}_new({abiParam} value, bool hasValue)");
+        sb.AppendLine("{");
+        sb.AppendLine($"    return hasValue ? new {optional}({ElemToCpp(inner, "value")}) : new {optional}();");
+        sb.AppendLine("}");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT bool qs_api_optional_{stem}_has(const void* optional)");
+        sb.AppendLine("{");
+        sb.AppendLine($"    return static_cast<const {optional}*>(optional)->has_value();");
+        sb.AppendLine("}");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT {abiRet} qs_api_optional_{stem}_value(const void* optional)");
+        sb.AppendLine("{");
+        sb.AppendLine($"    return {ElemFromCpp(inner, $"static_cast<const {optional}*>(optional)->value()")};");
+        sb.AppendLine("}");
+        sb.AppendLine($"extern \"C\" QS_API_EXPORT void qs_api_optional_{stem}_free(void* optional)");
+        sb.AppendLine("{");
+        sb.AppendLine($"    delete static_cast<{optional}*>(optional);");
         sb.AppendLine("}");
     }
 
@@ -2728,7 +2882,7 @@ public static class ApiCodeGen
 
     // The parameter spelling that makes up a method's signature (without the name or the default).
     static string ParamTypeKey(JsonElement p)
-        => IsByRef(p) ? (IsOut(p) ? "out " : "ref ") + ParamManagedType(p) : ManagedType(PType(p));
+        => IsByRef(p) ? (IsOut(p) ? "out " : "ref ") + ParamManagedType(p) : ParamValueManagedType(p);
 
     static string MethodKey(string name, IEnumerable<JsonElement> ps)
         => name + "(" + string.Join(",", ps.Select(ParamTypeKey)) + ")";
@@ -4229,7 +4383,7 @@ public static class ApiCodeGen
         {
             string sname = Name(s);
             var ps = Params(s);
-            var csTypes = ps.Select(p => ManagedType(PType(p))).ToList();
+            var csTypes = ps.Select(p => ParamValueManagedType(p)).ToList();
             // The arity classes stop somewhere, and a Qt signal with more than a handful of
             // parameters is not worth growing them for.
             if (csTypes.Count > MaxSignalArity)
@@ -4630,6 +4784,13 @@ public static class ApiCodeGen
             else if (IsPairT(t))
             {
                 string helper = PairHelper(t);
+                prelude.Add($"var {n}Handle = {helper}.New({n});");
+                cleanup.Add($"{helper}.Free({n}Handle);");
+                args.Add($"{n}Handle");
+            }
+            else if (IsOptionalT(t))
+            {
+                string helper = OptionalHelper(t);
                 prelude.Add($"var {n}Handle = {helper}.New({n});");
                 cleanup.Add($"{helper}.Free({n}Handle);");
                 args.Add($"{n}Handle");
@@ -5101,7 +5262,7 @@ public static class ApiCodeGen
     {
         // Nested values recurse, so a container of containers keeps the element's managed
         // spelling (QVariant -> object, a class pointer -> its wrapper) at every level.
-        if (Kind(e) == TypeKind.List) return ManagedElement(SequenceElem(e)) + "[]";
+        if (Kind(e) == TypeKind.List) return $"List<{ManagedElement(SequenceElem(e))}>";
         if (Kind(e) == TypeKind.Set) return $"HashSet<{ManagedElement(SequenceElem(e))}>";
         if (IsAssocT(e))
         {
@@ -5112,6 +5273,12 @@ public static class ApiCodeGen
         {
             var (first, second) = PairElems(e);
             return $"ValueTuple<{ManagedElement(first)}, {ManagedElement(second)}>";
+        }
+        if (IsOptionalT(e))
+        {
+            string inner = OptionalElem(e);
+            string managed = ManagedElement(inner);
+            return IsValueTypeManaged(inner) ? managed + "?" : managed;
         }
         if (IsQVariantType(e)) return "object";
         if (IsPtr(e) && IsClassPtr(e))
@@ -5139,7 +5306,7 @@ public static class ApiCodeGen
         if (IsArray(t)) return ManagedElement(t.Substring(0, t.Length - 1)) + "[]";
         if (t == "char*") return "string";
         // The two sequence containers: an array for the ordered one, a HashSet for the unordered.
-        if (Kind(t) == TypeKind.List) return ManagedElement(SequenceElem(t)) + "[]";
+        if (Kind(t) == TypeKind.List) return $"List<{ManagedElement(SequenceElem(t))}>";
         if (Kind(t) == TypeKind.Set) return $"HashSet<{ManagedElement(SequenceElem(t))}>";
         if (IsAssocT(t))
         {
@@ -5151,6 +5318,13 @@ public static class ApiCodeGen
         {
             var (first, second) = PairElems(t);
             return $"ValueTuple<{ManagedElement(first)}, {ManagedElement(second)}>";
+        }
+        // An optional value: Nullable<T> for a value type, a nullable reference otherwise.
+        if (IsOptionalT(t))
+        {
+            string inner = OptionalElem(t);
+            string managed = ManagedElement(inner);
+            return IsValueTypeManaged(inner) ? managed + "?" : managed;
         }
         if (IsPtr(t)) return IsClassPtr(t) ? CsTypeName(t.Substring(0, t.Length - 1)) : "IntPtr";
         if (IsEnum(t)) return CsEnum(t);
@@ -5256,7 +5430,7 @@ public static class ApiCodeGen
         // no allocation, no entry in the runtime's tables - and nothing for the caller to release.
         // A struct declared by another module (QPointF seen from QtGui) carries that namespace.
         if (IsStruct(t)) return CsTypeName(t);
-        if (IsStringListT(t) || IsSequenceT(t) || IsAssocT(t) || IsPairT(t) || t == "QByteArrayView") return "IntPtr";
+        if (IsStringListT(t) || IsSequenceT(t) || IsAssocT(t) || IsPairT(t) || IsOptionalT(t) || t == "QByteArrayView") return "IntPtr";
         if (IsPtr(t) || IsBoxed(t)) return "IntPtr";
         if (IsEnum(t)) return "int";
         if (IsStringT(t)) return "[MarshalAs(UnmanagedType.LPWStr)] string";
@@ -5517,7 +5691,7 @@ public static class ApiCodeGen
         if (IsStruct(t)) return name;
         if (IsArray(t) || IsStringT(t) || t == "char*") return name;
         if (t == "TimeSpan") return $"(long)({name}.Ticks * 100)";
-        if (IsStringListT(t) || IsSequenceT(t) || IsAssocT(t) || IsPairT(t) || t == "QByteArrayView") return $"{name}Handle";
+        if (IsStringListT(t) || IsSequenceT(t) || IsAssocT(t) || IsPairT(t) || IsOptionalT(t) || t == "QByteArrayView") return $"{name}Handle";
         // The carrier crosses the ABI as the raw address it holds.
         if (t == "QFunctionPointer") return $"{name}.Address";
         if (IsEnum(t)) return $"(int){name}";
@@ -5557,6 +5731,7 @@ public static class ApiCodeGen
         if (IsAssocT(t))
             return $"{AssocHelper(t)}.Read({call})";
         if (IsPairT(t)) return $"{PairHelper(t)}.Read({call})";
+        if (IsOptionalT(t)) return $"{OptionalHelper(t)}.Read({call})";
         if (t == "QByteArrayView") return $"ApiRuntime.ToManagedBytes({call})";
         if (IsEnum(t)) return $"({CsEnum(t)}){call}";
         if (IsClassPtr(t)) return $"{CsTypeName(t.Substring(0, t.Length - 1))}.FromHandle({call})";
@@ -5601,6 +5776,10 @@ public static class ApiCodeGen
                      .Distinct().OrderBy(h => h, StringComparer.Ordinal))
             sb.AppendLine($"#include <{header}>");
         sb.AppendLine("#include \"QtSharpApiRuntime.h\"");
+        // QPair is std::pair and the optional glue spells std::optional; Qt's headers usually
+        // pull both in, but the generated translation unit should not depend on that.
+        sb.AppendLine("#include <utility>");
+        sb.AppendLine("#include <optional>");
         // qHashBits, used by the hash of a struct whose equality ignores padding/flag bits.
         sb.AppendLine("#include <qhashfunctions.h>");
         sb.AppendLine("#include \"QtSharpApiExport.h\"");
@@ -5648,6 +5827,9 @@ public static class ApiCodeGen
 
         foreach (var type in containerTypes.Where(IsPairT))
             WritePairNativeCpp(sb, type);
+
+        foreach (var type in OptionalTypes())
+            WriteOptionalNativeCpp(sb, type);
 
         // A managed override that returns a value type hands the value over by copying it into
         // the caller's slot.
@@ -6123,7 +6305,7 @@ public static class ApiCodeGen
         // A function pointer crosses as an untyped address; the call casts it back to the type Qt
         // declared (see CppArgFor), exactly as the buffer convention does.
         if (IsFunctionType(t)) return "void*";
-        if (IsStringListT(t) || IsSequenceT(t) || IsAssocT(t) || IsPairT(t) || t == "QByteArrayView") return "void*";
+        if (IsStringListT(t) || IsSequenceT(t) || IsAssocT(t) || IsPairT(t) || IsOptionalT(t) || t == "QByteArrayView") return "void*";
         if (IsPtr(t) || IsBoxed(t)) return "void*";
         if (IsEnum(t)) return "int";
         return CppAbiScalar(t);
@@ -6145,7 +6327,7 @@ public static class ApiCodeGen
         if (t == "uchar*") return "unsigned char*";
         if (IsArray(t)) return "const " + t;
         if (IsStringListT(t)) return "const QStringList&";
-        if (IsSequenceT(t) || IsAssocT(t) || IsPairT(t)) return $"const {CppTypeName(t)}&";
+        if (IsSequenceT(t) || IsAssocT(t) || IsPairT(t) || IsOptionalT(t)) return $"const {CppTypeName(t)}&";
         // A byte[] argument is carried as a QByteArray, which converts to the view implicitly.
         if (t == "QByteArrayView") return "const QByteArray&";
         if (IsEnum(t) || IsPtr(t)) return CppTypeName(t);
@@ -6171,7 +6353,7 @@ public static class ApiCodeGen
         // A null managed string must not reach QString::fromUtf16 as a null pointer.
         if (IsStringT(t)) return $"{name} ? QString::fromUtf16({name}) : QString()";
         if (IsStringListT(t)) return $"*static_cast<QStringList*>({name})";
-        if (IsSequenceT(t) || IsAssocT(t) || IsPairT(t)) return $"*static_cast<{CppTypeName(t)}*>({name})";
+        if (IsSequenceT(t) || IsAssocT(t) || IsPairT(t) || IsOptionalT(t)) return $"*static_cast<{CppTypeName(t)}*>({name})";
         if (t == "QByteArrayView") return $"*static_cast<QByteArray*>({name})";
         if (t == "char*" || t == "uchar*") return name;      // already a matching pointer
         if (IsPtr(t)) return $"static_cast<{CppTypeName(t.Substring(0, t.Length - 1))}*>({name})";
@@ -6261,6 +6443,7 @@ public static class ApiCodeGen
         }
         if (IsAssocT(t)) return $"return new {CppTypeName(t)}({call});";
         if (IsPairT(t)) return $"return new {CppTypeName(t)}({call});";
+        if (IsOptionalT(t)) return $"return new {CppTypeName(t)}({call});";
         if (t == "QByteArrayView") return $"return new QByteArray({call});";
         // A duration comes back as nanoseconds whatever unit Qt used.
         if (t == "TimeSpan")

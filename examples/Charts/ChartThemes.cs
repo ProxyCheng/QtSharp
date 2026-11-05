@@ -123,19 +123,19 @@ public static class ChartThemes
             example.Check(charts.Length == 6, "the gallery has six charts");
 #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(area.Series().Length == ListCount, $"the area chart stacks {ListCount} bands");
+            example.Check(area.Series().Count == ListCount, $"the area chart stacks {ListCount} bands");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(pie.Series().Length == 1 && pieSeries.Count == ValueCount,
+            example.Check(pie.Series().Count == 1 && pieSeries.Count == ValueCount,
                 $"the pie chart has one series of {ValueCount} slices");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(bar.Series().Length == 1 && barSeries.BarSets().Length == ListCount,
+            example.Check(bar.Series().Count == 1 && barSeries.BarSets().Count == ListCount,
                 $"the bar chart stacks {ListCount} sets");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(line.Series().Length == ListCount && spline.Series().Length == ListCount
-                        && scatter.Series().Length == ListCount,
+            example.Check(line.Series().Count == ListCount && spline.Series().Count == ListCount
+                        && scatter.Series().Count == ListCount,
                 $"the three cartesian charts each hold {ListCount} series");
             #endif
 

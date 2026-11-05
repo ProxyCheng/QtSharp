@@ -197,8 +197,8 @@ namespace QtSharp.Tests
                 var metaType = list.MetaType();
                 context.Check(metaType.Name() == "QVariantList",
                     $"an object[] becomes a QVariantList (metatype '{metaType.Name()}')");
-                var back = list.ToObject() as object[];
-                context.Check(back != null && back.Length == 3
+                var back = list.ToObject() as List<object>;
+                context.Check(back != null && back.Count == 3
                       && back[0] is int number && number == 1
                       && back[1] is string text && text == "two"
                       && back[2] is QLine line && line.X1() == 1,
@@ -207,8 +207,8 @@ namespace QtSharp.Tests
 
             using (var numbers = QVariant.From(new[] { 1, 2, 3 }))
             {
-                var back = numbers.ToObject() as object[];
-                context.Check(back != null && back.Length == 3
+                var back = numbers.ToObject() as List<object>;
+                context.Check(back != null && back.Count == 3
                       && back[0] is int first && first == 1,
                     "an int[] becomes a QVariantList too, not an opaque payload");
             }

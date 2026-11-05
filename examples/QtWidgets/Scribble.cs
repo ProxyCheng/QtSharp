@@ -773,7 +773,7 @@ public static class Scribble
 
         var topMenus = window.MenuBar().Actions();
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(topMenus.Length == 3, $"the menu bar has three menus (got {topMenus.Length})");
+        example.Check(topMenus.Count == 3, $"the menu bar has three menus (got {topMenus.Count})");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
         example.Check(QMenu.MenuInAction(topMenus[0]).title() == "&File"
@@ -784,7 +784,7 @@ public static class Scribble
 
         var fileActions = window.FileMenu.Actions();
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(fileActions.Length == 5, $"File has five entries (got {fileActions.Length})");
+        example.Check(fileActions.Count == 5, $"File has five entries (got {fileActions.Count})");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
         example.Check(fileActions[0].text() == "&Open..." && fileActions[2].text() == "&Print..."
@@ -798,7 +798,7 @@ public static class Scribble
 
         var optionActions = window.OptionMenu.Actions();
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(optionActions.Length == 4, $"Options has four entries (got {optionActions.Length})");
+        example.Check(optionActions.Count == 4, $"Options has four entries (got {optionActions.Count})");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
         example.Check(optionActions[0].text() == "&Pen Color..." && optionActions[1].text() == "Pen &Width..."
@@ -808,7 +808,7 @@ public static class Scribble
 
         var helpActions = window.HelpMenu.Actions();
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(helpActions.Length == 2 && helpActions[0].text() == "&About"
+        example.Check(helpActions.Count == 2 && helpActions[0].text() == "&About"
               && helpActions[1].text() == "About &Qt",
             "Help holds About and About Qt");
         #endif
