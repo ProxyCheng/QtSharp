@@ -161,6 +161,7 @@
         { "name": "minimumSampleRate", "flags": ["const"], "returnType": "int", "parameters": [] },
         { "name": "mode", "flags": ["const"], "returnType": "QAudioDevice::Mode", "parameters": [] },
         { "name": "preferredFormat", "flags": ["const"], "returnType": "QAudioFormat", "parameters": [] },
+        { "name": "supportedSampleFormats", "flags": ["const"], "returnType": "QList<QAudioFormat::SampleFormat>", "parameters": [] },
         { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QAudioDevice" }] }
       ],
       "virtuals": [
@@ -640,6 +641,7 @@
         { "name": "setQuality", "returnType": "void", "parameters": [{ "name": "quality", "type": "QImageCapture::Quality" }] },
         { "name": "setResolution", "returnType": "void", "parameters": [{ "name": "arg0", "type": "QSize" }] },
         { "name": "setResolution", "returnType": "void", "parameters": [{ "name": "width", "type": "int" }, { "name": "height", "type": "int" }] },
+        { "name": "supportedFormats", "flags": ["static"], "returnType": "QList<QImageCapture::FileFormat>", "parameters": [] },
         { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
       "virtuals": [
@@ -650,7 +652,8 @@
         { "name": "fileFormat", "type": "QImageCapture::FileFormat", "getter": "fileFormat", "setter": "setFileFormat" },
         { "name": "metaData", "type": "QMediaMetaData", "getter": "metaData", "setter": "setMetaData" },
         { "name": "quality", "type": "QImageCapture::Quality", "getter": "quality", "setter": "setQuality" },
-        { "name": "readyForCapture", "type": "bool", "getter": "isReadyForCapture" }
+        { "name": "readyForCapture", "type": "bool", "getter": "isReadyForCapture" },
+        { "name": "supportedFormats", "type": "QList<QImageCapture::FileFormat>", "getter": "supportedFormats" }
       ],
       "signals": [
         { "name": "errorChanged", "parameters": [] },
@@ -785,6 +788,9 @@
         { "name": "setAudioCodec", "returnType": "void", "parameters": [{ "name": "codec", "type": "QMediaFormat::AudioCodec" }] },
         { "name": "setFileFormat", "returnType": "void", "parameters": [{ "name": "f", "type": "QMediaFormat::FileFormat" }] },
         { "name": "setVideoCodec", "returnType": "void", "parameters": [{ "name": "codec", "type": "QMediaFormat::VideoCodec" }] },
+        { "name": "supportedAudioCodecs", "flags": ["invokable"], "returnType": "QList<QMediaFormat::AudioCodec>", "parameters": [{ "name": "m", "type": "QMediaFormat::ConversionMode" }] },
+        { "name": "supportedFileFormats", "flags": ["invokable"], "returnType": "QList<QMediaFormat::FileFormat>", "parameters": [{ "name": "m", "type": "QMediaFormat::ConversionMode" }] },
+        { "name": "supportedVideoCodecs", "flags": ["invokable"], "returnType": "QList<QMediaFormat::VideoCodec>", "parameters": [{ "name": "m", "type": "QMediaFormat::ConversionMode" }] },
         { "name": "swap", "returnType": "void", "parameters": [{ "name": "other", "type": "QMediaFormat" }] },
         { "name": "videoCodec", "flags": ["const"], "returnType": "QMediaFormat::VideoCodec", "parameters": [] },
         { "name": "videoCodecDescription", "flags": ["static", "invokable"], "returnType": "QString", "parameters": [{ "name": "codec", "type": "QMediaFormat::VideoCodec" }] },
@@ -812,6 +818,7 @@
         { "name": "clear", "flags": ["invokable"], "returnType": "void", "parameters": [] },
         { "name": "insert", "flags": ["invokable"], "returnType": "void", "parameters": [{ "name": "k", "type": "QMediaMetaData::Key" }, { "name": "value", "type": "QVariant" }] },
         { "name": "isEmpty", "flags": ["const", "invokable"], "returnType": "bool", "parameters": [] },
+        { "name": "keys", "flags": ["const", "invokable"], "returnType": "QList<QMediaMetaData::Key>", "parameters": [] },
         { "name": "metaDataKeyToString", "flags": ["static", "invokable"], "returnType": "QString", "parameters": [{ "name": "k", "type": "QMediaMetaData::Key" }] },
         { "name": "remove", "flags": ["invokable"], "returnType": "void", "parameters": [{ "name": "k", "type": "QMediaMetaData::Key" }] },
         { "name": "stringValue", "flags": ["const", "invokable"], "returnType": "QString", "parameters": [{ "name": "k", "type": "QMediaMetaData::Key" }] },
