@@ -60,25 +60,25 @@ public static class LineAndBarChart
             var view = ChartsAssertions.Present(example, chart);
 #if QTSHARP_EXAMPLE_SMOKE
 
-            example.Check(chart.Series().Length == 2, $"the chart holds both series (got {chart.Series().Length})");
+            example.Check(chart.Series().Count == 2, $"the chart holds both series (got {chart.Series().Count})");
 #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(lineSeries.Count() == 6, $"the trend has six points (got {lineSeries.Count()})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(barSeries.BarSets().Length == 5, $"the bars hold five sets (got {barSeries.BarSets().Length})");
+            example.Check(barSeries.BarSets().Count == 5, $"the bars hold five sets (got {barSeries.BarSets().Count})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(lineSeries.Name == "trend", $"the trend keeps its name (got '{lineSeries.Name}')");
             #endif
 #if QTSHARP_EXAMPLE_SMOKE
 
-            example.Check(barSeries.AttachedAxes().Length == 2,
-                $"the bars are on both axes (got {barSeries.AttachedAxes().Length})");
+            example.Check(barSeries.AttachedAxes().Count == 2,
+                $"the bars are on both axes (got {barSeries.AttachedAxes().Count})");
 #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(lineSeries.AttachedAxes().Length == 2,
-                $"the line is on both axes (got {lineSeries.AttachedAxes().Length})");
+            example.Check(lineSeries.AttachedAxes().Count == 2,
+                $"the line is on both axes (got {lineSeries.AttachedAxes().Count})");
             #endif
 #if QTSHARP_EXAMPLE_SMOKE
 

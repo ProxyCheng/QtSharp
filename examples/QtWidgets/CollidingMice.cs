@@ -66,7 +66,7 @@ public static class CollidingMice
             painter.DrawEllipse(new QRectF(4.0 + eyeDirection, -17, 4, 4));
 
             // Ears
-            painter.SetBrush(Scene().CollidingItems(this).Length == 0
+            painter.SetBrush(Scene().CollidingItems(this).Count == 0
                 ? Qt.GlobalColor.darkYellow
                 : Qt.GlobalColor.red);
             painter.DrawEllipse(-17, -12, 16, 16);
@@ -130,7 +130,7 @@ public static class CollidingMice
 
             var random = QRandomGenerator.Global();
             // The upstream `bounded(1)` is always 0, so this only ever subtracts.
-            if (dangerMice.Length > 1 && random.Bounded(10) == 0)
+            if (dangerMice.Count > 1 && random.Bounded(10) == 0)
                 angle -= random.Bounded(1.0 / 500.0);
 
             speed += (-50 + random.Bounded(100)) / 100.0;
@@ -188,8 +188,8 @@ public static class CollidingMice
 
 #if QTSHARP_EXAMPLE_SMOKE
 
-        example.Check(scene.Items().Length == mouseCount,
-            $"the scene holds the seven mice ({scene.Items().Length})");
+        example.Check(scene.Items().Count == mouseCount,
+            $"the scene holds the seven mice ({scene.Items().Count})");
 #endif
 
         // Qt's scene advance calls every item's advance(1) through the vtable.

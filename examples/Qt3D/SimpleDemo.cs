@@ -113,7 +113,7 @@ namespace QtSharp.Qt3D.Examples
                          "QOrbitCameraController is attached to the window camera");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(torusEntity.Components().Length == 3 && sphereEntity.Components().Length == 3,
+            example.Check(torusEntity.Components().Count == 3 && sphereEntity.Components().Count == 3,
                          "each shape entity has three components (mesh, transform, material)");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE

@@ -270,7 +270,7 @@ public static class Menus
         var bar = window.MenuBar();
         var menus = bar.Actions();
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(menus.Length == 3, $"menu bar has three menus (got {menus.Length})");
+        example.Check(menus.Count == 3, $"menu bar has three menus (got {menus.Count})");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
         example.Check(menus[0].text() == "&File" && menus[1].text() == "&Edit" && menus[2].text() == "&Help",
@@ -284,7 +284,7 @@ public static class Menus
         // ------------------------------------------------------------------ File menu
         var fileActions = window.FileMenu.Actions();
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(fileActions.Length == 6, $"File has six entries (got {fileActions.Length})");
+        example.Check(fileActions.Count == 6, $"File has six entries (got {fileActions.Count})");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
         example.Check(fileActions[0].text() == "&New" && fileActions[1].text() == "&Open..."
@@ -299,7 +299,7 @@ public static class Menus
         // ------------------------------------------------------------------ Edit menu
         var editActions = window.EditMenu.Actions();
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(editActions.Length == 8, $"Edit has eight entries (got {editActions.Length})");
+        example.Check(editActions.Count == 8, $"Edit has eight entries (got {editActions.Count})");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
         example.Check(editActions[0].text() == "&Undo" && editActions[1].text() == "&Redo",
@@ -322,7 +322,7 @@ public static class Menus
         // ------------------------------------------------------------------ Format menu
         var formatActions = window.FormatMenu.Actions();
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(formatActions.Length == 10, $"Format has ten entries (got {formatActions.Length})");
+        example.Check(formatActions.Count == 10, $"Format has ten entries (got {formatActions.Count})");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
         example.Check(formatActions[0].text() == "&Bold" && formatActions[1].text() == "&Italic",
@@ -347,8 +347,8 @@ public static class Menus
         // ------------------------------------------------------------------ Help menu
         var helpActions = window.HelpMenu.Actions();
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(helpActions.Length == 2 && helpActions[0].text() == "&About" && helpActions[1].text() == "About &Qt",
-            $"Help holds About/About Qt (got {helpActions.Length})");
+        example.Check(helpActions.Count == 2 && helpActions[0].text() == "&About" && helpActions[1].text() == "About &Qt",
+            $"Help holds About/About Qt (got {helpActions.Count})");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
         example.Check(window.AboutAct.IsEnabled() && window.AboutQtAct.IsEnabled(),
@@ -364,8 +364,8 @@ public static class Menus
             "all four alignment actions are checkable");
 #endif
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(window.AlignmentGroup.Actions().Length == 4,
-            $"the group owns four actions (got {window.AlignmentGroup.Actions().Length})");
+        example.Check(window.AlignmentGroup.Actions().Count == 4,
+            $"the group owns four actions (got {window.AlignmentGroup.Actions().Count})");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
         example.Check(window.AlignmentGroup.IsExclusive(), "the alignment group is exclusive");
@@ -497,7 +497,7 @@ public static class Menus
         var context = window.CreateContextMenu();
         var contextActions = context.Actions();
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(contextActions.Length == 3, $"the context menu holds three actions (got {contextActions.Length})");
+        example.Check(contextActions.Count == 3, $"the context menu holds three actions (got {contextActions.Count})");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
         example.Check(contextActions[0].text() == "Cu&t" && contextActions[1].text() == "&Copy" && contextActions[2].text() == "&Paste",

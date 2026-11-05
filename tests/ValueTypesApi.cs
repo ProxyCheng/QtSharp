@@ -215,7 +215,7 @@ public static class ValueTypesApi
             var calendarLeapDay = gregorian.DateFromParts(2024, 2, 29);
             context.Check(calendarLeapDay.Year() == 2024 && calendarLeapDay.Month() == 2 && calendarLeapDay.Day() == 29,
                 "and it answers dates through the struct");
-            context.Check(QCalendar.AvailableCalendars().Length > 0, "the static members work on the value type");
+            context.Check(QCalendar.AvailableCalendars().Count > 0, "the static members work on the value type");
 
             {
                 var probe = new QObject();
@@ -246,8 +246,8 @@ public static class ValueTypesApi
                 table.SelectAll();
                 var ranges = table.SelectedRanges();
                 var all = new QTableWidgetSelectionRange(0, 0, 3, 3);
-                context.Check(ranges.Length == 1 && ranges[0] == all,
-                    $"a QList<QTableWidgetSelectionRange> crosses as an array of the struct ({ranges.Length} range)");
+                context.Check(ranges.Count == 1 && ranges[0] == all,
+                    $"a QList<QTableWidgetSelectionRange> crosses as an array of the struct ({ranges.Count} range)");
             }
 
             using (var textLayout = new QTextLayout("hello"))

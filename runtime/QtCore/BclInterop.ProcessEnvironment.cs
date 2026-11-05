@@ -82,7 +82,7 @@ namespace QtSharp.QtCore
         public Dictionary<string, string> ToDictionary(IEqualityComparer<string> comparer = null)
         {
             var result = new Dictionary<string, string>(comparer ?? StringComparer.Ordinal);
-            string[] keys = Keys() ?? Array.Empty<string>();
+            var keys = Keys() ?? new List<string>();
             foreach (string key in keys)
             {
                 if (!result.TryAdd(key, Value(key)))

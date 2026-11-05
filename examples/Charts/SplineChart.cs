@@ -38,9 +38,9 @@
             example.Check(series.Count() == 7, $"the series carries the example's 7 points (got {series.Count()})");
             example.Check(series.Name == "spline", $"the series keeps its name (got '{series.Name}')");
             example.Check(chart.Title == "Simple spline chart", $"the chart title round-trips (got '{chart.Title}')");
-            example.Check(chart.Series().Length == 1, $"the chart holds one series (got {chart.Series().Length})");
-            example.Check(chart.Axes(Qt.Orientations.Vertical).Length == 1, "createDefaultAxes built a vertical axis");
-            example.Check(chart.Axes(Qt.Orientations.Horizontal).Length == 1, "createDefaultAxes built a horizontal axis");
+            example.Check(chart.Series().Count == 1, $"the chart holds one series (got {chart.Series().Count})");
+            example.Check(chart.Axes(Qt.Orientations.Vertical).Count == 1, "createDefaultAxes built a vertical axis");
+            example.Check(chart.Axes(Qt.Orientations.Horizontal).Count == 1, "createDefaultAxes built a horizontal axis");
 
             // QAbstractAxis::setRange takes QVariants; the qreal overload is QValueAxis's.
             var axis = QValueAxis.FromHandle(chart.Axes(Qt.Orientations.Vertical)[0].Handle);

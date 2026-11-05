@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 // QVersionNumber and System.Version both hold a dotted numeric version, but their arity differs.
 // QVersionNumber stores any number of non-negative segments; Version stores exactly major and
@@ -47,22 +48,22 @@ namespace QtSharp.QtCore
         /// </remarks>
         public Version ToVersion()
         {
-            int[] segments = Segments() ?? Array.Empty<int>();
-            if (segments.Length == 0)
+            var segments = Segments() ?? new List<int>();
+            if (segments.Count == 0)
                 throw new InvalidOperationException(
                     "The QVersionNumber is null or empty; System.Version always has at least a "
                     + "major and a minor.");
-            if (segments.Length > 4)
+            if (segments.Count > 4)
                 throw new InvalidOperationException(
-                    $"The QVersionNumber has {segments.Length} segments; System.Version holds at "
+                    $"The QVersionNumber has {segments.Count} segments; System.Version holds at "
                     + "most four (major, minor, build, revision).");
-            for (int i = 0; i < segments.Length; i++)
+            for (int i = 0; i < segments.Count; i++)
                 if (segments[i] < 0)
                     throw new InvalidOperationException(
                         $"The QVersionNumber segment {i} is negative ({segments[i]}); "
                         + "System.Version components are non-negative.");
 
-            switch (segments.Length)
+            switch (segments.Count)
             {
                 case 1: return new Version(segments[0], 0);
                 case 2: return new Version(segments[0], segments[1]);
@@ -72,7 +73,7 @@ namespace QtSharp.QtCore
         }
 
         /// <summary>The non-omitted components of a Version, in version-number order.</summary>
-        static int[] ToSegments(Version version)
+        static List<int> ToSegments(Version version)
         {
             if (version is null)
                 throw new ArgumentNullException(nameof(version));
@@ -82,10 +83,10 @@ namespace QtSharp.QtCore
             int build = version.Build;
             int revision = version.Revision;
             if (revision >= 0)
-                return new[] { major, minor, build, revision };
+                return new List<int> { major, minor, build, revision };
             if (build >= 0)
-                return new[] { major, minor, build };
-            return new[] { major, minor };
+                return new List<int> { major, minor, build };
+            return new List<int> { major, minor };
         }
     }
 }

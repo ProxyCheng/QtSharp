@@ -89,7 +89,7 @@ public static class BoxPlotChart
 
             var sets = acmeSeries.BoxSets();
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(sets.Length == 12, $"QList<QBoxSet*> came back with twelve sets (got {sets.Length})");
+            example.Check(sets.Count == 12, $"QList<QBoxSet*> came back with twelve sets (got {sets.Count})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(sets[0].Label() == "Jan", $"the first set is January (got '{sets[0].Label()}')");
@@ -128,7 +128,7 @@ public static class BoxPlotChart
             #endif
             var categories = axisX.Categories;
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(categories.Length == 12 && categories[0] == "Jan" && categories[11] == "Dec",
+            example.Check(categories.Count == 12 && categories[0] == "Jan" && categories[11] == "Dec",
                 $"and they are the months ({categories[0]}..{categories[11]})");
             #endif
 

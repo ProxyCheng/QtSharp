@@ -42,10 +42,10 @@ namespace QtSharp.Tests
             context.Check((string)player["name"] == "Jack", "a nested string reads back");
             context.Check(Convert.ToInt32(player["level"]) == 10, "a nested number reads back");
 
-            context.Check(view.TryGetValue("levels", out object levelsObject) && levelsObject is object[],
-                "a nested array unwraps to object[]");
-            var levels = (object[])levelsObject;
-            context.Check(levels.Length == 2 && (string)levels[1] == "level2",
+            context.Check(view.TryGetValue("levels", out object levelsObject) && levelsObject is List<object>,
+                "a nested array unwraps to List<object>");
+            var levels = (List<object>)levelsObject;
+            context.Check(levels.Count == 2 && (string)levels[1] == "level2",
                 "the array keeps its elements and order");
 
             context.Check(view.TryGetValue("active", out object active) && active is bool flag && flag,

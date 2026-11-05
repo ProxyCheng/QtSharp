@@ -72,8 +72,8 @@ public static class NestedDonuts
             ChartsAssertions.Pump();
 #if QTSHARP_EXAMPLE_SMOKE
 
-            example.Check(chart.Series().Length == donutCount,
-                $"the chart holds {donutCount} donuts (got {chart.Series().Length})");
+            example.Check(chart.Series().Count == donutCount,
+                $"the chart holds {donutCount} donuts (got {chart.Series().Count})");
 #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(slices.Count >= 15 && slices.Count <= 25,

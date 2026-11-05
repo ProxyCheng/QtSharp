@@ -44,7 +44,7 @@ public static class PointConfiguration
             series.SelectPoint(4);
             var selected = series.SelectedPoints();
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(selected.Length == 1 && selected[0] == 4,
+            example.Check(selected.Count == 1 && selected[0] == 4,
                 $"point 4 is selected (got [{string.Join(",", selected)}])");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
@@ -117,7 +117,7 @@ public static class PointConfiguration
 
             series.DeselectAllPoints();
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(series.SelectedPoints().Length == 0, "deselectAllPoints clears the selection");
+            example.Check(series.SelectedPoints().Count == 0, "deselectAllPoints clears the selection");
             #endif
 
             using var rendered = view.Grab();

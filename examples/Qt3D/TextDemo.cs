@@ -1,4 +1,5 @@
 ﻿﻿using System;
+using System.Collections.Generic;
 using QtSharp.Qt3DCore;
 using QtSharp.Qt3DRender;
 using QtSharp.Qt3DExtras;
@@ -35,9 +36,9 @@ namespace QtSharp.Qt3D.Examples
             var textMaterial = new QPhongMaterial(root);
             textMaterial.SetDiffuse(new QColor(111, 150, 255));
             var families = QFontDatabase.Families();
-            if (families.Length == 0)
-                families = new[] { "Arial" };
-            int count = Math.Min(2, families.Length);
+            if (families.Count == 0)
+                families = new List<string> { "Arial" };
+            int count = Math.Min(2, families.Count);
             var textMeshes = new QExtrudedTextMesh[count];
             var textTransforms = new QTransform3D[count];
             for (int i = 0; i < count; i++)

@@ -75,21 +75,21 @@ namespace QtSharp.QtCore
         /// <summary>
         /// Every descendant that is a <typeparamref name="T"/> and whose
         /// <see cref="ObjectName"/> is <paramref name="name"/>, in the order
-        /// <c>QObject::findChildren</c> produces them; an empty array when there is none.
+        /// <c>QObject::findChildren</c> produces them; an empty list when there is none.
         /// </summary>
-        public T[] FindChildren<T>(string name = null,
+        public List<T> FindChildren<T>(string name = null,
             Qt.FindChildOptions options = Qt.FindChildOptions.FindChildrenRecursively)
             where T : QObject
             => FindAll<T>(NameMatcher(name), options);
 
         /// <summary>
         /// Every descendant that is a <typeparamref name="T"/> and whose
-        /// <see cref="ObjectName"/> the pattern matches, in Qt's order; an empty array when there
+        /// <see cref="ObjectName"/> the pattern matches, in Qt's order; an empty list when there
         /// is none. The managed equivalent of Qt's
         /// <c>findChildren&lt;T&gt;(const QRegularExpression &amp;, Qt::FindChildOptions)</c>.
         /// </summary>
         /// <exception cref="ArgumentNullException"><paramref name="pattern"/> is null.</exception>
-        public T[] FindChildren<T>(QRegularExpression pattern,
+        public List<T> FindChildren<T>(QRegularExpression pattern,
             Qt.FindChildOptions options = Qt.FindChildOptions.FindChildrenRecursively)
             where T : QObject
         {
@@ -124,11 +124,11 @@ namespace QtSharp.QtCore
 
         /// <summary>
         /// Every descendant whose meta-object derives from <paramref name="metaObject"/> and whose
-        /// object name is <paramref name="name"/>, in Qt's order; an empty array when there is
+        /// object name is <paramref name="name"/>, in Qt's order; an empty list when there is
         /// none.
         /// </summary>
         /// <exception cref="ArgumentNullException"><paramref name="metaObject"/> is null.</exception>
-        public QObject[] FindChildren(QMetaObject metaObject, string name = null,
+        public List<QObject> FindChildren(QMetaObject metaObject, string name = null,
             Qt.FindChildOptions options = Qt.FindChildOptions.FindChildrenRecursively)
             => FindByMetaObject(metaObject, name, null, options, firstOnly: false);
 
@@ -139,11 +139,11 @@ namespace QtSharp.QtCore
         /// <exception cref="ArgumentNullException">
         /// <paramref name="metaObject"/> or <paramref name="pattern"/> is null.
         /// </exception>
-        public QObject[] FindChildren(QMetaObject metaObject, QRegularExpression pattern,
+        public List<QObject> FindChildren(QMetaObject metaObject, QRegularExpression pattern,
             Qt.FindChildOptions options = Qt.FindChildOptions.FindChildrenRecursively)
             => FindByMetaObject(metaObject, null, pattern, options, firstOnly: false);
 
-        QObject[] FindByMetaObject(QMetaObject metaObject, string name, QRegularExpression pattern,
+        List<QObject> FindByMetaObject(QMetaObject metaObject, string name, QRegularExpression pattern,
             Qt.FindChildOptions options, bool firstOnly)
         {
             if (metaObject is null)
@@ -154,13 +154,13 @@ namespace QtSharp.QtCore
             IntPtr list = QObjectNative.FindChildren(Handle, metaObject.Handle,
                 pattern?.Handle ?? IntPtr.Zero, name, (int)options, firstOnly ? 1 : 0);
             if (list == IntPtr.Zero)
-                return Array.Empty<QObject>();
+                return new List<QObject>();
             try
             {
                 int count = QObjectNative.Count(list);
-                var found = new QObject[count];
+                var found = new List<QObject>(count);
                 for (int i = 0; i < count; i++)
-                    found[i] = FromHandle(QObjectNative.At(list, i));
+                    found.Add(FromHandle(QObjectNative.At(list, i)));
                 return found;
             }
             finally
@@ -169,7 +169,7 @@ namespace QtSharp.QtCore
             }
         }
 
-        static QObject First(QObject[] found) => found.Length == 0 ? null : found[0];
+        static QObject First(IReadOnlyList<QObject> found) => found.Count == 0 ? null : found[0];
 
         // ---------------------------------------------------------------- managed walk
 
@@ -191,12 +191,12 @@ namespace QtSharp.QtCore
             return found.Count == 0 ? null : found[0];
         }
 
-        T[] FindAll<T>(Func<QObject, bool> matches, Qt.FindChildOptions options)
+        List<T> FindAll<T>(Func<QObject, bool> matches, Qt.FindChildOptions options)
             where T : QObject
         {
             var found = new List<T>();
             CollectChildren(matches, options, found, firstOnly: false);
-            return found.ToArray();
+            return found;
         }
 
         // Qt checks a whole level before descending (qt_qFindChildren_helper): the direct children
@@ -206,7 +206,7 @@ namespace QtSharp.QtCore
             List<T> found, bool firstOnly)
             where T : QObject
         {
-            QObject[] children = Children();
+            var children = Children();
             foreach (QObject child in children)
             {
                 if (child is T match && matches(child))

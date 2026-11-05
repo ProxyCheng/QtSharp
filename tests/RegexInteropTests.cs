@@ -35,7 +35,7 @@ namespace QtSharp.Tests
                           && qtMatch.Captured(3) == "28",
                         "Qt's PCRE2 match sees the named and numbered captures");
                 }
-                context.Check(Array.IndexOf(expression.NamedCaptureGroups(), "year") >= 0,
+                context.Check(expression.NamedCaptureGroups().IndexOf("year") >= 0,
                     "NamedCaptureGroups carries the named group");
 
                 // A real Qt consumer: the validator compiles and evaluates the converted

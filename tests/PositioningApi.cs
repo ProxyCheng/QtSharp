@@ -62,7 +62,7 @@ namespace QtSharp.Tests
                     "QGeoPositionInfo carries its coordinate");
 
             context.Check(QGeoPositionInfoSource.AvailableSources() != null,
-                $"the position sources enumerate ({QGeoPositionInfoSource.AvailableSources().Length} available)");
+                $"the position sources enumerate ({QGeoPositionInfoSource.AvailableSources().Count} available)");
 
             return context.ExitCode;
         }

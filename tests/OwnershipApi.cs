@@ -47,11 +47,11 @@ public static class ApiOwnershipDemo
         // gives up its handle.
         var victim = new QPushButton("victim");
         layout.AddWidget(victim);
-        int childrenBefore = parent.Children().Length;
+        int childrenBefore = parent.Children().Count;
         victim.Dispose();
         victim.Dispose();       // the second call is the documented no-op
-        context.Check(parent.Children().Length == childrenBefore,
-            $"disposing a reparented widget leaves it alive (got {parent.Children().Length}, expected {childrenBefore})");
+        context.Check(parent.Children().Count == childrenBefore,
+            $"disposing a reparented widget leaves it alive (got {parent.Children().Count}, expected {childrenBefore})");
         context.Check(layout.Count() == 13, $"and still in the layout (got {layout.Count()})");
 
         // The exact crash the legacy pipeline recorded: a QCommandLinkButton inserted into a
@@ -76,15 +76,15 @@ public static class ApiOwnershipDemo
         // A parentless object is the other half of the rule: it really is ours, so disposing it
         // destroys the native object. The application's list of top-level widgets is what makes
         // that observable.
-        int topLevelBefore = QApplication.TopLevelWidgets().Length;
+        int topLevelBefore = QApplication.TopLevelWidgets().Count;
         var loose = new QPushButton("loose");
         loose.SetWindowTitle("loose");
-        int topLevelWithLoose = QApplication.TopLevelWidgets().Length;
+        int topLevelWithLoose = QApplication.TopLevelWidgets().Count;
         context.Check(topLevelWithLoose == topLevelBefore + 1,
             $"a parentless widget is a top-level widget (got {topLevelWithLoose}, was {topLevelBefore})");
         loose.Dispose();
-        context.Check(QApplication.TopLevelWidgets().Length == topLevelBefore,
-            $"disposing a parentless widget really destroys it (got {QApplication.TopLevelWidgets().Length})");
+        context.Check(QApplication.TopLevelWidgets().Count == topLevelBefore,
+            $"disposing a parentless widget really destroys it (got {QApplication.TopLevelWidgets().Count})");
 
         // A second reference to the same native object is the same managed wrapper, so ownership
         // cannot be claimed twice (and dropping the second reference must not free anything).
@@ -100,7 +100,7 @@ public static class ApiOwnershipDemo
         // owners either, so collecting them is harmless. The list hands out transient wrappers on
         // every call, so the object is identified by its window title rather than by reference.
         parent.SetWindowTitle("owner-window");
-        int topLevelBeforeCollect = QApplication.TopLevelWidgets().Length;
+        int topLevelBeforeCollect = QApplication.TopLevelWidgets().Count;
         GC.Collect();
         GC.WaitForPendingFinalizers();
         var titles = new List<string>();
@@ -185,10 +185,10 @@ public static class ApiOwnershipDemo
         var ownedTimer = new QTimer(owner);
         bool ownedDestroyed = false;
         ApiRuntime.Connect(ownedTimer.Handle, "destroyed()", (_, _) => ownedDestroyed = true);
-        int childrenBeforeDispose = owner.Children().Length;
+        int childrenBeforeDispose = owner.Children().Count;
         ownedTimer.Dispose();
-        context.Check(!ownedDestroyed && owner.Children().Length == childrenBeforeDispose,
-            $"a QTimer with a parent survives Dispose (parent still has {owner.Children().Length} child(ren))");
+        context.Check(!ownedDestroyed && owner.Children().Count == childrenBeforeDispose,
+            $"a QTimer with a parent survives Dispose (parent still has {owner.Children().Count} child(ren))");
 
         // The same rule for a document: Qt only owns it when the editor is its QObject parent,
         // which is why the C++ API takes one (`new QTextDocument(edit)`).
@@ -253,13 +253,13 @@ public static class ApiOwnershipDemo
         var childContainer = QWidget.CreateWindowContainer(childWindow, host);
         context.Check(childContainer.Parent() == host, "with a parent, the container is parented");
         IntPtr childHandle = childContainer.Handle;
-        int childrenBeforeTake = host.Children().Length;
+        int childrenBeforeTake = host.Children().Count;
         bool childDestroyed = false;
         ApiRuntime.Connect(childContainer.Handle, "destroyed()", (_, _) => childDestroyed = true);
         childContainer.Dispose();
         context.Check(!childDestroyed, "Dispose on a parented container does not delete it");
-        context.Check(host.Children().Length == childrenBeforeTake,
-            $"the parent still has its container (got {host.Children().Length}, expected {childrenBeforeTake})");
+        context.Check(host.Children().Count == childrenBeforeTake,
+            $"the parent still has its container (got {host.Children().Count}, expected {childrenBeforeTake})");
         var stillThere = QWidget.FromHandle(childHandle);
         context.Check(stillThere != null && stillThere.IsAlive,
             "and the native container is still alive (it was a borrowed return)");

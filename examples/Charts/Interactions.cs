@@ -164,7 +164,7 @@ public static class Interactions
             example.Check(!chart.IsPointClicked, "nothing is being dragged yet");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chart.Series().Length == 1, "the chart holds the series");
+            example.Check(chart.Series().Count == 1, "the chart holds the series");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(Math4.Nearly(series.Pen().Width(), 5.0, 0.001),

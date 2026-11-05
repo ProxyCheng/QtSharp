@@ -128,7 +128,7 @@ public static class CustomChart
 #endif
             var xLabels = axisX.CategoriesLabels;
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(xLabels.Length == 3 && xLabels[1] == "optimal",
+            example.Check(xLabels.Count == 3 && xLabels[1] == "optimal",
                 $"the x bands are named ({string.Join(",", xLabels)})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE

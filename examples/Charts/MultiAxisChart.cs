@@ -52,7 +52,7 @@ public static class MultiAxisChart
             var view = ChartsAssertions.Present(example, chart);
 #if QTSHARP_EXAMPLE_SMOKE
 
-            example.Check(chart.Series().Length == 2, $"the chart holds two series (got {chart.Series().Length})");
+            example.Check(chart.Series().Count == 2, $"the chart holds two series (got {chart.Series().Count})");
 #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(series1.Count() == 4, $"the first spline has four points (got {series1.Count()})");
@@ -64,18 +64,18 @@ public static class MultiAxisChart
 
             // One x axis for both, but three axes on the chart in total: the shared x, the left value
             // axis and the right category axis.
-            example.Check(series1.AttachedAxes().Length == 2, "the first series is on the x axis and the left y axis");
+            example.Check(series1.AttachedAxes().Count == 2, "the first series is on the x axis and the left y axis");
 #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(series2.AttachedAxes().Length == 2, "the second is on the x axis and the right y axis");
+            example.Check(series2.AttachedAxes().Count == 2, "the second is on the x axis and the right y axis");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chart.Axes(Qt.Orientations.Vertical, null).Length == 2,
-                $"the chart has two vertical axes (got {chart.Axes(Qt.Orientations.Vertical, null).Length})");
+            example.Check(chart.Axes(Qt.Orientations.Vertical, null).Count == 2,
+                $"the chart has two vertical axes (got {chart.Axes(Qt.Orientations.Vertical, null).Count})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chart.Axes(Qt.Orientations.Horizontal, null).Length == 1,
-                $"and one horizontal one (got {chart.Axes(Qt.Orientations.Horizontal, null).Length})");
+            example.Check(chart.Axes(Qt.Orientations.Horizontal, null).Count == 1,
+                $"and one horizontal one (got {chart.Axes(Qt.Orientations.Horizontal, null).Count})");
             #endif
 #if QTSHARP_EXAMPLE_SMOKE
 
@@ -84,7 +84,7 @@ public static class MultiAxisChart
 #endif
             var labels = axisY3.CategoriesLabels;
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(labels.Length == 3 && labels[0] == "Low" && labels[2] == "High",
+            example.Check(labels.Count == 3 && labels[0] == "Low" && labels[2] == "High",
                 $"the bands are named Low/Medium/High (got [{string.Join(",", labels)}])");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE

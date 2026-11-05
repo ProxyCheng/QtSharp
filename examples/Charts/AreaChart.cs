@@ -74,10 +74,10 @@ public static class AreaChart
             #endif
 #if QTSHARP_EXAMPLE_SMOKE
 
-            example.Check(chart.Axes(Qt.Orientations.Horizontal).Length == 1, "createDefaultAxes built one x axis");
+            example.Check(chart.Axes(Qt.Orientations.Horizontal).Count == 1, "createDefaultAxes built one x axis");
 #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chart.Axes(Qt.Orientations.Vertical).Length == 1, "createDefaultAxes built one y axis");
+            example.Check(chart.Axes(Qt.Orientations.Vertical).Count == 1, "createDefaultAxes built one y axis");
             #endif
 
             var axisX = QValueAxis.FromHandle(chart.Axes(Qt.Orientations.Horizontal)[0].Handle);

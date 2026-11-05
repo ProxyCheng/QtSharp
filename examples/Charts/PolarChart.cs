@@ -115,7 +115,7 @@ public static class PolarChart
             ChartsAssertions.Pump();
 #if QTSHARP_EXAMPLE_SMOKE
 
-            example.Check(chart.Series().Length == 5, $"the polar chart holds five series (got {chart.Series().Length})");
+            example.Check(chart.Series().Count == 5, $"the polar chart holds five series (got {chart.Series().Count})");
 #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(series1.Count() == 21, $"the scatter series walks -100..100 in tens (got {series1.Count()})");
@@ -153,7 +153,7 @@ public static class PolarChart
 
             // The polar chart is a QChart: the two polar orientations are extra axes on top of the
             // ordinary ones, and Qt reports them through the chart's own axis list.
-            example.Check(chart.Axes(Qt.Orientations.Vertical, null).Length >= 1,
+            example.Check(chart.Axes(Qt.Orientations.Vertical, null).Count >= 1,
                 "the polar chart still reports vertical axes");
 #endif
 #if QTSHARP_EXAMPLE_SMOKE

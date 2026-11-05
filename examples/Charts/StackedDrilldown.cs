@@ -134,7 +134,7 @@ public static class StackedDrilldown
             example.Check(chart.Swaps == 1, $"the season series is showing (got {chart.Swaps})");
 #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chart.Series().Length == 1, $"one series at a time (got {chart.Series().Length})");
+            example.Check(chart.Series().Count == 1, $"one series at a time (got {chart.Series().Count})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             // count() is the number of bar sets, i.e. one per plant - the months are the categories.

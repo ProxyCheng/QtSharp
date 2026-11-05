@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 ﻿﻿using System;
 
 // The official examples/widgets/gallery (Qt Widget Gallery) ported onto the *new* pipeline.
@@ -16,11 +17,11 @@ public sealed class ApiWidgetsGalleryWindow : QDialog
 {
     // QStyleFactory::keys() is Qt's own list; the active style is moved to the front, exactly like
     // the upstream startup sequence.
-    public static string[] StyleNames()
+    public static List<string> StyleNames()
     {
         string defaultStyleName = QApplication.Style()?.ObjectName ?? "";
         var names = QStyleFactory.Keys();
-        for (int i = 1; i < names.Length; i++)
+        for (int i = 1; i < names.Count; i++)
         {
             if (string.Equals(names[i], defaultStyleName, StringComparison.OrdinalIgnoreCase))
             {
@@ -332,7 +333,7 @@ public static class WidgetsGallery
         // ---------------------------------------------------------------- style selection
         var styleNames = ApiWidgetsGalleryWindow.StyleNames();
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(window.StyleCombo.count() == styleNames.Length,
+        example.Check(window.StyleCombo.count() == styleNames.Count,
             $"style combo is QStyleFactory's list (got {window.StyleCombo.count()} item(s))");
         #endif
         string activeStyle = QApplication.Style()?.ObjectName ?? "";
@@ -435,8 +436,8 @@ public static class WidgetsGallery
             "the menu button pops up instantly");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
-        example.Check(window.MenuToolButton.Menu() != null && window.ToolMenu.Actions().Length == 3,
-            $"the menu button carries a three-entry menu (got {window.ToolMenu.Actions().Length})");
+        example.Check(window.MenuToolButton.Menu() != null && window.ToolMenu.Actions().Count == 3,
+            $"the menu button carries a three-entry menu (got {window.ToolMenu.Actions().Count})");
         #endif
         #if QTSHARP_EXAMPLE_SMOKE
         example.Check(window.CommandLink.Text == "Command Link Button",
@@ -665,8 +666,8 @@ public static class WidgetsGallery
 #if QTSHARP_EXAMPLE_SMOKE
 
         // ---------------------------------------------------------------- dialog button box
-        example.Check(window.ButtonBox.Buttons().Length == 2,
-            $"button box has Help and Close (got {window.ButtonBox.Buttons().Length})");
+        example.Check(window.ButtonBox.Buttons().Count == 2,
+            $"button box has Help and Close (got {window.ButtonBox.Buttons().Count})");
 #endif
         #if QTSHARP_EXAMPLE_SMOKE
         example.Check(window.ButtonBox.Button(QDialogButtonBox.StandardButton.Help) != null, "Help button exists");

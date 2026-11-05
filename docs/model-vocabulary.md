@@ -20,11 +20,12 @@ Three files own it:
 |---|---|---|
 | `bool`, `int`, `float`, `double`, the integer typedefs (`short`, `unsigned short`, `long`, `unsigned long`, `long long`, `unsigned long long`, `char`, `unsigned char`) | the matching C# primitive (`long long` is `long`, `unsigned char` is `byte`, `char` is `sbyte`) | by value; `long`/`unsigned long` are pinned to 32 bits, the MSVC width the model is extracted with |
 | `QString`, `QStringView`, `QAnyStringView`, `QLatin1StringView`, a const `char*` | `string` | UTF-16 across the ABI |
-| `QStringList`, and any `QList<QString>` | `string[]` | `QStringList` keeps its own name in the model; the runtime builds a native `QStringList` per call (`runtime/ApiRuntime.cs`, `native/QtSharpApiRuntime.cpp`) |
-| `QList<E>` | `E[]` | generated per-element helpers (`qs_api_list_<stem>_*`) |
-| `QSet<E>` | `HashSet<E>` | generated per-element helpers (`qs_api_set_<stem>_*`); the read side walks the iterator because a set has no index |
-| `QMap<K, V>`, `QHash<K, V>` | `Dictionary<K, V>` | generated per-key/value helpers |
+| `QStringList`, and any `QList<QString>` | `List<string>`; a parameter is `IReadOnlyList<string>` | `QStringList` keeps its own name in the model; the runtime builds a native `QStringList` per call (`runtime/ApiRuntime.cs`, `native/QtSharpApiRuntime.cpp`) |
+| `QList<E>` | `List<E>`; a parameter is `IReadOnlyList<E>` | generated per-element helpers (`qs_api_list_<stem>_*`); an `IReadOnlyList` parameter accepts both `List<T>` and `T[]` |
+| `QSet<E>` | `HashSet<E>`; a parameter is `IReadOnlySet<E>` | generated per-element helpers (`qs_api_set_<stem>_*`); the read side walks the iterator because a set has no index |
+| `QMap<K, V>`, `QHash<K, V>` | `Dictionary<K, V>`; a parameter is `IReadOnlyDictionary<K, V>` | generated per-key/value helpers |
 | `QPair<A, B>` (`std::pair`) | `ValueTuple<A, B>` | generated two-field helpers (`qs_api_pair_<stem>_*`); ValueTuple gives the same structural equality and hashing |
+| `std::optional<T>` | `T?` for a C# value type, a nullable reference otherwise | generated optional helpers (`qs_api_optional_<stem>_*`); only a leaf `T` is accepted |
 | `QUuid` | `Guid` | erased; the Qt-only operations are extensions on `Guid` (`runtime/QtCore/Uuid.cs`) |
 | `QChar` | `char`; a `QChar*` buffer is `string` | erased; the Qt-only operations are extensions on `char` (`runtime/QtCore/Char.cs`) |
 | `QByteArrayView`, `uchar*` | `byte[]` | a buffer with its length (passed separately for `uchar*`); `QByteArray` itself is a bound class, not `byte[]` |
@@ -48,17 +49,25 @@ spellings that occur, so the helper set stays bounded by the model.
 
 `QList` and `QSet` share the element codec and differ in two places only: the native operation
 that adds an element (`append` versus `insert`) and the managed collection an element sequence
-surfaces as (`E[]` versus `HashSet<E>`). `QSet` is unordered, so its `_at` walks the iterator to
-reach the element at an index rather than calling `at(i)`.
+surfaces as (`List<E>` versus `HashSet<E>`). `QSet` is unordered, so its `_at` walks the iterator
+to reach the element at an index rather than calling `at(i)`.
+
+A container in **parameter** position is the read-only interface for its kind
+(`IReadOnlyList<E>`, `IReadOnlySet<E>`, `IReadOnlyDictionary<K, V>`), so a `List<T>`, a `T[]`, a
+`HashSet<T>` or a `Dictionary<K, V>` can be passed without an overload. A container in **return**
+position is the concrete BCL type, so the caller owns a mutable snapshot. `std::optional<T>` is
+`T?` for a C# value type and a nullable reference otherwise (the empty optional is the null value);
+its payload is a leaf, and it is not supported in signals or virtual slots because the meta-object
+and the dispatch slot have no has-value state.
 
 Nesting follows the position, because the managed type decides what can be nested safely:
 
 * a **list element** and a **map value** may be another container or a pair
-  (`QList<QList<int>>` is `int[][]`, `QHash<int, QHash<T, QVariant>>` is
+  (`QList<QList<int>>` is `List<List<int>>`, `QHash<int, QHash<T, QVariant>>` is
   `Dictionary<int, Dictionary<T, object>>`, `QList<QPair<double, QPointF>>` is
-  `ValueTuple<double, QPointF>[]`);
+  `List<ValueTuple<double, QPointF>>`);
 * a **set element** or a **map key** may be a pair but not a container: `ValueTuple` has structural
-  equality and hashing, while an array/`HashSet`/`Dictionary` has reference equality, so
+  equality and hashing, while a `List`/`HashSet`/`Dictionary` has reference equality, so
   `QSet<QList<int>>` and `QHash<QList<int>, V>` stay unbound;
 * a **pair's halves** are leaves (scalars, strings, enums, value structs, boxed values, class
   pointers, `QVariant`), not another container or pair.
@@ -179,12 +188,12 @@ type that blocked it. Those logs are not checked in.
 
 A current example bears this out, verified against the Qt 6.12 headers the model is extracted from:
 
-* `QScreenCapture::maximumFrameRate()` (QtMultimedia) returns `std::optional<qreal>`. The method is
-  absent from `model/qtsharp.qtmultimedia.json` until `std::optional` enters the vocabulary.
+* `QAspectEngine::setRootEntity(QEntityPtr)` / `rootEntity()` (Qt3D) use
+  `QSharedPointer<QEntity>`, so those declarations are absent from the Qt3D models.
 
-`QOpenGLContext::extensions()` and `QXYSeries::bestFitLineEquation()` used to be the examples;
-`QSet` and `QPair` entered the vocabulary and those methods are bound now, which is what the rule
-below is for.
+`QOpenGLContext::extensions()`, `QXYSeries::bestFitLineEquation()` and
+`QScreenCapture::maximumFrameRate()` used to be the examples; `QSet`, `QPair` and `std::optional`
+entered the vocabulary and those methods are bound now, which is what the rule below is for.
 
 ## The rule for adding a spelling
 
@@ -207,8 +216,8 @@ That means the whole entry, not just the type-name branch:
    The existing container tests are the model to copy: `QList<int>` in `tests/CoreApi.cs`,
    `QList<QGraphicsItem*>` in `tests/GraphicsApi.cs`, `QList<QTableWidgetSelectionRange>` in
    `tests/ValueTypesApi.cs`, a `string[]` return in `tests/CustomModelApi.cs`, the
-   `HashSet<QByteArray>` return in `tests/OpenGLFunctionsTests.cs`, and the pair/nesting cases in
-   `tests/PairContainerApi.cs`.
+   `HashSet<QByteArray>` return in `tests/OpenGLFunctionsTests.cs`, the pair/nesting cases in
+   `tests/PairContainerApi.cs`, and the nullable return in `tests/OptionalApi.cs`.
 5. **Regenerate the checked-in models.** The gate (`tools/regen-api.ps1`) re-extracts and checks the
    split models are byte-identical, so a vocabulary change without regenerated models fails there.
 
@@ -221,37 +230,6 @@ first call at runtime, where it is harder to attribute.
 None of these is in the vocabulary today; for `QStringList`, the type is, but none of its methods
 are. The sections record what the target would be and what the entry would cost, so the next
 concrete need does not have to re-derive it.
-
-### `std::optional<T>`
-
-There is no `std::optional` branch in `ModelName`. It is also not the same thing as the model's
-per-parameter `optional` flag, which records a C++ default argument.
-
-The trailing, defaulted form is already handled by parameter dropping: a defaulted unsupported
-parameter ends the visible parameter list and the method is kept with the parameters before it. The
-permission parameters are one case. In Qt 6.12 `QDir::mkdir` and `QDir::mkpath` are declared only
-with `std::optional<Permissions> = std::nullopt` (their non-optional overloads are inside
-`QT_CORE_REMOVED_SINCE(6, 10)`), and `QFile::copy` is declared the same way (removed-since 6.12); the
-model carries `mkdir(dirName)`, `mkpath(dirPath)` and `copy(newName)` because the optional parameter
-is dropped.
-
-So `std::optional<T>` is a gap when the value is required or is the return type: then the whole
-declaration is dropped. The current cases in bound types are:
-
-* QtMultimedia: `QScreenCapture` and `QWindowCapture` declare
-  `setMaximumFrameRate(std::optional<qreal>)` and `maximumFrameRate()` returning
-  `std::optional<qreal>`. Neither method is in the model, and the `maximumFrameRate` property is
-  absent with them; only the parameterless `maximumFrameRateChanged` signal survives.
-* QtCore: `QMetaEnum::value64`, `keyToValue64` and `keysToValue64` return `std::optional<quint64>`.
-* QtWidgets: `QFontComboBox::displayFont` returns `std::optional<QFont>`.
-
-The policy is to surface such a value as `T?`/a nullable only where no non-optional spelling of the
-same call is already modelled — which is the case for all of these. A plain `T` is never the
-mapping for a value type: an empty optional would become `default(T)`, indistinguishable from a
-real zero (`maximumFrameRate()` returning 0.0 is a different answer from returning no value). For
-a reference-like `T` (`string`, a boxed wrapper) `null` is the empty state already. Where a defaulted optional
-parameter is dropped and the method survives, nothing should be added: a nullable C# parameter would
-only restate the default Qt is going to apply, and the method already binds without it.
 
 ### `QSharedPointer<T>`, `QPointer<T>`, `QScopedPointer<T>`
 

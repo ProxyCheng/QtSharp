@@ -54,7 +54,7 @@ public static class HorizontalBarChart
                 $"the value axis became horizontal (got {axisX.Orientation})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(series.AttachedAxes().Length == 2, "the series is on both axes");
+            example.Check(series.AttachedAxes().Count == 2, "the series is on both axes");
             #endif
 #if QTSHARP_EXAMPLE_SMOKE
 

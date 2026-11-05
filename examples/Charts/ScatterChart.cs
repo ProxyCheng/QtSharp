@@ -119,7 +119,7 @@ public static class ScatterChart
                 $"the legend takes its marker shape from the series (got {chart.Legend().markerShape()})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chart.Series().Length == 3, $"the chart holds three series (got {chart.Series().Length})");
+            example.Check(chart.Series().Count == 3, $"the chart holds three series (got {chart.Series().Count})");
             #endif
 
             using var rendered = view.Grab();

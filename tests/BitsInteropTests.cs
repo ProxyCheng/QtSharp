@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace QtSharp.Tests
 {
@@ -120,7 +121,7 @@ namespace QtSharp.Tests
                 }
             }
 
-            using (var five = new QVersionNumber(new[] { 1, 2, 3, 4, 5 }))
+            using (var five = new QVersionNumber(new List<int> { 1, 2, 3, 4, 5 }))
             {
                 try
                 {

@@ -110,7 +110,7 @@ public static class LightMarkers
             {
                 clicks++;
                 var current = series.Points();
-                for (int i = 0; i < current.Length; i++)
+                for (int i = 0; i < current.Count; i++)
                 {
                     if (Math4.Nearly(current[i].X(), point.X(), 0.0001)
                         && Math4.Nearly(current[i].Y(), point.Y(), 0.0001))
@@ -123,14 +123,14 @@ public static class LightMarkers
 
             var points = series.Points();
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(points.Length == 7, $"points() came back with seven (got {points.Length})");
+            example.Check(points.Count == 7, $"points() came back with seven (got {points.Count})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(Math4.Nearly(points[4].X(), 4.23, 0.0001),
                 $"the fifth point is the one the example appended (got {points[4].X()})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(series.SelectedPoints().Length == 0, "nothing is selected to start with");
+            example.Check(series.SelectedPoints().Count == 0, "nothing is selected to start with");
             #endif
 
             series.ClickedSignal.Emit(points[2]);
@@ -138,7 +138,7 @@ public static class LightMarkers
             example.Check(clicks == 1, $"the click reached the handler (got {clicks})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(series.SelectedPoints().Length == 1, "the clicked point became selected");
+            example.Check(series.SelectedPoints().Count == 1, "the clicked point became selected");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(series.SelectedPoints()[0] == 2, "and it is the one that was clicked");
@@ -149,7 +149,7 @@ public static class LightMarkers
 
             series.ClickedSignal.Emit(points[2]);
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(series.SelectedPoints().Length == 0, "clicking it again deselects it");
+            example.Check(series.SelectedPoints().Count == 0, "clicking it again deselects it");
             #endif
 
             // The line colour combo box in the gallery goes through setColor(); the Q_PROPERTY

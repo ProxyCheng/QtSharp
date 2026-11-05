@@ -80,7 +80,7 @@ public static class SelectedBarChart
             example.Check(chicken.Sum() == 60.2, $"Chicken sums to 60.2 (got {chicken.Sum()})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(series.BarSets().Length == 4, $"four sets in the series (got {series.BarSets().Length})");
+            example.Check(series.BarSets().Count == 4, $"four sets in the series (got {series.BarSets().Count})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(axisX.Count == 5, $"five year categories (got {axisX.Count})");
@@ -102,7 +102,7 @@ public static class SelectedBarChart
             example.Check(!chicken.IsBarSelected(0), "no bar starts selected");
 #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chicken.SelectedBars().Length == 0, "and a set reports no selection");
+            example.Check(chicken.SelectedBars().Count == 0, "and a set reports no selection");
             #endif
 
             // Click the second bar of Chicken: 12 tons selected.
@@ -114,7 +114,7 @@ public static class SelectedBarChart
             example.Check(chicken.IsBarSelected(1), "the clicked bar is now selected");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chicken.SelectedBars().Length == 1, "exactly one bar is selected");
+            example.Check(chicken.SelectedBars().Count == 1, "exactly one bar is selected");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(Math4.Nearly(selectedSum, 12.0, 0.001), $"selected sum is 12 tons (got {selectedSum})");
@@ -130,7 +130,7 @@ public static class SelectedBarChart
             example.Check(!chicken.IsBarSelected(1), "the second click toggled it off");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(chicken.SelectedBars().Length == 0, "and nothing is selected again");
+            example.Check(chicken.SelectedBars().Count == 0, "and nothing is selected again");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
             example.Check(Math4.Nearly(selectedSum, 0.0, 0.001), "so the selected sum is back to zero");

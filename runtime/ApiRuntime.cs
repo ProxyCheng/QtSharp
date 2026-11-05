@@ -2229,22 +2229,22 @@ namespace QtSharp.Runtime
         public static string FromUtf8(IntPtr utf8) => utf8 == IntPtr.Zero ? null : Marshal.PtrToStringUTF8(utf8);
 
         // The list belongs to the signal's caller; the elements are copied out one by one.
-        static string[] CopyStringList(IntPtr list)
+        static List<string> CopyStringList(IntPtr list)
         {
             int count = StringListCount(list);
-            var result = new string[count];
+            var result = new List<string>(count);
             for (int i = 0; i < count; i++)
             {
                 var element = StringListAt(list, i);
-                result[i] = CopyString(element);
+                result.Add(CopyString(element));
                 StringFree(element);
             }
             return result;
         }
 
-        // A container argument: the managed array becomes a native QStringList for the duration
+        // A container argument: the managed list becomes a native QStringList for the duration
         // of the call (the generated wrapper frees it in a finally).
-        public static IntPtr NewStringList(string[] items)
+        public static IntPtr NewStringList(IEnumerable<string> items)
         {
             var list = StringListNew();
             if (items == null)
@@ -2261,7 +2261,7 @@ namespace QtSharp.Runtime
         }
 
         // A container return: the native side hands over a freshly allocated QStringList.
-        public static string[] ToManagedStringList(IntPtr list)
+        public static List<string> ToManagedStringList(IntPtr list)
         {
             if (list == IntPtr.Zero)
                 return null;
@@ -2272,7 +2272,7 @@ namespace QtSharp.Runtime
 
         // The same, for a list Qt handed to a virtual override: that one is Qt's, so it is copied
         // out without being freed.
-        public static string[] ToManagedStringListTransient(IntPtr list)
+        public static List<string> ToManagedStringListTransient(IntPtr list)
             => list == IntPtr.Zero ? null : CopyStringList(list);
 
         // A virtual override that returns a string writes it into the caller's slot.
@@ -2284,9 +2284,9 @@ namespace QtSharp.Runtime
                 WriteQStringNative(destination, value);
         }
 
-        // ...and the same for a string list: the managed array becomes a native QStringList that
+        // ...and the same for a string list: the managed list becomes a native QStringList that
         // is copied into the slot and then released.
-        public static void WriteStringList(IntPtr destination, string[] value)
+        public static void WriteStringList(IntPtr destination, IEnumerable<string> value)
         {
             var list = NewStringList(value);
             try

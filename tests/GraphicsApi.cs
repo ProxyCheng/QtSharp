@@ -21,7 +21,7 @@ public static class ApiGraphicsDemo
         var text = scene.AddSimpleText("hello");
         text.SetPos(new QPointF(10, 60));
 
-        context.Check(scene.Items().Length == 3, $"scene holds its three items (got {scene.Items().Length})");
+        context.Check(scene.Items().Count == 3, $"scene holds its three items (got {scene.Items().Count})");
         context.Check(rect.Rect().Width() == 50 && rect.Rect().Height() == 30,
             $"item rectangle round-trip (got {rect.Rect().Width()}x{rect.Rect().Height()})");
         context.Check(ellipse.Rect().X() == 70, $"ellipse x (got {ellipse.Rect().X()})");

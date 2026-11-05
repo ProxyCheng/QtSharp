@@ -58,7 +58,7 @@ public static class StackedBarChart
             example.Check(series.Count == 5, $"the series reports its five sets (got {series.Count})");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(series.BarSets().Length == 5, $"the series holds five sets (got {series.BarSets().Length})");
+            example.Check(series.BarSets().Count == 5, $"the series holds five sets (got {series.BarSets().Count})");
             #endif
 
             // A stacked bar chart totals the sets per category, which is what tells it apart from the
@@ -80,8 +80,8 @@ public static class StackedBarChart
             example.Check(chart.Legend().Alignment == Qt.Alignment.AlignBottom, "the legend sits at the bottom");
             #endif
             #if QTSHARP_EXAMPLE_SMOKE
-            example.Check(series.AttachedAxes().Length == 2,
-                $"the series is attached to both axes (got {series.AttachedAxes().Length})");
+            example.Check(series.AttachedAxes().Count == 2,
+                $"the series is attached to both axes (got {series.AttachedAxes().Count})");
             #endif
 
             using var rendered = view.Grab();
