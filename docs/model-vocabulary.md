@@ -22,7 +22,9 @@ Three files own it:
 | `QString`, `QStringView`, `QAnyStringView`, `QLatin1StringView`, a const `char*` | `string` | UTF-16 across the ABI |
 | `QStringList`, and any `QList<QString>` | `string[]` | `QStringList` keeps its own name in the model; the runtime builds a native `QStringList` per call (`runtime/ApiRuntime.cs`, `native/QtSharpApiRuntime.cpp`) |
 | `QList<E>` | `E[]` | generated per-element helpers (`qs_api_list_<stem>_*`) |
+| `QSet<E>` | `HashSet<E>` | generated per-element helpers (`qs_api_set_<stem>_*`); the read side walks the iterator because a set has no index |
 | `QMap<K, V>`, `QHash<K, V>` | `Dictionary<K, V>` | generated per-key/value helpers |
+| `QPair<A, B>` (`std::pair`) | `ValueTuple<A, B>` | generated two-field helpers (`qs_api_pair_<stem>_*`); ValueTuple gives the same structural equality and hashing |
 | `QUuid` | `Guid` | erased; the Qt-only operations are extensions on `Guid` (`runtime/QtCore/Uuid.cs`) |
 | `QChar` | `char`; a `QChar*` buffer is `string` | erased; the Qt-only operations are extensions on `char` (`runtime/QtCore/Char.cs`) |
 | `QByteArrayView`, `uchar*` | `byte[]` | a buffer with its length (passed separately for `uchar*`); `QByteArray` itself is a bound class, not `byte[]` |
@@ -36,17 +38,33 @@ Three files own it:
 | a C function type, `ret(*)(T1,T2)` | `Action<...>`/`Func<...,R>` in both positions | a rooted managed thunk, or a wrap of the returned address; see [Function types](#function-types) |
 | `QFunctionPointer` | the `QtSharp.QtCore.QFunctionPointer` struct in both positions | an address carrier: explicit `IntPtr` casts and `As<TDelegate>()` supply the meaning at the call site |
 
-Containers are converted element by element. Each distinct element type that actually occurs in the
-model produces its own set of native entry points — `qs_api_list_<stem>_new`, `_append`, `_count`,
-`_at`, `_free`, and the map/hash equivalents that walk the keys and values by index. There is no
-generic container marshaller. That is what "element glue" means here: a container spelling is a
-mapping plus a helper set per element type in use, plus the tests that exercise them. The model
-records only the element types that occur, so the helper set stays bounded by the model.
+Containers are converted element by element. Each distinct container spelling that actually occurs
+in the model produces its own set of native entry points — `qs_api_list_<stem>_new`, `_append`,
+`_count`, `_at`, `_free`, the set equivalents that `_insert` and walk the iterator, and the
+map/hash equivalents that walk the keys and values by index. There is no generic container
+marshaller. That is what "element glue" means here: a container spelling is a mapping plus a
+helper set per element type in use, plus the tests that exercise them. The model records only the
+spellings that occur, so the helper set stays bounded by the model.
 
-Two containers are deliberately absent even though they are adjacent to the modelled ones:
-`QMultiMap`/`QMultiHash` are different classes and stay unbound, and a container of containers
-(`QHash<int, QHash<T, QVariant>>`) is refused because the element codec handles scalars, strings,
-enums, boxed values and class pointers, not another container.
+`QList` and `QSet` share the element codec and differ in two places only: the native operation
+that adds an element (`append` versus `insert`) and the managed collection an element sequence
+surfaces as (`E[]` versus `HashSet<E>`). `QSet` is unordered, so its `_at` walks the iterator to
+reach the element at an index rather than calling `at(i)`.
+
+Nesting follows the position, because the managed type decides what can be nested safely:
+
+* a **list element** and a **map value** may be another container or a pair
+  (`QList<QList<int>>` is `int[][]`, `QHash<int, QHash<T, QVariant>>` is
+  `Dictionary<int, Dictionary<T, object>>`, `QList<QPair<double, QPointF>>` is
+  `ValueTuple<double, QPointF>[]`);
+* a **set element** or a **map key** may be a pair but not a container: `ValueTuple` has structural
+  equality and hashing, while an array/`HashSet`/`Dictionary` has reference equality, so
+  `QSet<QList<int>>` and `QHash<QList<int>, V>` stay unbound;
+* a **pair's halves** are leaves (scalars, strings, enums, value structs, boxed values, class
+  pointers, `QVariant`), not another container or pair.
+
+`QMultiMap`/`QMultiHash` remain unbound: they are different classes with a different key/value
+shape, and no bound API needs them.
 
 ## Function types
 
@@ -159,13 +177,14 @@ The gap is visible only on an extraction run: `ReportCoverage2` prints the twent
 `blocked by <type> xN` tallies, and `QTSHARP_MODEL_DEBUG=1` prints each skipped declaration with the
 type that blocked it. Those logs are not checked in.
 
-Two current examples bear this out, both verified against the Qt 6.12 headers the model is extracted
-from:
+A current example bears this out, verified against the Qt 6.12 headers the model is extracted from:
 
-* `QOpenGLContext` is a root class, and its `extensions()` returns `QSet<QByteArray>`. The method is
-  absent from `model/qtsharp.qtgui.json` and therefore from `QtSharp.QtGui`.
-* `QXYSeries` (Qt Charts) declares `bestFitLineEquation(bool &ok)` returning `QPair<qreal, qreal>`.
-  It is absent from `model/qtsharp.charts.json`.
+* `QScreenCapture::maximumFrameRate()` (QtMultimedia) returns `std::optional<qreal>`. The method is
+  absent from `model/qtsharp.qtmultimedia.json` until `std::optional` enters the vocabulary.
+
+`QOpenGLContext::extensions()` and `QXYSeries::bestFitLineEquation()` used to be the examples;
+`QSet` and `QPair` entered the vocabulary and those methods are bound now, which is what the rule
+below is for.
 
 ## The rule for adding a spelling
 
@@ -187,7 +206,9 @@ That means the whole entry, not just the type-name branch:
 4. **Add a test** that exercises the API and checks the value in both directions where both apply.
    The existing container tests are the model to copy: `QList<int>` in `tests/CoreApi.cs`,
    `QList<QGraphicsItem*>` in `tests/GraphicsApi.cs`, `QList<QTableWidgetSelectionRange>` in
-   `tests/ValueTypesApi.cs`, and a `string[]` return in `tests/CustomModelApi.cs`.
+   `tests/ValueTypesApi.cs`, a `string[]` return in `tests/CustomModelApi.cs`, the
+   `HashSet<QByteArray>` return in `tests/OpenGLFunctionsTests.cs`, and the pair/nesting cases in
+   `tests/PairContainerApi.cs`.
 5. **Regenerate the checked-in models.** The gate (`tools/regen-api.ps1`) re-extracts and checks the
    split models are byte-identical, so a vocabulary change without regenerated models fails there.
 
@@ -200,30 +221,6 @@ first call at runtime, where it is harder to attribute.
 None of these is in the vocabulary today; for `QStringList`, the type is, but none of its methods
 are. The sections record what the target would be and what the entry would cost, so the next
 concrete need does not have to re-derive it.
-
-### `QSet<T>` to `HashSet<T>`
-
-`ModelName` has branches for `QStringList`, `QList`, `QMap` and `QHash`; a `QSet<...>` specialization
-falls through to the class-declaration branch and is rejected there because its spelling contains
-`<`. (`IsContainerSpelling` mentions `QSet<` only so the nested-container check recognises the
-spelling; it does not map the type.)
-
-Target: `HashSet<T>`. It needs the same element-by-element native glue `QList` has, with one
-difference: a `QSet` is unordered and has no index, so the read side cannot be `QList`'s `at(i)`
-loop. Only the element types a real API uses need glue; the first concrete need,
-`QOpenGLContext::extensions()`, names `QByteArray`. A second element type is added when a second API
-needs it.
-
-### `QPair<A, B>` and `std::pair`
-
-Qt 6 defines `QPair<T1, T2>` as an alias of `std::pair<T1, T2>` (`QtCore/qcontainerfwd.h`), so the
-two spellings are one vocabulary entry. Neither is mapped today.
-
-Target: a small record or `ValueTuple`. Both halves need element glue, the way a `QMap` entry does:
-the native side has to hand each half across the ABI, and the managed side has to build one back.
-The concrete need is `QXYSeries::bestFitLineEquation(bool &ok)` returning `QPair<qreal, qreal>` in
-Qt Charts; `std::pair<iterator, iterator>` from `QMap::equal_range` is not a candidate, because the
-iterators themselves are outside the vocabulary.
 
 ### `std::optional<T>`
 
@@ -249,13 +246,17 @@ declaration is dropped. The current cases in bound types are:
 * QtWidgets: `QFontComboBox::displayFont` returns `std::optional<QFont>`.
 
 The policy is to surface such a value as `T?`/a nullable only where no non-optional spelling of the
-same call is already modelled — which is the case for all of these. Where a defaulted optional
+same call is already modelled — which is the case for all of these. A plain `T` is never the
+mapping for a value type: an empty optional would become `default(T)`, indistinguishable from a
+real zero (`maximumFrameRate()` returning 0.0 is a different answer from returning no value). For
+a reference-like `T` (`string`, a boxed wrapper) `null` is the empty state already. Where a defaulted optional
 parameter is dropped and the method survives, nothing should be added: a nullable C# parameter would
 only restate the default Qt is going to apply, and the method already binds without it.
 
 ### `QSharedPointer<T>`, `QPointer<T>`, `QScopedPointer<T>`
 
-All three are class templates, so they are dropped the same way `QSet` is. Ownership has to be
+All three are class templates, so they are dropped the same way the other unbound class templates
+are. Ownership has to be
 decided before any of them gets a managed spelling, because the current rule has no room for a
 reference-counted pointer: a wrapper that C# created deletes its object unless Qt took it over (a
 parent, a layout, a scene, a view), the generated destructor asks `QObject::parent()` first, and the

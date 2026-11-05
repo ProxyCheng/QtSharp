@@ -303,9 +303,19 @@ public static class ApiTypes
         }
 
         // A generic container: the managed surface is an array of the managed element type
-        // (QList<int> -> int[], QList<QStandardItem*> -> QStandardItem[]).
+        // (QList<int> -> int[], QList<QStandardItem*> -> QStandardItem[]); the unordered one is
+        // the matching BCL set (QSet<QByteArray> -> HashSet<QByteArray>).
         if (modelType.StartsWith("QList<", StringComparison.Ordinal) && modelType.EndsWith(">"))
             return Managed(modelType.Substring("QList<".Length, modelType.Length - "QList<".Length - 1), classes) + "[]";
+        if (modelType.StartsWith("QSet<", StringComparison.Ordinal) && modelType.EndsWith(">"))
+            return "HashSet<" + Managed(modelType.Substring("QSet<".Length, modelType.Length - "QSet<".Length - 1), classes) + ">";
+        // A pair is a two-field value; ValueTuple is the BCL shape with the same structural
+        // equality and hashing (QPair is std::pair in Qt 6).
+        if (modelType.StartsWith("QPair<", StringComparison.Ordinal) && modelType.EndsWith(">"))
+        {
+            var (first, second) = SplitPair(modelType.Substring("QPair<".Length, modelType.Length - "QPair<".Length - 1));
+            return $"ValueTuple<{Managed(first, classes)}, {Managed(second, classes)}>";
+        }
 
         // An associative container: the managed surface is a dictionary
         // (QMap<int, QVariant> / QHash<int, QByteArray> -> Dictionary<int, ...>).

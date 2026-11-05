@@ -62,6 +62,24 @@ public static class OpenGLFunctionsTests
         context.Check(functions != null && functions.GlGetError() == 0,
             "the context exposes the same GL table, still error-free");
 
+        // QSet<QByteArray> is marshalled as a HashSet<QByteArray>, one element at a time. The
+        // context is current, so a real GL implementation has at least some extensions; every
+        // element the set carries has to be one QOpenGLContext::hasExtension agrees with.
+        var extensions = probe.Context().Extensions();
+        context.Check(extensions != null && extensions.Count > 0,
+            $"QOpenGLContext::extensions returns a set (got {extensions?.Count ?? -1})");
+        QByteArray firstExtension = null;
+        if (extensions != null)
+            foreach (var extension in extensions)
+            {
+                firstExtension = extension;
+                break;
+            }
+        context.Check(firstExtension != null
+                      && firstExtension.ConstData().Length > 0
+                      && probe.Context().HasExtension(firstExtension),
+            $"a set element is a QByteArray hasExtension confirms ('{firstExtension?.ConstData()}')");
+
         probe.Close();
         return context.ExitCode;
     }

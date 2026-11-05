@@ -6,6 +6,22 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 
 ## Unreleased
 
+- **`QPair`/`std::pair` is bound as `ValueTuple`, and containers nest in value positions.**
+  `QPair<A,B>` (Qt 6 spells it `std::pair`) now surfaces as `ValueTuple<A,B>`, so
+  `QSurfaceFormat.version()`, `QUrlQuery.queryItems()/setQueryItems()`, `QHostAddress.parseSubnet()/
+  isInSubnet()`, `QGradient.stops()/setStops()` and `QGraphicsItemAnimation`'s five pair lists are
+  bound. A container may also be a list element or a map value (`QHash<int, QHash<T, QVariant>>` is
+  `Dictionary<int, Dictionary<T, object>>`), including in Qt Charts'
+  `QXYSeries.pointsConfiguration`; a set element or a map key may be a pair but not a container,
+  because `ValueTuple` has structural equality while an array/`HashSet`/`Dictionary` does not.
+  `test-pair-container` covers the pair returns, pair lists, pair parameters, nested maps and the
+  enum element lists this check also unlocked.
+- **`QSet<T>` is bound as `HashSet<T>`.** The unordered container joins `QList<E>` in the model
+  vocabulary, sharing its element codec; the generated glue inserts into a native `QSet` and walks
+  the iterator on the way back, because a set has no index. The first concrete API it unlocks is
+  `QOpenGLContext::extensions()`, which surfaces as `HashSet<QByteArray>`;
+  `test-opengl-functions` checks that every element the set carries is one `hasExtension`
+  confirms.
 - **`QRegularExpressionInterop.ToRegex` rejects an invalid source expression.** A pattern PCRE2
   itself rejects is no longer carried to .NET just because the .NET engine happens to accept the
   same text.

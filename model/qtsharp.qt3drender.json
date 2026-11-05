@@ -2860,7 +2860,9 @@
       ],
       "methods": [
         { "name": "metaObject", "flags": ["const"], "returnType": "QMetaObject*", "parameters": [] },
+        { "name": "setSortTypes", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "sortTypes", "type": "QList<QSortPolicy::SortType>" }] },
         { "name": "setSortTypes", "flags": ["slot"], "returnType": "void", "parameters": [{ "name": "sortTypesInt", "type": "QList<int>" }] },
+        { "name": "sortTypes", "flags": ["const"], "returnType": "QList<QSortPolicy::SortType>", "parameters": [] },
         { "name": "sortTypesInt", "flags": ["const"], "returnType": "QList<int>", "parameters": [] },
         { "name": "tr", "flags": ["static"], "returnType": "QString", "parameters": [{ "name": "s", "type": "char*" }, { "name": "c", "type": "char*", "flags": ["optional"] }, { "name": "n", "type": "int", "flags": ["optional"] }] }
       ],
@@ -2870,6 +2872,8 @@
         { "name": "sortTypes", "type": "QList<int>", "getter": "sortTypesInt", "setter": "setSortTypes" }
       ],
       "signals": [
+        { "name": "sortTypesChanged", "parameters": [{ "name": "sortTypes", "type": "QList<QSortPolicy::SortType>" }] },
+        { "name": "sortTypesChanged", "parameters": [{ "name": "sortTypes", "type": "QList<int>" }] }
       ]
     }
 ,

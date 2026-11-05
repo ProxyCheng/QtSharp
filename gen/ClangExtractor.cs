@@ -517,6 +517,14 @@ public static partial class ApiModel
             return "QStringList";
         if (IsQList(type, out var element))
             return "QList<" + element + ">";
+        // QSet<E> is the unordered one-template-argument container next to QList; both surface
+        // element by element through a generated helper.
+        if (IsQSet(type, out var setElement))
+            return "QSet<" + setElement + ">";
+        // QPair is std::pair in Qt 6; both spellings are this one model entry, and the managed
+        // side is a ValueTuple.
+        if (IsPair(type, out var first, out var second))
+            return "QPair<" + first + "," + second + ">";
         // QMap<K, V> and QHash<K, V> keep both halves of the template; QMultiMap/QMultiHash are
         // different classes and stay unbound.
         if (IsAssoc(type, "QMap", out var mapKey, out var mapValue))
@@ -772,28 +780,89 @@ public static partial class ApiModel
         return spelling.Replace(" ", "") == "QList<QString>";
     }
 
-    // The element type of a "QList<E>" model type name, or null when it is not a list.
-    static string ListElement(string modelType)
-        => modelType != null && modelType.StartsWith("QList<", StringComparison.Ordinal) && modelType.EndsWith(">")
-            ? modelType.Substring("QList<".Length, modelType.Length - "QList<".Length - 1)
-            : null;
+    // The element type of a single-argument container model spelling ("QList<E>"/"QSet<E>"), or
+    // null when the spelling is not one. The longer "QStringList" never reaches here: it is
+    // separated before this check.
+    static string SequenceElement(string modelType)
+    {
+        foreach (var container in new[] { "QList", "QSet" })
+            if (modelType != null
+                && modelType.StartsWith(container + "<", StringComparison.Ordinal)
+                && modelType.EndsWith(">"))
+                return modelType.Substring(container.Length + 1, modelType.Length - container.Length - 2);
+        return null;
+    }
 
-    // A QList<E> whose element type the vocabulary can express. The element comes from the
-    // template argument of the specialization rather than from parsing the spelling.
-    static bool IsQList(CXType type, out string element)
+    // A QList<E>/QSet<E> whose element type the vocabulary can express. The element comes from
+    // the template argument of the specialization rather than from parsing the spelling.
+    static bool IsQList(CXType type, out string element) => IsSequenceContainer(type, "QList", out element);
+    static bool IsQSet(CXType type, out string element) => IsSequenceContainer(type, "QSet", out element);
+
+    static bool IsSequenceContainer(CXType type, string container, out string element)
     {
         element = null;
+        if (!TryUnwrapSequence(type, container, out var elementType))
+            return false;
+        element = ModelName(elementType);
+        return element != null;
+    }
+
+    // A QList/QSet specialization's single template argument. The argument comes from the
+    // specialization rather than from parsing the spelling.
+    static bool TryUnwrapSequence(CXType type, string container, out CXType element)
+    {
+        element = default;
+        type = Unwrap(type);
+        while (type.kind == CXTypeKind.CXType_LValueReference || type.kind == CXTypeKind.CXType_RValueReference)
+            type = Unwrap(type.PointeeType);
         var canonical = type.CanonicalType;
         var declaration = canonical.Declaration;
         if (clang.getCursorKind(declaration) != CXCursorKind.CXCursor_ClassDecl)
             return false;
-        if (clang.getCursorSpelling(declaration).ToString() != "QList")
+        if (clang.getCursorSpelling(declaration).ToString() != container)
             return false;
-        int count = clang.Cursor_getNumTemplateArguments(declaration);
-        if (count != 1)
+        if (clang.Cursor_getNumTemplateArguments(declaration) != 1)
             return false;
-        element = ModelName(clang.Cursor_getTemplateArgumentType(declaration, 0));
-        return element != null;
+        element = clang.Cursor_getTemplateArgumentType(declaration, 0);
+        return true;
+    }
+
+    // QPair<T1, T2> is std::pair<T1, T2> in Qt 6 (a using alias), so the canonical spelling is
+    // the one reliable test: no other std::pair specialization belongs in the model.
+    static bool TryUnwrapPair(CXType type, out CXType first, out CXType second)
+    {
+        first = second = default;
+        type = Unwrap(type);
+        while (type.kind == CXTypeKind.CXType_LValueReference || type.kind == CXTypeKind.CXType_RValueReference)
+            type = Unwrap(type.PointeeType);
+        var canonical = type.CanonicalType;
+        if (!clang.getTypeSpelling(canonical).ToString()
+                 .Replace(" ", string.Empty).StartsWith("std::pair<", StringComparison.Ordinal))
+            return false;
+        var declaration = canonical.Declaration;
+        // libclang reports the std::pair specialization as a struct, unlike QList/QMap/QHash
+        // (class templates).
+        var kind = clang.getCursorKind(declaration);
+        if (kind != CXCursorKind.CXCursor_ClassDecl && kind != CXCursorKind.CXCursor_StructDecl)
+            return false;
+        if (clang.getCursorSpelling(declaration).ToString() != "pair")
+            return false;
+        if (clang.Cursor_getNumTemplateArguments(declaration) != 2)
+            return false;
+        first = clang.Cursor_getTemplateArgumentType(declaration, 0);
+        second = clang.Cursor_getTemplateArgumentType(declaration, 1);
+        return true;
+    }
+
+    // A QPair/std::pair whose two halves the vocabulary can express.
+    static bool IsPair(CXType type, out string first, out string second)
+    {
+        first = second = null;
+        if (!TryUnwrapPair(type, out var firstType, out var secondType))
+            return false;
+        first = ModelName(firstType);
+        second = ModelName(secondType);
+        return first != null && second != null;
     }
 
     // A QMap/QHash specialization's two template arguments, references unwrapped. The arguments
@@ -1371,7 +1440,20 @@ public static partial class ApiModel
            && (name.StartsWith("QList<", StringComparison.Ordinal)
                || name.StartsWith("QMap<", StringComparison.Ordinal)
                || name.StartsWith("QHash<", StringComparison.Ordinal)
-               || name.StartsWith("QSet<", StringComparison.Ordinal));
+               || name.StartsWith("QSet<", StringComparison.Ordinal)
+               || name.StartsWith("QPair<", StringComparison.Ordinal));
+
+    // Where a type sits decides which nesting it may express. A container is a value, so a list
+    // element or a map value may be another container; a set element or a map key has to be
+    // hashable, and a ValueTuple pair is, while an array/dictionary is not. A pair's own halves
+    // are leaves: a pair of containers would make the managed tuple's equality disagree with
+    // Qt's value equality.
+    enum TypePosition
+    {
+        Value,
+        Hashable,
+        PairComponent,
+    }
 
     static bool SupportedType(CXType type, bool isParameter = false, bool isReturn = false)
     {
@@ -1395,22 +1477,10 @@ public static partial class ApiModel
                 return false;
             return SupportedTypes.Contains(name);
         }
-        // A QList<E> is bindable exactly when its element type is.
-        if (ListElement(name) is string element)
-            return SupportedTypes.Contains(element);
-        // A QMap/QHash is bindable when both halves are, checked as the value types they are
-        // (so a pointer half still has to name a bound class, and an enum half a publishable
-        // scope).
-        if (TryUnwrapAssoc(type, "QMap", out var mapKeyType, out var mapValueType)
-            || TryUnwrapAssoc(type, "QHash", out mapKeyType, out mapValueType))
-        {
-            // A container of containers (QHash<int, QHash<T, QVariant>>) is not modelled: the element
-            // codec handles scalars, strings, enums, boxed values and class pointers, not another
-            // container, and the generated identifier for one is not a C# identifier either.
-            return SupportedType(mapKeyType) && SupportedType(mapValueType)
-                   && !IsContainerSpelling(ModelName(mapKeyType))
-                   && !IsContainerSpelling(ModelName(mapValueType));
-        }
+        // Containers and pairs are recursive: the element codec now hands one container through
+        // another, and a pair is a ValueTuple of two leaf values.
+        if (IsContainerSpelling(name))
+            return SupportedElementType(type, TypePosition.Value);
 
         var flags = FlagsName(type);
         if (flags != null)
@@ -1423,6 +1493,61 @@ public static partial class ApiModel
         if (clang.getCursorKind(declaration) != CXCursorKind.CXCursor_EnumDecl)
             return false;
         return ScopeIsPublishable(ScopeOfQualified(EnumTypeName(declaration)));
+    }
+
+    // A type in a container/pair position. Containers recurse through value positions; hash
+    // positions accept leaves and pairs but not containers, because the managed array/HashSet/
+    // Dictionary does not have Qt's value equality. A pair's halves are leaves only.
+    static bool SupportedElementType(CXType type, TypePosition position)
+    {
+        if (TryUnwrapSequence(type, "QList", out var listElement))
+            return position == TypePosition.Value && SupportedElementType(listElement, TypePosition.Value);
+        if (TryUnwrapSequence(type, "QSet", out var setElement))
+            return position == TypePosition.Value && SupportedElementType(setElement, TypePosition.Hashable);
+        if (TryUnwrapAssoc(type, "QMap", out var mapKey, out var mapValue)
+            || TryUnwrapAssoc(type, "QHash", out mapKey, out mapValue))
+            return position == TypePosition.Value
+                   && SupportedElementType(mapKey, TypePosition.Hashable)
+                   && SupportedElementType(mapValue, TypePosition.Value);
+        if (TryUnwrapPair(type, out var first, out var second))
+            return position != TypePosition.PairComponent
+                   && SupportedElementType(first, TypePosition.PairComponent)
+                   && SupportedElementType(second, TypePosition.PairComponent);
+        return SupportedLeaf(type);
+    }
+
+    // The leaf vocabulary of a container/pair element: the kinds the element codec knows. A
+    // buffer, a view, a callback or another erased spelling has no per-element conversion.
+    static bool SupportedLeaf(CXType type)
+    {
+        var name = ModelName(type);
+        if (name == null)
+            return false;
+        if (name.EndsWith("*", StringComparison.Ordinal))
+        {
+            if (IsScalarPointer(name))
+                return false;
+            // A handle to a bound class is an element (QList<QWidget*>); a deliberately opaque
+            // pointer has no wrapper to build.
+            string pointee = name.Substring(0, name.Length - 1);
+            return SupportedTypes.Contains(name) && RootClasses.Contains(pointee);
+        }
+        // The string views are not elements: the element codec hands QString across as UTF-16,
+        // and a QStringView/QAnyStringView local cannot bind to the QString a container wants.
+        if (name is "QString" or "QUuid" or "QChar" or "QVariant")
+            return true;
+        if (ApiTypes.IsStruct(name))
+            return true;
+        if (ScalarNames.Contains(name))
+            return true;
+        var flags = FlagsName(type);
+        if (flags != null)
+            return ScopeIsPublishable(ScopeOfQualified(flags));
+        var declaration = NoRef(type).CanonicalType.Declaration;
+        if (clang.getCursorKind(declaration) == CXCursorKind.CXCursor_EnumDecl)
+            return ScopeIsPublishable(ScopeOfQualified(EnumTypeName(declaration)));
+        // A bound class crossing by value (QByteArray, QHostAddress, QTextCharFormat).
+        return RootClasses.Contains(name);
     }
 
     static string DescribeBlocked(CXType type)
