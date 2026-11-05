@@ -16,6 +16,13 @@ internal sealed class QioDeviceBridge : IVirtualBridge
 {
     public bool AppliesTo(string className) => className == "QIODevice";
 
+    // The hooks are declared again by QBuffer, QFileDevice, QAbstractSocket, QProcess, ... with
+    // the same `const char *` + length shape. Those declarations must cross as byte buffers too:
+    // a string there round-trips through UTF-8 and silently corrupts any non-UTF-8 byte (0xFA
+    // became 0xEF in a QBuffer write). They still do not get a native override of their own -
+    // PropagatesToSubclasses below stays false.
+    public bool MapsAllDeclaringClasses => true;
+
     // Subclasses (QFile, QBuffer, QLocalSocket, ...) call their own open()/readData()-style
     // members straight into Qt; a native override on them would dispatch back into the managed
     // call that is already running - infinite recursion, found by test-network.

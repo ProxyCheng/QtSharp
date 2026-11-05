@@ -361,7 +361,7 @@ jobs:
       - name: Build the managed assemblies
         shell: pwsh
         run: |
-          foreach ($project in @('QtSharp.Api', 'QtSharp.Charts', 'QtSharp.Qt3D', 'QtSharp.Multimedia', 'QtSharp.Positioning', 'QtSharp.Sql')) {
+          foreach ($project in @('QtSharp.Api', 'QtSharp.Charts', 'QtSharp.Qt3D', 'QtSharp.Multimedia', 'QtSharp.Positioning', 'QtSharp.Sql', 'QtSharp.WebView')) {
             dotnet build "nuget/$project/$project.csproj" -c Release --nologo
             if ($LASTEXITCODE -ne 0) { throw "$project build failed" }
           }
@@ -449,7 +449,7 @@ jobs:
           # A GitHub Release has a flat asset list (no folders), so each platform's packages are
           # one archive: download the bundle, extract it and point a local NuGet source at it.
           $version = '${{ needs.version.outputs.version }}'
-          $win = @(Get-ChildItem packages\*.nupkg | Where-Object { $_.Name -like "*.win-x64.*" })
+          $win = @(Get-ChildItem packages\*.nupkg | Where-Object { $_.Name -like "*.win-x64.*" -or $_.Name -like "Microsoft.Web.WebView2.*" })
           $linux = @(Get-ChildItem packages\*.nupkg | Where-Object { $_.Name -like "*.linux-x64.*" })
           if ($win.Count -eq 0) { throw 'No win-x64 packages to bundle.' }
           if ($linux.Count -eq 0) { throw 'No linux-x64 packages to bundle.' }
@@ -477,14 +477,17 @@ jobs:
           The packages follow PyQt6's split and are published **per platform**, as two archives:
 
           * **QtSharp-$version-win-x64.zip** - every ``*.win-x64`` package (QtSharp.Api, Runtime,
-            Qt6, Charts, Qt3D, Multimedia, Positioning, Sql) and their addon Qt runtimes.
-          * **QtSharp-$version-linux-x64.zip** - the same list for ``*.linux-x64``.
+            Qt6, Charts, Qt3D, Multimedia, Positioning, Sql, WebView) and their addon Qt runtimes.
+          * **QtSharp-$version-linux-x64.zip** - the same list for ``*.linux-x64`` (WebView is
+            Windows-only and has no Linux package).
 
           Extract the archive for the machine you build on and add that folder as a local NuGet
           source (``<add key="local" value="<folder>" />``); the package id carries the RID
           (``QtSharp.Api.win-x64``, ``QtSharp.Api.linux-x64``) and only that platform's Qt runtime
           and native glue are inside. The .NET assemblies are identical in both. QtSharp.Tools is
-          Windows-only and is attached on its own.
+          Windows-only and is attached on its own. The Windows archive also carries the
+          ``Microsoft.Web.WebView2`` package that ``QtSharp.WebView`` depends on, so that feed
+          restores without nuget.org.
 
           * **QtSharp.Api** - the binding as nine module assemblies (QtCore, QtGui, QtWidgets,
             QtNetwork, QtSvg, QtSvgWidgets, QtPrintSupport, QtOpenGL, QtOpenGLWidgets).
@@ -508,6 +511,9 @@ jobs:
             ``QtSharp.Api``; **QtSharp.Positioning.Qt6** carries Qt6Positioning.
           * **QtSharp.Sql** - the Qt model classes QtSql used to bind (``QSqlQueryModel``,
             ``QSqlTableModel``) over ADO.NET; no Qt SQL module involved.
+          * **QtSharp.WebView** - a ``QWidget`` that hosts Microsoft Edge WebView2 (Windows x64
+            only), for web content without QtWebEngine; the Evergreen WebView2 runtime is a
+            system prerequisite. See the WebView readme.
 
           Linux note: Qt's X11/OpenGL runtime libraries (``libxcb-*``, ``libxkbcommon-x11-0``,
           ``libgl1``) must be installed on the machine, exactly as for any Qt application. The
@@ -516,8 +522,9 @@ jobs:
           See [CHANGELOG.md](https://github.com/ProxyCheng/QtSharp/blob/$tag/CHANGELOG.md),
           [the binding readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/nuget/QtSharp.Api/README.md),
           [the tools readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/tools/QtSharp.Tools/README.md),
-          [the Charts readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/nuget/QtSharp.Charts/README.md)
-          and [the Qt3D readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/nuget/QtSharp.Qt3D/README.md).
+          [the Charts readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/nuget/QtSharp.Charts/README.md),
+          [the Qt3D readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/nuget/QtSharp.Qt3D/README.md)
+          and [the WebView readme](https://github.com/ProxyCheng/QtSharp/blob/$tag/nuget/QtSharp.WebView/README.md).
           "@
           $assets = @(
             (Resolve-Path "packages\QtSharp-$version-win-x64.zip").Path,

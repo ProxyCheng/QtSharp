@@ -14,9 +14,9 @@ guaranteed between releases.** Pin package versions and test your application wh
 | [#60](https://github.com/ddobrev/QtSharp/issues/60), [#79](https://github.com/ddobrev/QtSharp/issues/79): QStringList construction and append | Pass a C# `string[]` to list-taking APIs. |
 | [#81](https://github.com/ddobrev/QtSharp/issues/81): objects in QVariant | Variant-taking APIs accept and return `object`. Existing QObject wrappers and ordinary managed objects retain their identity when stored and retrieved. General `qobject_cast<T>` support is not available. |
 | [#80](https://github.com/ddobrev/QtSharp/issues/80): nested layout disposal | Qt parenting determines ownership; deleting a parent invalidates the child wrappers. The nested-layout reproduction passes with the Windows v0.19.0 package. |
-| [#57](https://github.com/ddobrev/QtSharp/issues/57): QTreeWidget.ItemClicked | Generated signal handlers wrap items with `FromHandle`. The compatibility sample checks item identity, event delivery and disconnection. Its GUI scenario has not completed local runtime verification. |
-| [#61](https://github.com/ddobrev/QtSharp/issues/61): QObject.Sender | Exposed as `QObject.Sender`/`SenderSignal`, with per-thread and per-callback restoration. |
-| [#50](https://github.com/ddobrev/QtSharp/issues/50): findChild/findChildren | Exposed as `FindChild<T>`/`FindChildren<T>` (plus `Type`/`Type[]` and `QRegularExpression` overloads). Wrappers carry their actual bound type, so the type test is `is`/`IsInstanceOfType`; `Children()` remains available for manual traversal. |
+| [#57](https://github.com/ddobrev/QtSharp/issues/57): QTreeWidget.ItemClicked | Generated signal handlers wrap items with `FromHandle`. The compatibility sample checks item identity, event delivery and disconnection; the GUI scenario passed against the v0.25.0 Windows packages (offscreen, 2026-11-02). |
+| [#61](https://github.com/ddobrev/QtSharp/issues/61): QObject.Sender | No sender-context API is exposed. Capture the emitter in the event handler's closure. |
+| [#50](https://github.com/ddobrev/QtSharp/issues/50): findChild/findChildren | Generic lookup methods are not exposed. Use `Children()` for manual traversal. C# type checks alone do not implement native downcasts. |
 
 Multiple header labels:
 
@@ -115,8 +115,20 @@ commit `11a9b5ae25ea026b2e34c2bf0d02de4780bf77d0`:
 | `api-gaps` | Confirmed `Sender`, `sender`, `FindChild` and `FindChildren` are absent from the QObject member surface. |
 | `strings`, `tree` | Compiled, but the local run timed out during QApplication initialization, before the assertions. The cause was not established. |
 
-The `api-gaps` results describe the v0.19.0 package; the current tree adds `Sender`/`SenderSignal`
-and `FindChild`/`FindChildren` after that check.
+Re-checked on **2026-11-02**, using locally packed **v0.25.0** Windows packages and the offscreen
+platform (`QT_QPA_PLATFORM=offscreen`):
+
+| Check | Result |
+|---|---|
+| `layouts` | Passed: parent and child layouts are invalidated; repeated disposal and finalization complete. |
+| `variants` | Passed: QObject and ordinary managed values preserve reference identity through dynamic properties. |
+| `api-gaps` | `QObject.Sender`, `QObject.FindChild` and `QObject.FindChildren` are all present; only the lowercase C++ spelling `sender` is absent, by design. |
+| `strings` | Passed in 2.1 s, including the Unicode round-trip (`QtSharp 中文 😀`). The earlier timeout did not reproduce. |
+| `tree` | Passed in 1.3 s: item identity, native signal delivery and handler disconnection (ddobrev/QtSharp#57). |
+
+The Linux run is not part of this table: the compatibility sample is a package consumer that the
+release workflow does not invoke, and the Linux package smoke test (`tools/test-packages.ps1`)
+exercises the same packages without the sample's GUI checks.
 
 See also the [Windows and Linux release checks](https://github.com/ProxyCheng/QtSharp/actions/runs/40489656599)
 and the broader [example and test suite](conformance.md).

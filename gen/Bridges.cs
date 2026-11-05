@@ -26,6 +26,14 @@ internal interface IVirtualBridge
     /// </summary>
     bool PropagatesToSubclasses { get; }
 
+    /// <summary>
+    /// Whether this bridge's parameter mapping should also see declarations on classes it does
+    /// not own. The QIODevice hooks are declared again by QBuffer/QFileDevice/QProcess/..., and
+    /// those declarations need the same buffer mapping even though the bridge must not take
+    /// ownership of the classes (PropagatesToSubclasses stays false).
+    /// </summary>
+    bool MapsAllDeclaringClasses => false;
+
     /// <summary>Rewrites the virtual's parameters for the managed side (buffers, handles).</summary>
     void MapParameters(ApiModel.FnFact fn, string declaringClass);
 }
@@ -62,7 +70,7 @@ internal static class VirtualBridges
     public static void MapParameters(ApiModel.FnFact fn, string declaringClass)
     {
         foreach (var bridge in All)
-            if (bridge.AppliesTo(declaringClass))
+            if (bridge.AppliesTo(declaringClass) || bridge.MapsAllDeclaringClasses)
                 bridge.MapParameters(fn, declaringClass);
     }
 }

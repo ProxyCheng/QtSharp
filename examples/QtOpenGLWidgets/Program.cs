@@ -1,0 +1,10 @@
+using System;
+using QtSharp.Examples.Hosting;
+
+// The one entry point of the QtOpenGLWidgets examples: ExampleHost owns the command line, the
+// single QApplication and dispatch; the names come from this assembly's [Example] attributes.
+internal static class Program
+{
+    [STAThread]
+    static int Main(string[] args) => ExampleHost.Run(typeof(Program).Assembly, args);
+}

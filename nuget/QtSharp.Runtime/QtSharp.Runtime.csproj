@@ -22,7 +22,7 @@
        identical; the native payload below is the matching half only. -->
   <QtSharpPlatform Condition="'$(QtSharpPlatform)' == ''">win-x64</QtSharpPlatform>
     <PackageId>QtSharp.Runtime.$(QtSharpPlatform)</PackageId>
-    <Version>0.20.0</Version>
+    <Version>0.27.0</Version>
     <Authors>ProxyCheng</Authors>
     <Description>QtSharp runtime: the managed handle/signal/marshalling layer shared by every QtSharp binding module, plus the native QtSharp.Api glue.</Description>
     <PackageTags>Qt;Qt6;CSharp;dotnet;binding;interop;runtime</PackageTags>
@@ -46,6 +46,10 @@
          the registry keeps the managed thunk and the caller's delegate rooted. -->
     <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\QtCallbackRegistry.cs">
       <Link>Runtime\QtCallbackRegistry.cs</Link>
+    </Compile>
+    <!-- The pinned-buffer lifetime for Qt's buffer-plus-cleanup constructors. -->
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\runtime\QtPinnedBuffer.cs">
+      <Link>Runtime\QtPinnedBuffer.cs</Link>
     </Compile>
     <!-- The binding tests probe the liveness generation counters (OwnershipApi); those members
          are internal to the runtime otherwise. -->

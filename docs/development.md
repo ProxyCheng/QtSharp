@@ -110,31 +110,28 @@ See [module architecture](module-architecture.md) for assembly boundaries and mo
 
 ## Running examples and tests
 
-After generation and native compilation, build an example module and the binding tests:
+After generation and native compilation, the projects can be built normally:
 
 ```text
-dotnet build examples/QtWidgets/QtSharp.Examples.QtWidgets.csproj -c Release
 dotnet build tests/testapp/testapp.csproj -c Release
+./tools/run-examples.ps1 -Configuration Release
 ```
 
-Keep the path configuration from the setup steps when running these builds. On Windows:
+The example runner builds the ten example executables and hands each name to
+`tools/run-window-tests.ps1`. Keep the path configuration from the setup steps when running these
+builds. On Windows:
 
 ```powershell
-./examples/QtWidgets/bin/Release/net10.0/QtSharp.Examples.QtWidgets.exe --list
-./examples/QtWidgets/bin/Release/net10.0/QtSharp.Examples.QtWidgets.exe qtwidgets-calculator
+./tests/testapp/bin/Release/net10.0/testapp.exe --list
+./tests/testapp/bin/Release/net10.0/testapp.exe qtwidgets-calculator
 ./tests/testapp/bin/Release/net10.0/testapp.exe test-ownership
 ```
 
-`--list` prints one name per line; `<name>` runs the Smoke product, which builds the scene and
-runs its assertions. Build the examples in Debug (or the `View` configuration) to get the
-interactive product: the same names show the scene and stay open until the last window closes,
-and `--seconds N` closes it after N seconds. The Smoke host selects the offscreen QPA platform
-unless `QTSHARP_EXAMPLE_PLATFORM` or an existing `QT_QPA_PLATFORM` says otherwise.
-
-On Linux, omit `.exe`. Use `xvfb-run -a` when a test needs a display on a headless machine.
-`tools/run-examples.ps1` builds and runs all ten example executables; the gate and CI use it,
-and `tools/run-window-tests.ps1` is the per-name process runner it calls. See
-[conformance coverage](conformance.md) for the groups and the Smoke/View split.
+On Linux, omit `.exe`. The Smoke product selects the `offscreen` platform itself (through
+`setenv`, because Qt reads the C library's environment); the View product needs a real display.
+Use `xvfb-run -a` when a test needs one on a headless machine. `--seconds N` closes a View window
+after N seconds. The test runner lists each scenario's result and retries a failed process once.
+See [conformance coverage](conformance.md) for the example and test groups.
 
 ## Packaging and releases
 
@@ -154,7 +151,7 @@ versioning and workflow commands.
 | `gen/`, `model/` | Generator and checked-in API models |
 | `native/`, `runtime/` | Handwritten native and managed runtime code |
 | `nuget/` | Binding, runtime and optional module package projects |
-| `examples/` | Qt example ports, one executable per module plus `Charts/` and `Qt3D/`; `hosting/` has `[Example]`, `ExampleContext` and `ExampleHost` |
-| `tests/`, `tests/testapp/` | Binding tests and their dispatcher |
-| `packaging/resources/`, `samples/hello/`, `samples/compatibility/` | Release-package consumer examples |
+| `examples/` | One executable per module: the Qt example ports, their `[Example]` registrations and the Smoke/View host |
+| `tests/` | Binding tests (`test-*`), and `tests/testapp` — the one test entry point |
+| `samples/hello/`, `samples/compatibility/` | Release-package consumer examples |
 | `tools/` | Build, staging, packaging and test scripts |

@@ -15,8 +15,8 @@ C# 的语言特性与 .NET 生态调整 API 和模块设计。目前提供 Qt Wi
 
 ## 安装与快速开始
 
-安装 **.NET 10 SDK**，从 [v0.20.0 发布页](https://github.com/ProxyCheng/QtSharp/releases/tag/v0.20.0)
-下载对应平台的 `QtSharp-0.20.0-win-x64.zip` 或 `QtSharp-0.20.0-linux-x64.zip`，
+安装 **.NET 10 SDK**，从 [v0.27.0 发布页](https://github.com/ProxyCheng/QtSharp/releases/tag/v0.27.0)
+下载对应平台的 `QtSharp-0.27.0-win-x64.zip` 或 `QtSharp-0.27.0-linux-x64.zip`，
 解压到本地 NuGet 源目录。请保留归档中的全部包，以便还原依赖。
 
 包中包含原生绑定和 Qt 运行库，编写应用无需另装 Qt SDK 或 C++ 编译器。
@@ -63,7 +63,12 @@ dotnet run --project samples/hello/Hello.csproj --no-restore
 | 媒体播放 | [Player](examples/QtMultimedia/Player.cs) |
 
 这些示例通过仓库的[开发构建流程](docs/development.md)运行，验证范围见
-[示例与测试覆盖](docs/conformance.md)。
+[示例与测试覆盖](docs/conformance.md)。门禁把它们当作一致性测试套件：十一个可执行文件共
+**74 个示例（1547 条断言）**，另有 **51 个绑定测试（1359 条断言）**。
+
+当前覆盖：**483 个类 / 9947 个方法 / 1901 个虚函数 / 517 个枚举 / 834 个 Q_PROPERTY
+属性 / 475 个信号 / 72 个命名空间函数**（QtCore、QtGui、QtWidgets、QtNetwork、QtSvg、
+QtSvgWidgets、QtPrintSupport、QtOpenGL、QtOpenGLWidgets）。
 
 ## 模块取舍与 .NET 集成
 
@@ -79,9 +84,12 @@ QtSharp 不追求绑定全部 Qt 模块。对于 .NET 已有成熟、适合 C# �
 | QtXml | `System.Xml` | QtCore 中的 `QXmlStreamReader`/`QXmlStreamWriter` 仍可使用。 |
 | QtSql | ADO.NET 数据库驱动 | `QtSharp.Sql` 将 `DbConnection` 包装成查询和表格模型。 |
 | QtWebSockets | `ClientWebSocket` | 直接使用 .NET API，目前没有 Qt 接口适配。 |
+| QtWebEngine | 系统 WebView（Windows 上为 Edge WebView2） | 暂未绑定。`QtSharp.WebView` 在 `QWidget` 中承载 WebView2（仅 Windows x64）；如需跨平台可考虑 Qt WebView 模块。调研见[网页视图方案](docs/webview.md)。 |
 
-现有的 `QtSharp.Sql` 和将 .NET `Stream` 包装为 `QIODevice` 的
-[`StreamIODevice`](runtime/QtCore/IoDeviceInterop.cs) 已采用这种方式。后续也会按需考虑
+现有的 `QtSharp.Sql`、将 .NET `Stream` 包装为 `QIODevice` 的
+[`StreamIODevice`](runtime/QtCore/IoDeviceInterop.cs)，以及 [`runtime/QtCore`](runtime/QtCore)
+下的 System.IO/BCL 桥（`QIODevice.AsStream`、`QDir`/`QFileInfo` ↔ `DirectoryInfo`/`FileInfo`、
+`QDateTime` ↔ `DateTime` 等）已采用这种方式。后续也会按需考虑
 包装 C# 库，让 QtSharp 的模型、IO 等接口及其他组件使用。
 
 ## 与相似项目的比较
@@ -98,8 +106,9 @@ QtSharp 目前没有绑定 QtQml/QtQuick。如果需要使用 QML/Qt Quick 编�
 ## 模块与限制
 
 基础包提供 Core、Gui、Widgets、Network、Svg、SvgWidgets、PrintSupport、OpenGL 和
-OpenGLWidgets 九个模块程序集。Charts、Qt3D、Multimedia、Positioning 和 SQL 模型为
-可选包，具体包名见[英文包列表](README.md#packages)和[包架构](docs/module-architecture.md)。
+OpenGLWidgets 九个模块程序集。Charts、Qt3D、Multimedia、Positioning、SQL 模型和
+WebView2 适配器（`QtSharp.WebView`，仅 Windows x64）为可选包，具体包名见
+[英文包列表](README.md#packages)和[包架构](docs/module-architecture.md)。
 
 目前不提供 macOS、ARM64 或 musl 包，尚未绑定 QtPdf 和 QtWebEngine，也不支持 Linux
 单文件发布。部分原生窗口退出场景仍不稳定。完整说明见[已知限制](docs/limitations.md)。

@@ -6,20 +6,256 @@ The project is pre-1.0, so APIs and package layouts may change between releases.
 
 ## Unreleased
 
-- **`QObject.FindChild<T>`/`FindChildren<T>`.** The lookup is Qt's tree walk on the wrappers'
-  actual bound types, so the type test is the ordinary `is`/`IsInstanceOfType`; there is no
-  separate type table or `qobject_cast` helper. The `Type`/`Type[]` and `QRegularExpression`
-  overloads are included, and `FindDirectChildrenOnly`/the null-versus-empty name rules match Qt.
-- **The documentation from master is merged into the examples branch.** The quick start, API
-  guide, development, limitations and legacy-issue notes, the Chinese README and the
-  `samples/hello` / `samples/compatibility` consumer examples now describe the `examples/`
-  executables, the Smoke/View products and `tools/run-examples.ps1`.
 - **`QRegularExpressionInterop.ToRegex` rejects an invalid source expression.** A pattern PCRE2
   itself rejects is no longer carried to .NET just because the .NET engine happens to accept the
   same text.
 - **`QTimeZone(TimeZoneInfo)` checks the rules before reusing an id.** A custom zone that reuses
   `"UTC"` (or another system id) keeps its own offset/rules instead of silently becoming the
   system zone; a custom zone with unrepresentable DST rules still throws.
+
+## 0.27.0 - 2026-11-04
+
+- **`QSqlTableModel` cells are editable in a view.** The model reports `Qt::ItemIsEditable`
+  through `flags()` and emits `dataChanged` when `setData` stages an edit, matching Qt's
+  `QSqlTableModel`, so a `QTableView` opens an editor and repaints the staged value.
+  `test-sqlmodel` covers the flags and the signal.
+- **SQL model editors open on the cell's value.** `QSqlQueryModel.data` (and so
+  `QSqlTableModel`) answered `Qt::DisplayRole` only, where Qt's model serves `Qt::EditRole` too;
+  the view's delegate reads `EditRole` to seed the editor, so every double-click opened an empty
+  editor and committed the empty value back over the cell. `test-sqlmodel` now checks both roles
+  for a query model and for a staged table edit.
+- **`RevertAll` repaints, and `record()` reads the model.** `RevertAll` dropped the staged edits
+  without a signal, so a view kept painting the discarded values until the caller nudged it; it
+  now emits `dataChanged` over each row that had an edit, as Qt's `revertCachedRow` does.
+  `Record(row)` and `Value(row, column)` read through `CellValue`, so they show the same staged
+  value `Data` does - Qt's `record()` fills its fields from `data(..., Qt::EditRole)`.
+- **Provider errors are reported, not thrown.** `QSqlQueryModel.SetQuery`/`Select` and
+  `QSqlTableModel.SubmitAll` return `false` and leave the driver's exception in `LastError()`, the
+  counterpart of Qt's `lastError()`. Before, a failing `SubmitAll` from a button handler unwound a
+  `SqliteException` out of the model into the signal dispatch. A failed `SetQuery` resets the model,
+  as Qt's `setQuery` does; a failed `SubmitAll` rolls its transaction back and keeps the staged
+  edits and rows, as Qt keeps its cache until a successful submit. `test-sqlmodel` covers both.
+- **The SQL models stage rows and headers like Qt.** `QSqlTableModel` now implements
+  `insertRows`/`insertRow` and `removeRows`/`removeRow`: inserted rows appear as `*` in the
+  vertical header, deleted base rows as `!` and are no longer editable, and `submitAll` writes the
+  inserts and deletes in the same transaction as the updates while `revertAll` drops inserted
+  rows and restores deleted ones. `QSqlQueryModel.setHeaderData` stores a horizontal header,
+  falls back from `DisplayRole` to the stored `EditRole` value and emits `headerDataChanged`;
+  `setData` returns true without a signal for an unchanged value; and `flags` honors columns the
+  provider reports as read-only (SQLite reports none, matching Qt's SQLite driver).
+- **Row-header markers repaint when they change.** Marking a base row deleted now emits
+  `headerDataChanged(Qt::Vertical, row, row)`, as Qt's `removeRows` does in the manual-submit
+  strategy, and `revertAll` emits it when it restores the row, so a `QTableView`'s vertical
+  header switches between the row number and `!` immediately instead of waiting for another
+  repaint. `test-sqlmodel` checks both signals.
+
+## 0.26.0 - 2026-11-02
+
+- **`QOpenGLFunctions`.** The GL entry-point table is bound (137 methods: `glClear`, `glDrawArrays`,
+  the vertex-attrib setup, shader and uniform entry points), and `QOpenGLContext.functions()` is
+  extracted now that the class is in the model. `test-opengl-functions` initializes the table from a
+  `QOpenGLWidget` and checks that `glClearColor`/`glClear`/`glEnable` leave no GL error; under the
+  offscreen platform, which has no GL, it reports a skip like the WebView2 test.
+- **`QOpenGLShader` and Qt's hellogl2, ported.** The shader-type enum was the missing piece that
+  kept `QOpenGLShaderProgram.addShaderFromSourceCode` out of the model; with `QOpenGLShader` bound
+  the method appears. `examples/QtOpenGLWidgets` now holds Qt's opengl/hellogl2 ported onto
+  `QOpenGLWidget` + `QOpenGLFunctions` + `QOpenGLShaderProgram`: the logo mesh, the VAO/VBO setup,
+  the paint path and the slider-driven rotations. Offscreen it asserts the mesh and the rotation
+  wrapping and skips the GL path; on a real display it builds the program and paints, leaving no
+  GL error.
+- **The windowflags example is in the gate again, with a teardown fix.** The port used to crash
+  inside `qwindows.dll` in about a quarter of the runs while the runtime tore the application down
+  with a shown window still alive. `test-windowflags` now hides both windows, flushes the posted
+  events and disposes them before returning: 0 crashes in 40 runs on the windows QPA platform, 5 in
+  20 before. Its 115 assertions - the typed `Qt.WindowFlags` union through all 12 `Qt::WindowType`
+  values, the hints and the preview text - run in the gate again.
+- **Custom `QEvent` instances from C#.** `QEvent`'s constructor is bound now, so a C# subclass can
+  carry the payload, and `QCoreApplication.PostEvent(receiver, event)` (the two-argument overload)
+  transfers the instance to Qt and invalidates the wrapper — the generated three-argument overload
+  only passes the pointer and leaves the caller owning an object Qt will delete. The receiver sees
+  an ordinary `QEvent`: dispatch on `type()`, the same contract PyQt has. `test-custom-events` posts
+  a subclass and checks the delivery and the ownership transfer.
+- **`QFuture` stays out of the API; the async surface is `Task`.** `QFuture<T>`,
+  `QFutureWatcher<T>`, `QPromise<T>` and `QtConcurrent` are templates, and C# already spells their
+  surface: `Task`/`Task<T>`, `CancellationToken` and `IProgress<T>`. No Qt handle is exposed, so
+  there is nothing to dispose and no watcher event loop to keep alive.
+- **Cooperative cancellation and progress on `QThreadPool.RunAsync`.** The
+  `Action<CancellationToken>` / `Func<CancellationToken, T>` overloads hand the work the token, and
+  an `OperationCanceledException` thrown after it fires completes the task as cancelled rather than
+  faulted. The `Action<IProgress<int>>` / `Func<IProgress<int>, T>` overloads give the work a
+  reporter whose reports reach the caller's `Progress<T>` on the caller's thread — the progress
+  that `QFutureWatcher::progressValueChanged` would have carried, without the watcher.
+- **`QThread.Create(Action)`.** Qt's template `QThread::create` around the same managed token as
+  the other functor helpers; the caller owns the returned thread (start, wait, dispose).
+- **`QTimer.singleShot` with `TimeSpan` and `Qt.TimerType`.** The remaining functor overloads
+  (`singleShot(std::chrono::milliseconds[, Qt::TimerType][, context], Functor)`) in managed form;
+  a negative interval throws instead of firing immediately, and destroying the context still
+  cancels the call.
+
+## 0.25.0 - 2026-10-30
+
+- **`async`/`await` on the Qt thread (`QtSynchronizationContext`).** `QtSynchronizationContext.Install()`
+  installs a `SynchronizationContext` that queues continuations with
+  `QMetaObject::invokeMethod`/`QueuedConnection`, so `await Task.Run(...)` in a handler resumes on
+  the GUI thread — the C# counterpart of PySide's `QtAsyncio` scheduler, without a second event
+  loop. `Post` is always asynchronous even from the target thread; `Send` runs inline there and
+  blocks from elsewhere. A continuation posted to a destroyed context object is dropped, the same
+  way Qt drops a queued functor whose context died.
+- **`QThreadPool.RunAsync` and `QObject.InvokeAsync` — `Task` in place of `QFuture`.** `QFuture<T>`,
+  `QFutureWatcher<T>`, `QPromise<T>` and `QtConcurrent` are templates and stay unbound (PyQt and
+  PySide do not expose them either); these helpers cover the same ground: work on Qt's thread pool
+  with an optional `CancellationToken`, and a queued invocation on a specific object's thread, both
+  returning `Task`/`Task<T>`. Exceptions fault the task instead of unwinding into Qt; a task Qt
+  drops without running (pool cleared, context destroyed) completes as cancelled instead of
+  hanging. `test-async-await` covers the hops, results, faults, cancellation and lifetime paths.
+
+## 0.24.0 - 2026-10-30
+
+- **QMetaObject-based `FindChild`/`FindChildren` (reflection lookup).**
+  `FindChild(QMetaObject, ...)` and `FindChildren(QMetaObject, ...)`, with a name or a
+  `QRegularExpression`, filter by `QMetaObject::cast` at runtime — the C++ reflection primitive,
+  and the equivalent of PyQt's `findChild(type)`. The walk runs natively (Qt's order and
+  allocation profile: only matched objects are wrapped), and a managed subclass matches its Qt
+  base's meta-object through the inheritance chain.
+- **Cheaper managed lookup.** The generic walk no longer reads `ObjectName` when the name matches
+  everything, and its pattern path uses a native `hasMatch` helper instead of allocating a
+  `QRegularExpressionMatch` per visited object.
+- **Regular-expression `FindChild`/`FindChildren`.** `FindChild<T>(QRegularExpression, ...)` and
+  `FindChildren<T>(QRegularExpression, ...)` add Qt's pattern overloads: the pattern is searched
+  against each candidate's object name (`re.match(name).hasMatch()`, so `"di"` matches `"edit"`),
+  with the same type filter, Qt traversal order and `Qt.FindChildOptions`. A null pattern throws
+  `ArgumentNullException`. Because the name and pattern overloads are both reference types, a bare
+  `null` argument now needs a cast: `FindChild<T>((string)null)`.
+- **Qt's functor-taking template APIs.** `QTimer.singleShot(int, Action)`,
+  `QTimer.singleShot(int, QObject, Action)` and
+  `QMetaObject.InvokeMethod(QObject, Action, Qt.ConnectionType)` bind the
+  `QTimer::singleShot` and `QMetaObject::invokeMethod` functor overloads, which are C++ templates
+  and therefore have no exported symbol for the generator to see. The native runtime instantiates
+  them around a managed token; the delegate runs on the target thread, and the token is released
+  through native code when Qt destroys the functor without calling it (the context object died, the
+  queued event was discarded), so a cancelled call does not root its delegate until process exit.
+  The functor-based `QObject::connect` overloads are not added: a signal connection is already a
+  C# event. `test-functor-interop` covers firing, context cancellation and the queued invocation.
+
+## 0.23.0 - 2026-10-30
+
+- **BCL -> Qt extension methods (`ToQ*`).** The bridges now have a source-side spelling:
+  `dateTime.ToQDateTime()`, `dateOnly.ToQDate()`, `timeOnly.ToQTime()`, `uri.ToQUrl()`,
+  `culture.ToQLocale()`, `zone.ToQTimeZone()`, `version.ToQVersionNumber()`,
+  `bits.ToQBitArray()`, `regex.ToQRegularExpression()`, `bytes.ToQByteArray()`,
+  `node.ToQJsonValue()`/`jsonObject.ToQJsonObject()`/`jsonArray.ToQJsonArray()`,
+  `directory.ToQDir()`, `info.ToQFileInfo()`; QtGui's `point.ToQPoint()`/`ToQPointF()`,
+  `size.ToQSize()`/`ToQSizeF()`, `rectangle.ToQRect()`/`ToQRectF()`, `color.ToQColor()`,
+  `vector.ToQVector2D()`/`ToQVector3D()`/`ToQVector4D()`, `quaternion.ToQQuaternion()`,
+  `matrix.ToQMatrix4x4()`; and QtNetwork's `address.ToQHostAddress()`. They replace the named
+  constructors at the call site (`new QPointF(x, y)` -> `point.ToQPointF()`); because a method
+  name is new, the overload resolution of existing calls does not change. A handle result is the
+  caller's to dispose, a null reference receiver throws `ArgumentNullException`, and a null
+  JsonNode converts to `QJsonValue::Null` (in a JSON tree that is what null means).
+- **System.Text.Json bridges for the JSON DOM.** `QJsonValue.FromJsonNode(JsonNode)` and
+  `ToJsonNode()`, `QJsonObject(JsonObject)`/`ToJsonObject()`,
+  `QJsonArray(JsonArray)`/`ToJsonArray()`, and `QJsonDocument.FromJsonNode(JsonNode)`/
+  `ToJsonNode()`. `System.Text.Json.Nodes` is the counterpart rather than
+  `JsonDocument`/`JsonElement`: a `JsonNode` owns its data, while a `JsonElement` is only valid
+  for as long as its document lives. Numbers cross as doubles (Qt's representation), a null node
+  and Qt's Undefined both become null, and Qt's sorted object key order is kept.
+- **`QTextStream.ToTextReader()`.** A `TextReader` over Qt's decoded text stream: `Peek` uses a
+  one-character lookahead, `ReadLine`/`ReadToEnd` come from the stream, and `leaveOpen` decides
+  whether disposing the reader disposes the `QTextStream`. There is no `TextWriter` counterpart:
+  QTextStream writes through `operator<<`, which is not bound; use `QIODevice.AsStream()` with a
+  `StreamWriter` instead. (The XML stream pair is still out of reach: `QXmlStreamAttributes` is
+  not in the model, so `QXmlStreamReader.Attributes()` is not bound and an `XmlReader` adapter
+  could not see attributes.)
+- **System.IO bridges for the filesystem and QIODevice.** `QDir(DirectoryInfo)`/`ToDirectoryInfo()`,
+  `QFileInfo(FileSystemInfo)` with `ToFileSystemInfo()` plus the strict `ToFileInfo()`/
+  `ToDirectoryInfo()` (a type mismatch throws instead of returning the other type; a path that does
+  not exist yet converts to an `FileInfo`, the only choice `FileSystemInfo` allows), and
+  `QDirIterator.EnumeratePaths()`/`EnumerateFileInfos()` for `foreach` (the extensions dispose the
+  iterator they own, including when the loop breaks early). `QIODevice.AsStream()` is the missing
+  direction of `StreamIODevice`: an open Qt device becomes a `System.IO.Stream`, for a seekable
+  device `Position`/`Length`/`Seek` follow `pos()`/`size()`/`seek()`, `Flush` reaches
+  `QFileDevice::flush`, `SetLength` reaches `QFileDevice::resize` (`NotSupportedException` for a
+  QBuffer), and `leaveOpen: false` closes the Qt device on dispose. The conversions stay explicit:
+  `QDir`/`QFileInfo` keep their Qt spelling because their filter/sort state, the FileInfo/
+  DirectoryInfo split and native ownership have no lossless BCL equivalent. `test-filesystem-interop`
+  covers both directions, the iterator lifetime and binary writes.
+- **Fixed: the `writeData` hooks carried binary data as a string.** The derived declarations
+  (`QBuffer`, `QFileDevice`, `QAbstractSocket`, `QLocalSocket`, `QNetworkReply`, `QProcess`,
+  `QSaveFile`) were bound as `WriteData(string, long)`, so the managed dispatch round-tripped the
+  buffer through UTF-8: writing `0xFA` to a QBuffer stored `0xEF`. `QioDeviceBridge` now maps
+  `const char *` + length on every declaring class to the same `IntPtr` buffer the `QIODevice` base
+  already used. A managed override of those hooks changes from `string` to `IntPtr`.
+
+## 0.22.0 - 2026-10-29
+
+- **`QtSharp.WebView`: a QWidget host for Edge WebView2.** `WebView2Widget` puts web content in a
+  QtSharp window without binding QtWebEngine and without shipping Chromium: the browser is the
+  Microsoft Edge WebView2 runtime the system updates. The widget is a plain `QWidget` in the Qt
+  layout; it parents the WebView2 controller to its own `WinId()`, keeps bounds, rasterization
+  scale and visibility in step with Qt's resize/show/hide/DPI events, and pumps Qt's event loop
+  while WebView2 completes its asynchronous start-up (a plain `GetResult()` on the UI thread would
+  deadlock on the message-queue completion). `Navigate`, `NavigateToString`, `ExecuteScript(Async)`,
+  `PostWebMessage`, the navigation/process events and `RunOnUiThread` (a queued `[QtSlot]`
+  invocation) are exposed; the raw `CoreWebView2` remains available for the rest. The package is
+  `QtSharp.WebView.win-x64`, depends on `QtSharp.Api.win-x64` and `Microsoft.Web.WebView2`, and
+  the Windows release archive carries that dependency so a local feed restores offline. Windows
+  only: WebView2 has no Linux implementation, and Qt WebView (QtWebEngine on Linux) remains the
+  cross-platform route. `test-webview2` asserts load, title, script execution and the worker-thread
+  dispatch under a real window; the offscreen gate reports it as skipped. Airspace is the known
+  limitation: the native browser window cannot be painted over by Qt content. The research and the
+  measured cost of QtWebEngine/QtWebView are in `docs/webview.md`.
+
+## 0.21.0 - 2026-10-29
+
+- **C function pointers are part of the model.** A `ret(*)(T1,T2)` type now maps to `Action` /
+  `Func<..., R>` in both positions, so `QEasingCurve.SetCustomType`/`CustomType`,
+  `qInstallMessageHandler`, `qAddPreRoutine`/`qAddPostRoutine`/`qRemovePostRoutine` and the QImage
+  cleanup constructors are bound. The runtime roots each thunk and the caller's delegate and keys
+  them by instance, so a callback Qt hands back is the very delegate that was installed
+  (`curve.CustomType()` after `SetCustomType(f)` is `f` by reference) and `qRemovePostRoutine` finds
+  the routine `qAddPostRoutine` registered. A callback parameter on a virtual or a signal stays out,
+  as does a variadic or nested one. `QFunctionPointer` - Qt's signature-less "pointer to a
+  function" - keeps its own name and surfaces as the `QtSharp.QtCore.QFunctionPointer` carrier:
+  explicit `IntPtr` conversions, equality by address, and `As<TDelegate>()`/`TryAs<TDelegate>()` at
+  the call site, which is where the C++ `reinterpret_cast` lives. `docs/model-vocabulary.md` has
+  the full rule.
+- **QObject wrappers are their actual bound type** (issue #11). `FromHandle`,
+  `FromTransientHandle` and `FromOwnedHandle` resolve the most-derived bound class through the
+  native meta-object before the wrapper is made, so `is`/`as` work on a `QObject*` return, a
+  `QList<QObject*>` element (`QObject.Children()`), a signal argument and a parent/child accessor.
+  An existing compatible wrapper wins (identity and C# subclasses), an unpublished internal class
+  resolves to its nearest bound base (`QComboBox.View()` is a `QListView`), and the declared type is
+  the fallback when the module is not loaded. Owned returns set the ownership flag inside the actual
+  type's own class.
+- **`QObject.FindChild`/`FindChildren` as C# generics.** Qt only offers the two lookups as
+  templates; they are now methods over the wrapper tree, with Qt's order (a whole level is tested
+  before the search descends), `null`/empty name matching any object, `Qt.FindChildOptions` deciding
+  whether it descends, and managed subclasses found by their own type.
+- **`QImage` buffer constructors pin their `byte[]`.** Qt does not copy the buffer the image is
+  built from; it reads it until its last copy is destroyed and then calls the cleanup function. The
+  binding now pins the array for exactly that window (`QtSharp.Runtime.PinnedBuffer`), hands Qt a
+  cleanup that first runs the caller's `cleanupFunction(cleanupInfo)` and then releases the pin and
+  its thunk registry entry, and releases it directly when the native call fails. This is PySide6's
+  buffer-plus-decref design in C#, where the reference has to be a pin because the GC may move the
+  array.
+- Also in this release: the 0.20.1 fixes below (the Windows package's headless platform plugins, and
+  the QImage cleanup constructor's function-pointer parameter type on Linux), plus the
+  `collidingmice` example no longer culls an edge item from its own paint assertion.
+
+## 0.20.1 - 2026-10-29
+
+- **The Windows package carries the headless platforms.** 0.20.0 said automated runs are headless,
+  and the kit stages `qoffscreen.dll` and `qminimal.dll` for that, but the packaging project listed
+  only `platforms/qwindows.dll` and `buildTransitive` copied only that one: a consumer setting
+  `QT_QPA_PLATFORM=offscreen` had no such plugin and Qt aborted the process instead of drawing
+  nothing. Both are packed now (when the kit produced them) and copied next to the executable on
+  Build and on Publish, so the recipe in the 0.20.0 note works for a consumer of the package, not
+  only for this repository's own test host.
+- **The `QImage` cleanup-function constructor compiles on Linux.** The generated subclass
+  constructor declared the function-pointer parameter as `void*` while the entry point handed it the
+  address cast to `QImageCleanupFunction`; g++ rejects that conversion (MSVC accepts it as an
+  extension), so the Linux packages could not be built. The constructor now takes the type Qt
+  declared. `test-imagebuffer` covers the path.
 
 ## 0.20.0 - 2026-10-28
 

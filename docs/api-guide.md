@@ -22,6 +22,21 @@ button.ClickedSignal.Connect(handler);
 button.ClickedSignal.Emit(false);   // manual emit; only QSignal has it
 ```
 `Q_SIGNAL`s with more than one overload get the 2,3,… suffix (`Activated2Signal`/`Activated2`).
+A handler can ask who sent the signal: `QObject.Sender` and `QObject.SenderSignal` are PyQt's
+`sender()`/`senderSignalIndex()`. Inside a handler they name the emitting object (the same
+wrapper instance, resolved through the wrapper cache) and the moc signature the connection used:
+```csharp
+button.Clicked += checkedState =>
+{
+    if (button.Sender == someButton) { ... }   // the wrapper itself, not a duplicate
+    Log(button.SenderSignal);                  // "clicked(bool)"
+};
+```
+Both are per thread and per callback: a nested emission sees the inner sender and restores the
+outer one, and a queued delivery sees them on the thread that runs the slot. Outside a callback
+both are null. A C#-declared `[QtSignal]` invoked directly runs its handlers after the emit
+trampoline returned from Qt, so that path has no frame of its own; raise it with
+`EmitSignal(ValueChanged, value)` to get one.
 
 ## Qt and .NET value types
 
@@ -63,6 +78,15 @@ mirroring, case folding, Unicode version) call Qt's own tables. The static code-
 are extensions too: `char.Category(0x41)`, `char.Script(0x41)`. A `QChar*` buffer is a `string`
 (`QCollator.Compare`, `QRawFont.GlyphIndexesForChars`).
 
+The net types have the same conversions: `new QHostAddress(ipAddress)` / `ToIPAddress()`,
+`new QTimeZone(zoneInfo)` / `ToTimeZoneInfo()`, `new QProcessEnvironment(dictionary)` /
+`ToDictionary()` (a snapshot; `InheritsFromParent` has no .NET equivalent),
+`new QLocale(culture)` / `ToCultureInfo()` (identity only - Qt uses CLDR, .NET uses ICU),
+`new QBitArray(bitArray)` / `ToBitArray()` (bit order preserved), `new QVersionNumber(version)` /
+`ToVersion()` (one to four segments; Build/Revision -1 means omitted), and
+`new QMatrix4x4(matrix4x4)` / `ToMatrix4x4()` (column-vector vs row-vector transposes).
+`QCollator` implements `IComparer<string>`, so it can be handed to any BCL sort.
+
 The same rule covers every other trivially copyable Qt value: **QModelIndex, QColor, QSizePolicy,
 QTransform, QElapsedTimer, QDeadlineTimer, QOperatingSystemVersion, QTextLength, QRgba64,
 QPixelFormat, QPointingDeviceUniqueId, QMetaMethod/QMetaEnum/QMetaClassInfo, QMetaType,
@@ -96,6 +120,27 @@ variant's `ToObject()` unwraps them (nested objects as `Dictionary<string, objec
 `QXmlStreamReader`, `QDataStream` and anything else taking a `QIODevice*` reads from or writes to
 managed IO. The generator publishes QIODevice's virtuals through a small bridge registry
 (`gen/Bridges.cs`), which is also where future bridges belong.
+
+## Image buffers
+
+`QImage`'s buffer constructors do not copy what they are given: the image reads the array until its
+last copy is destroyed. The binding pins the array for that window and installs the cleanup that
+releases the pin, then runs your `cleanupFunction`:
+```csharp
+var pixels = new byte[width * height * 4];          // ARGB32, filled however you like
+using var image = new QImage(pixels, width, height, QImage.Format.Format_ARGB32);
+pixels[0] = 0xFF;                                   // the image reads the same memory in place
+```
+This is PySide's buffer-plus-decref design with a .NET pin, because the GC may move a `byte[]`:
+the address is stable only while the pin lives, so the array is not copied and writes through it are
+visible in the image. `image.Copy()` returns an image with pixels of its own, but the original
+keeps reading the pinned array until it is destroyed. An image handed to Qt (a copy kept elsewhere)
+delays the cleanup until the last copy dies, exactly as in Qt; until then the array stays pinned
+and reachable.
+
+The generator recognizes the shape - a `uchar*` buffer followed by a `void(*)(void*)` cleanup
+callback - and only that shape is pinned; a bare `uchar*` parameter is borrowed for the length of
+the call.
 
 ## Application lifetime
 
@@ -145,6 +190,35 @@ method; `Reset<Property>` by convention), `Constant`, `Final`, `Required`, `Desi
 `Scriptable`, `Stored`, `User` and `Revision`. `BINDABLE` is not exposed: it needs binding
 support in the native runtime, not just a flag.
 `tests/MetaObjectApi.cs` is the same declaration under test.
+
+## Slots and by-name invocation
+
+`[QtSlot]` (PyQt's `pyqtSlot`) puts a public instance method in the meta-object as a real slot, so
+Qt reaches it by name:
+```csharp
+[QtSlot] public int Add(int a, int b) => a + b;            // the Qt slot add(int,int)
+[QtSlot("multiply")] public int Times(int a, int b) => a * b;   // an explicit Qt name
+```
+Overloads stay ordinary C# overloads and are told apart by their normalized signature
+(`"add(int,int)"`); the attribute's argument renames the slot. Every parameter and a non-void
+return type must have a Qt type name, and a method that cannot be a slot (static, generic,
+`ref`/`out`, `params`, an unmapped type) throws when the meta-object is built instead of being
+silently omitted. The slot runs through reflection, so a throwing slot is reported through
+`ApiRuntime.UnhandledCallbackException` rather than unwinding into Qt. `QMetaObject.ConnectSlotsByName`
+finds managed slots with the usual `on_<objectName>_<signal>` naming.
+
+A method can also be called by name, the script/plugin case:
+```csharp
+QMetaObject.InvokeMethod(target, "setText", Qt.ConnectionType.DirectConnection,
+    new object[] { "hi" }, out object result);
+QMetaMethod.Invoke(target, args, out result);        // the resolved member, by index
+```
+The arguments may be C# primitives, `string`, `byte[]`, enums, bound Qt values and QObject
+pointers; anything else crosses as a `QVariant` and is converted to the parameter's declared type.
+A failure is `false` plus a reason, never an exception or a crash, and a queued call cannot carry
+a result. The generated members carry `[QtNativeSlot(signature, invokable)]` so reflection can
+tell a generated `Q_SLOTS`/`Q_SLOT` member from a `Q_INVOKABLE` one (Qt's `QMetaMethod::Slot`
+vs `QMetaMethod::Method`).
 The generated Qt classes are deliberately different: their properties and signals already exist
 in moc's meta-object, so they do not carry these attributes. Their types are marked
 `[GeneratedCode("qtgen", …)]`, and the XML docs say what a member is — for example
@@ -157,6 +231,33 @@ hand-written runtime extends (the application classes, `QObject`, and the date/t
 types) are `partial`; every other
 wrapper is a whole declaration, and `unsafe` sits on the few constructors that pass a function
 pointer rather than on the class.
+
+## Object wrappers are actual types
+
+A wrapper is created as the object's actual bound class, the PyQt/PySide object model, so `is`/`as`
+work on values Qt hands back as a base type:
+```csharp
+foreach (var child in spinBox.Children())      // QObject::children() is QList<QObject*>
+    if (child is QLineEdit edit) { ... }       // the editor is a QLineEdit wrapper, not a QObject one
+QPushButton button = (QPushButton)widget.Window();   // the window was created as a QPushButton
+```
+The type is resolved once, when the wrapper is made, from the native meta-object: an existing
+compatible wrapper wins (reference identity, and a C# subclass keeps its own type), then the
+meta-object chain gives the most-derived class the binding publishes, and an unpublished internal
+class resolves to its nearest bound base (`QComboBox.View()` is a `QListView`). The declared type
+is the fallback when nothing matches, for example a module whose assembly has not loaded yet.
+`QList<QObject*>` elements are read through the identity cache, so repeated `Children()` calls
+return the same wrapper instances.
+The same resolution powers the two lookups Qt only offers as templates, rewritten as C# generics:
+```csharp
+QPushButton button = window.FindChild<QPushButton>();                  // first child of that type
+QLineEdit edit = window.FindChild<QLineEdit>("edit");                  // ... with a matching objectName
+QWidget[] all = window.FindChildren<QWidget>();                        // the whole subtree
+QWidget[] direct = window.FindChildren<QWidget>(null, Qt.FindChildOptions.FindDirectChildrenOnly);
+```
+The order is Qt's (`findChildren` tests a whole level before descending), `null` or an empty name
+matches every object, a miss is `null` or an empty array, and a managed subclass is found by its
+own type as well as by its base. `tests/FindChildApi.cs` is the same lookup under test.
 
 ## Ownership
 
@@ -179,6 +280,107 @@ they do for ordinary C# references.
 The runtime catches exceptions from signal handlers and virtual
 overrides at the native boundary, writes them to stderr and raises
 `ApiRuntime.UnhandledCallbackException`. Subscribe to this event to handle or report them.
+
+## Function pointers and callbacks
+
+Qt's C function-pointer APIs take an `Action` (void return) or `Func<..., R>`, and the same
+delegate comes back when Qt hands the pointer out again:
+```csharp
+var curve = new QEasingCurve();
+curve.SetCustomType(p => p * p);              // double(*)(qreal)
+Func<double, double> installed = curve.CustomType();   // the same delegate instance
+var previous = Qt.QInstallMessageHandler(handler);     // Action<QtMsgType, IntPtr, string>?
+```
+The native side stores only the address, so the binding roots the thunk and the caller's delegate
+in `QtCallbackRegistry` for the process lifetime; the registry is keyed by delegate instance, so
+the same instance always gives the same address (`qRemovePostRoutine` needs that) and a callback
+installed through the binding comes back as the very instance that was installed. A `QString`
+callback argument is borrowed and copied with `ApiRuntime.ToManagedTransient`; a pointer argument
+is an `IntPtr`. A callback parameter on a virtual or a signal is not published, and a variadic,
+nested or class-returning callback stays out of the vocabulary.
+
+`QFunctionPointer` is the deliberate exception: Qt promises no signature for `QLibrary.Resolve`,
+`QGuiApplication.PlatformFunction` or `QOpenGLContext.GetProcAddress`, so it surfaces as the
+one-field `QtSharp.QtCore.QFunctionPointer` struct rather than a callable:
+```csharp
+QFunctionPointer address = lib.Resolve("qVersion");       // a carrier, not a Func
+if (!address.IsNull && address.TryAs<Func<IntPtr>>(out var version))
+    Console.WriteLine(Marshal.PtrToStringAnsi(version()));
+```
+`As<TDelegate>`/`TryAs<TDelegate>` are the explicit opt-in, the C# spelling of C++'s
+`reinterpret_cast`: the caller vouches for the signature, and a wrong signature or a stale address
+is a crash, not an exception. Identity is a property of this binding's registry; a pointer
+installed by native code returns a wrapper over the same address. `docs/model-vocabulary.md` has
+the full rule and the lifetime notes.
+
+## Async and threads
+
+C# has `await`, so the binding does not mirror `QFuture<T>` — a template with nothing to bind.
+Instead it installs a `SynchronizationContext` on the Qt thread, the same role PySide's
+`QtAsyncio` plays for asyncio, and maps Qt's two threading primitives onto `Task`:
+```csharp
+var sync = QtSynchronizationContext.Install();          // the GUI thread, after the QApplication
+
+async void OnActivated()
+{
+    var rows = await Task.Run(() => ReadRows());        // .NET worker thread
+    list.AddItems(rows);                                // back on the GUI thread
+}
+
+using var pool = new QThreadPool();
+int count = await pool.RunAsync(() => CountRows());     // Qt's thread pool, result as a Task
+await window.InvokeAsync(() => SetStatus("done"));      // queued onto the object's thread
+```
+
+`QtSynchronizationContext.Post` queues a continuation with `QMetaObject::invokeMethod` and
+`QueuedConnection`, so the target thread must be pumping an event loop. `Send` runs inline on the
+target thread and blocks from any other.
+
+`QFuture<T>`, `QFutureWatcher<T>` and `QtConcurrent` are deliberately not part of the API: they are
+templates, and C# already has the surface they model. Everything async is a `Task`, with
+`CancellationToken` for cancellation and `IProgress<T>` for progress — no Qt handle to dispose and no
+extra event loop:
+```csharp
+var progress = new Progress<int>(value => bar.Value = value);   // built on the GUI thread
+int count = await pool.RunAsync(p =>
+{
+    for (int i = 0; i < rows; i += 64) { p.Report(i); Scan(i); }   // runs on a pool thread
+    return rows;
+}, progress);
+
+using var cts = new CancellationTokenSource();
+var task = pool.RunAsync(token =>
+{
+    foreach (var row in rows)
+    {
+        token.ThrowIfCancellationRequested();   // cooperative, like QFuture::isCanceled()
+        Decode(row);
+    }
+    return rows.Length;
+}, cts.Token);
+cts.Cancel();                                   // task ends cancelled, not faulted
+```
+`Progress<T>` captures the `SynchronizationContext` it is constructed on, so reports made on the
+worker thread reach the Qt thread through the context installed above. A token cancelled before a
+worker picks the task up skips the work; a `OperationCanceledException` thrown after the token fires
+cancels the task. A task whose queued invocation is dropped — the pool was cleared, or the context
+object was destroyed before Qt dispatched it — comes back cancelled rather than pending. Exceptions
+from the work fault the task; nothing unwinds into Qt's C++ frames. `test-async-await` covers the
+thread hops, results, faults, cooperative cancellation, progress and the context-lifetime paths.
+
+The other template-shaped thread APIs are bound the same way — hand-written around a managed token,
+with the delegate released when Qt drops it:
+```csharp
+var worker = QThread.Create(() => DecodeAll());   // QThread::create: the caller owns the thread
+worker.Start();
+worker.Wait(5000);
+worker.Dispose();                                  // after it has finished, as Qt requires
+
+QTimer.singleShot(TimeSpan.FromMilliseconds(250), window, () => Refresh());   // duration + context
+QTimer.singleShot(TimeSpan.FromSeconds(1), Qt.TimerType.PreciseTimer, () => Tick());
+```
+A negative interval throws `ArgumentOutOfRangeException`; destroying the context before the timer
+fires cancels the call and releases the delegate.
 
 ## Event arguments
 
