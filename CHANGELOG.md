@@ -4,7 +4,7 @@ All notable changes to QtSharp will be documented here.
 
 The project is pre-1.0, so APIs and package layouts may change between releases.
 
-## Unreleased
+## 0.28.0 - 2026-11-08
 
 - **`QList` and `QStringList` surface as `List<T>`.** Returns are a mutable `List<T>` snapshot; a
   parameter is the read-only interface (`IReadOnlyList<T>`, `IReadOnlySet<T>`,

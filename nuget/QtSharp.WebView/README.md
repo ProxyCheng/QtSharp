@@ -9,8 +9,8 @@ equivalent route.
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QtSharp.Api.win-x64" Version="0.27.0" />
-  <PackageReference Include="QtSharp.WebView.win-x64" Version="0.27.0" />
+  <PackageReference Include="QtSharp.Api.win-x64" Version="0.28.0" />
+  <PackageReference Include="QtSharp.WebView.win-x64" Version="0.28.0" />
 </ItemGroup>
 ```
 
