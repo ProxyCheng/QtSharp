@@ -46,8 +46,8 @@ public static class Notepad
 
 #if QTSHARP_EXAMPLE_SMOKE
 
-            example.Check(QPrinterInfo.AvailablePrinterNames().Length >= 0,
-                $"QPrinterInfo enumerates the installed printers ({QPrinterInfo.AvailablePrinterNames().Length})");
+            example.Check(QPrinterInfo.AvailablePrinterNames().Count >= 0,
+                $"QPrinterInfo enumerates the installed printers ({QPrinterInfo.AvailablePrinterNames().Count})");
 #endif
         }
         finally

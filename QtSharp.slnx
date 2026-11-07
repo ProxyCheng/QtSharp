@@ -77,4 +77,5 @@
     <Project Path="tests/QtSharp.BindingTests.csproj" />
     <Project Path="tests/testapp/testapp.csproj" />
   </Folder>
+  <Project Path="gen-next/gen-next.csproj" />
 </Solution>

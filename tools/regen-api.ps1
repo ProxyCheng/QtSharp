@@ -16,6 +16,10 @@ $onWindows = $PSVersionTable.PSVersion.Major -lt 6 -or $IsWindows
 $rid = if ($onWindows) { 'win-x64' } elseif ($IsLinux) { 'linux-x64' } else { 'osx-x64' }
 $genBin = "$root/gen/bin/Release/net10.0/$rid"
 $genExe = "$genBin/" + $(if ($onWindows) { 'qtgen.exe' } else { 'qtgen' })
+# The rewrite produces the bindings; the old executable is kept for extraction, the model split
+# and the module descriptor, none of which the new generator implements yet.
+$codegenBin = "$root/gen-next/bin/Release/net10.0"
+$codegenExe = "$codegenBin/" + $(if ($onWindows) { 'qtgen-next.exe' } else { 'qtgen-next' })
 $exeSuffix = if ($onWindows) { '.exe' } else { '' }
 
 # The API model is the Windows one: extraction parses the MSVC Qt headers with MSVC compatibility
@@ -75,9 +79,11 @@ if ($extract) {
     Write-Host "extraction skipped - the checked-in model under model/ is the input"
 }
 
-Write-Host "=== [1] Build gen ==="
+Write-Host "=== [1] Build the generators ==="
 dotnet build "$root/gen/gen.csproj" -c Release --nologo | Out-Host
 if ($LASTEXITCODE -ne 0) { Write-Host "gen build failed"; exit 1 }
+dotnet build "$root/gen-next/gen-next.csproj" -c Release --nologo | Out-Host
+if ($LASTEXITCODE -ne 0) { Write-Host "gen-next build failed"; exit 1 }
 
 if ($extract) {
     Write-Host "=== [2] Extract model (extract2: parse-only, one translation unit) ==="
@@ -204,25 +210,25 @@ Write-Host "=== [3b] Codegen (twice, to prove determinism) ==="
 $codegenTasks = @(
     [pscustomobject]@{
         Name = 'native glue'
-        FilePath = $genExe
+        FilePath = $codegenExe
         Arguments = @('codegen', "$root/model/qtsharp.api.json", "$root/out/api", '--native-only')
-        WorkingDirectory = $genBin
+        WorkingDirectory = $codegenBin
         LogPath = "$root/out/codegen.log"
     }
 )
 foreach ($module in $allModules) {
     $codegenTasks += [pscustomobject]@{
         Name = $module
-        FilePath = $genExe
+        FilePath = $codegenExe
         Arguments = @('codegen', "$root/model/qtsharp.$module.json", "$root/out/$module", '--module', $module)
-        WorkingDirectory = $genBin
+        WorkingDirectory = $codegenBin
         LogPath = "$root/out/codegen-$module.log"
     }
     $codegenTasks += [pscustomobject]@{
         Name = "$module (check run)"
-        FilePath = $genExe
+        FilePath = $codegenExe
         Arguments = @('codegen', "$root/model/qtsharp.$module.json", "$root/out/.determinism/$module", '--module', $module)
-        WorkingDirectory = $genBin
+        WorkingDirectory = $codegenBin
         LogPath = "$root/out/codegen-$module-check.log"
     }
 }

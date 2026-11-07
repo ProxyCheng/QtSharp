@@ -42,7 +42,7 @@ Write-Host "[module] $Module -> $ns ($($descriptor['classes']) classes), modules
 
 $source = Join-Path $root "out\$Module\$ns.native.cpp"
 if (-not (Test-Path -LiteralPath $source)) {
-    throw "'$source' is missing - generate it first: qtgen codegen model/qtsharp.$Module.json out/$Module --module $Module"
+    throw "'$source' is missing - generate it first: qtgen-next codegen model/qtsharp.$Module.json out/$Module --module $Module"
 }
 foreach ($qtModule in $qtModules) {
     if (-not (Test-Path -LiteralPath (Join-Path $qtInc $qtModule))) {
