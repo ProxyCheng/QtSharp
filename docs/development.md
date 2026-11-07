@@ -148,8 +148,7 @@ versioning and workflow commands.
 
 | Path | Purpose |
 |---|---|
-| `gen-next/`, `model/` | Code generator and checked-in API models |
-| `gen/` | Model extractor, splitter and module descriptor (the codegen there is the legacy oracle) |
+| `gen/`, `model/` | Code generator, extractor, model splitter and checked-in API models |
 | `native/`, `runtime/` | Handwritten native and managed runtime code |
 | `nuget/` | Binding, runtime and optional module package projects |
 | `examples/` | One executable per module: the Qt example ports, their `[Example]` registrations and the Smoke/View host |

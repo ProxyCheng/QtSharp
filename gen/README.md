@@ -1,9 +1,9 @@
-# qtgen-next
+# qtgen
 
-A clean rewrite of the QtSharp binding generator. It now produces the bindings in
-`tools/regen-api.ps1` and in the CI/release workflows; the old `gen/` executable is kept for model
-extraction, `split-core` and the module descriptor. The old code generator remains in the tree as
-the byte-for-byte oracle, but no build path invokes it.
+The QtSharp binding generator. One executable owns the whole pipeline: model extraction
+(`extract2`), the per-module split (`split-core`), the module descriptor (`module`) and code
+generation (`codegen`). `tools/regen-api.ps1` and the CI/release workflows build this project and
+call `qtgen codegen` for every module.
 
 ## Layering
 
@@ -11,7 +11,7 @@ the byte-for-byte oracle, but no build path invokes it.
 Program
   └─ GeneratorDriver                 one run: load → passes → emit → save
        ├─ ModelDocument              the JSON model, opened once
-       ├─ ModelCatalog               module metadata and dependency closure
+       ├─ ModuleCatalog              module metadata and dependency closure
        ├─ GeneratorContext           per-run state; no static run state below the driver
        ├─ PassPipeline               ordered model transformations
        └─ Emitters                   read the finished context and produce files
@@ -51,23 +51,16 @@ for parameter passing (optional struct, in/out string, out, ref, plain input). T
 
 ## Current status
 
-All 18 modules are byte-identical to the old generator, both the generated C# tree and the native
-`.cpp`. The switch was made only after that gate passed:
+The generator reproduces the old output byte for byte for all 18 modules, both the C# tree and the
+native `.cpp`; the only deliberate difference is the qualification of a namespaced enum used as a
+container element (the old output failed to compile Qt3DRender on Linux). The combined model still
+produces only the shared native glue with `--native-only`.
 
 ```powershell
-# for every module in the old regen script
-dotnet run --project gen-next/gen-next.csproj -c Release -- `
-  codegen model/qtsharp.qtcore.json out/gen-next/qtcore --module qtcore
-diff -r out/qtcore/generated out/gen-next/qtcore/generated
+dotnet run --project gen/gen.csproj -c Release -- `
+  codegen model/qtsharp.qtcore.json out/gen/qtcore --module qtcore
+diff -r out/qtcore/generated out/gen/qtcore/generated
 ```
-
-The combined model still produces only the shared native glue with `--native-only`, exactly like
-the old generator. `tools/regen-api.ps1` now runs `qtgen-next codegen` for every module; `qtgen`
-itself remains the extractor/splitter.
-
-Transitional dependency: `gen-next.csproj` references `../gen/gen.csproj` for `ApiTypes`, the
-hand-maintained table of runtime structs and C++ struct names. The table moves into the shared
-model layer when the remaining generator-side tables are lifted out of the old project.
 
 ## Layout
 
@@ -80,3 +73,5 @@ model layer when the remaining generator-side tables are lifted out of the old p
 | `Core/` | the binding model: vocabulary, hierarchy, members, marshalling |
 | `Emitters/` | C# and C++ output |
 | `Output/` | `CodeWriter` and file set |
+| `ApiModel*.cs`, `ClangExtractor.cs`, `CoreSplit.cs` | model extraction, module registry and split |
+| `Program.cs`, `HostPlatform.*` | the `qtgen` command line and its host paths |

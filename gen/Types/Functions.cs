@@ -1,4 +1,6 @@
-public static partial class ApiCodeGen
+namespace QtSharp.Generator
+{
+public sealed partial class TypeSystem
 {
     // A concrete C function type is the delegate Qt declared; QFunctionPointer has no signature,
     // so it stays the carrier struct and the caller opts into a delegate with As<TDelegate>.
@@ -32,4 +34,5 @@ public static partial class ApiCodeGen
         public override string NativeRetExpr(string t, string call)
             => $"return reinterpret_cast<void*>({call});";
     }
+}
 }

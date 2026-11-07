@@ -63,10 +63,8 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Build the generators
-        run: |
-          dotnet build gen/gen.csproj -c Release --nologo
-          dotnet build gen-next/gen-next.csproj -c Release --nologo
+      - name: Build the generator
+        run: dotnet build gen/gen.csproj -c Release --nologo
 
       - name: Generate the bindings from the checked-in models
         shell: pwsh
@@ -75,7 +73,6 @@ jobs:
           # repository root rather than at the generator's own output folder.
           $root = $env:GITHUB_WORKSPACE
           $genBin = Join-Path $root 'gen/bin/Release/net10.0/win-x64'
-          $codegenExe = Join-Path $root 'gen-next/bin/Release/net10.0/qtgen-next.exe'
           $base = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
                     'qtprintsupport', 'qtopengl', 'qtopenglwidgets')
           $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia', 'qtpositioning')
@@ -92,10 +89,10 @@ jobs:
                 throw "model/qtsharp.$module.json is stale - run tools/regen-api.ps1 -Adopt and commit it"
               }
             }
-            & $codegenExe codegen (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/api') --native-only
+            & "./qtgen.exe" codegen (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/api') --native-only
             if ($LASTEXITCODE -ne 0) { throw "codegen (native glue) failed" }
             foreach ($module in $base + $addons) {
-              & $codegenExe codegen (Join-Path $root "model/qtsharp.$module.json") (Join-Path $root "out/$module") --module $module
+              & "./qtgen.exe" codegen (Join-Path $root "model/qtsharp.$module.json") (Join-Path $root "out/$module") --module $module
               if ($LASTEXITCODE -ne 0) { throw "codegen ($module) failed" }
             }
           } finally { Pop-Location }
@@ -209,17 +206,14 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Build the generators
-        run: |
-          dotnet build gen/gen.csproj -c Release --nologo
-          dotnet build gen-next/gen-next.csproj -c Release --nologo
+      - name: Build the generator
+        run: dotnet build gen/gen.csproj -c Release --nologo
 
       - name: Generate the bindings from the checked-in models
         shell: pwsh
         run: |
           $root = $env:GITHUB_WORKSPACE
           $genBin = Join-Path $root 'gen/bin/Release/net10.0/linux-x64'
-          $codegenExe = Join-Path $root 'gen-next/bin/Release/net10.0/qtgen-next'
           $base = @('qtcore', 'qtgui', 'qtwidgets', 'qtnetwork', 'qtsvg', 'qtsvgwidgets',
                     'qtprintsupport', 'qtopengl', 'qtopenglwidgets')
           $addons = @('charts', 'qt3dcore', 'qt3drender', 'qt3dinput', 'qt3dlogic', 'qt3danimation', 'qt3dextras', 'qtmultimedia', 'qtpositioning')
@@ -234,10 +228,10 @@ jobs:
                 throw "model/qtsharp.$module.json is stale - run tools/regen-api.ps1 -Adopt and commit it"
               }
             }
-            & $codegenExe codegen (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/api') --native-only
+            & "./qtgen" codegen (Join-Path $root 'model/qtsharp.api.json') (Join-Path $root 'out/api') --native-only
             if ($LASTEXITCODE -ne 0) { throw "codegen (native glue) failed" }
             foreach ($module in $base + $addons) {
-              & $codegenExe codegen (Join-Path $root "model/qtsharp.$module.json") (Join-Path $root "out/$module") --module $module
+              & "./qtgen" codegen (Join-Path $root "model/qtsharp.$module.json") (Join-Path $root "out/$module") --module $module
               if ($LASTEXITCODE -ne 0) { throw "codegen ($module) failed" }
             }
           } finally { Pop-Location }

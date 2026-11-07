@@ -1,4 +1,6 @@
-public static partial class ApiCodeGen
+namespace QtSharp.Generator
+{
+public sealed partial class TypeSystem
 {
     // QVariant is erased to object: the value is unwrapped to its BCL shape and boxed back on the
     // way in. The wrapper builds or leases the native variant around the call.
@@ -34,4 +36,5 @@ public static partial class ApiCodeGen
                 $"{prefix}Variant.Handle",
                 new System.Collections.Generic.List<string>());
     }
+}
 }

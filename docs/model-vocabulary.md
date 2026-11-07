@@ -12,12 +12,12 @@ Four files own it:
 |---|---|
 | `gen/ClangExtractor.cs` (`ModelName`, `SupportedType`, `Accept`) | whether a clang type has a model spelling, and so whether the declaration is kept at all |
 | `gen/ApiModel.cs` (`ApiTypes.Managed`, `BuildVocabulary`/`SupportedTypes`, `ApiTypes.RuntimeStructs`) | what a model spelling means in C#, which spellings are supported, and which Qt classes are value structs |
-| `gen-next/Core/BindingModel.cs` and `gen-next/Emitters/ContainerGlueEmitter.cs` (the container helper writers) and `gen-next/Types/*.cs` (the regex-registered `[TypeHandler]` classes) | the emitted managed signature and the marshalling behind it |
+| `gen/Core/BindingModel.cs` and `gen/Emitters/ContainerGlueEmitter.cs` (the container helper writers) and `gen/Types/*.cs` (the regex-registered `[TypeHandler]` classes) | the emitted managed signature and the marshalling behind it |
 
 The code generator selects a model type's handler with the regular expressions declared by
 `[TypeHandler]`; the registry is built by reflection at startup. The handler owns the managed, ABI,
 C++, container-shape and marshalling decisions for its spelling, so adding a type is one small
-class in `gen-next/Types/`, not another branch in every parallel mapping function.
+class in `gen/Types/`, not another branch in every parallel mapping function.
 
 ## What the vocabulary covers today
 

@@ -698,7 +698,12 @@ class Program
 
                 if (positional.Count >= 3 && positional[0] == "codegen")
                 {
-                    ApiCodeGen.Run(positional[1], positional[2], module, nativeOnly);
+                    QtSharp.Generator.GeneratorDriver.Run(new QtSharp.Generator.GeneratorOptions(
+                        positional[1], positional[2], module?.Name, nativeOnly));
+                    string assemblyName = module?.Namespace ?? ApiModel.CoreNamespace;
+                    Console.WriteLine(nativeOnly
+                        ? $"[codegen] wrote {assemblyName}.native.cpp (native glue only)"
+                        : $"[codegen] wrote {positional[2]}/generated/ + {assemblyName}.native.cpp");
                     return 0;
                 }
 

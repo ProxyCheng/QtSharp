@@ -1,4 +1,6 @@
-public static partial class ApiCodeGen
+namespace QtSharp.Generator
+{
+public sealed partial class TypeSystem
 {
     [TypeHandler(@"^[\w:]+$", 80)]
     sealed class StructHandler : TypeHandler
@@ -40,7 +42,7 @@ public static partial class ApiCodeGen
             => ApiTypes.IsStruct(t.Substring(0, t.Length - 1));
         public override bool IsStructPointer(string t) => true;
         public override string ManagedType(string t)
-            => ApiCodeGen.ManagedElement(t.Substring(0, t.Length - 1)) + "[]";
+            => S.ManagedElement(t.Substring(0, t.Length - 1)) + "[]";
         public override string NativeParamType(string t) => ManagedType(t);
         public override string NativeRetType(string t) => "IntPtr";
         public override string CppAbiType(string t) => StructArrayAbiType(t);
@@ -62,7 +64,7 @@ public static partial class ApiCodeGen
         public override string ManagedType(string t)
             => IsByteBuffer(t)
                 ? "byte[]"
-                : ApiCodeGen.ManagedElement(t.Substring(0, t.Length - 1)) + "[]";
+                : S.ManagedElement(t.Substring(0, t.Length - 1)) + "[]";
         public override string NativeParamType(string t) => ManagedType(t);
         public override string NativeRetType(string t) => "IntPtr";
         public override string CppAbiType(string t)
@@ -151,4 +153,5 @@ public static partial class ApiCodeGen
         public override string CppArg(string t, string name, string defaultCpp)
             => BoxedCppArg(t, name, defaultCpp);
     }
+}
 }

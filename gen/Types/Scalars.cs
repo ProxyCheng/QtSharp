@@ -1,4 +1,6 @@
-public static partial class ApiCodeGen
+namespace QtSharp.Generator
+{
+public sealed partial class TypeSystem
 {
     [TypeHandler(@"^void$", 0)]
     sealed class VoidHandler : TypeHandler
@@ -110,7 +112,7 @@ public static partial class ApiCodeGen
         public override string ElementAbiCppRet(string e) => "int";
         public override string ElementAbiCsParam(string e) => "int";
         public override string ElementAbiCsRet(string e) => "int";
-        public override string ElementToCpp(string e, string expr) => $"static_cast<{e}>({expr})";
+        public override string ElementToCpp(string e, string expr) => $"static_cast<{CppTypeName(e)}>({expr})";
         public override string ElementFromCpp(string e, string expr) => $"static_cast<int>({expr})";
         public override string ElementRead(string e, string expr) => $"({CsEnum(e)}){expr}";
         public override string ElementArg(string e, string expr) => $"(int){expr}";
@@ -134,4 +136,5 @@ public static partial class ApiCodeGen
         public override string NativeRetExpr(string t, string call)
             => $"return static_cast<long long>(std::chrono::duration_cast<std::chrono::nanoseconds>({call}).count());";
     }
+}
 }

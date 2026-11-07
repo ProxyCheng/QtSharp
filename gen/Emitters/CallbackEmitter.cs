@@ -4,12 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 
-public static partial class ApiCodeGen
+namespace QtSharp.Generator
 {
-    static readonly CallbackEmitter Callbacks = new();
-
-    sealed class CallbackEmitter : Emitter
+    public sealed class CallbackEmitter : BindingEmitter
     {
+        public CallbackEmitter(GeneratorContext context) : base(context)
+        {
+        }
+
         // Every function-type spelling that appears in a published signature. One thunk class per
         // distinct spelling: the ABI shape is a function of the spelling alone, so two APIs taking the
         // same function type share the conversion code. Both positions count - a returned callback is
@@ -19,17 +21,17 @@ public static partial class ApiCodeGen
             var found = new SortedSet<string>(StringComparer.Ordinal);
             void Add(string t)
             {
-                if (IsCallbackType(t))
+                if (B.IsCallbackType(t))
                     found.Add(t);
             }
 
-            foreach (var (fn, _) in FreeFunctionEntries())
+            foreach (var (fn, _) in B.FreeFunctionEntries())
             {
-                Add(ReturnType(fn));
-                foreach (var p in Params(fn))
-                    Add(PType(p));
+                Add(B.ReturnType(fn));
+                foreach (var p in B.Params(fn))
+                    Add(B.PType(p));
             }
-            foreach (var cls in Classes)
+            foreach (var cls in B.Classes)
             {
                 foreach (string list in new[] { "methods", "virtuals", "constructors" })
                 {
@@ -39,9 +41,9 @@ public static partial class ApiCodeGen
                     {
                         // Constructors have no return value, and only they lack the property.
                         if (list != "constructors")
-                            Add(ReturnType(fn));
-                        foreach (var p in Params(fn))
-                            Add(PType(p));
+                            Add(B.ReturnType(fn));
+                        foreach (var p in B.Params(fn))
+                            Add(B.PType(p));
                     }
                 }
             }
@@ -59,16 +61,16 @@ public static partial class ApiCodeGen
                 if (!ApiTypes.TryParseCallback(spelling, out string ret, out string[] arguments))
                     continue;
 
-                string className = CallbackThunkName(spelling);
-                string managed = CallbackDelegateType(spelling);
+                string className = B.CallbackThunkName(spelling);
+                string managed = B.CallbackDelegateType(spelling);
                 var declarations = new List<string>();
                 var parameters = new List<string>();
                 var conversions = new List<string>();
                 for (int i = 0; i < arguments.Length; i++)
                 {
-                    declarations.Add(CallbackAbiParam(arguments[i], i));
+                    declarations.Add(B.CallbackAbiParam(arguments[i], i));
                     parameters.Add("arg" + i);
-                    conversions.Add(CallbackParamToManaged(arguments[i], "arg" + i));
+                    conversions.Add(B.CallbackParamToManaged(arguments[i], "arg" + i));
                 }
                 string call = $"callback({string.Join(", ", conversions)})";
 
@@ -82,7 +84,7 @@ public static partial class ApiCodeGen
                 sb.AppendLine("        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]");
                 if (ret == "bool")
                     sb.AppendLine("        [return: MarshalAs(UnmanagedType.I1)]");
-                sb.AppendLine($"        private delegate {CallbackAbiType(ret)} Native({string.Join(", ", declarations)});");
+                sb.AppendLine($"        private delegate {B.CallbackAbiType(ret)} Native({string.Join(", ", declarations)});");
                 sb.AppendLine();
                 sb.AppendLine($"        internal static IntPtr Get({managed} callback)");
                 sb.AppendLine("        {");
@@ -95,7 +97,7 @@ public static partial class ApiCodeGen
                 if (ret == "void")
                     sb.AppendLine($"                    {call};");
                 else
-                    sb.AppendLine($"                    return {CallbackReturnToAbi(ret, call)};");
+                    sb.AppendLine($"                    return {B.CallbackReturnToAbi(ret, call)};");
                 sb.AppendLine("                }");
                 sb.AppendLine("                catch (Exception exception)");
                 sb.AppendLine("                {");
@@ -124,7 +126,7 @@ public static partial class ApiCodeGen
                     }
                     else
                     {
-                        abiArguments.Add(CallbackManagedToAbi(arguments[i], "arg" + i));
+                        abiArguments.Add(B.CallbackManagedToAbi(arguments[i], "arg" + i));
                     }
                 }
                 string nativeCall = $"native({string.Join(", ", abiArguments)})";
@@ -144,7 +146,7 @@ public static partial class ApiCodeGen
                 {
                     string body = ret == "void"
                         ? nativeCall
-                        : CallbackAbiToManagedReturn(ret, nativeCall);
+                        : B.CallbackAbiToManagedReturn(ret, nativeCall);
                     sb.AppendLine($"                return new {managed}(({managedParameters}) => {body});");
                 }
                 else
@@ -158,7 +160,7 @@ public static partial class ApiCodeGen
                     if (ret == "void")
                         sb.AppendLine($"                        {nativeCall};");
                     else
-                        sb.AppendLine($"                        return {CallbackAbiToManagedReturn(ret, nativeCall)};");
+                        sb.AppendLine($"                        return {B.CallbackAbiToManagedReturn(ret, nativeCall)};");
                     sb.AppendLine("                    }");
                     sb.AppendLine("                    finally");
                     sb.AppendLine("                    {");
@@ -173,5 +175,6 @@ public static partial class ApiCodeGen
                 sb.AppendLine();
             }
         }
+    
     }
 }

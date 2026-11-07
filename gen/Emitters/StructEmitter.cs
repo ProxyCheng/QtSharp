@@ -4,12 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 
-public static partial class ApiCodeGen
+namespace QtSharp.Generator
 {
-    static readonly StructEmitter Structs = new();
-
-    sealed class StructEmitter : Emitter
+    public sealed class StructEmitter : BindingEmitter
     {
+        public StructEmitter(GeneratorContext context) : base(context)
+        {
+        }
+
         /// <summary>
         /// The constructors the model declares for a value type, without the parameterless one: C#'s
         /// `default` already produces the same zero value Qt's own default constructor does.
@@ -17,17 +19,17 @@ public static partial class ApiCodeGen
         public List<JsonElement> StructCtors(string name)
         {
             var ctors = new List<JsonElement>();
-            if (!ModelClassNames.Contains(name))
+            if (!B.ModelClassNames.Contains(name))
                 return ctors;
-            var cls = CoreClassOf(name);
+            var cls = B.CoreClassOf(name);
             if (cls == null || !cls.Value.TryGetProperty("constructors", out var cs))
                 return ctors;
             // C#'s `default` is Qt's default construction for almost every value type. QCalendar is
             // the exception: default(QCalendar) is the null backend, while QCalendar() is Gregorian,
             // so its parameterless constructor stays callable.
-            bool keepZeroCtor = ZeroCtorStructs.Contains(name);
+            bool keepZeroCtor = B.ZeroCtorStructs.Contains(name);
             foreach (var c in cs.EnumerateArray())
-                if (Params(c).Count > 0 || keepZeroCtor)
+                if (B.Params(c).Count > 0 || keepZeroCtor)
                     ctors.Add(c);
             return ctors;
         }
@@ -40,13 +42,13 @@ public static partial class ApiCodeGen
         public List<JsonElement> StructComparisons(string name)
         {
             var ops = new List<JsonElement>();
-            if (!ModelClassNames.Contains(name))
+            if (!B.ModelClassNames.Contains(name))
                 return ops;
-            var cls = CoreClassOf(name);
+            var cls = B.CoreClassOf(name);
             if (cls == null || !cls.Value.TryGetProperty("methods", out var ms))
                 return ops;
             foreach (var m in ms.EnumerateArray())
-                if (ComparisonSymbol(Name(m)) != null && Params(m).Count == 2)
+                if (ComparisonSymbol(B.Name(m)) != null && B.Params(m).Count == 2)
                     ops.Add(m);
             return ops;
         }
@@ -64,7 +66,7 @@ public static partial class ApiCodeGen
 
 
         /// <summary>A C identifier for one of them, used in the export and P/Invoke names.</summary>
-        public string ComparisonEntry(JsonElement op) => Name(op) switch
+        public string ComparisonEntry(JsonElement op) => B.Name(op) switch
         {
             "operator==" => "eq",
             "operator!=" => "ne",
@@ -78,28 +80,28 @@ public static partial class ApiCodeGen
         public List<(JsonElement Method, string Entry, string Cs)> StructMembers(string name)
         {
             var members = new List<(JsonElement, string, string)>();
-            if (!ModelClassNames.Contains(name))
+            if (!B.ModelClassNames.Contains(name))
                 return members;
-            var cls = CoreClassOf(name);
+            var cls = B.CoreClassOf(name);
             if (cls == null || !cls.Value.TryGetProperty("methods", out var ms))
                 return members;
-            var written = HandWrittenMembers(name);
+            var written = B.HandWrittenMembers(name);
             var seen = new Dictionary<string, int>(StringComparer.Ordinal);
             var signatures = new HashSet<string>(StringComparer.Ordinal);
             void Add(JsonElement m)
             {
-                string n = Name(m);
+                string n = B.Name(m);
                 // An operator or the destructor is not a member C# can forward under that name.
-                if (!IsIdentifier(n) || n == name)
+                if (!B.IsIdentifier(n) || n == name)
                     return;
                 // A struct has no inheritance, so the methods it inherits from its base classes have to
                 // be folded in. QOperatingSystemVersion's major/minor/micro accessors live in
                 // QOperatingSystemVersionBase: as a class they arrived through the base chain, as a
                 // struct they would otherwise disappear. Own members win over an inherited overload.
-                string signature = n + "(" + string.Join(",", Params(m).Select(PType)) + ")";
+                string signature = n + "(" + string.Join(",", B.Params(m).Select(B.PType)) + ")";
                 if (!signatures.Add(signature))
                     return;
-                string cs = MemberName(name, n);
+                string cs = B.MemberName(name, n);
                 if (written.Contains(cs))
                     return;
                 seen.TryGetValue(n, out int count);
@@ -108,7 +110,7 @@ public static partial class ApiCodeGen
             }
             foreach (var m in ms.EnumerateArray())
                 Add(m);
-            foreach (var baseCls in BaseChainOf(cls.Value))
+            foreach (var baseCls in B.BaseChainOf(cls.Value))
                 if (baseCls.TryGetProperty("methods", out var baseMethods))
                     foreach (var m in baseMethods.EnumerateArray())
                         Add(m);
@@ -120,9 +122,9 @@ public static partial class ApiCodeGen
         {
             var members = StructMembers(name);
             var ctors = StructCtors(name);
-            var written = HandWrittenMembers(name);
+            var written = B.HandWrittenMembers(name);
             bool handWrittenCtor = written.Contains(name);
-            bool hasVariant = StructHasVariant(name);
+            bool hasVariant = B.StructHasVariant(name);
             // A type whose whole surface is hand-written still gets its constructors generated (the last
             // ones not to be), so the early return has to account for them.
             if (!hasVariant && members.Count == 0 && (handWrittenCtor || ctors.Count == 0))
@@ -130,8 +132,8 @@ public static partial class ApiCodeGen
             var row = ApiTypes.RuntimeStructOf(name).Value;
             sb.AppendLine();
             sb.AppendLine($"    /// <summary>{name}: {string.Join(", ", row.Types)} fields, Qt's own members forwarded through them.</summary>");
-            sb.AppendLine($"    [GeneratedCode(\"qtgen\", \"{GeneratedByVersion}\")]");
-            string partial = handWrittenParts.Contains(name) ? "partial " : "";
+            sb.AppendLine($"    [GeneratedCode(\"qtgen\", \"{BindingModel.GeneratedByVersion}\")]");
+            string partial = B.handWrittenParts.Contains(name) ? "partial " : "";
             sb.AppendLine($"    public {partial}struct {name} : IEquatable<{name}>");
             sb.AppendLine("    {");
             // The storage. The field names are the model's, and their order is the POD's, which is Qt's
@@ -139,7 +141,7 @@ public static partial class ApiCodeGen
             // The field's C# spelling, not the model's: "long long" is `long` over here (QDate's
             // julian day), and a pointer field is IntPtr, while the POD keeps the C++ spelling it needs.
             for (int i = 0; i < row.Fields.Length; i++)
-                sb.AppendLine($"        {ManagedStructFieldType(row.Types[i])} _{row.Fields[i]};");
+                sb.AppendLine($"        {B.ManagedStructFieldType(row.Types[i])} _{row.Fields[i]};");
             sb.AppendLine();
             // Equality and hashing are Qt's, through the generated glue: operator== for the types that
             // declare one, qHash where it exists, and a field-wise or byte-wise fallback otherwise.
@@ -159,14 +161,14 @@ public static partial class ApiCodeGen
             // model): forwarded, so the answer is Qt's.
             foreach (var op in StructComparisons(name))
             {
-                string symbol = ComparisonSymbol(Name(op));
+                string symbol = ComparisonSymbol(B.Name(op));
                 sb.AppendLine($"        public static bool operator {symbol}({name} a, {name} b) => ApiNative.{name}_{ComparisonEntry(op)}(a, b);");
             }
             if (StructComparisons(name).Count > 0)
                 sb.AppendLine();
             // The nested types Qt declares on it (QLineF::IntersectionType): the class that would have
             // carried them is not generated, so the struct does.
-            WriteEnums(sb, name, 2);
+            B.WriteEnums(sb, name, 2);
             // Constructors, forwarded like every other member: the glue builds Qt's own value from the
             // arguments and hands back its bytes, so no formula is translated by hand - QRect's
             // (x, y, width, height) becoming two corners is Qt's rule, not a copy of it.
@@ -175,13 +177,13 @@ public static partial class ApiCodeGen
                 int n = 0;
                 foreach (var ctor in ctors)
                 {
-                    var cps = Params(ctor);
+                    var cps = B.Params(ctor);
                     // The arguments go over the same way every other call's do: an enum as its int, a
                     // bound class as its handle, a nested value type as itself. Passing the managed
                     // spelling straight through compiled only while every argument happened to be a
                     // scalar (QDate's QCalendar overload and QVector's Qt::Initialization did not).
-                    var marshal = MarshalParams(cps, null);
-                    sb.AppendLine($"        public {name}({string.Join(", ", cps.Select(ParamSig))})");
+                    var marshal = B.MarshalParams(cps, null);
+                    sb.AppendLine($"        public {name}({string.Join(", ", cps.Select(B.ParamSig))})");
                     sb.AppendLine("        {");
                     foreach (var line in marshal.Prelude)
                         sb.AppendLine("            " + line);
@@ -194,19 +196,19 @@ public static partial class ApiCodeGen
             }
             foreach (var (m, entry, cs) in members)
             {
-                var ps = Params(m);
-                string ret = ReturnType(m);
-                string staticMod = IsStatic(m) ? "static " : "";
+                var ps = B.Params(m);
+                string ret = B.ReturnType(m);
+                string staticMod = B.IsStatic(m) ? "static " : "";
                 // A member that mutates in place hands over its own storage by reference: the value
                 // cannot be changed through a copy, and C# lets a struct method pass `ref this`.
-                string self = IsStatic(m) ? null : MutatesInPlace(name, m, ret) ? "ref this" : "this";
-                sb.AppendLine($"        public {staticMod}{ManagedRetType(ret)} {cs}({string.Join(", ", ps.Select(ParamSig))})");
+                string self = B.IsStatic(m) ? null : MutatesInPlace(name, m, ret) ? "ref this" : "this";
+                sb.AppendLine($"        public {staticMod}{B.ManagedRetType(ret)} {cs}({string.Join(", ", ps.Select(B.ParamSig))})");
                 sb.AppendLine("        {");
-                var marshal = MarshalParams(ps, self);
+                var marshal = B.MarshalParams(ps, self);
                 foreach (string line in marshal.Prelude)
                     sb.AppendLine("            " + line);
                 string call = $"ApiNative.{name}_{entry}({string.Join(", ", marshal.Args)})";
-                string body = ret == "void" ? call + ";" : "return " + RetToManaged(ret, call) + ";";
+                string body = ret == "void" ? call + ";" : "return " + B.RetToManaged(ret, call) + ";";
                 sb.AppendLine("            " + body);
                 sb.AppendLine("        }");
                 sb.AppendLine();
@@ -223,7 +225,7 @@ public static partial class ApiCodeGen
                     if (handWrittenCtor)
                         break;
                     sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}_ctor{n}\", CallingConvention = CallingConvention.Cdecl)]");
-                    sb.AppendLine($"        internal static extern {name} {name}_ctor{n}({string.Join(", ", Params(ctor).SelectMany(NativeParamsFor))});");
+                    sb.AppendLine($"        internal static extern {name} {name}_ctor{n}({string.Join(", ", B.Params(ctor).SelectMany(B.NativeParamsFor))});");
                     n++;
                 }
             }
@@ -236,18 +238,18 @@ public static partial class ApiCodeGen
             }
             foreach (var (m, entry, cs) in members)
             {
-                var ps = Params(m);
+                var ps = B.Params(m);
                 var nativeParams = new List<string>();
                 // The value crosses as itself: the managed struct and the POD are the same bytes. A
                 // mutating one crosses by reference, so the write-back reaches the caller's storage.
-                if (!IsStatic(m))
-                    nativeParams.Add(MutatesInPlace(name, m, ReturnType(m)) ? $"ref {name} self" : $"{name} self");
-                nativeParams.AddRange(ps.SelectMany(NativeParamsFor));
-                string ret = ReturnType(m);
+                if (!B.IsStatic(m))
+                    nativeParams.Add(MutatesInPlace(name, m, B.ReturnType(m)) ? $"ref {name} self" : $"{name} self");
+                nativeParams.AddRange(ps.SelectMany(B.NativeParamsFor));
+                string ret = B.ReturnType(m);
                 sb.AppendLine($"        [SuppressUnmanagedCodeSecurity, DllImport(Library, EntryPoint = \"qs_api_{name}_{entry}\", CallingConvention = CallingConvention.Cdecl)]");
                 if (ret == "bool")
                     sb.AppendLine("        [return: MarshalAs(UnmanagedType.I1)]");
-                sb.AppendLine($"        internal static extern {NativeRetType(ret)} {name}_{entry}({string.Join(", ", nativeParams)});");
+                sb.AppendLine($"        internal static extern {B.NativeRetType(ret)} {name}_{entry}({string.Join(", ", nativeParams)});");
             }
             if (hasVariant)
             {
@@ -284,29 +286,29 @@ public static partial class ApiCodeGen
             // chaining (QTransform::scale/translate/rotate/shear, QMatrix4x4's). A struct has no handle
             // behind which the mutation could happen, so both shapes have to write back through `ref
             // this` - the old class wrapper hid the second case.
-            => !IsStatic(m) && !IsConstMethod(m) && (ret == "void" || ret == name);
+            => !B.IsStatic(m) && !IsConstMethod(m) && (ret == "void" || ret == name);
 
 
         public bool IsConstMethod(JsonElement m)
-            => HasMethod(m, ApiModel.MethodFlags.Const);
+            => B.HasMethod(m, ApiModel.MethodFlags.Const);
 
 
         public void WriteStructNative(StringBuilder sb, string name)
         {
-            if (!HandWrittenMembers(name).Contains(name))
+            if (!B.HandWrittenMembers(name).Contains(name))
             {
                 int n = 0;
                 foreach (var ctor in StructCtors(name))
                 {
-                    var cps = Params(ctor);
-                    sb.AppendLine($"extern \"C\" QS_API_EXPORT {StructPod(name)} qs_api_{name}_ctor{n}({string.Join(", ", cps.SelectMany(CppParamsFor))})");
+                    var cps = B.Params(ctor);
+                    sb.AppendLine($"extern \"C\" QS_API_EXPORT {B.StructPod(name)} qs_api_{name}_ctor{n}({string.Join(", ", cps.SelectMany(B.CppParamsFor))})");
                     sb.AppendLine("{");
                     // A parameterless constructor keeps its own line: `QCalendar qs_new();` would
                     // declare a function instead of building the value.
                     sb.AppendLine(cps.Count == 0
                         ? $"    {ApiTypes.CppStructName(name)} qs_new;"
-                        : $"    {ApiTypes.CppStructName(name)} qs_new({string.Join(", ", cps.SelectMany(CppArgsFor))});");
-                    sb.AppendLine($"    return {StructToPod(name, "qs_new")};");
+                        : $"    {ApiTypes.CppStructName(name)} qs_new({string.Join(", ", cps.SelectMany(B.CppArgsFor))});");
+                    sb.AppendLine($"    return {B.StructToPod(name, "qs_new")};");
                     sb.AppendLine("}");
                     sb.AppendLine();
                     n++;
@@ -315,9 +317,9 @@ public static partial class ApiCodeGen
             foreach (var op in StructComparisons(name))
             {
                 string cmp = ComparisonEntry(op);
-                sb.AppendLine($"extern \"C\" QS_API_EXPORT bool qs_api_{name}_cmp_{cmp}({StructPod(name)} a, {StructPod(name)} b)");
+                sb.AppendLine($"extern \"C\" QS_API_EXPORT bool qs_api_{name}_cmp_{cmp}({B.StructPod(name)} a, {B.StructPod(name)} b)");
                 sb.AppendLine("{");
-                sb.AppendLine($"    return {StructFromPod(name, "a")} {ComparisonSymbol(Name(op))} {StructFromPod(name, "b")};");
+                sb.AppendLine($"    return {B.StructFromPod(name, "a")} {ComparisonSymbol(B.Name(op))} {B.StructFromPod(name, "b")};");
                 sb.AppendLine("}");
                 sb.AppendLine();
             }
@@ -327,7 +329,7 @@ public static partial class ApiCodeGen
                 // declares one, otherwise a generated field-wise hash (or, for a type whose opaque
                 // words are all there is, the bytes). The few types whose hash Qt cannot provide or
                 // whose operator== ignores part of the value keep an expression in NativeHashStructs.
-                string pod = StructPod(name);
+                string pod = B.StructPod(name);
                 string cpp = ApiTypes.CppStructName(name);
                 var row = ApiTypes.RuntimeStructOf(name).Value;
                 sb.AppendLine($"extern \"C\" QS_API_EXPORT bool qs_api_{name}_valueEq({pod} lhs, {pod} rhs)");
@@ -361,61 +363,61 @@ public static partial class ApiCodeGen
                 sb.AppendLine("}");
                 sb.AppendLine();
             }
-            if (StructHasVariant(name))
+            if (B.StructHasVariant(name))
             {
                 // The conversion operator is the only way into a QVariant for a trivially copyable
                 // QtGui type: qvariant.h has no constructor for it.
-                string pod = StructPod(name);
+                string pod = B.StructPod(name);
                 sb.AppendLine($"extern \"C\" QS_API_EXPORT void* qs_api_{name}_toQVariant({pod} qs_pod)");
                 sb.AppendLine("{");
-                sb.AppendLine($"    return new QVariant(static_cast<QVariant>({StructFromPod(name, "qs_pod")}));");
+                sb.AppendLine($"    return new QVariant(static_cast<QVariant>({B.StructFromPod(name, "qs_pod")}));");
                 sb.AppendLine("}");
                 sb.AppendLine();
                 sb.AppendLine($"extern \"C\" QS_API_EXPORT {pod} qs_api_{name}_fromQVariant(const void* variant)");
                 sb.AppendLine("{");
                 sb.AppendLine($"    {ApiTypes.CppStructName(name)} qs_value = static_cast<const QVariant*>(variant)->value<{ApiTypes.CppStructName(name)}>();");
-                sb.AppendLine($"    return {StructToPod(name, "qs_value")};");
+                sb.AppendLine($"    return {B.StructToPod(name, "qs_value")};");
                 sb.AppendLine("}");
                 sb.AppendLine();
             }
             foreach (var (m, entry, cs) in StructMembers(name))
             {
-                var ps = Params(m);
-                string ret = ReturnType(m);
+                var ps = B.Params(m);
+                string ret = B.ReturnType(m);
                 bool mutates = MutatesInPlace(name, m, ret);
-                string pod = StructPod(name);
+                string pod = B.StructPod(name);
                 var nativeParams = new List<string>();
-                if (!IsStatic(m))
+                if (!B.IsStatic(m))
                     nativeParams.Add(mutates ? $"{pod}* qs_pod" : $"{pod} qs_pod");
-                nativeParams.AddRange(ps.SelectMany(CppParamsFor));
-                string args = string.Join(", ", ps.SelectMany(CppArgsFor));
-                string call = IsStatic(m) ? $"{ApiTypes.CppStructName(name)}::{Name(m)}({args})" : $"qs_self.{Name(m)}({args})";
-                sb.AppendLine($"extern \"C\" QS_API_EXPORT {NativeRetCpp(ret)} qs_api_{name}_{entry}({string.Join(", ", nativeParams)})");
+                nativeParams.AddRange(ps.SelectMany(B.CppParamsFor));
+                string args = string.Join(", ", ps.SelectMany(B.CppArgsFor));
+                string call = B.IsStatic(m) ? $"{ApiTypes.CppStructName(name)}::{B.Name(m)}({args})" : $"qs_self.{B.Name(m)}({args})";
+                sb.AppendLine($"extern \"C\" QS_API_EXPORT {B.NativeRetCpp(ret)} qs_api_{name}_{entry}({string.Join(", ", nativeParams)})");
                 sb.AppendLine("{");
                 if (mutates)
                 {
                     // The call changes qs_self in place, and the caller's storage has to see that; a
                     // value-returning mutator (QTransform::scale returns *this for chaining) also hands
                     // the result back, so the write-back must happen before the return statement.
-                    sb.AppendLine($"    {ApiTypes.CppStructName(name)} qs_self = {StructFromPod(name, "(*qs_pod)")};");
+                    sb.AppendLine($"    {ApiTypes.CppStructName(name)} qs_self = {B.StructFromPod(name, "(*qs_pod)")};");
                     if (ret == "void")
                     {
-                        foreach (string line in NativeBody(m, call))
+                        foreach (string line in B.NativeBody(m, call))
                             sb.AppendLine("    " + line);
-                        sb.AppendLine($"    *qs_pod = {StructToPod(name, "qs_self")};");
+                        sb.AppendLine($"    *qs_pod = {B.StructToPod(name, "qs_self")};");
                     }
                     else
                     {
                         sb.AppendLine($"    auto qs_result = {call};");
-                        sb.AppendLine($"    *qs_pod = {StructToPod(name, "qs_self")};");
-                        sb.AppendLine("    " + NativeRetExpr(ret, "qs_result"));
+                        sb.AppendLine($"    *qs_pod = {B.StructToPod(name, "qs_self")};");
+                        sb.AppendLine("    " + B.NativeRetExpr(ret, "qs_result"));
                     }
                 }
                 else
                 {
-                    if (!IsStatic(m))
-                        sb.AppendLine($"    {ApiTypes.CppStructName(name)} qs_self = {StructFromPod(name, "qs_pod")};");
-                    foreach (string line in NativeBody(m, call))
+                    if (!B.IsStatic(m))
+                        sb.AppendLine($"    {ApiTypes.CppStructName(name)} qs_self = {B.StructFromPod(name, "qs_pod")};");
+                    foreach (string line in B.NativeBody(m, call))
                         sb.AppendLine("    " + line);
                 }
                 sb.AppendLine("}");
@@ -424,5 +426,6 @@ public static partial class ApiCodeGen
         }
 
 
+    
     }
 }

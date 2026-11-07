@@ -1,4 +1,6 @@
-public static partial class ApiCodeGen
+namespace QtSharp.Generator
+{
+public sealed partial class TypeSystem
 {
     [TypeHandler(@"^(?:QString|QStringView|QAnyStringView)$", 10)]
     sealed class StringHandler : TypeHandler
@@ -131,4 +133,5 @@ public static partial class ApiCodeGen
         public override string ElementRead(string e, string expr) => expr;
         public override string ElementArg(string e, string expr) => expr;
     }
+}
 }

@@ -59,7 +59,7 @@ echo "[module] $module -> $namespace, modules $qtModules, links $qtLibs"
 
 source_file="out/$module/$namespace.native.cpp"
 if [ ! -f "$source_file" ]; then
-    echo "'$source_file' is missing - generate it first: qtgen-next codegen model/qtsharp.$module.json out/$module --module $module" >&2
+    echo "'$source_file' is missing - generate it first: qtgen codegen model/qtsharp.$module.json out/$module --module $module" >&2
     exit 1
 fi
 for qtModule in $qtModules; do

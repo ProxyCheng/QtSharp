@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 
-public static partial class ApiCodeGen
+namespace QtSharp.Generator
+{
+public sealed partial class TypeSystem
 {
     [TypeHandler(@"^QStringList$", 10)]
     sealed class StringListHandler : TypeHandler
@@ -64,8 +66,8 @@ public static partial class ApiCodeGen
     {
         public override bool IsSequence(string t) => true;
         public override string ManagedType(string t) => Container(t).IsSet
-            ? $"HashSet<{ApiCodeGen.ManagedElement(Container(t).Element)}>"
-            : $"List<{ApiCodeGen.ManagedElement(Container(t).Element)}>";
+            ? $"HashSet<{S.ManagedElement(Container(t).Element)}>"
+            : $"List<{S.ManagedElement(Container(t).Element)}>";
         public override string NativeParamType(string t) => "IntPtr";
         public override string NativeRetType(string t) => "IntPtr";
         public override string CppAbiType(string t) => "void*";
@@ -127,7 +129,7 @@ public static partial class ApiCodeGen
         public override string ManagedType(string t)
         {
             var (key, value) = AssocElems(t);
-            return $"Dictionary<{ApiCodeGen.ManagedElement(key)}, {ApiCodeGen.ManagedElement(value)}>";
+            return $"Dictionary<{S.ManagedElement(key)}, {S.ManagedElement(value)}>";
         }
         public override string NativeParamType(string t) => "IntPtr";
         public override string NativeRetType(string t) => "IntPtr";
@@ -185,7 +187,7 @@ public static partial class ApiCodeGen
         public override string ManagedType(string t)
         {
             var (first, second) = PairElems(t);
-            return $"ValueTuple<{ApiCodeGen.ManagedElement(first)}, {ApiCodeGen.ManagedElement(second)}>";
+            return $"ValueTuple<{S.ManagedElement(first)}, {S.ManagedElement(second)}>";
         }
         public override string NativeParamType(string t) => "IntPtr";
         public override string NativeRetType(string t) => "IntPtr";
@@ -218,7 +220,7 @@ public static partial class ApiCodeGen
         public override string ManagedType(string t)
         {
             string inner = OptionalElem(t);
-            string managed = ApiCodeGen.ManagedElement(inner);
+            string managed = S.ManagedElement(inner);
             return IsValueTypeManaged(inner) ? managed + "?" : managed;
         }
         public override string NativeParamType(string t) => "IntPtr";
@@ -240,32 +242,32 @@ public static partial class ApiCodeGen
 
     // The mainline's container-shape facade. Only handlers that override Container participate;
     // a non-container returns null.
-    static string SequenceElem(string t) => ContainerOf(t).Element;
-    static string SequenceClass(string t) => ContainerOf(t).Class;
-    static string SequencePrefix(string t) => ContainerOf(t).Prefix;
-    static string SequenceTag(string t) => ContainerOf(t).Tag;
-    static string SequenceStem(string t) => ContainerOf(t).Stem;
-    static string SequenceHelper(string t) => ContainerOf(t).Helper;
-    static string AssocClass(string t) => ContainerOf(t).Class;
-    static string AssocPrefix(string t) => ContainerOf(t).Prefix;
-    static string AssocTag(string t) => ContainerOf(t).Tag;
-    static string AssocStem(string t) => ContainerOf(t).Stem;
-    static string AssocHelper(string t) => ContainerOf(t).Helper;
-    static (string Key, string Value) AssocElems(string t)
+    internal string SequenceElem(string t) => ContainerOf(t).Element;
+    internal string SequenceClass(string t) => ContainerOf(t).Class;
+    internal string SequencePrefix(string t) => ContainerOf(t).Prefix;
+    internal string SequenceTag(string t) => ContainerOf(t).Tag;
+    internal string SequenceStem(string t) => ContainerOf(t).Stem;
+    internal string SequenceHelper(string t) => ContainerOf(t).Helper;
+    internal string AssocClass(string t) => ContainerOf(t).Class;
+    internal string AssocPrefix(string t) => ContainerOf(t).Prefix;
+    internal string AssocTag(string t) => ContainerOf(t).Tag;
+    internal string AssocStem(string t) => ContainerOf(t).Stem;
+    internal string AssocHelper(string t) => ContainerOf(t).Helper;
+    internal (string Key, string Value) AssocElems(string t)
         => (ContainerOf(t).Key, ContainerOf(t).Value);
-    static (string First, string Second) PairElems(string t)
+    internal (string First, string Second) PairElems(string t)
         => (ContainerOf(t).Element, ContainerOf(t).Value);
-    static string PairStem(string t) => ContainerOf(t).Stem;
-    static string PairHelper(string t) => ContainerOf(t).Helper;
-    static string OptionalElem(string t) => ContainerOf(t).Element;
-    static string OptionalStem(string t) => ContainerOf(t).Stem;
-    static string OptionalHelper(string t) => ContainerOf(t).Helper;
-    static string NativeContainerHelper(string t) => ContainerOf(t).Helper;
-    static string GeneratedHelper(string t) => ContainerOf(t).Helper;
+    internal string PairStem(string t) => ContainerOf(t).Stem;
+    internal string PairHelper(string t) => ContainerOf(t).Helper;
+    internal string OptionalElem(string t) => ContainerOf(t).Element;
+    internal string OptionalStem(string t) => ContainerOf(t).Stem;
+    internal string OptionalHelper(string t) => ContainerOf(t).Helper;
+    internal string NativeContainerHelper(string t) => ContainerOf(t).Helper;
+    internal string GeneratedHelper(string t) => ContainerOf(t).Helper;
 
     // Every container spelling in a signature, in stable order. Nested containers recurse so
     // QList<QMap<...>> emits both helpers.
-    static IEnumerable<string> ContainerTypesIn(string t)
+    internal IEnumerable<string> ContainerTypesInCore(string t)
     {
         if (t == null)
             yield break;
@@ -275,22 +277,23 @@ public static partial class ApiCodeGen
         yield return t;
         if (container.Family is "list" or "set")
         {
-            foreach (var inner in ContainerTypesIn(container.Element))
+            foreach (var inner in ContainerTypesInCore(container.Element))
                 yield return inner;
         }
         else if (container.Family is "map" or "hash")
         {
-            foreach (var inner in ContainerTypesIn(container.Key))
+            foreach (var inner in ContainerTypesInCore(container.Key))
                 yield return inner;
-            foreach (var inner in ContainerTypesIn(container.Value))
+            foreach (var inner in ContainerTypesInCore(container.Value))
                 yield return inner;
         }
         else if (container.Family == "pair")
         {
-            foreach (var inner in ContainerTypesIn(container.Element))
+            foreach (var inner in ContainerTypesInCore(container.Element))
                 yield return inner;
-            foreach (var inner in ContainerTypesIn(container.Value))
+            foreach (var inner in ContainerTypesInCore(container.Value))
                 yield return inner;
         }
     }
+}
 }

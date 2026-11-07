@@ -6,7 +6,9 @@ using System.Text.Json;
 // Parameter passing is selected by the same pattern as type handling: a handler declares the
 // parameter shape it can take and the mainline calls it. The shapes are exclusive (optional
 // struct, in-out string, out, ref, plain input), so the registry is ordered by specificity.
-public static partial class ApiCodeGen
+namespace QtSharp.Generator
+{
+public sealed partial class TypeSystem
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     sealed class ParamHandlerAttribute : Attribute
@@ -15,8 +17,39 @@ public static partial class ApiCodeGen
         public ParamHandlerAttribute(int order) => Order = order;
     }
 
-    abstract class ParamHandler
+    internal abstract class ParamHandler
     {
+        internal TypeSystem S;
+
+        protected string PType(JsonElement p) => S.PType(p);
+        protected string PName(JsonElement p) => S.PName(p);
+        protected string SafeName(string s) => S.SafeName(s);
+        protected string NativeName(string s) => S.NativeName(s);
+        protected string CsTypeName(string t) => S.CsTypeName(t);
+        protected string ManagedType(string t) => S.ManagedType(t);
+        protected string NativeParamType(string t) => S.NativeParamType(t);
+        protected string CppParamType(string t) => S.CppParamType(t);
+        protected string CppArg(string t, string name, string defaultCpp = null) => S.CppArg(t, name, defaultCpp);
+        protected string CppCtorParamType(string t) => S.CppCtorParamType(t);
+        protected bool IsStruct(string t) => S.IsStruct(t);
+        protected bool IsFunctionType(string t) => S.IsFunctionType(t);
+        protected bool IsOptional(JsonElement p) => S.IsOptional(p);
+        protected bool HasParam(JsonElement p, ApiModel.ParamFlags flag) => S.HasParam(p, flag);
+        protected string ParamValueManagedType(JsonElement p) => S.ParamValueManagedType(p);
+        protected bool IsOpaqueStructPtr(JsonElement p) => S.IsOpaqueStructPtr(p);
+        protected string RefValueType(string t) => S.RefValueType(t);
+        protected string StructPod(string t) => S.StructPod(t);
+        protected string StructFromPod(string t, string name) => S.StructFromPod(t, name);
+        protected string StructDefaultExpr(string type, string defaultCpp) => S.StructDefaultExpr(type, defaultCpp);
+        protected string DefaultCpp(JsonElement p) => S.DefaultCpp(p);
+        protected string DefaultCppOf(JsonElement p) => S.DefaultCppOf(p);
+        protected string GivenName(JsonElement p) => S.GivenName(p);
+        protected string StringOutLocal(JsonElement p) => S.StringOutLocal(p);
+        protected string StringInLocal(string name) => S.StringInLocal(name);
+        protected string QualifyEnumDefault(string literal, string type) => S.QualifyEnumDefault(literal, type);
+        protected string CSharpDefault(string type) => S.CSharpDefault(type);
+        protected (List<string> Prelude, string Arg, List<string> Cleanup) MarshalArgOf(string t, string name)
+            => S.MarshalArg(t, name);
         public virtual bool CanHandle(JsonElement p) => false;
         public virtual bool IsByRef(JsonElement p) => false;
         public virtual bool IsOut(JsonElement p) => false;
@@ -38,16 +71,16 @@ public static partial class ApiCodeGen
         public virtual (List<string> Prelude, List<string> Args, List<string> Postlude, List<string> Cleanup)
             Marshal(JsonElement p, string name)
         {
-            var (prelude, arg, cleanup) = MarshalArg(PType(p), name);
+            var (prelude, arg, cleanup) = MarshalArgOf(PType(p), name);
             return (prelude, new List<string> { arg }, new List<string>(), cleanup);
         }
 
         public virtual string CppParamType(JsonElement p)
-            => ApiCodeGen.CppParamType(PType(p));
+            => S.CppParamType(PType(p));
         public virtual string CppArg(JsonElement p)
-            => ApiCodeGen.CppArg(PType(p), NativeName(PName(p)), DefaultCpp(p));
+            => S.CppArg(PType(p), NativeName(PName(p)), DefaultCpp(p));
         public virtual string CppCtorParamType(JsonElement p)
-            => ApiCodeGen.CppCtorParamType(PType(p));
+            => S.CppCtorParamType(PType(p));
         public virtual string CppCtorArg(JsonElement p)
             => NativeName(PName(p));
         public virtual string TypeKey(JsonElement p) => ManagedType(p);
@@ -56,7 +89,7 @@ public static partial class ApiCodeGen
     [ParamHandler(0)]
     sealed class OptionalStructParamHandler : ParamHandler
     {
-        public override bool CanHandle(JsonElement p) => ApiCodeGen.IsOptionalStructDefault(p);
+        public override bool CanHandle(JsonElement p) => S.IsOptionalStructDefault(p);
         public override string Signature(JsonElement p)
             => $"{CsTypeName(PType(p))}? {SafeName(PName(p))} = null";
         public override string NativeType(JsonElement p) => CsTypeName(PType(p));
@@ -88,7 +121,7 @@ public static partial class ApiCodeGen
     [ParamHandler(10)]
     sealed class StringInOutParamHandler : ParamHandler
     {
-        public override bool CanHandle(JsonElement p) => ApiCodeGen.IsStringByRef(p);
+        public override bool CanHandle(JsonElement p) => S.IsStringByRef(p);
         public override bool IsByRef(JsonElement p) => true;
         public override string Signature(JsonElement p)
             => $"ref {ManagedType(p)} {SafeName(PName(p))}";
@@ -124,11 +157,11 @@ public static partial class ApiCodeGen
     [ParamHandler(20)]
     sealed class OutParamHandler : ParamHandler
     {
-        public override bool CanHandle(JsonElement p) => ApiCodeGen.IsOut(p);
+        public override bool CanHandle(JsonElement p) => S.IsOut(p);
         public override bool IsByRef(JsonElement p) => true;
         public override bool IsOut(JsonElement p) => true;
         public override string ManagedType(JsonElement p)
-            => ApiCodeGen.ManagedType(RefValueType(PType(p)));
+            => S.ManagedType(RefValueType(PType(p)));
         public override string Signature(JsonElement p)
             => $"out {ManagedType(p)} {SafeName(PName(p))}";
         public override string NativeType(JsonElement p)
@@ -137,7 +170,7 @@ public static partial class ApiCodeGen
                 : "out " + ManagedType(p);
         public override string CppParamType(JsonElement p) => PType(p);
         public override string CppArg(JsonElement p)
-            => ApiCodeGen.CppArg(PType(p), NativeName(PName(p)), DefaultCpp(p));
+            => S.CppArg(PType(p), NativeName(PName(p)), DefaultCpp(p));
         public override string CppCtorParamType(JsonElement p) => PType(p);
         public override string TypeKey(JsonElement p) => "out " + ManagedType(p);
         public override (List<string> Prelude, List<string> Args, List<string> Postlude, List<string> Cleanup)
@@ -149,7 +182,7 @@ public static partial class ApiCodeGen
     [ParamHandler(30)]
     sealed class RefParamHandler : ParamHandler
     {
-        public override bool CanHandle(JsonElement p) => ApiCodeGen.IsRef(p);
+        public override bool CanHandle(JsonElement p) => S.IsRef(p);
         public override bool IsByRef(JsonElement p) => true;
         public override string Signature(JsonElement p)
             => $"ref {ManagedType(p)} {SafeName(PName(p))}";
@@ -193,7 +226,7 @@ public static partial class ApiCodeGen
                 ? d.GetString()
                 : null;
             literal = QualifyEnumDefault(literal, type);
-            if (literal == "null" && (ApiCodeGen.ManagedType(type) == "IntPtr" || IsStruct(RefValueType(type))))
+            if (literal == "null" && (S.ManagedType(type) == "IntPtr" || IsStruct(RefValueType(type))))
                 literal = "default";
             return sig + " = " + (literal ?? CSharpDefault(type));
         }
@@ -216,7 +249,7 @@ public static partial class ApiCodeGen
             return new[] { CppArg(p) };
         }
         public override string CppParamType(JsonElement p)
-            => ApiCodeGen.CppParamType(PType(p));
+            => S.CppParamType(PType(p));
         public override string CppArg(JsonElement p)
         {
             string t = PType(p);
@@ -226,12 +259,12 @@ public static partial class ApiCodeGen
                 return $"std::chrono::duration_cast<{p.GetProperty("cpp").GetString()}>(std::chrono::nanoseconds({NativeName(PName(p))}))";
             if (HasParam(p, ApiModel.ParamFlags.Buffer))
                 return $"static_cast<{p.GetProperty("cpp").GetString()}>({NativeName(PName(p))})";
-            return ApiCodeGen.CppArg(t, NativeName(PName(p)), DefaultCpp(p));
+            return S.CppArg(t, NativeName(PName(p)), DefaultCpp(p));
         }
         public override string CppCtorParamType(JsonElement p)
             => IsFunctionType(PType(p))
                 ? p.GetProperty("cpp").GetString()
-                : ApiCodeGen.CppCtorParamType(PType(p));
+                : S.CppCtorParamType(PType(p));
         public override string CppCtorArg(JsonElement p)
             => IsFunctionType(PType(p))
                 ? $"reinterpret_cast<{p.GetProperty("cpp").GetString()}>({NativeName(PName(p))})"
@@ -239,13 +272,13 @@ public static partial class ApiCodeGen
         public override string TypeKey(JsonElement p) => ParamValueManagedType(p);
     }
 
-    static readonly List<ParamHandler> paramHandlers = BuildParamHandlers();
-    static readonly ParamHandler inParamHandler = new InParamHandler();
+    private readonly List<ParamHandler> paramHandlers;
+    readonly ParamHandler inParamHandler = new InParamHandler();
 
-    static List<ParamHandler> BuildParamHandlers()
+    List<ParamHandler> BuildParamHandlers()
     {
         var handlers = new List<(int Order, ParamHandler Handler)>();
-        foreach (var type in typeof(ApiCodeGen).Assembly.GetTypes())
+        foreach (var type in typeof(TypeSystem).Assembly.GetTypes())
         {
             if (type.IsAbstract || !typeof(ParamHandler).IsAssignableFrom(type))
                 continue;
@@ -255,15 +288,17 @@ public static partial class ApiCodeGen
                 continue;
             handlers.Add((attribute.Order,
                 (ParamHandler)Activator.CreateInstance(type, nonPublic: true)));
+            handlers[^1].Handler.S = this;
         }
         return handlers.OrderBy(h => h.Order).Select(h => h.Handler).ToList();
     }
 
-    static ParamHandler ParamFor(JsonElement p)
+    internal ParamHandler ParamFor(JsonElement p)
     {
         foreach (var handler in paramHandlers)
             if (handler.CanHandle(p))
                 return handler;
         return inParamHandler;
     }
+}
 }
