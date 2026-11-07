@@ -441,6 +441,9 @@ namespace QtSharp.Generator
         {
             "QProcess.nativeArguments",
             "QProcess.setNativeArguments",
+            // Windows-only in qprinter.h: the Linux Qt headers do not declare it, and the
+            // checked-in model was extracted from the Windows headers.
+            "QPrinter.supportedPaperSources",
         };
 
         internal IEnumerable<JsonElement> Methods(JsonElement cls)

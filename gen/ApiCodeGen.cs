@@ -650,6 +650,8 @@ public static partial class ApiCodeGen
     {
         "QProcess.nativeArguments",
         "QProcess.setNativeArguments",
+        // Windows-only in qprinter.h: the Linux Qt headers do not declare it.
+        "QPrinter.supportedPaperSources",
     };
 
     static IEnumerable<JsonElement> Methods(JsonElement cls)
